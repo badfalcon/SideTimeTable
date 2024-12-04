@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>タイムライン</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            width: 300px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            position: relative;
+            height: 500px;
+            overflow-y: scroll;
+        }
+
+        h1 {
+            font-size: 20px;
+            text-align: center;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 60px; /* 時間表示用に余裕を持たせる */
+            border-left: 2px solid #ccc;
+            height: 540px; /* 営業時間分の高さを設定 (9 * 60px) */
+        }
+
+        .event {
+            position: absolute;
+            left: 65px;
+            width: 200px;
+            padding: 5px 10px;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .short {
+            padding: 0 10px;
+        }
+
+        .current-time-line {
+            position: absolute;
+            width: calc(100% - 60px);
+            height: 2px;
+            background-color: red;
+            left: 60px;
+            z-index: 2;
+            border-left: none;
+        }
+
+        .hour-label {
+            position: absolute;
+            left: 0;
+            width: 55px;
+            text-align: right;
+            padding-right: 5px;
+            font-size: 12px;
+            transform: translateY(-50%);
+        }
+
+        .hour-line {
+            position: absolute;
+            left: 60px;
+            width: calc(100% - 60px);
+            border-top: 1px dashed #ccc;
+            z-index: 1;
+        }
+
+
+    </style>
+</head>
+<body>
+<h1>一日のタイムライン</h1>
+<div class="timeline" id="timeline"></div>
+
+<!-- 外部スクリプトを読み込む -->
+<script src="side_panel.js"></script>
+</body>
+</html>

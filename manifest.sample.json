@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "SideGoogleカレンダー",
+  "version": "1.0",
+  "description": "Googleカレンダーから一日の予定を表示します。",
+  "permissions": ["sidePanel", "identity"],
+  "oauth2": {
+    "client_id": "FILL_OUT_YOUR_CLIENT_ID",
+    "scopes": ["https://www.googleapis.com/auth/calendar.readonly"]
+  },
+  "key": "FILL_OUT_YOUR_KEY",
+  "action": {
+    "default_popup": "side_panel.html"
+  },
+  "side_panel": {
+    "default_path": "side_panel.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}
