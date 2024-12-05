@@ -1,5 +1,8 @@
 // DOMが読み込まれたときに実行
 document.addEventListener('DOMContentLoaded', function () {
+
+    const timelineDiv = document.getElementById('timeline');
+
     // 1時間あたりのミリ秒数
     const hourMillis = 3600000;
     // 1分あたりのミリ秒数
@@ -9,21 +12,34 @@ document.addEventListener('DOMContentLoaded', function () {
     const unitHeight = 60;
 
     // 始業時間と終業時間
-    const openHour = 10;
-    const closeHour = 19;
-    const openTime = new Date().setHours(openHour, 0, 0, 0);
-    const closeTime = new Date().setHours(closeHour, 0, 0, 0);
 
-    // 前後に1時間ずつ余裕を持たせる
-
+    let  openHour = 10;
+    let  closeHour = 19;
+    let openTime = new Date().setHours(openHour, 0, 0, 0);
+    let closeTime = new Date().setHours(closeHour, 0, 0, 0);
     // 時間差分の計算
-    const hourDiff = (closeTime - openTime) / hourMillis;
+    let hourDiff = (closeTime - openTime) / hourMillis;
 
-    const timelineDiv = document.getElementById('timeline');
+    // ストレージから始業時間と終業時間を取得
+    chrome.storage.sync.get(['openHour', 'closeHour'], (items) => {
+        if (items.openHour !== undefined) openHour = items.openHour;
+        if (items.closeHour !== undefined) closeHour = items.closeHour;
+        initializeTimeVariables();
+        fetchEvents();
+    });
+
+    // 時間関連の変数を初期化
+    function initializeTimeVariables() {
+        openTime = new Date().setHours(openHour, 0, 0, 0);
+        closeTime = new Date().setHours(closeHour, 0, 0, 0);
+        hourDiff = (closeTime - openTime) / hourMillis;
+    }
 
     // カレンダーから予定を取得
     function fetchEvents() {
+        console.log('fetchEvents');
         chrome.runtime.sendMessage({action: "getEvents"}, (response) => {
+            console.log(response);
             timelineDiv.innerHTML = ''; // 以前の表示をクリア
 
             if (response.error) {
@@ -31,6 +47,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
+            // 前後に1時間ずつ余裕を持たせる
             // 各時間ラベルと補助線を追加
             for (let i = 0; i <= hourDiff+2; i++) {
                 const hourLabel = document.createElement('div');
@@ -127,13 +144,20 @@ document.addEventListener('DOMContentLoaded', function () {
             updateCurrentTimeLine();
         }
     }
+
+    // 設定アイコンのクリックイベント
+    const settingsIcon = document.getElementById('settingsIcon');
+    settingsIcon.addEventListener('click', () => {
+        chrome.runtime.openOptionsPage();
+    });
+
     // タイトル設定
     const today = new Date();
     const title = document.querySelector('h1');
     title.textContent = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日の予定`;
 
     // 初回表示
-    fetchEvents();
+    // fetchEvents();
 
     // 1秒ごとに更新をチェック
     setInterval(checkSideCalendarUpdate, 1000);

@@ -1,0 +1,35 @@
+<!-- options.html -->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>拡張機能の設定</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 10px;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+        input[type="text"] {
+            width: 200px;
+        }
+    </style>
+</head>
+<body>
+<h1>設定ページ</h1>
+
+<label for="open-hour">始業時間:</label>
+<input type="number" min="0" max="23" id="open-hour" value="10">
+
+<label for="close-hour">終業時間:</label>
+<input type="number" min="0" max="23" id="close-hour" value="19">
+
+<button id="saveButton">保存</button>
+
+<script src="options.js"></script>
+</body>
+</html>
