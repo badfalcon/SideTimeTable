@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', function () {
         openTime = new Date().setHours(openHour, 0, 0, 0);
         closeTime = new Date().setHours(closeHour, 0, 0, 0);
         hourDiff = (closeTime - openTime) / hourMillis;
+        timelineDiv.style.height = `${unitHeight * (hourDiff + 2)}px`;
     }
 
     // カレンダーから予定を取得
