@@ -215,9 +215,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const title = document.querySelector('h1');
     title.textContent = today.toLocaleDateString(undefined, { dateStyle : 'full' });
 
-    // 初回表示
-    // fetchEvents();
-
     // 1秒ごとに更新をチェック
     setInterval(checkSideCalendarUpdate, 1000);
 });
