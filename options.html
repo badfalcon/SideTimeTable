@@ -1,58 +1,71 @@
+<!-- options.html -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>拡張機能の設定</title>
+    <title>SideTimeTableの設定</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
     <style>
         body {
             font-family: Arial, sans-serif;
-            padding: 10px;
-        }
-        label {
-            display: block;
-            margin-top: 10px;
-        }
-        input[type="text"] {
-            width: 200px;
+            padding: 20px;
         }
     </style>
 </head>
 <body>
-<h1>設定ページ</h1>
 
-<h2>時間設定</h2>
-<div>
-    <label for="open-hour">始業時間:</label>
-    <input type="number" min="0" max="23" id="open-hour" value="10">
+<div class="container">
+    <h1 class="mb-4">SideTimeTable 設定</h1>
 
-    <label for="close-hour">終業時間:</label>
-    <input type="number" min="0" max="23" id="close-hour" value="19">
+    <h2>時間設定</h2>
 
-    <label>休憩時間:</label>
+    <div class="form-group row mb-4">
+        <div class="col-md-6">
+            <label for="open-hour" class="form-label">始業時間:</label>
+            <input type="number" class="form-control" min="0" max="23" id="open-hour" value="10">
+        </div>
+        <div class="col-md-6">
+            <label for="close-hour" class="form-label">終業時間:</label>
+            <input type="number" class="form-control" min="0" max="23" id="close-hour" value="19">
+        </div>
+    </div>
 
-    <input type="checkbox" id="break-time-fixed">
-    <label style="display: inline" for="break-time-fixed">固定</label>
-    <input type="time" id="break-time-start" step="900" value="12:00"> ～
-    <input type="time" id="break-time-end" step="900" value="13:00">
+    <div class="input-group grid gap-3">
+        <label for="break-time-start" class="form-label">休憩時間: </label>
+        <div class="form-check">
+            <input type="checkbox" class="form-check-input" id="break-time-fixed">
+            <label class="form-check-label" for="break-time-fixed">固定</label>
+        </div>
+    </div>
+    <div class="input-group mb-4">
+        <input type="time" class="form-control" id="break-time-start" step="900" value="12:00">
+            <span class="input-group-text">～</span>
+        <input type="time" class="form-control" id="break-time-end" step="900" value="13:00">
+    </div>
+
+    <h2>色設定</h2>
+    <div class="form-group row">
+        <div class="col-md-4">
+            <label for="work-time-color">業務時間:</label>
+            <input type="color" class="form-control" id="work-time-color" value="#FF6347">
+        </div>
+        <div class="col-md-4">
+            <label for="local-event-color">ローカルイベント:</label>
+            <input type="color" class="form-control" id="local-event-color" value="#FFD700">
+        </div>
+        <div class="col-md-4">
+            <label for="google-event-color">Google イベント:</label>
+            <input type="color" class="form-control" id="google-event-color" value="#4285F4">
+        </div>
+    </div>
+
+    <button id="saveButton" class="btn btn-primary">保存</button>
 </div>
 
-<h2>色設定</h2>
-
-<div>
-    <label for="work-time-color">業務時間:</label>
-    <input type="color" id="work-time-color" value="#FF6347">
-
-    <label for="local-event-color">ローカルイベント:</label>
-    <input type="color" id="local-event-color" value="#FFD700">
-
-    <label for="google-event-color">Google イベント:</label>
-    <input type="color" id="google-event-color" value="#4285F4">
-</div>
-<div>
-    <button id="saveButton">保存</button>
-</div>
-
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js" integrity="sha384-fbbOQedDUMZZ5KreZpsbe1LCZPVmfTnH7ois6mU1QK+m14rQ1l2bGBq41eYeM/fS" crossorigin="anonymous"></script>
 <script src="options.js"></script>
 </body>
 </html>
