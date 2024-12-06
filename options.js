@@ -1,4 +1,3 @@
-// options.js
 document.addEventListener('DOMContentLoaded', () => {
     const saveButton = document.getElementById('saveButton');
     const openHourInput = document.getElementById('open-hour');
@@ -19,17 +18,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const breakTimeStart = breakTimeStartInput.value;
         const breakTimeEnd = breakTimeEndInput.value;
         const localEventColor = localEventColorInput.value;
-        const googleEventColor = googleEventColorInput.value
+        const googleEventColor = googleEventColorInput.value;
+
         chrome.storage.sync.set({ openHour, closeHour, workTimeColor, breakTimeFixed, breakTimeStart, breakTimeEnd, localEventColor, googleEventColor }, () => {
             alert('設定が保存されました');
         });
     });
 
     // 保存された設定を読み込んで表示
-    chrome.storage.sync.get(['openHour', 'closeHour', 'workTimeColor', 'localEventColor', 'googleEventColor'], (items) => {
+    chrome.storage.sync.get(['openHour', 'closeHour', 'workTimeColor', 'breakTimeFixed', 'breakTimeStart', 'breakTimeEnd', 'localEventColor', 'googleEventColor'], (items) => {
         if (items.openHour) openHourInput.value = items.openHour;
         if (items.closeHour) closeHourInput.value = items.closeHour;
         if (items.workTimeColor) workTimeColorInput.value = items.workTimeColor;
+        if (items.breakTimeFixed) breakTimeFixedInput.checked = items.breakTimeFixed;
+        if (items.breakTimeStart) breakTimeStartInput.value = items.breakTimeStart;
+        if (items.breakTimeEnd) breakTimeEndInput.value = items.breakTimeEnd;
         if (items.localEventColor) localEventColorInput.value = items.localEventColor;
         if (items.googleEventColor) googleEventColorInput.value = items.googleEventColor;
     });
