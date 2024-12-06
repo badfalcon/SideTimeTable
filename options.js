@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const saveButton = document.getElementById('saveButton');
-    const openHourInput = document.getElementById('open-hour');
-    const closeHourInput = document.getElementById('close-hour');
+    const openTimeInput = document.getElementById('open-time');
+    const closeTimeInput = document.getElementById('close-time');
     const workTimeColorInput = document.getElementById('work-time-color');
     const breakTimeFixedInput = document.getElementById('break-time-fixed');
     const breakTimeStartInput = document.getElementById('break-time-start');
@@ -23,8 +23,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 設定を保存
     saveButton.addEventListener('click', () => {
-        const openHour = parseInt(openHourInput.value, 10);
-        const closeHour = parseInt(closeHourInput.value, 10);
+        const openTime = openTimeInput.value;
+        const closeTime = closeTimeInput.value;
         const workTimeColor = workTimeColorInput.value;
         const breakTimeFixed = breakTimeFixedInput.checked;
         const breakTimeStart = breakTimeStartInput.value;
@@ -32,21 +32,30 @@ document.addEventListener('DOMContentLoaded', () => {
         const localEventColor = localEventColorInput.value;
         const googleEventColor = googleEventColorInput.value;
 
-        chrome.storage.sync.set({ openHour, closeHour, workTimeColor, breakTimeFixed, breakTimeStart, breakTimeEnd, localEventColor, googleEventColor }, () => {
+        chrome.storage.sync.set({ openTime, closeTime, workTimeColor, breakTimeFixed, breakTimeStart, breakTimeEnd, localEventColor, googleEventColor }, () => {
             alert('設定が保存されました');
         });
     });
 
     // 保存された設定を読み込んで表示
-    chrome.storage.sync.get(['openHour', 'closeHour', 'workTimeColor', 'breakTimeFixed', 'breakTimeStart', 'breakTimeEnd', 'localEventColor', 'googleEventColor'], (items) => {
-        if (items.openHour) openHourInput.value = items.openHour;
-        if (items.closeHour) closeHourInput.value = items.closeHour;
-        if (items.workTimeColor) workTimeColorInput.value = items.workTimeColor;
-        if (items.breakTimeFixed) breakTimeFixedInput.checked = items.breakTimeFixed;
-        if (items.breakTimeStart) breakTimeStartInput.value = items.breakTimeStart;
-        if (items.breakTimeEnd) breakTimeEndInput.value = items.breakTimeEnd;
-        if (items.localEventColor) localEventColorInput.value = items.localEventColor;
-        if (items.googleEventColor) googleEventColorInput.value = items.googleEventColor;
+    chrome.storage.sync.get({
+        openTime: '09:00',
+        closeTime: '18:00',
+        workTimeColor: '#FF6347',
+        breakTimeFixed: false,
+        breakTimeStart: '12:00',
+        breakTimeEnd: '13:00',
+        localEventColor: '#FFD700',
+        googleEventColor: '#4285F4'
+    }, (items) => {
+        openTimeInput.value = items.openTime;
+        closeTimeInput.value = items.closeTime;
+        workTimeColorInput.value = items.workTimeColor;
+        breakTimeFixedInput.checked = items.breakTimeFixed;
+        breakTimeStartInput.value = items.breakTimeStart;
+        breakTimeEndInput.value = items.breakTimeEnd;
+        localEventColorInput.value = items.localEventColor;
+        googleEventColorInput.value = items.googleEventColor;
 
         toggleBreakTimeFields(); // 休憩時間設定を更新
     });

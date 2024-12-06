@@ -16,8 +16,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const unitHeight = 60;
 
     // 始業時間と終業時間
-    let  openHour = 10;
-    let  closeHour = 19;
+    let  openHour = '09:00';
+    let  closeHour = '18:00';
     let openTime = new Date().setHours(openHour, 0, 0, 0);
     let closeTime = new Date().setHours(closeHour, 0, 0, 0);
     // 時間差分の計算
@@ -25,8 +25,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ストレージから設定を取得
     chrome.storage.sync.get({
-        openHour: 9,
-        closeHour: 18,
+        openTime: '09:00',
+        closeTime: '18:00',
         workTimeColor: '#D3D3D3',
         breakTimeFixed: false,
         breakTimeStart: '12:00',
@@ -34,8 +34,9 @@ document.addEventListener('DOMContentLoaded', function () {
         localEventColor: '#A9A9A9',
         googleEventColor: '#808080'
     }, (items) => {
-        openHour = items.openHour;
-        closeHour = items.closeHour;
+        console.log(items);
+        openHour = items.openTime;
+        closeHour = items.closeTime;
 
         document.documentElement.style.setProperty('--side-calendar-work-time-color', items.workTimeColor);
         document.documentElement.style.setProperty('--side-calendar-local-event-color', items.localEventColor);
@@ -48,9 +49,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 時間関連の変数を初期化
     function initializeTimeVariables() {
-        openTime = new Date().setHours(openHour, 0, 0, 0);
-        closeTime = new Date().setHours(closeHour, 0, 0, 0);
+        const openTimeHour = parseInt(openHour.split(':')[0], 10);
+        const openTimeMinute = parseInt(openHour.split(':')[1], 10);
+        const closeTimeHour = parseInt(closeHour.split(':')[0], 10);
+        const closeTimeMinute = parseInt(closeHour.split(':')[1], 10);
+        openTime = new Date().setHours(openTimeHour, openTimeMinute, 0, 0);
+        closeTime = new Date().setHours(closeTimeHour, closeTimeMinute, 0, 0);
         hourDiff = (closeTime - openTime) / hourMillis;
+        console.log(`openTime: ${openTime}, closeTime: ${closeTime}, hourDiff: ${hourDiff}`);
     }
 
     function createBaseTable(breakTimeFixed, breakTimeStart, breakTimeEnd) {
