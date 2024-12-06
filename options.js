@@ -9,6 +9,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const localEventColorInput = document.getElementById('local-event-color');
     const googleEventColorInput = document.getElementById('google-event-color');
 
+    const toggleBreakTimeFields = () => {
+        const isFixed = breakTimeFixedInput.checked;
+        breakTimeStartInput.disabled = !isFixed;
+        breakTimeEndInput.disabled = !isFixed;
+    };
+
+    // 初期状態を設定
+    toggleBreakTimeFields();
+
+    // 固定チェックボックスの変更イベント
+    breakTimeFixedInput.addEventListener('change', toggleBreakTimeFields);
+
     // 設定を保存
     saveButton.addEventListener('click', () => {
         const openHour = parseInt(openHourInput.value, 10);
@@ -35,5 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (items.breakTimeEnd) breakTimeEndInput.value = items.breakTimeEnd;
         if (items.localEventColor) localEventColorInput.value = items.localEventColor;
         if (items.googleEventColor) googleEventColorInput.value = items.googleEventColor;
+
+        toggleBreakTimeFields(); // 休憩時間設定を更新
     });
 });
