@@ -9,6 +9,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const localEventColorInput = document.getElementById('local-event-color');
     const googleEventColorInput = document.getElementById('google-event-color');
 
+    // 時間の選択肢を生成
+    const timeList = document.getElementById('time-list');
+    for (let hour = 0; hour < 24; hour++) {
+        for (let minute = 0; minute < 60; minute += 15) {
+            const time = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+            const option = document.createElement('option');
+            option.value = time;
+            option.textContent = time;
+            timeList.appendChild(option);
+        }
+    }
+
     const toggleBreakTimeFields = () => {
         const isFixed = breakTimeFixedInput.checked;
         breakTimeStartInput.disabled = !isFixed;
