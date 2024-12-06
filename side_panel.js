@@ -213,7 +213,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // タイトル設定
     const today = new Date();
     const title = document.querySelector('h1');
-    title.textContent = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日の予定`;
+    title.textContent = today.toLocaleDateString(undefined, { dateStyle : 'full' });
 
     // 初回表示
     // fetchEvents();
