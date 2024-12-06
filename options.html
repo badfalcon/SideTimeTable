@@ -22,11 +22,37 @@
 <body>
 <h1>設定ページ</h1>
 
-<label for="open-hour">始業時間:</label>
-<input type="number" min="0" max="23" id="open-hour" value="10">
+<h2>時間設定</h2>
+<div>
+    <label for="open-hour">始業時間:</label>
+    <input type="number" min="0" max="23" id="open-hour" value="10">
 
-<label for="close-hour">終業時間:</label>
-<input type="number" min="0" max="23" id="close-hour" value="19">
+    <label for="close-hour">終業時間:</label>
+    <input type="number" min="0" max="23" id="close-hour" value="19">
+
+    <label>休憩時間:</label>
+
+    <label style="display: inline" for="break-time-fixed">休憩時間が固定</label>
+    <input type="checkbox" id="break-time-fixed">
+
+    <label style="display: inline">休憩時間:</label>
+    <input type="time" id="break-time-start" step="900" value="12:00">～
+    <input type="time" id="break-time-end" step="900" value="13:00">
+</div>
+
+
+<h2>色設定</h2>
+
+<div>
+    <label for="work-time-color">業務時間:</label>
+    <input type="color" id="work-time-color" value="#FF6347">
+
+    <label for="local-event-color">ローカルイベント:</label>
+    <input type="color" id="local-event-color" value="#FFD700">
+
+    <label for="google-event-color">Google イベント:</label>
+    <input type="color" id="google-event-color" value="#4285F4">
+</div>
 
 <button id="saveButton">保存</button>
 

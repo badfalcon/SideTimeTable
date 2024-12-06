@@ -1,7 +1,11 @@
 // DOMが読み込まれたときに実行
 document.addEventListener('DOMContentLoaded', function () {
 
-    const timelineDiv = document.getElementById('timeline');
+    const parentDiv = document.getElementById('sideTimeTable');
+    const baseDiv = document.getElementById('sideTimeTableBase');
+    const eventsDiv = document.getElementById('sideTimeTableEvents');
+    const googleEventsDiv = document.getElementById('sideTimeTableEventsGoogle');
+    const localEventsDiv = document.getElementById('sideTimeTableEventsLocal');
 
     // 1時間あたりのミリ秒数
     const hourMillis = 3600000;
@@ -12,7 +16,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const unitHeight = 60;
 
     // 始業時間と終業時間
-
     let  openHour = 10;
     let  closeHour = 19;
     let openTime = new Date().setHours(openHour, 0, 0, 0);
@@ -20,11 +23,26 @@ document.addEventListener('DOMContentLoaded', function () {
     // 時間差分の計算
     let hourDiff = (closeTime - openTime) / hourMillis;
 
-    // ストレージから始業時間と終業時間を取得
-    chrome.storage.sync.get(['openHour', 'closeHour'], (items) => {
-        if (items.openHour !== undefined) openHour = items.openHour;
-        if (items.closeHour !== undefined) closeHour = items.closeHour;
+    // ストレージから設定を取得
+    chrome.storage.sync.get({
+        openHour: 9,
+        closeHour: 18,
+        workTimeColor: '#D3D3D3',
+        breakTimeFixed: false,
+        breakTimeStart: '12:00',
+        breakTimeEnd: '13:00',
+        localEventColor: '#A9A9A9',
+        googleEventColor: '#808080'
+    }, (items) => {
+        openHour = items.openHour;
+        closeHour = items.closeHour;
+
+        document.documentElement.style.setProperty('--side-calendar-work-time-color', items.workTimeColor);
+        document.documentElement.style.setProperty('--side-calendar-local-event-color', items.localEventColor);
+        document.documentElement.style.setProperty('--side-calendar-google-event-color', items.googleEventColor);
+
         initializeTimeVariables();
+        createBaseTable(items.breakTimeFixed, items.breakTimeStart, items.breakTimeEnd);
         fetchEvents();
     });
 
@@ -33,7 +51,61 @@ document.addEventListener('DOMContentLoaded', function () {
         openTime = new Date().setHours(openHour, 0, 0, 0);
         closeTime = new Date().setHours(closeHour, 0, 0, 0);
         hourDiff = (closeTime - openTime) / hourMillis;
-        timelineDiv.style.height = `${unitHeight * (hourDiff + 2)}px`;
+    }
+
+    function createBaseTable(breakTimeFixed, breakTimeStart, breakTimeEnd) {
+        parentDiv.style.height = `${unitHeight * (hourDiff + 2)}px`;
+        baseDiv.innerHTML = ''; // 以前の表示をクリア
+        baseDiv.style.height = `${unitHeight * (hourDiff + 2)}px`;
+
+        // 業務時間に色を付ける(休憩時間を除く)
+        if (breakTimeFixed) {
+            const breakTimeStartHour = parseInt(breakTimeStart.split(':')[0], 10);
+            const breakTimeStartMinute = parseInt(breakTimeStart.split(':')[1], 10);
+            const breakTimeEndHour = parseInt(breakTimeEnd.split(':')[0], 10);
+            const breakTimeEndMinute = parseInt(breakTimeEnd.split(':')[1], 10);
+            const breakTimeStartMillis = new Date().setHours(breakTimeStartHour, breakTimeStartMinute, 0, 0);
+
+            const breakTimeEndMillis = new Date().setHours(breakTimeEndHour, breakTimeEndMinute, 0, 0);
+
+            const breakTimeStartOffset = (1 + (breakTimeStartMillis - openTime) / hourMillis) * unitHeight;
+            const breakTimeDuration = (breakTimeEndMillis - breakTimeStartMillis) / minuteMillis * unitHeight / 60;
+
+            // 休憩時間を避けて業務時間を表示
+            const workTimeDiv1 = document.createElement('div');
+            workTimeDiv1.className = 'work-time';
+            workTimeDiv1.style.top = `${unitHeight}px`;
+            workTimeDiv1.style.height = `${breakTimeStartOffset - unitHeight}px`;
+            baseDiv.appendChild(workTimeDiv1);
+
+            const workTimeDiv2 = document.createElement('div');
+            workTimeDiv2.className = 'work-time';
+            workTimeDiv2.style.top = `${breakTimeStartOffset + breakTimeDuration}px`;
+            workTimeDiv2.style.height = `${unitHeight * (closeTime - breakTimeEndMillis) / hourMillis}px`;
+            baseDiv.appendChild(workTimeDiv2);
+
+        }else{
+            const workTimeDiv = document.createElement('div');
+            workTimeDiv.className = 'work-time';
+            workTimeDiv.style.top = `${unitHeight}px`;
+            workTimeDiv.style.height = `${unitHeight * hourDiff}px`;
+            baseDiv.appendChild(workTimeDiv);
+        }
+
+        // 各時間ラベルと補助線を追加
+        for (let i = 0; i <= hourDiff+2; i++) {
+            const hourLabel = document.createElement('div');
+            hourLabel.className = 'hour-label';
+            hourLabel.style.top = `${i * 60}px`;
+            const hour = new Date(openTime + (i-1) * hourMillis).getHours();
+            hourLabel.textContent = `${hour}:00`;
+            baseDiv.appendChild(hourLabel);
+
+            const hourLine = document.createElement('div');
+            hourLine.className = 'hour-line';
+            hourLine.style.top = `${i * 60}px`;
+            baseDiv.appendChild(hourLine);
+        }
     }
 
     // カレンダーから予定を取得
@@ -41,28 +113,13 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log('fetchEvents');
         chrome.runtime.sendMessage({action: "getEvents"}, (response) => {
             console.log(response);
-            timelineDiv.innerHTML = ''; // 以前の表示をクリア
-
             if (response.error) {
-                timelineDiv.innerHTML = "エラー: " + response.error;
+                parentDiv.innerHTML = "エラー: " + response.error;
                 return;
             }
 
-            // 前後に1時間ずつ余裕を持たせる
-            // 各時間ラベルと補助線を追加
-            for (let i = 0; i <= hourDiff+2; i++) {
-                const hourLabel = document.createElement('div');
-                hourLabel.className = 'hour-label';
-                hourLabel.style.top = `${i * 60}px`;
-                const hour = new Date(openTime + (i-1) * hourMillis).getHours();
-                hourLabel.textContent = `${hour}:00`;
-                timelineDiv.appendChild(hourLabel);
-
-                const hourLine = document.createElement('div');
-                hourLine.className = 'hour-line';
-                hourLine.style.top = `${i * 60}px`;
-                timelineDiv.appendChild(hourLine);
-            }
+            // 以前の表示をクリア
+            googleEventsDiv.innerHTML = '';
 
             response.events.forEach(event => {
                 console.log(event);
@@ -76,13 +133,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     case 'default':
                         // 通常のイベント処理
                         const eventDiv = document.createElement('div');
-                        eventDiv.className = 'event';
+                        eventDiv.className = 'event google-event';
                         const startDate = new Date(event.start.dateTime || event.start.date);
                         const endDate = new Date(event.end.dateTime || event.end.date);
                         const startOffset = (1 + (startDate - openTime) / hourMillis) * unitHeight;
                         const duration = (endDate - startDate) / minuteMillis * unitHeight / 60;
                         if (duration < 30) {
-                            eventDiv.className = 'event short'; // 30分未満の場合はpaddingを減らす
+                            eventDiv.className = 'event google-event short'; // 30分未満の場合はpaddingを減らす
                             eventDiv.style.height = `${duration}px`; // padding分を引かない
                         }else{
                             eventDiv.style.height = `${duration - 10}px`; // padding分を引く
@@ -105,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         } else {
                             eventDiv.textContent = eventContent;
                         }
-                        timelineDiv.appendChild(eventDiv);
+                        googleEventsDiv.appendChild(eventDiv);
                         break;
                 }
             });
@@ -124,7 +181,7 @@ document.addEventListener('DOMContentLoaded', function () {
             currentTimeLine = document.createElement('div');
             currentTimeLine.id = 'currentTimeLine';
             currentTimeLine.className = 'current-time-line';
-            timelineDiv.appendChild(currentTimeLine);
+            parentDiv.appendChild(currentTimeLine);
         }
 
         const offset = (1 + (currentTime - openTime) / hourMillis) * unitHeight;
@@ -139,6 +196,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // 毎時0分に予定を更新
             fetchEvents();
         }
+
         const currentSeconds = currentTime.getSeconds();
         if (currentSeconds === 0) {
             // 毎分0秒に現在時刻の線を追加

@@ -6,13 +6,19 @@
     <title>タイムライン</title>
     <link href="https://use.fontawesome.com/releases/v6.7.1/css/all.css" rel="stylesheet">
     <style>
+
+        :root {
+            --side-calendar-work-time-color: #FF6347;
+            --side-calendar-break-time-color: #87CEEB;
+            --side-calendar-local-event-color: #FFD700;
+            --side-calendar-google-event-color: #4285F4;
+        }
+
         body {
             font-family: Arial, sans-serif;
-            width: 300px;
             padding: 10px;
             background-color: #f0f0f0;
             position: relative;
-            height: 500px;
             overflow-y: scroll;
         }
 
@@ -21,11 +27,40 @@
             text-align: center;
         }
 
-        .timeline {
+        .side-time-table {
             position: relative;
             padding-left: 60px; /* 時間表示用に余裕を持たせる */
             border-left: 2px solid #ccc;
             height: 540px; /* 営業時間分の高さを設定 (9 * 60px) */
+
+        }
+
+        .side-time-table-base {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 100%;
+            padding-left: 60px; /* 時間表示用に余裕を持たせる */
+            border-right: 1px solid #ccc;
+            z-index: 10;
+        }
+
+        .side-time-table-events {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 20;
+        }
+
+        .work-time {
+            position: absolute;
+            left: 60px;
+            width: calc(100% - 60px);
+            height: 60px;
+            border-bottom: 1px solid #ccc;
+            z-index: 1;
+            background-color: var(--side-calendar-work-time-color);
         }
 
         .event {
@@ -33,14 +68,24 @@
             left: 65px;
             width: 200px;
             padding: 5px 10px;
-            background: white;
+            background: lightgray;
             border-radius: 5px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            z-index: 21;
         }
 
         .short {
             padding: 0 10px;
         }
+
+        .google-event {
+            background-color: var(--side-calendar-google-event-color);
+        }
+
+        .local-event {
+            background-color: var(--side-calendar-local-event-color);
+        }
+
 
         .current-time-line {
             position: absolute;
@@ -48,7 +93,7 @@
             height: 2px;
             background-color: red;
             left: 60px;
-            z-index: 2;
+            z-index: 32;
             border-left: none;
         }
 
@@ -60,6 +105,7 @@
             padding-right: 5px;
             font-size: 12px;
             transform: translateY(-50%);
+            z-index: 30;
         }
 
         .hour-line {
@@ -67,7 +113,7 @@
             left: 60px;
             width: calc(100% - 60px);
             border-top: 1px dashed #ccc;
-            z-index: 1;
+            z-index: 31;
         }
 
         .settings-icon {
@@ -82,8 +128,18 @@
 </head>
 <body>
 <i class="fas fa-cog settings-icon" id="settingsIcon"></i>
-<h1>一日のタイムライン</h1>
-<div class="timeline" id="timeline"></div>
+<h1>一日のスケジュール</h1>
+<div class="side-time-table" id="sideTimeTable">
+    <div class="side-time-table-base" id="sideTimeTableBase">
+    </div>
+    <div class="side-time-table-events" id="sideTimeTableEvents">
+        <div class="side-time-table-events-local" id="sideTimeTableEventsLocal">
+        </div>
+        <div class="side-time-table-events-google" id="sideTimeTableEventsGoogle">
+        </div>
+    </div>
+    <div class="current-time-line" id="currentTimeLine"></div>
+</div>
 
 <!-- 外部スクリプトを読み込む -->
 <script src="side_panel.js"></script>
