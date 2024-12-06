@@ -18,6 +18,10 @@ document.addEventListener('DOMContentLoaded', function () {
     // 始業時間と終業時間
     let  openHour = '09:00';
     let  closeHour = '18:00';
+    let openTimeHour = parseInt(openHour.split(':')[0], 10);
+    let openTimeMinute = parseInt(openHour.split(':')[1], 10);
+    let closeTimeHour = parseInt(closeHour.split(':')[0], 10);
+    let closeTimeMinute = parseInt(closeHour.split(':')[1], 10);
     let openTime = new Date().setHours(openHour, 0, 0, 0);
     let closeTime = new Date().setHours(closeHour, 0, 0, 0);
     // 時間差分の計算
@@ -49,10 +53,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 時間関連の変数を初期化
     function initializeTimeVariables() {
-        const openTimeHour = parseInt(openHour.split(':')[0], 10);
-        const openTimeMinute = parseInt(openHour.split(':')[1], 10);
-        const closeTimeHour = parseInt(closeHour.split(':')[0], 10);
-        const closeTimeMinute = parseInt(closeHour.split(':')[1], 10);
+        openTimeHour = parseInt(openHour.split(':')[0], 10);
+        openTimeMinute = parseInt(openHour.split(':')[1], 10);
+        closeTimeHour = parseInt(closeHour.split(':')[0], 10);
+        closeTimeMinute = parseInt(closeHour.split(':')[1], 10);
         openTime = new Date().setHours(openTimeHour, openTimeMinute, 0, 0);
         closeTime = new Date().setHours(closeTimeHour, closeTimeMinute, 0, 0);
         hourDiff = (closeTime - openTime) / hourMillis;
@@ -100,16 +104,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // 各時間ラベルと補助線を追加
         for (let i = 0; i <= hourDiff+2; i++) {
+            if(i===0 && openTimeMinute !== 0){
+                continue;
+            }
             const hourLabel = document.createElement('div');
             hourLabel.className = 'hour-label';
-            hourLabel.style.top = `${i * 60}px`;
+            hourLabel.style.top = `${i * 60 - openTimeMinute}px`;
             const hour = new Date(openTime + (i-1) * hourMillis).getHours();
             hourLabel.textContent = `${hour}:00`;
             baseDiv.appendChild(hourLabel);
 
             const hourLine = document.createElement('div');
             hourLine.className = 'hour-line';
-            hourLine.style.top = `${i * 60}px`;
+            hourLine.style.top = `${i * 60 - openTimeMinute}px`;
             baseDiv.appendChild(hourLine);
         }
     }
