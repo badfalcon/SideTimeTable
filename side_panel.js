@@ -27,6 +27,18 @@ document.addEventListener('DOMContentLoaded', function () {
     // 時間差分の計算
     let hourDiff = (closeTime - openTime) / hourMillis;
 
+    // 時間の選択肢を生成
+    const timeList = document.getElementById('time-list');
+    for (let hour = 0; hour < 24; hour++) {
+        for (let minute = 0; minute < 60; minute += 15) {
+            const time = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+            const option = document.createElement('option');
+            option.value = time;
+            option.textContent = time;
+            timeList.appendChild(option);
+        }
+    }
+
     // ストレージから設定を取得
     chrome.storage.sync.get({
         openTime: '09:00',
@@ -221,6 +233,68 @@ document.addEventListener('DOMContentLoaded', function () {
     const settingsIcon = document.getElementById('settingsIcon');
     settingsIcon.addEventListener('click', () => {
         chrome.runtime.openOptionsPage();
+    });
+    // 新しい要素
+    const addLocalEventButton = document.getElementById('addLocalEventButton');
+    const localEventDialog = document.getElementById('localEventDialog');
+    const closeDialog = document.getElementById('closeDialog');
+    const saveEventButton = document.getElementById('saveEventButton');
+    const cancelEventButton = document.getElementById('cancelEventButton');
+    const eventTitleInput = document.getElementById('eventTitle');
+    const eventStartTimeInput = document.getElementById('eventStartTime');
+    const eventEndTimeInput = document.getElementById('eventEndTime');
+
+    addLocalEventButton.addEventListener('click', () => {
+        localEventDialog.style.display = 'block';
+    });
+
+    closeDialog.addEventListener('click', () => {
+        localEventDialog.style.display = 'none';
+    });
+
+    cancelEventButton.addEventListener('click', () => {
+        localEventDialog.style.display = 'none';
+    });
+
+    saveEventButton.addEventListener('click', () => {
+        const title = eventTitleInput.value;
+        const startTime = eventStartTimeInput.value;
+        const endTime = eventEndTimeInput.value;
+
+        if (title && startTime && endTime) {
+            const eventDiv = document.createElement('div');
+            eventDiv.className = 'event local-event';
+            const startDate = new Date().setHours(startTime.split(':')[0], startTime.split(':')[1], 0, 0);
+            const endDate = new Date().setHours(endTime.split(':')[0], endTime.split(':')[1], 0, 0);
+
+            // 開始時間と営業開始時間の差を計算
+            const startOffset = (1 + (startDate - openTime) / hourMillis) * unitHeight;
+            console.log(`endDate: ${endDate}, startDate: ${startDate}`);
+            // format
+            console.log(`endDate: ${new Date(endDate).toLocaleString()}`);
+            console.log(`startDate: ${new Date(startDate).toLocaleString()}`);
+            console.log(`(endDate - startDate): ${(endDate - startDate)}`);
+            console.log(`minuteMillis: ${minuteMillis}`);
+            console.log(`(endDate - startDate) / minuteMillis: ${(endDate - startDate) / minuteMillis}`);
+            console.log(`unitHeight: ${unitHeight}`);
+            console.log(`(endDate - startDate) / minuteMillis * unitHeight: ${(endDate - startDate) / minuteMillis * unitHeight}`);
+            console.log(`(endDate - startDate) / minuteMillis * unitHeight / 60: ${(endDate - startDate) / minuteMillis * unitHeight / 60}`);
+            const duration = (endDate - startDate) / minuteMillis * unitHeight / 60;
+            if (duration < 30) {
+                eventDiv.className = 'event local-event short'; // 30分未満の場合はpaddingを減らす
+                eventDiv.style.height = `${duration}px`; // padding分を引かない
+            }else{
+                eventDiv.style.height = `${duration - 10}px`; // padding分を引く
+            }
+
+            eventDiv.style.top = `${startOffset}px`;
+            eventDiv.textContent = `${startTime} - ${endTime}: ${title}`;
+            localEventsDiv.appendChild(eventDiv);
+
+            localEventDialog.style.display = 'none'; // 保存後にダイアログを閉じる
+        } else {
+            alert('すべてのフィールドを入力してください');
+        }
     });
 
     // タイトル設定
