@@ -326,6 +326,77 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+// 既存のイベントをクリックしたときに編集する
+    function setupEventEdit(eventDiv, event) {
+        eventDiv.addEventListener('click', () => {
+            // 編集用ダイアログを表示
+            localEventDialog.style.display = 'block';
+
+            // フォームに既存のイベント情報を設定
+            eventTitleInput.value = event.title;
+            eventStartTimeInput.value = event.startTime;
+            eventEndTimeInput.value = event.endTime;
+
+            // 保存ボタンがクリックされたときの処理を設定
+            saveEventButton.onclick = () => {
+                const newTitle = eventTitleInput.value;
+                const newStartTime = eventStartTimeInput.value;
+                const newEndTime = eventEndTimeInput.value;
+
+                if (newTitle && newStartTime && newEndTime) {
+                    // イベント情報を更新
+                    event.title = newTitle;
+                    event.startTime = newStartTime;
+                    event.endTime = newEndTime;
+
+                    // ストレージの更新
+                    chrome.storage.sync.get({localEvents: []}, (data) => {
+                        const localEvents = data.localEvents;
+                        const eventIndex = localEvents.findIndex(e => e.title === event.title && e.startTime === event.startTime && e.endTime === event.endTime);
+
+                        if (eventIndex !== -1) {
+                            // 該当イベントの情報を更新
+                            localEvents[eventIndex] = event;
+                            chrome.storage.sync.set({localEvents}, () => {
+                                alert('イベントが更新されました');
+                                loadLocalEvents(); // イベント表示を更新
+                            });
+                        }
+                    });
+
+                    localEventDialog.style.display = 'none';
+                } else {
+                    alert('すべてのフィールドを入力してください');
+                }
+            };
+        });
+    }
+
+    function createEventDiv(title, startTime, endTime) {
+        const eventDiv = document.createElement('div');
+        eventDiv.className = 'event local-event';
+        const startDate = new Date();
+        startDate.setHours(startTime.split(':')[0], startTime.split(':')[1], 0, 0);
+        const endDate = new Date();
+        endDate.setHours(endTime.split(':')[0], endTime.split(':')[1], 0, 0);
+
+        const startOffset = (1 + (startDate - openTime) / hourMillis) * unitHeight;
+        const duration = (endDate - startDate) / minuteMillis * unitHeight / 60;
+
+        if (duration < 30) {
+            eventDiv.className = 'event local-event short';
+            eventDiv.style.height = `${duration}px`;
+        } else {
+            eventDiv.style.height = `${duration - 10}px`;
+        }
+        eventDiv.style.top = `${startOffset}px`;
+        eventDiv.textContent = `${startTime} - ${endTime}: ${title}`;
+
+        // 編集機能を設定
+        setupEventEdit(eventDiv, {title, startTime, endTime});
+
+        return eventDiv;
+    }
 
 // 現在のフォーマットされた日付を取得するための関数
     function getFormattedDate() {
