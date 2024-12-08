@@ -269,16 +269,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // 開始時間と営業開始時間の差を計算
             const startOffset = (1 + (startDate - openTime) / hourMillis) * unitHeight;
-            console.log(`endDate: ${endDate}, startDate: ${startDate}`);
-            // format
-            console.log(`endDate: ${new Date(endDate).toLocaleString()}`);
-            console.log(`startDate: ${new Date(startDate).toLocaleString()}`);
-            console.log(`(endDate - startDate): ${(endDate - startDate)}`);
-            console.log(`minuteMillis: ${minuteMillis}`);
-            console.log(`(endDate - startDate) / minuteMillis: ${(endDate - startDate) / minuteMillis}`);
-            console.log(`unitHeight: ${unitHeight}`);
-            console.log(`(endDate - startDate) / minuteMillis * unitHeight: ${(endDate - startDate) / minuteMillis * unitHeight}`);
-            console.log(`(endDate - startDate) / minuteMillis * unitHeight / 60: ${(endDate - startDate) / minuteMillis * unitHeight / 60}`);
             const duration = (endDate - startDate) / minuteMillis * unitHeight / 60;
             if (duration < 30) {
                 eventDiv.className = 'event local-event short'; // 30分未満の場合はpaddingを減らす
