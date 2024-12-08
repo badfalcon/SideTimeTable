@@ -256,37 +256,109 @@ document.addEventListener('DOMContentLoaded', function () {
         localEventDialog.style.display = 'none';
     });
 
+// 保存されたローカルイベントを読み込んで表示
+    function loadLocalEvents() {
+        chrome.storage.sync.get({localEvents: []}, (data) => {
+            data.localEvents.forEach(event => {
+                const eventDiv = createEventDiv(event.title, event.startTime, event.endTime);
+                localEventsDiv.appendChild(eventDiv);
+            });
+        });
+    }
+
+// イベントを作成する関数を追加
+    function createEventDiv(title, startTime, endTime) {
+        const eventDiv = document.createElement('div');
+        eventDiv.className = 'event local-event';
+        const startDate = new Date();
+        startDate.setHours(startTime.split(':')[0], startTime.split(':')[1], 0, 0);
+        const endDate = new Date();
+        endDate.setHours(endTime.split(':')[0], endTime.split(':')[1], 0, 0);
+
+        const startOffset = (1 + (startDate - openTime) / hourMillis) * unitHeight;
+        const duration = (endDate - startDate) / minuteMillis * unitHeight / 60;
+
+        if (duration < 30) {
+            eventDiv.className = 'event local-event short';
+            eventDiv.style.height = `${duration}px`;
+        } else {
+            eventDiv.style.height = `${duration - 10}px`;
+        }
+        eventDiv.style.top = `${startOffset}px`;
+        eventDiv.textContent = `${startTime} - ${endTime}: ${title}`;
+
+        return eventDiv;
+    }
+
+// 保存ボタンのクリック時にイベントを保存して表示
     saveEventButton.addEventListener('click', () => {
         const title = eventTitleInput.value;
         const startTime = eventStartTimeInput.value;
         const endTime = eventEndTimeInput.value;
+        const currentDate = getFormattedDate(); // 現在の日付を取得
 
         if (title && startTime && endTime) {
-            const eventDiv = document.createElement('div');
-            eventDiv.className = 'event local-event';
-            const startDate = new Date().setHours(startTime.split(':')[0], startTime.split(':')[1], 0, 0);
-            const endDate = new Date().setHours(endTime.split(':')[0], endTime.split(':')[1], 0, 0);
-
-            // 開始時間と営業開始時間の差を計算
-            const startOffset = (1 + (startDate - openTime) / hourMillis) * unitHeight;
-            const duration = (endDate - startDate) / minuteMillis * unitHeight / 60;
-            if (duration < 30) {
-                eventDiv.className = 'event local-event short'; // 30分未満の場合はpaddingを減らす
-                eventDiv.style.height = `${duration}px`; // padding分を引かない
-            }else{
-                eventDiv.style.height = `${duration - 10}px`; // padding分を引く
-            }
-
-            eventDiv.style.top = `${startOffset}px`;
-            eventDiv.textContent = `${startTime} - ${endTime}: ${title}`;
+            const eventDiv = createEventDiv(title, startTime, endTime);
             localEventsDiv.appendChild(eventDiv);
 
-            localEventDialog.style.display = 'none'; // 保存後にダイアログを閉じる
+            // ローカルイベントを storage.sync に保存
+            chrome.storage.sync.get({localEvents: [], lastUpdateDate: ''}, (data) => {
+                let localEvents = data.localEvents;
+                const lastUpdateDate = data.lastUpdateDate;
+
+                // 日付が変わっていた場合も考慮する
+                if (currentDate !== lastUpdateDate) {
+                    localEvents = []; // 日付が変わったらイベントをリセット
+                }
+
+                localEvents.push({title, startTime, endTime});
+                chrome.storage.sync.set({
+                    localEvents,
+                    lastUpdateDate: currentDate // 日付を更新
+                }, () => {
+                    alert('イベントが保存されました');
+                });
+            });
+
+            localEventDialog.style.display = 'none';
         } else {
             alert('すべてのフィールドを入力してください');
         }
     });
 
+
+// 現在のフォーマットされた日付を取得するための関数
+    function getFormattedDate() {
+        const today = new Date();
+        return today.toISOString().split('T')[0]; // YYYY-MM-DD 形式の文字列を取得
+    }
+
+// ローカルイベントをリセットする関数
+    function resetLocalEventsIfNewDay() {
+        // ストレージに保存した最後の更新日を取得
+        chrome.storage.sync.get({lastUpdateDate: '', localEvents: []}, (data) => {
+            const lastUpdateDate = data.lastUpdateDate;
+            const currentDate = getFormattedDate();
+
+            // 日付が変わった場合、ローカルイベントをリセット
+            if (currentDate !== lastUpdateDate) {
+                chrome.storage.sync.set({
+                    lastUpdateDate: currentDate,
+                    localEvents: [] // イベントを空にする
+                }, () => {
+                    // 更新した後で、ローカルイベントエリアをクリア
+                    localEventsDiv.innerHTML = '';
+                    alert('新しい日付になりました。ローカルイベントがリセットされました。');
+                });
+            } else {
+                // 日が変わっていない場合、ローカルイベントをロード
+                loadLocalEvents();
+            }
+        });
+    }
+
+// 初回読み込み時にローカルイベントをロードしてチェック
+    resetLocalEventsIfNewDay();
     // タイトル設定
     const today = new Date();
     const title = document.querySelector('h1');
