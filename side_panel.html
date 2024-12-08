@@ -6,7 +6,6 @@
     <title>タイムライン</title>
     <link href="https://use.fontawesome.com/releases/v6.7.1/css/all.css" rel="stylesheet">
     <style>
-
         :root {
             --side-calendar-work-time-color: #FF6347;
             --side-calendar-break-time-color: #87CEEB;
@@ -29,10 +28,9 @@
 
         .side-time-table {
             position: relative;
-            padding-left: 60px; /* 時間表示用に余裕を持たせる */
+            padding-left: 60px;
             border-left: 2px solid #ccc;
             height: 540px; /* 営業時間分の高さを設定 (9 * 60px) */
-
         }
 
         .side-time-table-base {
@@ -40,7 +38,7 @@
             left: 0;
             right: 0;
             height: 100%;
-            padding-left: 60px; /* 時間表示用に余裕を持たせる */
+            padding-left: 60px;
             z-index: 10;
         }
 
@@ -85,7 +83,6 @@
             background-color: var(--side-calendar-local-event-color);
         }
 
-
         .current-time-line {
             position: absolute;
             width: calc(100% - 60px);
@@ -123,7 +120,64 @@
             color: #333;
             cursor: pointer;
         }
+
+        /* ローカルイベント作成ダイアログのスタイル */
+        .add-local-event-icon {
+            position: fixed;
+            left: 20px;
+            top: 20px;
+            font-size: 40px;     /* アイコンのサイズ */
+            color: #28a745;      /* アイコンの色 */
+            cursor: pointer;     /* ポインターにカーソルを変更 */
+            z-index: 1000;       /* ボタンが前面に表示されるように調整 */
+        }
+
+        .add-local-event-icon:hover {
+            color: #218838;      /* ホバー時の色 */
+        }
+
+        .modal {
+            display: none; /* 初期状態で隠す */
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            padding-top: 60px;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            border-radius: 5px;
+            position: relative;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        button {
+            margin-top: 10px;
+        }
     </style>
+
 </head>
 <body>
 <i class="fas fa-cog settings-icon" id="settingsIcon"></i>
@@ -140,6 +194,28 @@
     <div class="current-time-line" id="currentTimeLine"></div>
 </div>
 
+<!-- ローカルイベント作成ボタン -->
+<!-- ローカルイベントを追加するアイコンボタン -->
+<i class="fas fa-plus-circle add-local-event-icon" id="addLocalEventButton" title="ローカルイベントを追加"></i>
+<!--<button id="addLocalEventButton" class="btn btn-primary">ローカルイベントを追加</button>-->
+
+<!-- ローカルイベント作成ダイアログ -->
+<div id="localEventDialog" class="modal" hidden>
+    <div class="modal-content">
+        <span class="close" id="closeDialog">&times;</span>
+        <h2>ローカルイベントを作成</h2>
+        <label for="eventTitle">タイトル:</label>
+        <input type="text" id="eventTitle" required>
+        <label for="eventStartTime">開始時刻:</label>
+        <input type="time" list="time-list" id="eventStartTime" required>
+        <label for="eventEndTime">終了時刻:</label>
+        <input type="time" list="time-list" id="eventEndTime" required>
+        <button id="saveEventButton" class="btn btn-success">保存</button>
+        <button id="cancelEventButton" class="btn btn-secondary">キャンセル</button>
+    </div>
+</div>
+<datalist id="time-list">
+</datalist>
 <!-- 外部スクリプトを読み込む -->
 <script src="side_panel.js"></script>
 </body>
