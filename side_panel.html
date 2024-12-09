@@ -278,9 +278,10 @@
 
 <!-- ローカルイベント作成ダイアログ -->
 <div id="localEventDialog" class="modal" hidden>
+    <!-- 編集用ダイアログの中 -->
     <div class="modal-content">
         <span class="close" id="closeDialog">&times;</span>
-        <h2>ローカルイベントを作成</h2>
+        <h2>ローカルイベントを作成/編集</h2>
         <label for="eventTitle">タイトル:</label>
         <input type="text" id="eventTitle" required>
         <label for="eventStartTime">開始時刻:</label>
@@ -288,8 +289,10 @@
         <label for="eventEndTime">終了時刻:</label>
         <input type="time" list="time-list" id="eventEndTime" required>
         <button id="saveEventButton" class="btn btn-success">保存</button>
+        <button id="deleteEventButton" class="btn btn-danger">削除</button> <!-- 追加 -->
         <button id="cancelEventButton" class="btn btn-secondary">キャンセル</button>
     </div>
+
 </div>
 <datalist id="time-list">
 </datalist>
