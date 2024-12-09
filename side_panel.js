@@ -258,7 +258,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
 // 保存されたローカルイベントを読み込んで表示
     function loadLocalEvents() {
+        localEventsDiv.innerHTML = ''; // 以前の表示をクリア
         chrome.storage.sync.get({localEvents: []}, (data) => {
+            console.log(data);
             data.localEvents.forEach(event => {
                 const eventDiv = createEventDiv(event.title, event.startTime, event.endTime);
                 localEventsDiv.appendChild(eventDiv);
@@ -303,6 +305,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // ローカルイベントを storage.sync に保存
             chrome.storage.sync.get({localEvents: [], lastUpdateDate: ''}, (data) => {
+                console.log(data);
                 let localEvents = data.localEvents;
                 const lastUpdateDate = data.lastUpdateDate;
 
@@ -316,6 +319,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     localEvents,
                     lastUpdateDate: currentDate // 日付を更新
                 }, () => {
+                    console.log('イベントが保存されました');
                     alert('イベントが保存されました');
                 });
             });
@@ -327,6 +331,9 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
 // 既存のイベントをクリックしたときに編集する
+// 新しい要素の取得
+    const deleteEventButton = document.getElementById('deleteEventButton');
+
     function setupEventEdit(eventDiv, event) {
         eventDiv.addEventListener('click', () => {
             // 編集用ダイアログを表示
@@ -337,26 +344,22 @@ document.addEventListener('DOMContentLoaded', function () {
             eventStartTimeInput.value = event.startTime;
             eventEndTimeInput.value = event.endTime;
 
-            // 保存ボタンがクリックされたときの処理を設定
+            // 保存ボタンがクリックされたときの処理
             saveEventButton.onclick = () => {
                 const newTitle = eventTitleInput.value;
                 const newStartTime = eventStartTimeInput.value;
                 const newEndTime = eventEndTimeInput.value;
 
                 if (newTitle && newStartTime && newEndTime) {
-                    // イベント情報を更新
-                    event.title = newTitle;
-                    event.startTime = newStartTime;
-                    event.endTime = newEndTime;
-
-                    // ストレージの更新
                     chrome.storage.sync.get({localEvents: []}, (data) => {
                         const localEvents = data.localEvents;
+
+                        // 元のイベントを見つけて更新
                         const eventIndex = localEvents.findIndex(e => e.title === event.title && e.startTime === event.startTime && e.endTime === event.endTime);
 
                         if (eventIndex !== -1) {
-                            // 該当イベントの情報を更新
-                            localEvents[eventIndex] = event;
+                            localEvents[eventIndex] = {title: newTitle, startTime: newStartTime, endTime: newEndTime};
+
                             chrome.storage.sync.set({localEvents}, () => {
                                 alert('イベントが更新されました');
                                 loadLocalEvents(); // イベント表示を更新
@@ -369,8 +372,27 @@ document.addEventListener('DOMContentLoaded', function () {
                     alert('すべてのフィールドを入力してください');
                 }
             };
+
+            // 削除ボタンがクリックされたときの処理
+            deleteEventButton.onclick = () => {
+                if (confirm('本当にこのイベントを削除しますか？')) {
+                    chrome.storage.sync.get({localEvents: []}, (data) => {
+                        let localEvents = data.localEvents;
+                        localEvents = localEvents.filter(e => !(e.title === event.title && e.startTime === event.startTime && e.endTime === event.endTime));
+
+                        chrome.storage.sync.set({localEvents}, () => {
+                            alert('イベントが削除されました');
+                            loadLocalEvents(); // イベント表示を更新
+                        });
+                    });
+
+                    localEventDialog.style.display = 'none';
+                }
+            };
         });
     }
+
+
 
     function createEventDiv(title, startTime, endTime) {
         const eventDiv = document.createElement('div');
