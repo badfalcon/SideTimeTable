@@ -4,14 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>タイムライン</title>
+    <!-- Font Awesome -->
     <link href="https://use.fontawesome.com/releases/v6.7.1/css/all.css" rel="stylesheet">
+    <!-- CSS -->
     <link rel="stylesheet" href="side_panel.css">
+    <!-- JavaScript -->
+    <script src="side_panel.js"></script>
 </head>
 <body>
 <div id="sideTimeTableHeader">
-    <i class="fas fa-plus-circle add-local-event-icon" id="addLocalEventButton" title="ローカルイベントを追加"></i>
+    <i class="fas fa-plus-circle add-local-event-icon" id="addLocalEventButton" title="予定を追加"></i>
     <h1>一日のスケジュール</h1>
-    <i class="fas fa-cog settings-icon" id="settingsIcon"></i>
+    <i class="fas fa-cog settings-icon" id="settingsIcon" title="設定"></i>
 </div>
 <div class="side-time-table" id="sideTimeTable">
     <div class="side-time-table-base" id="sideTimeTableBase">
@@ -24,17 +28,12 @@
     </div>
     <div class="current-time-line" id="currentTimeLine"></div>
 </div>
-
-<!-- ローカルイベント作成ボタン -->
-<!-- ローカルイベントを追加するアイコンボタン -->
-<!--<button id="addLocalEventButton" class="btn btn-primary">ローカルイベントを追加</button>-->
-
-<!-- ローカルイベント作成ダイアログ -->
+<!-- 予定作成ダイアログ -->
 <div id="localEventDialog" class="modal" hidden>
     <!-- 編集用ダイアログの中 -->
     <div class="modal-content">
         <span class="close" id="closeDialog">&times;</span>
-        <h2>ローカルイベントを作成/編集</h2>
+        <h2>予定を作成/編集</h2>
         <label for="eventTitle">タイトル:</label>
         <input type="text" id="eventTitle" required>
         <label for="eventStartTime">開始時刻:</label>
@@ -42,14 +41,11 @@
         <label for="eventEndTime">終了時刻:</label>
         <input type="time" list="time-list" id="eventEndTime" required>
         <button id="saveEventButton" class="btn btn-success">保存</button>
-        <button id="deleteEventButton" class="btn btn-danger">削除</button> <!-- 追加 -->
+        <button id="deleteEventButton" class="btn btn-danger">削除</button>
         <button id="cancelEventButton" class="btn btn-secondary">キャンセル</button>
     </div>
-
 </div>
 <datalist id="time-list">
 </datalist>
-<!-- 外部スクリプトを読み込む -->
-<script src="side_panel.js"></script>
 </body>
 </html>
