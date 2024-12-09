@@ -1,0 +1,253 @@
+:root {
+    --side-calendar-work-time-color: #FF6347;
+    --side-calendar-break-time-color: #87CEEB;
+    --side-calendar-local-event-color: #FFD700;
+    --side-calendar-google-event-color: #4285F4;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    padding: 10px;
+    background-color: #f0f0f0;
+    position: relative;
+    overflow-y: auto;
+}
+
+h1 {
+    font-size: 20px;
+    text-align: center;
+}
+
+.side-time-table {
+    position: relative;
+    padding-left: 60px;
+    border-left: 2px solid #ccc;
+    height: 540px; /* 営業時間分の高さを設定 (9 * 60px) */
+}
+
+#sideTimeTableHeader{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    /*padding: 10px;*/
+    background-color: #f0f0f0;
+    border-bottom: 1px solid #ccc;
+    width: 100%;
+}
+
+.add-local-event-icon {
+    font-size: 24px;
+    cursor: pointer;     /* ポインターにカーソルを変更 */
+}
+
+#sideTimeTableHeader > h1 {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.add-local-event-icon:hover {
+}
+
+.settings-icon {
+    font-size: 24px;
+    color: #333;
+    cursor: pointer;
+}
+
+.side-time-table-base {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 100%;
+    padding-left: 60px;
+    z-index: 10;
+}
+
+.side-time-table-events {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 20;
+}
+
+.work-time {
+    position: absolute;
+    left: 60px;
+    width: calc(100% - 60px);
+    height: 60px;
+    z-index: 1;
+    background-color: var(--side-calendar-work-time-color);
+}
+
+.event {
+    position: absolute;
+    left: 65px;
+    width: 200px;
+    padding: 5px 10px;
+    background: lightgray;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    z-index: 21;
+}
+
+.short {
+    padding: 0 10px;
+}
+
+.google-event {
+    background-color: var(--side-calendar-google-event-color);
+}
+
+.local-event {
+    background-color: var(--side-calendar-local-event-color);
+}
+
+.current-time-line {
+    position: absolute;
+    width: calc(100% - 60px);
+    height: 2px;
+    background-color: red;
+    left: 60px;
+    z-index: 32;
+    border-left: none;
+}
+
+.hour-label {
+    position: absolute;
+    left: 0;
+    width: 55px;
+    text-align: right;
+    padding-right: 5px;
+    font-size: 12px;
+    transform: translateY(-50%);
+    z-index: 30;
+}
+
+.hour-line {
+    position: absolute;
+    left: 60px;
+    width: calc(100% - 60px);
+    border-top: 1px dashed #ccc;
+    z-index: 31;
+}
+
+/* ローカルイベント作成ダイアログのスタイル */
+.modal {
+    display: none; /* 初期状態で隠す */
+    position: fixed;
+    z-index: 100;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+    padding-top: 60px;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    border-radius: 5px;
+    position: relative;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+button {
+    margin-top: 10px;
+}
+
+/* ローカルイベント作成ダイアログのスタイル */
+.modal {
+    display: none; /* 初期状態で隠す */
+    position: fixed;
+    z-index: 100;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5); /* 半透明の背景を少し濃く */
+    padding-top: 60px;
+}
+
+.modal-content {
+    background-color: #fff; /* 純白の背景 */
+    margin: auto;
+    padding: 30px; /* 内側の余白を広く */
+    border: 1px solid #ccc; /* グレーの境界線 */
+    width: 70%; /* 幅調整 */
+    max-width: 500px; /* 最大幅を設定 */
+    border-radius: 10px; /* 少し大きめの角丸 */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 影の追加 */
+    position: relative;
+}
+
+.close {
+    color: #333;
+    float: right;
+    font-size: 32px; /* 文字を少し大きく */
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* フォームのラベルと入力欄のスタイル */
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+input[type="text"],
+input[type="time"] {
+    width: calc(100% - 20px); /* 幅を調整 */
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+button {
+    margin-top: 10px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: #28a745;
+    color: #fff;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #218838;
+}
+
+button.btn-secondary {
+    background-color: #6c757d;
+}
+
+button.btn-secondary:hover {
+    background-color: #5a6268;
+}
