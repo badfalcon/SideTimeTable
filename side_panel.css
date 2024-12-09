@@ -235,19 +235,35 @@ button {
     padding: 10px 20px;
     border: none;
     border-radius: 5px;
-    background-color: #28a745;
-    color: #fff;
     cursor: pointer;
 }
 
-button:hover {
-    background-color: #218838;
+#saveEventButton {
+    background-color: #28a745; /* 緑色 */
+    color: #fff; /* 白色の文字 */
 }
 
-button.btn-secondary {
-    background-color: #6c757d;
+#saveEventButton:hover,
+#saveEventButton:focus {
+    background-color: #218838; /* Darker green */
 }
 
-button.btn-secondary:hover {
-    background-color: #5a6268;
+#deleteEventButton {
+    background-color: #dc3545; /* 赤色 */
+    color: #fff; /* 白色の文字 */
+}
+
+#deleteEventButton:hover,
+#deleteEventButton:focus {
+    background-color: #c82333; /* Darker red */
+}
+
+#cancelEventButton {
+    background-color: #6c757d; /* 灰色 */
+    color: #fff; /* 白色の文字 */
+}
+
+#cancelEventButton:hover,
+#cancelEventButton:focus {
+    background-color: #5a6268; /* Darker grey */
 }
