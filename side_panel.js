@@ -246,6 +246,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     addLocalEventButton.addEventListener('click', () => {
         localEventDialog.style.display = 'block';
+        // フォームをリセット
+        eventTitleInput.value = '';
+        eventStartTimeInput.value = '';
+        eventEndTimeInput.value = '';
     });
 
     closeDialog.addEventListener('click', () => {
