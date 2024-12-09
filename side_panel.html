@@ -18,7 +18,7 @@
             padding: 10px;
             background-color: #f0f0f0;
             position: relative;
-            overflow-y: scroll;
+            overflow-y: auto;
         }
 
         h1 {
@@ -31,6 +31,35 @@
             padding-left: 60px;
             border-left: 2px solid #ccc;
             height: 540px; /* 営業時間分の高さを設定 (9 * 60px) */
+        }
+
+        #sideTimeTableHeader{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            /*padding: 10px;*/
+            background-color: #f0f0f0;
+            border-bottom: 1px solid #ccc;
+            width: 100%;
+        }
+
+        .add-local-event-icon {
+            font-size: 24px;
+            cursor: pointer;     /* ポインターにカーソルを変更 */
+        }
+
+        #sideTimeTableHeader > h1 {
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .add-local-event-icon:hover {
+        }
+
+        .settings-icon {
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
         }
 
         .side-time-table-base {
@@ -111,30 +140,7 @@
             z-index: 31;
         }
 
-        .settings-icon {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            font-size: 24px;
-            color: #333;
-            cursor: pointer;
-        }
-
         /* ローカルイベント作成ダイアログのスタイル */
-        .add-local-event-icon {
-            position: fixed;
-            left: 20px;
-            top: 20px;
-            font-size: 40px;     /* アイコンのサイズ */
-            color: #28a745;      /* アイコンの色 */
-            cursor: pointer;     /* ポインターにカーソルを変更 */
-            z-index: 1000;       /* ボタンが前面に表示されるように調整 */
-        }
-
-        .add-local-event-icon:hover {
-            color: #218838;      /* ホバー時の色 */
-        }
-
         .modal {
             display: none; /* 初期状態で隠す */
             position: fixed;
@@ -257,8 +263,11 @@
 
 </head>
 <body>
-<i class="fas fa-cog settings-icon" id="settingsIcon"></i>
-<h1>一日のスケジュール</h1>
+<div id="sideTimeTableHeader">
+    <i class="fas fa-plus-circle add-local-event-icon" id="addLocalEventButton" title="ローカルイベントを追加"></i>
+    <h1>一日のスケジュール</h1>
+    <i class="fas fa-cog settings-icon" id="settingsIcon"></i>
+</div>
 <div class="side-time-table" id="sideTimeTable">
     <div class="side-time-table-base" id="sideTimeTableBase">
     </div>
@@ -273,7 +282,6 @@
 
 <!-- ローカルイベント作成ボタン -->
 <!-- ローカルイベントを追加するアイコンボタン -->
-<i class="fas fa-plus-circle add-local-event-icon" id="addLocalEventButton" title="ローカルイベントを追加"></i>
 <!--<button id="addLocalEventButton" class="btn btn-primary">ローカルイベントを追加</button>-->
 
 <!-- ローカルイベント作成ダイアログ -->
