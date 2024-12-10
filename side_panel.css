@@ -25,6 +25,15 @@ h1 {
     height: 540px; /* 営業時間分の高さを設定 (9 * 60px) */
 }
 
+#sideTimeTableHeaderWrapper{
+/* 上部に固定(sticky)   */
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background-color: #f0f0f0;
+    border-bottom: 1px solid #ccc;
+}
+
 #sideTimeTableHeader{
     display: flex;
     justify-content: space-between;
