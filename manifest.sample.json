@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "SideGoogleカレンダー",
+  "name": "SideTimeTable",
   "version": "1.0",
-  "description": "Googleカレンダーから一日の予定を表示します。",
+  "description": "A side panel extension that shows your today's events.",
   "permissions": ["sidePanel", "identity", "storage"],
   "oauth2": {
     "client_id": "FILL_OUT_YOUR_CLIENT_ID",
