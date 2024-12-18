@@ -159,6 +159,10 @@ document.addEventListener('DOMContentLoaded', function () {
                         // 通常のイベント処理
                         const eventDiv = document.createElement('div');
                         eventDiv.className = 'event google-event';
+                        if (event.start.date || event.end.date) {
+                            // 終日イベントのため、スキップ
+                            return;
+                        }
                         const startDate = new Date(event.start.dateTime || event.start.date);
                         const endDate = new Date(event.end.dateTime || event.end.date);
                         const startOffset = (1 + (startDate - openTime) / hourMillis) * unitHeight;
