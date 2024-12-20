@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SideTimeTable - 今日の予定管理ツール</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        header {
+            background-color: #0078d4;
+            color: white;
+            padding: 20px 10px;
+            text-align: center;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+        header p {
+            font-size: 1.2em;
+        }
+        .icon {
+            width: 128px;
+            height: 128px;
+            border-radius: 20%;
+            margin: 10px auto;
+            display: block;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        nav {
+            background-color: #005a9e;
+            padding: 10px;
+            text-align: center;
+        }
+        nav a {
+            margin: 0 15px;
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        nav a:hover {
+            text-decoration: underline;
+        }
+        section {
+            padding: 30px 20px;
+            background: white;
+            margin: 20px auto;
+            max-width: 900px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        section h2 {
+            font-size: 1.8em;
+            color: #0078d4;
+        }
+        ul, ol {
+            margin: 20px 0;
+            padding-left: 40px;
+        }
+        .screenshot {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin: 10px 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        footer {
+            background-color: #0078d4;
+            color: white;
+            text-align: center;
+            padding: 5px;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+        }
+        body {
+            margin-bottom: 50px; /* フッターの高さ分のマージンを追加 */
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>SideTimeTable</h1>
+    <img src="img/icon128.png" alt="SideTimeTableのアイコン" class="icon">
+    <p>今日の予定管理ツール</p>
+</header>
+<nav>
+    <a href="#overview">概要</a>
+    <a href="#features">機能</a>
+    <a href="#installation">インストール方法</a>
+    <a href="#screenshots">スクリーンショット</a>
+    <a href="#developer">開発者情報</a>
+</nav>
+<section id="overview">
+    <h2>概要</h2>
+    <p>SideTimeTableは、日々のスケジュールをしっかり管理するためのChrome拡張機能です。Googleカレンダーと同期し、日々の予定をサイドパネルに表示します。これにより、大事な瞬間を見逃すことなく、個人的なイベントも管理できます。</p>
+</section>
+<section id="features">
+    <h2>機能</h2>
+    <ul>
+        <li>クリック一つでサイドパネルから日々のイベントにアクセス。</li>
+        <li>Googleカレンダーとシームレスに同期してイベントを表示・管理。</li>
+        <li>ローカルイベントを簡単に追加・管理。</li>
+        <li>カスタマイズ可能な表示設定とカラースキーム。</li>
+    </ul>
+</section>
+<section id="installation">
+    <h2>インストール方法</h2>
+    <a href="https://chrome.google.com/webstore/detail/sidetimetable/pnknjjpncnciijkpdfgfiikmhlmamaid" target="_blank" class="button"><img src="img/web_store.png" alt="Chrome ウェブストアでインストール" /></a>
+    <ol>
+        <li>Chrome ウェブストアでインストール</li>
+        <li>「Chromeに追加」ボタンをクリックします。</li>
+        <li>表示されるダイアログで、拡張機能の追加を確認します。</li>
+        <li>インストール後、ツールバーのアイコンをクリックしてサイドパネルを開きます。</li>
+    </ol>
+</section>
+<section id="screenshots">
+    <h2>スクリーンショット</h2>
+    <img src="img/image_1.png" alt="SideTimeTableのスクリーンショット1" class="screenshot">
+    <img src="img/image_2.png" alt="SideTimeTableのスクリーンショット2" class="screenshot">
+    <img src="img/image_3.png" alt="SideTimeTableのスクリーンショット3" class="screenshot">
+</section>
+<section id="developer">
+    <h2>開発者情報</h2>
+    <p>開発者: badfalcon</p>
+    <p>メール: <a href="mailto:badfalcon610@gmail.com">badfalcon610@gmail.com</a></p>
+</section>
+<footer>
+    <p>&copy; 2024 badfalcon. All rights reserved.</p>
+</footer>
+</body>
+</html>
