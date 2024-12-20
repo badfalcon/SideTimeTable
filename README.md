@@ -27,7 +27,7 @@
 - Run `zip_project.bat` (Windows) or `zip_project.sh` (Unix/Linux/macOS) to package your project.
 
 ### License
-This project is licensed under the terms outlined in the LICENSE file.
+This plugin is released under the [Apache License 2.0]. See the `LICENSE` file for details.
 
 ---
 
@@ -58,4 +58,4 @@ This project is licensed under the terms outlined in the LICENSE file.
 - Windowsでは `zip_project.bat`、Unix/Linux/macOSでは `zip_project.sh` を実行してプロジェクトをパッケージ化します。
 
 ### ライセンス
-このプロジェクトは、LICENSEファイルに記載のライセンスに基づいてライセンスされています。
+このプラグインは[Apache License 2.0]の下で公開されています。詳細は`LICENSE`ファイルを参照してください。
