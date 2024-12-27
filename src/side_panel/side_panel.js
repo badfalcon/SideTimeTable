@@ -16,8 +16,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const unitHeight = 60;
 
     // 始業時間と終業時間
-    let  openHour = '09:00';
-    let  closeHour = '18:00';
+    let openHour = '09:00';
+    let closeHour = '18:00';
     let openTimeHour = parseInt(openHour.split(':')[0], 10);
     let openTimeMinute = parseInt(openHour.split(':')[1], 10);
     let closeTimeHour = parseInt(closeHour.split(':')[0], 10);
@@ -39,8 +39,11 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    let googleIntegrated = false;
+
     // ストレージから設定を取得
     chrome.storage.sync.get({
+        googleIntegrated: false,
         openTime: '09:00',
         closeTime: '18:00',
         workTimeColor: '#D3D3D3',
@@ -51,6 +54,9 @@ document.addEventListener('DOMContentLoaded', function () {
         googleEventColor: '#808080'
     }, (items) => {
         console.log(items);
+
+        googleIntegrated = this.googleIntegrated;
+
         openHour = items.openTime;
         closeHour = items.closeTime;
 
@@ -61,6 +67,7 @@ document.addEventListener('DOMContentLoaded', function () {
         initializeTimeVariables();
         createBaseTable(items.breakTimeFixed, items.breakTimeStart, items.breakTimeEnd);
         fetchEvents();
+        updateCurrentTimeLine();
     });
 
     // 時間関連の変数を初期化
@@ -106,7 +113,7 @@ document.addEventListener('DOMContentLoaded', function () {
             workTimeDiv2.style.height = `${unitHeight * (closeTime - breakTimeEndMillis) / hourMillis}px`;
             baseDiv.appendChild(workTimeDiv2);
 
-        }else{
+        } else {
             const workTimeDiv = document.createElement('div');
             workTimeDiv.className = 'work-time';
             workTimeDiv.style.top = `${unitHeight}px`;
@@ -115,14 +122,14 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         // 各時間ラベルと補助線を追加
-        for (let i = 0; i <= hourDiff+2; i++) {
-            if(i===0 && openTimeMinute !== 0){
+        for (let i = 0; i <= hourDiff + 2; i++) {
+            if (i === 0 && openTimeMinute !== 0) {
                 continue;
             }
             const hourLabel = document.createElement('div');
             hourLabel.className = 'hour-label';
             hourLabel.style.top = `${i * 60 - openTimeMinute}px`;
-            const hour = new Date(openTime + (i-1) * hourMillis).getHours();
+            const hour = new Date(openTime + (i - 1) * hourMillis).getHours();
             hourLabel.textContent = `${hour}:00`;
             baseDiv.appendChild(hourLabel);
 
@@ -135,7 +142,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // カレンダーから予定を取得
     function fetchEvents() {
-        console.log('fetchEvents');
+        console.log('fetchGoogleEvents');
+        if (!googleIntegrated) {
+            console.log('Not authorized');
+            return;
+        }
+
         chrome.runtime.sendMessage({action: "getEvents"}, (response) => {
             console.log(response);
             if (response.error) {
@@ -170,7 +182,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         if (duration < 30) {
                             eventDiv.className = 'event google-event short'; // 30分未満の場合はpaddingを減らす
                             eventDiv.style.height = `${duration}px`; // padding分を引かない
-                        }else{
+                        } else {
                             eventDiv.style.height = `${duration - 10}px`; // padding分を引く
                         }
 
@@ -195,9 +207,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         break;
                 }
             });
-
-            // 初回表示
-            updateCurrentTimeLine();
         });
     }
 
@@ -238,6 +247,7 @@ document.addEventListener('DOMContentLoaded', function () {
     settingsIcon.addEventListener('click', () => {
         chrome.runtime.openOptionsPage();
     });
+
     // 新しい要素
     const addLocalEventButton = document.getElementById('addLocalEventButton');
     const localEventDialog = document.getElementById('localEventDialog');
@@ -264,7 +274,7 @@ document.addEventListener('DOMContentLoaded', function () {
         localEventDialog.style.display = 'none';
     });
 
-// 保存されたローカルイベントを読み込んで表示
+    // 保存されたローカルイベントを読み込んで表示
     function loadLocalEvents() {
         localEventsDiv.innerHTML = ''; // 以前の表示をクリア
         chrome.storage.sync.get({localEvents: []}, (data) => {
@@ -276,7 +286,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-// イベントを作成する関数を追加
+    // イベントを作成する関数を追加
     function createEventDiv(title, startTime, endTime) {
         const eventDiv = document.createElement('div');
         eventDiv.className = 'event local-event';
@@ -300,7 +310,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return eventDiv;
     }
 
-// 保存ボタンのクリック時にイベントを保存して表示
+    // 保存ボタンのクリック時にイベントを保存して表示
     saveEventButton.addEventListener('click', () => {
         const title = eventTitleInput.value;
         const startTime = eventStartTimeInput.value;
@@ -338,8 +348,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-// 既存のイベントをクリックしたときに編集する
-// 新しい要素の取得
+    // 既存のイベントをクリックしたときに編集する
+    // 新しい要素の取得
     const deleteEventButton = document.getElementById('deleteEventButton');
 
     function setupEventEdit(eventDiv, event) {
@@ -366,7 +376,11 @@ document.addEventListener('DOMContentLoaded', function () {
                         const eventIndex = localEvents.findIndex(e => e.title === event.title && e.startTime === event.startTime && e.endTime === event.endTime);
 
                         if (eventIndex !== -1) {
-                            localEvents[eventIndex] = {title: newTitle, startTime: newStartTime, endTime: newEndTime};
+                            localEvents[eventIndex] = {
+                                title: newTitle,
+                                startTime: newStartTime,
+                                endTime: newEndTime
+                            };
 
                             chrome.storage.sync.set({localEvents}, () => {
                                 alert('イベントが更新されました');
@@ -401,7 +415,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
 
-
     function createEventDiv(title, startTime, endTime) {
         const eventDiv = document.createElement('div');
         eventDiv.className = 'event local-event';
@@ -428,13 +441,13 @@ document.addEventListener('DOMContentLoaded', function () {
         return eventDiv;
     }
 
-// 現在のフォーマットされた日付を取得するための関数
+    // 現在のフォーマットされた日付を取得するための関数
     function getFormattedDate() {
         const today = new Date();
         return today.toISOString().split('T')[0]; // YYYY-MM-DD 形式の文字列を取得
     }
 
-// ローカルイベントをリセットする関数
+    // ローカルイベントをリセットする関数
     function resetLocalEventsIfNewDay() {
         // ストレージに保存した最後の更新日を取得
         chrome.storage.sync.get({lastUpdateDate: '', localEvents: []}, (data) => {
@@ -458,12 +471,12 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-// 初回読み込み時にローカルイベントをロードしてチェック
+    // 初回読み込み時にローカルイベントをロードしてチェック
     resetLocalEventsIfNewDay();
     // タイトル設定
     const today = new Date();
     const title = document.querySelector('h1');
-    title.textContent = today.toLocaleDateString(undefined, { dateStyle : 'full' });
+    title.textContent = today.toLocaleDateString(undefined, {dateStyle: 'full'});
 
     // 1秒ごとに更新をチェック
     setInterval(checkSideCalendarUpdate, 1000);

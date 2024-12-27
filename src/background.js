@@ -33,10 +33,17 @@ function getCalendarEvents() {
 }
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.action === "getEvents") {
-        getCalendarEvents()
-            .then(events => sendResponse({ events }))
-            .catch(error => sendResponse({ error: error.message }));
-        return true; // Indicates that you will send a response asynchronously
+    switch (request.action) {
+        case "getEvents":
+            getCalendarEvents()
+                .then(events => sendResponse({ events }))
+                .catch(error => sendResponse({ error: error.message }));
+            return true; // 非同期応答を示す
+        case "checkAuth":
+            checkGoogleAuth()
+                .then(isAuthenticated => sendResponse({ isAuthenticated }))
+                .catch(error => sendResponse({ error: error.message }));
+            return true; // 非同期応答を示す
     }
 });
+
