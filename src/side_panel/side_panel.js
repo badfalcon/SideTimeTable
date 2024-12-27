@@ -1,4 +1,10 @@
 // DOMが読み込まれたときに実行
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === "reloadSideTimeTable") {
+        location.reload();
+    }
+});
+
 document.addEventListener('DOMContentLoaded', function () {
 
     const parentDiv = document.getElementById('sideTimeTable');

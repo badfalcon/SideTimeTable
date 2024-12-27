@@ -24,6 +24,10 @@ document.addEventListener('DOMContentLoaded', () => {
             googleIntegrationStatus.textContent = response.error ? '未連携' : '連携済み';
             alert(response.error ? 'Googleカレンダーとの連携に失敗しました' : 'Googleカレンダーとの連携に成功しました');
             googleIntegrationButton.disabled = false;
+
+            chrome.runtime.sendMessage({ action: "reloadSideTimeTable" }, (response) => {
+                console.log(response.status);
+            });
         });
     });
 
@@ -74,6 +78,9 @@ document.addEventListener('DOMContentLoaded', () => {
             googleEventColor
         }, () => {
             alert('設定が保存されました');
+            chrome.runtime.sendMessage({ action: "reloadSideTimeTable" }, (response) => {
+                console.log(response.status);
+            });
         });
     });
 
