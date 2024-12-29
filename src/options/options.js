@@ -20,13 +20,15 @@ document.addEventListener('DOMContentLoaded', () => {
         chrome.runtime.sendMessage({action: 'getEvents'}, (response) => {
             console.log('Googleカレンダーとの連携結果', response);
             googleIntegrated = !response.error;
-            chrome.storage.sync.set({googleIntegrated});
-            googleIntegrationStatus.textContent = response.error ? '未連携' : '連携済み';
-            alert(response.error ? 'Googleカレンダーとの連携に失敗しました' : 'Googleカレンダーとの連携に成功しました');
-            googleIntegrationButton.disabled = false;
+            chrome.storage.sync.set({googleIntegrated}, () => {
+                console.log('Googleカレンダーとの連携情報を保存しました');
+                googleIntegrationStatus.textContent = response.error ? '未連携' : '連携済み';
+                alert(response.error ? 'Googleカレンダーとの連携に失敗しました' : 'Googleカレンダーとの連携に成功しました');
+                googleIntegrationButton.disabled = false;
 
-            chrome.runtime.sendMessage({ action: "reloadSideTimeTable" }, (response) => {
-                console.log(response.status);
+                chrome.runtime.sendMessage({ action: "reloadSideTimeTable" }, (response) => {
+                    console.log(response);
+                });
             });
         });
     });
@@ -68,6 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const googleEventColor = googleEventColorInput.value;
 
         chrome.storage.sync.set({
+            googleIntegrated,
             openTime,
             closeTime,
             workTimeColor,
@@ -79,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, () => {
             alert('設定が保存されました');
             chrome.runtime.sendMessage({ action: "reloadSideTimeTable" }, (response) => {
-                console.log(response.status);
+                console.log(response);
             });
         });
     });
