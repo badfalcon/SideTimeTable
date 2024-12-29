@@ -45,8 +45,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    let googleIntegrated = false;
-
+    let isGoogleIntegrated = false;
     // ストレージから設定を取得
     chrome.storage.sync.get({
         googleIntegrated: false,
@@ -61,7 +60,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }, (items) => {
         console.log(items);
 
-        googleIntegrated = this.googleIntegrated;
+        isGoogleIntegrated = items.googleIntegrated;
 
         openHour = items.openTime;
         closeHour = items.closeTime;
@@ -149,7 +148,8 @@ document.addEventListener('DOMContentLoaded', function () {
     // カレンダーから予定を取得
     function fetchEvents() {
         console.log('fetchGoogleEvents');
-        if (!googleIntegrated) {
+        console.log(isGoogleIntegrated);
+        if (!isGoogleIntegrated) {
             console.log('Not authorized');
             return;
         }
@@ -163,6 +163,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // 以前の表示をクリア
             googleEventsDiv.innerHTML = '';
+
+            if (!response.events){
+                return;
+            }
 
             response.events.forEach(event => {
                 console.log(event);
