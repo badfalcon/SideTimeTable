@@ -1,0 +1,78 @@
+{
+  "appDesc": {
+    "message": "A side panel extension that shows your today's events.",
+    "description": "The description of the application"
+  },
+  "timelineTitle": {
+    "message": "Timeline",
+    "description": "Title of the timeline page"
+  },
+  "addEvent": {
+    "message": "Add Event",
+    "description": "Tooltip for add event button"
+  },
+  "settings": {
+    "message": "Settings",
+    "description": "Tooltip for settings button"
+  },
+  "eventDialogTitle": {
+    "message": "Create/Edit Event",
+    "description": "Title of event dialog"
+  },
+  "eventTitle": {
+    "message": "Title:",
+    "description": "Label for event title input"
+  },
+  "startTime": {
+    "message": "Start Time:",
+    "description": "Label for start time input"
+  },
+  "endTime": {
+    "message": "End Time:",
+    "description": "Label for end time input"
+  },
+  "save": {
+    "message": "Save",
+    "description": "Save button text"
+  },
+  "delete": {
+    "message": "Delete",
+    "description": "Delete button text"
+  },
+  "cancel": {
+    "message": "Cancel",
+    "description": "Cancel button text"
+  },
+  "fillAllFields": {
+    "message": "Please fill in all fields",
+    "description": "Error message when required fields are empty"
+  },
+  "errorPrefix": {
+    "message": "Error: ",
+    "description": "Error message prefix"
+  },
+  "eventSaved": {
+    "message": "Event saved successfully",
+    "description": "Success message when event is saved"
+  },
+  "eventUpdated": {
+    "message": "Event updated successfully",
+    "description": "Success message when event is updated"
+  },
+  "eventDeleted": {
+    "message": "Event deleted successfully",
+    "description": "Success message when event is deleted"
+  },
+  "confirmDeleteEvent": {
+    "message": "Are you sure you want to delete this event?",
+    "description": "Confirmation message for event deletion"
+  },
+  "newDayReset": {
+    "message": "New day detected. Resetting previous day's events",
+    "description": "Message when events are reset for new day"
+  },
+  "notAuthorized": {
+    "message": "Google Calendar integration is not authorized",
+    "description": "Message when Google Calendar integration is not authorized"
+  }
+}

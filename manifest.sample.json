@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
+  "default_locale": "en",
   "name": "SideTimeTable",
   "version": "1.0",
-  "description": "A side panel extension that shows your today's events.",
+  "description": "__MSG_appDesc__",
   "permissions": ["sidePanel", "identity", "storage"],
   "oauth2": {
     "client_id": "FILL_OUT_YOUR_CLIENT_ID",
