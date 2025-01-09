@@ -74,5 +74,45 @@
   "notAuthorized": {
     "message": "Googleカレンダーとの連携が許可されていません",
     "description": "Googleカレンダー連携未許可時のメッセージ"
+  },
+  "settingsSaved": {
+    "message": "設定が保存されました",
+    "description": "設定保存時のメッセージ"
+  },
+  "optionsTitle": {
+    "message": "SideTimeTable 設定",
+    "description": "オプションページのタイトル"
+  },
+  "timeSettings": {
+    "message": "時間設定",
+    "description": "時間設定セクションのタイトル"
+  },
+  "workHours": {
+    "message": "就業時間:",
+    "description": "就業時間入力のラベル"
+  },
+  "breakTime": {
+    "message": "休憩時間:",
+    "description": "休憩時間入力のラベル"
+  },
+  "fixed": {
+    "message": "固定",
+    "description": "固定休憩時間チェックボックスのラベル"
+  },
+  "colorSettings": {
+    "message": "色設定",
+    "description": "色設定セクションのタイトル"
+  },
+  "workTimeColor": {
+    "message": "業務時間:",
+    "description": "業務時間色入力のラベル"
+  },
+  "localEventColor": {
+    "message": "ローカルイベント:",
+    "description": "ローカルイベント色入力のラベル"
+  },
+  "googleEventColor": {
+    "message": "Google イベント:",
+    "description": "Googleイベント色入力のラベル"
   }
 }

@@ -74,5 +74,45 @@
   "notAuthorized": {
     "message": "Google Calendar integration is not authorized",
     "description": "Message when Google Calendar integration is not authorized"
+  },
+  "settingsSaved": {
+    "message": "Settings have been saved",
+    "description": "Message displayed when settings are saved"
+  },
+  "optionsTitle": {
+    "message": "SideTimeTable Settings",
+    "description": "Title of the options page"
+  },
+  "timeSettings": {
+    "message": "Time Settings",
+    "description": "Section title for time settings"
+  },
+  "workHours": {
+    "message": "Work Hours:",
+    "description": "Label for work hours input"
+  },
+  "breakTime": {
+    "message": "Break Time:",
+    "description": "Label for break time input"
+  },
+  "fixed": {
+    "message": "Fixed",
+    "description": "Label for fixed break time checkbox"
+  },
+  "colorSettings": {
+    "message": "Color Settings",
+    "description": "Section title for color settings"
+  },
+  "workTimeColor": {
+    "message": "Work Time Color:",
+    "description": "Label for work time color input"
+  },
+  "localEventColor": {
+    "message": "Local Event Color:",
+    "description": "Label for local event color input"
+  },
+  "googleEventColor": {
+    "message": "Google Event Color:",
+    "description": "Label for Google event color input"
   }
 }
