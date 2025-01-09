@@ -1,10 +1,9 @@
-<!-- options.html -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SideTimeTableの設定</title>
+    <title data-localize="__MSG_optionsTitle__">SideTimeTableの設定</title>
     <!-- Bootstrap CSS -->
     <link href="../lib/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
@@ -20,16 +19,17 @@
     <script src="../lib/bootstrap.min.js"
             integrity="sha384-fbbOQedDUMZZ5KreZpsbe1LCZPVmfTnH7ois6mU1QK+m14rQ1l2bGBq41eYeM/fS"
             crossorigin="anonymous"></script>
+    <script src="../lib/localize.js"></script>
     <script src="options.js"></script>
 </head>
 <body>
 
 <div class="container">
-    <h1 class="mb-4">SideTimeTable 設定</h1>
+    <h1 class="mb-4" data-localize="__MSG_optionsTitle__">SideTimeTable 設定</h1>
 
-    <h2>時間設定</h2>
+    <h2 data-localize="__MSG_timeSettings__">時間設定</h2>
 
-    <label class="form-label">就業時間:</label>
+    <label class="form-label" data-localize="__MSG_workHours__">就業時間:</label>
     <div class="input-group mb-4">
         <input type="time" list="time-list" class="form-control" id="open-time" step="900" value="09:00">
         <span class="input-group-text">～</span>
@@ -37,10 +37,10 @@
     </div>
 
     <div class="input-group grid gap-3">
-        <label class="form-label">休憩時間: </label>
+        <label class="form-label" data-localize="__MSG_breakTime__">休憩時間: </label>
         <div class="form-check">
             <input type="checkbox" class="form-check-input" id="break-time-fixed">
-            <label class="form-check-label" for="break-time-fixed">固定</label>
+            <label class="form-check-label" for="break-time-fixed" data-localize="__MSG_fixed__">固定</label>
         </div>
     </div>
     <div class="input-group mb-4">
@@ -49,23 +49,23 @@
         <input type="time" list="time-list" class="form-control" id="break-time-end" step="900" value="13:00" disabled="disabled">
     </div>
 
-    <h2>色設定</h2>
+    <h2 data-localize="__MSG_colorSettings__">色設定</h2>
     <div class="form-group row">
         <div class="col-md-4">
-            <label for="work-time-color">業務時間:</label>
+            <label for="work-time-color" data-localize="__MSG_workTimeColor__">業務時間:</label>
             <input type="color" class="form-control" id="work-time-color" value="#FF6347">
         </div>
         <div class="col-md-4">
-            <label for="local-event-color">ローカルイベント:</label>
+            <label for="local-event-color" data-localize="__MSG_localEventColor__">ローカルイベント:</label>
             <input type="color" class="form-control" id="local-event-color" value="#FFD700">
         </div>
         <div class="col-md-4">
-            <label for="google-event-color">Google イベント:</label>
+            <label for="google-event-color" data-localize="__MSG_googleEventColor__">Google イベント:</label>
             <input type="color" class="form-control" id="google-event-color" value="#4285F4">
         </div>
     </div>
 
-    <button id="saveButton" class="btn btn-primary">保存</button>
+    <button id="saveButton" class="btn btn-primary" data-localize="__MSG_save__">保存</button>
     <datalist id="time-list">
     </datalist>
 </div>
