@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+    localizeHtmlPage();
     const saveButton = document.getElementById('saveButton');
     const openTimeInput = document.getElementById('open-time');
     const closeTimeInput = document.getElementById('close-time');
@@ -44,8 +45,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const localEventColor = localEventColorInput.value;
         const googleEventColor = googleEventColorInput.value;
 
-        chrome.storage.sync.set({ openTime, closeTime, workTimeColor, breakTimeFixed, breakTimeStart, breakTimeEnd, localEventColor, googleEventColor }, () => {
-            alert('設定が保存されました');
+        chrome.storage.sync.set({
+            openTime,
+            closeTime,
+            workTimeColor,
+            breakTimeFixed,
+            breakTimeStart,
+            breakTimeEnd,
+            localEventColor,
+            googleEventColor
+        }, () => {
+            alert(chrome.i18n.getMessage('settingsSaved'));
         });
     });
 

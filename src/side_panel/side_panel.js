@@ -1,5 +1,6 @@
 // DOMが読み込まれたときに実行
 document.addEventListener('DOMContentLoaded', function () {
+    localizeHtmlPage();
 
     const parentDiv = document.getElementById('sideTimeTable');
     const baseDiv = document.getElementById('sideTimeTableBase');
@@ -16,8 +17,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const unitHeight = 60;
 
     // 始業時間と終業時間
-    let  openHour = '09:00';
-    let  closeHour = '18:00';
+    let openHour = '09:00';
+    let closeHour = '18:00';
     let openTimeHour = parseInt(openHour.split(':')[0], 10);
     let openTimeMinute = parseInt(openHour.split(':')[1], 10);
     let closeTimeHour = parseInt(closeHour.split(':')[0], 10);
@@ -106,7 +107,7 @@ document.addEventListener('DOMContentLoaded', function () {
             workTimeDiv2.style.height = `${unitHeight * (closeTime - breakTimeEndMillis) / hourMillis}px`;
             baseDiv.appendChild(workTimeDiv2);
 
-        }else{
+        } else {
             const workTimeDiv = document.createElement('div');
             workTimeDiv.className = 'work-time';
             workTimeDiv.style.top = `${unitHeight}px`;
@@ -115,14 +116,14 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         // 各時間ラベルと補助線を追加
-        for (let i = 0; i <= hourDiff+2; i++) {
-            if(i===0 && openTimeMinute !== 0){
+        for (let i = 0; i <= hourDiff + 2; i++) {
+            if (i === 0 && openTimeMinute !== 0) {
                 continue;
             }
             const hourLabel = document.createElement('div');
             hourLabel.className = 'hour-label';
             hourLabel.style.top = `${i * 60 - openTimeMinute}px`;
-            const hour = new Date(openTime + (i-1) * hourMillis).getHours();
+            const hour = new Date(openTime + (i - 1) * hourMillis).getHours();
             hourLabel.textContent = `${hour}:00`;
             baseDiv.appendChild(hourLabel);
 
@@ -139,7 +140,7 @@ document.addEventListener('DOMContentLoaded', function () {
         chrome.runtime.sendMessage({action: "getEvents"}, (response) => {
             console.log(response);
             if (response.error) {
-                parentDiv.innerHTML = "エラー: " + response.error;
+                parentDiv.innerHTML = chrome.i18n.getMessage("errorPrefix") + response.error;
                 return;
             }
 
@@ -170,7 +171,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         if (duration < 30) {
                             eventDiv.className = 'event google-event short'; // 30分未満の場合はpaddingを減らす
                             eventDiv.style.height = `${duration}px`; // padding分を引かない
-                        }else{
+                        } else {
                             eventDiv.style.height = `${duration - 10}px`; // padding分を引く
                         }
 
@@ -327,14 +328,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     localEvents,
                     lastUpdateDate: currentDate // 日付を更新
                 }, () => {
-                    console.log('イベントが保存されました');
-                    alert('イベントが保存されました');
+                    console.log(chrome.i18n.getMessage("eventSaved"));
+                    alert(chrome.i18n.getMessage("eventSaved"));
                 });
             });
 
             localEventDialog.style.display = 'none';
         } else {
-            alert('すべてのフィールドを入力してください');
+            alert(chrome.i18n.getMessage("fillAllFields"));
         }
     });
 
@@ -369,7 +370,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             localEvents[eventIndex] = {title: newTitle, startTime: newStartTime, endTime: newEndTime};
 
                             chrome.storage.sync.set({localEvents}, () => {
-                                alert('イベントが更新されました');
+                                alert(chrome.i18n.getMessage("eventUpdated"));
                                 loadLocalEvents(); // イベント表示を更新
                             });
                         }
@@ -377,19 +378,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     localEventDialog.style.display = 'none';
                 } else {
-                    alert('すべてのフィールドを入力してください');
+                    alert(chrome.i18n.getMessage("fillAllFields"));
                 }
             };
 
             // 削除ボタンがクリックされたときの処理
             deleteEventButton.onclick = () => {
-                if (confirm('本当にこのイベントを削除しますか？')) {
+                if (confirm(chrome.i18n.getMessage("confirmDeleteEvent"))) {
                     chrome.storage.sync.get({localEvents: []}, (data) => {
                         let localEvents = data.localEvents;
                         localEvents = localEvents.filter(e => !(e.title === event.title && e.startTime === event.startTime && e.endTime === event.endTime));
 
                         chrome.storage.sync.set({localEvents}, () => {
-                            alert('イベントが削除されました');
+                            alert(chrome.i18n.getMessage("eventDeleted"));
                             loadLocalEvents(); // イベント表示を更新
                         });
                     });
@@ -399,7 +400,6 @@ document.addEventListener('DOMContentLoaded', function () {
             };
         });
     }
-
 
 
     function createEventDiv(title, startTime, endTime) {
@@ -449,7 +449,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }, () => {
                     // 更新した後で、ローカルイベントエリアをクリア
                     localEventsDiv.innerHTML = '';
-                    alert('新しい日付になりました。ローカルイベントがリセットされました。');
+                    alert(chrome.i18n.getMessage("newDayReset"));
                 });
             } else {
                 // 日が変わっていない場合、ローカルイベントをロード
@@ -463,7 +463,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // タイトル設定
     const today = new Date();
     const title = document.querySelector('h1');
-    title.textContent = today.toLocaleDateString(undefined, { dateStyle : 'full' });
+    title.textContent = today.toLocaleDateString(undefined, {dateStyle: 'full'});
 
     // 1秒ごとに更新をチェック
     setInterval(checkSideCalendarUpdate, 1000);
