@@ -17,8 +17,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const unitHeight = 60;
 
     // 始業時間と終業時間
-    let  openHour = '09:00';
-    let  closeHour = '18:00';
+    let openHour = '09:00';
+    let closeHour = '18:00';
     let openTimeHour = parseInt(openHour.split(':')[0], 10);
     let openTimeMinute = parseInt(openHour.split(':')[1], 10);
     let closeTimeHour = parseInt(closeHour.split(':')[0], 10);
@@ -107,7 +107,7 @@ document.addEventListener('DOMContentLoaded', function () {
             workTimeDiv2.style.height = `${unitHeight * (closeTime - breakTimeEndMillis) / hourMillis}px`;
             baseDiv.appendChild(workTimeDiv2);
 
-        }else{
+        } else {
             const workTimeDiv = document.createElement('div');
             workTimeDiv.className = 'work-time';
             workTimeDiv.style.top = `${unitHeight}px`;
@@ -116,14 +116,14 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         // 各時間ラベルと補助線を追加
-        for (let i = 0; i <= hourDiff+2; i++) {
-            if(i===0 && openTimeMinute !== 0){
+        for (let i = 0; i <= hourDiff + 2; i++) {
+            if (i === 0 && openTimeMinute !== 0) {
                 continue;
             }
             const hourLabel = document.createElement('div');
             hourLabel.className = 'hour-label';
             hourLabel.style.top = `${i * 60 - openTimeMinute}px`;
-            const hour = new Date(openTime + (i-1) * hourMillis).getHours();
+            const hour = new Date(openTime + (i - 1) * hourMillis).getHours();
             hourLabel.textContent = `${hour}:00`;
             baseDiv.appendChild(hourLabel);
 
@@ -171,7 +171,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         if (duration < 30) {
                             eventDiv.className = 'event google-event short'; // 30分未満の場合はpaddingを減らす
                             eventDiv.style.height = `${duration}px`; // padding分を引かない
-                        }else{
+                        } else {
                             eventDiv.style.height = `${duration - 10}px`; // padding分を引く
                         }
 
@@ -402,7 +402,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
 
-
     function createEventDiv(title, startTime, endTime) {
         const eventDiv = document.createElement('div');
         eventDiv.className = 'event local-event';
@@ -464,39 +463,8 @@ document.addEventListener('DOMContentLoaded', function () {
     // タイトル設定
     const today = new Date();
     const title = document.querySelector('h1');
-    title.textContent = today.toLocaleDateString(undefined, { dateStyle : 'full' });
+    title.textContent = today.toLocaleDateString(undefined, {dateStyle: 'full'});
 
     // 1秒ごとに更新をチェック
     setInterval(checkSideCalendarUpdate, 1000);
-
-    function replace_i18n(obj, tag) {
-        var msg = tag.replace(/__MSG_(\w+)__/g, function(match, v1) {
-            return v1 ? chrome.i18n.getMessage(v1) : '';
-        });
-
-        if(msg != tag) obj.innerHTML = msg;
-    }
-
-    function localizeHtmlPage() {
-        // Localize using __MSG_***__ data tags
-        var data = document.querySelectorAll('[data-localize]');
-
-        for (var i in data) if (data.hasOwnProperty(i)) {
-            var obj = data[i];
-            var tag = obj.getAttribute('data-localize').toString();
-
-            replace_i18n(obj, tag);
-        }
-
-        // Localize everything else by replacing all __MSG_***__ tags
-        var page = document.getElementsByTagName('html');
-
-        for (var j = 0; j < page.length; j++) {
-            var obj = page[j];
-            var tag = obj.innerHTML.toString();
-
-            replace_i18n(obj, tag);
-        }
-    }
-
 });
