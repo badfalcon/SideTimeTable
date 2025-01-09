@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>__MSG_timelineTitle__</title>
+    <title data-localize="__MSG_timelineTitle__">__MSG_timelineTitle__</title>
     <!-- Font Awesome -->
     <link href="https://use.fontawesome.com/releases/v6.7.1/css/all.css" rel="stylesheet">
     <!-- CSS -->
@@ -35,16 +35,16 @@
     <!-- 編集用ダイアログの中 -->
     <div class="modal-content">
         <span class="close" id="closeDialog">&times;</span>
-        <h2>__MSG_eventDialogTitle__</h2>
-        <label for="eventTitle">__MSG_eventTitle__</label>
+        <h2 data-localize="__MSG_eventDialogTitle__">__MSG_eventDialogTitle__</h2>
+        <label for="eventTitle" data-localize="__MSG_eventTitle__">__MSG_eventTitle__</label>
         <input type="text" id="eventTitle" required>
-        <label for="eventStartTime">__MSG_startTime__</label>
+        <label for="eventStartTime" data-localize="__MSG_startTime__">__MSG_startTime__</label>
         <input type="time" list="time-list" id="eventStartTime" required>
-        <label for="eventEndTime">__MSG_endTime__</label>
+        <label for="eventEndTime" data-localize="__MSG_endTime__">__MSG_endTime__</label>
         <input type="time" list="time-list" id="eventEndTime" required>
-        <button id="saveEventButton" class="btn btn-success">__MSG_save__</button>
-        <button id="deleteEventButton" class="btn btn-danger">__MSG_delete__</button>
-        <button id="cancelEventButton" class="btn btn-secondary">__MSG_cancel__</button>
+        <button id="saveEventButton" class="btn btn-success" data-localize="__MSG_save__">__MSG_save__</button>
+        <button id="deleteEventButton" class="btn btn-danger" data-localize="__MSG_delete__">__MSG_delete__</button>
+        <button id="cancelEventButton" class="btn btn-secondary" data-localize="__MSG_cancel__">__MSG_cancel__</button>
     </div>
 </div>
 <datalist id="time-list">
