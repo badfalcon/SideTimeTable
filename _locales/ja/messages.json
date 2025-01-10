@@ -1,0 +1,118 @@
+{
+  "appDesc": {
+    "message": "今日の予定を表示するサイドパネル拡張機能",
+    "description": "アプリケーションの説明"
+  },
+  "timelineTitle": {
+    "message": "タイムライン",
+    "description": "タイムラインページのタイトル"
+  },
+  "addEvent": {
+    "message": "予定を追加",
+    "description": "予定追加ボタンのツールチップ"
+  },
+  "settings": {
+    "message": "設定",
+    "description": "設定ボタンのツールチップ"
+  },
+  "eventDialogTitle": {
+    "message": "予定を作成/編集",
+    "description": "予定ダイアログのタイトル"
+  },
+  "eventTitle": {
+    "message": "タイトル:",
+    "description": "予定タイトル入力のラベル"
+  },
+  "startTime": {
+    "message": "開始時刻:",
+    "description": "開始時刻入力のラベル"
+  },
+  "endTime": {
+    "message": "終了時刻:",
+    "description": "終了時刻入力のラベル"
+  },
+  "save": {
+    "message": "保存",
+    "description": "保存ボタンのテキスト"
+  },
+  "delete": {
+    "message": "削除",
+    "description": "削除ボタンのテキスト"
+  },
+  "cancel": {
+    "message": "キャンセル",
+    "description": "キャンセルボタンのテキスト"
+  },
+  "fillAllFields": {
+    "message": "すべてのフィールドを入力してください",
+    "description": "必須フィールドが空の場合のエラーメッセージ"
+  },
+  "errorPrefix": {
+    "message": "エラー: ",
+    "description": "エラーメッセージの接頭辞"
+  },
+  "eventSaved": {
+    "message": "イベントが保存されました",
+    "description": "イベント保存成功時のメッセージ"
+  },
+  "eventUpdated": {
+    "message": "イベントが更新されました",
+    "description": "イベント更新成功時のメッセージ"
+  },
+  "eventDeleted": {
+    "message": "イベントが削除されました",
+    "description": "イベント削除成功時のメッセージ"
+  },
+  "confirmDeleteEvent": {
+    "message": "このイベントを削除してもよろしいですか？",
+    "description": "イベント削除確認メッセージ"
+  },
+  "newDayReset": {
+    "message": "新しい日になりました。前日のイベントをリセットします",
+    "description": "日付変更時のリセットメッセージ"
+  },
+  "notAuthorized": {
+    "message": "Googleカレンダーとの連携が許可されていません",
+    "description": "Googleカレンダー連携未許可時のメッセージ"
+  },
+  "settingsSaved": {
+    "message": "設定が保存されました",
+    "description": "設定保存時のメッセージ"
+  },
+  "optionsTitle": {
+    "message": "SideTimeTable 設定",
+    "description": "オプションページのタイトル"
+  },
+  "timeSettings": {
+    "message": "時間設定",
+    "description": "時間設定セクションのタイトル"
+  },
+  "workHours": {
+    "message": "就業時間:",
+    "description": "就業時間入力のラベル"
+  },
+  "breakTime": {
+    "message": "休憩時間:",
+    "description": "休憩時間入力のラベル"
+  },
+  "fixed": {
+    "message": "固定",
+    "description": "固定休憩時間チェックボックスのラベル"
+  },
+  "colorSettings": {
+    "message": "色設定",
+    "description": "色設定セクションのタイトル"
+  },
+  "workTimeColor": {
+    "message": "業務時間:",
+    "description": "業務時間色入力のラベル"
+  },
+  "localEventColor": {
+    "message": "ローカルイベント:",
+    "description": "ローカルイベント色入力のラベル"
+  },
+  "googleEventColor": {
+    "message": "Google イベント:",
+    "description": "Googleイベント色入力のラベル"
+  }
+}
