@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+    localizeHtmlPage();
     let googleIntegrated = false;
     const googleIntegrationButton = document.getElementById('google-integration-button');
     const googleIntegrationStatus = document.getElementById('google-integration-status');
@@ -80,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
             localEventColor,
             googleEventColor
         }, () => {
-            alert('設定が保存されました');
+            alert(chrome.i18n.getMessage('settingsSaved'));
             chrome.runtime.sendMessage({ action: "reloadSideTimeTable" }, (response) => {
                 console.log(response);
             });

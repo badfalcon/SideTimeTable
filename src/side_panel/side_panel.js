@@ -6,6 +6,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 document.addEventListener('DOMContentLoaded', function () {
+    localizeHtmlPage();
 
     const parentDiv = document.getElementById('sideTimeTable');
     const baseDiv = document.getElementById('sideTimeTableBase');
@@ -157,7 +158,7 @@ document.addEventListener('DOMContentLoaded', function () {
         chrome.runtime.sendMessage({action: "getEvents"}, (response) => {
             console.log(response);
             if (response.error) {
-                parentDiv.innerHTML = "エラー: " + response.error;
+                parentDiv.innerHTML = chrome.i18n.getMessage("errorPrefix") + response.error;
                 return;
             }
 
@@ -347,14 +348,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     localEvents,
                     lastUpdateDate: currentDate // 日付を更新
                 }, () => {
-                    console.log('イベントが保存されました');
-                    alert('イベントが保存されました');
+                    console.log(chrome.i18n.getMessage("eventSaved"));
+                    alert(chrome.i18n.getMessage("eventSaved"));
                 });
             });
 
             localEventDialog.style.display = 'none';
         } else {
-            alert('すべてのフィールドを入力してください');
+            alert(chrome.i18n.getMessage("fillAllFields"));
         }
     });
 
@@ -393,7 +394,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             };
 
                             chrome.storage.sync.set({localEvents}, () => {
-                                alert('イベントが更新されました');
+                                alert(chrome.i18n.getMessage("eventUpdated"));
                                 loadLocalEvents(); // イベント表示を更新
                             });
                         }
@@ -401,19 +402,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     localEventDialog.style.display = 'none';
                 } else {
-                    alert('すべてのフィールドを入力してください');
+                    alert(chrome.i18n.getMessage("fillAllFields"));
                 }
             };
 
             // 削除ボタンがクリックされたときの処理
             deleteEventButton.onclick = () => {
-                if (confirm('本当にこのイベントを削除しますか？')) {
+                if (confirm(chrome.i18n.getMessage("confirmDeleteEvent"))) {
                     chrome.storage.sync.get({localEvents: []}, (data) => {
                         let localEvents = data.localEvents;
                         localEvents = localEvents.filter(e => !(e.title === event.title && e.startTime === event.startTime && e.endTime === event.endTime));
 
                         chrome.storage.sync.set({localEvents}, () => {
-                            alert('イベントが削除されました');
+                            alert(chrome.i18n.getMessage("eventDeleted"));
                             loadLocalEvents(); // イベント表示を更新
                         });
                     });
@@ -472,7 +473,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }, () => {
                     // 更新した後で、ローカルイベントエリアをクリア
                     localEventsDiv.innerHTML = '';
-                    alert('新しい日付になりました。ローカルイベントがリセットされました。');
+                    alert(chrome.i18n.getMessage("newDayReset"));
                 });
             } else {
                 // 日が変わっていない場合、ローカルイベントをロード
