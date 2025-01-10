@@ -25,8 +25,8 @@
 
     <div class="card mb-4">
         <div class="card-body">
-            <h2 class="card-title">連携</h2>
-            <p class="card-text">Google カレンダーと連携して予定を表示します。</p>
+            <h2 class="card-title" data-localize="__MSG_integration__">連携</h2>
+            <p class="card-text" data-localize="__MSG_googleIntegration__">Google カレンダーと連携して予定を表示します。</p>
             <div class="d-flex align-items-center">
                 <button class="gsi-material-button" id="google-integration-button">
                     <div class="gsi-material-button-state"></div>
@@ -49,7 +49,7 @@
                         <span style="display: none;">Sign in with Google</span>
                     </div>
                 </button>
-                <span id="google-integration-status" class="ms-2">未連携</span>
+                <span id="google-integration-status" class="ms-2" data-localize="__MSG_notIntegrated__">未連携</span>
             </div>
         </div>
     </div>
@@ -63,7 +63,7 @@
                     <div class="input-group">
                         <input type="time" list="time-list" class="form-control" id="open-time" step="900"
                                value="09:00">
-                        <span class="input-group-text">～</span>
+                        <span class="input-group-text" data-localize="__MSG_to__">～</span>
                         <input type="time" list="time-list" class="form-control" id="close-time" step="900"
                                value="18:00">
                     </div>
@@ -78,7 +78,7 @@
                     <div class="input-group">
                         <input type="time" list="time-list" class="form-control" id="break-time-start" step="900"
                                value="12:00" disabled="disabled">
-                        <span class="input-group-text">～</span>
+                        <span class="input-group-text" data-localize="__MSG_to__">～</span>
                         <input type="time" list="time-list" class="form-control" id="break-time-end" step="900"
                                value="13:00" disabled="disabled">
                     </div>

@@ -83,6 +83,22 @@
     "message": "SideTimeTable Settings",
     "description": "Title of the options page"
   },
+  "integration": {
+    "message": "Integration",
+    "description": "Title of the integration section"
+  },
+  "googleIntegration": {
+    "message": "Integrate with Google Calendar to display events.",
+    "description": "Google Calendar integration description"
+  },
+  "notIntegrated": {
+    "message": "Not Integrated",
+    "description": "Label when Google Calendar is not integrated"
+  },
+  "integrated": {
+    "message": "Integrated",
+    "description": "Label when Google Calendar is integrated"
+  },
   "timeSettings": {
     "message": "Time Settings",
     "description": "Section title for time settings"

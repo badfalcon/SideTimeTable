@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
             googleIntegrated = !response.error;
             chrome.storage.sync.set({googleIntegrated}, () => {
                 console.log('Googleカレンダーとの連携情報を保存しました');
-                googleIntegrationStatus.textContent = response.error ? '未連携' : '連携済み';
+                googleIntegrationStatus.textContent = response.error ? chrome.i18n.getMessage('notIntegrated') : chrome.i18n.getMessage('integrated');
                 alert(response.error ? 'Googleカレンダーとの連携に失敗しました' : 'Googleカレンダーとの連携に成功しました');
                 googleIntegrationButton.disabled = false;
 
