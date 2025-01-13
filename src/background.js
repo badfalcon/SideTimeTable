@@ -1,6 +1,6 @@
 // Allows users to open the side panel by clicking on the action toolbar icon
 chrome.sidePanel
-    .setPanelBehavior({ openPanelOnActionClick: true })
+    .setPanelBehavior({openPanelOnActionClick: true})
     .catch((error) => console.error(error));
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -11,7 +11,7 @@ function getCalendarEvents() {
     console.log("Getting calendar events");
     return new Promise((resolve, reject) => {
         console.log("Requesting auth token");
-        chrome.identity.getAuthToken({ interactive: true }, (token) => {
+        chrome.identity.getAuthToken({interactive: true}, (token) => {
             console.log("Received auth token", token);
             if (chrome.runtime.lastError || !token) {
                 console.error("Error getting auth token", chrome.runtime.lastError);
@@ -33,10 +33,17 @@ function getCalendarEvents() {
 }
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.action === "getEvents") {
-        getCalendarEvents()
-            .then(events => sendResponse({ events }))
-            .catch(error => sendResponse({ error: error.message }));
-        return true; // Indicates that you will send a response asynchronously
+    switch (request.action) {
+        case "getEvents":
+            getCalendarEvents()
+                .then(events => sendResponse({events}))
+                .catch(error => sendResponse({error: error.message}));
+            return true; // 非同期応答を示す
+        case "checkAuth":
+            checkGoogleAuth()
+                .then(isAuthenticated => sendResponse({isAuthenticated}))
+                .catch(error => sendResponse({error: error.message}));
+            return true; // 非同期応答を示す
     }
 });
+
