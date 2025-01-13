@@ -83,6 +83,22 @@
     "message": "SideTimeTable 設定",
     "description": "オプションページのタイトル"
   },
+  "integration": {
+    "message": "連携",
+    "description": "連携セクションのタイトル"
+  },
+  "googleIntegration": {
+    "message": "Google カレンダーと連携して予定を表示します。",
+    "description": "Googleカレンダー連携説明"
+  },
+  "notIntegrated": {
+    "message": "未連携",
+    "description": "Googleカレンダー未連携時のラベル"
+  },
+  "integrated": {
+    "message": "連携済み",
+    "description": "Googleカレンダー連携済み時のラベル"
+  },
   "timeSettings": {
     "message": "時間設定",
     "description": "時間設定セクションのタイトル"

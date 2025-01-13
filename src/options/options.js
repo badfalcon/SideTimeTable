@@ -1,14 +1,38 @@
 document.addEventListener('DOMContentLoaded', () => {
     localizeHtmlPage();
-    const saveButton = document.getElementById('saveButton');
+    let googleIntegrated = false;
+    const googleIntegrationButton = document.getElementById('google-integration-button');
+    const googleIntegrationStatus = document.getElementById('google-integration-status');
     const openTimeInput = document.getElementById('open-time');
     const closeTimeInput = document.getElementById('close-time');
-    const workTimeColorInput = document.getElementById('work-time-color');
     const breakTimeFixedInput = document.getElementById('break-time-fixed');
     const breakTimeStartInput = document.getElementById('break-time-start');
     const breakTimeEndInput = document.getElementById('break-time-end');
+    const workTimeColorInput = document.getElementById('work-time-color');
     const localEventColorInput = document.getElementById('local-event-color');
     const googleEventColorInput = document.getElementById('google-event-color');
+    const saveButton = document.getElementById('saveButton');
+
+    // Googleカレンダー連携ボタンのクリックイベント
+    googleIntegrationButton.addEventListener('click', () => {
+        // disable button click
+        googleIntegrationButton.disabled = true;
+        console.log('Googleカレンダーとの連携を試みます');
+        chrome.runtime.sendMessage({action: 'getEvents'}, (response) => {
+            console.log('Googleカレンダーとの連携結果', response);
+            googleIntegrated = !response.error;
+            chrome.storage.sync.set({googleIntegrated}, () => {
+                console.log('Googleカレンダーとの連携情報を保存しました');
+                googleIntegrationStatus.textContent = response.error ? chrome.i18n.getMessage('notIntegrated') : chrome.i18n.getMessage('integrated');
+                alert(response.error ? 'Googleカレンダーとの連携に失敗しました' : 'Googleカレンダーとの連携に成功しました');
+                googleIntegrationButton.disabled = false;
+
+                chrome.runtime.sendMessage({ action: "reloadSideTimeTable" }, (response) => {
+                    console.log(response);
+                });
+            });
+        });
+    });
 
     // 時間の選択肢を生成
     const timeList = document.getElementById('time-list');
@@ -22,6 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // 休憩時間設定の表示切り替え
     const toggleBreakTimeFields = () => {
         const isFixed = breakTimeFixedInput.checked;
         breakTimeStartInput.disabled = !isFixed;
@@ -46,6 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const googleEventColor = googleEventColorInput.value;
 
         chrome.storage.sync.set({
+            googleIntegrated,
             openTime,
             closeTime,
             workTimeColor,
@@ -56,11 +82,15 @@ document.addEventListener('DOMContentLoaded', () => {
             googleEventColor
         }, () => {
             alert(chrome.i18n.getMessage('settingsSaved'));
+            chrome.runtime.sendMessage({ action: "reloadSideTimeTable" }, (response) => {
+                console.log(response);
+            });
         });
     });
 
     // 保存された設定を読み込んで表示
     chrome.storage.sync.get({
+        googleIntegrated: false,
         openTime: '09:00',
         closeTime: '18:00',
         workTimeColor: '#FF6347',
@@ -70,6 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localEventColor: '#FFD700',
         googleEventColor: '#4285F4'
     }, (items) => {
+        googleIntegrationStatus.textContent = items.googleIntegrated ? '連携済み' : '未連携';
         openTimeInput.value = items.openTime;
         closeTimeInput.value = items.closeTime;
         workTimeColorInput.value = items.workTimeColor;
