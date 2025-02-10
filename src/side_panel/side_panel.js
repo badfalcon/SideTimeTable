@@ -473,7 +473,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 }, () => {
                     // 更新した後で、ローカルイベントエリアをクリア
                     localEventsDiv.innerHTML = '';
-                    showAlertModal(chrome.i18n.getMessage("newDayReset"));
                 });
             } else {
                 // 日が変わっていない場合、ローカルイベントをロード
