@@ -1,5 +1,5 @@
 // DOMが読み込まれたときに実行
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((request) => {
     if (request.action === "reloadSideTimeTable") {
         location.reload();
     }
@@ -10,7 +10,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const parentDiv = document.getElementById('sideTimeTable');
     const baseDiv = document.getElementById('sideTimeTableBase');
-    const eventsDiv = document.getElementById('sideTimeTableEvents');
     const googleEventsDiv = document.getElementById('sideTimeTableEventsGoogle');
     const localEventsDiv = document.getElementById('sideTimeTableEventsLocal');
 
