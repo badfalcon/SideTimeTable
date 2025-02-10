@@ -52,12 +52,12 @@ document.addEventListener('DOMContentLoaded', function () {
         googleIntegrated: false,
         openTime: '09:00',
         closeTime: '18:00',
-        workTimeColor: '#D3D3D3',
+        workTimeColor: '#d4d4d4',
         breakTimeFixed: false,
         breakTimeStart: '12:00',
         breakTimeEnd: '13:00',
-        localEventColor: '#A9A9A9',
-        googleEventColor: '#808080'
+        localEventColor: '#bbf2b1',
+        googleEventColor: '#c3d6f7'
     }, (items) => {
         console.log(items);
 

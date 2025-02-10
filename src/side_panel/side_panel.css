@@ -1,8 +1,8 @@
 :root {
-    --side-calendar-work-time-color: #FF6347;
-    --side-calendar-break-time-color: #87CEEB;
-    --side-calendar-local-event-color: #FFD700;
-    --side-calendar-google-event-color: #4285F4;
+    --side-calendar-work-time-color: #d4d4d4;
+    --side-calendar-break-time-color: #fda9ca;
+    --side-calendar-local-event-color: #bbf2b1;
+    --side-calendar-google-event-color: #c3d6f7;
 }
 
 body {
