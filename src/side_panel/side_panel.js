@@ -270,7 +270,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const eventEndTimeInput = document.getElementById('eventEndTime');
 
     addLocalEventButton.addEventListener('click', () => {
-        localEventDialog.style.display = 'block';
+        localEventDialog.style.display = 'flex';
         // フォームをリセット
         eventTitleInput.value = '';
         eventStartTimeInput.value = '';
@@ -366,7 +366,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function setupEventEdit(eventDiv, event) {
         eventDiv.addEventListener('click', () => {
             // 編集用ダイアログを表示
-            localEventDialog.style.display = 'block';
+            localEventDialog.style.display = 'flex';
 
             // フォームに既存のイベント情報を設定
             eventTitleInput.value = event.title;
