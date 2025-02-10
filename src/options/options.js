@@ -93,12 +93,12 @@ document.addEventListener('DOMContentLoaded', () => {
         googleIntegrated: false,
         openTime: '09:00',
         closeTime: '18:00',
-        workTimeColor: '#FF6347',
+        workTimeColor: '#d4d4d4',
         breakTimeFixed: false,
         breakTimeStart: '12:00',
         breakTimeEnd: '13:00',
-        localEventColor: '#FFD700',
-        googleEventColor: '#4285F4'
+        localEventColor: '#bbf2b1',
+        googleEventColor: '#c3d6f7'
     }, (items) => {
         googleIntegrationStatus.textContent = items.googleIntegrated ? '連携済み' : '未連携';
         openTimeInput.value = items.openTime;
