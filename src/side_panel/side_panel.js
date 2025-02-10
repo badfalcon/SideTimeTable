@@ -349,13 +349,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     lastUpdateDate: currentDate // 日付を更新
                 }, () => {
                     console.log(chrome.i18n.getMessage("eventSaved"));
-                    alert(chrome.i18n.getMessage("eventSaved"));
+                    showAlertModal(chrome.i18n.getMessage("eventSaved"));
                 });
             });
 
             localEventDialog.style.display = 'none';
         } else {
-            alert(chrome.i18n.getMessage("fillAllFields"));
+            showAlertModal(chrome.i18n.getMessage("fillAllFields"));
         }
     });
 
@@ -394,7 +394,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             };
 
                             chrome.storage.sync.set({localEvents}, () => {
-                                alert(chrome.i18n.getMessage("eventUpdated"));
+                                showAlertModal(chrome.i18n.getMessage("eventUpdated"));
                                 loadLocalEvents(); // イベント表示を更新
                             });
                         }
@@ -402,7 +402,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     localEventDialog.style.display = 'none';
                 } else {
-                    alert(chrome.i18n.getMessage("fillAllFields"));
+                    showAlertModal(chrome.i18n.getMessage("fillAllFields"));
                 }
             };
 
@@ -414,7 +414,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         localEvents = localEvents.filter(e => !(e.title === event.title && e.startTime === event.startTime && e.endTime === event.endTime));
 
                         chrome.storage.sync.set({localEvents}, () => {
-                            alert(chrome.i18n.getMessage("eventDeleted"));
+                            showAlertModal(chrome.i18n.getMessage("eventDeleted"));
                             loadLocalEvents(); // イベント表示を更新
                         });
                     });
@@ -473,13 +473,38 @@ document.addEventListener('DOMContentLoaded', function () {
                 }, () => {
                     // 更新した後で、ローカルイベントエリアをクリア
                     localEventsDiv.innerHTML = '';
-                    alert(chrome.i18n.getMessage("newDayReset"));
+                    showAlertModal(chrome.i18n.getMessage("newDayReset"));
                 });
             } else {
                 // 日が変わっていない場合、ローカルイベントをロード
                 loadLocalEvents();
             }
         });
+    }
+
+    // モーダルを表示する関数
+    function showAlertModal(message) {
+        const alertModal = document.getElementById('alertModal');
+        const alertMessage = document.getElementById('alertMessage');
+        const closeAlertButton = document.getElementById('closeAlertButton');
+        const closeAlertModal = document.getElementById('closeAlertModal');
+
+        alertMessage.textContent = message;
+        alertModal.style.display = 'flex';
+
+        closeAlertButton.onclick = () => {
+            alertModal.style.display = 'none';
+        };
+
+        closeAlertModal.onclick = () => {
+            alertModal.style.display = 'none';
+        };
+
+        window.onclick = (event) => {
+            if (event.target === alertModal) {
+                alertModal.style.display = 'none';
+            }
+        };
     }
 
     // 初回読み込み時にローカルイベントをロードしてチェック
