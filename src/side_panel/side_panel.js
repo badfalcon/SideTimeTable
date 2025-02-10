@@ -318,6 +318,9 @@ document.addEventListener('DOMContentLoaded', function () {
         eventDiv.style.top = `${startOffset}px`;
         eventDiv.textContent = `${startTime} - ${endTime}: ${title}`;
 
+        // 編集機能を設定
+        setupEventEdit(eventDiv, {title, startTime, endTime});
+
         return eventDiv;
     }
 
@@ -423,33 +426,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             };
         });
-    }
-
-
-    function createEventDiv(title, startTime, endTime) {
-        const eventDiv = document.createElement('div');
-        eventDiv.className = 'event local-event';
-        const startDate = new Date();
-        startDate.setHours(startTime.split(':')[0], startTime.split(':')[1], 0, 0);
-        const endDate = new Date();
-        endDate.setHours(endTime.split(':')[0], endTime.split(':')[1], 0, 0);
-
-        const startOffset = (1 + (startDate - openTime) / hourMillis) * unitHeight;
-        const duration = (endDate - startDate) / minuteMillis * unitHeight / 60;
-
-        if (duration < 30) {
-            eventDiv.className = 'event local-event short';
-            eventDiv.style.height = `${duration}px`;
-        } else {
-            eventDiv.style.height = `${duration - 10}px`;
-        }
-        eventDiv.style.top = `${startOffset}px`;
-        eventDiv.textContent = `${startTime} - ${endTime}: ${title}`;
-
-        // 編集機能を設定
-        setupEventEdit(eventDiv, {title, startTime, endTime});
-
-        return eventDiv;
     }
 
     // 現在のフォーマットされた日付を取得するための関数
