@@ -145,6 +145,16 @@ button {
     margin-top: 10px;
 }
 
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: #0056b3;
+}
+
 /* ローカルイベント作成ダイアログのスタイル */
 .modal {
     display: none; /* 初期状態で隠す */
@@ -156,7 +166,6 @@ button {
     height: 100%;
     overflow: auto;
     background-color: rgba(0, 0, 0, 0.5); /* 半透明の背景を少し濃く */
-    padding-top: 60px;
 }
 
 .modal-content {
