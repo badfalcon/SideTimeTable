@@ -82,9 +82,12 @@ document.addEventListener('DOMContentLoaded', () => {
             googleEventColor
         }, () => {
             alert(chrome.i18n.getMessage('settingsSaved'));
-            chrome.runtime.sendMessage({ action: "reloadSideTimeTable" }, (response) => {
-                console.log(response);
-            });
+            // 設定保存が確実に完了するように少し遅延を入れてからリロード
+            setTimeout(() => {
+                chrome.runtime.sendMessage({ action: "reloadSideTimeTable" }, (response) => {
+                    console.log('サイドパネルリロード応答:', response);
+                });
+            }, 500); // 500ミリ秒の遅延
         });
     });
 
