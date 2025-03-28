@@ -5,7 +5,7 @@
  * 管理するためのJavaScriptコードです。
  */
 
-import { TimeTableManager } from './time-manager.js';
+import { TimeTableManager, EventLayoutManager } from './time-manager.js';
 import { GoogleEventManager, LocalEventManager } from './event-handlers.js';
 import { generateTimeList, loadSettings, logError } from '../lib/utils.js';
 
@@ -25,6 +25,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 class UIController {
     constructor() {
         this.timeTableManager = null;
+        this.eventLayoutManager = null;
         this.googleEventManager = null;
         this.localEventManager = null;
         this.updateInterval = null;
@@ -42,8 +43,9 @@ class UIController {
 
         // 各マネージャーの初期化
         this.timeTableManager = new TimeTableManager(parentDiv, baseDiv);
-        this.googleEventManager = new GoogleEventManager(this.timeTableManager, googleEventsDiv);
-        this.localEventManager = new LocalEventManager(this.timeTableManager, localEventsDiv);
+        this.eventLayoutManager = new EventLayoutManager();
+        this.googleEventManager = new GoogleEventManager(this.timeTableManager, googleEventsDiv, this.eventLayoutManager);
+        this.localEventManager = new LocalEventManager(this.timeTableManager, localEventsDiv, this.eventLayoutManager);
 
         // 時間選択リストの初期化
         this._initializeTimeList();

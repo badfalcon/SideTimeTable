@@ -7,6 +7,150 @@
 import { TIME_CONSTANTS } from '../lib/utils.js';
 
 /**
+ * EventLayoutManager - イベントの配置を管理するクラス
+ * 複数のイベントが時間的に重なる場合の表示位置を調整する
+ */
+export class EventLayoutManager {
+    /**
+     * コンストラクタ
+     */
+    constructor() {
+        this.events = [];
+        this.layoutGroups = [];
+        this.maxWidth = 200; // イベントの最大幅（ピクセル）
+        this.baseLeft = 65;  // イベントの基本左位置（ピクセル）
+        this.gap = 5;        // イベント間の間隔（ピクセル）
+    }
+
+    /**
+     * イベントを登録
+     * @param {Object} eventData - イベント情報
+     * @param {Date|number} eventData.startTime - 開始時間
+     * @param {Date|number} eventData.endTime - 終了時間
+     * @param {HTMLElement} eventData.element - イベント要素
+     * @param {string} eventData.type - イベントタイプ ('google' または 'local')
+     * @param {string} eventData.id - イベントの一意識別子
+     */
+    registerEvent(eventData) {
+        this.events.push(eventData);
+    }
+
+    /**
+     * すべてのイベントをクリア
+     */
+    clearEvents() {
+        this.events = [];
+        this.layoutGroups = [];
+    }
+
+    /**
+     * イベントの配置を計算して適用
+     */
+    calculateLayout() {
+        if (this.events.length === 0) return;
+
+        // イベントを開始時間でソート
+        this.events.sort((a, b) => {
+            const startA = a.startTime instanceof Date ? a.startTime.getTime() : a.startTime;
+            const startB = b.startTime instanceof Date ? b.startTime.getTime() : b.startTime;
+            return startA - startB;
+        });
+        
+        // 重なるイベントをグループ化
+        this.layoutGroups = this._groupOverlappingEvents();
+        
+        // 各グループ内でイベントの配置を計算
+        this._applyLayout();
+    }
+
+    /**
+     * 重なるイベントをグループ化
+     * @private
+     * @returns {Array} 重なるイベントのグループ配列
+     */
+    _groupOverlappingEvents() {
+        const groups = [];
+        let currentGroup = [];
+        
+        // 最初のイベントをグループに追加
+        if (this.events.length > 0) {
+            currentGroup.push(this.events[0]);
+        }
+        
+        // 2番目以降のイベントを処理
+        for (let i = 1; i < this.events.length; i++) {
+            const currentEvent = this.events[i];
+            const currentStart = currentEvent.startTime instanceof Date ? 
+                currentEvent.startTime.getTime() : currentEvent.startTime;
+            const currentEnd = currentEvent.endTime instanceof Date ? 
+                currentEvent.endTime.getTime() : currentEvent.endTime;
+            
+            // 現在のグループ内の最後のイベントの終了時間を取得
+            let overlapsWithGroup = false;
+            
+            // グループ内のすべてのイベントと重なりをチェック
+            for (const groupEvent of currentGroup) {
+                const groupEventEnd = groupEvent.endTime instanceof Date ? 
+                    groupEvent.endTime.getTime() : groupEvent.endTime;
+                
+                // 現在のイベントの開始時間が、グループ内のイベントの終了時間より前なら重なりあり
+                if (currentStart < groupEventEnd) {
+                    overlapsWithGroup = true;
+                    break;
+                }
+            }
+            
+            if (overlapsWithGroup) {
+                // 重なる場合は現在のグループに追加
+                currentGroup.push(currentEvent);
+            } else {
+                // 重ならない場合は新しいグループを作成
+                if (currentGroup.length > 0) {
+                    groups.push([...currentGroup]);
+                }
+                currentGroup = [currentEvent];
+            }
+        }
+        
+        // 最後のグループを追加
+        if (currentGroup.length > 0) {
+            groups.push(currentGroup);
+        }
+        
+        return groups;
+    }
+
+    /**
+     * イベントの配置を適用
+     * @private
+     */
+    _applyLayout() {
+        this.layoutGroups.forEach(group => {
+            // グループ内のイベント数
+            const count = group.length;
+            
+            // 1つしかない場合は最大幅で表示
+            if (count === 1) {
+                const event = group[0];
+                event.element.style.left = `${this.baseLeft}px`;
+                event.element.style.width = `${this.maxWidth}px`;
+                return;
+            }
+            
+            // 複数ある場合は幅を調整
+            const width = Math.max(100, Math.floor((this.maxWidth - (this.gap * (count - 1))) / count));
+            
+            // 各イベントの位置を設定
+            group.forEach((event, index) => {
+                const left = this.baseLeft + (width + this.gap) * index;
+                event.element.style.left = `${left}px`;
+                event.element.style.width = `${width}px`;
+            });
+        });
+    }
+}
+
+/**
  * TimeTableManager - タイムテーブルの基本構造を管理するクラス
  */
 export class TimeTableManager {

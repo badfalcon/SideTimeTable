@@ -14,10 +14,12 @@ export class GoogleEventManager {
      * コンストラクタ
      * @param {Object} timeTableManager - タイムテーブルマネージャーのインスタンス
      * @param {HTMLElement} googleEventsDiv - Googleイベント表示用のDOM要素
+     * @param {Object} eventLayoutManager - イベントレイアウトマネージャーのインスタンス
      */
-    constructor(timeTableManager, googleEventsDiv) {
+    constructor(timeTableManager, googleEventsDiv, eventLayoutManager) {
         this.timeTableManager = timeTableManager;
         this.googleEventsDiv = googleEventsDiv;
+        this.eventLayoutManager = eventLayoutManager;
         this.isGoogleIntegrated = false;
     }
 
@@ -48,6 +50,9 @@ export class GoogleEventManager {
                 // 以前の表示をクリア
                 this.googleEventsDiv.innerHTML = '';
                 
+                // イベントレイアウトマネージャーのイベントをクリア
+                this.eventLayoutManager.clearEvents();
+                
                 if (chrome.runtime.lastError) {
                     logError('Googleイベント取得', chrome.runtime.lastError);
                     return;
@@ -74,6 +79,9 @@ export class GoogleEventManager {
 
                 console.log('イベント処理開始:', response.events.length + '件');
                 this._processEvents(response.events);
+                
+                // イベントレイアウトを計算して適用
+                this.eventLayoutManager.calculateLayout();
             });
         } catch (error) {
             logError('Googleイベント取得例外', error);
@@ -148,6 +156,15 @@ export class GoogleEventManager {
         }
         
         this.googleEventsDiv.appendChild(eventDiv);
+        
+        // イベントレイアウトマネージャーに登録
+        this.eventLayoutManager.registerEvent({
+            startTime: startDate,
+            endTime: endDate,
+            element: eventDiv,
+            type: 'google',
+            id: event.id || `google-${Date.now()}-${Math.random()}`
+        });
     }
 }
 
@@ -159,10 +176,12 @@ export class LocalEventManager {
      * コンストラクタ
      * @param {Object} timeTableManager - タイムテーブルマネージャーのインスタンス
      * @param {HTMLElement} localEventsDiv - ローカルイベント表示用のDOM要素
+     * @param {Object} eventLayoutManager - イベントレイアウトマネージャーのインスタンス
      */
-    constructor(timeTableManager, localEventsDiv) {
+    constructor(timeTableManager, localEventsDiv, eventLayoutManager) {
         this.timeTableManager = timeTableManager;
         this.localEventsDiv = localEventsDiv;
+        this.eventLayoutManager = eventLayoutManager;
         this.eventDialogElements = null;
         this.alertModalElements = null;
     }
@@ -201,6 +220,9 @@ export class LocalEventManager {
                         logError('イベント表示', error);
                     }
                 });
+                
+                // イベントレイアウトを計算して適用
+                this.eventLayoutManager.calculateLayout();
             })
             .catch(error => {
                 logError('ローカルイベント読み込み', error);
@@ -235,6 +257,15 @@ export class LocalEventManager {
 
         // 編集機能を設定
         this._setupEventEdit(eventDiv, {title, startTime, endTime});
+        
+        // イベントレイアウトマネージャーに登録
+        this.eventLayoutManager.registerEvent({
+            startTime: startDate,
+            endTime: endDate,
+            element: eventDiv,
+            type: 'local',
+            id: `local-${title}-${startTime}-${endTime}`
+        });
 
         return eventDiv;
     }
@@ -372,6 +403,9 @@ export class LocalEventManager {
                     // イベント要素を作成して表示
                     const eventDiv = this._createEventDiv(title, startTime, endTime);
                     this.localEventsDiv.appendChild(eventDiv);
+                    
+                    // イベントレイアウトを再計算
+                    this.eventLayoutManager.calculateLayout();
                     
                     this._showAlertModal(chrome.i18n.getMessage("eventSaved") || 'イベントを保存しました');
                 })
