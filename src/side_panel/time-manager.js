@@ -8,28 +8,81 @@ import { TIME_CONSTANTS } from '../lib/utils.js';
 
 /**
  * EventLayoutManager - イベントの配置を管理するクラス
- * 複数のイベントが時間的に重なる場合の表示位置を調整する
+ * 
+ * このクラスは複数のイベントが時間的に重なる場合の表示位置を調整します。
+ * イベントの重なり検出やレイアウト計算を効率的に行い、
+ * UIにおけるイベントの視覚的な配置を最適化します。
+ * 
+ * @example
+ * // 使用例:
+ * const layoutManager = new EventLayoutManager();
+ * layoutManager.registerEvent({
+ *   id: 'event1',
+ *   startTime: new Date('2023-01-01T10:00:00'),
+ *   endTime: new Date('2023-01-01T11:00:00'),
+ *   element: document.getElementById('event1'),
+ *   type: 'local'
+ * });
+ * layoutManager.calculateLayout(); // レイアウトを計算して適用
  */
 export class EventLayoutManager {
     /**
-     * コンストラクタ
+     * EventLayoutManagerのインスタンスを作成
+     * 
+     * @constructor
      */
     constructor() {
+        /**
+         * 登録されたイベントの配列
+         * @type {Array<Object>}
+         * @private
+         */
         this.events = [];
+        
+        /**
+         * 計算されたレイアウトグループの配列
+         * @type {Array<Array<Object>>}
+         * @private
+         */
         this.layoutGroups = [];
-        this.maxWidth = 200; // イベントの最大幅（ピクセル）
-        this.baseLeft = 65;  // イベントの基本左位置（ピクセル）
-        this.gap = 5;        // イベント間の間隔（ピクセル）
-        this._timeCache = new Map(); // 時間計算のキャッシュ
+        
+        /**
+         * イベントの最大幅（ピクセル）
+         * @type {number}
+         */
+        this.maxWidth = 200;
+        
+        /**
+         * イベントの基本左位置（ピクセル）
+         * @type {number}
+         */
+        this.baseLeft = 65;
+        
+        /**
+         * イベント間の間隔（ピクセル）
+         * @type {number}
+         */
+        this.gap = 5;
+        
+        /**
+         * 時間計算のキャッシュ
+         * @type {Map<string, number>}
+         * @private
+         */
+        this._timeCache = new Map();
     }
 
     /**
-     * 時間値をミリ秒に変換（キャッシュ利用）
+     * 時間値をミリ秒に変換し、結果をキャッシュする
+     * 
+     * 同じ時間値の変換を繰り返し行うことを避けるため、
+     * 変換結果をキャッシュして再利用します。
+     * 
      * @private
-     * @param {Date|number} time - 変換する時間
+     * @param {Date|number} time - 変換する時間（DateオブジェクトまたはUNIXタイムスタンプ）
      * @param {string} id - イベントID
-     * @param {string} type - 'start' または 'end'
-     * @returns {number} - ミリ秒単位の時間
+     * @param {string} type - 時間の種類 ('start' または 'end')
+     * @returns {number} ミリ秒単位の時間値
      */
     _getTimeInMillis(time, id, type) {
         // キャッシュキーを生成
@@ -46,9 +99,14 @@ export class EventLayoutManager {
         
         return timeInMillis;
     }
-
+    
     /**
-     * 時間キャッシュをクリア
+     * 時間キャッシュをクリアする
+     * 
+     * すべての時間計算キャッシュをクリアします。
+     * イベントの削除や大規模な変更の後に呼び出すことで、
+     * 古いキャッシュデータによる問題を防止します。
+     * 
      * @private
      */
     _clearTimeCache() {
@@ -56,14 +114,30 @@ export class EventLayoutManager {
     }
     
     /**
-     * イベントを登録
+     * イベントをレイアウトマネージャーに登録する
+     * 
+     * このメソッドはイベントをレイアウト計算対象として登録します。
+     * 登録されたイベントは calculateLayout() が呼ばれたときに配置が計算されます。
+     * 
      * @param {Object} eventData - イベント情報
-     * @param {Date|number} eventData.startTime - 開始時間
-     * @param {Date|number} eventData.endTime - 終了時間
-     * @param {HTMLElement} eventData.element - イベント要素
-     * @param {string} eventData.type - イベントタイプ ('google' または 'local')
-     * @param {string} eventData.id - イベントの一意識別子
-     * @throws {Error} - 無効なイベントデータの場合
+     * @param {Date|number} eventData.startTime - 開始時間（Date型またはミリ秒のタイムスタンプ）
+     * @param {Date|number} eventData.endTime - 終了時間（Date型またはミリ秒のタイムスタンプ）
+     * @param {HTMLElement} eventData.element - イベントを表示するDOM要素
+     * @param {string} eventData.id - イベントの一意識別子（必須）
+     * @param {string} [eventData.type] - イベントタイプ ('google' または 'local')
+     * @throws {Error} 無効なイベントデータが渡された場合
+     * @throws {Error} 開始時間が終了時間より後の場合
+     * @throws {Error} イベントタイプが不正の場合
+     * @returns {void}
+     * 
+     * @example
+     * layoutManager.registerEvent({
+     *   id: 'event1',
+     *   startTime: new Date('2023-01-01T10:00:00'),
+     *   endTime: new Date('2023-01-01T11:00:00'),
+     *   element: document.getElementById('event1'),
+     *   type: 'local'
+     * });
      */
     registerEvent(eventData) {
         // 必須パラメータのバリデーション
@@ -92,8 +166,16 @@ export class EventLayoutManager {
     }
     
     /**
-     * すべてのイベントをクリア
-     * DOM要素への参照も解放してメモリリークを防止
+     * すべてのイベントをクリアする
+     * 
+     * 登録されているすべてのイベントを削除し、DOM要素への参照も解放してメモリリークを防止します。
+     * このメソッドを呼び出した後は calculateLayout() を呼び出しても何も表示されません。
+     * 
+     * @returns {void}
+     * 
+     * @example
+     * // すべてのイベントを削除
+     * layoutManager.clearEvents();
      */
     clearEvents() {
         // DOM要素への参照を明示的に解放
@@ -109,11 +191,25 @@ export class EventLayoutManager {
         this.layoutGroups = [];
         this._clearTimeCache(); // 時間キャッシュもクリア
     }
-
+    
     /**
-     * 特定のイベントを削除
+     * 特定のイベントを削除する
+     * 
+     * 指定されたIDのイベントを検索して削除します。
+     * 削除されたイベントの時間キャッシュもクリアされます。
+     * 
      * @param {string} id - 削除するイベントのID
-     * @returns {boolean} - イベントが見つかり削除された場合はtrue、それ以外はfalse
+     * @throws {Error} IDが未指定の場合
+     * @returns {boolean} イベントが見つかり削除された場合はtrue、それ以外はfalse
+     * 
+     * @example
+     * // 特定のイベントを削除
+     * const wasRemoved = layoutManager.removeEvent('event1');
+     * if (wasRemoved) {
+     *   console.log('イベントが削除されました');
+     * } else {
+     *   console.log('指定されたIDのイベントが見つかりませんでした');
+     * }
      */
     removeEvent(id) {
         if (!id) {
@@ -137,8 +233,25 @@ export class EventLayoutManager {
     }
 
     /**
-     * イベントの配置を計算して適用
-     * @throws {Error} - 計算中にエラーが発生した場合
+     * イベントの配置を計算して適用する
+     * 
+     * このメソッドは登録されたすべてのイベントを処理し、時間的な重なりに基づいて
+     * 視覚的に最適なレイアウトを計算し、各イベント要素のスタイルを更新します。
+     * 
+     * 処理の流れ:
+     * 1. 無効なイベントデータをフィルタリング
+     * 2. イベントを開始時間順にソート
+     * 3. 時間的に重なるイベントをグループ化
+     * 4. 各グループのイベントの幅と位置を計算
+     * 5. 計算された配置をDOM要素に適用
+     * 
+     * @throws {Error} 計算中にエラーが発生した場合
+     * @returns {void}
+     * 
+     * @example
+     * // イベントを登録した後、レイアウトを計算
+     * layoutManager.registerEvent(...);
+     * layoutManager.calculateLayout();
      */
     calculateLayout() {
         if (this.events.length === 0) return;
@@ -173,19 +286,29 @@ export class EventLayoutManager {
     }
 
     /**
-     * 重なるイベントをグループ化
+     * 時間的に重なるイベントをグループ化する
+     * 
+     * 時間的に重なり合うイベントを検出してグループにまとめます。
+     * このグループ化により、重なり合うイベントを横に並べて表示する際の
+     * レイアウト計算の基礎となります。
+     * 
+     * アルゴリズム:
+     * 1. イベントは開始時間でソート済みであると想定
+     * 2. 各イベントについて、現在のグループ内の他のイベントと時間的な重なりをチェック
+     * 3. 重なりがある場合は同じグループに追加、ない場合は新しいグループを作成
+     * 
      * @private
-     * @returns {Array} 重なるイベントのグループ配列
+     * @returns {Array<Array<Object>>} 重なるイベントのグループ配列
      */
     _groupOverlappingEvents() {
         const groups = [];
         let currentGroup = [];
-
+    
         // 最初のイベントをグループに追加
         if (this.events.length > 0) {
             currentGroup.push(this.events[0]);
         }
-
+    
         // 2番目以降のイベントを処理
         for (let i = 1; i < this.events.length; i++) {
             const currentEvent = this.events[i];
@@ -206,7 +329,7 @@ export class EventLayoutManager {
                     break;
                 }
             }
-
+    
             if (overlapsWithGroup) {
                 // 重なる場合は現在のグループに追加
                 currentGroup.push(currentEvent);
@@ -218,25 +341,32 @@ export class EventLayoutManager {
                 currentGroup = [currentEvent];
             }
         }
-
+    
         // 最後のグループを追加
         if (currentGroup.length > 0) {
             groups.push(currentGroup);
         }
-
+    
         return groups;
     }
-
+    
     /**
-     * イベントの配置を適用
+     * 計算されたレイアウトをイベント要素に適用する
+     * 
+     * 各グループごとに、イベントの幅と水平位置を計算し、
+     * 対応するDOM要素のスタイルを更新します。
+     * 
+     * レイアウトルール:
+     * 1. 単一イベントは最大幅で表示
+     * 2. 重なるイベントは均等に幅を分割
+     * 3. 最小幅（100px）を保証
+     * 4. イベント間に設定されたギャップを適用
+     * 
      * @private
      */
     _applyLayout() {
         try {
             this.layoutGroups.forEach(group => {
-                // グループ内のイベント数
-                const count = group.length;
-                
                 // 無効なイベントをフィルタリング
                 const validEvents = group.filter(event => event && event.element);
                 
