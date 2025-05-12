@@ -188,6 +188,12 @@ export class EventLayoutManager {
         });
         
         this.events = [];
+        
+        /**
+         * 計算されたレイアウトグループの配列
+         * @type {Array<Array<Object>>}
+         * @private
+         */
         this.layoutGroups = [];
         this._clearTimeCache(); // 時間キャッシュもクリア
     }
@@ -402,36 +408,128 @@ export class EventLayoutManager {
 
 /**
  * TimeTableManager - タイムテーブルの基本構造を管理するクラス
+ * 
+ * このクラスはタイムテーブルのUI表示と時間軸の管理を担当します。
+ * 業務時間の表示、時間ラベルの配置、現在時刻のインジケーターなど、
+ * 時間に関連する視覚要素の生成と更新を行います。
+ * 
+ * 主な機能:
+ * - 業務時間の設定と表示
+ * - 休憩時間の指定と視覚的な区別
+ * - 時間ラベルと時間補助線の生成
+ * - リアルタイムの現在時刻インジケーター
+ * 
+ * @example
+ * // 使用例:
+ * const parentElement = document.getElementById('timetable-container');
+ * const baseElement = document.getElementById('timetable-base');
+ * const timeTableManager = new TimeTableManager(parentElement, baseElement);
+ * 
+ * // 設定を適用
+ * timeTableManager.applySettings({
+ *   openTime: '09:00',
+ *   closeTime: '18:00'
+ * });
+ * 
+ * // 基本的なタイムテーブルを作成（休憩時間あり）
+ * timeTableManager.createBaseTable(true, '12:00', '13:00');
+ * 
+ * // 現在時刻の線を更新
+ * setInterval(() => timeTableManager.updateCurrentTimeLine(), 60000);
  */
 export class TimeTableManager {
     /**
-     * コンストラクタ
-     * @param {HTMLElement} parentDiv - 親要素
-     * @param {HTMLElement} baseDiv - 基本要素
+     * TimeTableManagerのインスタンスを作成
+     * 
+     * @constructor
+     * @param {HTMLElement} parentDiv - タイムテーブルを格納する親要素
+     * @param {HTMLElement} baseDiv - 基本的なタイムテーブル要素を格納する要素
      */
     constructor(parentDiv, baseDiv) {
+        /**
+         * タイムテーブルを格納する親要素
+         * @type {HTMLElement}
+         */
         this.parentDiv = parentDiv;
+        
+        /**
+         * 基本的なタイムテーブル要素を格納する要素
+         * @type {HTMLElement}
+         */
         this.baseDiv = baseDiv;
+        
+        /**
+         * 業務開始時間（HH:MM形式）
+         * @type {string}
+         */
         this.openHour = TIME_CONSTANTS.DEFAULT_OPEN_HOUR;
+        
+        /**
+         * 業務終了時間（HH:MM形式）
+         * @type {string}
+         */
         this.closeHour = TIME_CONSTANTS.DEFAULT_CLOSE_HOUR;
+        
+        /**
+         * 業務開始時間（ミリ秒）
+         * @type {number}
+         */
         this.openTime = 0;
+        
+        /**
+         * 業務終了時間（ミリ秒）
+         * @type {number}
+         */
         this.closeTime = 0;
+        
+        /**
+         * 業務時間の長さ（時間単位）
+         * @type {number}
+         */
         this.hourDiff = 0;
+        
+        /**
+         * 現在時刻を示す線のHTML要素
+         * @type {HTMLElement|null}
+         */
         this.currentTimeLine = null;
     }
 
     /**
-     * 設定を適用する
-     * @param {Object} settings - 設定オブジェクト
+     * 時間設定を適用する
+     * 
+     * このメソッドは業務開始時間と終了時間の設定を更新します。
+     * 設定後にタイムテーブルを再生成するには createBaseTable を呼び出す必要があります。
+     * 
+     * @param {Object} settings - 時間設定オブジェクト
+     * @param {string} settings.openTime - 業務開始時間（HH:MM形式）
+     * @param {string} settings.closeTime - 業務終了時間（HH:MM形式）
+     * @returns {void}
+     * 
+     * @example
+     * timeTableManager.applySettings({
+     *   openTime: '09:30',
+     *   closeTime: '18:30'
+     * });
      */
     applySettings(settings) {
         this.openHour = settings.openTime;
         this.closeHour = settings.closeTime;
     }
-
+    
     /**
      * 時間関連の変数を初期化
+     * 
+     * 設定された業務開始時間と終了時間を解析し、内部的な時間計算用の変数を設定します。
+     * このメソッドは createBaseTable 内部で自動的に呼び出されます。
+     * 
      * @returns {Object} 初期化された時間変数
+     * @returns {number} returnValue.openTimeHour - 業務開始時間（時）
+     * @returns {number} returnValue.openTimeMinute - 業務開始時間（分）
+     * 
+     * @example
+     * const { openTimeHour, openTimeMinute } = timeTableManager.initializeTimeVariables();
+     * console.log(`業務開始: ${openTimeHour}時${openTimeMinute}分`);
      */
     initializeTimeVariables() {
         const openTimeParts = this.openHour.split(':');
@@ -451,12 +549,25 @@ export class TimeTableManager {
     }
 
     /**
-     * 基本的なタイムテーブルを作成
-     * @param {boolean} breakTimeFixed - 休憩時間が固定かどうか
-     * @param {string} breakTimeStart - 休憩開始時間
-     * @param {string} breakTimeEnd - 休憩終了時間
+     * 基本的なタイムテーブルを作成する
+     * 
+     * このメソッドは業務時間、休憩時間の表示、時間ラベル、時間補助線などを含む
+     * 基本的なタイムテーブルのUI要素を生成します。既存の表示はクリアされます。
+     * 
+     * @param {boolean} breakTimeFixed - 休憩時間が固定されているかどうか
+     * @param {string} [breakTimeStart='12:00'] - 休憩開始時間（HH:MM形式）、breakTimeFixedがtrueの場合に使用
+     * @param {string} [breakTimeEnd='13:00'] - 休憩終了時間（HH:MM形式）、breakTimeFixedがtrueの場合に使用
+     * @returns {void}
+     * @throws {Error} 時間形式が不正な場合にエラーが発生する可能性があります
+     * 
+     * @example
+     * // 固定休憩時間ありのタイムテーブルを作成
+     * timeTableManager.createBaseTable(true, '12:00', '13:00');
+     * 
+     * // 休憩時間なしのタイムテーブルを作成
+     * timeTableManager.createBaseTable(false);
      */
-    createBaseTable(breakTimeFixed, breakTimeStart, breakTimeEnd) {
+    createBaseTable(breakTimeFixed, breakTimeStart = '12:00', breakTimeEnd = '13:00') {
         const { openTimeMinute } = this.initializeTimeVariables();
         const unitHeight = TIME_CONSTANTS.UNIT_HEIGHT;
 
@@ -476,31 +587,39 @@ export class TimeTableManager {
     }
 
     /**
-     * 休憩時間ありの業務時間表示を作成
+     * 休憩時間ありの業務時間表示を作成する
+     * 
+     * 指定された休憩時間を除いた業務時間の視覚表示を作成します。
+     * 休憩時間の前後に分かれた2つの業務時間ブロックを生成します。
+     * 
      * @private
+     * @param {string} breakTimeStart - 休憩開始時間（HH:MM形式）
+     * @param {string} breakTimeEnd - 休憩終了時間（HH:MM形式）
+     * @param {number} unitHeight - 時間単位の高さ（ピクセル）
+     * @returns {void}
      */
     _createWorkTimeWithBreak(breakTimeStart, breakTimeEnd, unitHeight) {
         const breakTimeStartParts = breakTimeStart.split(':');
         const breakTimeEndParts = breakTimeEnd.split(':');
-
+    
         const breakTimeStartHour = parseInt(breakTimeStartParts[0], 10);
         const breakTimeStartMinute = parseInt(breakTimeStartParts[1], 10);
         const breakTimeEndHour = parseInt(breakTimeEndParts[0], 10);
         const breakTimeEndMinute = parseInt(breakTimeEndParts[1], 10);
-
+    
         const breakTimeStartMillis = new Date().setHours(breakTimeStartHour, breakTimeStartMinute, 0, 0);
         const breakTimeEndMillis = new Date().setHours(breakTimeEndHour, breakTimeEndMinute, 0, 0);
-
+    
         const breakTimeStartOffset = (1 + (breakTimeStartMillis - this.openTime) / TIME_CONSTANTS.HOUR_MILLIS) * unitHeight;
         const breakTimeDuration = (breakTimeEndMillis - breakTimeStartMillis) / TIME_CONSTANTS.MINUTE_MILLIS * unitHeight / 60;
-
+    
         // 休憩時間前の業務時間
         const workTimeDiv1 = document.createElement('div');
         workTimeDiv1.className = 'work-time';
         workTimeDiv1.style.top = `${unitHeight}px`;
         workTimeDiv1.style.height = `${breakTimeStartOffset - unitHeight}px`;
         this.baseDiv.appendChild(workTimeDiv1);
-
+    
         // 休憩時間後の業務時間
         const workTimeDiv2 = document.createElement('div');
         workTimeDiv2.className = 'work-time';
@@ -508,10 +627,15 @@ export class TimeTableManager {
         workTimeDiv2.style.height = `${unitHeight * (this.closeTime - breakTimeEndMillis) / TIME_CONSTANTS.HOUR_MILLIS}px`;
         this.baseDiv.appendChild(workTimeDiv2);
     }
-
+    
     /**
-     * 休憩時間なしの業務時間表示を作成
+     * 休憩時間なしの業務時間表示を作成する
+     * 
+     * 業務開始時間から終了時間までの連続した業務時間ブロックを生成します。
+     * 
      * @private
+     * @param {number} unitHeight - 時間単位の高さ（ピクセル）
+     * @returns {void}
      */
     _createWorkTimeWithoutBreak(unitHeight) {
         const workTimeDiv = document.createElement('div');
@@ -522,15 +646,22 @@ export class TimeTableManager {
     }
 
     /**
-     * 時間ラベルと補助線を追加
+     * 時間ラベルと補助線を追加する
+     * 
+     * タイムテーブル上に1時間ごとの時間ラベル（時:00形式）と
+     * 水平方向の時間補助線を追加します。
+     * 
      * @private
+     * @param {number} openTimeMinute - 業務開始時間の分（0-59）
+     * @param {number} unitHeight - 時間単位の高さ（ピクセル）
+     * @returns {void}
      */
     _addTimeLabelsAndLines(openTimeMinute, unitHeight) {
         for (let i = 0; i <= this.hourDiff + 2; i++) {
             if (i === 0 && openTimeMinute !== 0) {
                 continue;
             }
-
+    
             // 時間ラベル
             const hourLabel = document.createElement('div');
             hourLabel.className = 'hour-label';
@@ -538,7 +669,7 @@ export class TimeTableManager {
             const hour = new Date(this.openTime + (i - 1) * TIME_CONSTANTS.HOUR_MILLIS).getHours();
             hourLabel.textContent = `${hour}:00`;
             this.baseDiv.appendChild(hourLabel);
-
+    
             // 時間補助線
             const hourLine = document.createElement('div');
             hourLine.className = 'hour-line';
@@ -546,9 +677,21 @@ export class TimeTableManager {
             this.baseDiv.appendChild(hourLine);
         }
     }
-
+    
     /**
-     * 現在時刻の線を更新
+     * 現在時刻の線を更新する
+     * 
+     * 現在の時刻に対応する位置に水平線を表示または更新します。
+     * 現在時刻が業務時間内の場合のみ表示され、業務時間外の場合は非表示になります。
+     * このメソッドは定期的に呼び出すことで、リアルタイムの時間インジケーターとして機能します。
+     * 
+     * @returns {void}
+     * 
+     * @example
+     * // 1分ごとに現在時刻の線を更新
+     * setInterval(() => {
+     *   timeTableManager.updateCurrentTimeLine();
+     * }, 60000);
      */
     updateCurrentTimeLine() {
         const currentTime = new Date();
