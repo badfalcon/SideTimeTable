@@ -30,15 +30,44 @@ export class EventLayoutManager {
      * @param {HTMLElement} eventData.element - イベント要素
      * @param {string} eventData.type - イベントタイプ ('google' または 'local')
      * @param {string} eventData.id - イベントの一意識別子
+     * @throws {Error} - 無効なイベントデータの場合
      */
     registerEvent(eventData) {
+        // 必須パラメータのバリデーション
+        if (!eventData || !eventData.startTime || !eventData.endTime || !eventData.element || !eventData.id) {
+            throw new Error('無効なイベントデータです');
+        }
+    
+        // 開始時間と終了時間の検証
+        const start = eventData.startTime instanceof Date ? eventData.startTime.getTime() : eventData.startTime;
+        const end = eventData.endTime instanceof Date ? eventData.endTime.getTime() : eventData.endTime;
+        
+        if (start >= end) {
+            throw new Error('開始時間は終了時間より前である必要があります');
+        }
+    
+        // イベントタイプの検証（存在する場合）
+        if (eventData.type && !['google', 'local'].includes(eventData.type)) {
+            throw new Error("イベントタイプは 'google' または 'local' である必要があります");
+        }
+    
         this.events.push(eventData);
     }
 
     /**
      * すべてのイベントをクリア
+     * DOM要素への参照も解放してメモリリークを防止
      */
     clearEvents() {
+        // DOM要素への参照を明示的に解放
+        // 注意: 実際にDOM要素を削除するのではなく、参照のみを解放
+        this.events.forEach(event => {
+            if (event && event.element) {
+                // イベント要素への参照を解放
+                event.element = null;
+            }
+        });
+        
         this.events = [];
         this.layoutGroups = [];
     }
@@ -46,29 +75,51 @@ export class EventLayoutManager {
     /**
      * 特定のイベントを削除
      * @param {string} id - 削除するイベントのID
+     * @returns {boolean} - イベントが見つかり削除された場合はtrue、それ以外はfalse
      */
     removeEvent(id) {
+        if (!id) {
+            throw new Error('削除するイベントのIDが指定されていません');
+        }
+        
+        const originalLength = this.events.length;
         this.events = this.events.filter(event => event.id !== id);
+        
+        // 削除されたかどうかを返す
+        return this.events.length < originalLength;
     }
 
     /**
      * イベントの配置を計算して適用
+     * @throws {Error} - 計算中にエラーが発生した場合
      */
     calculateLayout() {
         if (this.events.length === 0) return;
-
-        // イベントを開始時間でソート
-        this.events.sort((a, b) => {
-            const startA = a.startTime instanceof Date ? a.startTime.getTime() : a.startTime;
-            const startB = b.startTime instanceof Date ? b.startTime.getTime() : b.startTime;
-            return startA - startB;
-        });
-
-        // 重なるイベントをグループ化
-        this.layoutGroups = this._groupOverlappingEvents();
-
-        // 各グループ内でイベントの配置を計算
-        this._applyLayout();
+    
+        try {
+            // 無効なデータや参照が解除されたイベントを除外
+            this.events = this.events.filter(event => {
+                return event && event.startTime && event.endTime && event.element;
+            });
+            
+            if (this.events.length === 0) return;
+    
+            // イベントを開始時間でソート
+            this.events.sort((a, b) => {
+                const startA = a.startTime instanceof Date ? a.startTime.getTime() : a.startTime;
+                const startB = b.startTime instanceof Date ? b.startTime.getTime() : b.startTime;
+                return startA - startB;
+            });
+    
+            // 重なるイベントをグループ化
+            this.layoutGroups = this._groupOverlappingEvents();
+    
+            // 各グループ内でイベントの配置を計算
+            this._applyLayout();
+        } catch (error) {
+            console.error('イベントレイアウト計算中にエラーが発生しました:', error);
+            throw error;
+        }
     }
 
     /**
@@ -98,11 +149,13 @@ export class EventLayoutManager {
 
             // グループ内のすべてのイベントと重なりをチェック
             for (const groupEvent of currentGroup) {
+                const groupEventStart = groupEvent.startTime instanceof Date ? 
+                    groupEvent.startTime.getTime() : groupEvent.startTime;
                 const groupEventEnd = groupEvent.endTime instanceof Date ? 
                     groupEvent.endTime.getTime() : groupEvent.endTime;
-
-                // 現在のイベントの開始時間が、グループ内のイベントの終了時間より前なら重なりあり
-                if (currentStart < groupEventEnd) {
+    
+                // 時間の重なりをより厳密にチェック（両方のイベントが完全に分離していない場合）
+                if (!(currentEnd <= groupEventStart || currentStart >= groupEventEnd)) {
                     overlapsWithGroup = true;
                     break;
                 }
@@ -133,28 +186,41 @@ export class EventLayoutManager {
      * @private
      */
     _applyLayout() {
-        this.layoutGroups.forEach(group => {
-            // グループ内のイベント数
-            const count = group.length;
-
-            // 1つしかない場合は最大幅で表示
-            if (count === 1) {
-                const event = group[0];
-                event.element.style.left = `${this.baseLeft}px`;
-                event.element.style.width = `${this.maxWidth}px`;
-                return;
-            }
-
-            // 複数ある場合は幅を調整
-            const width = Math.max(100, Math.floor((this.maxWidth - (this.gap * (count - 1))) / count));
-
-            // 各イベントの位置を設定
-            group.forEach((event, index) => {
-                const left = this.baseLeft + (width + this.gap) * index;
-                event.element.style.left = `${left}px`;
-                event.element.style.width = `${width}px`;
+        try {
+            this.layoutGroups.forEach(group => {
+                // グループ内のイベント数
+                const count = group.length;
+                
+                // 無効なイベントをフィルタリング
+                const validEvents = group.filter(event => event && event.element);
+                
+                if (validEvents.length === 0) return;
+                
+                // 1つしかない場合は最大幅で表示
+                if (validEvents.length === 1) {
+                    const event = validEvents[0];
+                    if (event.element) {
+                        event.element.style.left = `${this.baseLeft}px`;
+                        event.element.style.width = `${this.maxWidth}px`;
+                    }
+                    return;
+                }
+                
+                // 複数ある場合は幅を調整
+                const width = Math.max(100, Math.floor((this.maxWidth - (this.gap * (validEvents.length - 1))) / validEvents.length));
+                
+                // 各イベントの位置を設定
+                validEvents.forEach((event, index) => {
+                    if (event.element) {
+                        const left = this.baseLeft + (width + this.gap) * index;
+                        event.element.style.left = `${left}px`;
+                        event.element.style.width = `${width}px`;
+                    }
+                });
             });
-        });
+        } catch (error) {
+            console.error('イベントレイアウト適用中にエラーが発生しました:', error);
+        }
     }
 }
 
