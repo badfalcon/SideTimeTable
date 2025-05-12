@@ -20,8 +20,41 @@ export class EventLayoutManager {
         this.maxWidth = 200; // イベントの最大幅（ピクセル）
         this.baseLeft = 65;  // イベントの基本左位置（ピクセル）
         this.gap = 5;        // イベント間の間隔（ピクセル）
+        this._timeCache = new Map(); // 時間計算のキャッシュ
     }
 
+    /**
+     * 時間値をミリ秒に変換（キャッシュ利用）
+     * @private
+     * @param {Date|number} time - 変換する時間
+     * @param {string} id - イベントID
+     * @param {string} type - 'start' または 'end'
+     * @returns {number} - ミリ秒単位の時間
+     */
+    _getTimeInMillis(time, id, type) {
+        // キャッシュキーを生成
+        const cacheKey = `${id}_${type}`;
+        
+        // キャッシュに存在する場合はそれを返す
+        if (this._timeCache.has(cacheKey)) {
+            return this._timeCache.get(cacheKey);
+        }
+        
+        // 存在しない場合は計算して保存
+        const timeInMillis = time instanceof Date ? time.getTime() : time;
+        this._timeCache.set(cacheKey, timeInMillis);
+        
+        return timeInMillis;
+    }
+
+    /**
+     * 時間キャッシュをクリア
+     * @private
+     */
+    _clearTimeCache() {
+        this._timeCache.clear();
+    }
+    
     /**
      * イベントを登録
      * @param {Object} eventData - イベント情報
@@ -51,9 +84,13 @@ export class EventLayoutManager {
             throw new Error("イベントタイプは 'google' または 'local' である必要があります");
         }
     
+        // 時間をキャッシュに事前に格納しておく
+        this._getTimeInMillis(eventData.startTime, eventData.id, 'start');
+        this._getTimeInMillis(eventData.endTime, eventData.id, 'end');
+    
         this.events.push(eventData);
     }
-
+    
     /**
      * すべてのイベントをクリア
      * DOM要素への参照も解放してメモリリークを防止
@@ -70,6 +107,7 @@ export class EventLayoutManager {
         
         this.events = [];
         this.layoutGroups = [];
+        this._clearTimeCache(); // 時間キャッシュもクリア
     }
 
     /**
@@ -85,8 +123,17 @@ export class EventLayoutManager {
         const originalLength = this.events.length;
         this.events = this.events.filter(event => event.id !== id);
         
-        // 削除されたかどうかを返す
-        return this.events.length < originalLength;
+        // イベントが削除された場合、関連するキャッシュもクリア
+        if (this.events.length < originalLength) {
+            // 削除されたイベントのキャッシュエントリを削除
+            const startKey = `${id}_start`;
+            const endKey = `${id}_end`;
+            this._timeCache.delete(startKey);
+            this._timeCache.delete(endKey);
+            return true;
+        }
+        
+        return false;
     }
 
     /**
@@ -97,17 +144,20 @@ export class EventLayoutManager {
         if (this.events.length === 0) return;
     
         try {
+            // キャッシュをクリア
+            this._timeCache.clear();
+            
             // 無効なデータや参照が解除されたイベントを除外
             this.events = this.events.filter(event => {
-                return event && event.startTime && event.endTime && event.element;
+                return event && event.startTime && event.endTime && event.element && event.id;
             });
             
             if (this.events.length === 0) return;
     
             // イベントを開始時間でソート
             this.events.sort((a, b) => {
-                const startA = a.startTime instanceof Date ? a.startTime.getTime() : a.startTime;
-                const startB = b.startTime instanceof Date ? b.startTime.getTime() : b.startTime;
+                const startA = this._getTimeInMillis(a.startTime, a.id, 'start');
+                const startB = this._getTimeInMillis(b.startTime, b.id, 'start');
                 return startA - startB;
             });
     
@@ -139,20 +189,16 @@ export class EventLayoutManager {
         // 2番目以降のイベントを処理
         for (let i = 1; i < this.events.length; i++) {
             const currentEvent = this.events[i];
-            const currentStart = currentEvent.startTime instanceof Date ? 
-                currentEvent.startTime.getTime() : currentEvent.startTime;
-            const currentEnd = currentEvent.endTime instanceof Date ? 
-                currentEvent.endTime.getTime() : currentEvent.endTime;
-
+            const currentStart = this._getTimeInMillis(currentEvent.startTime, currentEvent.id, 'start');
+            const currentEnd = this._getTimeInMillis(currentEvent.endTime, currentEvent.id, 'end');
+    
             // 現在のグループ内の最後のイベントの終了時間を取得
             let overlapsWithGroup = false;
-
+    
             // グループ内のすべてのイベントと重なりをチェック
             for (const groupEvent of currentGroup) {
-                const groupEventStart = groupEvent.startTime instanceof Date ? 
-                    groupEvent.startTime.getTime() : groupEvent.startTime;
-                const groupEventEnd = groupEvent.endTime instanceof Date ? 
-                    groupEvent.endTime.getTime() : groupEvent.endTime;
+                const groupEventStart = this._getTimeInMillis(groupEvent.startTime, groupEvent.id, 'start');
+                const groupEventEnd = this._getTimeInMillis(groupEvent.endTime, groupEvent.id, 'end');
     
                 // 時間の重なりをより厳密にチェック（両方のイベントが完全に分離していない場合）
                 if (!(currentEnd <= groupEventStart || currentStart >= groupEventEnd)) {
