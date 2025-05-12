@@ -371,9 +371,6 @@ export class LocalEventManager {
                 .then(() => {
                     this._showAlertModal(chrome.i18n.getMessage("eventDeleted") || 'イベントを削除しました');
 
-                    // イベントレイアウトマネージャーから削除
-                    this.eventLayoutManager.removeEvent(eventId);
-
                     // イベント表示を更新（DOM要素の削除）
                     const eventElements = this.localEventsDiv.querySelectorAll('.local-event');
                     for (const element of eventElements) {
@@ -383,7 +380,8 @@ export class LocalEventManager {
                         }
                     }
 
-                    // レイアウトを再計算
+                    // イベントレイアウトマネージャーから削除してからレイアウトを再計算
+                    this.eventLayoutManager.removeEvent(eventId);
                     this.eventLayoutManager.calculateLayout();
                 })
                 .catch(error => {
