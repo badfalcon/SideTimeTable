@@ -37,7 +37,7 @@ export class GoogleEventManager {
     fetchEvents() {
         console.log('Googleイベント取得開始');
         console.log('Google連携状態:', this.isGoogleIntegrated);
-        
+
         if (!this.isGoogleIntegrated) {
             console.log('Google連携が無効です');
             return;
@@ -46,23 +46,23 @@ export class GoogleEventManager {
         try {
             chrome.runtime.sendMessage({action: "getEvents"}, (response) => {
                 console.log('イベント取得応答:', response);
-                
+
                 // 以前の表示をクリア
                 this.googleEventsDiv.innerHTML = '';
-                
+
                 // イベントレイアウトマネージャーのイベントをクリア
                 this.eventLayoutManager.clearEvents();
-                
+
                 if (chrome.runtime.lastError) {
                     logError('Googleイベント取得', chrome.runtime.lastError);
                     return;
                 }
-                
+
                 if (!response) {
                     logError('Googleイベント取得', '応答がありません');
                     return;
                 }
-                
+
                 if (response.error) {
                     logError('Googleイベント取得', response.error);
                     const errorDiv = document.createElement('div');
@@ -79,7 +79,7 @@ export class GoogleEventManager {
 
                 console.log('イベント処理開始:', response.events.length + '件');
                 this._processEvents(response.events);
-                
+
                 // イベントレイアウトを計算して適用
                 this.eventLayoutManager.calculateLayout();
             });
@@ -123,13 +123,13 @@ export class GoogleEventManager {
 
         const eventDiv = document.createElement('div');
         eventDiv.className = 'event google-event';
-        
+
         const startDate = new Date(event.start.dateTime || event.start.date);
         const endDate = new Date(event.end.dateTime || event.end.date);
-        
+
         const startOffset = (1 + (startDate - this.timeTableManager.openTime) / TIME_CONSTANTS.HOUR_MILLIS) * TIME_CONSTANTS.UNIT_HEIGHT;
         const duration = (endDate - startDate) / TIME_CONSTANTS.MINUTE_MILLIS * TIME_CONSTANTS.UNIT_HEIGHT / 60;
-        
+
         if (duration < 30) {
             eventDiv.className = 'event google-event short'; // 30分未満の場合はpaddingを減らす
             eventDiv.style.height = `${duration}px`; // padding分を引かない
@@ -154,9 +154,9 @@ export class GoogleEventManager {
         } else {
             eventDiv.textContent = eventContent;
         }
-        
+
         this.googleEventsDiv.appendChild(eventDiv);
-        
+
         // イベントレイアウトマネージャーに登録
         this.eventLayoutManager.registerEvent({
             startTime: startDate,
@@ -207,11 +207,11 @@ export class LocalEventManager {
      */
     loadLocalEvents() {
         this.localEventsDiv.innerHTML = ''; // 以前の表示をクリア
-        
+
         loadLocalEvents()
             .then(events => {
                 console.log('ローカルイベント取得:', events.length + '件');
-                
+
                 events.forEach(event => {
                     try {
                         const eventDiv = this._createEventDiv(event.title, event.startTime, event.endTime);
@@ -220,7 +220,7 @@ export class LocalEventManager {
                         logError('イベント表示', error);
                     }
                 });
-                
+
                 // イベントレイアウトを計算して適用
                 this.eventLayoutManager.calculateLayout();
             })
@@ -236,7 +236,7 @@ export class LocalEventManager {
     _createEventDiv(title, startTime, endTime) {
         const eventDiv = document.createElement('div');
         eventDiv.className = 'event local-event';
-        
+
         const startDate = new Date();
         startDate.setHours(startTime.split(':')[0], startTime.split(':')[1], 0, 0);
         const endDate = new Date();
@@ -251,13 +251,13 @@ export class LocalEventManager {
         } else {
             eventDiv.style.height = `${duration - 10}px`;
         }
-        
+
         eventDiv.style.top = `${startOffset}px`;
         eventDiv.textContent = `${startTime} - ${endTime}: ${title}`;
 
         // 編集機能を設定
         this._setupEventEdit(eventDiv, {title, startTime, endTime});
-        
+
         // イベントレイアウトマネージャーに登録
         this.eventLayoutManager.registerEvent({
             startTime: startDate,
@@ -276,9 +276,9 @@ export class LocalEventManager {
      */
     _setupEventEdit(eventDiv, event) {
         if (!this.eventDialogElements) return;
-        
+
         const elements = this.eventDialogElements;
-        
+
         eventDiv.addEventListener('click', () => {
             // 編集用ダイアログを表示
             elements.dialog.style.display = 'flex';
@@ -306,7 +306,7 @@ export class LocalEventManager {
      */
     _handleEventUpdate(originalEvent) {
         if (!this.eventDialogElements) return;
-        
+
         const elements = this.eventDialogElements;
         const newTitle = elements.titleInput.value;
         const newStartTime = elements.startTimeInput.value;
@@ -354,6 +354,9 @@ export class LocalEventManager {
      */
     _handleEventDelete(event) {
         if (confirm(chrome.i18n.getMessage("confirmDeleteEvent") || 'イベントを削除しますか？')) {
+            // イベントIDを生成
+            const eventId = `local-${event.title}-${event.startTime}-${event.endTime}`;
+
             loadLocalEvents()
                 .then(localEvents => {
                     // 対象のイベントを除外
@@ -362,12 +365,26 @@ export class LocalEventManager {
                           e.startTime === event.startTime && 
                           e.endTime === event.endTime)
                     );
-                    
+
                     return saveLocalEvents(updatedEvents);
                 })
                 .then(() => {
                     this._showAlertModal(chrome.i18n.getMessage("eventDeleted") || 'イベントを削除しました');
-                    this.loadLocalEvents(); // イベント表示を更新
+
+                    // イベントレイアウトマネージャーから削除
+                    this.eventLayoutManager.removeEvent(eventId);
+
+                    // イベント表示を更新（DOM要素の削除）
+                    const eventElements = this.localEventsDiv.querySelectorAll('.local-event');
+                    for (const element of eventElements) {
+                        if (element.textContent.includes(`${event.startTime} - ${event.endTime}: ${event.title}`)) {
+                            element.remove();
+                            break;
+                        }
+                    }
+
+                    // レイアウトを再計算
+                    this.eventLayoutManager.calculateLayout();
                 })
                 .catch(error => {
                     logError('イベント削除', error);
@@ -386,7 +403,7 @@ export class LocalEventManager {
      */
     addNewEvent() {
         if (!this.eventDialogElements) return;
-        
+
         const elements = this.eventDialogElements;
         const title = elements.titleInput.value;
         const startTime = elements.startTimeInput.value;
@@ -403,10 +420,10 @@ export class LocalEventManager {
                     // イベント要素を作成して表示
                     const eventDiv = this._createEventDiv(title, startTime, endTime);
                     this.localEventsDiv.appendChild(eventDiv);
-                    
+
                     // イベントレイアウトを再計算
                     this.eventLayoutManager.calculateLayout();
-                    
+
                     this._showAlertModal(chrome.i18n.getMessage("eventSaved") || 'イベントを保存しました');
                 })
                 .catch(error => {

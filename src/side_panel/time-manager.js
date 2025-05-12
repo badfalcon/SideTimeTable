@@ -44,6 +44,14 @@ export class EventLayoutManager {
     }
 
     /**
+     * 特定のイベントを削除
+     * @param {string} id - 削除するイベントのID
+     */
+    removeEvent(id) {
+        this.events = this.events.filter(event => event.id !== id);
+    }
+
+    /**
      * イベントの配置を計算して適用
      */
     calculateLayout() {
@@ -55,10 +63,10 @@ export class EventLayoutManager {
             const startB = b.startTime instanceof Date ? b.startTime.getTime() : b.startTime;
             return startA - startB;
         });
-        
+
         // 重なるイベントをグループ化
         this.layoutGroups = this._groupOverlappingEvents();
-        
+
         // 各グループ内でイベントの配置を計算
         this._applyLayout();
     }
@@ -71,12 +79,12 @@ export class EventLayoutManager {
     _groupOverlappingEvents() {
         const groups = [];
         let currentGroup = [];
-        
+
         // 最初のイベントをグループに追加
         if (this.events.length > 0) {
             currentGroup.push(this.events[0]);
         }
-        
+
         // 2番目以降のイベントを処理
         for (let i = 1; i < this.events.length; i++) {
             const currentEvent = this.events[i];
@@ -84,22 +92,22 @@ export class EventLayoutManager {
                 currentEvent.startTime.getTime() : currentEvent.startTime;
             const currentEnd = currentEvent.endTime instanceof Date ? 
                 currentEvent.endTime.getTime() : currentEvent.endTime;
-            
+
             // 現在のグループ内の最後のイベントの終了時間を取得
             let overlapsWithGroup = false;
-            
+
             // グループ内のすべてのイベントと重なりをチェック
             for (const groupEvent of currentGroup) {
                 const groupEventEnd = groupEvent.endTime instanceof Date ? 
                     groupEvent.endTime.getTime() : groupEvent.endTime;
-                
+
                 // 現在のイベントの開始時間が、グループ内のイベントの終了時間より前なら重なりあり
                 if (currentStart < groupEventEnd) {
                     overlapsWithGroup = true;
                     break;
                 }
             }
-            
+
             if (overlapsWithGroup) {
                 // 重なる場合は現在のグループに追加
                 currentGroup.push(currentEvent);
@@ -111,12 +119,12 @@ export class EventLayoutManager {
                 currentGroup = [currentEvent];
             }
         }
-        
+
         // 最後のグループを追加
         if (currentGroup.length > 0) {
             groups.push(currentGroup);
         }
-        
+
         return groups;
     }
 
@@ -128,7 +136,7 @@ export class EventLayoutManager {
         this.layoutGroups.forEach(group => {
             // グループ内のイベント数
             const count = group.length;
-            
+
             // 1つしかない場合は最大幅で表示
             if (count === 1) {
                 const event = group[0];
@@ -136,10 +144,10 @@ export class EventLayoutManager {
                 event.element.style.width = `${this.maxWidth}px`;
                 return;
             }
-            
+
             // 複数ある場合は幅を調整
             const width = Math.max(100, Math.floor((this.maxWidth - (this.gap * (count - 1))) / count));
-            
+
             // 各イベントの位置を設定
             group.forEach((event, index) => {
                 const left = this.baseLeft + (width + this.gap) * index;
@@ -186,16 +194,16 @@ export class TimeTableManager {
     initializeTimeVariables() {
         const openTimeParts = this.openHour.split(':');
         const closeTimeParts = this.closeHour.split(':');
-        
+
         const openTimeHour = parseInt(openTimeParts[0], 10);
         const openTimeMinute = parseInt(openTimeParts[1], 10);
         const closeTimeHour = parseInt(closeTimeParts[0], 10);
         const closeTimeMinute = parseInt(closeTimeParts[1], 10);
-        
+
         this.openTime = new Date().setHours(openTimeHour, openTimeMinute, 0, 0);
         this.closeTime = new Date().setHours(closeTimeHour, closeTimeMinute, 0, 0);
         this.hourDiff = (this.closeTime - this.openTime) / TIME_CONSTANTS.HOUR_MILLIS;
-        
+
         console.log(`openTime: ${this.openTime}, closeTime: ${this.closeTime}, hourDiff: ${this.hourDiff}`);
         return { openTimeHour, openTimeMinute };
     }
@@ -209,7 +217,7 @@ export class TimeTableManager {
     createBaseTable(breakTimeFixed, breakTimeStart, breakTimeEnd) {
         const { openTimeMinute } = this.initializeTimeVariables();
         const unitHeight = TIME_CONSTANTS.UNIT_HEIGHT;
-        
+
         this.parentDiv.style.height = `${unitHeight * (this.hourDiff + 2)}px`;
         this.baseDiv.innerHTML = ''; // 以前の表示をクリア
         this.baseDiv.style.height = `${unitHeight * (this.hourDiff + 2)}px`;
@@ -232,12 +240,12 @@ export class TimeTableManager {
     _createWorkTimeWithBreak(breakTimeStart, breakTimeEnd, unitHeight) {
         const breakTimeStartParts = breakTimeStart.split(':');
         const breakTimeEndParts = breakTimeEnd.split(':');
-        
+
         const breakTimeStartHour = parseInt(breakTimeStartParts[0], 10);
         const breakTimeStartMinute = parseInt(breakTimeStartParts[1], 10);
         const breakTimeEndHour = parseInt(breakTimeEndParts[0], 10);
         const breakTimeEndMinute = parseInt(breakTimeEndParts[1], 10);
-        
+
         const breakTimeStartMillis = new Date().setHours(breakTimeStartHour, breakTimeStartMinute, 0, 0);
         const breakTimeEndMillis = new Date().setHours(breakTimeEndHour, breakTimeEndMinute, 0, 0);
 
@@ -280,7 +288,7 @@ export class TimeTableManager {
             if (i === 0 && openTimeMinute !== 0) {
                 continue;
             }
-            
+
             // 時間ラベル
             const hourLabel = document.createElement('div');
             hourLabel.className = 'hour-label';
@@ -302,10 +310,10 @@ export class TimeTableManager {
      */
     updateCurrentTimeLine() {
         const currentTime = new Date();
-        
+
         // 現在時刻が業務時間内かチェック
         const isWithinWorkHours = currentTime.getTime() >= this.openTime && currentTime.getTime() <= this.closeTime;
-        
+
         // 既存の線を再利用または作成
         if (!this.currentTimeLine) {
             this.currentTimeLine = document.createElement('div');
@@ -313,7 +321,7 @@ export class TimeTableManager {
             this.currentTimeLine.className = 'current-time-line';
             this.parentDiv.appendChild(this.currentTimeLine);
         }
-        
+
         if (isWithinWorkHours) {
             // 業務時間内の場合のみ表示
             const offset = (1 + (currentTime.getTime() - this.openTime) / TIME_CONSTANTS.HOUR_MILLIS) * TIME_CONSTANTS.UNIT_HEIGHT;
