@@ -38,32 +38,32 @@ export class EventLayoutManager {
          * @private
          */
         this.events = [];
-        
+
         /**
          * 計算されたレイアウトグループの配列
          * @type {Array<Array<Object>>}
          * @private
          */
         this.layoutGroups = [];
-        
+
         /**
          * イベントの最大幅（ピクセル）
          * @type {number}
          */
         this.maxWidth = 200;
-        
+
         /**
          * イベントの基本左位置（ピクセル）
          * @type {number}
          */
         this.baseLeft = 65;
-        
+
         /**
          * イベント間の間隔（ピクセル）
          * @type {number}
          */
         this.gap = 5;
-        
+
         /**
          * 時間計算のキャッシュ
          * @type {Map<string, number>}
@@ -87,19 +87,19 @@ export class EventLayoutManager {
     _getTimeInMillis(time, id, type) {
         // キャッシュキーを生成
         const cacheKey = `${id}_${type}`;
-        
+
         // キャッシュに存在する場合はそれを返す
         if (this._timeCache.has(cacheKey)) {
             return this._timeCache.get(cacheKey);
         }
-        
+
         // 存在しない場合は計算して保存
         const timeInMillis = time instanceof Date ? time.getTime() : time;
         this._timeCache.set(cacheKey, timeInMillis);
-        
+
         return timeInMillis;
     }
-    
+
     /**
      * 時間キャッシュをクリアする
      * 
@@ -112,7 +112,7 @@ export class EventLayoutManager {
     _clearTimeCache() {
         this._timeCache.clear();
     }
-    
+
     /**
      * イベントをレイアウトマネージャーに登録する
      * 
@@ -144,27 +144,27 @@ export class EventLayoutManager {
         if (!eventData || !eventData.startTime || !eventData.endTime || !eventData.element || !eventData.id) {
             throw new Error('無効なイベントデータです');
         }
-    
+
         // 開始時間と終了時間の検証
         const start = eventData.startTime instanceof Date ? eventData.startTime.getTime() : eventData.startTime;
         const end = eventData.endTime instanceof Date ? eventData.endTime.getTime() : eventData.endTime;
-        
+
         if (start >= end) {
             throw new Error('開始時間は終了時間より前である必要があります');
         }
-    
+
         // イベントタイプの検証（存在する場合）
         if (eventData.type && !['google', 'local'].includes(eventData.type)) {
             throw new Error("イベントタイプは 'google' または 'local' である必要があります");
         }
-    
+
         // 時間をキャッシュに事前に格納しておく
         this._getTimeInMillis(eventData.startTime, eventData.id, 'start');
         this._getTimeInMillis(eventData.endTime, eventData.id, 'end');
-    
+
         this.events.push(eventData);
     }
-    
+
     /**
      * すべてのイベントをクリアする
      * 
@@ -186,9 +186,9 @@ export class EventLayoutManager {
                 event.element = null;
             }
         });
-        
+
         this.events = [];
-        
+
         /**
          * 計算されたレイアウトグループの配列
          * @type {Array<Array<Object>>}
@@ -197,7 +197,7 @@ export class EventLayoutManager {
         this.layoutGroups = [];
         this._clearTimeCache(); // 時間キャッシュもクリア
     }
-    
+
     /**
      * 特定のイベントを削除する
      * 
@@ -221,10 +221,10 @@ export class EventLayoutManager {
         if (!id) {
             throw new Error('削除するイベントのIDが指定されていません');
         }
-        
+
         const originalLength = this.events.length;
         this.events = this.events.filter(event => event.id !== id);
-        
+
         // イベントが削除された場合、関連するキャッシュもクリア
         if (this.events.length < originalLength) {
             // 削除されたイベントのキャッシュエントリを削除
@@ -234,7 +234,7 @@ export class EventLayoutManager {
             this._timeCache.delete(endKey);
             return true;
         }
-        
+
         return false;
     }
 
@@ -261,28 +261,28 @@ export class EventLayoutManager {
      */
     calculateLayout() {
         if (this.events.length === 0) return;
-    
+
         try {
             // キャッシュをクリア
             this._timeCache.clear();
-            
+
             // 無効なデータや参照が解除されたイベントを除外
             this.events = this.events.filter(event => {
                 return event && event.startTime && event.endTime && event.element && event.id;
             });
-            
+
             if (this.events.length === 0) return;
-    
+
             // イベントを開始時間でソート
             this.events.sort((a, b) => {
                 const startA = this._getTimeInMillis(a.startTime, a.id, 'start');
                 const startB = this._getTimeInMillis(b.startTime, b.id, 'start');
                 return startA - startB;
             });
-    
+
             // 重なるイベントをグループ化
             this.layoutGroups = this._groupOverlappingEvents();
-    
+
             // 各グループ内でイベントの配置を計算
             this._applyLayout();
         } catch (error) {
@@ -309,33 +309,33 @@ export class EventLayoutManager {
     _groupOverlappingEvents() {
         const groups = [];
         let currentGroup = [];
-    
+
         // 最初のイベントをグループに追加
         if (this.events.length > 0) {
             currentGroup.push(this.events[0]);
         }
-    
+
         // 2番目以降のイベントを処理
         for (let i = 1; i < this.events.length; i++) {
             const currentEvent = this.events[i];
             const currentStart = this._getTimeInMillis(currentEvent.startTime, currentEvent.id, 'start');
             const currentEnd = this._getTimeInMillis(currentEvent.endTime, currentEvent.id, 'end');
-    
+
             // 現在のグループ内の最後のイベントの終了時間を取得
             let overlapsWithGroup = false;
-    
+
             // グループ内のすべてのイベントと重なりをチェック
             for (const groupEvent of currentGroup) {
                 const groupEventStart = this._getTimeInMillis(groupEvent.startTime, groupEvent.id, 'start');
                 const groupEventEnd = this._getTimeInMillis(groupEvent.endTime, groupEvent.id, 'end');
-    
+
                 // 時間の重なりをより厳密にチェック（両方のイベントが完全に分離していない場合）
                 if (!(currentEnd <= groupEventStart || currentStart >= groupEventEnd)) {
                     overlapsWithGroup = true;
                     break;
                 }
             }
-    
+
             if (overlapsWithGroup) {
                 // 重なる場合は現在のグループに追加
                 currentGroup.push(currentEvent);
@@ -347,15 +347,65 @@ export class EventLayoutManager {
                 currentGroup = [currentEvent];
             }
         }
-    
+
         // 最後のグループを追加
         if (currentGroup.length > 0) {
             groups.push(currentGroup);
         }
-    
+
         return groups;
     }
-    
+
+    /**
+     * イベントをレーンに割り当てる
+     * 
+     * 時間的に重なるイベントを効率的にレーンに割り当てます。
+     * 開始時間が早いイベントから順に処理し、可能な限り少ないレーン数で
+     * すべてのイベントを配置します。
+     * 
+     * @private
+     * @param {Array} events - イベントの配列
+     * @returns {Array} - 各イベントに対応するレーン番号（インデックス）
+     */
+    _assignLanes(events) {
+        // 開始時刻でソート（元の順序を保持するためにインデックスを記録）
+        const sorted = events.map((e, i) => ({...e, index: i}))
+            .sort((a, b) => {
+                const startA = this._getTimeInMillis(a.startTime, a.id, 'start');
+                const startB = this._getTimeInMillis(b.startTime, b.id, 'start');
+                return startA - startB;
+            });
+
+        const lanes = [];  // 各レーンの最終終了時刻を記録
+        const result = new Array(events.length);
+
+        for (const event of sorted) {
+            let assigned = false;
+
+            for (let lane = 0; lane < lanes.length; lane++) {
+                const eventStart = this._getTimeInMillis(event.startTime, event.id, 'start');
+                if (lanes[lane] <= eventStart) {
+                    // このレーンに割り当て可能
+                    const eventEnd = this._getTimeInMillis(event.endTime, event.id, 'end');
+                    lanes[lane] = eventEnd;
+                    result[event.index] = lane;
+                    assigned = true;
+                    break;
+                }
+            }
+
+            if (!assigned) {
+                // 新しいレーンを作成
+                const newLane = lanes.length;
+                const eventEnd = this._getTimeInMillis(event.endTime, event.id, 'end');
+                lanes.push(eventEnd);
+                result[event.index] = newLane;
+            }
+        }
+
+        return result;
+    }
+
     /**
      * 計算されたレイアウトをイベント要素に適用する
      * 
@@ -364,8 +414,8 @@ export class EventLayoutManager {
      * 
      * レイアウトルール:
      * 1. 単一イベントは最大幅で表示
-     * 2. 重なるイベントは均等に幅を分割
-     * 3. 最小幅（100px）を保証
+     * 2. 重なるイベントはレーン割り当てに基づいて配置
+     * 3. 最小幅を保証
      * 4. イベント間に設定されたギャップを適用
      * 
      * @private
@@ -375,9 +425,9 @@ export class EventLayoutManager {
             this.layoutGroups.forEach(group => {
                 // 無効なイベントをフィルタリング
                 const validEvents = group.filter(event => event && event.element);
-                
+
                 if (validEvents.length === 0) return;
-                
+
                 // 1つしかない場合は最大幅で表示
                 if (validEvents.length === 1) {
                     const event = validEvents[0];
@@ -387,16 +437,23 @@ export class EventLayoutManager {
                     }
                     return;
                 }
-                
-                // 複数ある場合は幅を調整
-                const width = Math.max(100, Math.floor((this.maxWidth - (this.gap * (validEvents.length - 1))) / validEvents.length));
-                
+
+                // レーン割り当てを計算
+                const laneAssignments = this._assignLanes(validEvents);
+
+                // 必要なレーン数を計算
+                const laneCount = Math.max(...laneAssignments) + 1;
+
+                // 各レーンの幅を計算
+                const laneWidth = Math.max(100, Math.floor((this.maxWidth - (this.gap * (laneCount - 1))) / laneCount));
+
                 // 各イベントの位置を設定
                 validEvents.forEach((event, index) => {
                     if (event.element) {
-                        const left = this.baseLeft + (width + this.gap) * index;
+                        const lane = laneAssignments[index];
+                        const left = this.baseLeft + (laneWidth + this.gap) * lane;
                         event.element.style.left = `${left}px`;
-                        event.element.style.width = `${width}px`;
+                        event.element.style.width = `${laneWidth}px`;
                     }
                 });
             });
@@ -451,43 +508,43 @@ export class TimeTableManager {
          * @type {HTMLElement}
          */
         this.parentDiv = parentDiv;
-        
+
         /**
          * 基本的なタイムテーブル要素を格納する要素
          * @type {HTMLElement}
          */
         this.baseDiv = baseDiv;
-        
+
         /**
          * 業務開始時間（HH:MM形式）
          * @type {string}
          */
         this.openHour = TIME_CONSTANTS.DEFAULT_OPEN_HOUR;
-        
+
         /**
          * 業務終了時間（HH:MM形式）
          * @type {string}
          */
         this.closeHour = TIME_CONSTANTS.DEFAULT_CLOSE_HOUR;
-        
+
         /**
          * 業務開始時間（ミリ秒）
          * @type {number}
          */
         this.openTime = 0;
-        
+
         /**
          * 業務終了時間（ミリ秒）
          * @type {number}
          */
         this.closeTime = 0;
-        
+
         /**
          * 業務時間の長さ（時間単位）
          * @type {number}
          */
         this.hourDiff = 0;
-        
+
         /**
          * 現在時刻を示す線のHTML要素
          * @type {HTMLElement|null}
@@ -516,7 +573,7 @@ export class TimeTableManager {
         this.openHour = settings.openTime;
         this.closeHour = settings.closeTime;
     }
-    
+
     /**
      * 時間関連の変数を初期化
      * 
@@ -601,25 +658,25 @@ export class TimeTableManager {
     _createWorkTimeWithBreak(breakTimeStart, breakTimeEnd, unitHeight) {
         const breakTimeStartParts = breakTimeStart.split(':');
         const breakTimeEndParts = breakTimeEnd.split(':');
-    
+
         const breakTimeStartHour = parseInt(breakTimeStartParts[0], 10);
         const breakTimeStartMinute = parseInt(breakTimeStartParts[1], 10);
         const breakTimeEndHour = parseInt(breakTimeEndParts[0], 10);
         const breakTimeEndMinute = parseInt(breakTimeEndParts[1], 10);
-    
+
         const breakTimeStartMillis = new Date().setHours(breakTimeStartHour, breakTimeStartMinute, 0, 0);
         const breakTimeEndMillis = new Date().setHours(breakTimeEndHour, breakTimeEndMinute, 0, 0);
-    
+
         const breakTimeStartOffset = (1 + (breakTimeStartMillis - this.openTime) / TIME_CONSTANTS.HOUR_MILLIS) * unitHeight;
         const breakTimeDuration = (breakTimeEndMillis - breakTimeStartMillis) / TIME_CONSTANTS.MINUTE_MILLIS * unitHeight / 60;
-    
+
         // 休憩時間前の業務時間
         const workTimeDiv1 = document.createElement('div');
         workTimeDiv1.className = 'work-time';
         workTimeDiv1.style.top = `${unitHeight}px`;
         workTimeDiv1.style.height = `${breakTimeStartOffset - unitHeight}px`;
         this.baseDiv.appendChild(workTimeDiv1);
-    
+
         // 休憩時間後の業務時間
         const workTimeDiv2 = document.createElement('div');
         workTimeDiv2.className = 'work-time';
@@ -627,7 +684,7 @@ export class TimeTableManager {
         workTimeDiv2.style.height = `${unitHeight * (this.closeTime - breakTimeEndMillis) / TIME_CONSTANTS.HOUR_MILLIS}px`;
         this.baseDiv.appendChild(workTimeDiv2);
     }
-    
+
     /**
      * 休憩時間なしの業務時間表示を作成する
      * 
@@ -661,7 +718,7 @@ export class TimeTableManager {
             if (i === 0 && openTimeMinute !== 0) {
                 continue;
             }
-    
+
             // 時間ラベル
             const hourLabel = document.createElement('div');
             hourLabel.className = 'hour-label';
@@ -669,7 +726,7 @@ export class TimeTableManager {
             const hour = new Date(this.openTime + (i - 1) * TIME_CONSTANTS.HOUR_MILLIS).getHours();
             hourLabel.textContent = `${hour}:00`;
             this.baseDiv.appendChild(hourLabel);
-    
+
             // 時間補助線
             const hourLine = document.createElement('div');
             hourLine.className = 'hour-line';
@@ -677,7 +734,7 @@ export class TimeTableManager {
             this.baseDiv.appendChild(hourLine);
         }
     }
-    
+
     /**
      * 現在時刻の線を更新する
      * 
