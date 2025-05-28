@@ -445,7 +445,8 @@ export class EventLayoutManager {
                 const laneCount = Math.max(...laneAssignments) + 1;
 
                 // 各レーンの幅を計算
-                const laneWidth = Math.max(100, Math.floor((this.maxWidth - (this.gap * (laneCount - 1))) / laneCount));
+                // レーン数に応じて幅を調整する - レーン数が増えるほど幅を狭くする
+                const laneWidth = Math.max(60, Math.floor((this.maxWidth * 0.9 - (this.gap * (laneCount - 1))) / laneCount));
 
                 // 各イベントの位置を設定
                 validEvents.forEach((event, index) => {
@@ -453,7 +454,17 @@ export class EventLayoutManager {
                         const lane = laneAssignments[index];
                         const left = this.baseLeft + (laneWidth + this.gap) * lane;
                         event.element.style.left = `${left}px`;
-                        event.element.style.width = `${laneWidth}px`;
+
+                        // レーン数に応じて幅を調整
+                        const width = laneWidth;
+                        event.element.style.width = `${width}px`;
+
+                        // レーン数が多い場合はフォントサイズを小さくする
+                        if (laneCount > 2) {
+                            event.element.style.fontSize = '0.9em';
+                        } else {
+                            event.element.style.fontSize = '1em';
+                        }
                     }
                 });
             });
