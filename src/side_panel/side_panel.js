@@ -49,19 +49,19 @@ class UIController {
 
         // 時間選択リストの初期化
         this._initializeTimeList();
-        
+
         // ダイアログ要素の設定
         this._setupDialogElements();
-        
+
         // 設定の読み込み
         this._loadSettings();
-        
+
         // イベントリスナーの設定
         this._setupEventListeners();
-        
+
         // タイトル設定
         this._setTitle();
-        
+
         // 定期的な更新の設定
         this._setupPeriodicUpdates();
     }
@@ -127,24 +127,27 @@ class UIController {
                     // 各マネージャーに設定を適用
                     this.googleEventManager.setGoogleIntegration(settings.googleIntegrated);
                     this.timeTableManager.applySettings(settings);
-                    
+
                     console.log('タイムテーブル作成開始');
                     // タイムテーブルの作成
                     this.timeTableManager.createBaseTable(settings.breakTimeFixed, settings.breakTimeStart, settings.breakTimeEnd);
-                    
+
                     console.log('イベント取得開始');
                     // イベントの取得と表示 - 少し遅延を入れて確実に実行されるようにする
                     setTimeout(() => {
+                        // ローカルイベントの取得
+                        console.log('ローカルイベント取得開始');
+                        this.localEventManager.loadLocalEvents();
+
                         // Googleイベントの取得
                         if (settings.googleIntegrated) {
                             console.log('Googleイベント取得開始');
                             this.googleEventManager.fetchEvents();
+                        } else {
+                            // Google連携がない場合は、ローカルイベントのみでレイアウト計算
+                            this.eventLayoutManager.calculateLayout();
                         }
-                        
-                        // ローカルイベントの取得
-                        console.log('ローカルイベント取得開始');
-                        this.localEventManager.loadLocalEvents();
-                        
+
                         // 現在時刻の線を更新
                         this.timeTableManager.updateCurrentTimeLine();
                     }, 100); // 100ミリ秒の遅延
@@ -185,7 +188,7 @@ class UIController {
             eventTitleInput.value = '';
             eventStartTimeInput.value = '';
             eventEndTimeInput.value = '';
-            
+
             // 保存ボタンのクリックイベントを設定
             saveEventButton.onclick = () => {
                 this.localEventManager.addNewEvent();
@@ -251,7 +254,7 @@ class UIController {
             const currentTime = new Date();
             const currentMinutes = currentTime.getMinutes();
             const currentSeconds = currentTime.getSeconds();
-            
+
             if (currentMinutes === 0) {
                 // 毎時0分に予定を更新
                 this.googleEventManager.fetchEvents();
@@ -269,7 +272,7 @@ class UIController {
 document.addEventListener('DOMContentLoaded', function() {
     // 多言語化
     localizeHtmlPage();
-    
+
     // UIコントローラーの初期化と実行
     const uiController = new UIController();
     uiController.initialize();

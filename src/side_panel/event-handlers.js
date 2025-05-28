@@ -50,8 +50,14 @@ export class GoogleEventManager {
                 // 以前の表示をクリア
                 this.googleEventsDiv.innerHTML = '';
 
-                // イベントレイアウトマネージャーのイベントをクリア
-                this.eventLayoutManager.clearEvents();
+                // Googleイベントのみをレイアウトマネージャーから削除
+                // 全イベントをクリアするのではなく、Googleイベントのみを削除
+                const events = [...this.eventLayoutManager.events];
+                events.forEach(event => {
+                    if (event && event.type === 'google') {
+                        this.eventLayoutManager.removeEvent(event.id);
+                    }
+                });
 
                 if (chrome.runtime.lastError) {
                     logError('Googleイベント取得', chrome.runtime.lastError);
@@ -221,8 +227,7 @@ export class LocalEventManager {
                     }
                 });
 
-                // イベントレイアウトを計算して適用
-                this.eventLayoutManager.calculateLayout();
+                // 注: レイアウト計算はside_panel.jsで行うため、ここでは行わない
             })
             .catch(error => {
                 logError('ローカルイベント読み込み', error);
