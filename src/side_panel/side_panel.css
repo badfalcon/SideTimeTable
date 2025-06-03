@@ -101,7 +101,6 @@ h1 {
     transition: left 0.3s, width 0.3s; /* スムーズな移動のためのトランジション */
     overflow: hidden; /* テキストがはみ出さないようにする */
     text-overflow: ellipsis; /* はみ出したテキストを省略記号で表示 */
-    white-space: nowrap; /* テキストを折り返さない */
 }
 
 .short {
