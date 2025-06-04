@@ -129,6 +129,8 @@ export class GoogleEventManager {
 
         const eventDiv = document.createElement('div');
         eventDiv.className = 'event google-event';
+        // ツールチップとしてイベントのタイトルを表示
+        eventDiv.title = event.summary;
 
         const startDate = new Date(event.start.dateTime || event.start.date);
         const endDate = new Date(event.end.dateTime || event.end.date);
@@ -241,6 +243,8 @@ export class LocalEventManager {
     _createEventDiv(title, startTime, endTime) {
         const eventDiv = document.createElement('div');
         eventDiv.className = 'event local-event';
+        // ツールチップとしてイベントのタイトルを表示
+        eventDiv.title = title;
 
         const startDate = new Date();
         startDate.setHours(startTime.split(':')[0], startTime.split(':')[1], 0, 0);
