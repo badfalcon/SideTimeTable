@@ -49,9 +49,27 @@ h1 {
     cursor: pointer;     /* ポインターにカーソルを変更 */
 }
 
-#sideTimeTableHeader > h1 {
+.date-navigation {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.date-navigation h1 {
     display: inline-block;
+    margin: 0 10px;
     vertical-align: middle;
+}
+
+.date-nav-arrow {
+    font-size: 20px;
+    color: #333;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.date-nav-arrow:hover {
+    color: #007bff;
 }
 
 .add-local-event-icon:hover {

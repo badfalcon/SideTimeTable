@@ -7,7 +7,7 @@
 
 import { TimeTableManager, EventLayoutManager } from './time-manager.js';
 import { GoogleEventManager, LocalEventManager } from './event-handlers.js';
-import { generateTimeList, loadSettings, logError } from '../lib/utils.js';
+import { generateTimeList, loadSettings, logError, getPreviousDay, getNextDay, formatDate } from '../lib/utils.js';
 
 // リロードメッセージリスナー
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -29,6 +29,7 @@ class UIController {
         this.googleEventManager = null;
         this.localEventManager = null;
         this.updateInterval = null;
+        this.currentDate = new Date(); // 現在の日付を初期値として設定
     }
 
     /**
@@ -128,28 +129,24 @@ class UIController {
                     this.googleEventManager.setGoogleIntegration(settings.googleIntegrated);
                     this.timeTableManager.applySettings(settings);
 
-                    console.log('タイムテーブル作成開始');
-                    // タイムテーブルの作成
-                    this.timeTableManager.createBaseTable(settings.breakTimeFixed, settings.breakTimeStart, settings.breakTimeEnd);
+                    // タイムテーブルの作成 - 現在の日付を渡す
+                    this.timeTableManager.createBaseTable(settings.breakTimeFixed, settings.breakTimeStart, settings.breakTimeEnd, this.currentDate);
 
-                    console.log('イベント取得開始');
                     // イベントの取得と表示 - 少し遅延を入れて確実に実行されるようにする
                     setTimeout(() => {
                         // ローカルイベントの取得
-                        console.log('ローカルイベント取得開始');
-                        this.localEventManager.loadLocalEvents();
+                        this.localEventManager.loadLocalEvents(this.currentDate);
 
                         // Googleイベントの取得
                         if (settings.googleIntegrated) {
-                            console.log('Googleイベント取得開始');
-                            this.googleEventManager.fetchEvents();
+                            this.googleEventManager.fetchEvents(this.currentDate);
                         } else {
-                            // Google連携がない場合は、ローカルイベントのみでレイアウト計算
-                            this.eventLayoutManager.calculateLayout();
+                            // Google連携がない場合でも、fetchEvents内でレイアウト計算が行われるようになった
+                            this.googleEventManager.fetchEvents(this.currentDate);
                         }
 
-                        // 現在時刻の線を更新
-                        this.timeTableManager.updateCurrentTimeLine();
+                        // 現在時刻の線を更新 - 現在の日付を渡す
+                        this.timeTableManager.updateCurrentTimeLine(this.currentDate);
                     }, 100); // 100ミリ秒の遅延
                 } catch (error) {
                     logError('設定適用', error);
@@ -165,6 +162,20 @@ class UIController {
      * @private
      */
     _setupEventListeners() {
+        // 日付ナビゲーションの矢印ボタン
+        const prevDateButton = document.getElementById('prevDateButton');
+        const nextDateButton = document.getElementById('nextDateButton');
+        
+        // 前日ボタンのクリックイベント
+        prevDateButton.addEventListener('click', () => {
+            this._goToPreviousDay();
+        });
+        
+        // 翌日ボタンのクリックイベント
+        nextDateButton.addEventListener('click', () => {
+            this._goToNextDay();
+        });
+        
         // 設定アイコンのクリックイベント
         const settingsIcon = document.getElementById('settingsIcon');
         settingsIcon.addEventListener('click', () => {
@@ -191,7 +202,7 @@ class UIController {
 
             // 保存ボタンのクリックイベントを設定
             saveEventButton.onclick = () => {
-                this.localEventManager.addNewEvent();
+                this.localEventManager.addNewEvent(this.currentDate);
             };
         });
 
@@ -240,9 +251,68 @@ class UIController {
      * @private
      */
     _setTitle() {
-        const today = new Date();
         const title = document.querySelector('h1');
-        title.textContent = today.toLocaleDateString(undefined, {dateStyle: 'full'});
+        title.textContent = formatDate(this.currentDate);
+    }
+    
+    /**
+     * 前日に移動
+     * @private
+     */
+    _goToPreviousDay() {
+        this.currentDate = getPreviousDay(this.currentDate);
+        this._setTitle();
+        this._refreshEvents();
+    }
+    
+    /**
+     * 翌日に移動
+     * @private
+     */
+    _goToNextDay() {
+        this.currentDate = getNextDay(this.currentDate);
+        this._setTitle();
+        this._refreshEvents();
+    }
+    
+    /**
+     * イベントを再読み込み
+     * @private
+     */
+    _refreshEvents() {
+        // タイムテーブルをクリア
+        const localEventsDiv = document.getElementById('sideTimeTableEventsLocal');
+        const googleEventsDiv = document.getElementById('sideTimeTableEventsGoogle');
+        localEventsDiv.innerHTML = '';
+        googleEventsDiv.innerHTML = '';
+        
+        // 設定を読み込んでタイムテーブルを再作成し、イベントを取得
+        loadSettings()
+            .then(settings => {
+                try {
+                    // タイムテーブルを再作成 - 現在の日付を渡す
+                    this.timeTableManager.createBaseTable(settings.breakTimeFixed, settings.breakTimeStart, settings.breakTimeEnd, this.currentDate);
+                    
+                    // 現在時刻の線を更新 - 現在の日付を渡す
+                    this.timeTableManager.updateCurrentTimeLine(this.currentDate);
+                    
+                    // ローカルイベントの取得
+                    this.localEventManager.loadLocalEvents(this.currentDate);
+                    
+                    // Googleイベントの取得
+                    if (settings.googleIntegrated) {
+                        this.googleEventManager.fetchEvents(this.currentDate);
+                    } else {
+                        // Google連携がない場合でも、fetchEvents内でレイアウト計算が行われるようになった
+                        this.googleEventManager.fetchEvents(this.currentDate);
+                    }
+                } catch (error) {
+                    logError('イベント再読み込み', error);
+                }
+            })
+            .catch(error => {
+                logError('設定読み込み', error);
+            });
     }
 
     /**
@@ -256,13 +326,13 @@ class UIController {
             const currentSeconds = currentTime.getSeconds();
 
             if (currentMinutes === 0) {
-                // 毎時0分に予定を更新
-                this.googleEventManager.fetchEvents();
+                // 毎時0分に予定を更新 - 現在の日付を渡す
+                this.googleEventManager.fetchEvents(this.currentDate);
             }
 
             if (currentSeconds === 0) {
-                // 毎分0秒に現在時刻の線を更新
-                this.timeTableManager.updateCurrentTimeLine();
+                // 毎分0秒に現在時刻の線を更新 - 現在の日付を渡す
+                this.timeTableManager.updateCurrentTimeLine(this.currentDate);
             }
         }, 1000);
     }

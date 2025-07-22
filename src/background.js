@@ -12,18 +12,17 @@ chrome.sidePanel
 
 // 拡張機能がインストールされたときの処理
 chrome.runtime.onInstalled.addListener(() => {
-    console.log("拡張機能がインストールされました");
+    // インストール時の処理をここに記述
 });
 
 /**
  * Googleカレンダーからイベントを取得する
+ * @param {string} [dateStr=null] - 取得する日付（YYYY-MM-DD形式、省略時は今日の日付）
  * @returns {Promise<Array>} イベントの配列を返すPromise
  */
-function getCalendarEvents() {
-    console.log("Googleカレンダーイベント取得開始");
+function getCalendarEvents(dateStr = null) {
     return new Promise((resolve, reject) => {
         try {
-            console.log("認証トークンをリクエスト中");
             chrome.identity.getAuthToken({interactive: true}, (token) => {
                 if (chrome.runtime.lastError || !token) {
                     const error = chrome.runtime.lastError || new Error("認証トークンが取得できませんでした");
@@ -31,20 +30,28 @@ function getCalendarEvents() {
                     reject(error);
                     return;
                 }
-
-                console.log("認証トークン取得成功");
                 
-                // 今日の日付の範囲を設定
-                const today = new Date();
-                const startOfDay = new Date(today);
+                // 指定された日付または今日の日付の範囲を設定
+                let targetDate;
+                if (dateStr) {
+                    targetDate = new Date(dateStr);
+                    // 無効な日付の場合は今日の日付を使用
+                    if (isNaN(targetDate.getTime())) {
+                        console.warn("無効な日付形式です。今日の日付を使用します。", dateStr);
+                        targetDate = new Date();
+                    }
+                } else {
+                    targetDate = new Date();
+                }
+                
+                const startOfDay = new Date(targetDate);
                 startOfDay.setHours(0, 0, 0, 0);
-                const endOfDay = new Date(today);
+                const endOfDay = new Date(targetDate);
                 endOfDay.setHours(23, 59, 59, 999);
                 
                 // カレンダーAPIのURL
                 const calendarApiUrl = `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${startOfDay.toISOString()}&timeMax=${endOfDay.toISOString()}&singleEvents=true&orderBy=startTime`;
                 
-                console.log("カレンダーイベントをフェッチ中");
                 fetch(calendarApiUrl, {
                     headers: {
                         Authorization: "Bearer " + token
@@ -57,7 +64,6 @@ function getCalendarEvents() {
                     return response.json();
                 })
                 .then(data => {
-                    console.log(`${data.items?.length || 0}件のイベントを取得しました`);
                     resolve(data.items || []);
                 })
                 .catch(error => {
@@ -77,18 +83,16 @@ function getCalendarEvents() {
  * @returns {Promise<boolean>} 認証状態を返すPromise
  */
 function checkGoogleAuth() {
-    console.log("Google認証状態確認開始");
     return new Promise((resolve, reject) => {
         try {
             chrome.identity.getAuthToken({interactive: false}, (token) => {
                 if (chrome.runtime.lastError) {
-                    console.log("認証状態確認エラー:", chrome.runtime.lastError);
-                    resolve(false); // エラーがあっても認証されていないだけなのでrejectしない
+                    // エラーがあっても認証されていないだけなのでrejectしない
+                    resolve(false);
                     return;
                 }
                 
                 const isAuthenticated = !!token;
-                console.log("認証状態:", isAuthenticated ? "認証済み" : "未認証");
                 resolve(isAuthenticated);
             });
         } catch (error) {
@@ -100,11 +104,9 @@ function checkGoogleAuth() {
 
 // メッセージリスナー
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    console.log("メッセージ受信:", request.action);
-    
     switch (request.action) {
         case "getEvents":
-            getCalendarEvents()
+            getCalendarEvents(request.date)
                 .then(events => sendResponse({events}))
                 .catch(error => sendResponse({error: error.message || "イベント取得エラー"}));
             return true; // 非同期応答を示す

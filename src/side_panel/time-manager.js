@@ -599,7 +599,7 @@ export class TimeTableManager {
      * const { openTimeHour, openTimeMinute } = timeTableManager.initializeTimeVariables();
      * console.log(`業務開始: ${openTimeHour}時${openTimeMinute}分`);
      */
-    initializeTimeVariables() {
+    initializeTimeVariables(date = new Date()) {
         const openTimeParts = this.openHour.split(':');
         const closeTimeParts = this.closeHour.split(':');
 
@@ -608,11 +608,12 @@ export class TimeTableManager {
         const closeTimeHour = parseInt(closeTimeParts[0], 10);
         const closeTimeMinute = parseInt(closeTimeParts[1], 10);
 
-        this.openTime = new Date().setHours(openTimeHour, openTimeMinute, 0, 0);
-        this.closeTime = new Date().setHours(closeTimeHour, closeTimeMinute, 0, 0);
+        // 指定された日付を使用して時間を設定
+        const baseDate = new Date(date);
+        this.openTime = new Date(baseDate).setHours(openTimeHour, openTimeMinute, 0, 0);
+        this.closeTime = new Date(baseDate).setHours(closeTimeHour, closeTimeMinute, 0, 0);
         this.hourDiff = (this.closeTime - this.openTime) / TIME_CONSTANTS.HOUR_MILLIS;
 
-        console.log(`openTime: ${this.openTime}, closeTime: ${this.closeTime}, hourDiff: ${this.hourDiff}`);
         return { openTimeHour, openTimeMinute };
     }
 
@@ -625,6 +626,7 @@ export class TimeTableManager {
      * @param {boolean} breakTimeFixed - 休憩時間が固定されているかどうか
      * @param {string} [breakTimeStart='12:00'] - 休憩開始時間（HH:MM形式）、breakTimeFixedがtrueの場合に使用
      * @param {string} [breakTimeEnd='13:00'] - 休憩終了時間（HH:MM形式）、breakTimeFixedがtrueの場合に使用
+     * @param {Date} [date=new Date()] - 表示する日付（省略時は現在の日付）
      * @returns {void}
      * @throws {Error} 時間形式が不正な場合にエラーが発生する可能性があります
      * 
@@ -634,9 +636,12 @@ export class TimeTableManager {
      * 
      * // 休憩時間なしのタイムテーブルを作成
      * timeTableManager.createBaseTable(false);
+     * 
+     * // 特定の日付のタイムテーブルを作成
+     * timeTableManager.createBaseTable(true, '12:00', '13:00', new Date('2023-01-01'));
      */
-    createBaseTable(breakTimeFixed, breakTimeStart = '12:00', breakTimeEnd = '13:00') {
-        const { openTimeMinute } = this.initializeTimeVariables();
+    createBaseTable(breakTimeFixed, breakTimeStart = '12:00', breakTimeEnd = '13:00', date = new Date()) {
+        const { openTimeMinute } = this.initializeTimeVariables(date);
         const unitHeight = TIME_CONSTANTS.UNIT_HEIGHT;
 
         this.parentDiv.style.height = `${unitHeight * (this.hourDiff + 2)}px`;
@@ -753,6 +758,7 @@ export class TimeTableManager {
      * 現在時刻が業務時間内の場合のみ表示され、業務時間外の場合は非表示になります。
      * このメソッドは定期的に呼び出すことで、リアルタイムの時間インジケーターとして機能します。
      * 
+     * @param {Date} [date=new Date()] - 表示する日付（省略時は現在の日付）
      * @returns {void}
      * 
      * @example
@@ -760,12 +766,23 @@ export class TimeTableManager {
      * setInterval(() => {
      *   timeTableManager.updateCurrentTimeLine();
      * }, 60000);
+     * 
+     * // 特定の日付の時間線を更新
+     * timeTableManager.updateCurrentTimeLine(new Date('2023-01-01'));
      */
-    updateCurrentTimeLine() {
+    updateCurrentTimeLine(date = new Date()) {
         const currentTime = new Date();
-
+        const displayDate = new Date(date);
+        
+        // 表示日付と現在日付が同じ日かチェック
+        const isSameDay = displayDate.getFullYear() === currentTime.getFullYear() &&
+                          displayDate.getMonth() === currentTime.getMonth() &&
+                          displayDate.getDate() === currentTime.getDate();
+        
         // 現在時刻が業務時間内かチェック
-        const isWithinWorkHours = currentTime.getTime() >= this.openTime && currentTime.getTime() <= this.closeTime;
+        const isWithinWorkHours = isSameDay && 
+                                 currentTime.getTime() >= this.openTime && 
+                                 currentTime.getTime() <= this.closeTime;
 
         // 既存の線を再利用または作成
         if (!this.currentTimeLine) {
@@ -776,12 +793,12 @@ export class TimeTableManager {
         }
 
         if (isWithinWorkHours) {
-            // 業務時間内の場合のみ表示
+            // 当日かつ業務時間内の場合のみ表示
             const offset = (1 + (currentTime.getTime() - this.openTime) / TIME_CONSTANTS.HOUR_MILLIS) * TIME_CONSTANTS.UNIT_HEIGHT;
             this.currentTimeLine.style.top = `${offset}px`;
             this.currentTimeLine.style.display = 'block';
         } else {
-            // 業務時間外の場合は非表示
+            // 当日以外または業務時間外の場合は非表示
             this.currentTimeLine.style.display = 'none';
         }
     }

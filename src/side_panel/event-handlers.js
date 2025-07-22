@@ -4,7 +4,7 @@
  * このファイルはGoogleカレンダーイベントとローカルイベントの管理を行います。
  */
 
-import { TIME_CONSTANTS, loadLocalEvents, saveLocalEvents, logError, showAlertModal } from '../lib/utils.js';
+import { TIME_CONSTANTS, loadLocalEvents, saveLocalEvents, logError, showAlertModal, getFormattedDate } from '../lib/utils.js';
 
 /**
  * GoogleEventManager - Googleイベント管理クラス
@@ -33,20 +33,18 @@ export class GoogleEventManager {
 
     /**
      * Googleカレンダーから予定を取得
+     * @param {Date} [date=new Date()] - 取得する日付（省略時は現在の日付）
      */
-    fetchEvents() {
-        console.log('Googleイベント取得開始');
-        console.log('Google連携状態:', this.isGoogleIntegrated);
-
+    fetchEvents(date = new Date()) {
         if (!this.isGoogleIntegrated) {
-            console.log('Google連携が無効です');
+            // Google連携が無効でも、既存のイベントのレイアウトを計算
+            this.eventLayoutManager.calculateLayout();
             return;
         }
 
         try {
-            chrome.runtime.sendMessage({action: "getEvents"}, (response) => {
-                console.log('イベント取得応答:', response);
-
+            const dateStr = getFormattedDate(date);
+            chrome.runtime.sendMessage({action: "getEvents", date: dateStr}, (response) => {
                 // 以前の表示をクリア
                 this.googleEventsDiv.innerHTML = '';
 
@@ -61,11 +59,13 @@ export class GoogleEventManager {
 
                 if (chrome.runtime.lastError) {
                     logError('Googleイベント取得', chrome.runtime.lastError);
+                    this.eventLayoutManager.calculateLayout();
                     return;
                 }
 
                 if (!response) {
                     logError('Googleイベント取得', '応答がありません');
+                    this.eventLayoutManager.calculateLayout();
                     return;
                 }
 
@@ -75,15 +75,15 @@ export class GoogleEventManager {
                     errorDiv.className = 'error-message';
                     errorDiv.textContent = chrome.i18n.getMessage("errorPrefix") + response.error;
                     this.googleEventsDiv.appendChild(errorDiv);
+                    this.eventLayoutManager.calculateLayout();
                     return;
                 }
 
                 if (!response.events || response.events.length === 0) {
-                    console.log('イベントがありません');
+                    this.eventLayoutManager.calculateLayout();
                     return;
                 }
 
-                console.log('イベント処理開始:', response.events.length + '件');
                 this._processEvents(response.events);
 
                 // イベントレイアウトを計算して適用
@@ -91,6 +91,7 @@ export class GoogleEventManager {
             });
         } catch (error) {
             logError('Googleイベント取得例外', error);
+            this.eventLayoutManager.calculateLayout();
         }
     }
 
@@ -100,7 +101,6 @@ export class GoogleEventManager {
      */
     _processEvents(events) {
         events.forEach(event => {
-            console.log(event);
             switch (event.eventType) {
                 case 'workingLocation':
                 case 'focusTime':
@@ -212,43 +212,49 @@ export class LocalEventManager {
 
     /**
      * ローカルイベントをロード
+     * @param {Date} [date=new Date()] - 読み込む日付（省略時は現在の日付）
      */
-    loadLocalEvents() {
+    loadLocalEvents(date = new Date()) {
         this.localEventsDiv.innerHTML = ''; // 以前の表示をクリア
 
-        loadLocalEvents()
+        loadLocalEvents(date)
             .then(events => {
-                console.log('ローカルイベント取得:', events.length + '件');
-
                 events.forEach(event => {
                     try {
-                        const eventDiv = this._createEventDiv(event.title, event.startTime, event.endTime);
+                        const eventDiv = this._createEventDiv(event.title, event.startTime, event.endTime, date);
                         this.localEventsDiv.appendChild(eventDiv);
                     } catch (error) {
                         logError('イベント表示', error);
                     }
                 });
 
-                // 注: レイアウト計算はside_panel.jsで行うため、ここでは行わない
+                // ローカルイベントの表示後にレイアウト計算を行う
+                this.eventLayoutManager.calculateLayout();
             })
             .catch(error => {
                 logError('ローカルイベント読み込み', error);
+                // エラー時にもレイアウト計算を行う
+                this.eventLayoutManager.calculateLayout();
             });
     }
 
     /**
      * イベント要素を作成
      * @private
+     * @param {string} title - イベントのタイトル
+     * @param {string} startTime - 開始時刻（HH:MM形式）
+     * @param {string} endTime - 終了時刻（HH:MM形式）
+     * @param {Date} [date=new Date()] - イベントの日付
      */
-    _createEventDiv(title, startTime, endTime) {
+    _createEventDiv(title, startTime, endTime, date = new Date()) {
         const eventDiv = document.createElement('div');
         eventDiv.className = 'event local-event';
         // ツールチップとしてイベントのタイトルを表示
         eventDiv.title = title;
 
-        const startDate = new Date();
+        const startDate = new Date(date);
         startDate.setHours(startTime.split(':')[0], startTime.split(':')[1], 0, 0);
-        const endDate = new Date();
+        const endDate = new Date(date);
         endDate.setHours(endTime.split(':')[0], endTime.split(':')[1], 0, 0);
 
         const startOffset = (1 + (startDate - this.timeTableManager.openTime) / TIME_CONSTANTS.HOUR_MILLIS) * TIME_CONSTANTS.UNIT_HEIGHT;
@@ -265,7 +271,7 @@ export class LocalEventManager {
         eventDiv.textContent = `${startTime} - ${endTime}: ${title}`;
 
         // 編集機能を設定
-        this._setupEventEdit(eventDiv, {title, startTime, endTime});
+        this._setupEventEdit(eventDiv, {title, startTime, endTime, date});
 
         // イベントレイアウトマネージャーに登録
         this.eventLayoutManager.registerEvent({
@@ -273,7 +279,7 @@ export class LocalEventManager {
             endTime: endDate,
             element: eventDiv,
             type: 'local',
-            id: `local-${title}-${startTime}-${endTime}`
+            id: `local-${title}-${startTime}-${endTime}-${getFormattedDate(date)}`
         });
 
         return eventDiv;
@@ -320,9 +326,10 @@ export class LocalEventManager {
         const newTitle = elements.titleInput.value;
         const newStartTime = elements.startTimeInput.value;
         const newEndTime = elements.endTimeInput.value;
+        const date = originalEvent.date || new Date();
 
         if (newTitle && newStartTime && newEndTime) {
-            loadLocalEvents()
+            loadLocalEvents(date)
                 .then(localEvents => {
                     // 元のイベントを見つけて更新
                     const eventIndex = localEvents.findIndex(e => 
@@ -338,12 +345,12 @@ export class LocalEventManager {
                             endTime: newEndTime
                         };
 
-                        return saveLocalEvents(localEvents);
+                        return saveLocalEvents(localEvents, date);
                     }
                 })
                 .then(() => {
                     this._showAlertModal(chrome.i18n.getMessage("eventUpdated") || 'イベントを更新しました');
-                    this.loadLocalEvents(); // イベント表示を更新
+                    this.loadLocalEvents(date); // イベント表示を更新
                 })
                 .catch(error => {
                     logError('イベント更新', error);
@@ -363,10 +370,11 @@ export class LocalEventManager {
      */
     _handleEventDelete(event) {
         if (confirm(chrome.i18n.getMessage("confirmDeleteEvent") || 'イベントを削除しますか？')) {
+            const date = event.date || new Date();
             // イベントIDを生成
-            const eventId = `local-${event.title}-${event.startTime}-${event.endTime}`;
+            const eventId = `local-${event.title}-${event.startTime}-${event.endTime}-${getFormattedDate(date)}`;
 
-            loadLocalEvents()
+            loadLocalEvents(date)
                 .then(localEvents => {
                     // 対象のイベントを除外
                     const updatedEvents = localEvents.filter(e => 
@@ -375,7 +383,7 @@ export class LocalEventManager {
                           e.endTime === event.endTime)
                     );
 
-                    return saveLocalEvents(updatedEvents);
+                    return saveLocalEvents(updatedEvents, date);
                 })
                 .then(() => {
                     this._showAlertModal(chrome.i18n.getMessage("eventDeleted") || 'イベントを削除しました');
@@ -407,8 +415,9 @@ export class LocalEventManager {
 
     /**
      * 新しいイベントを追加
+     * @param {Date} [date=new Date()] - イベントの日付
      */
-    addNewEvent() {
+    addNewEvent(date = new Date()) {
         if (!this.eventDialogElements) return;
 
         const elements = this.eventDialogElements;
@@ -417,15 +426,15 @@ export class LocalEventManager {
         const endTime = elements.endTimeInput.value;
 
         if (title && startTime && endTime) {
-            loadLocalEvents()
+            loadLocalEvents(date)
                 .then(localEvents => {
                     // 新しいイベントを追加
                     localEvents.push({title, startTime, endTime});
-                    return saveLocalEvents(localEvents);
+                    return saveLocalEvents(localEvents, date);
                 })
                 .then(() => {
                     // イベント要素を作成して表示
-                    const eventDiv = this._createEventDiv(title, startTime, endTime);
+                    const eventDiv = this._createEventDiv(title, startTime, endTime, date);
                     this.localEventsDiv.appendChild(eventDiv);
 
                     // イベントレイアウトを再計算

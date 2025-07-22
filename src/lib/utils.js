@@ -49,12 +49,44 @@ export function generateTimeList(timeListElement) {
 }
 
 /**
- * 現在の日付を取得（YYYY-MM-DD形式）
+ * 指定された日付を取得（YYYY-MM-DD形式）
+ * @param {Date} [date=new Date()] - 日付オブジェクト（省略時は現在の日付）
  * @returns {string} YYYY-MM-DD形式の日付文字列
  */
-export function getFormattedDate() {
-    const today = new Date();
-    return today.toISOString().split('T')[0]; // YYYY-MM-DD 形式の文字列を取得
+export function getFormattedDate(date = new Date()) {
+    return date.toISOString().split('T')[0]; // YYYY-MM-DD 形式の文字列を取得
+}
+
+/**
+ * 前日の日付を取得
+ * @param {Date} date - 基準となる日付
+ * @returns {Date} 前日の日付オブジェクト
+ */
+export function getPreviousDay(date) {
+    const prevDay = new Date(date);
+    prevDay.setDate(date.getDate() - 1);
+    return prevDay;
+}
+
+/**
+ * 翌日の日付を取得
+ * @param {Date} date - 基準となる日付
+ * @returns {Date} 翌日の日付オブジェクト
+ */
+export function getNextDay(date) {
+    const nextDay = new Date(date);
+    nextDay.setDate(date.getDate() + 1);
+    return nextDay;
+}
+
+/**
+ * 日付を指定された形式でフォーマットする
+ * @param {Date} date - フォーマットする日付
+ * @param {Object} options - Intl.DateTimeFormat のオプション
+ * @returns {string} フォーマットされた日付文字列
+ */
+export function formatDate(date, options = { dateStyle: 'full' }) {
+    return date.toLocaleDateString(undefined, options);
 }
 
 /**
@@ -101,25 +133,20 @@ export function loadSettings(defaultSettings = DEFAULT_SETTINGS) {
 
 /**
  * ローカルイベントを読み込む
+ * @param {Date} [date=new Date()] - 読み込む日付（省略時は現在の日付）
  * @returns {Promise<Array>} イベントの配列を返すPromise
  */
-export function loadLocalEvents() {
+export function loadLocalEvents(date = new Date()) {
     return new Promise((resolve, reject) => {
         try {
-            chrome.storage.sync.get({localEvents: [], lastUpdateDate: ''}, (data) => {
+            const dateKey = getFormattedDate(date);
+            chrome.storage.sync.get({[`localEvents_${dateKey}`]: []}, (data) => {
                 if (chrome.runtime.lastError) {
                     reject(chrome.runtime.lastError);
                     return;
                 }
                 
-                // 日付が変わっていたら空の配列を返す
-                const currentDate = getFormattedDate();
-                if (currentDate !== data.lastUpdateDate) {
-                    resolve([]);
-                    return;
-                }
-                
-                resolve(data.localEvents || []);
+                resolve(data[`localEvents_${dateKey}`] || []);
             });
         } catch (error) {
             reject(error);
@@ -130,15 +157,15 @@ export function loadLocalEvents() {
 /**
  * ローカルイベントを保存する
  * @param {Array} events - 保存するイベントの配列
+ * @param {Date} [date=new Date()] - 保存する日付（省略時は現在の日付）
  * @returns {Promise} 保存処理のPromise
  */
-export function saveLocalEvents(events) {
+export function saveLocalEvents(events, date = new Date()) {
     return new Promise((resolve, reject) => {
         try {
-            const currentDate = getFormattedDate();
+            const dateKey = getFormattedDate(date);
             chrome.storage.sync.set({
-                localEvents: events,
-                lastUpdateDate: currentDate
+                [`localEvents_${dateKey}`]: events
             }, () => {
                 if (chrome.runtime.lastError) {
                     reject(chrome.runtime.lastError);
