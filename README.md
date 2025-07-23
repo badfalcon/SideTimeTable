@@ -31,7 +31,7 @@
 ### Development and Customization
 - Clone this repository.
 - Install dependencies with `npm install`.
-- Modify code mainly in `background.js`, `side_panel.js`, or styles in `side_panel.css`.
+- Modify code mainly in `background.ts`, `side_panel.ts`, or styles in `side_panel.css`.
 - Use webpack for building the extension:
   - `npm run dev` - Development build with watch mode
   - `npm run build` - Production build
@@ -79,7 +79,7 @@ This plugin is released under the [Apache License 2.0]. See the `LICENSE` file f
 ### 開発とカスタマイズ
 - このリポジトリをクローンしてください。
 - `npm install` で依存関係をインストールします。
-- 主に `background.js`、`side_panel.js`、または `side_panel.css` 内のスタイルを変更します。
+- 主に `background.ts`、`side_panel.ts`、または `side_panel.css` 内のスタイルを変更します。
 - webpackを使用して拡張機能をビルドします：
   - `npm run dev` - 監視モード付きの開発ビルド
   - `npm run build` - 本番ビルド
