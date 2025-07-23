@@ -11,19 +11,19 @@
   },
   "key": "FILL_OUT_YOUR_KEY",
   "action": {
-    "default_popup": "src/side_panel/side_panel.html"
+    "default_popup": "side_panel/side_panel.html"
   },
   "side_panel": {
-    "default_path": "src/side_panel/side_panel.html"
+    "default_path": "side_panel/side_panel.html"
   },
   "background": {
-    "service_worker": "src/background.js"
+    "service_worker": "background.js"
   },
-  "options_page": "src/options/options.html",
+  "options_page": "options/options.html",
   "icons": {
-    "16": "src/img/icon16.png",
-    "32": "src/img/icon32.png",
-    "48": "src/img/icon48.png",
-    "128": "src/img/icon128.png"
+    "16": "img/icon16.png",
+    "32": "img/icon32.png",
+    "48": "img/icon48.png",
+    "128": "img/icon128.png"
   }
 }
