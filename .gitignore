@@ -1,1 +1,37 @@
-/manifest.json
+# Node.js
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Build artifacts
+dist/
+coverage/
+
+# IDE files
+.vscode/
+*.iml
+*.iws
+*.ipr
+*.swp
+*.swo
+
+# OS specific files
+.DS_Store
+Thumbs.db
+.directory
+desktop.ini
+
+# Package files
+*.zip
+project.zip
+extension.zip
+
+# Temporary files
+temp_zip/
+tmp/
+*.tmp
+*.bak
+
+# Sensitive files
+manifest.json

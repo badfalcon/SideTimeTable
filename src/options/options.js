@@ -4,6 +4,8 @@
  * このファイルはChrome拡張機能のオプションページを管理するためのJavaScriptコードです。
  */
 
+import './options.css';
+import './google_button.css';
 import { 
     DEFAULT_SETTINGS, 
     generateTimeList, 
@@ -12,6 +14,7 @@ import {
     reloadSidePanel, 
     logError 
 } from '../lib/utils.js';
+import { localizeHtmlPage } from '../lib/localize.js';
 
 /**
  * SettingsManager - 設定管理クラス

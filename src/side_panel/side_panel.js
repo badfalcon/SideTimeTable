@@ -8,6 +8,7 @@
 import { TimeTableManager, EventLayoutManager } from './time-manager.js';
 import { GoogleEventManager, LocalEventManager } from './event-handlers.js';
 import { generateTimeList, loadSettings, logError } from '../lib/utils.js';
+import { localizeHtmlPage } from '../lib/localize.js';
 
 // リロードメッセージリスナー
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {

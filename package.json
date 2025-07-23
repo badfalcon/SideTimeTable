@@ -1,0 +1,36 @@
+{
+  "name": "sidetimetable",
+  "version": "1.0.0",
+  "description": "## English",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack --mode=production",
+    "dev": "webpack --mode=development --watch",
+    "package": "npm run build && powershell Compress-Archive -Path dist/* -DestinationPath dist/extension.zip -Force"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/badfalcon/SideTimeTable.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/badfalcon/SideTimeTable/issues"
+  },
+  "homepage": "https://github.com/badfalcon/SideTimeTable#readme",
+  "devDependencies": {
+    "copy-webpack-plugin": "^13.0.0",
+    "css-loader": "^7.1.2",
+    "html-loader": "^5.1.0",
+    "html-webpack-plugin": "^5.6.3",
+    "mini-css-extract-plugin": "^2.9.2",
+    "style-loader": "^4.0.0",
+    "webpack": "^5.100.2",
+    "webpack-cli": "^6.0.1"
+  }
+}

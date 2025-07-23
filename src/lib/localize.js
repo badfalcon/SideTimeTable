@@ -14,3 +14,9 @@ function localizeHtmlPage() {
         replace_i18n(element, element.innerHTML);
     });
 }
+
+// Export for webpack
+export { localizeHtmlPage };
+
+// Make available globally for direct script inclusion
+window.localizeHtmlPage = localizeHtmlPage;
