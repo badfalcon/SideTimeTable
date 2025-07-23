@@ -6,18 +6,26 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 module.exports = {
   mode: 'production',
   entry: {
-    background: './src/background.js',
-    'side_panel/side_panel': './src/side_panel/side_panel.js',
-    'options/options': './src/options/options.js',
-    'lib/localize': './src/lib/localize.js'
+    background: './src/background.ts',
+    'side_panel/side_panel': './src/side_panel/side_panel.ts',
+    'options/options': './src/options/options.ts',
+    'lib/localize': './src/lib/localize.ts'
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: '[name].js',
     clean: true
   },
+  resolve: {
+    extensions: ['.ts', '.js']
+  },
   module: {
     rules: [
+      {
+        test: /\.ts$/,
+        use: 'ts-loader',
+        exclude: /node_modules/
+      },
       {
         test: /\.css$/,
         use: [MiniCssExtractPlugin.loader, 'css-loader']
