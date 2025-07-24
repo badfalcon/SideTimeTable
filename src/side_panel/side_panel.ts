@@ -5,6 +5,7 @@
  * 管理するためのJavaScriptコードです。
  */
 
+import './side_panel.css';
 import { TimeTableManager, EventLayoutManager } from './time-manager';
 import { GoogleEventManager, LocalEventManager } from './event-handlers';
 import { generateTimeList, loadSettings, logError } from '../lib/utils';
