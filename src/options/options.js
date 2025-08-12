@@ -10,8 +10,481 @@ import {
     loadSettings, 
     saveSettings, 
     reloadSidePanel, 
-    logError 
+    logError,
+    loadSelectedCalendars,
+    saveSelectedCalendars,
+    loadAvailableCalendars,
+    saveAvailableCalendars,
+    loadCalendarColors,
+    saveCalendarColors,
+    getDefaultCalendarColor
 } from '../lib/utils.js';
+
+/**
+ * CalendarManager - カレンダー管理クラス
+ */
+class CalendarManager {
+    constructor() {
+        this.availableCalendars = {};
+        this.selectedCalendarIds = [];
+        this.calendarColors = {};
+        
+        // パフォーマンス最適化用
+        this.colorChangeTimeouts = new Map();
+        this.debounceDelay = 300; // 300ms デバウンス
+        
+        this.elements = {
+            card: document.getElementById('calendar-management-card'),
+            refreshBtn: document.getElementById('refresh-calendars-btn'),
+            loading: document.getElementById('calendar-loading-indicator'),
+            list: document.getElementById('calendar-list'),
+            noMsg: document.getElementById('no-calendars-msg')
+        };
+        
+        this._setupEventListeners();
+    }
+    
+    _setupEventListeners() {
+        if (this.elements.refreshBtn) {
+            this.elements.refreshBtn.addEventListener('click', () => this.refreshCalendars());
+        }
+        
+        // イベント委譲でパフォーマンスを改善
+        if (this.elements.list) {
+            this.elements.list.addEventListener('change', (e) => {
+                if (e.target.type === 'checkbox') {
+                    this._handleCalendarToggle(e);
+                } else if (e.target.type === 'color') {
+                    this._handleColorChange(e);
+                }
+            });
+            
+            this.elements.list.addEventListener('click', (e) => {
+                if (e.target.matches('[data-action="reset-color"]') || e.target.closest('[data-action="reset-color"]')) {
+                    this._handleColorReset(e);
+                }
+            });
+        }
+    }
+    
+    async loadData() {
+        try {
+            const [available, selected, colors] = await Promise.all([
+                loadAvailableCalendars(),
+                loadSelectedCalendars(),
+                loadCalendarColors()
+            ]);
+            
+            // データ検証
+            this.availableCalendars = this._validateCalendarsData(available);
+            this.selectedCalendarIds = this._validateSelectedIds(selected);
+            this.calendarColors = this._validateColorsData(colors);
+            
+            this.render();
+        } catch (error) {
+            logError('カレンダーデータ読み込み', error);
+            this._showError('カレンダーデータの読み込みに失敗しました');
+        }
+    }
+    
+    show() {
+        if (this.elements.card) {
+            this.elements.card.style.display = 'block';
+        }
+    }
+    
+    hide() {
+        if (this.elements.card) {
+            this.elements.card.style.display = 'none';
+        }
+    }
+    
+    async refreshCalendars() {
+        this._setLoading(true);
+        
+        try {
+            const response = await new Promise((resolve) => {
+                chrome.runtime.sendMessage({action: 'getCalendarList'}, resolve);
+            });
+            
+            if (response.error) {
+                throw new Error(response.error);
+            }
+            
+            if (response.calendars) {
+                this.availableCalendars = {};
+                response.calendars.forEach(cal => {
+                    this.availableCalendars[cal.id] = cal;
+                });
+                
+                // Auto-select all if none selected
+                if (this.selectedCalendarIds.length === 0) {
+                    this.selectedCalendarIds = response.calendars.map(cal => cal.id);
+                }
+                
+                await this._assignDefaultColors();
+                await this._saveData();
+                this.render();
+            }
+        } catch (error) {
+            logError('カレンダー一覧更新', error);
+            this._showError(`カレンダーの更新に失敗しました: ${error.message || '不明なエラー'}`);
+        } finally {
+            this._setLoading(false);
+        }
+    }
+    
+    render() {
+        const calendarIds = Object.keys(this.availableCalendars)
+            .sort((a, b) => {
+                const calA = this.availableCalendars[a];
+                const calB = this.availableCalendars[b];
+                
+                // プライマリカレンダーを最初に表示
+                if (calA.primary && !calB.primary) return -1;
+                if (!calA.primary && calB.primary) return 1;
+                
+                // その後は名前でアルファベット順（日本語対応）
+                return calA.summary.localeCompare(calB.summary, 'ja');
+            });
+        
+        if (calendarIds.length === 0) {
+            this._showEmptyState();
+            return;
+        }
+        
+        this._hideEmptyState();
+        this.elements.list.innerHTML = '';
+        
+        calendarIds.forEach(calendarId => {
+            const calendar = this.availableCalendars[calendarId];
+            const isSelected = this.selectedCalendarIds.includes(calendarId);
+            const item = this._createCalendarItem(calendar, isSelected);
+            this.elements.list.appendChild(item);
+        });
+    }
+    
+    _createCalendarItem(calendar, isSelected) {
+        const item = document.createElement('div');
+        item.className = 'list-group-item d-flex align-items-center py-2';
+        item.dataset.calendarId = calendar.id; // データ属性でイベント委譲を可能に
+        
+        // Checkbox
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'form-check-input me-3';
+        checkbox.checked = isSelected;
+        // イベントリスナーは削除 - 委譲で処理
+        
+        // Calendar info
+        const info = document.createElement('div');
+        info.className = 'flex-grow-1';
+        
+        const name = document.createElement('div');
+        name.className = 'fw-bold';
+        name.textContent = calendar.summary;
+        if (calendar.primary) {
+            name.classList.add('text-primary');
+        }
+        
+        info.appendChild(name);
+        
+        // Color controls (only for selected calendars)
+        let colorControls = null;
+        if (isSelected) {
+            colorControls = this._createColorControls(calendar.id);
+            info.appendChild(colorControls);
+        }
+        
+        // Original Google color indicator
+        const googleColor = document.createElement('div');
+        googleColor.className = 'me-2';
+        googleColor.style.width = '12px';
+        googleColor.style.height = '12px';
+        googleColor.style.backgroundColor = calendar.backgroundColor || '#ccc';
+        googleColor.style.borderRadius = '50%';
+        googleColor.style.border = '1px solid #ddd';
+        googleColor.title = 'Google色';
+        
+        item.appendChild(checkbox);
+        item.appendChild(info);
+        item.appendChild(googleColor);
+        
+        return item;
+    }
+    
+    _createColorControls(calendarId) {
+        const controls = document.createElement('div');
+        controls.className = 'd-flex align-items-center mt-1';
+        
+        const colorInput = document.createElement('input');
+        colorInput.type = 'color';
+        colorInput.className = 'form-control form-control-color form-control-sm me-2';
+        colorInput.style.width = '32px';
+        colorInput.style.height = '24px';
+        colorInput.value = this.calendarColors[calendarId] || this._getDefaultColor(calendarId);
+        colorInput.dataset.calendarId = calendarId; // データ属性でID保存
+        
+        const resetBtn = document.createElement('button');
+        resetBtn.type = 'button';
+        resetBtn.className = 'btn btn-outline-secondary btn-sm';
+        resetBtn.style.fontSize = '0.7rem';
+        resetBtn.textContent = 'リセット';
+        resetBtn.dataset.action = 'reset-color';
+        resetBtn.dataset.calendarId = calendarId;
+        
+        controls.appendChild(colorInput);
+        controls.appendChild(resetBtn);
+        
+        return controls;
+    }
+    
+    // パフォーマンス最適化されたイベントハンドラー
+    _handleCalendarToggle(event) {
+        const calendarId = this._findCalendarId(event.target);
+        if (calendarId) {
+            this._toggleCalendarSelection(calendarId, event.target.checked);
+        }
+    }
+    
+    _handleColorChange(event) {
+        const calendarId = event.target.dataset.calendarId;
+        if (calendarId) {
+            this._debouncedColorUpdate(calendarId, event.target.value);
+        }
+    }
+    
+    _handleColorReset(event) {
+        const button = event.target.closest('[data-action="reset-color"]');
+        if (button) {
+            const calendarId = button.dataset.calendarId;
+            const colorInput = button.parentElement.querySelector('input[type="color"]');
+            if (calendarId && colorInput) {
+                const defaultColor = this._getDefaultColor(calendarId, true);
+                colorInput.value = defaultColor;
+                this._debouncedColorUpdate(calendarId, defaultColor);
+            }
+        }
+    }
+    
+    // デバウンス付きの色更新
+    _debouncedColorUpdate(calendarId, color) {
+        // 既存のタイマーをクリア
+        if (this.colorChangeTimeouts.has(calendarId)) {
+            clearTimeout(this.colorChangeTimeouts.get(calendarId));
+        }
+        
+        // 新しいタイマーを設定
+        const timeoutId = setTimeout(async () => {
+            await this._updateCalendarColor(calendarId, color);
+            this.colorChangeTimeouts.delete(calendarId);
+        }, this.debounceDelay);
+        
+        this.colorChangeTimeouts.set(calendarId, timeoutId);
+    }
+    
+    _findCalendarId(element) {
+        // 要素から上に向かってcalendar IDを探す
+        let current = element;
+        while (current && current !== this.elements.list) {
+            if (current.dataset?.calendarId) {
+                return current.dataset.calendarId;
+            }
+            current = current.parentElement;
+        }
+        return null;
+    }
+    
+    async _toggleCalendarSelection(calendarId, isSelected) {
+        try {
+            // 入力検証
+            if (!calendarId || typeof calendarId !== 'string') {
+                throw new Error('無効なカレンダーID');
+            }
+            
+            if (typeof isSelected !== 'boolean') {
+                throw new Error('無効な選択状態');
+            }
+            
+            if (isSelected && !this.selectedCalendarIds.includes(calendarId)) {
+                this.selectedCalendarIds.push(calendarId);
+            } else if (!isSelected) {
+                this.selectedCalendarIds = this.selectedCalendarIds.filter(id => id !== calendarId);
+            }
+            
+            await saveSelectedCalendars(this.selectedCalendarIds);
+            this.render();
+            this._notifyUpdate();
+        } catch (error) {
+            logError('カレンダー選択更新', error);
+            this._showError(`カレンダー選択の更新に失敗しました: ${error.message}`);
+        }
+    }
+    
+    async _updateCalendarColor(calendarId, color) {
+        try {
+            // 入力検証
+            if (!calendarId || typeof calendarId !== 'string') {
+                throw new Error('無効なカレンダーID');
+            }
+            
+            if (!color || !/^#[0-9A-Fa-f]{6}$/.test(color)) {
+                throw new Error('無効な色形式');
+            }
+            
+            this.calendarColors[calendarId] = color;
+            await saveCalendarColors(this.calendarColors);
+            this._notifyUpdate();
+        } catch (error) {
+            logError('カレンダー色更新', error);
+            this._showError(`色の更新に失敗しました: ${error.message}`);
+        }
+    }
+    
+    _getDefaultColor(calendarId, forceDefault = false) {
+        if (!forceDefault && this.calendarColors[calendarId]) {
+            return this.calendarColors[calendarId];
+        }
+        
+        const calendar = this.availableCalendars[calendarId];
+        if (!forceDefault && calendar?.backgroundColor) {
+            return calendar.backgroundColor;
+        }
+        
+        const calendarIds = Object.keys(this.availableCalendars);
+        const index = calendarIds.indexOf(calendarId);
+        return getDefaultCalendarColor(index >= 0 ? index : 0);
+    }
+    
+    async _assignDefaultColors() {
+        const calendarIds = Object.keys(this.availableCalendars);
+        let hasChanges = false;
+        
+        calendarIds.forEach((calendarId, index) => {
+            if (!this.calendarColors[calendarId]) {
+                const calendar = this.availableCalendars[calendarId];
+                this.calendarColors[calendarId] = calendar.backgroundColor || getDefaultCalendarColor(index);
+                hasChanges = true;
+            }
+        });
+        
+        if (hasChanges) {
+            await saveCalendarColors(this.calendarColors);
+        }
+    }
+    
+    async _saveData() {
+        await Promise.all([
+            saveAvailableCalendars(this.availableCalendars),
+            saveSelectedCalendars(this.selectedCalendarIds),
+            saveCalendarColors(this.calendarColors)
+        ]);
+    }
+    
+    _setLoading(loading) {
+        if (this.elements.loading) {
+            this.elements.loading.style.display = loading ? 'block' : 'none';
+        }
+        if (this.elements.refreshBtn) {
+            this.elements.refreshBtn.disabled = loading;
+        }
+    }
+    
+    _showEmptyState() {
+        if (this.elements.list) this.elements.list.style.display = 'none';
+        if (this.elements.noMsg) this.elements.noMsg.style.display = 'block';
+    }
+    
+    _hideEmptyState() {
+        if (this.elements.list) this.elements.list.style.display = 'block';
+        if (this.elements.noMsg) this.elements.noMsg.style.display = 'none';
+    }
+    
+    _notifyUpdate() {
+        // Reload side panel to update event display
+        reloadSidePanel().catch(error => logError('サイドパネルリロード', error));
+    }
+    
+    // データ検証メソッド
+    _validateCalendarsData(data) {
+        if (!data || typeof data !== 'object') {
+            logError('カレンダーデータ検証', '無効なカレンダーデータ形式');
+            return {};
+        }
+        
+        // 各カレンダーオブジェクトを検証
+        const validatedData = {};
+        for (const [id, calendar] of Object.entries(data)) {
+            if (this._isValidCalendar(calendar)) {
+                validatedData[id] = calendar;
+            } else {
+                logError('カレンダーデータ検証', `無効なカレンダー: ${id}`);
+            }
+        }
+        
+        return validatedData;
+    }
+    
+    _validateSelectedIds(data) {
+        if (!Array.isArray(data)) {
+            logError('選択カレンダーデータ検証', '配列ではありません');
+            return [];
+        }
+        
+        return data.filter(id => typeof id === 'string' && id.trim() !== '');
+    }
+    
+    _validateColorsData(data) {
+        if (!data || typeof data !== 'object') {
+            return {};
+        }
+        
+        // 色の形式を検証 (#RRGGBB)
+        const colorRegex = /^#[0-9A-Fa-f]{6}$/;
+        const validatedData = {};
+        
+        for (const [id, color] of Object.entries(data)) {
+            if (typeof color === 'string' && colorRegex.test(color)) {
+                validatedData[id] = color;
+            } else {
+                logError('カレンダー色データ検証', `無効な色形式: ${id} = ${color}`);
+            }
+        }
+        
+        return validatedData;
+    }
+    
+    _isValidCalendar(calendar) {
+        return calendar &&
+               typeof calendar === 'object' &&
+               typeof calendar.id === 'string' &&
+               typeof calendar.summary === 'string' &&
+               calendar.id.trim() !== '' &&
+               calendar.summary.trim() !== '';
+    }
+    
+    _showError(message) {
+        // エラーメッセージを表示する簡単なUI
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'alert alert-danger alert-dismissible fade show';
+        errorDiv.innerHTML = `
+            <strong>エラー:</strong> ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        // カレンダーリストの上に表示
+        if (this.elements.list && this.elements.list.parentElement) {
+            this.elements.list.parentElement.insertBefore(errorDiv, this.elements.list);
+            
+            // 5秒後に自動で削除
+            setTimeout(() => {
+                if (errorDiv.parentElement) {
+                    errorDiv.remove();
+                }
+            }, 5000);
+        }
+    }
+}
 
 /**
  * SettingsManager - 設定管理クラス
@@ -21,6 +494,11 @@ class SettingsManager {
         this.elements = {
             googleIntegrationButton: document.getElementById('google-integration-button'),
             googleIntegrationStatus: document.getElementById('google-integration-status'),
+            calendarManagementCard: document.getElementById('calendar-management-card'),
+            refreshCalendarsBtn: document.getElementById('refresh-calendars-btn'),
+            calendarLoadingIndicator: document.getElementById('calendar-loading-indicator'),
+            calendarList: document.getElementById('calendar-list'),
+            noCalendarsMsg: document.getElementById('no-calendars-msg'),
             openTimeInput: document.getElementById('open-time'),
             closeTimeInput: document.getElementById('close-time'),
             breakTimeFixedInput: document.getElementById('break-time-fixed'),
@@ -34,6 +512,7 @@ class SettingsManager {
         };
         
         this.settings = { ...DEFAULT_SETTINGS };
+        this.calendarManager = new CalendarManager();
     }
 
     /**
@@ -43,6 +522,7 @@ class SettingsManager {
         this._setupEventListeners();
         this._generateTimeList();
         this._loadSettings();
+        this._loadCalendarData();
     }
 
     /**
@@ -52,6 +532,8 @@ class SettingsManager {
     _setupEventListeners() {
         // Googleカレンダー連携ボタン
         this.elements.googleIntegrationButton.addEventListener('click', () => this._handleGoogleIntegration());
+        
+        // Note: Calendar refresh is handled by CalendarManager
         
         // 休憩時間設定の表示切り替え
         this.elements.breakTimeFixedInput.addEventListener('change', () => this._toggleBreakTimeFields());
@@ -95,6 +577,13 @@ class SettingsManager {
         elements.googleIntegrationStatus.textContent = settings.googleIntegrated 
             ? chrome.i18n.getMessage('integrated') || '連携済み'
             : chrome.i18n.getMessage('notIntegrated') || '未連携';
+        
+        // カレンダー管理カードの表示/非表示
+        if (settings.googleIntegrated) {
+            this.calendarManager.show();
+        } else {
+            this.calendarManager.hide();
+        }
         
         // 時間設定
         elements.openTimeInput.value = settings.openTime;
@@ -155,9 +644,12 @@ class SettingsManager {
                     console.log('Googleカレンダーとの連携情報を保存しました');
                     
                     // UI更新
-                    googleIntegrationStatus.textContent = this.settings.googleIntegrated 
-                        ? chrome.i18n.getMessage('integrated') || '連携済み'
-                        : chrome.i18n.getMessage('notIntegrated') || '未連携';
+                    this._updateUI();
+                    
+                    // 連携が成功した場合、カレンダー一覧を取得
+                    if (this.settings.googleIntegrated) {
+                        this.calendarManager.refreshCalendars();
+                    }
                     
                     // 結果を通知
                     alert(this.settings.googleIntegrated 
@@ -218,12 +710,28 @@ class SettingsManager {
                 alert('設定の保存中にエラーが発生しました');
             });
     }
+
+    /**
+     * カレンダーデータを読み込む
+     * @private
+     */
+    _loadCalendarData() {
+        this.calendarManager.loadData();
+    }
+
+
+
+
+
+
 }
 
 // DOMが読み込まれたときに実行
 document.addEventListener('DOMContentLoaded', () => {
-    // 多言語化
-    localizeHtmlPage();
+    // 多言語化 (localize.js provides this function)
+    if (typeof localizeHtmlPage === 'function') {
+        localizeHtmlPage();
+    }
     
     // 設定マネージャーの初期化と実行
     const settingsManager = new SettingsManager();

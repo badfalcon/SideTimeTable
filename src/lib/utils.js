@@ -25,7 +25,10 @@ export const DEFAULT_SETTINGS = {
     breakTimeStart: TIME_CONSTANTS.DEFAULT_BREAK_START,
     breakTimeEnd: TIME_CONSTANTS.DEFAULT_BREAK_END,
     localEventColor: '#bbf2b1',
-    googleEventColor: '#c3d6f7'
+    googleEventColor: '#c3d6f7',
+    selectedCalendars: [], // 選択されたカレンダーID配列
+    availableCalendars: {}, // 利用可能なカレンダー情報
+    calendarColors: {} // カレンダーごとのカスタム色設定
 };
 
 /**
@@ -212,4 +215,153 @@ export function showAlertModal(message, alertModal, alertMessage, closeButton) {
             alertModal.style.display = 'none';
         }
     };
+}
+
+/**
+ * 選択されたカレンダーを保存する
+ * @param {Array<string>} selectedCalendars - 選択されたカレンダーIDの配列
+ * @returns {Promise} 保存処理のPromise
+ */
+export function saveSelectedCalendars(selectedCalendars) {
+    return new Promise((resolve, reject) => {
+        try {
+            chrome.storage.sync.set({ selectedCalendars }, () => {
+                if (chrome.runtime.lastError) {
+                    reject(chrome.runtime.lastError);
+                    return;
+                }
+                resolve();
+            });
+        } catch (error) {
+            reject(error);
+        }
+    });
+}
+
+/**
+ * 選択されたカレンダーを読み込む
+ * @returns {Promise<Array<string>>} 選択されたカレンダーIDの配列を返すPromise
+ */
+export function loadSelectedCalendars() {
+    return new Promise((resolve, reject) => {
+        try {
+            chrome.storage.sync.get({ selectedCalendars: [] }, (data) => {
+                if (chrome.runtime.lastError) {
+                    reject(chrome.runtime.lastError);
+                    return;
+                }
+                resolve(data.selectedCalendars || []);
+            });
+        } catch (error) {
+            reject(error);
+        }
+    });
+}
+
+/**
+ * 利用可能なカレンダー情報を保存する
+ * @param {Object} availableCalendars - カレンダー情報オブジェクト
+ * @returns {Promise} 保存処理のPromise
+ */
+export function saveAvailableCalendars(availableCalendars) {
+    return new Promise((resolve, reject) => {
+        try {
+            chrome.storage.sync.set({ availableCalendars }, () => {
+                if (chrome.runtime.lastError) {
+                    reject(chrome.runtime.lastError);
+                    return;
+                }
+                resolve();
+            });
+        } catch (error) {
+            reject(error);
+        }
+    });
+}
+
+/**
+ * 利用可能なカレンダー情報を読み込む
+ * @returns {Promise<Object>} カレンダー情報オブジェクトを返すPromise
+ */
+export function loadAvailableCalendars() {
+    return new Promise((resolve, reject) => {
+        try {
+            chrome.storage.sync.get({ availableCalendars: {} }, (data) => {
+                if (chrome.runtime.lastError) {
+                    reject(chrome.runtime.lastError);
+                    return;
+                }
+                resolve(data.availableCalendars || {});
+            });
+        } catch (error) {
+            reject(error);
+        }
+    });
+}
+
+/**
+ * カレンダー色設定を保存する
+ * @param {Object} calendarColors - カレンダーIDをキーとする色設定オブジェクト
+ * @returns {Promise} 保存処理のPromise
+ */
+export function saveCalendarColors(calendarColors) {
+    return new Promise((resolve, reject) => {
+        try {
+            chrome.storage.sync.set({ calendarColors }, () => {
+                if (chrome.runtime.lastError) {
+                    reject(chrome.runtime.lastError);
+                    return;
+                }
+                resolve();
+            });
+        } catch (error) {
+            reject(error);
+        }
+    });
+}
+
+/**
+ * カレンダー色設定を読み込む
+ * @returns {Promise<Object>} カレンダー色設定オブジェクトを返すPromise
+ */
+export function loadCalendarColors() {
+    return new Promise((resolve, reject) => {
+        try {
+            chrome.storage.sync.get({ calendarColors: {} }, (data) => {
+                if (chrome.runtime.lastError) {
+                    reject(chrome.runtime.lastError);
+                    return;
+                }
+                resolve(data.calendarColors || {});
+            });
+        } catch (error) {
+            reject(error);
+        }
+    });
+}
+
+/**
+ * デフォルトカラーパレットからカレンダー用の色を取得
+ * @param {number} index - カレンダーのインデックス
+ * @returns {string} HEX色コード
+ */
+export function getDefaultCalendarColor(index) {
+    const defaultColors = [
+        '#3174ad', // Blue
+        '#d06b64', // Red
+        '#f83a22', // Dark Red
+        '#fa573c', // Orange Red
+        '#ff7537', // Orange
+        '#ffad46', // Yellow Orange
+        '#42d692', // Green
+        '#16a765', // Dark Green
+        '#7986cb', // Light Blue
+        '#9fc6e7', // Lighter Blue
+        '#4285f4', // Google Blue
+        '#9aa0a6', // Gray
+        '#795548', // Brown
+        '#e91e63', // Pink
+        '#9c27b0', // Purple
+    ];
+    return defaultColors[index % defaultColors.length];
 }
