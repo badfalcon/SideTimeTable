@@ -73,16 +73,11 @@
                     </div>
                 </div>
             </div>
-            
-            <!-- Calendar list with integrated color settings -->
-            <div id="calendar-list-wrapper">
-                <div id="calendar-list" class="list-group list-group-flush border rounded" style="max-height: 300px; overflow-y: auto;">
-                    <!-- Calendar items will be generated here -->
-                </div>
-                <div id="no-calendars-msg" class="text-center p-4 text-muted" style="display: none;">
-                    <i class="fas fa-calendar-times mb-2"></i>
-                    <p class="mb-0" data-localize="__MSG_noCalendarsFound__">カレンダーが見つかりませんでした。</p>
-                </div>
+
+            <!-- Calendar list container -->
+            <div id="calendar-list" class="list-group"></div>
+            <div id="no-calendars-msg" class="text-muted" style="display: none;" data-localize="__MSG_noCalendarsFound__">
+                カレンダーが見つかりませんでした。
             </div>
         </div>
     </div>

@@ -15,11 +15,13 @@ body {
 
 /* カレンダーリストのスクロール設定 */
 #calendar-list {
+    max-height: 300px;
+    overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: #ccc #f8f9fa;
     width: 100%;
     box-sizing: border-box;
-    margin: 0;
+    margin: 0 0 1rem 0;
     padding: 0;
     border-radius: 0.375rem;
 }
