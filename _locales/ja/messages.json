@@ -130,5 +130,21 @@
   "googleEventColor": {
     "message": "Google イベント:",
     "description": "Googleイベント色入力のラベル"
+  },
+  "calendarSelection": {
+    "message": "カレンダー管理",
+    "description": "カレンダー管理セクションのタイトル"
+  },
+  "calendarSelectionDescription": {
+    "message": "表示するGoogleカレンダーを選択し、色を設定できます。",
+    "description": "カレンダー選択と色設定の説明"
+  },
+  "refreshCalendars": {
+    "message": "更新",
+    "description": "カレンダーリスト更新ボタンのラベル"
+  },
+  "noCalendarsFound": {
+    "message": "カレンダーが見つかりませんでした。",
+    "description": "カレンダーが見つからない場合のメッセージ"
   }
 }

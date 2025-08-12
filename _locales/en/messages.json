@@ -130,5 +130,21 @@
   "googleEventColor": {
     "message": "Google Event Color:",
     "description": "Label for Google event color input"
+  },
+  "calendarSelection": {
+    "message": "Calendar Management",
+    "description": "Title of the calendar management section"
+  },
+  "calendarSelectionDescription": {
+    "message": "Select which Google Calendars to display and set their colors.",
+    "description": "Description for calendar selection and color settings"
+  },
+  "refreshCalendars": {
+    "message": "Refresh",
+    "description": "Label for calendar list refresh button"
+  },
+  "noCalendarsFound": {
+    "message": "No calendars found.",
+    "description": "Message when no calendars are found"
   }
 }
