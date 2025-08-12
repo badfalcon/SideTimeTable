@@ -16,11 +16,11 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 
 /**
- * Googleカレンダーからイベントを取得する
- * @returns {Promise<Array>} イベントの配列を返すPromise
+ * Googleカレンダー一覧を取得する
+ * @returns {Promise<Array>} カレンダー一覧を返すPromise
  */
-function getCalendarEvents() {
-    console.log("Googleカレンダーイベント取得開始");
+function getCalendarList() {
+    console.log("Googleカレンダー一覧取得開始");
     return new Promise((resolve, reject) => {
         try {
             console.log("認証トークンをリクエスト中");
@@ -34,14 +34,6 @@ function getCalendarEvents() {
 
                 console.log("認証トークン取得成功");
                 
-                // 今日の日付の範囲を設定
-                const today = new Date();
-                const startOfDay = new Date(today);
-                startOfDay.setHours(0, 0, 0, 0);
-                const endOfDay = new Date(today);
-                endOfDay.setHours(23, 59, 59, 999);
-                
-                // まず、表示対象のカレンダー一覧を取得
                 const calendarListUrl = `https://www.googleapis.com/calendar/v3/users/me/calendarList`;
 
                 console.log("カレンダー一覧をフェッチ中");
@@ -58,18 +50,106 @@ function getCalendarEvents() {
                 })
                 .then(listData => {
                     const calendars = (listData.items || [])
-                        // GoogleカレンダーのUIで「表示」にチェックされているカレンダーのみ
-                        .filter(cal => cal.selected)
-                        // 念のため、アクセスできないものを除外
-                        .filter(cal => cal.accessRole && cal.accessRole !== 'none');
+                        .filter(cal => cal.accessRole && cal.accessRole !== 'none')
+                        .map(cal => ({
+                            id: cal.id,
+                            summary: cal.summary,
+                            primary: cal.primary || false,
+                            selected: cal.selected || false,
+                            backgroundColor: cal.backgroundColor,
+                            foregroundColor: cal.foregroundColor
+                        }));
 
-                    if (calendars.length === 0) {
-                        console.log('表示対象のカレンダーがありません。primaryのみ取得します。');
-                        return [ { id: 'primary' } ];
+                    console.log(`カレンダー一覧取得完了: ${calendars.length}件`);
+                    resolve(calendars);
+                })
+                .catch(error => {
+                    console.error("カレンダー一覧取得エラー:", error);
+                    reject(error);
+                });
+            });
+        } catch (error) {
+            console.error("カレンダー一覧取得例外:", error);
+            reject(error);
+        }
+    });
+}
+
+/**
+ * Googleカレンダーからイベントを取得する
+ * @returns {Promise<Array>} イベントの配列を返すPromise
+ */
+function getCalendarEvents() {
+    console.log("Googleカレンダーイベント取得開始");
+    return new Promise((resolve, reject) => {
+        try {
+            // まず選択されたカレンダー一覧を取得
+            chrome.storage.sync.get({ selectedCalendars: [] }, (storageData) => {
+                if (chrome.runtime.lastError) {
+                    console.error("選択カレンダー取得エラー:", chrome.runtime.lastError);
+                    reject(chrome.runtime.lastError);
+                    return;
+                }
+
+                console.log("認証トークンをリクエスト中");
+                chrome.identity.getAuthToken({interactive: true}, (token) => {
+                    if (chrome.runtime.lastError || !token) {
+                        const error = chrome.runtime.lastError || new Error("認証トークンが取得できませんでした");
+                        console.error("認証トークン取得エラー:", error);
+                        reject(error);
+                        return;
                     }
 
-                    return calendars.map(c => ({ id: c.id }));
-                })
+                    console.log("認証トークン取得成功");
+                    
+                    // 今日の日付の範囲を設定
+                    const today = new Date();
+                    const startOfDay = new Date(today);
+                    startOfDay.setHours(0, 0, 0, 0);
+                    const endOfDay = new Date(today);
+                    endOfDay.setHours(23, 59, 59, 999);
+                    
+                    const selectedCalendarIds = storageData.selectedCalendars || [];
+                    
+                    let calendarsPromise;
+                    
+                    if (selectedCalendarIds.length === 0) {
+                        // 選択されたカレンダーがない場合は、Googleカレンダーで表示設定されたカレンダーを使用
+                        const calendarListUrl = `https://www.googleapis.com/calendar/v3/users/me/calendarList`;
+
+                        console.log("選択カレンダーなし。全カレンダー一覧をフェッチ中");
+                        calendarsPromise = fetch(calendarListUrl, {
+                            headers: {
+                                Authorization: "Bearer " + token
+                            }
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`CalendarList APIエラー: ${response.status} ${response.statusText}`);
+                            }
+                            return response.json();
+                        })
+                        .then(listData => {
+                            const calendars = (listData.items || [])
+                                // GoogleカレンダーのUIで「表示」にチェックされているカレンダーのみ
+                                .filter(cal => cal.selected)
+                                // 念のため、アクセスできないものを除外
+                                .filter(cal => cal.accessRole && cal.accessRole !== 'none');
+
+                            if (calendars.length === 0) {
+                                console.log('表示対象のカレンダーがありません。primaryのみ取得します。');
+                                return [ { id: 'primary' } ];
+                            }
+
+                            return calendars.map(c => ({ id: c.id }));
+                        });
+                    } else {
+                        // 選択されたカレンダーを使用
+                        console.log(`選択されたカレンダー: ${selectedCalendarIds.length}件`);
+                        calendarsPromise = Promise.resolve(selectedCalendarIds.map(id => ({ id })));
+                    }
+
+                    calendarsPromise
                 .then(calendarsToFetch => {
                     // 今日の日付の範囲を設定（上で計算済みのstartOfDay/endOfDayを使用）
                     const baseUrl = 'https://www.googleapis.com/calendar/v3/calendars';
@@ -87,7 +167,14 @@ function getCalendarEvents() {
                             }
                             return res.json();
                         })
-                        .then(data => data.items || [])
+                        .then(data => {
+                            // 各イベントにカレンダーIDを追加
+                            const events = data.items || [];
+                            events.forEach(event => {
+                                event.calendarId = cal.id;
+                            });
+                            return events;
+                        })
                         .catch(err => {
                             console.warn(`カレンダー(${cal.id})取得時の例外をスキップ:`, err);
                             return [];
@@ -107,6 +194,7 @@ function getCalendarEvents() {
                 .catch(error => {
                     console.error("カレンダーイベント取得エラー:", error);
                     reject(error);
+                });
                 });
             });
         } catch (error) {
@@ -151,6 +239,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             getCalendarEvents()
                 .then(events => sendResponse({events}))
                 .catch(error => sendResponse({error: error.message || "イベント取得エラー"}));
+            return true; // 非同期応答を示す
+            
+        case "getCalendarList":
+            getCalendarList()
+                .then(calendars => sendResponse({calendars}))
+                .catch(error => sendResponse({error: error.message || "カレンダー一覧取得エラー"}));
             return true; // 非同期応答を示す
             
         case "checkAuth":

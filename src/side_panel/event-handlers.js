@@ -4,7 +4,7 @@
  * このファイルはGoogleカレンダーイベントとローカルイベントの管理を行います。
  */
 
-import { TIME_CONSTANTS, loadLocalEvents, saveLocalEvents, logError, showAlertModal } from '../lib/utils.js';
+import { TIME_CONSTANTS, loadLocalEvents, saveLocalEvents, logError, showAlertModal, loadCalendarColors } from '../lib/utils.js';
 
 /**
  * GoogleEventManager - Googleイベント管理クラス
@@ -21,6 +21,7 @@ export class GoogleEventManager {
         this.googleEventsDiv = googleEventsDiv;
         this.eventLayoutManager = eventLayoutManager;
         this.isGoogleIntegrated = false;
+        this.calendarColors = {};
     }
 
     /**
@@ -43,26 +44,35 @@ export class GoogleEventManager {
             return;
         }
 
-        try {
-            chrome.runtime.sendMessage({action: "getEvents"}, (response) => {
+        // まずカレンダー色設定を読み込む
+        loadCalendarColors()
+            .then(calendarColors => {
+                this.calendarColors = calendarColors;
+                
+                // イベントを取得
+                return new Promise((resolve, reject) => {
+                    chrome.runtime.sendMessage({action: "getEvents"}, (response) => {
+                        if (chrome.runtime.lastError) {
+                            reject(chrome.runtime.lastError);
+                            return;
+                        }
+                        resolve(response);
+                    });
+                });
+            })
+            .then(response => {
                 console.log('イベント取得応答:', response);
 
                 // 以前の表示をクリア
                 this.googleEventsDiv.innerHTML = '';
 
                 // Googleイベントのみをレイアウトマネージャーから削除
-                // 全イベントをクリアするのではなく、Googleイベントのみを削除
                 const events = [...this.eventLayoutManager.events];
                 events.forEach(event => {
                     if (event && event.type === 'google') {
                         this.eventLayoutManager.removeEvent(event.id);
                     }
                 });
-
-                if (chrome.runtime.lastError) {
-                    logError('Googleイベント取得', chrome.runtime.lastError);
-                    return;
-                }
 
                 if (!response) {
                     logError('Googleイベント取得', '応答がありません');
@@ -88,10 +98,10 @@ export class GoogleEventManager {
 
                 // イベントレイアウトを計算して適用
                 this.eventLayoutManager.calculateLayout();
+            })
+            .catch(error => {
+                logError('Googleイベント取得例外', error);
             });
-        } catch (error) {
-            logError('Googleイベント取得例外', error);
-        }
     }
 
     /**
@@ -146,6 +156,16 @@ export class GoogleEventManager {
         }
 
         eventDiv.style.top = `${startOffset}px`;
+        
+        // カスタムカレンダー色を適用
+        if (event.calendarId && this.calendarColors[event.calendarId]) {
+            eventDiv.style.backgroundColor = this.calendarColors[event.calendarId];
+            // 背景色に応じてテキスト色を自動調整
+            const backgroundColor = this.calendarColors[event.calendarId];
+            const textColor = this._getContrastingTextColor(backgroundColor);
+            eventDiv.style.color = textColor;
+        }
+        
         let eventContent = `${startDate.toLocaleTimeString([], {
             hour: '2-digit',
             minute: '2-digit'
@@ -158,6 +178,7 @@ export class GoogleEventManager {
             meetLink.target = "_blank";
             meetLink.textContent = eventContent;
             meetLink.style.display = 'block';
+            meetLink.style.color = 'inherit'; // 親要素の色を継承
             eventDiv.appendChild(meetLink);
         } else {
             eventDiv.textContent = eventContent;
@@ -171,8 +192,27 @@ export class GoogleEventManager {
             endTime: endDate,
             element: eventDiv,
             type: 'google',
-            id: event.id || `google-${Date.now()}-${Math.random()}`
+            id: event.id || `google-${Date.now()}-${Math.random()}`,
+            calendarId: event.calendarId
         });
+    }
+
+    /**
+     * 背景色に対してコントラストの良いテキスト色を取得
+     * @private
+     */
+    _getContrastingTextColor(backgroundColor) {
+        // HEX色をRGBに変換
+        const hex = backgroundColor.replace('#', '');
+        const r = parseInt(hex.substr(0, 2), 16);
+        const g = parseInt(hex.substr(2, 2), 16);
+        const b = parseInt(hex.substr(4, 2), 16);
+        
+        // 明度を計算 (0-255の範囲)
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        
+        // 明度が128以上なら黒、未満なら白
+        return brightness >= 128 ? '#000000' : '#ffffff';
     }
 }
 
