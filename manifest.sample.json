@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "default_locale": "en",
   "name": "SideTimeTable",
-  "version": "1.0",
+  "version": "1.4.0",
   "description": "__MSG_appDesc__",
   "permissions": ["sidePanel", "identity", "storage"],
   "oauth2": {
@@ -11,19 +11,19 @@
   },
   "key": "FILL_OUT_YOUR_KEY",
   "action": {
-    "default_popup": "side_panel.html"
+    "default_popup": "src/side_panel/side_panel.html"
   },
   "side_panel": {
-    "default_path": "side_panel.html"
+    "default_path": "src/side_panel/side_panel.html"
   },
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "src/background.js",
   },
-  "options_page": "options.html",
+  "options_page": "src/options/options.html",
   "icons": {
-    "16": "icon16.png",
-    "32": "icon32.png",
-    "48": "icon48.png",
-    "128": "icon128.png"
+    "16": "src/img/icon16.png",
+    "32": "src/img/icon32.png",
+    "48": "src/img/icon48.png",
+    "128": "src/img/icon128.png"
   }
 }
