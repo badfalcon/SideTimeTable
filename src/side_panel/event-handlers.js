@@ -48,7 +48,7 @@ export class GoogleEventManager {
         loadCalendarColors()
             .then(calendarColors => {
                 this.calendarColors = calendarColors;
-                
+
                 // イベントを取得
                 return new Promise((resolve, reject) => {
                     chrome.runtime.sendMessage({action: "getEvents"}, (response) => {
