@@ -29,33 +29,45 @@
         <div class="side-time-table-events-google" id="sideTimeTableEventsGoogle">
         </div>
     </div>
-</div>
-<!-- 予定作成ダイアログ -->
-<div id="localEventDialog" class="modal" hidden>
-    <!-- 編集用ダイアログの中 -->
-    <div class="modal-content">
-        <span class="close" id="closeDialog">&times;</span>
-        <h2 data-localize="__MSG_eventDialogTitle__">予定を作成/編集</h2>
-        <label for="eventTitle" data-localize="__MSG_eventTitle__">タイトル:</label>
-        <input type="text" id="eventTitle" required>
-        <label for="eventStartTime" data-localize="__MSG_startTime__">開始時刻:</label>
-        <input type="time" list="time-list" id="eventStartTime" required>
-        <label for="eventEndTime" data-localize="__MSG_endTime__">終了時刻:</label>
-        <input type="time" list="time-list" id="eventEndTime" required>
-        <button id="saveEventButton" class="btn btn-success" data-localize="__MSG_save__">保存</button>
-        <button id="deleteEventButton" class="btn btn-danger" data-localize="__MSG_delete__">削除</button>
-        <button id="cancelEventButton" class="btn btn-secondary" data-localize="__MSG_cancel__">キャンセル</button>
+
+    <!-- Google event detail dialog -->
+    <div id="googleEventDialog" class="modal" hidden>
+        <div class="modal-content">
+            <span class="close" id="closeGoogleEventDialog">&times;</span>
+            <h2 class="google-event-title"></h2>
+            <div class="google-event-time mb-2"></div>
+            <div class="google-event-description mb-2"></div>
+            <div class="google-event-location mb-2"></div>
+            <div class="google-event-meet"></div>
+        </div>
     </div>
-</div>
-<!-- モーダル -->
-<div id="alertModal" class="modal" hidden>
-    <div class="modal-content">
-        <span class="close" id="closeAlertModal">&times;</span>
-        <p id="alertMessage"></p>
-        <button id="closeAlertButton" class="btn btn-primary">閉じる</button>
+
+    <!-- Local event dialog -->
+    <div id="localEventDialog" class="modal" hidden>
+        <!-- 編集用ダイアログの中 -->
+        <div class="modal-content">
+            <span class="close" id="closeDialog">&times;</span>
+            <h2 data-localize="__MSG_eventDialogTitle__">予定を作成/編集</h2>
+            <label for="eventTitle" data-localize="__MSG_eventTitle__">タイトル:</label>
+            <input type="text" id="eventTitle" required>
+            <label for="eventStartTime" data-localize="__MSG_startTime__">開始時刻:</label>
+            <input type="time" list="time-list" id="eventStartTime" required>
+            <label for="eventEndTime" data-localize="__MSG_endTime__">終了時刻:</label>
+            <input type="time" list="time-list" id="eventEndTime" required>
+            <button id="saveEventButton" class="btn btn-success" data-localize="__MSG_save__">保存</button>
+            <button id="deleteEventButton" class="btn btn-danger" data-localize="__MSG_delete__">削除</button>
+            <button id="cancelEventButton" class="btn btn-secondary" data-localize="__MSG_cancel__">キャンセル</button>
+        </div>
     </div>
-</div>
-<datalist id="time-list">
-</datalist>
+    <!-- モーダル -->
+    <div id="alertModal" class="modal" hidden>
+        <div class="modal-content">
+            <span class="close" id="closeAlertModal">&times;</span>
+            <p id="alertMessage"></p>
+            <button id="closeAlertButton" class="btn btn-primary">閉じる</button>
+        </div>
+    </div>
+    <datalist id="time-list">
+    </datalist>
 </body>
 </html>

@@ -139,11 +139,22 @@ export class GoogleEventManager {
 
         const eventDiv = document.createElement('div');
         eventDiv.className = 'event google-event';
-        // ツールチップとしてイベントのタイトルを表示
         eventDiv.title = event.summary;
 
         const startDate = new Date(event.start.dateTime || event.start.date);
         const endDate = new Date(event.end.dateTime || event.end.date);
+
+        // データ属性に時刻情報を追加
+        eventDiv.dataset.startTime = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        eventDiv.dataset.endTime = endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        // イベントの詳細データを保存
+        eventDiv.dataset.description = event.description || '';
+        eventDiv.dataset.location = event.location || '';
+        eventDiv.dataset.hangoutLink = event.hangoutLink || '';
+
+        // クリックイベントの追加
+        eventDiv.addEventListener('click', () => this._showEventDetails(event));
 
         const startOffset = (1 + (startDate - this.timeTableManager.openTime) / TIME_CONSTANTS.HOUR_MILLIS) * TIME_CONSTANTS.UNIT_HEIGHT;
         const duration = (endDate - startDate) / TIME_CONSTANTS.MINUTE_MILLIS * TIME_CONSTANTS.UNIT_HEIGHT / 60;
@@ -214,6 +225,66 @@ export class GoogleEventManager {
         // 明度が128以上なら黒、未満なら白
         return brightness >= 128 ? '#000000' : '#ffffff';
     }
+
+    /**
+     * イベントの詳細を表示
+     * @private
+     */
+    _showEventDetails(event) {
+        const dialog = document.getElementById('googleEventDialog');
+        const closeBtn = document.getElementById('closeGoogleEventDialog');
+
+        // タイトル設定
+        dialog.querySelector('.google-event-title').textContent = event.summary;
+
+        // 日時設定
+        const startDate = new Date(event.start.dateTime);
+        const endDate = new Date(event.end.dateTime);
+        const timeStr = `${startDate.toLocaleString()} - ${endDate.toLocaleString()}`;
+        dialog.querySelector('.google-event-time').textContent = timeStr;
+
+        // 説明設定
+        const descriptionEl = dialog.querySelector('.google-event-description');
+        if (event.description) {
+            descriptionEl.textContent = event.description;
+            descriptionEl.style.display = 'block';
+        } else {
+            descriptionEl.style.display = 'none';
+        }
+
+        // 場所設定
+        const locationEl = dialog.querySelector('.google-event-location');
+        if (event.location) {
+            locationEl.textContent = `場所: ${event.location}`;
+            locationEl.style.display = 'block';
+        } else {
+            locationEl.style.display = 'none';
+        }
+
+        // Google Meetリンク設定
+        const meetEl = dialog.querySelector('.google-event-meet');
+        if (event.hangoutLink) {
+            meetEl.innerHTML = `<a href="${event.hangoutLink}" target="_blank"><i class="fas fa-video"></i> Google Meetで参加</a>`;
+            meetEl.style.display = 'block';
+        } else {
+            meetEl.style.display = 'none';
+        }
+
+        // モーダルを表示
+        dialog.style.display = 'flex';
+
+        // 閉じるボタンのイベントリスナー
+        closeBtn.onclick = () => {
+            dialog.style.display = 'none';
+        };
+
+        // モーダルの外側をクリックしたときに閉じる
+        dialog.onclick = (e) => {
+            if (e.target === dialog) {
+                dialog.style.display = 'none';
+            }
+        };
+    }
 }
 
 /**
@@ -283,13 +354,19 @@ export class LocalEventManager {
     _createEventDiv(title, startTime, endTime) {
         const eventDiv = document.createElement('div');
         eventDiv.className = 'event local-event';
-        // ツールチップとしてイベントのタイトルを表示
         eventDiv.title = title;
 
         const startDate = new Date();
-        startDate.setHours(startTime.split(':')[0], startTime.split(':')[1], 0, 0);
+        const [startHours, startMinutes] = startTime.split(':');
+        startDate.setHours(parseInt(startHours), parseInt(startMinutes), 0, 0);
+
         const endDate = new Date();
-        endDate.setHours(endTime.split(':')[0], endTime.split(':')[1], 0, 0);
+        const [endHours, endMinutes] = endTime.split(':');
+        endDate.setHours(parseInt(endHours), parseInt(endMinutes), 0, 0);
+
+        // データ属性に時刻情報を追加
+        eventDiv.dataset.startTime = startTime;
+        eventDiv.dataset.endTime = endTime;
 
         const startOffset = (1 + (startDate - this.timeTableManager.openTime) / TIME_CONSTANTS.HOUR_MILLIS) * TIME_CONSTANTS.UNIT_HEIGHT;
         const duration = (endDate - startDate) / TIME_CONSTANTS.MINUTE_MILLIS * TIME_CONSTANTS.UNIT_HEIGHT / 60;
