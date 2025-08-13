@@ -639,22 +639,25 @@ export class TimeTableManager {
      * timeTableManager.createBaseTable(false);
      */
     createBaseTable(targetDate, breakTimeFixed, breakTimeStart = '12:00', breakTimeEnd = '13:00') {
-        const { openTimeMinute } = this.initializeTimeVariables(targetDate);
+        this.initializeTimeVariables(targetDate);
         const unitHeight = TIME_CONSTANTS.UNIT_HEIGHT;
 
-        this.parentDiv.style.height = `${unitHeight * (this.hourDiff + 2)}px`;
-        this.baseDiv.innerHTML = ''; // 以前の表示をクリア
-        this.baseDiv.style.height = `${unitHeight * (this.hourDiff + 2)}px`;
+        // 24時間分の固定高さを設定（parentDivはCSSで固定サイズ、baseDivのみ設定）
+        this.baseDiv.style.height = '1440px'; // 24 * 60px
+        
+        // 既存の業務時間表示をクリア（時間ラベルはHTMLに固定済みなのでクリアしない）
+        const workTimeElements = this.baseDiv.querySelectorAll('.work-time');
+        workTimeElements.forEach(element => element.remove());
 
         // 業務時間に色を付ける(休憩時間を除く)
         if (breakTimeFixed) {
             this._createWorkTimeWithBreak(targetDate, breakTimeStart, breakTimeEnd, unitHeight);
         } else {
-            this._createWorkTimeWithoutBreak(unitHeight);
+            this._createWorkTimeWithoutBreak(targetDate, unitHeight);
         }
 
-        // 各時間ラベルと補助線を追加
-        this._addTimeLabelsAndLines(openTimeMinute, unitHeight);
+        // 業務開始時間に基づいてスクロール位置を調整
+        this.adjustScrollPosition(targetDate);
     }
 
     /**
@@ -674,21 +677,24 @@ export class TimeTableManager {
         const breakTimeStartMillis = breakStartTime.getTime();
         const breakTimeEndMillis = breakEndTime.getTime();
 
-        const breakTimeStartOffset = (1 + (breakTimeStartMillis - this.openTime) / TIME_CONSTANTS.HOUR_MILLIS) * unitHeight;
-        const breakTimeDuration = (breakTimeEndMillis - breakTimeStartMillis) / TIME_CONSTANTS.MINUTE_MILLIS * unitHeight / 60;
+        // 24時間座標系での位置計算（0:00からの時間）
+        const openTimeOffset = (this.openTime - new Date(targetDate).setHours(0, 0, 0, 0)) / TIME_CONSTANTS.MINUTE_MILLIS;
+        const breakTimeStartOffset = (breakTimeStartMillis - new Date(targetDate).setHours(0, 0, 0, 0)) / TIME_CONSTANTS.MINUTE_MILLIS;
+        const breakTimeEndOffset = (breakTimeEndMillis - new Date(targetDate).setHours(0, 0, 0, 0)) / TIME_CONSTANTS.MINUTE_MILLIS;
+        const closeTimeOffset = (this.closeTime - new Date(targetDate).setHours(0, 0, 0, 0)) / TIME_CONSTANTS.MINUTE_MILLIS;
 
         // 休憩時間前の業務時間
         const workTimeDiv1 = document.createElement('div');
         workTimeDiv1.className = 'work-time';
-        workTimeDiv1.style.top = `${unitHeight}px`;
-        workTimeDiv1.style.height = `${breakTimeStartOffset - unitHeight}px`;
+        workTimeDiv1.style.top = `${openTimeOffset}px`;
+        workTimeDiv1.style.height = `${breakTimeStartOffset - openTimeOffset}px`;
         this.baseDiv.appendChild(workTimeDiv1);
 
         // 休憩時間後の業務時間
         const workTimeDiv2 = document.createElement('div');
         workTimeDiv2.className = 'work-time';
-        workTimeDiv2.style.top = `${breakTimeStartOffset + breakTimeDuration}px`;
-        workTimeDiv2.style.height = `${unitHeight * (this.closeTime - breakTimeEndMillis) / TIME_CONSTANTS.HOUR_MILLIS}px`;
+        workTimeDiv2.style.top = `${breakTimeEndOffset}px`;
+        workTimeDiv2.style.height = `${closeTimeOffset - breakTimeEndOffset}px`;
         this.baseDiv.appendChild(workTimeDiv2);
     }
 
@@ -701,45 +707,78 @@ export class TimeTableManager {
      * @param {number} unitHeight - 時間単位の高さ（ピクセル）
      * @returns {void}
      */
-    _createWorkTimeWithoutBreak(unitHeight) {
+    _createWorkTimeWithoutBreak(targetDate, unitHeight) {
+        // 24時間座標系での位置計算（0:00からの時間）
+        const openTimeOffset = (this.openTime - new Date(targetDate).setHours(0, 0, 0, 0)) / TIME_CONSTANTS.MINUTE_MILLIS;
+        const closeTimeOffset = (this.closeTime - new Date(targetDate).setHours(0, 0, 0, 0)) / TIME_CONSTANTS.MINUTE_MILLIS;
+
         const workTimeDiv = document.createElement('div');
         workTimeDiv.className = 'work-time';
-        workTimeDiv.style.top = `${unitHeight}px`;
-        workTimeDiv.style.height = `${unitHeight * this.hourDiff}px`;
+        workTimeDiv.style.top = `${openTimeOffset}px`;
+        workTimeDiv.style.height = `${closeTimeOffset - openTimeOffset}px`;
         this.baseDiv.appendChild(workTimeDiv);
     }
 
     /**
-     * 時間ラベルと補助線を追加する
+     * 表示開始位置を調整する
      * 
-     * タイムテーブル上に1時間ごとの時間ラベル（時:00形式）と
-     * 水平方向の時間補助線を追加します。
+     * 業務開始時間に基づいて、タイムテーブルのスクロール位置を調整します。
+     * 業務開始時間の1時間前を表示範囲の上部に配置します。
      * 
-     * @private
-     * @param {number} openTimeMinute - 業務開始時間の分（0-59）
-     * @param {number} unitHeight - 時間単位の高さ（ピクセル）
+     * @param {Date} targetDate - 対象の日付
      * @returns {void}
      */
-    _addTimeLabelsAndLines(openTimeMinute, unitHeight) {
-        for (let i = 0; i <= this.hourDiff + 2; i++) {
-            if (i === 0 && openTimeMinute !== 0) {
-                continue;
-            }
-
-            // 時間ラベル
-            const hourLabel = document.createElement('div');
-            hourLabel.className = 'hour-label';
-            hourLabel.style.top = `${i * 60 - openTimeMinute}px`;
-            const hour = new Date(this.openTime + (i - 1) * TIME_CONSTANTS.HOUR_MILLIS).getHours();
-            hourLabel.textContent = `${hour}:00`;
-            this.baseDiv.appendChild(hourLabel);
-
-            // 時間補助線
-            const hourLine = document.createElement('div');
-            hourLine.className = 'hour-line';
-            hourLine.style.top = `${i * 60 - openTimeMinute}px`;
-            this.baseDiv.appendChild(hourLine);
+    adjustScrollPosition(targetDate) {
+        const currentTime = new Date();
+        const isToday = this._isSameDay(currentTime, targetDate);
+        
+        let scrollTop;
+        
+        if (isToday) {
+            // 今日の場合：現在時刻を中心に表示
+            const currentPosition = currentTime.getHours() * 60 + currentTime.getMinutes();
+            const viewportHeight = this.parentDiv.clientHeight;
+            scrollTop = Math.max(0, currentPosition - viewportHeight / 2);
+            
+            console.log(`=== 現在時刻中心スクロール ===`);
+            console.log(`現在時刻: ${currentTime.getHours()}:${String(currentTime.getMinutes()).padStart(2, '0')}`);
+            console.log(`現在位置: ${currentPosition}px`);
+            console.log(`ビューポート高さ: ${viewportHeight}px`);
+        } else {
+            // 他の日：業務開始時間の1時間前を表示
+            const [openHour, openMinute] = this.openHour.split(':').map(Number);
+            const targetHour = Math.max(0, openHour - 1);
+            scrollTop = targetHour * 60 + openMinute;
+            
+            console.log(`=== 業務時間ベーススクロール ===`);
+            console.log(`業務開始時間: ${this.openHour}`);
         }
+
+        console.log(`計算された位置: ${scrollTop}px`);
+        console.log(`parentDiv:`, this.parentDiv);
+        console.log(`現在のscrollTop:`, this.parentDiv.scrollTop);
+        
+        // スクロール位置を設定
+        this.parentDiv.scrollTop = scrollTop;
+        
+        console.log(`設定後のscrollTop:`, this.parentDiv.scrollTop);
+        console.log(`parentDivの高さ:`, this.parentDiv.clientHeight, this.parentDiv.scrollHeight);
+    }
+
+    /**
+     * 2つの日付が同じ日かどうかを判定
+     * 
+     * @private
+     * @param {Date} date1 - 日付1
+     * @param {Date} date2 - 日付2
+     * @returns {boolean} 同じ日の場合true
+     */
+    _isSameDay(date1, date2) {
+        const d1 = new Date(date1);
+        const d2 = new Date(date2);
+        d1.setHours(0, 0, 0, 0);
+        d2.setHours(0, 0, 0, 0);
+        return d1.getTime() === d2.getTime();
     }
 
     /**
