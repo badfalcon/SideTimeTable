@@ -5,8 +5,7 @@
  * 責任を明確に分離することで、テストしやすく保守しやすい設計になっています。
  */
 
-import { TIME_CONSTANTS } from './utils.js';
-import { isCurrentTimeInWorkHours, calculateWorkHours } from './time-utils.js';
+import {calculateWorkHours} from './time-utils.js';
 
 /**
  * 現在時刻線を管理するクラス
@@ -99,11 +98,9 @@ export class CurrentTimeLineManager {
      * @private
      * @param {Date} currentTime - 現在時刻
      * @param {Date} targetDate - 表示対象の日付
-     * @param {string} openHour - 業務開始時間
-     * @param {string} closeHour - 業務終了時間
      * @returns {boolean} 表示すべき場合true
      */
-    _shouldShowTimeLine(currentTime, targetDate, openHour, closeHour) {
+    _shouldShowTimeLine(currentTime, targetDate) {
         try {
             // 24時間表示なので、今日の場合は常に表示
             return this._isSameDay(currentTime, targetDate);
@@ -153,13 +150,11 @@ export class CurrentTimeLineManager {
      * 
      * @private
      * @param {Date} currentTime - 現在時刻
-     * @param {Date} openTime - 業務開始時間（使用しない）
      * @returns {number} 位置（ピクセル）
      */
-    _calculateTimeLinePosition(currentTime, openTime) {
+    _calculateTimeLinePosition(currentTime) {
         // 24時間座標系での位置計算（0:00からの分数）
-        const position = currentTime.getHours() * 60 + currentTime.getMinutes();
-        return position;
+        return currentTime.getHours() * 60 + currentTime.getMinutes();
     }
 
     /**

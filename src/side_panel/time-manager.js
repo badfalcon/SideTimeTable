@@ -4,9 +4,9 @@
  * このファイルはタイムテーブルの基本構造と時間関連の機能を管理します。
  */
 
-import { TIME_CONSTANTS } from '../lib/utils.js';
-import { calculateWorkHours, calculateBreakHours } from '../lib/time-utils.js';
-import { CurrentTimeLineManager } from '../lib/current-time-line-manager.js';
+import {TIME_CONSTANTS} from '../lib/utils.js';
+import {calculateBreakHours, calculateWorkHours} from '../lib/time-utils.js';
+import {CurrentTimeLineManager} from '../lib/current-time-line-manager.js';
 
 /**
  * EventLayoutManager - イベントの配置を管理するクラス
@@ -388,8 +388,7 @@ export class EventLayoutManager {
                 const eventStart = this._getTimeInMillis(event.startTime, event.id, 'start');
                 if (lanes[lane] <= eventStart) {
                     // このレーンに割り当て可能
-                    const eventEnd = this._getTimeInMillis(event.endTime, event.id, 'end');
-                    lanes[lane] = eventEnd;
+                    lanes[lane] = this._getTimeInMillis(event.endTime, event.id, 'end');
                     result[event.index] = lane;
                     assigned = true;
                     break;
@@ -458,8 +457,7 @@ export class EventLayoutManager {
                         event.element.style.left = `${left}px`;
 
                         // レーン数に応じて幅を調整
-                        const width = laneWidth;
-                        event.element.style.width = `${width}px`;
+                        event.element.style.width = `${laneWidth}px`;
 
                         // レーン数が多い場合はフォントサイズを小さくする
                         if (laneCount > 2) {
@@ -624,7 +622,8 @@ export class TimeTableManager {
      * 
      * このメソッドは業務時間、休憩時間の表示、時間ラベル、時間補助線などを含む
      * 基本的なタイムテーブルのUI要素を生成します。既存の表示はクリアされます。
-     * 
+     *
+     * @param {Date} targetDate - 対象の日付
      * @param {boolean} breakTimeFixed - 休憩時間が固定されているかどうか
      * @param {string} [breakTimeStart='12:00'] - 休憩開始時間（HH:MM形式）、breakTimeFixedがtrueの場合に使用
      * @param {string} [breakTimeEnd='13:00'] - 休憩終了時間（HH:MM形式）、breakTimeFixedがtrueの場合に使用
@@ -667,12 +666,12 @@ export class TimeTableManager {
      * 休憩時間の前後に分かれた2つの業務時間ブロックを生成します。
      * 
      * @private
+     * @param {Date} targetDate - 対象の日付
      * @param {string} breakTimeStart - 休憩開始時間（HH:MM形式）
      * @param {string} breakTimeEnd - 休憩終了時間（HH:MM形式）
-     * @param {number} unitHeight - 時間単位の高さ（ピクセル）
      * @returns {void}
      */
-    _createWorkTimeWithBreak(targetDate, breakTimeStart, breakTimeEnd, unitHeight) {
+    _createWorkTimeWithBreak(targetDate, breakTimeStart, breakTimeEnd) {
         const { breakStartTime, breakEndTime } = calculateBreakHours(targetDate, breakTimeStart, breakTimeEnd);
         const breakTimeStartMillis = breakStartTime.getTime();
         const breakTimeEndMillis = breakEndTime.getTime();
@@ -704,10 +703,10 @@ export class TimeTableManager {
      * 業務開始時間から終了時間までの連続した業務時間ブロックを生成します。
      * 
      * @private
-     * @param {number} unitHeight - 時間単位の高さ（ピクセル）
+     * @param {Date} targetDate - 対象の日付
      * @returns {void}
      */
-    _createWorkTimeWithoutBreak(targetDate, unitHeight) {
+    _createWorkTimeWithoutBreak(targetDate) {
         // 24時間座標系での位置計算（0:00からの時間）
         const openTimeOffset = (this.openTime - new Date(targetDate).setHours(0, 0, 0, 0)) / TIME_CONSTANTS.MINUTE_MILLIS;
         const closeTimeOffset = (this.closeTime - new Date(targetDate).setHours(0, 0, 0, 0)) / TIME_CONSTANTS.MINUTE_MILLIS;
