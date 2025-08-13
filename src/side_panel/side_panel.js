@@ -7,7 +7,8 @@
 
 import { TimeTableManager, EventLayoutManager } from './time-manager.js';
 import { GoogleEventManager, LocalEventManager } from './event-handlers.js';
-import { generateTimeList, loadSettings, logError } from '../lib/utils.js';
+import { generateTimeList, loadSettings, logError, loadLocalEventsForDate } from '../lib/utils.js';
+import { isToday } from '../lib/time-utils.js';
 
 // リロードメッセージリスナー
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -29,6 +30,9 @@ class UIController {
         this.googleEventManager = null;
         this.localEventManager = null;
         this.updateInterval = null;
+        // 現在の日付（時間部分は00:00:00に正規化）
+        this.currentDate = new Date();
+        this.currentDate.setHours(0, 0, 0, 0);
     }
 
     /**
@@ -59,8 +63,8 @@ class UIController {
         // イベントリスナーの設定
         this._setupEventListeners();
 
-        // タイトル設定
-        this._setTitle();
+        // 日付表示の初期化
+        this._updateDateDisplay();
 
         // 定期的な更新の設定
         this._setupPeriodicUpdates();
@@ -130,7 +134,7 @@ class UIController {
 
                     console.log('タイムテーブル作成開始');
                     // タイムテーブルの作成
-                    this.timeTableManager.createBaseTable(settings.breakTimeFixed, settings.breakTimeStart, settings.breakTimeEnd);
+                    this.timeTableManager.createBaseTable(this.currentDate, settings.breakTimeFixed, settings.breakTimeStart, settings.breakTimeEnd);
 
                     console.log('イベント取得開始');
                     // イベントの取得と表示 - 少し遅延を入れて確実に実行されるようにする
@@ -149,7 +153,7 @@ class UIController {
                         }
 
                         // 現在時刻の線を更新
-                        this.timeTableManager.updateCurrentTimeLine();
+                        this.timeTableManager.updateCurrentTimeLine(this.currentDate);
                     }, 100); // 100ミリ秒の遅延
                 } catch (error) {
                     logError('設定適用', error);
@@ -233,16 +237,97 @@ class UIController {
                 localEventDialog.style.display = 'none';
             }
         });
+
+        // 日付ナビゲーションボタン
+        const prevDateButton = document.getElementById('prevDateButton');
+        const nextDateButton = document.getElementById('nextDateButton');
+
+        prevDateButton.addEventListener('click', () => {
+            this._navigateDate(-1);
+        });
+
+        nextDateButton.addEventListener('click', () => {
+            this._navigateDate(1);
+        });
     }
 
     /**
-     * タイトルを設定
+     * 日付表示を更新
      * @private
      */
-    _setTitle() {
-        const today = new Date();
-        const title = document.querySelector('h1');
-        title.textContent = today.toLocaleDateString(undefined, {dateStyle: 'full'});
+    _updateDateDisplay() {
+        const dateDisplay = document.getElementById('currentDateDisplay');
+        
+        // 今日かどうかを判定
+        const isTodayFlag = isToday(this.currentDate);
+
+        
+        // 日付表示を更新
+        dateDisplay.textContent = this.currentDate.toLocaleDateString('ja-JP', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            weekday: 'short'
+        });
+        
+        // 今日の場合はクラスを追加
+        if (isTodayFlag) {
+            dateDisplay.classList.add('today');
+        } else {
+            dateDisplay.classList.remove('today');
+        }
+    }
+
+    /**
+     * 日付を移動
+     * @param {number} days - 移動する日数（正の数で未来、負の数で過去）
+     * @private
+     */
+    _navigateDate(days) {
+        this.currentDate.setDate(this.currentDate.getDate() + days);
+        this._updateDateDisplay();
+        this._loadEventsForCurrentDate();
+    }
+
+    /**
+     * 現在の日付のイベントを読み込み
+     * @private
+     */
+    _loadEventsForCurrentDate() {
+        // 既存のイベントをクリア
+        this.eventLayoutManager.events = [];
+        this.localEventManager.localEventsDiv.innerHTML = '';
+        this.googleEventManager.googleEventsDiv.innerHTML = '';
+        
+        // TimeTableManagerの時間設定を対象日付で更新
+        loadSettings()
+            .then(settings => {
+                // タイムテーブルを新しい日付で再作成
+                this.timeTableManager.createBaseTable(this.currentDate, settings.breakTimeFixed, settings.breakTimeStart, settings.breakTimeEnd);
+                
+                // 現在時刻線を更新（今日以外では非表示になる）
+                this.timeTableManager.updateCurrentTimeLine(this.currentDate);
+                
+                // ローカルイベントの取得
+                this.localEventManager.loadLocalEvents(this.currentDate);
+                
+                // Googleイベントの取得
+                if (settings.googleIntegrated) {
+                    this.googleEventManager.fetchEvents(this.currentDate);
+                } else {
+                    // Google連携がない場合は、ローカルイベントのみでレイアウト計算
+                    setTimeout(() => {
+                        this.eventLayoutManager.calculateLayout();
+                    }, 100);
+                }
+            })
+            .catch(error => {
+                logError('設定読み込み', error);
+                // エラーの場合もレイアウト計算
+                setTimeout(() => {
+                    this.eventLayoutManager.calculateLayout();
+                }, 100);
+            });
     }
 
     /**
@@ -262,7 +347,7 @@ class UIController {
 
             if (currentSeconds === 0) {
                 // 毎分0秒に現在時刻の線を更新
-                this.timeTableManager.updateCurrentTimeLine();
+                this.timeTableManager.updateCurrentTimeLine(this.currentDate);
             }
         }, 1000);
     }
