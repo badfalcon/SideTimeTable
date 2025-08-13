@@ -4,8 +4,16 @@
  * このファイルはGoogleカレンダーイベントとローカルイベントの管理を行います。
  */
 
-import { TIME_CONSTANTS, loadLocalEvents, loadLocalEventsForDate, saveLocalEvents, saveLocalEventsForDate, logError, showAlertModal, loadCalendarColors } from '../lib/utils.js';
-import { createTimeOnDate } from '../lib/time-utils.js';
+import {
+    loadCalendarColors,
+    loadLocalEvents,
+    loadLocalEventsForDate,
+    logError,
+    saveLocalEvents,
+    showAlertModal,
+    TIME_CONSTANTS
+} from '../lib/utils.js';
+import {createTimeOnDate} from '../lib/time-utils.js';
 
 /**
  * GoogleEventManager - Googleイベント管理クラス
@@ -181,8 +189,7 @@ export class GoogleEventManager {
             eventDiv.style.backgroundColor = this.calendarColors[event.calendarId];
             // 背景色に応じてテキスト色を自動調整
             const backgroundColor = this.calendarColors[event.calendarId];
-            const textColor = this._getContrastingTextColor(backgroundColor);
-            eventDiv.style.color = textColor;
+            eventDiv.style.color = this._getContrastingTextColor(backgroundColor);
         }
         
         let eventContent = `${startDate.toLocaleTimeString([], {
@@ -248,8 +255,7 @@ export class GoogleEventManager {
         // 日時設定
         const startDate = new Date(event.start.dateTime);
         const endDate = new Date(event.end.dateTime);
-        const timeStr = `${startDate.toLocaleString()} - ${endDate.toLocaleString()}`;
-        dialog.querySelector('.google-event-time').textContent = timeStr;
+        dialog.querySelector('.google-event-time').textContent = `${startDate.toLocaleString()} - ${endDate.toLocaleString()}`;
 
         // 説明設定
         const descriptionEl = dialog.querySelector('.google-event-description');
