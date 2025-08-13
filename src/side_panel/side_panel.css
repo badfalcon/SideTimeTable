@@ -21,7 +21,7 @@ h1 {
 .side-time-table {
     position: relative;
     padding-left: 60px;
-    border-left: 2px solid #ccc;
+    border: 1px solid #ccc;
     height: 70vh; /* ビューポート高さの70% */
     overflow-y: auto; /* 縦スクロールを有効にする */
 }
@@ -32,16 +32,14 @@ h1 {
     top: 0;
     z-index: 100;
     background-color: #f0f0f0;
-    border-bottom: 1px solid #ccc;
+    padding: 10px;
 }
 
 #sideTimeTableHeader{
     display: flex;
     justify-content: space-between;
     align-items: center;
-    /*padding: 10px;*/
     background-color: #f0f0f0;
-    border-bottom: 1px solid #ccc;
     width: 100%;
 }
 
@@ -211,6 +209,10 @@ button {
     border-radius: 10px; /* 少し大きめの角丸 */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 影の追加 */
     position: relative;
+}
+
+.modal-content h2 {
+    margin-top: 0;
 }
 
 .close {
