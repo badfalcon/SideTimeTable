@@ -248,6 +248,7 @@ class UIController {
         // 日付ナビゲーションボタン
         const prevDateButton = document.getElementById('prevDateButton');
         const nextDateButton = document.getElementById('nextDateButton');
+        const currentDateDisplay = document.getElementById('currentDateDisplay');
 
         prevDateButton.addEventListener('click', () => {
             this._navigateDate(-1);
@@ -255,6 +256,11 @@ class UIController {
 
         nextDateButton.addEventListener('click', () => {
             this._navigateDate(1);
+        });
+
+        // 日付表示をクリックで今日に移動
+        currentDateDisplay.addEventListener('click', () => {
+            this._navigateToToday();
         });
     }
 
@@ -292,6 +298,24 @@ class UIController {
      */
     _navigateDate(days) {
         this.currentDate.setDate(this.currentDate.getDate() + days);
+        this._updateDateDisplay();
+        this._loadEventsForCurrentDate();
+    }
+
+    /**
+     * 今日の日付に移動
+     * @private
+     */
+    _navigateToToday() {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        // 既に今日の場合は何もしない
+        if (this.currentDate.getTime() === today.getTime()) {
+            return;
+        }
+        
+        this.currentDate = today;
         this._updateDateDisplay();
         this._loadEventsForCurrentDate();
     }
