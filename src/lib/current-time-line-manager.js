@@ -105,8 +105,8 @@ export class CurrentTimeLineManager {
      */
     _shouldShowTimeLine(currentTime, targetDate, openHour, closeHour) {
         try {
-            return isCurrentTimeInWorkHours(currentTime, openHour, closeHour) && 
-                   this._isSameDay(currentTime, targetDate);
+            // 24時間表示なので、今日の場合は常に表示
+            return this._isSameDay(currentTime, targetDate);
         } catch (error) {
             console.warn('現在時刻線の表示判定でエラーが発生しました:', error);
             return false;
@@ -153,13 +153,13 @@ export class CurrentTimeLineManager {
      * 
      * @private
      * @param {Date} currentTime - 現在時刻
-     * @param {Date} openTime - 業務開始時間
+     * @param {Date} openTime - 業務開始時間（使用しない）
      * @returns {number} 位置（ピクセル）
      */
     _calculateTimeLinePosition(currentTime, openTime) {
-        const timeDiff = currentTime.getTime() - openTime.getTime();
-        const hourDiff = timeDiff / TIME_CONSTANTS.HOUR_MILLIS;
-        return (1 + hourDiff) * TIME_CONSTANTS.UNIT_HEIGHT;
+        // 24時間座標系での位置計算（0:00からの分数）
+        const position = currentTime.getHours() * 60 + currentTime.getMinutes();
+        return position;
     }
 
     /**

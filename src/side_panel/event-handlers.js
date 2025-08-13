@@ -163,8 +163,9 @@ export class GoogleEventManager {
         // クリックイベントの追加
         eventDiv.addEventListener('click', () => this._showEventDetails(event));
 
-        const startOffset = (1 + (startDate - this.timeTableManager.openTime) / TIME_CONSTANTS.HOUR_MILLIS) * TIME_CONSTANTS.UNIT_HEIGHT;
-        const duration = (endDate - startDate) / TIME_CONSTANTS.MINUTE_MILLIS * TIME_CONSTANTS.UNIT_HEIGHT / 60;
+        // 24時間座標系での位置計算（0:00からの分数をピクセルに変換）
+        const startOffset = (startDate.getHours() * 60 + startDate.getMinutes());
+        const duration = (endDate - startDate) / TIME_CONSTANTS.MINUTE_MILLIS;
 
         if (duration < 30) {
             eventDiv.className = 'event google-event short'; // 30分未満の場合はpaddingを減らす
@@ -383,10 +384,9 @@ export class LocalEventManager {
         eventDiv.dataset.startTime = startTime;
         eventDiv.dataset.endTime = endTime;
 
-        // TimeTableManager から対象日付の業務開始時間を取得して位置を計算
-        const timeTableOpenTime = this.timeTableManager.openTime;
-        const startOffset = (1 + (startDate.getTime() - timeTableOpenTime) / TIME_CONSTANTS.HOUR_MILLIS) * TIME_CONSTANTS.UNIT_HEIGHT;
-        const duration = (endDate.getTime() - startDate.getTime()) / TIME_CONSTANTS.MINUTE_MILLIS * TIME_CONSTANTS.UNIT_HEIGHT / 60;
+        // 24時間座標系での位置計算（0:00からの分数をピクセルに変換）
+        const startOffset = (startDate.getHours() * 60 + startDate.getMinutes());
+        const duration = (endDate.getTime() - startDate.getTime()) / TIME_CONSTANTS.MINUTE_MILLIS;
 
         if (duration < 30) {
             eventDiv.className = 'event local-event short';

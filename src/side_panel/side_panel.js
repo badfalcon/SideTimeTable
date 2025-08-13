@@ -154,6 +154,13 @@ class UIController {
 
                         // 現在時刻の線を更新
                         this.timeTableManager.updateCurrentTimeLine(this.currentDate);
+                        
+                        // スクロール位置を調整（全ての初期化が完了した後）
+                        setTimeout(() => {
+                            requestAnimationFrame(() => {
+                                this.timeTableManager.adjustScrollPosition(this.currentDate);
+                            });
+                        }, 300);
                     }, 100); // 100ミリ秒の遅延
                 } catch (error) {
                     logError('設定適用', error);
@@ -320,6 +327,13 @@ class UIController {
                         this.eventLayoutManager.calculateLayout();
                     }, 100);
                 }
+                
+                // スクロール位置を調整
+                setTimeout(() => {
+                    requestAnimationFrame(() => {
+                        this.timeTableManager.adjustScrollPosition(this.currentDate);
+                    });
+                }, 300);
             })
             .catch(error => {
                 logError('設定読み込み', error);
