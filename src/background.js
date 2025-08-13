@@ -77,9 +77,10 @@ function getCalendarList() {
 
 /**
  * Googleカレンダーからイベントを取得する
+ * @param {Date} targetDate - 対象の日付（省略時は今日）
  * @returns {Promise<Array>} イベントの配列を返すPromise
  */
-function getCalendarEvents() {
+function getCalendarEvents(targetDate = null) {
     console.log("Googleカレンダーイベント取得開始");
     return new Promise((resolve, reject) => {
         try {
@@ -102,11 +103,11 @@ function getCalendarEvents() {
 
                     console.log("認証トークン取得成功");
                     
-                    // 今日の日付の範囲を設定
-                    const today = new Date();
-                    const startOfDay = new Date(today);
+                    // 対象日付の範囲を設定
+                    const targetDay = targetDate || new Date();
+                    const startOfDay = new Date(targetDay);
                     startOfDay.setHours(0, 0, 0, 0);
-                    const endOfDay = new Date(today);
+                    const endOfDay = new Date(targetDay);
                     endOfDay.setHours(23, 59, 59, 999);
                     
                     const selectedCalendarIds = storageData.selectedCalendars || [];
@@ -236,7 +237,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     
     switch (request.action) {
         case "getEvents":
-            getCalendarEvents()
+            const targetDate = request.targetDate ? new Date(request.targetDate) : null;
+            getCalendarEvents(targetDate)
                 .then(events => sendResponse({events}))
                 .catch(error => sendResponse({error: error.message || "イベント取得エラー"}));
             return true; // 非同期応答を示す

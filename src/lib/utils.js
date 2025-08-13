@@ -61,6 +61,15 @@ export function getFormattedDate() {
 }
 
 /**
+ * 指定した日付を取得（YYYY-MM-DD形式）
+ * @param {Date} date - 対象の日付
+ * @returns {string} YYYY-MM-DD形式の日付文字列
+ */
+export function getFormattedDateFromDate(date) {
+    return date.toISOString().split('T')[0]; // YYYY-MM-DD 形式の文字列を取得
+}
+
+/**
  * 設定を保存する
  * @param {Object} settings - 保存する設定オブジェクト
  * @returns {Promise} 保存処理のPromise
@@ -107,22 +116,27 @@ export function loadSettings(defaultSettings = DEFAULT_SETTINGS) {
  * @returns {Promise<Array>} イベントの配列を返すPromise
  */
 export function loadLocalEvents() {
+    return loadLocalEventsForDate(new Date());
+}
+
+/**
+ * 指定した日付のローカルイベントを読み込む
+ * @param {Date} targetDate - 対象の日付
+ * @returns {Promise<Array>} イベントの配列を返すPromise
+ */
+export function loadLocalEventsForDate(targetDate) {
     return new Promise((resolve, reject) => {
         try {
-            chrome.storage.sync.get({localEvents: [], lastUpdateDate: ''}, (data) => {
+            const targetDateStr = getFormattedDateFromDate(targetDate);
+            const storageKey = `localEvents_${targetDateStr}`;
+            
+            chrome.storage.sync.get({[storageKey]: []}, (data) => {
                 if (chrome.runtime.lastError) {
                     reject(chrome.runtime.lastError);
                     return;
                 }
                 
-                // 日付が変わっていたら空の配列を返す
-                const currentDate = getFormattedDate();
-                if (currentDate !== data.lastUpdateDate) {
-                    resolve([]);
-                    return;
-                }
-                
-                resolve(data.localEvents || []);
+                resolve(data[storageKey] || []);
             });
         } catch (error) {
             reject(error);
@@ -136,12 +150,23 @@ export function loadLocalEvents() {
  * @returns {Promise} 保存処理のPromise
  */
 export function saveLocalEvents(events) {
+    return saveLocalEventsForDate(events, new Date());
+}
+
+/**
+ * 指定した日付のローカルイベントを保存する
+ * @param {Array} events - 保存するイベントの配列
+ * @param {Date} targetDate - 対象の日付
+ * @returns {Promise} 保存処理のPromise
+ */
+export function saveLocalEventsForDate(events, targetDate) {
     return new Promise((resolve, reject) => {
         try {
-            const currentDate = getFormattedDate();
+            const targetDateStr = getFormattedDateFromDate(targetDate);
+            const storageKey = `localEvents_${targetDateStr}`;
+            
             chrome.storage.sync.set({
-                localEvents: events,
-                lastUpdateDate: currentDate
+                [storageKey]: events
             }, () => {
                 if (chrome.runtime.lastError) {
                     reject(chrome.runtime.lastError);

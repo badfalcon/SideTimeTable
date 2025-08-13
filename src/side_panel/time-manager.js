@@ -5,6 +5,8 @@
  */
 
 import { TIME_CONSTANTS } from '../lib/utils.js';
+import { calculateWorkHours, calculateBreakHours } from '../lib/time-utils.js';
+import { CurrentTimeLineManager } from '../lib/current-time-line-manager.js';
 
 /**
  * EventLayoutManager - イベントの配置を管理するクラス
@@ -557,10 +559,10 @@ export class TimeTableManager {
         this.hourDiff = 0;
 
         /**
-         * 現在時刻を示す線のHTML要素
-         * @type {HTMLElement|null}
+         * 現在時刻線マネージャー
+         * @type {CurrentTimeLineManager}
          */
-        this.currentTimeLine = null;
+        this.currentTimeLineManager = new CurrentTimeLineManager(this.parentDiv);
     }
 
     /**
@@ -585,35 +587,36 @@ export class TimeTableManager {
         this.closeHour = settings.closeTime;
     }
 
+
     /**
      * 時間関連の変数を初期化
      * 
      * 設定された業務開始時間と終了時間を解析し、内部的な時間計算用の変数を設定します。
-     * このメソッドは createBaseTable 内部で自動的に呼び出されます。
      * 
+     * @param {Date} targetDate - 対象の日付
      * @returns {Object} 初期化された時間変数
      * @returns {number} returnValue.openTimeHour - 業務開始時間（時）
      * @returns {number} returnValue.openTimeMinute - 業務開始時間（分）
-     * 
-     * @example
-     * const { openTimeHour, openTimeMinute } = timeTableManager.initializeTimeVariables();
-     * console.log(`業務開始: ${openTimeHour}時${openTimeMinute}分`);
      */
-    initializeTimeVariables() {
-        const openTimeParts = this.openHour.split(':');
-        const closeTimeParts = this.closeHour.split(':');
+    initializeTimeVariables(targetDate) {
+        try {
+            const { openTime, closeTime, hourDiff } = calculateWorkHours(targetDate, this.openHour, this.closeHour);
+            
+            this.openTime = openTime.getTime();
+            this.closeTime = closeTime.getTime();
+            this.hourDiff = hourDiff;
 
-        const openTimeHour = parseInt(openTimeParts[0], 10);
-        const openTimeMinute = parseInt(openTimeParts[1], 10);
-        const closeTimeHour = parseInt(closeTimeParts[0], 10);
-        const closeTimeMinute = parseInt(closeTimeParts[1], 10);
-
-        this.openTime = new Date().setHours(openTimeHour, openTimeMinute, 0, 0);
-        this.closeTime = new Date().setHours(closeTimeHour, closeTimeMinute, 0, 0);
-        this.hourDiff = (this.closeTime - this.openTime) / TIME_CONSTANTS.HOUR_MILLIS;
-
-        console.log(`openTime: ${this.openTime}, closeTime: ${this.closeTime}, hourDiff: ${this.hourDiff}`);
-        return { openTimeHour, openTimeMinute };
+            console.log(`openTime: ${this.openTime}, closeTime: ${this.closeTime}, hourDiff: ${this.hourDiff}`);
+            
+            const openTimeParts = this.openHour.split(':');
+            return {
+                openTimeHour: parseInt(openTimeParts[0], 10),
+                openTimeMinute: parseInt(openTimeParts[1], 10)
+            };
+        } catch (error) {
+            console.error('時間変数の初期化でエラーが発生しました:', error);
+            throw error;
+        }
     }
 
     /**
@@ -635,8 +638,8 @@ export class TimeTableManager {
      * // 休憩時間なしのタイムテーブルを作成
      * timeTableManager.createBaseTable(false);
      */
-    createBaseTable(breakTimeFixed, breakTimeStart = '12:00', breakTimeEnd = '13:00') {
-        const { openTimeMinute } = this.initializeTimeVariables();
+    createBaseTable(targetDate, breakTimeFixed, breakTimeStart = '12:00', breakTimeEnd = '13:00') {
+        const { openTimeMinute } = this.initializeTimeVariables(targetDate);
         const unitHeight = TIME_CONSTANTS.UNIT_HEIGHT;
 
         this.parentDiv.style.height = `${unitHeight * (this.hourDiff + 2)}px`;
@@ -645,7 +648,7 @@ export class TimeTableManager {
 
         // 業務時間に色を付ける(休憩時間を除く)
         if (breakTimeFixed) {
-            this._createWorkTimeWithBreak(breakTimeStart, breakTimeEnd, unitHeight);
+            this._createWorkTimeWithBreak(targetDate, breakTimeStart, breakTimeEnd, unitHeight);
         } else {
             this._createWorkTimeWithoutBreak(unitHeight);
         }
@@ -666,17 +669,10 @@ export class TimeTableManager {
      * @param {number} unitHeight - 時間単位の高さ（ピクセル）
      * @returns {void}
      */
-    _createWorkTimeWithBreak(breakTimeStart, breakTimeEnd, unitHeight) {
-        const breakTimeStartParts = breakTimeStart.split(':');
-        const breakTimeEndParts = breakTimeEnd.split(':');
-
-        const breakTimeStartHour = parseInt(breakTimeStartParts[0], 10);
-        const breakTimeStartMinute = parseInt(breakTimeStartParts[1], 10);
-        const breakTimeEndHour = parseInt(breakTimeEndParts[0], 10);
-        const breakTimeEndMinute = parseInt(breakTimeEndParts[1], 10);
-
-        const breakTimeStartMillis = new Date().setHours(breakTimeStartHour, breakTimeStartMinute, 0, 0);
-        const breakTimeEndMillis = new Date().setHours(breakTimeEndHour, breakTimeEndMinute, 0, 0);
+    _createWorkTimeWithBreak(targetDate, breakTimeStart, breakTimeEnd, unitHeight) {
+        const { breakStartTime, breakEndTime } = calculateBreakHours(targetDate, breakTimeStart, breakTimeEnd);
+        const breakTimeStartMillis = breakStartTime.getTime();
+        const breakTimeEndMillis = breakEndTime.getTime();
 
         const breakTimeStartOffset = (1 + (breakTimeStartMillis - this.openTime) / TIME_CONSTANTS.HOUR_MILLIS) * unitHeight;
         const breakTimeDuration = (breakTimeEndMillis - breakTimeStartMillis) / TIME_CONSTANTS.MINUTE_MILLIS * unitHeight / 60;
@@ -761,28 +757,7 @@ export class TimeTableManager {
      *   timeTableManager.updateCurrentTimeLine();
      * }, 60000);
      */
-    updateCurrentTimeLine() {
-        const currentTime = new Date();
-
-        // 現在時刻が業務時間内かチェック
-        const isWithinWorkHours = currentTime.getTime() >= this.openTime && currentTime.getTime() <= this.closeTime;
-
-        // 既存の線を再利用または作成
-        if (!this.currentTimeLine) {
-            this.currentTimeLine = document.createElement('div');
-            this.currentTimeLine.id = 'currentTimeLine';
-            this.currentTimeLine.className = 'current-time-line';
-            this.parentDiv.appendChild(this.currentTimeLine);
-        }
-
-        if (isWithinWorkHours) {
-            // 業務時間内の場合のみ表示
-            const offset = (1 + (currentTime.getTime() - this.openTime) / TIME_CONSTANTS.HOUR_MILLIS) * TIME_CONSTANTS.UNIT_HEIGHT;
-            this.currentTimeLine.style.top = `${offset}px`;
-            this.currentTimeLine.style.display = 'block';
-        } else {
-            // 業務時間外の場合は非表示
-            this.currentTimeLine.style.display = 'none';
-        }
+    updateCurrentTimeLine(targetDate) {
+        this.currentTimeLineManager.update(targetDate, this.openHour, this.closeHour);
     }
 }

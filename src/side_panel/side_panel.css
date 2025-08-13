@@ -44,6 +44,35 @@ h1 {
     width: 100%;
 }
 
+#dateNavigation {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.nav-arrow {
+    font-size: 16px;
+    cursor: pointer;
+    color: #666;
+    transition: color 0.2s ease;
+}
+
+.nav-arrow:hover {
+    color: #007bff;
+}
+
+#currentDateDisplay {
+    font-size: 18px;
+    margin: 0;
+    min-width: 180px;
+    text-align: center;
+}
+
+#currentDateDisplay.today {
+    color: #007bff;
+    font-weight: bold;
+}
+
 .add-local-event-icon {
     font-size: 24px;
     cursor: pointer;     /* ポインターにカーソルを変更 */

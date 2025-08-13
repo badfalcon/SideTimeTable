@@ -4,7 +4,8 @@
  * このファイルはGoogleカレンダーイベントとローカルイベントの管理を行います。
  */
 
-import { TIME_CONSTANTS, loadLocalEvents, saveLocalEvents, logError, showAlertModal, loadCalendarColors } from '../lib/utils.js';
+import { TIME_CONSTANTS, loadLocalEvents, loadLocalEventsForDate, saveLocalEvents, saveLocalEventsForDate, logError, showAlertModal, loadCalendarColors } from '../lib/utils.js';
+import { createTimeOnDate } from '../lib/time-utils.js';
 
 /**
  * GoogleEventManager - Googleイベント管理クラス
@@ -34,8 +35,9 @@ export class GoogleEventManager {
 
     /**
      * Googleカレンダーから予定を取得
+     * @param {Date} targetDate - 対象の日付（省略時は今日）
      */
-    fetchEvents() {
+    fetchEvents(targetDate = null) {
         console.log('Googleイベント取得開始');
         console.log('Google連携状態:', this.isGoogleIntegrated);
 
@@ -51,7 +53,12 @@ export class GoogleEventManager {
 
                 // イベントを取得
                 return new Promise((resolve, reject) => {
-                    chrome.runtime.sendMessage({action: "getEvents"}, (response) => {
+                    const message = {action: "getEvents"};
+                    if (targetDate) {
+                        message.targetDate = targetDate.toISOString();
+                    }
+                    
+                    chrome.runtime.sendMessage(message, (response) => {
                         if (chrome.runtime.lastError) {
                             reject(chrome.runtime.lastError);
                             return;
@@ -303,6 +310,7 @@ export class LocalEventManager {
         this.eventLayoutManager = eventLayoutManager;
         this.eventDialogElements = null;
         this.alertModalElements = null;
+        this.currentTargetDate = new Date(); // 現在表示中の日付
     }
 
     /**
@@ -323,11 +331,19 @@ export class LocalEventManager {
 
     /**
      * ローカルイベントをロード
+     * @param {Date} targetDate - 対象の日付（省略時は今日）
      */
-    loadLocalEvents() {
+    loadLocalEvents(targetDate = null) {
+        // 対象日付を更新
+        this.currentTargetDate = targetDate || new Date();
+        
         this.localEventsDiv.innerHTML = ''; // 以前の表示をクリア
 
-        loadLocalEvents()
+        const loadFunction = targetDate ? 
+            () => loadLocalEventsForDate(targetDate) : 
+            () => loadLocalEvents();
+            
+        loadFunction()
             .then(events => {
                 console.log('ローカルイベント取得:', events.length + '件');
 
@@ -356,20 +372,21 @@ export class LocalEventManager {
         eventDiv.className = 'event local-event';
         eventDiv.title = title;
 
-        const startDate = new Date();
+        // 対象日付に時間を設定
         const [startHours, startMinutes] = startTime.split(':');
-        startDate.setHours(parseInt(startHours), parseInt(startMinutes), 0, 0);
-
-        const endDate = new Date();
         const [endHours, endMinutes] = endTime.split(':');
-        endDate.setHours(parseInt(endHours), parseInt(endMinutes), 0, 0);
+        
+        const startDate = createTimeOnDate(this.currentTargetDate, parseInt(startHours), parseInt(startMinutes));
+        const endDate = createTimeOnDate(this.currentTargetDate, parseInt(endHours), parseInt(endMinutes));
 
         // データ属性に時刻情報を追加
         eventDiv.dataset.startTime = startTime;
         eventDiv.dataset.endTime = endTime;
 
-        const startOffset = (1 + (startDate - this.timeTableManager.openTime) / TIME_CONSTANTS.HOUR_MILLIS) * TIME_CONSTANTS.UNIT_HEIGHT;
-        const duration = (endDate - startDate) / TIME_CONSTANTS.MINUTE_MILLIS * TIME_CONSTANTS.UNIT_HEIGHT / 60;
+        // TimeTableManager から対象日付の業務開始時間を取得して位置を計算
+        const timeTableOpenTime = this.timeTableManager.openTime;
+        const startOffset = (1 + (startDate.getTime() - timeTableOpenTime) / TIME_CONSTANTS.HOUR_MILLIS) * TIME_CONSTANTS.UNIT_HEIGHT;
+        const duration = (endDate.getTime() - startDate.getTime()) / TIME_CONSTANTS.MINUTE_MILLIS * TIME_CONSTANTS.UNIT_HEIGHT / 60;
 
         if (duration < 30) {
             eventDiv.className = 'event local-event short';
