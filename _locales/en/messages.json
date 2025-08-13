@@ -146,5 +146,17 @@
   "noCalendarsFound": {
     "message": "No calendars found.",
     "description": "Message when no calendars are found"
+  },
+  "resetToDefault": {
+    "message": "Reset to Default",
+    "description": "Text for reset to default button"
+  },
+  "confirmResetSettings": {
+    "message": "Reset settings to default?",
+    "description": "Confirmation message for settings reset"
+  },
+  "settingsReset": {
+    "message": "Settings have been reset to default",
+    "description": "Message when settings are reset to default"
   }
 }

@@ -508,6 +508,7 @@ class SettingsManager {
             localEventColorInput: document.getElementById('local-event-color'),
             googleEventColorInput: document.getElementById('google-event-color'),
             saveButton: document.getElementById('saveButton'),
+            resetButton: document.getElementById('resetButton'),
             timeList: document.getElementById('time-list')
         };
         
@@ -540,6 +541,9 @@ class SettingsManager {
         
         // 設定保存ボタン
         this.elements.saveButton.addEventListener('click', () => this._saveSettings());
+        
+        // デフォルト設定リセットボタン
+        this.elements.resetButton.addEventListener('click', () => this._resetToDefaults());
     }
 
     /**
@@ -717,6 +721,43 @@ class SettingsManager {
      */
     _loadCalendarData() {
         this.calendarManager.loadData();
+    }
+
+    /**
+     * 設定をデフォルトに戻す
+     * @private
+     */
+    _resetToDefaults() {
+        if (confirm(chrome.i18n.getMessage('confirmResetSettings') || '設定をデフォルトに戻しますか？')) {
+            // Google連携状態は保持する
+            const defaultSettings = {
+                ...DEFAULT_SETTINGS,
+                googleIntegrated: this.settings.googleIntegrated
+            };
+            
+            // 設定を保存
+            saveSettings(defaultSettings)
+                .then(() => {
+                    alert(chrome.i18n.getMessage('settingsReset') || '設定をデフォルトに戻しました');
+                    
+                    // 設定を更新
+                    this.settings = defaultSettings;
+                    
+                    // UIを更新
+                    this._updateUI();
+                    
+                    // サイドパネルをリロード
+                    setTimeout(() => {
+                        reloadSidePanel()
+                            .then(() => console.log('サイドパネルのリロードに成功しました'))
+                            .catch(error => logError('サイドパネルリロード', error));
+                    }, 500);
+                })
+                .catch(error => {
+                    logError('設定リセット', error);
+                    alert('設定のリセット中にエラーが発生しました');
+                });
+        }
     }
 
 
