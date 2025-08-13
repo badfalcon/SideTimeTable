@@ -146,5 +146,17 @@
   "noCalendarsFound": {
     "message": "カレンダーが見つかりませんでした。",
     "description": "カレンダーが見つからない場合のメッセージ"
+  },
+  "resetToDefault": {
+    "message": "デフォルトに戻す",
+    "description": "設定をデフォルトに戻すボタンのテキスト"
+  },
+  "confirmResetSettings": {
+    "message": "設定をデフォルトに戻しますか？",
+    "description": "設定リセット確認メッセージ"
+  },
+  "settingsReset": {
+    "message": "設定をデフォルトに戻しました",
+    "description": "設定リセット完了メッセージ"
   }
 }
