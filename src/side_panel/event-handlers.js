@@ -242,7 +242,8 @@ export class GoogleEventManager {
         // 説明設定
         const descriptionEl = dialog.querySelector('.google-event-description');
         if (event.description) {
-            descriptionEl.textContent = event.description;
+            // HTMLタグを適切に処理するためinnerHTMLを使用
+            descriptionEl.innerHTML = this._sanitizeHtml(event.description);
             descriptionEl.style.display = 'block';
         } else {
             descriptionEl.style.display = 'none';
@@ -280,6 +281,51 @@ export class GoogleEventManager {
                 dialog.style.display = 'none';
             }
         };
+    }
+
+    /**
+     * HTMLをサニタイズ（安全なタグのみ許可）
+     * @param {string} html - サニタイズするHTML文字列
+     * @returns {string} サニタイズされたHTML文字列
+     * @private
+     */
+    _sanitizeHtml(html) {
+        // 改行をbrタグに変換
+        let sanitized = html.replace(/\n/g, '<br>');
+        
+        // 安全なHTMLタグのみを許可
+        const allowedTags = ['a', 'br', 'b', 'strong', 'i', 'em', 'u', 'p', 'div', 'span'];
+        const allowedAttributes = ['href', 'target', 'title'];
+        
+        // 簡易HTMLサニタイザー
+        // より厳密な場合は DOMPurify などのライブラリを使用することを推奨
+        sanitized = sanitized.replace(/<(\/?)([\w]+)([^>]*)>/g, (match, slash, tag, attrs) => {
+            const lowerTag = tag.toLowerCase();
+            
+            if (!allowedTags.includes(lowerTag)) {
+                return ''; // 許可されていないタグは削除
+            }
+            
+            if (slash) {
+                return `</${lowerTag}>`;
+            }
+            
+            // 属性をフィルタリング
+            const filteredAttrs = attrs.replace(/(\w+)=["']([^"']*)["']/g, (attrMatch, name, value) => {
+                if (allowedAttributes.includes(name.toLowerCase())) {
+                    // target="_blank"の場合はrel="noopener"を追加
+                    if (name.toLowerCase() === 'target' && value === '_blank') {
+                        return `${name}="${value}" rel="noopener"`;
+                    }
+                    return `${name}="${value}"`;
+                }
+                return '';
+            });
+            
+            return `<${lowerTag}${filteredAttrs}>`;
+        });
+        
+        return sanitized;
     }
 }
 
