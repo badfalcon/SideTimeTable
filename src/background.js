@@ -229,6 +229,13 @@ function getCalendarEvents(targetDate = null) {
                                         return;
                                     }
                                     
+                                    // 参加を辞退したイベントをスキップ
+                                    if (event.attendees && event.attendees.some(attendee => 
+                                        attendee.self && attendee.responseStatus === 'declined'
+                                    )) {
+                                        return;
+                                    }
+                                    
                                     const calendarInfo = calendarColors[event.calendarId];
                                     if (calendarInfo) {
                                         event.calendarBackgroundColor = calendarInfo.backgroundColor;
@@ -244,9 +251,21 @@ function getCalendarEvents(targetDate = null) {
                         resolve(allEvents);
                     } catch (colorError) {
                         console.warn('カレンダー色情報取得エラー:', colorError);
-                        // 色情報なしでもイベント自体は返す（キャンセルされたイベントは除外）
+                        // 色情報なしでもイベント自体は返す（キャンセルされたイベントと参加を辞退したイベントは除外）
                         const merged = resultsPerCalendar.flatMap(r => 
-                            (r.events || []).filter(event => event.status !== 'cancelled')
+                            (r.events || []).filter(event => {
+                                // キャンセルされたイベントを除外
+                                if (event.status === 'cancelled') {
+                                    return false;
+                                }
+                                // 参加を辞退したイベントを除外
+                                if (event.attendees && event.attendees.some(attendee => 
+                                    attendee.self && attendee.responseStatus === 'declined'
+                                )) {
+                                    return false;
+                                }
+                                return true;
+                            })
                         );
                         resolve(merged);
                     }
