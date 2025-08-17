@@ -97,7 +97,7 @@ function getCalendarEvents(targetDate = null) {
     console.log("Googleカレンダーイベント取得開始");
     return new Promise((resolve, reject) => {
         try {
-            // まず選択されたカレンダー一覧を取得
+            // 選択されたカレンダー一覧を取得
             chrome.storage.sync.get({ selectedCalendars: [] }, (storageData) => {
                 if (chrome.runtime.lastError) {
                     console.error("選択カレンダー取得エラー:", chrome.runtime.lastError);
@@ -187,11 +187,11 @@ function getCalendarEvents(targetDate = null) {
                             events.forEach(event => {
                                 event.calendarId = cal.id;
                             });
-                            return events;
+                            return { calendarId: cal.id, events };
                         })
                         .catch(err => {
                             console.warn(`カレンダー(${cal.id})取得時の例外をスキップ:`, err);
-                            return [];
+                            return { calendarId: cal.id, events: [] };
                         });
                     });
 
@@ -199,11 +199,48 @@ function getCalendarEvents(targetDate = null) {
 
                     return Promise.all(fetches);
                 })
-                .then(resultsPerCalendar => {
-                    // 結果を平坦化
-                    const merged = resultsPerCalendar.flat();
-                    console.log(`合計 ${merged.length} 件のイベントを取得しました（全カレンダー）`);
-                    resolve(merged);
+                .then(async (resultsPerCalendar) => {
+                    // カレンダー情報を取得してイベントに色情報を追加
+                    try {
+                        const calendarListUrl = `https://www.googleapis.com/calendar/v3/users/me/calendarList`;
+                        const calendarResponse = await fetch(calendarListUrl, {
+                            headers: { Authorization: "Bearer " + token }
+                        });
+                        
+                        let calendarColors = {};
+                        if (calendarResponse.ok) {
+                            const calendarData = await calendarResponse.json();
+                            calendarData.items?.forEach(cal => {
+                                calendarColors[cal.id] = {
+                                    backgroundColor: cal.backgroundColor,
+                                    foregroundColor: cal.foregroundColor
+                                };
+                            });
+                        }
+                        
+                        // 結果を平坦化し、色情報を追加
+                        const allEvents = [];
+                        resultsPerCalendar.forEach(result => {
+                            if (result.events) {
+                                result.events.forEach(event => {
+                                    const colors = calendarColors[event.calendarId];
+                                    if (colors) {
+                                        event.calendarBackgroundColor = colors.backgroundColor;
+                                        event.calendarForegroundColor = colors.foregroundColor;
+                                    }
+                                    allEvents.push(event);
+                                });
+                            }
+                        });
+                        
+                        console.log(`合計 ${allEvents.length} 件のイベントを取得しました（全カレンダー）`);
+                        resolve(allEvents);
+                    } catch (colorError) {
+                        console.warn('カレンダー色情報取得エラー:', colorError);
+                        // 色情報なしでもイベント自体は返す
+                        const merged = resultsPerCalendar.flatMap(r => r.events || []);
+                        resolve(merged);
+                    }
                 })
                 .catch(error => {
                     console.error("カレンダーイベント取得エラー:", error);

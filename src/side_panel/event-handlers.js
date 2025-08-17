@@ -5,7 +5,6 @@
  */
 
 import {
-    loadCalendarColors,
     loadLocalEvents,
     loadLocalEventsForDate,
     logError,
@@ -30,7 +29,6 @@ export class GoogleEventManager {
         this.googleEventsDiv = googleEventsDiv;
         this.eventLayoutManager = eventLayoutManager;
         this.isGoogleIntegrated = false;
-        this.calendarColors = {};
     }
 
     /**
@@ -54,27 +52,21 @@ export class GoogleEventManager {
             return;
         }
 
-        // まずカレンダー色設定を読み込む
-        loadCalendarColors()
-            .then(calendarColors => {
-                this.calendarColors = calendarColors;
-
-                // イベントを取得
-                return new Promise((resolve, reject) => {
-                    const message = {action: "getEvents"};
-                    if (targetDate) {
-                        message.targetDate = targetDate.toISOString();
-                    }
-                    
-                    chrome.runtime.sendMessage(message, (response) => {
-                        if (chrome.runtime.lastError) {
-                            reject(chrome.runtime.lastError);
-                            return;
-                        }
-                        resolve(response);
-                    });
-                });
-            })
+        // イベントを取得（Google色を直接使用）
+        return new Promise((resolve, reject) => {
+            const message = {action: "getEvents"};
+            if (targetDate) {
+                message.targetDate = targetDate.toISOString();
+            }
+            
+            chrome.runtime.sendMessage(message, (response) => {
+                if (chrome.runtime.lastError) {
+                    reject(chrome.runtime.lastError);
+                    return;
+                }
+                resolve(response);
+            });
+        })
             .then(response => {
                 console.log('イベント取得応答:', response);
 
@@ -184,12 +176,10 @@ export class GoogleEventManager {
 
         eventDiv.style.top = `${startOffset}px`;
         
-        // カスタムカレンダー色を適用
-        if (event.calendarId && this.calendarColors[event.calendarId]) {
-            eventDiv.style.backgroundColor = this.calendarColors[event.calendarId];
-            // 背景色に応じてテキスト色を自動調整
-            const backgroundColor = this.calendarColors[event.calendarId];
-            eventDiv.style.color = this._getContrastingTextColor(backgroundColor);
+        // Google色を直接適用
+        if (event.calendarBackgroundColor) {
+            eventDiv.style.backgroundColor = event.calendarBackgroundColor;
+            eventDiv.style.color = event.calendarForegroundColor;
         }
         
         let eventContent = `${startDate.toLocaleTimeString([], {
@@ -223,23 +213,6 @@ export class GoogleEventManager {
         });
     }
 
-    /**
-     * 背景色に対してコントラストの良いテキスト色を取得
-     * @private
-     */
-    _getContrastingTextColor(backgroundColor) {
-        // HEX色をRGBに変換
-        const hex = backgroundColor.replace('#', '');
-        const r = parseInt(hex.substr(0, 2), 16);
-        const g = parseInt(hex.substr(2, 2), 16);
-        const b = parseInt(hex.substr(4, 2), 16);
-        
-        // 明度を計算 (0-255の範囲)
-        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-        
-        // 明度が128以上なら黒、未満なら白
-        return brightness >= 128 ? '#000000' : '#ffffff';
-    }
 
     /**
      * イベントの詳細を表示

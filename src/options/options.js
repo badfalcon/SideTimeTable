@@ -13,11 +13,6 @@ import {
     logError,
     loadSelectedCalendars,
     saveSelectedCalendars,
-    loadAvailableCalendars,
-    saveAvailableCalendars,
-    loadCalendarColors,
-    saveCalendarColors,
-    getDefaultCalendarColor
 } from '../lib/utils.js';
 
 /**
@@ -27,11 +22,6 @@ class CalendarManager {
     constructor() {
         this.availableCalendars = {};
         this.selectedCalendarIds = [];
-        this.calendarColors = {};
-        
-        // パフォーマンス最適化用
-        this.colorChangeTimeouts = new Map();
-        this.debounceDelay = 300; // 300ms デバウンス
         
         this.elements = {
             card: document.getElementById('calendar-management-card'),
@@ -54,14 +44,6 @@ class CalendarManager {
             this.elements.list.addEventListener('change', (e) => {
                 if (e.target.type === 'checkbox') {
                     this._handleCalendarToggle(e);
-                } else if (e.target.type === 'color') {
-                    this._handleColorChange(e);
-                }
-            });
-            
-            this.elements.list.addEventListener('click', (e) => {
-                if (e.target.matches('[data-action="reset-color"]') || e.target.closest('[data-action="reset-color"]')) {
-                    this._handleColorReset(e);
                 }
             });
         }
@@ -69,16 +51,8 @@ class CalendarManager {
     
     async loadData() {
         try {
-            const [available, selected, colors] = await Promise.all([
-                loadAvailableCalendars(),
-                loadSelectedCalendars(),
-                loadCalendarColors()
-            ]);
-            
-            // データ検証
-            this.availableCalendars = this._validateCalendarsData(available);
-            this.selectedCalendarIds = this._validateSelectedIds(selected);
-            this.calendarColors = this._validateColorsData(colors);
+            // 選択されたカレンダーIDのみをロード
+            this.selectedCalendarIds = this._validateSelectedIds(await loadSelectedCalendars());
             
             this.render();
         } catch (error) {
@@ -112,10 +86,8 @@ class CalendarManager {
             }
             
             if (response.calendars) {
-                this.availableCalendars = {};
-                response.calendars.forEach(cal => {
-                    this.availableCalendars[cal.id] = cal;
-                });
+                // メモリ上でのみカレンダー情報を保持（保存はしない）
+                this.allCalendars = response.calendars;
                 
                 // プライマリカレンダーのみを自動選択（選択されていない場合）
                 if (this.selectedCalendarIds.length === 0) {
@@ -131,8 +103,8 @@ class CalendarManager {
                     this.selectedCalendarIds.unshift(primaryCalendar.id); // 先頭に追加
                 }
                 
-                await this._assignDefaultColors();
-                await this._saveData();
+                // selectedCalendarsのみを保存
+                await saveSelectedCalendars(this.selectedCalendarIds);
                 this.render();
             }
         } catch (error) {
@@ -144,30 +116,26 @@ class CalendarManager {
     }
     
     render() {
-        const calendarIds = Object.keys(this.availableCalendars)
-            .sort((a, b) => {
-                const calA = this.availableCalendars[a];
-                const calB = this.availableCalendars[b];
-                
-                // プライマリカレンダーを最初に表示
-                if (calA.primary && !calB.primary) return -1;
-                if (!calA.primary && calB.primary) return 1;
-                
-                // その後は名前でアルファベット順（日本語対応）
-                return calA.summary.localeCompare(calB.summary, 'ja');
-            });
-        
-        if (calendarIds.length === 0) {
+        if (!this.allCalendars || this.allCalendars.length === 0) {
             this._showEmptyState();
             return;
         }
         
+        // カレンダーをソート（プライマリを最初に）
+        const sortedCalendars = [...this.allCalendars].sort((a, b) => {
+            // プライマリカレンダーを最初に表示
+            if (a.primary && !b.primary) return -1;
+            if (!a.primary && b.primary) return 1;
+            
+            // その後は名前でアルファベット順（日本語対応）
+            return a.summary.localeCompare(b.summary, 'ja');
+        });
+        
         this._hideEmptyState();
         this.elements.list.innerHTML = '';
         
-        calendarIds.forEach(calendarId => {
-            const calendar = this.availableCalendars[calendarId];
-            const isSelected = this.selectedCalendarIds.includes(calendarId);
+        sortedCalendars.forEach(calendar => {
+            const isSelected = this.selectedCalendarIds.includes(calendar.id);
             const item = this._createCalendarItem(calendar, isSelected);
             this.elements.list.appendChild(item);
         });
@@ -205,12 +173,6 @@ class CalendarManager {
         
         info.appendChild(name);
         
-        // Color controls (only for selected calendars)
-        let colorControls = null;
-        if (isSelected) {
-            colorControls = this._createColorControls(calendar.id);
-            info.appendChild(colorControls);
-        }
         
         // Original Google color indicator
         const googleColor = document.createElement('div');
@@ -229,31 +191,6 @@ class CalendarManager {
         return item;
     }
     
-    _createColorControls(calendarId) {
-        const controls = document.createElement('div');
-        controls.className = 'd-flex align-items-center mt-1';
-        
-        const colorInput = document.createElement('input');
-        colorInput.type = 'color';
-        colorInput.className = 'form-control form-control-color form-control-sm me-2';
-        colorInput.style.width = '32px';
-        colorInput.style.height = '24px';
-        colorInput.value = this.calendarColors[calendarId] || this._getDefaultColor(calendarId);
-        colorInput.dataset.calendarId = calendarId; // データ属性でID保存
-        
-        const resetBtn = document.createElement('button');
-        resetBtn.type = 'button';
-        resetBtn.className = 'btn btn-outline-secondary btn-sm';
-        resetBtn.style.fontSize = '0.7rem';
-        resetBtn.textContent = 'リセット';
-        resetBtn.dataset.action = 'reset-color';
-        resetBtn.dataset.calendarId = calendarId;
-        
-        controls.appendChild(colorInput);
-        controls.appendChild(resetBtn);
-        
-        return controls;
-    }
     
     // パフォーマンス最適化されたイベントハンドラー
     _handleCalendarToggle(event) {
@@ -263,41 +200,6 @@ class CalendarManager {
         }
     }
     
-    _handleColorChange(event) {
-        const calendarId = event.target.dataset.calendarId;
-        if (calendarId) {
-            this._debouncedColorUpdate(calendarId, event.target.value);
-        }
-    }
-    
-    _handleColorReset(event) {
-        const button = event.target.closest('[data-action="reset-color"]');
-        if (button) {
-            const calendarId = button.dataset.calendarId;
-            const colorInput = button.parentElement.querySelector('input[type="color"]');
-            if (calendarId && colorInput) {
-                const defaultColor = this._getDefaultColor(calendarId, true);
-                colorInput.value = defaultColor;
-                this._debouncedColorUpdate(calendarId, defaultColor);
-            }
-        }
-    }
-    
-    // デバウンス付きの色更新
-    _debouncedColorUpdate(calendarId, color) {
-        // 既存のタイマーをクリア
-        if (this.colorChangeTimeouts.has(calendarId)) {
-            clearTimeout(this.colorChangeTimeouts.get(calendarId));
-        }
-        
-        // 新しいタイマーを設定
-        const timeoutId = setTimeout(async () => {
-            await this._updateCalendarColor(calendarId, color);
-            this.colorChangeTimeouts.delete(calendarId);
-        }, this.debounceDelay);
-        
-        this.colorChangeTimeouts.set(calendarId, timeoutId);
-    }
     
     _findCalendarId(element) {
         // 要素から上に向かってcalendar IDを探す
@@ -323,7 +225,7 @@ class CalendarManager {
             }
             
             // プライマリカレンダーの選択解除を防ぐ
-            const calendar = this.availableCalendars[calendarId];
+            const calendar = this.allCalendars?.find(cal => cal.id === calendarId);
             if (!isSelected && calendar && calendar.primary) {
                 console.log('プライマリカレンダーの選択は解除できません');
                 return; // 処理を中断
@@ -344,64 +246,10 @@ class CalendarManager {
         }
     }
     
-    async _updateCalendarColor(calendarId, color) {
-        try {
-            // 入力検証
-            if (!calendarId || typeof calendarId !== 'string') {
-                throw new Error('無効なカレンダーID');
-            }
-            
-            if (!color || !/^#[0-9A-Fa-f]{6}$/.test(color)) {
-                throw new Error('無効な色形式');
-            }
-            
-            this.calendarColors[calendarId] = color;
-            await saveCalendarColors(this.calendarColors);
-            this._notifyUpdate();
-        } catch (error) {
-            logError('カレンダー色更新', error);
-            this._showError(`色の更新に失敗しました: ${error.message}`);
-        }
-    }
     
-    _getDefaultColor(calendarId, forceDefault = false) {
-        if (!forceDefault && this.calendarColors[calendarId]) {
-            return this.calendarColors[calendarId];
-        }
-        
-        const calendar = this.availableCalendars[calendarId];
-        if (!forceDefault && calendar?.backgroundColor) {
-            return calendar.backgroundColor;
-        }
-        
-        const calendarIds = Object.keys(this.availableCalendars);
-        const index = calendarIds.indexOf(calendarId);
-        return getDefaultCalendarColor(index >= 0 ? index : 0);
-    }
-    
-    async _assignDefaultColors() {
-        const calendarIds = Object.keys(this.availableCalendars);
-        let hasChanges = false;
-        
-        calendarIds.forEach((calendarId, index) => {
-            if (!this.calendarColors[calendarId]) {
-                const calendar = this.availableCalendars[calendarId];
-                this.calendarColors[calendarId] = calendar.backgroundColor || getDefaultCalendarColor(index);
-                hasChanges = true;
-            }
-        });
-        
-        if (hasChanges) {
-            await saveCalendarColors(this.calendarColors);
-        }
-    }
     
     async _saveData() {
-        await Promise.all([
-            saveAvailableCalendars(this.availableCalendars),
-            saveSelectedCalendars(this.selectedCalendarIds),
-            saveCalendarColors(this.calendarColors)
-        ]);
+        await saveSelectedCalendars(this.selectedCalendarIds);
     }
     
     _setLoading(loading) {
@@ -457,25 +305,6 @@ class CalendarManager {
         return data.filter(id => typeof id === 'string' && id.trim() !== '');
     }
     
-    _validateColorsData(data) {
-        if (!data || typeof data !== 'object') {
-            return {};
-        }
-        
-        // 色の形式を検証 (#RRGGBB)
-        const colorRegex = /^#[0-9A-Fa-f]{6}$/;
-        const validatedData = {};
-        
-        for (const [id, color] of Object.entries(data)) {
-            if (typeof color === 'string' && colorRegex.test(color)) {
-                validatedData[id] = color;
-            } else {
-                logError('カレンダー色データ検証', `無効な色形式: ${id} = ${color}`);
-            }
-        }
-        
-        return validatedData;
-    }
     
     _isValidCalendar(calendar) {
         return calendar &&
@@ -567,6 +396,12 @@ class SettingsManager {
         
         // デフォルト設定リセットボタン
         this.elements.resetButton.addEventListener('click', () => this._resetToDefaults());
+        
+        // ストレージクリアボタン（一時的）
+        const clearStorageButton = document.getElementById('clearStorageButton');
+        if (clearStorageButton) {
+            clearStorageButton.addEventListener('click', () => this._clearStorage());
+        }
     }
 
     /**
@@ -736,6 +571,35 @@ class SettingsManager {
                 logError('設定保存', error);
                 alert('設定の保存中にエラーが発生しました');
             });
+    }
+
+    /**
+     * ストレージを完全にクリアする（一時的な機能）
+     * @private
+     */
+    async _clearStorage() {
+        if (!confirm('本当にすべてのストレージデータをクリアしますか？\nこの操作は元に戻せません。')) {
+            return;
+        }
+        
+        try {
+            // すべてのストレージデータをクリア
+            await new Promise((resolve, reject) => {
+                chrome.storage.sync.clear(() => {
+                    if (chrome.runtime.lastError) {
+                        reject(chrome.runtime.lastError);
+                    } else {
+                        resolve();
+                    }
+                });
+            });
+            
+            alert('ストレージをクリアしました。ページをリロードします。');
+            location.reload();
+        } catch (error) {
+            console.error('ストレージクリアエラー:', error);
+            alert('ストレージクリアに失敗しました: ' + error.message);
+        }
     }
 
     /**
