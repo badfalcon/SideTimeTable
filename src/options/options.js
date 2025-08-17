@@ -396,12 +396,6 @@ class SettingsManager {
         
         // デフォルト設定リセットボタン
         this.elements.resetButton.addEventListener('click', () => this._resetToDefaults());
-        
-        // ストレージクリアボタン（一時的）
-        const clearStorageButton = document.getElementById('clearStorageButton');
-        if (clearStorageButton) {
-            clearStorageButton.addEventListener('click', () => this._clearStorage());
-        }
     }
 
     /**
@@ -573,34 +567,6 @@ class SettingsManager {
             });
     }
 
-    /**
-     * ストレージを完全にクリアする（一時的な機能）
-     * @private
-     */
-    async _clearStorage() {
-        if (!confirm('本当にすべてのストレージデータをクリアしますか？\nこの操作は元に戻せません。')) {
-            return;
-        }
-        
-        try {
-            // すべてのストレージデータをクリア
-            await new Promise((resolve, reject) => {
-                chrome.storage.sync.clear(() => {
-                    if (chrome.runtime.lastError) {
-                        reject(chrome.runtime.lastError);
-                    } else {
-                        resolve();
-                    }
-                });
-            });
-            
-            alert('ストレージをクリアしました。ページをリロードします。');
-            location.reload();
-        } catch (error) {
-            console.error('ストレージクリアエラー:', error);
-            alert('ストレージクリアに失敗しました: ' + error.message);
-        }
-    }
 
     /**
      * カレンダーデータを読み込む
