@@ -295,3 +295,16 @@ button {
     color: #6c757d;
     font-style: italic;
 }
+
+/* Google イベント詳細内のリンク */
+.google-event-description a,
+.google-event-location a {
+    color: #007bff;
+    text-decoration: underline;
+}
+
+.google-event-description a:hover,
+.google-event-location a:hover {
+    color: #0056b3;
+    text-decoration: none;
+}
