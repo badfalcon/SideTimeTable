@@ -194,7 +194,7 @@ export class GoogleEventManager {
             meetLink.target = "_blank";
             meetLink.textContent = eventContent;
             meetLink.style.display = 'block';
-            meetLink.style.color = 'inherit'; // 親要素の色を継承
+            meetLink.style.color = 'inherit';
             eventDiv.appendChild(meetLink);
         } else {
             eventDiv.textContent = eventContent;
@@ -224,6 +224,15 @@ export class GoogleEventManager {
 
         // タイトル設定
         dialog.querySelector('.google-event-title').textContent = event.summary;
+
+        // カレンダー名設定
+        const calendarEl = dialog.querySelector('.google-event-calendar');
+        if (event.calendarName) {
+            calendarEl.textContent = `カレンダー: ${event.calendarName}`;
+            calendarEl.style.display = 'block';
+        } else {
+            calendarEl.style.display = 'none';
+        }
 
         // 日時設定
         const startDate = new Date(event.start.dateTime);

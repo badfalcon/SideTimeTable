@@ -288,3 +288,10 @@ button {
 #cancelEventButton:focus {
     background-color: #5a6268; /* Darker grey */
 }
+
+/* Google イベント詳細のカレンダー名 */
+.google-event-calendar {
+    font-size: 0.9em;
+    color: #6c757d;
+    font-style: italic;
+}
