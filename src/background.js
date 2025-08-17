@@ -224,6 +224,11 @@ function getCalendarEvents(targetDate = null) {
                         resultsPerCalendar.forEach(result => {
                             if (result.events) {
                                 result.events.forEach(event => {
+                                    // キャンセルされたイベントをスキップ
+                                    if (event.status === 'cancelled') {
+                                        return;
+                                    }
+                                    
                                     const calendarInfo = calendarColors[event.calendarId];
                                     if (calendarInfo) {
                                         event.calendarBackgroundColor = calendarInfo.backgroundColor;
@@ -239,8 +244,10 @@ function getCalendarEvents(targetDate = null) {
                         resolve(allEvents);
                     } catch (colorError) {
                         console.warn('カレンダー色情報取得エラー:', colorError);
-                        // 色情報なしでもイベント自体は返す
-                        const merged = resultsPerCalendar.flatMap(r => r.events || []);
+                        // 色情報なしでもイベント自体は返す（キャンセルされたイベントは除外）
+                        const merged = resultsPerCalendar.flatMap(r => 
+                            (r.events || []).filter(event => event.status !== 'cancelled')
+                        );
                         resolve(merged);
                     }
                 })
