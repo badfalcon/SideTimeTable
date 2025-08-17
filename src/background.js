@@ -213,7 +213,8 @@ function getCalendarEvents(targetDate = null) {
                             calendarData.items?.forEach(cal => {
                                 calendarColors[cal.id] = {
                                     backgroundColor: cal.backgroundColor,
-                                    foregroundColor: cal.foregroundColor
+                                    foregroundColor: cal.foregroundColor,
+                                    summary: cal.summary
                                 };
                             });
                         }
@@ -223,10 +224,11 @@ function getCalendarEvents(targetDate = null) {
                         resultsPerCalendar.forEach(result => {
                             if (result.events) {
                                 result.events.forEach(event => {
-                                    const colors = calendarColors[event.calendarId];
-                                    if (colors) {
-                                        event.calendarBackgroundColor = colors.backgroundColor;
-                                        event.calendarForegroundColor = colors.foregroundColor;
+                                    const calendarInfo = calendarColors[event.calendarId];
+                                    if (calendarInfo) {
+                                        event.calendarBackgroundColor = calendarInfo.backgroundColor;
+                                        event.calendarForegroundColor = calendarInfo.foregroundColor;
+                                        event.calendarName = calendarInfo.summary;
                                     }
                                     allEvents.push(event);
                                 });
