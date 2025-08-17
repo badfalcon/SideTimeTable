@@ -55,12 +55,25 @@ function getCalendarList() {
                             id: cal.id,
                             summary: cal.summary,
                             primary: cal.primary || false,
-                            selected: cal.selected || false,
                             backgroundColor: cal.backgroundColor,
                             foregroundColor: cal.foregroundColor
                         }));
 
                     console.log(`カレンダー一覧取得完了: ${calendars.length}件`);
+                    
+                    // プライマリカレンダーのみを自動選択状態にする
+                    const primaryCalendar = calendars.find(cal => cal.primary);
+                    if (primaryCalendar) {
+                        const primaryCalendarIds = [primaryCalendar.id];
+                        chrome.storage.sync.set({ selectedCalendars: primaryCalendarIds }, () => {
+                            if (chrome.runtime.lastError) {
+                                console.error("プライマリカレンダー選択設定エラー:", chrome.runtime.lastError);
+                            } else {
+                                console.log("プライマリカレンダーを自動選択しました:", primaryCalendar.summary);
+                            }
+                        });
+                    }
+                    
                     resolve(calendars);
                 })
                 .catch(error => {
