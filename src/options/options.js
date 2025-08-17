@@ -117,9 +117,18 @@ class CalendarManager {
                     this.availableCalendars[cal.id] = cal;
                 });
                 
-                // Auto-select all if none selected
+                // プライマリカレンダーのみを自動選択（選択されていない場合）
                 if (this.selectedCalendarIds.length === 0) {
-                    this.selectedCalendarIds = response.calendars.map(cal => cal.id);
+                    const primaryCalendar = response.calendars.find(cal => cal.primary);
+                    if (primaryCalendar) {
+                        this.selectedCalendarIds = [primaryCalendar.id];
+                    }
+                }
+                
+                // プライマリカレンダーが選択に含まれていない場合は追加
+                const primaryCalendar = response.calendars.find(cal => cal.primary);
+                if (primaryCalendar && !this.selectedCalendarIds.includes(primaryCalendar.id)) {
+                    this.selectedCalendarIds.unshift(primaryCalendar.id); // 先頭に追加
                 }
                 
                 await this._assignDefaultColors();
@@ -174,6 +183,13 @@ class CalendarManager {
         checkbox.type = 'checkbox';
         checkbox.className = 'form-check-input me-3';
         checkbox.checked = isSelected;
+        
+        // プライマリカレンダーは選択を外せないようにする
+        if (calendar.primary) {
+            checkbox.disabled = true;
+            checkbox.checked = true; // 強制的にチェック状態にする
+        }
+        
         // イベントリスナーは削除 - 委譲で処理
         
         // Calendar info
@@ -304,6 +320,13 @@ class CalendarManager {
             
             if (typeof isSelected !== 'boolean') {
                 throw new Error('無効な選択状態');
+            }
+            
+            // プライマリカレンダーの選択解除を防ぐ
+            const calendar = this.availableCalendars[calendarId];
+            if (!isSelected && calendar && calendar.primary) {
+                console.log('プライマリカレンダーの選択は解除できません');
+                return; // 処理を中断
             }
             
             if (isSelected && !this.selectedCalendarIds.includes(calendarId)) {
