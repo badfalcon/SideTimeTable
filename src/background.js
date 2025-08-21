@@ -15,6 +15,33 @@ chrome.runtime.onInstalled.addListener(() => {
     console.log("拡張機能がインストールされました");
 });
 
+// キーボードショートカットのハンドラー
+// StackOverflowの解決策：awaitを使わず、callbackで即座にsidePanel.open()を呼ぶ
+chrome.commands.onCommand.addListener((command) => {
+    console.log("ショートカットコマンド受信:", command);
+    
+    switch (command) {
+        case 'open-side-panel':
+            // async操作を最小限に抑え、即座にsidePanel.open()を呼ぶ
+            chrome.tabs.query({ active: true, currentWindow: true }, ([activeTab]) => {
+                if (activeTab) {
+                    console.log("サイドパネルを開く試行:", activeTab.id);
+                    chrome.sidePanel.open({ tabId: activeTab.id })
+                        .then(() => {
+                            console.log("サイドパネル開閉成功！");
+                        });
+                } else {
+                    console.error("アクティブタブが見つかりません");
+                }
+            });
+            break;
+            
+        default:
+            console.warn("未知のコマンド:", command);
+            break;
+    }
+});
+
 /**
  * Googleカレンダー一覧を取得する
  * @returns {Promise<Array>} カレンダー一覧を返すPromise

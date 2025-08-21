@@ -162,5 +162,33 @@
   "clickToToday": {
     "message": "クリックで今日に移動",
     "description": "日付表示クリック時のツールチップ"
+  },
+  "shortcutSettings": {
+    "message": "キーボードショートカット",
+    "description": "キーボードショートカットセクションのタイトル"
+  },
+  "shortcutDescription": {
+    "message": "サイドパネルを開くためのショートカットキーです。",
+    "description": "キーボードショートカットの説明"
+  },
+  "currentShortcut": {
+    "message": "現在のショートカット:",
+    "description": "現在のショートカット表示のラベル"
+  },
+  "configureShortcuts": {
+    "message": "設定",
+    "description": "ショートカット設定ボタンのテキスト"
+  },
+  "shortcutHelp": {
+    "message": "設定を変更する場合は、Chrome の拡張機能管理ページ（chrome://extensions/shortcuts）で行ってください。",
+    "description": "ショートカット設定のヘルプテキスト"
+  },
+  "noShortcutSet": {
+    "message": "未設定",
+    "description": "ショートカットが設定されていない場合のプレースホルダー"
+  },
+  "toggleSidePanelShortcut": {
+    "message": "サイドパネルを開く",
+    "description": "サイドパネル開閉ショートカットコマンドの説明"
   }
 }
