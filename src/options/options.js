@@ -361,7 +361,9 @@ class SettingsManager {
             googleEventColorInput: document.getElementById('google-event-color'),
             saveButton: document.getElementById('saveButton'),
             resetButton: document.getElementById('resetButton'),
-            timeList: document.getElementById('time-list')
+            timeList: document.getElementById('time-list'),
+            shortcutKeyInput: document.getElementById('shortcut-key'),
+            configureShortcutsBtn: document.getElementById('configure-shortcuts-btn')
         };
         
         this.settings = { ...DEFAULT_SETTINGS };
@@ -376,6 +378,7 @@ class SettingsManager {
         this._generateTimeList();
         this._loadSettings();
         this._loadCalendarData();
+        this._loadCurrentShortcuts();
     }
 
     /**
@@ -396,6 +399,9 @@ class SettingsManager {
         
         // デフォルト設定リセットボタン
         this.elements.resetButton.addEventListener('click', () => this._resetToDefaults());
+        
+        // ショートカット設定ボタン
+        this.elements.configureShortcutsBtn.addEventListener('click', () => this._openShortcutSettings());
     }
 
     /**
@@ -618,6 +624,37 @@ class SettingsManager {
 
 
 
+    /**
+     * 現在のショートカット設定を読み込む
+     * @private
+     */
+    _loadCurrentShortcuts() {
+        if (chrome.commands && chrome.commands.getAll) {
+            chrome.commands.getAll((commands) => {
+                const openCommand = commands.find(cmd => cmd.name === 'open-side-panel');
+                if (openCommand && openCommand.shortcut) {
+                    this.elements.shortcutKeyInput.textContent = openCommand.shortcut;
+                    this.elements.shortcutKeyInput.classList.remove('text-muted');
+                    this.elements.shortcutKeyInput.classList.add('fw-bold');
+                } else {
+                    this.elements.shortcutKeyInput.textContent = chrome.i18n.getMessage('noShortcutSet') || '未設定';
+                    this.elements.shortcutKeyInput.classList.add('text-muted');
+                    this.elements.shortcutKeyInput.classList.remove('fw-bold');
+                }
+            });
+        }
+    }
+
+    /**
+     * ショートカット設定画面を開く
+     * @private
+     */
+    _openShortcutSettings() {
+        // Chrome の拡張機能管理画面のショートカット設定ページを開く
+        chrome.tabs.create({
+            url: 'chrome://extensions/shortcuts'
+        });
+    }
 }
 
 // DOMが読み込まれたときに実行

@@ -25,5 +25,14 @@
     "32": "src/img/icon32.png",
     "48": "src/img/icon48.png",
     "128": "src/img/icon128.png"
+  },
+  "commands": {
+    "open-side-panel": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+S",
+        "mac": "Command+Shift+S"
+      },
+      "description": "__MSG_toggleSidePanelShortcut__"
+    }
   }
 }

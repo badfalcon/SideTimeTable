@@ -146,5 +146,33 @@
   "clickToToday": {
     "message": "Click to go to today",
     "description": "Tooltip for date display click action"
+  },
+  "shortcutSettings": {
+    "message": "Keyboard Shortcut",
+    "description": "Section title for keyboard shortcut"
+  },
+  "shortcutDescription": {
+    "message": "Keyboard shortcut to open the side panel.",
+    "description": "Description for keyboard shortcut"
+  },
+  "currentShortcut": {
+    "message": "Current Shortcut:",
+    "description": "Label for current shortcut display"
+  },
+  "configureShortcuts": {
+    "message": "Configure",
+    "description": "Button text to configure shortcuts"
+  },
+  "shortcutHelp": {
+    "message": "To change the shortcut, visit Chrome's extension management page (chrome://extensions/shortcuts).",
+    "description": "Help text for shortcut configuration"
+  },
+  "noShortcutSet": {
+    "message": "Not set",
+    "description": "Placeholder when no shortcut is set"
+  },
+  "toggleSidePanelShortcut": {
+    "message": "Open side panel",
+    "description": "Description for open side panel shortcut command"
   }
 }

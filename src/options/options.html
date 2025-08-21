@@ -140,6 +140,28 @@
             </form>
         </div>
     </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="card-title" data-localize="__MSG_shortcutSettings__">キーボードショートカット</h2>
+            <p class="card-text" data-localize="__MSG_shortcutDescription__">サイドパネルを開くためのショートカットキーです。</p>
+            
+            <div class="mb-3">
+                <label class="form-label" data-localize="__MSG_currentShortcut__">現在のショートカット:</label>
+                <div class="d-flex align-items-center gap-2">
+                    <button id="configure-shortcuts-btn" class="btn btn-outline-secondary text-nowrap flex-shrink-0" type="button">
+                        <i class="fas fa-external-link-alt me-1"></i>
+                        <span data-localize="__MSG_configureShortcuts__">設定</span>
+                    </button>
+                    <span id="shortcut-key" class="form-control-plaintext text-muted flex-grow-1">未設定</span>
+                </div>
+                <small class="form-text text-muted" data-localize="__MSG_shortcutHelp__">
+                    設定を変更する場合は、Chrome の拡張機能管理ページ（chrome://extensions/shortcuts）で行ってください。
+                </small>
+            </div>
+        </div>
+    </div>
+    
     <div class="d-flex gap-2">
         <button id="saveButton" class="btn btn-primary" data-localize="__MSG_save__">保存</button>
         <button id="resetButton" class="btn btn-outline-secondary" data-localize="__MSG_resetToDefault__">デフォルトに戻す</button>
