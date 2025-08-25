@@ -149,7 +149,12 @@ export class GoogleEventManager {
         eventDiv.title = event.summary;
 
         const startDate = new Date(event.start.dateTime || event.start.date);
-        const endDate = new Date(event.end.dateTime || event.end.date);
+        let endDate = new Date(event.end.dateTime || event.end.date);
+
+        // 開始時間と終了時間が同じ場合は15分の予定として扱う
+        if (startDate.getTime() >= endDate.getTime()) {
+            endDate = new Date(startDate.getTime() + 15 * 60 * 1000); // 15分追加
+        }
 
         // データ属性に時刻情報を追加
         eventDiv.dataset.startTime = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
