@@ -192,18 +192,7 @@ export class GoogleEventManager {
             minute: '2-digit'
         })} - ${event.summary}`;
 
-        // Google Meetのリンクが存在する場合は追加
-        if (event.hangoutLink) {
-            const meetLink = document.createElement('a');
-            meetLink.href = event.hangoutLink;
-            meetLink.target = "_blank";
-            meetLink.textContent = eventContent;
-            meetLink.style.display = 'block';
-            meetLink.style.color = 'inherit';
-            eventDiv.appendChild(meetLink);
-        } else {
-            eventDiv.textContent = eventContent;
-        }
+        eventDiv.textContent = eventContent;
 
         this.googleEventsDiv.appendChild(eventDiv);
 
@@ -263,10 +252,20 @@ export class GoogleEventManager {
             locationEl.style.display = 'none';
         }
 
-        // Google Meetリンク設定
+        // Google Meetリンク設定（ボタンで開く）
         const meetEl = dialog.querySelector('.google-event-meet');
         if (event.hangoutLink) {
-            meetEl.innerHTML = `<a href="${event.hangoutLink}" target="_blank"><i class="fas fa-video"></i> Google Meetで参加</a>`;
+            meetEl.innerHTML = `<button id="openMeetButton" class="btn btn-primary"><i class="fas fa-video"></i> Meetを開く</button>`;
+            const openMeetButton = dialog.querySelector('#openMeetButton');
+            if (openMeetButton) {
+                openMeetButton.onclick = () => {
+                    try {
+                        window.open(event.hangoutLink, '_blank', 'noopener');
+                    } catch (e) {
+                        console.error('Meetを開けませんでした:', e);
+                    }
+                };
+            }
             meetEl.style.display = 'block';
         } else {
             meetEl.style.display = 'none';
