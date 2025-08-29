@@ -265,19 +265,32 @@ export class GoogleEventManager {
             descriptionEl.style.display = 'none';
         }
 
-        // 場所設定
+        // 場所設定（テキストのみ）
         const locationEl = dialog.querySelector('.google-event-location');
+        let mapsUrl = '';
         if (event.location) {
-            locationEl.textContent = `場所: ${event.location}`;
+            const locationText = `場所: ${event.location}`;
+            mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`;
+            locationEl.textContent = locationText;
             locationEl.style.display = 'block';
         } else {
             locationEl.style.display = 'none';
         }
 
-        // Google Meetリンク設定（ボタンで開く）
+        // アクションボタン領域（Meet と Map を横並び）
         const meetEl = dialog.querySelector('.google-event-meet');
+        const buttons = [];
+        // Meet ボタン
         if (event.hangoutLink) {
-            meetEl.innerHTML = `<button id="openMeetButton" class="btn btn-primary" title="Google Meet を新しいタブで開く"><i class="fas fa-video"></i> Meetを開く</button>`;
+            buttons.push(`<button class="btn btn-primary" id="openMeetButton" title="Google Meet を新しいタブで開く"><i class="fas fa-video"></i> Meetを開く</button>`);
+        }
+        // Map ボタン（場所がある場合）
+        if (mapsUrl) {
+            buttons.push(`<button class="btn btn-secondary" id="openMapButton" title="Google マップで開く"><i class="fas fa-map-marker-alt"></i> マップを開く</button>`);
+        }
+        if (buttons.length > 0) {
+            meetEl.innerHTML = buttons.join(' ');
+            // クリックハンドラ
             const openMeetButton = dialog.querySelector('#openMeetButton');
             if (openMeetButton) {
                 openMeetButton.onclick = () => {
@@ -285,6 +298,16 @@ export class GoogleEventManager {
                         window.open(event.hangoutLink, '_blank', 'noopener');
                     } catch (e) {
                         console.error('Meetを開けませんでした:', e);
+                    }
+                };
+            }
+            const openMapButton = dialog.querySelector('#openMapButton');
+            if (openMapButton) {
+                openMapButton.onclick = () => {
+                    try {
+                        window.open(mapsUrl, '_blank', 'noopener');
+                    } catch (e) {
+                        console.error('マップを開けませんでした:', e);
                     }
                 };
             }
