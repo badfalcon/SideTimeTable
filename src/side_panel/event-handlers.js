@@ -216,8 +216,30 @@ export class GoogleEventManager {
         const dialog = document.getElementById('googleEventDialog');
         const closeBtn = document.getElementById('closeGoogleEventDialog');
 
-        // タイトル設定
-        dialog.querySelector('.google-event-title').textContent = event.summary;
+        // タイトル設定（タイトル自体をGoogleカレンダーのイベントページへのリンクにする）
+        const titleEl = dialog.querySelector('.google-event-title');
+        titleEl.innerHTML = '';
+
+        const titleText = event.summary || '(無題)';
+
+        // 最優先は API レスポンスの htmlLink
+        let linkHref = event.htmlLink || '';
+
+        if (linkHref) {
+            const a = document.createElement('a');
+            a.href = linkHref;
+            a.target = '_blank';
+            a.rel = 'noopener';
+            a.textContent = titleText;
+            // 見た目の調整（最小差分: 下線 + 色継承）
+            a.style.color = 'inherit';
+            a.style.textDecoration = 'underline';
+            a.title = 'カレンダーで開く';
+            titleEl.appendChild(a);
+        } else {
+            // リンクが作れない場合はテキスト表示にフォールバック
+            titleEl.textContent = titleText;
+        }
 
         // カレンダー名設定
         const calendarEl = dialog.querySelector('.google-event-calendar');
@@ -255,7 +277,7 @@ export class GoogleEventManager {
         // Google Meetリンク設定（ボタンで開く）
         const meetEl = dialog.querySelector('.google-event-meet');
         if (event.hangoutLink) {
-            meetEl.innerHTML = `<button id="openMeetButton" class="btn btn-primary"><i class="fas fa-video"></i> Meetを開く</button>`;
+            meetEl.innerHTML = `<button id="openMeetButton" class="btn btn-primary" title="Google Meet を新しいタブで開く"><i class="fas fa-video"></i> Meetを開く</button>`;
             const openMeetButton = dialog.querySelector('#openMeetButton');
             if (openMeetButton) {
                 openMeetButton.onclick = () => {
