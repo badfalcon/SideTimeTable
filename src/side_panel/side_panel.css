@@ -182,6 +182,14 @@ button {
     margin-top: 10px;
 }
 
+/* Googleイベントのアクション行（Meet と Map ボタンを横並び） */
+.google-event-meet {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
 .btn-primary {
     background-color: #007bff;
     color: white;
