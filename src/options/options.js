@@ -78,11 +78,14 @@ class CalendarManager {
         
         try {
             const response = await new Promise((resolve) => {
-                chrome.runtime.sendMessage({action: 'getCalendarList'}, resolve);
+                const requestId = `req-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+                chrome.runtime.sendMessage({action: 'getCalendarList', requestId}, resolve);
             });
             
             if (response.error) {
-                throw new Error(response.error);
+                const detail = response.errorType ? `${response.error} (${response.errorType})` : response.error;
+                const rid = response.requestId ? ` [Request ID: ${response.requestId}]` : '';
+                throw new Error(detail + rid);
             }
             
             if (response.calendars) {
@@ -480,55 +483,102 @@ class SettingsManager {
      * @private
      */
     _handleGoogleIntegration() {
-        const { googleIntegrationButton, googleIntegrationStatus } = this.elements;
+        const { googleIntegrationButton } = this.elements;
         
         // ボタンを無効化
         googleIntegrationButton.disabled = true;
         
         console.log('Googleカレンダーとの連携を試みます');
-        
-        chrome.runtime.sendMessage({action: 'getEvents'}, (response) => {
-            console.log('Googleカレンダーとの連携結果:', response);
-            
-            if (chrome.runtime.lastError) {
-                logError('Google連携', chrome.runtime.lastError);
-                alert('Googleカレンダーとの連携に失敗しました: ' + chrome.runtime.lastError.message);
+
+        // 応答待ちのタイムアウトを設定（15秒）
+        let responded = false;
+        const timeoutId = setTimeout(() => {
+            if (!responded) {
+                console.warn('Google連携応答がタイムアウトしました');
+                alert('Googleカレンダーとの連携要求がタイムアウトしました。ネットワーク状況やログイン状態をご確認のうえ、もう一度お試しください。');
                 googleIntegrationButton.disabled = false;
-                return;
+            }
+        }, 15000);
+        
+        // まずは認証状態を軽くチェックして、Service Worker を確実に起こす
+        chrome.runtime.sendMessage({ action: 'checkAuth' }, (authResp) => {
+            // checkAuth の結果は参考情報として扱う（失敗しても続行）
+            if (chrome.runtime.lastError) {
+                console.warn('認証事前チェックに失敗:', chrome.runtime.lastError);
+            } else {
+                console.log('認証事前チェック結果:', authResp);
             }
             
-            // 連携状態を更新
-            this.settings.googleIntegrated = !response.error;
-            
-            // 設定を保存
-            saveSettings({ googleIntegrated: this.settings.googleIntegrated })
-                .then(() => {
-                    console.log('Googleカレンダーとの連携情報を保存しました');
-                    
-                    // UI更新
-                    this._updateUI();
-                    
-                    // 連携が成功した場合、カレンダー一覧を取得
-                    if (this.settings.googleIntegrated) {
-                        this.calendarManager.refreshCalendars();
-                    }
-                    
-                    // 結果を通知
-                    alert(this.settings.googleIntegrated 
-                        ? 'Googleカレンダーとの連携に成功しました'
-                        : 'Googleカレンダーとの連携に失敗しました');
-                    
-                    // サイドパネルをリロード
-                    return reloadSidePanel();
-                })
-                .catch(error => {
-                    logError('Google連携設定保存', error);
-                    alert('設定の保存中にエラーが発生しました');
-                })
-                .finally(() => {
-                    // ボタンを再度有効化
+            // 実際のイベント取得（= 認可フロー開始）
+            const requestId = `req-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+            chrome.runtime.sendMessage({ action: 'getEvents', requestId }, (response) => {
+                responded = true;
+                clearTimeout(timeoutId);
+                console.log('Googleカレンダーとの連携結果:', response);
+                
+                if (chrome.runtime.lastError) {
+                    logError('Google連携', chrome.runtime.lastError);
+                    alert('Googleカレンダーとの連携に失敗しました: ' + chrome.runtime.lastError.message);
                     googleIntegrationButton.disabled = false;
-                });
+                    return;
+                }
+                
+                // 応答が不正/未定義のケースも考慮
+                if (!response) {
+                    logError('Google連携', '応答がありません');
+                    alert('Googleカレンダーとの連携で不明なエラーが発生しました（応答なし）');
+                    googleIntegrationButton.disabled = false;
+                    return;
+                }
+                
+                // 失敗時は理由を表示
+                if (response.error) {
+                    const reason = response.errorType ? `${response.error} (${response.errorType})` : response.error;
+                    let hint = '';
+                    const msg = (response.error || '').toLowerCase();
+                    if (msg.includes('auth') || msg.includes('token')) {
+                        hint = '\nヒント: Chromeにログインしているか、拡張機能がGoogleアカウントの使用を許可しているかを確認してください。';
+                    } else if (msg.includes('403') || msg.includes('insufficient') || msg.includes('forbidden')) {
+                        hint = '\nヒント: カレンダーの権限（read only）が付与されているか、組織ポリシーでブロックされていないか確認してください。';
+                    } else if (msg.includes('failed to fetch') || msg.includes('network')) {
+                        hint = '\nヒント: ネットワーク接続やVPN/プロキシ設定をご確認ください。';
+                    }
+                    const rid = response.requestId ? `\nRequest ID: ${response.requestId}` : '';
+                    alert(`Googleカレンダーとの連携に失敗しました: ${reason}${hint}${rid}`);
+                }
+                // 連携状態を更新
+                this.settings.googleIntegrated = !response.error;
+                
+                // 設定を保存
+                saveSettings({ googleIntegrated: this.settings.googleIntegrated })
+                    .then(() => {
+                        console.log('Googleカレンダーとの連携情報を保存しました');
+                        
+                        // UI更新
+                        this._updateUI();
+                        
+                        // 連携が成功した場合、カレンダー一覧を取得
+                        if (this.settings.googleIntegrated) {
+                            this.calendarManager.refreshCalendars();
+                        }
+                        
+                        // 結果を通知
+                        alert(this.settings.googleIntegrated 
+                            ? 'Googleカレンダーとの連携に成功しました'
+                            : (response.error || 'Googleカレンダーとの連携に失敗しました'));
+                        
+                        // サイドパネルをリロード
+                        return reloadSidePanel();
+                    })
+                    .catch(error => {
+                        logError('Google連携設定保存', error);
+                        alert('設定の保存中にエラーが発生しました');
+                    })
+                    .finally(() => {
+                        // ボタンを再度有効化
+                        googleIntegrationButton.disabled = false;
+                    });
+            });
         });
     }
 

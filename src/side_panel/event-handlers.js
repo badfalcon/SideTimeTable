@@ -54,7 +54,8 @@ export class GoogleEventManager {
 
         // イベントを取得（Google色を直接使用）
         return new Promise((resolve, reject) => {
-            const message = {action: "getEvents"};
+            const requestId = `req-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+            const message = { action: "getEvents", requestId };
             if (targetDate) {
                 message.targetDate = targetDate.toISOString();
             }
@@ -90,7 +91,9 @@ export class GoogleEventManager {
                     logError('Googleイベント取得', response.error);
                     const errorDiv = document.createElement('div');
                     errorDiv.className = 'error-message';
-                    errorDiv.textContent = chrome.i18n.getMessage("errorPrefix") + response.error;
+                    const rid = response.requestId ? ` [Request ID: ${response.requestId}]` : '';
+                    const errType = response.errorType ? ` (${response.errorType})` : '';
+                    errorDiv.textContent = (chrome.i18n.getMessage("errorPrefix") || 'エラー: ') + response.error + errType + rid;
                     this.googleEventsDiv.appendChild(errorDiv);
                     return;
                 }
