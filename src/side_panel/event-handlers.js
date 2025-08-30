@@ -195,18 +195,7 @@ export class GoogleEventManager {
             minute: '2-digit'
         })} - ${event.summary}`;
 
-        // Google Meetのリンクが存在する場合は追加
-        if (event.hangoutLink) {
-            const meetLink = document.createElement('a');
-            meetLink.href = event.hangoutLink;
-            meetLink.target = "_blank";
-            meetLink.textContent = eventContent;
-            meetLink.style.display = 'block';
-            meetLink.style.color = 'inherit';
-            eventDiv.appendChild(meetLink);
-        } else {
-            eventDiv.textContent = eventContent;
-        }
+        eventDiv.textContent = eventContent;
 
         this.googleEventsDiv.appendChild(eventDiv);
 
@@ -230,8 +219,30 @@ export class GoogleEventManager {
         const dialog = document.getElementById('googleEventDialog');
         const closeBtn = document.getElementById('closeGoogleEventDialog');
 
-        // タイトル設定
-        dialog.querySelector('.google-event-title').textContent = event.summary;
+        // タイトル設定（タイトル自体をGoogleカレンダーのイベントページへのリンクにする）
+        const titleEl = dialog.querySelector('.google-event-title');
+        titleEl.innerHTML = '';
+
+        const titleText = event.summary || '(無題)';
+
+        // 最優先は API レスポンスの htmlLink
+        let linkHref = event.htmlLink || '';
+
+        if (linkHref) {
+            const a = document.createElement('a');
+            a.href = linkHref;
+            a.target = '_blank';
+            a.rel = 'noopener';
+            a.textContent = titleText;
+            // 見た目の調整（最小差分: 下線 + 色継承）
+            a.style.color = 'inherit';
+            a.style.textDecoration = 'underline';
+            a.title = 'カレンダーで開く';
+            titleEl.appendChild(a);
+        } else {
+            // リンクが作れない場合はテキスト表示にフォールバック
+            titleEl.textContent = titleText;
+        }
 
         // カレンダー名設定
         const calendarEl = dialog.querySelector('.google-event-calendar');
@@ -257,19 +268,52 @@ export class GoogleEventManager {
             descriptionEl.style.display = 'none';
         }
 
-        // 場所設定
+        // 場所設定（テキストのみ）
         const locationEl = dialog.querySelector('.google-event-location');
+        let mapsUrl = '';
         if (event.location) {
-            locationEl.textContent = `場所: ${event.location}`;
+            const locationText = `場所: ${event.location}`;
+            mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`;
+            locationEl.textContent = locationText;
             locationEl.style.display = 'block';
         } else {
             locationEl.style.display = 'none';
         }
 
-        // Google Meetリンク設定
+        // アクションボタン領域（Meet と Map を横並び）
         const meetEl = dialog.querySelector('.google-event-meet');
+        const buttons = [];
+        // Meet ボタン
         if (event.hangoutLink) {
-            meetEl.innerHTML = `<a href="${event.hangoutLink}" target="_blank"><i class="fas fa-video"></i> Google Meetで参加</a>`;
+            buttons.push(`<button class="btn btn-primary" id="openMeetButton" title="Google Meet を新しいタブで開く"><i class="fas fa-video"></i> Meetを開く</button>`);
+        }
+        // Map ボタン（場所がある場合）
+        if (mapsUrl) {
+            buttons.push(`<button class="btn btn-secondary" id="openMapButton" title="Google マップで開く"><i class="fas fa-map-marker-alt"></i> マップを開く</button>`);
+        }
+        if (buttons.length > 0) {
+            meetEl.innerHTML = buttons.join(' ');
+            // クリックハンドラ
+            const openMeetButton = dialog.querySelector('#openMeetButton');
+            if (openMeetButton) {
+                openMeetButton.onclick = () => {
+                    try {
+                        window.open(event.hangoutLink, '_blank', 'noopener');
+                    } catch (e) {
+                        console.error('Meetを開けませんでした:', e);
+                    }
+                };
+            }
+            const openMapButton = dialog.querySelector('#openMapButton');
+            if (openMapButton) {
+                openMapButton.onclick = () => {
+                    try {
+                        window.open(mapsUrl, '_blank', 'noopener');
+                    } catch (e) {
+                        console.error('マップを開けませんでした:', e);
+                    }
+                };
+            }
             meetEl.style.display = 'block';
         } else {
             meetEl.style.display = 'none';
