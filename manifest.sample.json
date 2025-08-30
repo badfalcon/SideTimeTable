@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "default_locale": "en",
   "name": "SideTimeTable",
-  "version": "1.4.2",
+  "version": "1.4.4",
   "description": "__MSG_appDesc__",
   "permissions": ["sidePanel", "identity", "storage"],
   "oauth2": {
@@ -17,7 +17,7 @@
     "default_path": "src/side_panel/side_panel.html"
   },
   "background": {
-    "service_worker": "src/background.js",
+    "service_worker": "src/background.js"
   },
   "options_page": "src/options/options.html",
   "icons": {
