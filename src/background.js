@@ -17,30 +17,34 @@ chrome.runtime.onInstalled.addListener(() => {
 
 // キーボードショートカットのハンドラー
 // StackOverflowの解決策：awaitを使わず、callbackで即座にsidePanel.open()を呼ぶ
-chrome.commands.onCommand.addListener((command) => {
-    console.log("ショートカットコマンド受信:", command);
-    
-    switch (command) {
-        case 'open-side-panel':
-            // async操作を最小限に抑え、即座にsidePanel.open()を呼ぶ
-            chrome.tabs.query({ active: true, currentWindow: true }, ([activeTab]) => {
-                if (activeTab) {
-                    console.log("サイドパネルを開く試行:", activeTab.id);
-                    chrome.sidePanel.open({ tabId: activeTab.id })
-                        .then(() => {
-                            console.log("サイドパネル開閉成功！");
-                        });
-                } else {
-                    console.error("アクティブタブが見つかりません");
-                }
-            });
-            break;
-            
-        default:
-            console.warn("未知のコマンド:", command);
-            break;
-    }
-});
+if (chrome.commands && chrome.commands.onCommand && chrome.commands.onCommand.addListener) {
+    chrome.commands.onCommand.addListener((command) => {
+        console.log("ショートカットコマンド受信:", command);
+        
+        switch (command) {
+            case 'open-side-panel':
+                // async操作を最小限に抑え、即座にsidePanel.open()を呼ぶ
+                chrome.tabs.query({ active: true, currentWindow: true }, ([activeTab]) => {
+                    if (activeTab) {
+                        console.log("サイドパネルを開く試行:", activeTab.id);
+                        chrome.sidePanel.open({ tabId: activeTab.id })
+                            .then(() => {
+                                console.log("サイドパネル開閉成功！");
+                            });
+                    } else {
+                        console.error("アクティブタブが見つかりません");
+                    }
+                });
+                break;
+                
+            default:
+                console.warn("未知のコマンド:", command);
+                break;
+        }
+    });
+} else {
+    console.warn("chrome.commands API が利用できない環境です。manifest.json の commands 設定を確認してください。");
+}
 
 /**
  * Googleカレンダー一覧を取得する
@@ -343,21 +347,35 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     switch (request.action) {
         case "getEvents":
             const targetDate = request.targetDate ? new Date(request.targetDate) : null;
+            const requestId = request.requestId;
             getCalendarEvents(targetDate)
-                .then(events => sendResponse({events}))
-                .catch(error => sendResponse({error: error.message || "イベント取得エラー"}));
+                .then(events => sendResponse({events, requestId}))
+                .catch(error => {
+                    const detail = (error && (error.message || error.toString())) || "イベント取得エラー";
+                    console.error("イベント取得エラー詳細:", error);
+                    sendResponse({ error: detail, errorType: (error && error.name) || undefined, requestId });
+                });
             return true; // 非同期応答を示す
             
         case "getCalendarList":
+            const reqIdList = request.requestId;
             getCalendarList()
-                .then(calendars => sendResponse({calendars}))
-                .catch(error => sendResponse({error: error.message || "カレンダー一覧取得エラー"}));
+                .then(calendars => sendResponse({calendars, requestId: reqIdList}))
+                .catch(error => {
+                    const detail = (error && (error.message || error.toString())) || "カレンダー一覧取得エラー";
+                    console.error("カレンダー一覧取得エラー詳細:", error);
+                    sendResponse({ error: detail, errorType: (error && error.name) || undefined, requestId: reqIdList });
+                });
             return true; // 非同期応答を示す
             
         case "checkAuth":
             checkGoogleAuth()
                 .then(isAuthenticated => sendResponse({isAuthenticated}))
-                .catch(error => sendResponse({error: error.message || "認証確認エラー"}));
+                .catch(error => {
+                                    const detail = (error && (error.message || error.toString())) || "認証確認エラー";
+                                    console.error("認証確認エラー詳細:", error);
+                                    sendResponse({ error: detail, errorType: (error && error.name) || undefined });
+                                });
             return true; // 非同期応答を示す
             
         case "reloadSideTimeTable":
