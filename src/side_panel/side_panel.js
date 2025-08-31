@@ -258,10 +258,11 @@ class UIController {
             this._navigateDate(1);
         });
 
-        // 日付表示をクリックで今日に移動
-        currentDateDisplay.addEventListener('click', () => {
-            this._navigateToToday();
+        // 日付入力の変更イベント
+        currentDateDisplay.addEventListener('change', (event) => {
+            this._onDatePickerChange(event.target.value);
         });
+        
     }
 
     /**
@@ -274,14 +275,11 @@ class UIController {
         // 今日かどうかを判定
         const isTodayFlag = isToday(this.currentDate);
 
-        
-        // 日付表示を更新
-        dateDisplay.textContent = this.currentDate.toLocaleDateString('ja-JP', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            weekday: 'short'
-        });
+        // input要素のvalue属性に日付を設定
+        const year = this.currentDate.getFullYear();
+        const month = String(this.currentDate.getMonth() + 1).padStart(2, '0');
+        const day = String(this.currentDate.getDate()).padStart(2, '0');
+        dateDisplay.value = `${year}-${month}-${day}`;
         
         // 今日の場合はクラスを追加
         if (isTodayFlag) {
@@ -318,6 +316,22 @@ class UIController {
         this.currentDate = today;
         this._updateDateDisplay();
         this._loadEventsForCurrentDate();
+    }
+
+    /**
+     * 日付ピッカーの変更を処理
+     * @param {string} dateValue - YYYY-MM-DD形式の日付文字列
+     * @private
+     */
+    _onDatePickerChange(dateValue) {
+        if (dateValue) {
+            // 新しい日付を設定
+            const newDate = new Date(dateValue);
+            newDate.setHours(0, 0, 0, 0);
+            
+            this.currentDate = newDate;
+            this._loadEventsForCurrentDate();
+        }
     }
 
     /**
