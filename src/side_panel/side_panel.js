@@ -30,6 +30,7 @@ class UIController {
         this.googleEventManager = null;
         this.localEventManager = null;
         this.updateInterval = null;
+        this.loadEventsDebounceTimeout = null;
         // 現在の日付（時間部分は00:00:00に正規化）
         this.currentDate = new Date();
         this.currentDate.setHours(0, 0, 0, 0);
@@ -335,10 +336,26 @@ class UIController {
     }
 
     /**
-     * 現在の日付のイベントを読み込み
+     * 現在の日付のイベントを読み込み（デバウンス付き）
      * @private
      */
     _loadEventsForCurrentDate() {
+        // 既存のタイマーをクリア
+        if (this.loadEventsDebounceTimeout) {
+            clearTimeout(this.loadEventsDebounceTimeout);
+        }
+        
+        // 300ms後に実行
+        this.loadEventsDebounceTimeout = setTimeout(() => {
+            this._loadEventsImmediate();
+        }, 300);
+    }
+
+    /**
+     * 現在の日付のイベントを即座に読み込み
+     * @private
+     */
+    _loadEventsImmediate() {
         // 既存のイベントをクリア
         this.eventLayoutManager.events = [];
         this.localEventManager.localEventsDiv.innerHTML = '';
