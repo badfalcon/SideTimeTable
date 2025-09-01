@@ -22,7 +22,7 @@ h1 {
     position: relative;
     padding-left: 60px;
     border: 1px solid #ccc;
-    height: 70vh; /* ビューポート高さの70% */
+    height: calc(100vh - 120px); /* ビューポート高さ - ヘッダー・padding・margin等を引いて目一杯使用 */
     overflow-y: auto; /* 縦スクロールを有効にする */
 }
 
