@@ -64,7 +64,6 @@ h1 {
 #currentDateDisplay {
     font-size: 18px;
     margin: 0;
-    min-width: 180px;
     text-align: center;
     cursor: pointer;
     transition: color 0.2s ease;
@@ -91,7 +90,6 @@ h1 {
 
 /* 日付ピッカーのカレンダーアイコンを透明にして機能は残す */
 #currentDateDisplay::-webkit-calendar-picker-indicator {
-    opacity: 0;
     cursor: pointer;
 }
 
