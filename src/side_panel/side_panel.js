@@ -48,7 +48,7 @@ class UIController {
 
         // 各マネージャーの初期化
         this.timeTableManager = new TimeTableManager(parentDiv, baseDiv);
-        this.eventLayoutManager = new EventLayoutManager();
+        this.eventLayoutManager = new EventLayoutManager(baseDiv);
         this.googleEventManager = new GoogleEventManager(this.timeTableManager, googleEventsDiv, this.eventLayoutManager);
         this.localEventManager = new LocalEventManager(this.timeTableManager, localEventsDiv, this.eventLayoutManager);
 
