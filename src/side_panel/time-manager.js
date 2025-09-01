@@ -32,8 +32,9 @@ export class EventLayoutManager {
      * EventLayoutManagerのインスタンスを作成
      * 
      * @constructor
+     * @param {HTMLElement} [baseElement] - sideTimeTableBase要素への参照（幅計算用）
      */
-    constructor() {
+    constructor(baseElement = null) {
         /**
          * 登録されたイベントの配列
          * @type {Array<Object>}
@@ -49,10 +50,17 @@ export class EventLayoutManager {
         this.layoutGroups = [];
 
         /**
+         * sideTimeTableBase要素への参照
+         * @type {HTMLElement|null}
+         * @private
+         */
+        this.baseElement = baseElement;
+
+        /**
          * イベントの最大幅（ピクセル）
          * @type {number}
          */
-        this.maxWidth = 200;
+        this.maxWidth = this._calculateMaxWidth();
 
         /**
          * イベントの基本左位置（ピクセル）
@@ -72,6 +80,27 @@ export class EventLayoutManager {
          * @private
          */
         this._timeCache = new Map();
+    }
+
+    /**
+     * sideTimeTableBase要素の実際の幅を取得してイベントの最大幅を計算する
+     * 
+     * sideTimeTableBase要素が利用可能な場合は、その実際の幅から
+     * 時間ラベルの分（65px）を引いた値を最大幅として返します。
+     * 要素が利用できない場合はデフォルト値を返します。
+     * 
+     * @private
+     * @returns {number} イベントの最大幅（ピクセル）
+     */
+    _calculateMaxWidth() {
+        if (this.baseElement && this.baseElement.clientWidth > 0) {
+            // baseElement幅から左パディング（baseLeft + 余白）を引いて利用可能な幅を計算
+            // baseLeft(65px) + 右側の余白(10px) + スクロールバー考慮(15px) = 90px
+            const reservedSpace = this.baseLeft + 25;
+            const availableWidth = this.baseElement.clientWidth - reservedSpace;
+            return Math.max(100, availableWidth); // 最小幅100pxを保証
+        }
+        return 200; // デフォルト値
     }
 
     /**
@@ -267,6 +296,9 @@ export class EventLayoutManager {
         try {
             // キャッシュをクリア
             this._timeCache.clear();
+            
+            // maxWidthを再計算（レスポンシブ対応）
+            this.maxWidth = this._calculateMaxWidth();
 
             // 無効なデータや参照が解除されたイベントを除外
             this.events = this.events.filter(event => {
