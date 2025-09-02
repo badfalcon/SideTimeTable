@@ -32,8 +32,9 @@ export class EventLayoutManager {
      * EventLayoutManagerのインスタンスを作成
      * 
      * @constructor
+     * @param {HTMLElement} [baseElement] - sideTimeTableBase要素への参照（幅計算用）
      */
-    constructor() {
+    constructor(baseElement = null) {
         /**
          * 登録されたイベントの配列
          * @type {Array<Object>}
@@ -49,10 +50,17 @@ export class EventLayoutManager {
         this.layoutGroups = [];
 
         /**
+         * sideTimeTableBase要素への参照
+         * @type {HTMLElement|null}
+         * @private
+         */
+        this.baseElement = baseElement;
+
+        /**
          * イベントの最大幅（ピクセル）
          * @type {number}
          */
-        this.maxWidth = 200;
+        this.maxWidth = this._calculateMaxWidth();
 
         /**
          * イベントの基本左位置（ピクセル）
@@ -64,7 +72,7 @@ export class EventLayoutManager {
          * イベント間の間隔（ピクセル）
          * @type {number}
          */
-        this.gap = 5;
+        this.gap = 5; // 基本の間隔
 
         /**
          * 時間計算のキャッシュ
@@ -72,6 +80,46 @@ export class EventLayoutManager {
          * @private
          */
         this._timeCache = new Map();
+
+        // ウィンドウリサイズ時のイベントリスナーを設定
+        this._setupResizeListener();
+    }
+
+    /**
+     * ウィンドウリサイズ時のイベントリスナーを設定する
+     * 
+     * リサイズ時にレイアウトを即座に再計算するためのイベントリスナーを登録します。
+     * デバウンス処理は行わず、リサイズ中も常に計算を行います。
+     * 
+     * @private
+     */
+    _setupResizeListener() {
+        window.addEventListener('resize', () => {
+            // 最大幅を再計算してレイアウトを更新（即時実行）
+            this.maxWidth = this._calculateMaxWidth();
+            this.calculateLayout();
+        });
+    }
+
+    /**
+     * sideTimeTableBase要素の実際の幅を取得してイベントの最大幅を計算する
+     * 
+     * sideTimeTableBase要素が利用可能な場合は、その実際の幅から
+     * 時間ラベルの分（65px）を引いた値を最大幅として返します。
+     * 要素が利用できない場合はデフォルト値を返します。
+     * 
+     * @private
+     * @returns {number} イベントの最大幅（ピクセル）
+     */
+    _calculateMaxWidth() {
+        if (this.baseElement && this.baseElement.clientWidth > 0) {
+            // baseElement幅から左パディング（baseLeft + 余白）を引いて利用可能な幅を計算
+            // baseLeft(65px) + 右側の余白(10px) + スクロールバー考慮(15px) = 90px
+            const reservedSpace = this.baseLeft + 25;
+            const availableWidth = this.baseElement.clientWidth - reservedSpace;
+            return Math.max(100, availableWidth); // 最小幅100pxを保証
+        }
+        return 200; // デフォルト値
     }
 
     /**
@@ -198,6 +246,12 @@ export class EventLayoutManager {
          */
         this.layoutGroups = [];
         this._clearTimeCache(); // 時間キャッシュもクリア
+
+        // 不要なFlexコンテナがあれば削除
+        const flexContainer = document.getElementById('event-flex-container');
+        if (flexContainer) {
+            flexContainer.remove();
+        }
     }
 
     /**
@@ -267,6 +321,9 @@ export class EventLayoutManager {
         try {
             // キャッシュをクリア
             this._timeCache.clear();
+            
+            // maxWidthを再計算（レスポンシブ対応）
+            this.maxWidth = this._calculateMaxWidth();
 
             // 無効なデータや参照が解除されたイベントを除外
             this.events = this.events.filter(event => {
@@ -323,7 +380,6 @@ export class EventLayoutManager {
             const currentStart = this._getTimeInMillis(currentEvent.startTime, currentEvent.id, 'start');
             const currentEnd = this._getTimeInMillis(currentEvent.endTime, currentEvent.id, 'end');
 
-            // 現在のグループ内の最後のイベントの終了時間を取得
             let overlapsWithGroup = false;
 
             // グループ内のすべてのイベントと重なりをチェック
@@ -435,6 +491,8 @@ export class EventLayoutManager {
                     if (event.element) {
                         event.element.style.left = `${this.baseLeft}px`;
                         event.element.style.width = `${this.maxWidth}px`;
+                        // 絶対位置配置を確保
+                        event.element.style.position = 'absolute';
                     }
                     return;
                 }
@@ -445,28 +503,132 @@ export class EventLayoutManager {
                 // 必要なレーン数を計算
                 const laneCount = Math.max(...laneAssignments) + 1;
 
-                // 各レーンの幅を計算
-                // レーン数に応じて幅を調整する - レーン数が増えるほど幅を狭くする
-                const laneWidth = Math.max(60, Math.floor((this.maxWidth * 0.9 - (this.gap * (laneCount - 1))) / laneCount));
+                // Eventのpadding値を考慮したサイズ計算
+                const availableWidth = this.maxWidth;
+                
+                // Event要素のpadding値を取得（レーン数に応じて変動）
+                let eventPaddingLeft, eventPaddingRight;
+                if (laneCount > 4) {
+                    // micro class
+                    eventPaddingLeft = eventPaddingRight = 6;
+                } else if (laneCount > 2) {
+                    // compact class  
+                    eventPaddingLeft = eventPaddingRight = 8;
+                } else {
+                    // 基本
+                    eventPaddingLeft = eventPaddingRight = 10;
+                }
+                
+                const totalEventPadding = eventPaddingLeft + eventPaddingRight; // 左右のpadding合計
+                const totalGapWidth = this.gap * (laneCount - 1);
+                const usableWidth = availableWidth - totalGapWidth;
+                
+                // レーン幅を計算（padding分も考慮）
+                const laneContentWidth = Math.floor(usableWidth / laneCount);
+                const laneWidth = laneContentWidth; // 要素の実際のwidth
+                
+                // 最小コンテンツ幅チェック（padding込みで最小表示に必要な幅）
+                const minContentWidth = 40; // paddingを除いた最小コンテンツ幅
+                const minTotalWidth = minContentWidth + totalEventPadding; // padding込み最小幅
+                let adjustedGap = this.gap;
+                let adjustedLaneWidth = laneWidth;
+                
+                if (laneWidth < minTotalWidth) {
+                    // 最小幅を確保するために間隔を調整
+                    const totalMinWidth = minTotalWidth * laneCount;
+                    const availableGapSpace = availableWidth - totalMinWidth;
+                    adjustedGap = Math.max(2, Math.floor(availableGapSpace / (laneCount - 1)));
+                    adjustedLaneWidth = minTotalWidth;
+                }
+                
+                console.log(`サイズ計算: 利用可能幅=${availableWidth}px, レーン数=${laneCount}`);
+                console.log(`Padding: 左右${totalEventPadding}px, コンテンツ幅=${adjustedLaneWidth - totalEventPadding}px`);
+                console.log(`調整後: レーン幅=${adjustedLaneWidth}px, 間隔=${adjustedGap}px`);
 
-                // 各イベントの位置を設定
+                // Flexコンテナを探すか作成
+                let flexContainer = document.getElementById('event-flex-container');
+                if (!flexContainer) {
+                    flexContainer = document.createElement('div');
+                    flexContainer.id = 'event-flex-container';
+                    this.baseElement.appendChild(flexContainer);
+                }
+
+                // Flexコンテナの基本設定
+                flexContainer.style.position = 'absolute';
+                flexContainer.style.left = `${this.baseLeft}px`;
+                flexContainer.style.width = `${availableWidth}px`;
+                flexContainer.style.display = 'flex';
+                flexContainer.style.alignItems = 'stretch';
+                flexContainer.style.pointerEvents = 'none';
+                flexContainer.style.zIndex = '5';
+                flexContainer.innerHTML = '';
+
+                // レーン数に応じた配置方法を選択
+                if (laneCount === 1) {
+                    // 1つの場合: 左詰め
+                    flexContainer.style.justifyContent = 'flex-start';
+                    flexContainer.style.gap = '0px';
+                } else {
+                    // 複数の場合: 調整された間隔を使用
+                    flexContainer.style.justifyContent = 'flex-start';
+                    flexContainer.style.gap = `${adjustedGap}px`;
+                }
+
+                // 各レーンのプレースホルダーを作成
+                const flexLanes = [];
+                for (let i = 0; i < laneCount; i++) {
+                    const lanePlaceholder = document.createElement('div');
+                    lanePlaceholder.className = 'event-flex-lane';
+                    lanePlaceholder.style.pointerEvents = 'none';
+                    
+                    if (laneCount === 1) {
+                        // 1つの場合: 全幅使用
+                        lanePlaceholder.style.flex = 'none';
+                        lanePlaceholder.style.width = `${availableWidth}px`;
+                    } else {
+                        // 複数の場合: 調整された幅を使用
+                        lanePlaceholder.style.flex = 'none';
+                        lanePlaceholder.style.width = `${adjustedLaneWidth}px`;
+                    }
+                    
+                    flexContainer.appendChild(lanePlaceholder);
+                    flexLanes.push(lanePlaceholder);
+                }
+
+                // 各イベントの位置を設定（直接計算）
                 validEvents.forEach((event, index) => {
                     if (event.element) {
                         const lane = laneAssignments[index];
-                        const left = this.baseLeft + (laneWidth + this.gap) * lane;
-                        event.element.style.left = `${left}px`;
 
-                        // レーン数に応じて幅を調整
-                        event.element.style.width = `${laneWidth}px`;
-
-                        // レーン数が多い場合はフォントサイズを小さくする
-                        if (laneCount > 2) {
-                            event.element.style.fontSize = '0.9em';
+                        // 調整された値で位置を計算
+                        let left, width;
+                        
+                        if (laneCount === 1) {
+                            left = this.baseLeft;
+                            width = availableWidth;
                         } else {
-                            event.element.style.fontSize = '1em';
+                            left = this.baseLeft + (adjustedLaneWidth + adjustedGap) * lane;
+                            width = adjustedLaneWidth;
                         }
+
+                        // イベント要素のスタイルを設定
+                        event.element.style.position = 'absolute';
+                        event.element.style.left = `${left}px`;
+                        event.element.style.width = `${width}px`;
+
+                        // レーン数に応じたCSSクラス調整
+                        event.element.classList.remove('compact', 'micro');
+                        if (laneCount > 4) {
+                            event.element.classList.add('micro');
+                        } else if (laneCount > 2) {
+                            event.element.classList.add('compact');
+                        }
+
+                        console.log(`イベント ${event.id}: レーン=${lane}, 位置=${left}px, 幅=${width}px, 調整間隔=${adjustedGap}px`);
                     }
                 });
+
+                console.log(`Flexレイアウト適用完了: ${laneCount}レーン`);
             });
         } catch (error) {
             console.error('イベントレイアウト適用中にエラーが発生しました:', error);
