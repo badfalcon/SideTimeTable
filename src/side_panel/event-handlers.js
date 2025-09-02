@@ -29,6 +29,9 @@ export class GoogleEventManager {
         this.googleEventsDiv = googleEventsDiv;
         this.eventLayoutManager = eventLayoutManager;
         this.isGoogleIntegrated = false;
+        this.lastFetchTime = 0; // 最後のAPI呼び出し時刻
+        this.minFetchInterval = 30000; // 30秒間隔の制限
+        this.currentFetchPromise = null; // 現在実行中のfetch Promise
     }
 
     /**
@@ -49,11 +52,26 @@ export class GoogleEventManager {
 
         if (!this.isGoogleIntegrated) {
             console.log('Google連携が無効です');
-            return;
+            return Promise.resolve();
         }
 
+        // 進行中のリクエストがある場合はそれを返す（重複防止）
+        if (this.currentFetchPromise) {
+            console.log('既にイベント取得中です。既存のPromiseを返します');
+            return this.currentFetchPromise;
+        }
+
+        // API呼び出し頻度制限チェック
+        const now = Date.now();
+        if (now - this.lastFetchTime < this.minFetchInterval) {
+            console.log('API呼び出し頻度制限により、スキップします');
+            return Promise.resolve();
+        }
+
+        this.lastFetchTime = now;
+
         // イベントを取得（Google色を直接使用）
-        return new Promise((resolve, reject) => {
+        this.currentFetchPromise = new Promise((resolve, reject) => {
             const requestId = `req-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
             const message = { action: "getEvents", requestId };
             if (targetDate) {
@@ -111,7 +129,13 @@ export class GoogleEventManager {
             })
             .catch(error => {
                 logError('Googleイベント取得例外', error);
+            })
+            .finally(() => {
+                // リクエスト完了時にPromiseをクリア
+                this.currentFetchPromise = null;
             });
+
+        return this.currentFetchPromise;
     }
 
     /**
