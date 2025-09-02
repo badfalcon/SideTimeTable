@@ -23,6 +23,7 @@ class CalendarManager {
     constructor() {
         this.availableCalendars = {};
         this.selectedCalendarIds = [];
+        this.hasAutoFetched = false; // Track if we've auto-fetched calendars
         
         this.elements = {
             card: document.getElementById('calendar-management-card'),
@@ -65,6 +66,12 @@ class CalendarManager {
     show() {
         if (this.elements.card) {
             this.elements.card.style.display = 'block';
+            
+            // Auto-fetch calendars on first show for Google-integrated accounts
+            if (!this.hasAutoFetched && (!this.allCalendars || this.allCalendars.length === 0)) {
+                this.hasAutoFetched = true;
+                this.refreshCalendars();
+            }
         }
     }
     
