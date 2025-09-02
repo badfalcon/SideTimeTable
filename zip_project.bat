@@ -14,7 +14,7 @@ rem 一時フォルダを作成
 mkdir %TEMP_DIR%
 
 rem PowerShellを使って必要なファイルをコピー
-powershell -Command "Get-ChildItem -Path . -Exclude *.iml*, *.bat*, *.sh*, *.sample.json*, *.zip*, *.git*, *.idea*, *.DS_Store, %TEMP_DIR% | ForEach-Object { if ($_.FullName -ne '%TEMP_DIR%') { Copy-Item -Path $_.FullName -Destination '%TEMP_DIR%' -Recurse } }"
+powershell -Command "Get-ChildItem -Path . -Exclude *.iml*, *.bat*, *.sh*, *.sample.json*, *.zip*, *.git*, *.idea*, *.DS_Store, *.md*, docs, %TEMP_DIR% | ForEach-Object { if ($_.FullName -ne '%TEMP_DIR%') { Copy-Item -Path $_.FullName -Destination '%TEMP_DIR%' -Recurse } }"
 
 rem 一時フォルダをZIP化
 powershell Compress-Archive -Path %TEMP_DIR%\* -DestinationPath %ZIPFILE% -Force
