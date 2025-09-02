@@ -8,6 +8,41 @@ import {TIME_CONSTANTS} from '../lib/utils.js';
 import {calculateBreakHours, calculateWorkHours} from '../lib/time-utils.js';
 import {CurrentTimeLineManager} from '../lib/current-time-line-manager.js';
 
+// EventLayoutManager関連の定数
+const LAYOUT_CONSTANTS = {
+    BASE_LEFT: 65,           // イベントの基本左位置（px）
+    GAP: 5,                  // イベント間の基本間隔（px）
+    RESERVED_SPACE_MARGIN: 25,    // baseLeft以外の予約領域（px）
+    MIN_WIDTH: 100,          // 最小保証幅（px）
+    DEFAULT_WIDTH: 200,      // デフォルト最大幅（px）
+    MIN_CONTENT_WIDTH: 20,   // 最小コンテンツ幅（px）
+    MIN_GAP: 2,              // 最小間隔（px）
+    MIN_DISPLAY_WIDTH: 40,   // タイトルのみ表示の閾値（px）
+    Z_INDEX: 5,              // Flexコンテナのz-index
+    
+    // パディング設定
+    PADDING: {
+        BASIC: 10,           // 基本パディング（2レーン以下）
+        COMPACT: 8,          // コンパクトパディング（3-4レーン）
+        MICRO: 6             // マイクロパディング（5レーン以上）
+    },
+    
+    // レーン数による閾値
+    LANE_THRESHOLDS: {
+        COMPACT: 2,          // コンパクトモードになるレーン数
+        MICRO: 4             // マイクロモードになるレーン数
+    }
+};
+
+// TimeTableManager関連の定数
+const TIMETABLE_CONSTANTS = {
+    DAY_HEIGHT: 1440,        // 24時間分の高さ（24 * 60px）
+    MINUTES_PER_HOUR: 60,
+    HOURS_PER_DAY: 24,
+    VIEWPORT_CENTER_RATIO: 2,  // ビューポート中心計算用の除数
+    SCROLL_HOUR_OFFSET: 1    // 業務開始時間からのスクロールオフセット時間
+};
+
 /**
  * EventLayoutManager - イベントの配置を管理するクラス
  * 
@@ -66,13 +101,13 @@ export class EventLayoutManager {
          * イベントの基本左位置（ピクセル）
          * @type {number}
          */
-        this.baseLeft = 65;
+        this.baseLeft = LAYOUT_CONSTANTS.BASE_LEFT;
 
         /**
          * イベント間の間隔（ピクセル）
          * @type {number}
          */
-        this.gap = 5; // 基本の間隔
+        this.gap = LAYOUT_CONSTANTS.GAP;
 
         /**
          * 時間計算のキャッシュ
@@ -114,12 +149,11 @@ export class EventLayoutManager {
     _calculateMaxWidth() {
         if (this.baseElement && this.baseElement.clientWidth > 0) {
             // baseElement幅から左パディング（baseLeft + 余白）を引いて利用可能な幅を計算
-            // baseLeft(65px) + 右側の余白(10px) + スクロールバー考慮(15px) = 90px
-            const reservedSpace = this.baseLeft + 25;
+            const reservedSpace = this.baseLeft + LAYOUT_CONSTANTS.RESERVED_SPACE_MARGIN;
             const availableWidth = this.baseElement.clientWidth - reservedSpace;
-            return Math.max(100, availableWidth); // 最小幅100pxを保証
+            return Math.max(LAYOUT_CONSTANTS.MIN_WIDTH, availableWidth);
         }
-        return 200; // デフォルト値
+        return LAYOUT_CONSTANTS.DEFAULT_WIDTH;
     }
 
     /**
@@ -509,15 +543,15 @@ export class EventLayoutManager {
                 
                 // Event要素のpadding値を取得（レーン数に応じて変動）
                 let eventPaddingLeft, eventPaddingRight;
-                if (laneCount > 4) {
+                if (laneCount > LAYOUT_CONSTANTS.LANE_THRESHOLDS.MICRO) {
                     // micro class
-                    eventPaddingLeft = eventPaddingRight = 6;
-                } else if (laneCount > 2) {
+                    eventPaddingLeft = eventPaddingRight = LAYOUT_CONSTANTS.PADDING.MICRO;
+                } else if (laneCount > LAYOUT_CONSTANTS.LANE_THRESHOLDS.COMPACT) {
                     // compact class  
-                    eventPaddingLeft = eventPaddingRight = 8;
+                    eventPaddingLeft = eventPaddingRight = LAYOUT_CONSTANTS.PADDING.COMPACT;
                 } else {
                     // 基本
-                    eventPaddingLeft = eventPaddingRight = 10;
+                    eventPaddingLeft = eventPaddingRight = LAYOUT_CONSTANTS.PADDING.BASIC;
                 }
                 
                 const totalEventPadding = eventPaddingLeft + eventPaddingRight; // 左右のpadding合計
@@ -529,8 +563,7 @@ export class EventLayoutManager {
                 const laneWidth = laneContentWidth; // 要素の実際のwidth
                 
                 // 最小コンテンツ幅チェック（padding込みで最小表示に必要な幅）
-                const minContentWidth = 20; // paddingを除いた最小コンテンツ幅
-                const minTotalWidth = minContentWidth + totalEventPadding; // padding込み最小幅
+                const minTotalWidth = LAYOUT_CONSTANTS.MIN_CONTENT_WIDTH + totalEventPadding; // padding込み最小幅
                 let adjustedGap = this.gap;
                 let adjustedLaneWidth = laneWidth;
                 
@@ -538,7 +571,7 @@ export class EventLayoutManager {
                     // 最小幅を確保するために間隔を調整
                     const totalMinWidth = minTotalWidth * laneCount;
                     const availableGapSpace = availableWidth - totalMinWidth;
-                    adjustedGap = Math.max(2, Math.floor(availableGapSpace / (laneCount - 1)));
+                    adjustedGap = Math.max(LAYOUT_CONSTANTS.MIN_GAP, Math.floor(availableGapSpace / (laneCount - 1)));
                     adjustedLaneWidth = minTotalWidth;
                 }
                 
@@ -561,11 +594,12 @@ export class EventLayoutManager {
                 flexContainer.style.display = 'flex';
                 flexContainer.style.alignItems = 'stretch';
                 flexContainer.style.pointerEvents = 'none';
-                flexContainer.style.zIndex = '5';
+                flexContainer.style.zIndex = LAYOUT_CONSTANTS.Z_INDEX.toString();
                 flexContainer.innerHTML = '';
 
                 // レーン数に応じた配置方法を選択
-                if (laneCount === 1) {
+                const isSingleLane = laneCount === 1;
+                if (isSingleLane) {
                     // 1つの場合: 左詰め
                     flexContainer.style.justifyContent = 'flex-start';
                     flexContainer.style.gap = '0px';
@@ -582,7 +616,7 @@ export class EventLayoutManager {
                     lanePlaceholder.className = 'event-flex-lane';
                     lanePlaceholder.style.pointerEvents = 'none';
                     
-                    if (laneCount === 1) {
+                    if (isSingleLane) {
                         // 1つの場合: 全幅使用
                         lanePlaceholder.style.flex = 'none';
                         lanePlaceholder.style.width = `${availableWidth}px`;
@@ -604,7 +638,7 @@ export class EventLayoutManager {
                         // 調整された値で位置を計算
                         let left, width;
                         
-                        if (laneCount === 1) {
+                        if (isSingleLane) {
                             left = this.baseLeft;
                             width = availableWidth;
                         } else {
@@ -619,15 +653,15 @@ export class EventLayoutManager {
 
                         // レーン数に応じたCSSクラス調整
                         event.element.classList.remove('compact', 'micro');
-                        if (laneCount > 4) {
+                        if (laneCount > LAYOUT_CONSTANTS.LANE_THRESHOLDS.MICRO) {
                             event.element.classList.add('micro');
-                        } else if (laneCount > 2) {
+                        } else if (laneCount > LAYOUT_CONSTANTS.LANE_THRESHOLDS.COMPACT) {
                             event.element.classList.add('compact');
                         }
 
                         // 最小幅以下の場合はタイトルのみを表示
-                        if(width < 40) {
-                            event.element.innerText=event.title;
+                        if(width < LAYOUT_CONSTANTS.MIN_DISPLAY_WIDTH) {
+                            event.element.innerText = event.title;
                         }
 
                         console.log(`イベント ${event.id}: レーン=${lane}, 位置=${left}px, 幅=${width}px, 調整間隔=${adjustedGap}px`);
@@ -810,7 +844,7 @@ export class TimeTableManager {
         const unitHeight = TIME_CONSTANTS.UNIT_HEIGHT;
 
         // 24時間分の固定高さを設定（parentDivはCSSで固定サイズ、baseDivのみ設定）
-        this.baseDiv.style.height = '1440px'; // 24 * 60px
+        this.baseDiv.style.height = `${TIMETABLE_CONSTANTS.DAY_HEIGHT}px`;
         
         // 既存の業務時間表示をクリア（時間ラベルはHTMLに固定済みなのでクリアしない）
         const workTimeElements = this.baseDiv.querySelectorAll('.work-time');
@@ -903,9 +937,9 @@ export class TimeTableManager {
         
         if (isToday) {
             // 今日の場合：現在時刻を中心に表示
-            const currentPosition = currentTime.getHours() * 60 + currentTime.getMinutes();
+            const currentPosition = currentTime.getHours() * TIMETABLE_CONSTANTS.MINUTES_PER_HOUR + currentTime.getMinutes();
             const viewportHeight = this.parentDiv.clientHeight;
-            scrollTop = Math.max(0, currentPosition - viewportHeight / 2);
+            scrollTop = Math.max(0, currentPosition - viewportHeight / TIMETABLE_CONSTANTS.VIEWPORT_CENTER_RATIO);
             
             console.log(`=== 現在時刻中心スクロール ===`);
             console.log(`現在時刻: ${currentTime.getHours()}:${String(currentTime.getMinutes()).padStart(2, '0')}`);
@@ -914,8 +948,8 @@ export class TimeTableManager {
         } else {
             // 他の日：業務開始時間の1時間前を表示
             const [openHour, openMinute] = this.openHour.split(':').map(Number);
-            const targetHour = Math.max(0, openHour - 1);
-            scrollTop = targetHour * 60 + openMinute;
+            const targetHour = Math.max(0, openHour - TIMETABLE_CONSTANTS.SCROLL_HOUR_OFFSET);
+            scrollTop = targetHour * TIMETABLE_CONSTANTS.MINUTES_PER_HOUR + openMinute;
             
             console.log(`=== 業務時間ベーススクロール ===`);
             console.log(`業務開始時間: ${this.openHour}`);
