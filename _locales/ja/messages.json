@@ -190,5 +190,189 @@
   "toggleSidePanelShortcut": {
     "message": "サイドパネルを開く",
     "description": "サイドパネル開閉ショートカットコマンドの説明"
+  },
+  "demo_event_summary_morning_meeting": {
+    "message": "朝会",
+    "description": "デモイベント: 朝会のタイトル"
+  },
+  "demo_event_description_morning_meeting": {
+    "message": "チームの朝会です。",
+    "description": "デモイベント: 朝会の説明"
+  },
+  "demo_event_location_meeting_room_a": {
+    "message": "会議室A",
+    "description": "デモイベント: 会議室A"
+  },
+  "demo_event_calendar_main": {
+    "message": "メインカレンダー",
+    "description": "デモイベント: メインカレンダー名"
+  },
+  "demo_event_summary_project_work": {
+    "message": "プロジェクト作業",
+    "description": "デモイベント: プロジェクト作業のタイトル"
+  },
+  "demo_event_description_project_work": {
+    "message": "プロジェクトの進捗作業。",
+    "description": "デモイベント: プロジェクト作業の説明"
+  },
+  "demo_event_calendar_work": {
+    "message": "仕事用カレンダー",
+    "description": "デモイベント: 仕事用カレンダー名"
+  },
+  "demo_event_summary_lunch_meeting": {
+    "message": "ランチミーティング",
+    "description": "デモイベント: ランチミーティングのタイトル"
+  },
+  "demo_event_description_lunch_meeting": {
+    "message": "レストランでの打ち合わせ。",
+    "description": "デモイベント: ランチミーティングの説明"
+  },
+  "demo_event_location_restaurant_xyz": {
+    "message": "レストランXYZ",
+    "description": "デモイベント: レストランXYZ"
+  },
+  "demo_event_calendar_business": {
+    "message": "ビジネスカレンダー",
+    "description": "デモイベント: ビジネスカレンダー名"
+  },
+  "demo_event_summary_short_call": {
+    "message": "短い電話会議",
+    "description": "デモイベント: 短い電話会議のタイトル"
+  },
+  "demo_event_description_short_call": {
+    "message": "15分の電話会議。",
+    "description": "デモイベント: 短い電話会議の説明"
+  },
+  "demo_event_summary_design_review": {
+    "message": "デザインレビュー",
+    "description": "デモイベント: デザインレビューのタイトル"
+  },
+  "demo_event_description_design_review": {
+    "message": "オンラインでデザインレビュー。",
+    "description": "デモイベント: デザインレビューの説明"
+  },
+  "demo_event_location_online": {
+    "message": "オンライン",
+    "description": "デモイベント: オンライン"
+  },
+  "demo_event_summary_overlap_a": {
+    "message": "重複イベントA",
+    "description": "デモイベント: 重複イベントAのタイトル"
+  },
+  "demo_event_description_overlap_a": {
+    "message": "会議室Bでの打ち合わせ。",
+    "description": "デモイベント: 重複イベントAの説明"
+  },
+  "demo_event_location_meeting_room_b": {
+    "message": "会議室B",
+    "description": "デモイベント: 会議室B"
+  },
+  "demo_event_calendar_test": {
+    "message": "テストカレンダー",
+    "description": "デモイベント: テストカレンダー名"
+  },
+  "demo_event_summary_overlap_b": {
+    "message": "重複イベントB",
+    "description": "デモイベント: 重複イベントBのタイトル"
+  },
+  "demo_event_description_overlap_b": {
+    "message": "オンライン会議。",
+    "description": "デモイベント: 重複イベントBの説明"
+  },
+  "demo_event_calendar_private": {
+    "message": "プライベートカレンダー",
+    "description": "デモイベント: プライベートカレンダー名"
+  },
+  "demo_event_summary_overlap_c": {
+    "message": "重複イベントC",
+    "description": "デモイベント: 重複イベントCのタイトル"
+  },
+  "demo_event_description_overlap_c": {
+    "message": "重複イベントCの説明。",
+    "description": "デモイベント: 重複イベントCの説明"
+  },
+  "demo_event_calendar_overlap1": {
+    "message": "重複カレンダー1",
+    "description": "デモイベント: 重複カレンダー1名"
+  },
+  "demo_event_summary_overlap_d": {
+    "message": "重複イベントD",
+    "description": "デモイベント: 重複イベントDのタイトル"
+  },
+  "demo_event_description_overlap_d": {
+    "message": "カフェでの打ち合わせ。",
+    "description": "デモイベント: 重複イベントDの説明"
+  },
+  "demo_event_location_cafe": {
+    "message": "カフェ",
+    "description": "デモイベント: カフェ"
+  },
+  "demo_event_calendar_overlap2": {
+    "message": "重複カレンダー2",
+    "description": "デモイベント: 重複カレンダー2名"
+  },
+  "demo_event_summary_morning_overlap_a": {
+    "message": "朝重複イベントA",
+    "description": "デモイベント: 朝重複イベントAのタイトル"
+  },
+  "demo_event_description_morning_overlap_a": {
+    "message": "オンライン朝会。",
+    "description": "デモイベント: 朝重複イベントAの説明"
+  },
+  "demo_event_calendar_morning1": {
+    "message": "朝カレンダー1",
+    "description": "デモイベント: 朝カレンダー1名"
+  },
+  "demo_event_summary_morning_overlap_b": {
+    "message": "朝重複イベントB",
+    "description": "デモイベント: 朝重複イベントBのタイトル"
+  },
+  "demo_event_description_morning_overlap_b": {
+    "message": "会議室Cでの朝会。",
+    "description": "デモイベント: 朝重複イベントBの説明"
+  },
+  "demo_event_location_meeting_room_c": {
+    "message": "会議室C",
+    "description": "デモイベント: 会議室C"
+  },
+  "demo_event_calendar_morning2": {
+    "message": "朝カレンダー2",
+    "description": "デモイベント: 朝カレンダー2名"
+  },
+  "demo_event_summary_morning_overlap_c": {
+    "message": "朝重複イベントC",
+    "description": "デモイベント: 朝重複イベントCのタイトル"
+  },
+  "demo_event_description_morning_overlap_c": {
+    "message": "朝重複イベントCの説明。",
+    "description": "デモイベント: 朝重複イベントCの説明"
+  },
+  "demo_event_calendar_morning3": {
+    "message": "朝カレンダー3",
+    "description": "デモイベント: 朝カレンダー3名"
+  },
+  "demo_event_summary_evening_review": {
+    "message": "夕方レビュー",
+    "description": "デモイベント: 夕方レビューのタイトル"
+  },
+  "demo_event_description_evening_review": {
+    "message": "夕方の振り返り。",
+    "description": "デモイベント: 夕方レビューの説明"
+  },
+  "demo_local_event_title_morning_routine": {
+    "message": "朝のルーティン",
+    "description": "デモローカルイベント: 朝のルーティン"
+  },
+  "demo_local_event_title_focus_time": {
+    "message": "集中タイム",
+    "description": "デモローカルイベント: 集中タイム"
+  },
+  "demo_local_event_title_exercise": {
+    "message": "運動タイム",
+    "description": "デモローカルイベント: 運動タイム"
+  },
+  "demo_local_event_title_reading_time": {
+    "message": "読書タイム",
+    "description": "デモローカルイベント: 読書タイム"
   }
 }
