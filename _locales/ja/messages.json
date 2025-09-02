@@ -15,6 +15,10 @@
     "message": "設定",
     "description": "設定ボタンのツールチップ"
   },
+  "clickToSelectDate": {
+    "message": "クリックして日付を選択",
+    "description": "日付ピッカー入力のツールチップ"
+  },
   "eventDialogTitle": {
     "message": "予定を作成/編集",
     "description": "予定ダイアログのタイトル"
