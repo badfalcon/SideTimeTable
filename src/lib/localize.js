@@ -24,6 +24,13 @@ function localizeHtmlPage() {
         if (msg !== tag) element.setAttribute('placeholder', msg);
     });
 
+    // title属性のローカライズ
+    document.querySelectorAll('[data-localize-title]').forEach(element => {
+        const tag = element.getAttribute('data-localize-title');
+        const msg = tag.replace(/__MSG_(\w+)__/g, (match, v1) => chrome.i18n.getMessage(v1) || '');
+        if (msg !== tag) element.setAttribute('title', msg);
+    });
+
     Array.from(document.getElementsByTagName('html')).forEach(element => {
         replace_i18n(element, element.innerHTML);
     });
@@ -123,6 +130,15 @@ async function localizeWithLanguage(targetLang) {
                 return messages[v1]?.message || chrome.i18n.getMessage(v1) || v1;
             });
             if (msg !== tag) element.setAttribute('placeholder', msg);
+        });
+        
+        // title属性のローカライズ
+        document.querySelectorAll('[data-localize-title]').forEach(element => {
+            const tag = element.getAttribute('data-localize-title');
+            const msg = tag.replace(/__MSG_(\w+)__/g, (match, v1) => {
+                return messages[v1]?.message || chrome.i18n.getMessage(v1) || v1;
+            });
+            if (msg !== tag) element.setAttribute('title', msg);
         });
         
     } catch (error) {

@@ -15,6 +15,10 @@
     "message": "Settings",
     "description": "Tooltip for settings button"
   },
+  "clickToSelectDate": {
+    "message": "Click to select date",
+    "description": "Tooltip for date picker input"
+  },
   "eventDialogTitle": {
     "message": "Create/Edit Event",
     "description": "Title of event dialog"
