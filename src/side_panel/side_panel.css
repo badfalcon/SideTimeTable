@@ -3,17 +3,12 @@
     --side-calendar-break-time-color: #fda9ca;
     --side-calendar-local-event-color: #bbf2b1;
     --side-calendar-google-event-color: #c3d6f7;
-    color-scheme: light dark;
-
-    --light-bg: #ffffff;
-
-    --dark-bg: #f0f0f0;
 }
 
 body {
     font-family: Arial, sans-serif;
     padding: 10px;
-    background-color: light-dark(var(--light-bg), var(--dark-bg));
+    background-color: #f0f0f0;
     position: relative;
     overflow-y: auto;
 }
@@ -36,6 +31,7 @@ h1 {
     position: sticky;
     top: 0;
     z-index: 100;
+    background-color: #f0f0f0;
     padding-bottom: 10px;
 }
 
@@ -43,6 +39,7 @@ h1 {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background-color: #f0f0f0;
     width: 100%;
 }
 
