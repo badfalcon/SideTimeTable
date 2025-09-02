@@ -52,6 +52,17 @@ This plugin is released under the [Apache License 2.0]. See the `LICENSE` file f
 - 設定アイコンから作業時間や見た目を設定できます。
 - インターフェースを通じて直接イベントを追加するか、カレンダーを同期して自動で更新します。
 
+#### 幅の自動調整について
+- サイドパネルの幅を変更すると、イベントの横幅が自動的に再計算されます。
+- 仕組みの概要:
+  - `src/side_panel/side_panel.js` の `UIController._setupResizeHandling()` が `#sideTimeTableBase` の幅変化を `ResizeObserver` で監視します。
+  - 監視結果から、`side-time-table-base`（DOM: `#sideTimeTableBase`）の幅を基準にイベント表示に使える「利用可能幅」を算出し、`EventLayoutManager.maxWidth` に反映します。
+  - その後 `EventLayoutManager.calculateLayout()` を呼び出して、各イベントの `left` と `width` を再配置します。
+- 利用可能幅の計算式（簡略）:
+  - `available = max(60, floor(baseWidth - paddingLeft - paddingRight - borderLeft - borderRight - reserved))`
+  - `reserved` は CSS変数 `--side-ttb-extra-margin`（既定 10px）。`baseLeft` は時間ラベルの左余白（既定 65px、位置計算専用）であり、利用可能幅からは差し引きません。
+- 複数イベントが重なる場合は、`maxWidth` の約90%をベースに均等割りし、レーン間ギャップ(5px)を差し引いてレーン幅を決定します。最小幅は 60px です。
+
 ### 開発とカスタマイズ
 - このリポジトリをクローンしてください。
 - 主に `background.js`、`side_panel.js`、または `side_panel.css` 内のスタイルを変更します。
