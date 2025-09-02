@@ -1,2 +1,2 @@
 # zip_project.sh (Unix/Linux/macOS)
-zip -r project.zip . -x "*.git*" "*.idea*" "*.DS_Store" "*.iml" "*.bat" "*.sh" "*.sample.json" "*.zip"
+zip -r project.zip . -x "*.iml*" "*.bat*" "*.sh*" "*.sample.json*" "*.zip*" "*.git*" "*.idea*" "*.DS_Store*" "*.md*" "docs/*"
