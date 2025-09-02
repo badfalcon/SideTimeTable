@@ -204,6 +204,7 @@ export class GoogleEventManager {
             startTime: startDate,
             endTime: endDate,
             element: eventDiv,
+            title: event.summary,
             type: 'google',
             id: event.id || `google-${Date.now()}-${Math.random()}`,
             calendarId: event.calendarId
@@ -493,6 +494,7 @@ export class LocalEventManager {
             endTime: endDate,
             element: eventDiv,
             type: 'local',
+            title: title,
             id: `local-${title}-${startTime}-${endTime}`
         });
 

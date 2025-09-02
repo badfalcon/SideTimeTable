@@ -173,6 +173,7 @@ export class EventLayoutManager {
      * @param {Date|number} eventData.startTime - 開始時間（Date型またはミリ秒のタイムスタンプ）
      * @param {Date|number} eventData.endTime - 終了時間（Date型またはミリ秒のタイムスタンプ）
      * @param {HTMLElement} eventData.element - イベントを表示するDOM要素
+     * @param {string} eventData.title - イベントのタイトル
      * @param {string} eventData.id - イベントの一意識別子（必須）
      * @param {string} [eventData.type] - イベントタイプ ('google' または 'local')
      * @throws {Error} 無効なイベントデータが渡された場合
@@ -528,7 +529,7 @@ export class EventLayoutManager {
                 const laneWidth = laneContentWidth; // 要素の実際のwidth
                 
                 // 最小コンテンツ幅チェック（padding込みで最小表示に必要な幅）
-                const minContentWidth = 40; // paddingを除いた最小コンテンツ幅
+                const minContentWidth = 20; // paddingを除いた最小コンテンツ幅
                 const minTotalWidth = minContentWidth + totalEventPadding; // padding込み最小幅
                 let adjustedGap = this.gap;
                 let adjustedLaneWidth = laneWidth;
@@ -622,6 +623,11 @@ export class EventLayoutManager {
                             event.element.classList.add('micro');
                         } else if (laneCount > 2) {
                             event.element.classList.add('compact');
+                        }
+
+                        // 最小幅以下の場合はタイトルのみを表示
+                        if(width < 40) {
+                            event.element.innerText=event.title;
                         }
 
                         console.log(`イベント ${event.id}: レーン=${lane}, 位置=${left}px, 幅=${width}px, 調整間隔=${adjustedGap}px`);
