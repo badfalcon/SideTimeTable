@@ -143,6 +143,14 @@
     "message": "Refresh",
     "description": "Label for calendar list refresh button"
   },
+  "searchCalendars": {
+    "message": "Search calendars...",
+    "description": "Placeholder text for calendar search input"
+  },
+  "noSearchResults": {
+    "message": "No search results found.",
+    "description": "Message when calendar search returns no results"
+  },
   "noCalendarsFound": {
     "message": "No calendars found.",
     "description": "Message when no calendars are found"

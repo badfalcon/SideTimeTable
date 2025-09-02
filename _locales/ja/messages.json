@@ -143,6 +143,14 @@
     "message": "更新",
     "description": "カレンダーリスト更新ボタンのラベル"
   },
+  "searchCalendars": {
+    "message": "カレンダーを検索...",
+    "description": "カレンダー検索入力のプレースホルダーテキスト"
+  },
+  "noSearchResults": {
+    "message": "検索結果が見つかりませんでした。",
+    "description": "カレンダー検索で結果が見つからない場合のメッセージ"
+  },
   "noCalendarsFound": {
     "message": "カレンダーが見つかりませんでした。",
     "description": "カレンダーが見つからない場合のメッセージ"

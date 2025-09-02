@@ -74,6 +74,19 @@
                 </div>
             </div>
 
+            <!-- Search field -->
+            <div class="mb-3">
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    <input type="text" id="calendar-search" class="form-control" placeholder="カレンダーを検索..." data-localize-placeholder="__MSG_searchCalendars__">
+                    <button id="clear-search-btn" class="btn btn-outline-secondary" type="button" style="display: none;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+
             <!-- Calendar list container -->
             <div id="calendar-list" class="list-group"></div>
             <div id="no-calendars-msg" class="text-muted" style="display: none;" data-localize="__MSG_noCalendarsFound__">
