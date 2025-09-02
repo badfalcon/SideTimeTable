@@ -367,11 +367,12 @@ class SettingsManager {
             resetButton: document.getElementById('resetButton'),
             developerSettingsCard: document.getElementById('developer-settings-card'),
             demoModeToggle: document.getElementById('demo-mode-toggle'),
+            languageSelect: document.getElementById('language-select'),
+            currentLanguageDisplay: document.getElementById('current-language-display'),
             timeList: document.getElementById('time-list'),
             shortcutKeyInput: document.getElementById('shortcut-key'),
             configureShortcutsBtn: document.getElementById('configure-shortcuts-btn')
         };
-        
         this.settings = { ...DEFAULT_SETTINGS };
         this.calendarManager = new CalendarManager();
     }
@@ -383,6 +384,7 @@ class SettingsManager {
         this._setupEventListeners();
         this._generateTimeList();
         this._checkDeveloperMode();
+        this._loadCurrentLanguage();
         this._loadSettings();
         this._loadCalendarData();
         this._loadCurrentShortcuts();
@@ -412,6 +414,9 @@ class SettingsManager {
         
         // デモモードトグル
         this.elements.demoModeToggle.addEventListener('change', () => this._handleDemoModeToggle());
+        
+        // 言語選択
+        this.elements.languageSelect.addEventListener('change', () => this._handleLanguageChange());
     }
 
     /**
@@ -430,6 +435,30 @@ class SettingsManager {
     }
 
     /**
+     * 現在の言語を読み込み・表示
+     * @private
+     */
+    _loadCurrentLanguage() {
+        // Chromeブラウザーの言語を取得
+        const browserLanguage = chrome.i18n.getUILanguage();
+        let displayText = '';
+        
+        switch (browserLanguage.toLowerCase().split('-')[0]) {
+            case 'ja':
+                displayText = '日本語 (Japanese)';
+                break;
+            case 'en':
+                displayText = 'English';
+                break;
+            default:
+                displayText = `${browserLanguage} (${chrome.i18n.getMessage('languageDetected') || '検出された言語'})`;
+                break;
+        }
+        
+        this.elements.currentLanguageDisplay.textContent = displayText;
+    }
+
+    /**
      * 時間選択リストを生成
      * @private
      */
@@ -443,9 +472,9 @@ class SettingsManager {
      */
     _loadSettings() {
         loadSettings()
-            .then(settings => {
+            .then(async settings => {
                 this.settings = settings;
-                this._updateUI();
+                await this._updateUI();
             })
             .catch(error => {
                 logError('設定読み込み', error);
@@ -457,13 +486,17 @@ class SettingsManager {
      * UIを更新
      * @private
      */
-    _updateUI() {
+    async _updateUI() {
         const { elements, settings } = this;
         
-        // Google連携状態
+        // Google連携状態（設定に基づく言語で表示）
+        const userLanguage = await this._getCurrentLanguageCode();
+        const integratedText = await this._getMessageInLanguage('integrated', userLanguage) || '連携済み';
+        const notIntegratedText = await this._getMessageInLanguage('notIntegrated', userLanguage) || '未連携';
+        
         elements.googleIntegrationStatus.textContent = settings.googleIntegrated 
-            ? chrome.i18n.getMessage('integrated') || '連携済み'
-            : chrome.i18n.getMessage('notIntegrated') || '未連携';
+            ? integratedText
+            : notIntegratedText;
         
         // カレンダー管理カードの表示/非表示
         if (settings.googleIntegrated) {
@@ -488,6 +521,9 @@ class SettingsManager {
         
         // デモモード設定
         elements.demoModeToggle.checked = isDemoMode();
+        
+        // 言語設定
+        elements.languageSelect.value = settings.language || 'auto';
         
         // 休憩時間フィールドの有効/無効を切り替え
         this._toggleBreakTimeFields();
@@ -576,11 +612,11 @@ class SettingsManager {
                 
                 // 設定を保存
                 saveSettings({ googleIntegrated: this.settings.googleIntegrated })
-                    .then(() => {
+                    .then(async () => {
                         console.log('Googleカレンダーとの連携情報を保存しました');
                         
                         // UI更新
-                        this._updateUI();
+                        await this._updateUI();
                         
                         // 連携が成功した場合、カレンダー一覧を取得
                         if (this.settings.googleIntegrated) {
@@ -624,7 +660,8 @@ class SettingsManager {
             breakTimeStart: elements.breakTimeStartInput.value,
             breakTimeEnd: elements.breakTimeEndInput.value,
             localEventColor: elements.localEventColorInput.value,
-            googleEventColor: elements.googleEventColorInput.value
+            googleEventColor: elements.googleEventColorInput.value,
+            language: elements.languageSelect.value
         };
         
         // 設定を保存
@@ -674,14 +711,14 @@ class SettingsManager {
             
             // 設定を保存
             saveSettings(defaultSettings)
-                .then(() => {
+                .then(async () => {
                     alert(chrome.i18n.getMessage('settingsReset') || '設定をデフォルトに戻しました');
                     
                     // 設定を更新
                     this.settings = defaultSettings;
                     
                     // UIを更新
-                    this._updateUI();
+                    await this._updateUI();
                     
                     // サイドパネルをリロード
                     setTimeout(() => {
@@ -736,6 +773,84 @@ class SettingsManager {
     }
 
     /**
+     * 言語変更の処理
+     * @private
+     */
+    async _handleLanguageChange() {
+        const selectedLanguage = this.elements.languageSelect.value;
+        
+        try {
+            // 設定を即座に保存
+            const currentSettings = { ...this.settings };
+            currentSettings.language = selectedLanguage;
+            
+            await saveSettings(currentSettings);
+            
+            // 設定を更新
+            this.settings = currentSettings;
+            
+            // 新しい言語でメッセージを取得
+            const newLanguageCode = window.resolveLanguageCode ? 
+                window.resolveLanguageCode(selectedLanguage) : 
+                (selectedLanguage === 'auto' ? chrome.i18n.getUILanguage().startsWith('ja') ? 'ja' : 'en' : selectedLanguage);
+            
+            const confirmMessage = await this._getMessageInLanguage('languageChangeConfirm', newLanguageCode);
+            
+            // ユーザーに新しい言語で再読み込みが必要であることを通知
+            if (confirm(confirmMessage)) {
+                chrome.runtime.reload();
+            }
+        } catch (error) {
+            logError('言語設定保存', error);
+            alert('言語設定の保存に失敗しました');
+        }
+    }
+
+    /**
+     * 現在の言語コードを取得
+     * @private
+     */
+    async _getCurrentLanguageCode() {
+        try {
+            const userLanguageSetting = await (window.getCurrentLanguageSetting ? 
+                window.getCurrentLanguageSetting() : 
+                chrome.storage.sync.get(['language']).then(result => result.language || 'auto'));
+            
+            return window.resolveLanguageCode ? 
+                window.resolveLanguageCode(userLanguageSetting) :
+                (userLanguageSetting === 'auto' ? 
+                    (chrome.i18n.getUILanguage().startsWith('ja') ? 'ja' : 'en') : 
+                    userLanguageSetting);
+        } catch (error) {
+            console.warn('言語コード取得エラー:', error);
+            return chrome.i18n.getUILanguage().startsWith('ja') ? 'ja' : 'en';
+        }
+    }
+
+    /**
+     * 指定された言語でメッセージを取得
+     * @private
+     */
+    async _getMessageInLanguage(messageKey, languageCode) {
+        try {
+            const messageFiles = {
+                'en': '/_locales/en/messages.json',
+                'ja': '/_locales/ja/messages.json'
+            };
+            
+            const messagesUrl = chrome.runtime.getURL(messageFiles[languageCode] || messageFiles['en']);
+            const response = await fetch(messagesUrl);
+            const messages = await response.json();
+            
+            return messages[messageKey]?.message || chrome.i18n.getMessage(messageKey);
+        } catch (error) {
+            console.warn('言語別メッセージ取得エラー:', error);
+            // フォールバック
+            return chrome.i18n.getMessage(messageKey);
+        }
+    }
+
+    /**
      * ショートカット設定画面を開く
      * @private
      */
@@ -748,9 +863,20 @@ class SettingsManager {
 }
 
 // DOMが読み込まれたときに実行
-document.addEventListener('DOMContentLoaded', () => {
-    // 多言語化 (localize.js provides this function)
-    if (typeof localizeHtmlPage === 'function') {
+document.addEventListener('DOMContentLoaded', async () => {
+    // 多言語化（設定に基づく言語で実行）
+    if (window.localizeHtmlPageWithLang) {
+        try {
+            await window.localizeHtmlPageWithLang();
+            console.log('オプションページ多言語化完了');
+        } catch (error) {
+            console.warn('多言語化処理でエラー:', error);
+            // フォールバックとして標準の多言語化を実行
+            if (typeof localizeHtmlPage === 'function') {
+                localizeHtmlPage();
+            }
+        }
+    } else if (typeof localizeHtmlPage === 'function') {
         localizeHtmlPage();
     }
     

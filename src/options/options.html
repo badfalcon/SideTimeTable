@@ -162,6 +162,38 @@
         </div>
     </div>
 
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="d-flex align-items-center mb-3">
+                <i class="fas fa-language me-2 text-primary" style="font-size: 1.5rem;"></i>
+                <h2 class="card-title mb-0" data-localize="__MSG_languageSettings__">言語設定</h2>
+            </div>
+            <p class="card-text text-muted mb-4" data-localize="__MSG_languageDescription__">拡張機能の表示言語を選択できます。</p>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="language-select" class="form-label fw-semibold" data-localize="__MSG_selectLanguage__">言語選択:</label>
+                    <select class="form-select" id="language-select">
+                        <option value="auto" data-localize="__MSG_languageAuto__">自動（ブラウザーの言語）</option>
+                        <option value="en" data-localize="__MSG_languageEnglish__">English（英語）</option>
+                        <option value="ja" data-localize="__MSG_languageJapanese__">日本語</option>
+                    </select>
+                    <small class="form-text text-muted mt-1" data-localize="__MSG_languageHelp__">
+                        言語を変更した場合、変更を適用するために拡張機能を再読み込みする必要があります。
+                    </small>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-semibold" data-localize="__MSG_currentLanguage__">現在のブラウザー言語:</label>
+                    <div class="p-2 bg-light rounded">
+                        <i class="fas fa-info-circle text-info me-1"></i>
+                        <span id="current-language-display" class="text-dark">検出中...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="card mb-4" id="developer-settings-card" style="display: none;">
         <div class="card-body">
             <h2 class="card-title">開発者設定</h2>
@@ -175,7 +207,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="d-flex gap-2">
         <button id="saveButton" class="btn btn-primary" data-localize="__MSG_save__">保存</button>
         <button id="resetButton" class="btn btn-outline-secondary" data-localize="__MSG_resetToDefault__">デフォルトに戻す</button>

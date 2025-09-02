@@ -839,16 +839,25 @@ export class TimeTableManager {
      * // 休憩時間なしのタイムテーブルを作成
      * timeTableManager.createBaseTable(false);
      */
-    createBaseTable(targetDate, breakTimeFixed, breakTimeStart = '12:00', breakTimeEnd = '13:00') {
+    async createBaseTable(targetDate, breakTimeFixed, breakTimeStart = '12:00', breakTimeEnd = '13:00') {
         this.initializeTimeVariables(targetDate);
         const unitHeight = TIME_CONSTANTS.UNIT_HEIGHT;
 
         // 24時間分の固定高さを設定（parentDivはCSSで固定サイズ、baseDivのみ設定）
         this.baseDiv.style.height = `${TIMETABLE_CONSTANTS.DAY_HEIGHT}px`;
         
-        // 既存の業務時間表示をクリア（時間ラベルはHTMLに固定済みなのでクリアしない）
+        // 既存の業務時間表示とラベルをクリア
         const workTimeElements = this.baseDiv.querySelectorAll('.work-time');
         workTimeElements.forEach(element => element.remove());
+        
+        const hourLabels = this.baseDiv.querySelectorAll('.hour-label');
+        hourLabels.forEach(element => element.remove());
+        
+        const hourLines = this.baseDiv.querySelectorAll('.hour-line');
+        hourLines.forEach(element => element.remove());
+
+        // 時間ラベルと補助線を動的に生成
+        await this._createHourLabelsAndLines();
 
         // 業務時間に色を付ける(休憩時間を除く)
         if (breakTimeFixed) {
@@ -980,6 +989,38 @@ export class TimeTableManager {
         d1.setHours(0, 0, 0, 0);
         d2.setHours(0, 0, 0, 0);
         return d1.getTime() === d2.getTime();
+    }
+
+    /**
+     * 時間ラベルと補助線を動的に生成
+     * @private
+     */
+    async _createHourLabelsAndLines() {
+        const locale = window.getCurrentLocale ? await window.getCurrentLocale() : 'ja';
+        
+        for (let hour = 0; hour < TIMETABLE_CONSTANTS.HOURS_PER_DAY; hour++) {
+            const topPosition = hour * TIME_CONSTANTS.UNIT_HEIGHT;
+            
+            // 時間ラベルを作成
+            const hourLabel = document.createElement('div');
+            hourLabel.className = 'hour-label';
+            hourLabel.style.top = `${topPosition}px`;
+            
+            // ロケールに応じた時間フォーマット
+            const timeString = `${hour.toString().padStart(2, '0')}:00`;
+            hourLabel.textContent = window.formatTimeForLocale ? 
+                window.formatTimeForLocale(timeString, locale) : 
+                timeString;
+            
+            this.baseDiv.appendChild(hourLabel);
+            
+            // 時間補助線を作成
+            const hourLine = document.createElement('div');
+            hourLine.className = 'hour-line';
+            hourLine.style.top = `${topPosition}px`;
+            
+            this.baseDiv.appendChild(hourLine);
+        }
     }
 
     /**
