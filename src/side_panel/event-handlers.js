@@ -30,8 +30,7 @@ export class GoogleEventManager {
         this.googleEventsDiv = googleEventsDiv;
         this.eventLayoutManager = eventLayoutManager;
         this.isGoogleIntegrated = false;
-        this.lastFetchTime = 0; // 最後のAPI呼び出し時刻
-        this.minFetchInterval = 30000; // 30秒間隔の制限
+        this.lastFetchDate = null; // 最後にAPI呼び出しした日付
         this.currentFetchPromise = null; // 現在実行中のfetch Promise
     }
 
@@ -68,14 +67,16 @@ export class GoogleEventManager {
             return this.currentFetchPromise;
         }
 
-        // API呼び出し頻度制限チェック
-        const now = Date.now();
-        if (now - this.lastFetchTime < this.minFetchInterval) {
-            console.log('API呼び出し頻度制限により、スキップします');
-            return Promise.resolve();
+        // 同じ日付での重複呼び出し制限チェック
+        const targetDay = targetDate || new Date();
+        const targetDateStr = targetDay.toDateString(); // 日付文字列で比較
+        
+        if (this.lastFetchDate === targetDateStr && this.currentFetchPromise) {
+            console.log('同じ日付で既にAPI呼び出し中のため、スキップします');
+            return this.currentFetchPromise; // 既存のPromiseを返す
         }
 
-        this.lastFetchTime = now;
+        this.lastFetchDate = targetDateStr;
 
         // イベントを取得（Google色を直接使用）
         this.currentFetchPromise = new Promise((resolve, reject) => {
@@ -83,6 +84,9 @@ export class GoogleEventManager {
             const message = { action: "getEvents", requestId };
             if (targetDate) {
                 message.targetDate = targetDate.toISOString();
+                console.log('Google イベント取得 対象日付:', targetDate.toISOString());
+            } else {
+                console.log('Google イベント取得 対象日付: 今日');
             }
             
             chrome.runtime.sendMessage(message, (response) => {
@@ -93,7 +97,7 @@ export class GoogleEventManager {
                 resolve(response);
             });
         })
-            .then(response => {
+            .then(async response => {
                 console.log('イベント取得応答:', response);
 
                 // 以前の表示をクリア
@@ -129,7 +133,7 @@ export class GoogleEventManager {
                 }
 
                 console.log('イベント処理開始:', response.events.length + '件');
-                this._processEvents(response.events);
+                await this._processEvents(response.events);
 
                 // イベントレイアウトを計算して適用
                 this.eventLayoutManager.calculateLayout();
@@ -149,8 +153,8 @@ export class GoogleEventManager {
      * デモイベントを処理して表示
      * @private
      */
-    _processDemoEvents() {
-        return new Promise((resolve) => {
+    async _processDemoEvents() {
+        return new Promise(async (resolve) => {
             // 以前の表示をクリア
             this.googleEventsDiv.innerHTML = '';
 
@@ -163,10 +167,10 @@ export class GoogleEventManager {
             });
 
             // デモイベントを取得
-            const demoEvents = getDemoEvents();
+            const demoEvents = await getDemoEvents();
             console.log('デモイベント処理開始:', demoEvents.length + '件');
             
-            this._processEvents(demoEvents);
+            await this._processEvents(demoEvents);
 
             // イベントレイアウトを計算して適用
             this.eventLayoutManager.calculateLayout();
@@ -179,30 +183,30 @@ export class GoogleEventManager {
      * イベントデータを処理して表示
      * @private
      */
-    _processEvents(events) {
-        events.forEach(event => {
+    async _processEvents(events) {
+        for (const event of events) {
             console.log(event);
             switch (event.eventType) {
                 case 'workingLocation':
                 case 'focusTime':
                 case 'outOfOffice':
                     // 作業場所、集中時間、外出の場合は何も表示しない
-                    return;
+                    continue;
                 case 'default':
-                    this._createGoogleEventElement(event);
+                    await this._createGoogleEventElement(event);
                     break;
                 default:
                     // その他のイベントタイプは表示しない
-                    return;
+                    continue;
             }
-        });
+        }
     }
 
     /**
      * Googleイベント要素を作成
      * @private
      */
-    _createGoogleEventElement(event) {
+    async _createGoogleEventElement(event) {
         // 終日イベントはスキップ
         if (event.start.date || event.end.date) {
             return;
@@ -251,12 +255,8 @@ export class GoogleEventManager {
             eventDiv.style.color = event.calendarForegroundColor;
         }
         
-        let eventContent = `${startDate.toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit'
-        })} - ${event.summary}`;
-
-        eventDiv.textContent = eventContent;
+        // ロケール対応の時間表示を非同期で設定
+        await this._setEventContentWithLocale(eventDiv, startDate, event.summary);
 
         this.googleEventsDiv.appendChild(eventDiv);
 
@@ -272,6 +272,35 @@ export class GoogleEventManager {
         });
     }
 
+
+    /**
+     * ロケールに対応した時間表示でイベント内容を設定
+     * @param {HTMLElement} eventDiv - イベント要素
+     * @param {Date} startDate - 開始時刻
+     * @param {string} summary - イベントのタイトル
+     * @private
+     */
+    async _setEventContentWithLocale(eventDiv, startDate, summary) {
+        try {
+            // 現在のロケールを取得
+            const locale = await window.getCurrentLocale();
+            
+            // 時間をロケール形式でフォーマット
+            const startHours = String(startDate.getHours()).padStart(2, '0');
+            const startMinutes = String(startDate.getMinutes()).padStart(2, '0');
+            const timeString = `${startHours}:${startMinutes}`;
+            
+            const formattedTime = window.formatTimeForLocale(timeString, locale);
+            eventDiv.textContent = `${formattedTime} - ${summary}`;
+        } catch (error) {
+            // エラーの場合は従来の表示方法を使用
+            console.warn('ロケール時間フォーマットエラー:', error);
+            eventDiv.textContent = `${startDate.toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit'
+            })} - ${summary}`;
+        }
+    }
 
     /**
      * イベントの詳細を表示
@@ -318,7 +347,7 @@ export class GoogleEventManager {
         // 日時設定
         const startDate = new Date(event.start.dateTime);
         const endDate = new Date(event.end.dateTime);
-        dialog.querySelector('.google-event-time').textContent = `${startDate.toLocaleString()} - ${endDate.toLocaleString()}`;
+        this._setEventDetailsTimeWithLocale(dialog.querySelector('.google-event-time'), startDate, endDate);
 
         // 説明設定
         const descriptionEl = dialog.querySelector('.google-event-description');
@@ -395,6 +424,39 @@ export class GoogleEventManager {
                 dialog.style.display = 'none';
             }
         };
+    }
+
+    /**
+     * ロケールに対応した時間表示でイベント詳細の時間を設定
+     * @param {HTMLElement} timeElement - 時間表示要素
+     * @param {Date} startDate - 開始時刻
+     * @param {Date} endDate - 終了時刻
+     * @private
+     */
+    async _setEventDetailsTimeWithLocale(timeElement, startDate, endDate) {
+        try {
+            // 現在のロケールを取得
+            const locale = await window.getCurrentLocale();
+            
+            // 日時をロケール形式でフォーマット
+            const formattedDate = window.formatDateForLocale(startDate, locale);
+            const startHours = String(startDate.getHours()).padStart(2, '0');
+            const startMinutes = String(startDate.getMinutes()).padStart(2, '0');
+            const endHours = String(endDate.getHours()).padStart(2, '0');
+            const endMinutes = String(endDate.getMinutes()).padStart(2, '0');
+            
+            const formattedTimeRange = window.formatTimeRangeForLocale(
+                `${startHours}:${startMinutes}`,
+                `${endHours}:${endMinutes}`,
+                locale
+            );
+            
+            timeElement.textContent = `${formattedDate} ${formattedTimeRange}`;
+        } catch (error) {
+            // エラーの場合は従来の表示方法を使用
+            console.warn('ロケール時間フォーマットエラー:', error);
+            timeElement.textContent = `${startDate.toLocaleString()} - ${endDate.toLocaleString()}`;
+        }
     }
 
     /**
@@ -482,7 +544,7 @@ export class LocalEventManager {
      * ローカルイベントをロード
      * @param {Date} targetDate - 対象の日付（省略時は今日）
      */
-    loadLocalEvents(targetDate = null) {
+    async loadLocalEvents(targetDate = null) {
         // 対象日付を更新
         this.currentTargetDate = targetDate || new Date();
         
@@ -491,17 +553,17 @@ export class LocalEventManager {
         // デモモードの場合はモックデータを使用
         if (isDemoMode()) {
             console.log('デモモードでローカルモックデータを使用します');
-            const demoEvents = getDemoLocalEvents();
+            const demoEvents = await getDemoLocalEvents();
             console.log('デモローカルイベント取得:', demoEvents.length + '件');
 
-            demoEvents.forEach(event => {
+            for (const event of demoEvents) {
                 try {
-                    const eventDiv = this._createEventDiv(event.title, event.startTime, event.endTime);
+                    const eventDiv = await this._createEventDiv(event.title, event.startTime, event.endTime);
                     this.localEventsDiv.appendChild(eventDiv);
                 } catch (error) {
                     logError('デモイベント表示', error);
                 }
-            });
+            }
             return;
         }
 
@@ -510,17 +572,19 @@ export class LocalEventManager {
             () => loadLocalEvents();
             
         loadFunction()
-            .then(events => {
+            .then(async events => {
                 console.log('ローカルイベント取得:', events.length + '件');
+                console.log('対象日付:', targetDate ? targetDate.toISOString() : '今日');
+                console.log('使用した関数:', targetDate ? 'loadLocalEventsForDate' : 'loadLocalEvents');
 
-                events.forEach(event => {
+                for (const event of events) {
                     try {
-                        const eventDiv = this._createEventDiv(event.title, event.startTime, event.endTime);
+                        const eventDiv = await this._createEventDiv(event.title, event.startTime, event.endTime);
                         this.localEventsDiv.appendChild(eventDiv);
                     } catch (error) {
                         logError('イベント表示', error);
                     }
-                });
+                }
 
                 // 注: レイアウト計算はside_panel.jsで行うため、ここでは行わない
             })
@@ -533,7 +597,7 @@ export class LocalEventManager {
      * イベント要素を作成
      * @private
      */
-    _createEventDiv(title, startTime, endTime) {
+    async _createEventDiv(title, startTime, endTime) {
         const eventDiv = document.createElement('div');
         eventDiv.className = 'event local-event';
         eventDiv.title = title;
@@ -561,7 +625,9 @@ export class LocalEventManager {
         }
 
         eventDiv.style.top = `${startOffset}px`;
-        eventDiv.textContent = `${startTime} - ${endTime}: ${title}`;
+        
+        // ロケール対応の時間表示を非同期で設定
+        await this._setLocalEventContentWithLocale(eventDiv, startTime, endTime, title);
 
         // 編集機能を設定
         this._setupEventEdit(eventDiv, {title, startTime, endTime});
@@ -577,6 +643,29 @@ export class LocalEventManager {
         });
 
         return eventDiv;
+    }
+
+    /**
+     * ロケールに対応した時間表示でローカルイベント内容を設定
+     * @param {HTMLElement} eventDiv - イベント要素
+     * @param {string} startTime - 開始時刻（HH:mm形式）
+     * @param {string} endTime - 終了時刻（HH:mm形式）
+     * @param {string} title - イベントのタイトル
+     * @private
+     */
+    async _setLocalEventContentWithLocale(eventDiv, startTime, endTime, title) {
+        try {
+            // 現在のロケールを取得
+            const locale = await window.getCurrentLocale();
+            
+            // 時間範囲をロケール形式でフォーマット
+            const formattedTimeRange = window.formatTimeRangeForLocale(startTime, endTime, locale);
+            eventDiv.textContent = `${formattedTimeRange}: ${title}`;
+        } catch (error) {
+            // エラーの場合は従来の表示方法を使用
+            console.warn('ロケール時間フォーマットエラー:', error);
+            eventDiv.textContent = `${startTime} - ${endTime}: ${title}`;
+        }
     }
 
     /**
@@ -723,9 +812,9 @@ export class LocalEventManager {
                     localEvents.push({title, startTime, endTime});
                     return saveLocalEvents(localEvents);
                 })
-                .then(() => {
+                .then(async () => {
                     // イベント要素を作成して表示
-                    const eventDiv = this._createEventDiv(title, startTime, endTime);
+                    const eventDiv = await this._createEventDiv(title, startTime, endTime);
                     this.localEventsDiv.appendChild(eventDiv);
 
                     // イベントレイアウトを再計算

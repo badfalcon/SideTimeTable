@@ -183,6 +183,46 @@
     "message": "To change the shortcut, visit Chrome's extension management page (chrome://extensions/shortcuts).",
     "description": "Help text for shortcut configuration"
   },
+  "languageSettings": {
+    "message": "Language Settings",
+    "description": "Section title for language settings"
+  },
+  "languageDescription": {
+    "message": "Choose your preferred display language for the extension.",
+    "description": "Description for language settings section"
+  },
+  "selectLanguage": {
+    "message": "Select Language:",
+    "description": "Label for language selection dropdown"
+  },
+  "languageAuto": {
+    "message": "Auto (Browser Language)",
+    "description": "Option for automatic language detection"
+  },
+  "languageEnglish": {
+    "message": "English",
+    "description": "Option for English language"
+  },
+  "languageJapanese": {
+    "message": "Japanese (日本語)",
+    "description": "Option for Japanese language"
+  },
+  "languageHelp": {
+    "message": "After changing the language, you may need to reload the extension for changes to take effect.",
+    "description": "Help text for language change"
+  },
+  "currentLanguage": {
+    "message": "Current Browser Language:",
+    "description": "Label for current language display"
+  },
+  "languageDetected": {
+    "message": "Detected Language",
+    "description": "Text for detected language"
+  },
+  "languageChangeConfirm": {
+    "message": "Language setting has been changed. The extension needs to be reloaded to apply the changes. Reload now?",
+    "description": "Confirmation message for language change"
+  },
   "noShortcutSet": {
     "message": "Not set",
     "description": "Placeholder when no shortcut is set"

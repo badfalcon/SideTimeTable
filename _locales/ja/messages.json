@@ -183,6 +183,46 @@
     "message": "設定を変更する場合は、Chrome の拡張機能管理ページ（chrome://extensions/shortcuts）で行ってください。",
     "description": "ショートカット設定のヘルプテキスト"
   },
+  "languageSettings": {
+    "message": "言語設定",
+    "description": "言語設定セクションのタイトル"
+  },
+  "languageDescription": {
+    "message": "拡張機能の表示言語を選択できます。",
+    "description": "言語設定セクションの説明"
+  },
+  "selectLanguage": {
+    "message": "言語選択:",
+    "description": "言語選択ドロップダウンのラベル"
+  },
+  "languageAuto": {
+    "message": "自動（ブラウザーの言語）",
+    "description": "自動言語検出のオプション"
+  },
+  "languageEnglish": {
+    "message": "English（英語）",
+    "description": "英語言語のオプション"
+  },
+  "languageJapanese": {
+    "message": "日本語",
+    "description": "日本語言語のオプション"
+  },
+  "languageHelp": {
+    "message": "言語を変更した場合、変更を適用するために拡張機能を再読み込みする必要があります。",
+    "description": "言語変更のヘルプテキスト"
+  },
+  "currentLanguage": {
+    "message": "現在のブラウザー言語:",
+    "description": "現在の言語表示のラベル"
+  },
+  "languageDetected": {
+    "message": "検出された言語",
+    "description": "検出された言語のテキスト"
+  },
+  "languageChangeConfirm": {
+    "message": "言語設定が変更されました。変更を適用するには拡張機能を再読み込みする必要があります。今すぐ再読み込みしますか？",
+    "description": "言語変更の確認メッセージ"
+  },
   "noShortcutSet": {
     "message": "未設定",
     "description": "ショートカットが設定されていない場合のプレースホルダー"

@@ -129,7 +129,7 @@ class UIController {
      */
     _loadSettings() {
         loadSettings()
-            .then(settings => {
+            .then(async settings => {
                 try {
                     // CSS変数の設定
                     document.documentElement.style.setProperty('--side-calendar-work-time-color', settings.workTimeColor);
@@ -143,14 +143,14 @@ class UIController {
 
                     console.log('タイムテーブル作成開始');
                     // タイムテーブルの作成
-                    this.timeTableManager.createBaseTable(this.currentDate, settings.breakTimeFixed, settings.breakTimeStart, settings.breakTimeEnd);
+                    await this.timeTableManager.createBaseTable(this.currentDate, settings.breakTimeFixed, settings.breakTimeStart, settings.breakTimeEnd);
 
                     console.log('イベント取得開始');
                     // イベントの取得と表示 - 少し遅延を入れて確実に実行されるようにする
-                    setTimeout(() => {
+                    setTimeout(async () => {
                         // ローカルイベントの取得
                         console.log('ローカルイベント取得開始');
-                        this.localEventManager.loadLocalEvents();
+                        await this.localEventManager.loadLocalEvents();
 
                         // Googleイベントの取得（デモモードの場合も含む）
                         if (googleIntegrated) {
@@ -371,15 +371,15 @@ class UIController {
         
         // TimeTableManagerの時間設定を対象日付で更新
         loadSettings()
-            .then(settings => {
+            .then(async settings => {
                 // タイムテーブルを新しい日付で再作成
-                this.timeTableManager.createBaseTable(this.currentDate, settings.breakTimeFixed, settings.breakTimeStart, settings.breakTimeEnd);
+                await this.timeTableManager.createBaseTable(this.currentDate, settings.breakTimeFixed, settings.breakTimeStart, settings.breakTimeEnd);
                 
                 // 現在時刻線を更新（今日以外では非表示になる）
                 this.timeTableManager.updateCurrentTimeLine(this.currentDate);
                 
                 // ローカルイベントの取得
-                this.localEventManager.loadLocalEvents(this.currentDate);
+                await this.localEventManager.loadLocalEvents(this.currentDate);
                 
                 // Googleイベントの取得（デモモードの場合も含む）
                 const googleIntegrated = isDemoMode() || settings.googleIntegrated;
@@ -437,9 +437,20 @@ class UIController {
 }
 
 // DOMが読み込まれたときに実行
-document.addEventListener('DOMContentLoaded', function() {
-    // 多言語化
-    localizeHtmlPage();
+document.addEventListener('DOMContentLoaded', async function() {
+    // 多言語化（グローバル関数として呼び出し）
+    if (window.localizeHtmlPageWithLang) {
+        try {
+            await window.localizeHtmlPageWithLang();
+            console.log('多言語化処理完了');
+        } catch (error) {
+            console.warn('多言語化処理でエラー:', error);
+            // フォールバックとして標準の多言語化を実行
+            if (window.localizeHtmlPage) {
+                window.localizeHtmlPage();
+            }
+        }
+    }
 
     // UIコントローラーの初期化と実行
     const uiController = new UIController();

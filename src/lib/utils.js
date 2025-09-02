@@ -26,7 +26,8 @@ export const DEFAULT_SETTINGS = {
     breakTimeEnd: TIME_CONSTANTS.DEFAULT_BREAK_END,
     localEventColor: '#bbf2b1',
     googleEventColor: '#c3d6f7',
-    selectedCalendars: [] // 選択されたカレンダーID配列
+    selectedCalendars: [], // 選択されたカレンダーID配列
+    language: 'auto' // 言語設定（auto/en/ja）
 };
 
 /**
