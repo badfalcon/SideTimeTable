@@ -13,6 +13,7 @@ import {
     TIME_CONSTANTS
 } from '../lib/utils.js';
 import {createTimeOnDate} from '../lib/time-utils.js';
+import {getDemoEvents, getDemoLocalEvents, isDemoMode} from '../lib/demo-data.js';
 
 /**
  * GoogleEventManager - Googleイベント管理クラス
@@ -53,6 +54,12 @@ export class GoogleEventManager {
         if (!this.isGoogleIntegrated) {
             console.log('Google連携が無効です');
             return Promise.resolve();
+        }
+
+        // デモモードの場合はモックデータを使用
+        if (isDemoMode()) {
+            console.log('デモモードでモックデータを使用します');
+            return this._processDemoEvents();
         }
 
         // 進行中のリクエストがある場合はそれを返す（重複防止）
@@ -136,6 +143,36 @@ export class GoogleEventManager {
             });
 
         return this.currentFetchPromise;
+    }
+
+    /**
+     * デモイベントを処理して表示
+     * @private
+     */
+    _processDemoEvents() {
+        return new Promise((resolve) => {
+            // 以前の表示をクリア
+            this.googleEventsDiv.innerHTML = '';
+
+            // Googleイベントのみをレイアウトマネージャーから削除
+            const events = [...this.eventLayoutManager.events];
+            events.forEach(event => {
+                if (event && event.type === 'google') {
+                    this.eventLayoutManager.removeEvent(event.id);
+                }
+            });
+
+            // デモイベントを取得
+            const demoEvents = getDemoEvents();
+            console.log('デモイベント処理開始:', demoEvents.length + '件');
+            
+            this._processEvents(demoEvents);
+
+            // イベントレイアウトを計算して適用
+            this.eventLayoutManager.calculateLayout();
+            
+            resolve();
+        });
     }
 
     /**
@@ -450,6 +487,23 @@ export class LocalEventManager {
         this.currentTargetDate = targetDate || new Date();
         
         this.localEventsDiv.innerHTML = ''; // 以前の表示をクリア
+
+        // デモモードの場合はモックデータを使用
+        if (isDemoMode()) {
+            console.log('デモモードでローカルモックデータを使用します');
+            const demoEvents = getDemoLocalEvents();
+            console.log('デモローカルイベント取得:', demoEvents.length + '件');
+
+            demoEvents.forEach(event => {
+                try {
+                    const eventDiv = this._createEventDiv(event.title, event.startTime, event.endTime);
+                    this.localEventsDiv.appendChild(eventDiv);
+                } catch (error) {
+                    logError('デモイベント表示', error);
+                }
+            });
+            return;
+        }
 
         const loadFunction = targetDate ? 
             () => loadLocalEventsForDate(targetDate) : 

@@ -9,6 +9,7 @@ import { TimeTableManager, EventLayoutManager } from './time-manager.js';
 import { GoogleEventManager, LocalEventManager } from './event-handlers.js';
 import { generateTimeList, loadSettings, logError } from '../lib/utils.js';
 import { isToday } from '../lib/time-utils.js';
+import { isDemoMode, setDemoMode } from '../lib/demo-data.js';
 
 // リロードメッセージリスナー
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -40,6 +41,12 @@ class UIController {
      * 初期化
      */
     initialize() {
+        // URLパラメータでデモモードを確認
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('demo') === 'true') {
+            setDemoMode(true);
+        }
+
         // DOM要素の取得
         const parentDiv = document.getElementById('sideTimeTable');
         const baseDiv = document.getElementById('sideTimeTableBase');
@@ -129,8 +136,9 @@ class UIController {
                     document.documentElement.style.setProperty('--side-calendar-local-event-color', settings.localEventColor);
                     document.documentElement.style.setProperty('--side-calendar-google-event-color', settings.googleEventColor);
 
-                    // 各マネージャーに設定を適用
-                    this.googleEventManager.setGoogleIntegration(settings.googleIntegrated);
+                    // 各マネージャーに設定を適用（デモモードの場合は強制的にGoogle連携を有効）
+                    const googleIntegrated = isDemoMode() || settings.googleIntegrated;
+                    this.googleEventManager.setGoogleIntegration(googleIntegrated);
                     this.timeTableManager.applySettings(settings);
 
                     console.log('タイムテーブル作成開始');
@@ -144,8 +152,8 @@ class UIController {
                         console.log('ローカルイベント取得開始');
                         this.localEventManager.loadLocalEvents();
 
-                        // Googleイベントの取得
-                        if (settings.googleIntegrated) {
+                        // Googleイベントの取得（デモモードの場合も含む）
+                        if (googleIntegrated) {
                             console.log('Googleイベント取得開始');
                             this.googleEventManager.fetchEvents();
                         } else {
@@ -373,8 +381,9 @@ class UIController {
                 // ローカルイベントの取得
                 this.localEventManager.loadLocalEvents(this.currentDate);
                 
-                // Googleイベントの取得
-                if (settings.googleIntegrated) {
+                // Googleイベントの取得（デモモードの場合も含む）
+                const googleIntegrated = isDemoMode() || settings.googleIntegrated;
+                if (googleIntegrated) {
                     this.googleEventManager.fetchEvents(this.currentDate);
                 } else {
                     // Google連携がない場合は、ローカルイベントのみでレイアウト計算
