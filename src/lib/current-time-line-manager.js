@@ -6,6 +6,7 @@
  */
 
 import {calculateWorkHours} from './time-utils.js';
+import {isDemoMode} from './demo-data.js';
 
 /**
  * 現在時刻線を管理するクラス
@@ -153,6 +154,11 @@ export class CurrentTimeLineManager {
      * @returns {number} 位置（ピクセル）
      */
     _calculateTimeLinePosition(currentTime) {
+        // デモモードの場合は固定位置（737px）を返す
+        if (isDemoMode()) {
+            return 737;
+        }
+        
         // 24時間座標系での位置計算（0:00からの分数）
         return currentTime.getHours() * 60 + currentTime.getMinutes();
     }
