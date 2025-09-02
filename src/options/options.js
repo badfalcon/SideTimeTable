@@ -14,6 +14,7 @@ import {
     loadSelectedCalendars,
     saveSelectedCalendars,
 } from '../lib/utils.js';
+import { isDemoMode, setDemoMode } from '../lib/demo-data.js';
 
 /**
  * CalendarManager - カレンダー管理クラス
@@ -364,6 +365,8 @@ class SettingsManager {
             googleEventColorInput: document.getElementById('google-event-color'),
             saveButton: document.getElementById('saveButton'),
             resetButton: document.getElementById('resetButton'),
+            developerSettingsCard: document.getElementById('developer-settings-card'),
+            demoModeToggle: document.getElementById('demo-mode-toggle'),
             timeList: document.getElementById('time-list'),
             shortcutKeyInput: document.getElementById('shortcut-key'),
             configureShortcutsBtn: document.getElementById('configure-shortcuts-btn')
@@ -379,6 +382,7 @@ class SettingsManager {
     initialize() {
         this._setupEventListeners();
         this._generateTimeList();
+        this._checkDeveloperMode();
         this._loadSettings();
         this._loadCalendarData();
         this._loadCurrentShortcuts();
@@ -405,6 +409,24 @@ class SettingsManager {
         
         // ショートカット設定ボタン
         this.elements.configureShortcutsBtn.addEventListener('click', () => this._openShortcutSettings());
+        
+        // デモモードトグル
+        this.elements.demoModeToggle.addEventListener('change', () => this._handleDemoModeToggle());
+    }
+
+    /**
+     * 開発者モードの表示判定
+     * @private
+     */
+    _checkDeveloperMode() {
+        // Chrome Web Storeからインストールされていない場合（開発版）のみ開発者設定を表示
+        const manifest = chrome.runtime.getManifest();
+        const isFromStore = manifest.update_url !== undefined;
+        
+        if (!isFromStore) {
+            // 開発版の場合は開発者設定を表示
+            this.elements.developerSettingsCard.style.display = 'block';
+        }
     }
 
     /**
@@ -463,6 +485,9 @@ class SettingsManager {
         elements.workTimeColorInput.value = settings.workTimeColor;
         elements.localEventColorInput.value = settings.localEventColor;
         elements.googleEventColorInput.value = settings.googleEventColor;
+        
+        // デモモード設定
+        elements.demoModeToggle.checked = isDemoMode();
         
         // 休憩時間フィールドの有効/無効を切り替え
         this._toggleBreakTimeFields();
@@ -644,6 +669,9 @@ class SettingsManager {
                 googleIntegrated: this.settings.googleIntegrated
             };
             
+            // デモモードもリセット
+            setDemoMode(false);
+            
             // 設定を保存
             saveSettings(defaultSettings)
                 .then(() => {
@@ -693,6 +721,18 @@ class SettingsManager {
                 }
             });
         }
+    }
+
+    /**
+     * デモモードトグルの処理
+     * @private
+     */
+    _handleDemoModeToggle() {
+        const isEnabled = this.elements.demoModeToggle.checked;
+        setDemoMode(isEnabled);
+        
+        // サイドパネルをリロードして変更を反映
+        reloadSidePanel().catch(error => logError('サイドパネルリロード', error));
     }
 
     /**
