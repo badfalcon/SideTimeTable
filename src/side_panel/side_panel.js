@@ -404,14 +404,19 @@ class UIController {
      * @private
      */
     _setupPeriodicUpdates() {
+        let lastHourlyUpdate = -1; // 前回の毎時更新を記録
+        
         this.updateInterval = setInterval(() => {
             const currentTime = new Date();
             const currentMinutes = currentTime.getMinutes();
             const currentSeconds = currentTime.getSeconds();
+            const currentHour = currentTime.getHours();
 
-            if (currentMinutes === 0) {
-                // 毎時0分に予定を更新
-                this.googleEventManager.fetchEvents();
+            // 毎時0分に予定を更新（重複実行を防ぐため時刻チェックを追加）
+            if (currentMinutes === 0 && currentSeconds === 0 && lastHourlyUpdate !== currentHour) {
+                lastHourlyUpdate = currentHour;
+                // 現在表示中の日付でイベントを取得
+                this.googleEventManager.fetchEvents(this.currentDate);
             }
 
             if (currentSeconds === 0) {
