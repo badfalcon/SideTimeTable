@@ -30,7 +30,9 @@ class CalendarManager {
             refreshBtn: document.getElementById('refresh-calendars-btn'),
             loading: document.getElementById('calendar-loading-indicator'),
             list: document.getElementById('calendar-list'),
-            noMsg: document.getElementById('no-calendars-msg')
+            noMsg: document.getElementById('no-calendars-msg'),
+            searchInput: document.getElementById('calendar-search'),
+            clearSearchBtn: document.getElementById('clear-search-btn')
         };
         
         this._setupEventListeners();
@@ -39,6 +41,20 @@ class CalendarManager {
     _setupEventListeners() {
         if (this.elements.refreshBtn) {
             this.elements.refreshBtn.addEventListener('click', () => this.refreshCalendars());
+        }
+        
+        // Search functionality
+        if (this.elements.searchInput) {
+            this.elements.searchInput.addEventListener('input', (e) => this._handleSearch(e.target.value));
+            this.elements.searchInput.addEventListener('keyup', (e) => {
+                if (e.key === 'Escape') {
+                    this._clearSearch();
+                }
+            });
+        }
+        
+        if (this.elements.clearSearchBtn) {
+            this.elements.clearSearchBtn.addEventListener('click', () => this._clearSearch());
         }
         
         // イベント委譲でパフォーマンスを改善
@@ -132,8 +148,15 @@ class CalendarManager {
             return;
         }
         
+        // 検索フィルターを適用
+        const searchTerm = this.elements.searchInput ? this.elements.searchInput.value.toLowerCase().trim() : '';
+        const filteredCalendars = searchTerm 
+            ? this.allCalendars.filter(calendar => 
+                calendar.summary.toLowerCase().includes(searchTerm))
+            : this.allCalendars;
+        
         // カレンダーをソート（プライマリを最初に）
-        const sortedCalendars = [...this.allCalendars].sort((a, b) => {
+        const sortedCalendars = [...filteredCalendars].sort((a, b) => {
             // プライマリカレンダーを最初に表示
             if (a.primary && !b.primary) return -1;
             if (!a.primary && b.primary) return 1;
@@ -141,6 +164,11 @@ class CalendarManager {
             // その後は名前でアルファベット順（日本語対応）
             return a.summary.localeCompare(b.summary, 'ja');
         });
+        
+        if (sortedCalendars.length === 0 && searchTerm) {
+            this._showNoSearchResults();
+            return;
+        }
         
         this._hideEmptyState();
         this.elements.list.innerHTML = '';
@@ -150,6 +178,9 @@ class CalendarManager {
             const item = this._createCalendarItem(calendar, isSelected);
             this.elements.list.appendChild(item);
         });
+        
+        // Update clear search button visibility
+        this._updateSearchUI(searchTerm);
     }
     
     _createCalendarItem(calendar, isSelected) {
@@ -345,6 +376,32 @@ class CalendarManager {
                     errorDiv.remove();
                 }
             }, 5000);
+        }
+    }
+    
+    // Search functionality methods
+    _handleSearch(searchTerm) {
+        this.render();
+    }
+    
+    _clearSearch() {
+        if (this.elements.searchInput) {
+            this.elements.searchInput.value = '';
+            this.render();
+        }
+    }
+    
+    _updateSearchUI(searchTerm) {
+        if (this.elements.clearSearchBtn) {
+            this.elements.clearSearchBtn.style.display = searchTerm ? 'block' : 'none';
+        }
+    }
+    
+    _showNoSearchResults() {
+        if (this.elements.list) this.elements.list.style.display = 'none';
+        if (this.elements.noMsg) {
+            this.elements.noMsg.style.display = 'block';
+            this.elements.noMsg.textContent = chrome.i18n.getMessage('noSearchResults') || '検索結果が見つかりませんでした。';
         }
     }
 }
