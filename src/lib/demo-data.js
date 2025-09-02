@@ -10,14 +10,13 @@
  */
 export function getDemoEvents() {
     const today = new Date();
-    
     // 今日の日付でイベントを生成
     const events = [
         {
             id: 'demo-1',
-            summary: '朝の会議',
-            description: 'チームの週次ミーティング\n今週の進捗を共有します',
-            location: '会議室A',
+            summary: chrome.i18n.getMessage('demo_event_summary_morning_meeting'),
+            description: chrome.i18n.getMessage('demo_event_description_morning_meeting'),
+            location: chrome.i18n.getMessage('demo_event_location_meeting_room_a'),
             start: {
                 dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 9, 0).toISOString()
             },
@@ -26,7 +25,7 @@ export function getDemoEvents() {
             },
             eventType: 'default',
             calendarId: 'primary',
-            calendarName: 'メインカレンダー',
+            calendarName: chrome.i18n.getMessage('demo_event_calendar_main'),
             calendarBackgroundColor: '#3F51B5',
             calendarForegroundColor: '#FFFFFF',
             hangoutLink: 'https://meet.google.com/demo-meeting-1',
@@ -34,8 +33,8 @@ export function getDemoEvents() {
         },
         {
             id: 'demo-2',
-            summary: 'プロジェクト作業',
-            description: 'SideTimeTableの機能開発\n・UI改善\n・バグ修正\n・テスト実行',
+            summary: chrome.i18n.getMessage('demo_event_summary_project_work'),
+            description: chrome.i18n.getMessage('demo_event_description_project_work'),
             location: '',
             start: {
                 dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 10, 30).toISOString()
@@ -45,16 +44,16 @@ export function getDemoEvents() {
             },
             eventType: 'default',
             calendarId: 'work@example.com',
-            calendarName: '仕事',
+            calendarName: chrome.i18n.getMessage('demo_event_calendar_work'),
             calendarBackgroundColor: '#4CAF50',
             calendarForegroundColor: '#FFFFFF',
             htmlLink: 'https://calendar.google.com/calendar/event?eid=demo2'
         },
         {
             id: 'demo-3',
-            summary: 'ランチミーティング',
-            description: 'クライアントとの商談\n新しいプロジェクトについて',
-            location: 'レストラン XYZ',
+            summary: chrome.i18n.getMessage('demo_event_summary_lunch_meeting'),
+            description: chrome.i18n.getMessage('demo_event_description_lunch_meeting'),
+            location: chrome.i18n.getMessage('demo_event_location_restaurant_xyz'),
             start: {
                 dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 12, 30).toISOString()
             },
@@ -63,15 +62,15 @@ export function getDemoEvents() {
             },
             eventType: 'default',
             calendarId: 'business@example.com',
-            calendarName: 'ビジネス',
+            calendarName: chrome.i18n.getMessage('demo_event_calendar_business'),
             calendarBackgroundColor: '#FF9800',
             calendarForegroundColor: '#FFFFFF',
             htmlLink: 'https://calendar.google.com/calendar/event?eid=demo3'
         },
         {
             id: 'demo-4',
-            summary: '短時間通話',
-            description: 'クイックチェックイン',
+            summary: chrome.i18n.getMessage('demo_event_summary_short_call'),
+            description: chrome.i18n.getMessage('demo_event_description_short_call'),
             location: '',
             start: {
                 dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 14, 0).toISOString()
@@ -81,7 +80,7 @@ export function getDemoEvents() {
             },
             eventType: 'default',
             calendarId: 'primary',
-            calendarName: 'メインカレンダー',
+            calendarName: chrome.i18n.getMessage('demo_event_calendar_main'),
             calendarBackgroundColor: '#3F51B5',
             calendarForegroundColor: '#FFFFFF',
             hangoutLink: 'https://meet.google.com/demo-meeting-2',
@@ -89,9 +88,9 @@ export function getDemoEvents() {
         },
         {
             id: 'demo-5',
-            summary: '設計レビュー',
-            description: 'システム設計の最終確認\n・アーキテクチャ図の確認\n・パフォーマンス要件の検討',
-            location: 'オンライン',
+            summary: chrome.i18n.getMessage('demo_event_summary_design_review'),
+            description: chrome.i18n.getMessage('demo_event_description_design_review'),
+            location: chrome.i18n.getMessage('demo_event_location_online'),
             start: {
                 dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 15, 0).toISOString()
             },
@@ -100,7 +99,7 @@ export function getDemoEvents() {
             },
             eventType: 'default',
             calendarId: 'work@example.com',
-            calendarName: '仕事',
+            calendarName: chrome.i18n.getMessage('demo_event_calendar_work'),
             calendarBackgroundColor: '#4CAF50',
             calendarForegroundColor: '#FFFFFF',
             hangoutLink: 'https://meet.google.com/demo-meeting-3',
@@ -108,9 +107,9 @@ export function getDemoEvents() {
         },
         {
             id: 'demo-6',
-            summary: '重複イベント A',
-            description: '4つ同時重複の1つ目',
-            location: '会議室B',
+            summary: chrome.i18n.getMessage('demo_event_summary_overlap_a'),
+            description: chrome.i18n.getMessage('demo_event_description_overlap_a'),
+            location: chrome.i18n.getMessage('demo_event_location_meeting_room_b'),
             start: {
                 dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 14, 30).toISOString()
             },
@@ -119,16 +118,16 @@ export function getDemoEvents() {
             },
             eventType: 'default',
             calendarId: 'test@example.com',
-            calendarName: 'テスト',
+            calendarName: chrome.i18n.getMessage('demo_event_calendar_test'),
             calendarBackgroundColor: '#E91E63',
             calendarForegroundColor: '#FFFFFF',
             htmlLink: 'https://calendar.google.com/calendar/event?eid=demo6'
         },
         {
             id: 'demo-7',
-            summary: '重複イベント B',
-            description: '4つ同時重複の2つ目',
-            location: 'オンライン',
+            summary: chrome.i18n.getMessage('demo_event_summary_overlap_b'),
+            description: chrome.i18n.getMessage('demo_event_description_overlap_b'),
+            location: chrome.i18n.getMessage('demo_event_location_online'),
             start: {
                 dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 14, 45).toISOString()
             },
@@ -137,7 +136,7 @@ export function getDemoEvents() {
             },
             eventType: 'default',
             calendarId: 'personal@example.com',
-            calendarName: 'プライベート',
+            calendarName: chrome.i18n.getMessage('demo_event_calendar_private'),
             calendarBackgroundColor: '#9C27B0',
             calendarForegroundColor: '#FFFFFF',
             hangoutLink: 'https://meet.google.com/demo-meeting-4',
@@ -145,8 +144,8 @@ export function getDemoEvents() {
         },
         {
             id: 'demo-9',
-            summary: '重複イベント C',
-            description: '4つ同時重複の3つ目',
+            summary: chrome.i18n.getMessage('demo_event_summary_overlap_c'),
+            description: chrome.i18n.getMessage('demo_event_description_overlap_c'),
             location: '',
             start: {
                 dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 15, 0).toISOString()
@@ -156,16 +155,16 @@ export function getDemoEvents() {
             },
             eventType: 'default',
             calendarId: 'overlap1@example.com',
-            calendarName: '重複テスト1',
+            calendarName: chrome.i18n.getMessage('demo_event_calendar_overlap1'),
             calendarBackgroundColor: '#FF5722',
             calendarForegroundColor: '#FFFFFF',
             htmlLink: 'https://calendar.google.com/calendar/event?eid=demo9'
         },
         {
             id: 'demo-10',
-            summary: '重複イベント D',
-            description: '4つ同時重複の4つ目（最も長い）',
-            location: 'カフェ',
+            summary: chrome.i18n.getMessage('demo_event_summary_overlap_d'),
+            description: chrome.i18n.getMessage('demo_event_description_overlap_d'),
+            location: chrome.i18n.getMessage('demo_event_location_cafe'),
             start: {
                 dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 14, 15).toISOString()
             },
@@ -174,16 +173,16 @@ export function getDemoEvents() {
             },
             eventType: 'default',
             calendarId: 'overlap2@example.com',
-            calendarName: '重複テスト2',
+            calendarName: chrome.i18n.getMessage('demo_event_calendar_overlap2'),
             calendarBackgroundColor: '#607D8B',
             calendarForegroundColor: '#FFFFFF',
             htmlLink: 'https://calendar.google.com/calendar/event?eid=demo10'
         },
         {
             id: 'demo-11',
-            summary: '午前重複 A',
-            description: '午前中の3つ重複テスト - 1つ目',
-            location: 'オンライン',
+            summary: chrome.i18n.getMessage('demo_event_summary_morning_overlap_a'),
+            description: chrome.i18n.getMessage('demo_event_description_morning_overlap_a'),
+            location: chrome.i18n.getMessage('demo_event_location_online'),
             start: {
                 dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 10, 45).toISOString()
             },
@@ -192,7 +191,7 @@ export function getDemoEvents() {
             },
             eventType: 'default',
             calendarId: 'morning1@example.com',
-            calendarName: '午前テスト1',
+            calendarName: chrome.i18n.getMessage('demo_event_calendar_morning1'),
             calendarBackgroundColor: '#00BCD4',
             calendarForegroundColor: '#FFFFFF',
             hangoutLink: 'https://meet.google.com/demo-meeting-5',
@@ -200,9 +199,9 @@ export function getDemoEvents() {
         },
         {
             id: 'demo-12',
-            summary: '午前重複 B',
-            description: '午前中の3つ重複テスト - 2つ目',
-            location: '会議室C',
+            summary: chrome.i18n.getMessage('demo_event_summary_morning_overlap_b'),
+            description: chrome.i18n.getMessage('demo_event_description_morning_overlap_b'),
+            location: chrome.i18n.getMessage('demo_event_location_meeting_room_c'),
             start: {
                 dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 11, 0).toISOString()
             },
@@ -211,15 +210,15 @@ export function getDemoEvents() {
             },
             eventType: 'default',
             calendarId: 'morning2@example.com',
-            calendarName: '午前テスト2',
+            calendarName: chrome.i18n.getMessage('demo_event_calendar_morning2'),
             calendarBackgroundColor: '#8BC34A',
             calendarForegroundColor: '#FFFFFF',
             htmlLink: 'https://calendar.google.com/calendar/event?eid=demo12'
         },
         {
             id: 'demo-13',
-            summary: '午前重複 C',
-            description: '午前中の3つ重複テスト - 3つ目（短時間）',
+            summary: chrome.i18n.getMessage('demo_event_summary_morning_overlap_c'),
+            description: chrome.i18n.getMessage('demo_event_description_morning_overlap_c'),
             location: '',
             start: {
                 dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 11, 15).toISOString()
@@ -229,15 +228,15 @@ export function getDemoEvents() {
             },
             eventType: 'default',
             calendarId: 'morning3@example.com',
-            calendarName: '午前テスト3',
+            calendarName: chrome.i18n.getMessage('demo_event_calendar_morning3'),
             calendarBackgroundColor: '#FFC107',
             calendarForegroundColor: '#000000',
             htmlLink: 'https://calendar.google.com/calendar/event?eid=demo13'
         },
         {
             id: 'demo-8',
-            summary: '夕方の振り返り',
-            description: '今日の作業を振り返り、明日の計画を立てる',
+            summary: chrome.i18n.getMessage('demo_event_summary_evening_review'),
+            description: chrome.i18n.getMessage('demo_event_description_evening_review'),
             location: '',
             start: {
                 dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 18, 30).toISOString()
@@ -247,13 +246,12 @@ export function getDemoEvents() {
             },
             eventType: 'default',
             calendarId: 'primary',
-            calendarName: 'メインカレンダー',
+            calendarName: chrome.i18n.getMessage('demo_event_calendar_main'),
             calendarBackgroundColor: '#3F51B5',
             calendarForegroundColor: '#FFFFFF',
             htmlLink: 'https://calendar.google.com/calendar/event?eid=demo8'
         }
     ];
-
     return events;
 }
 
@@ -264,22 +262,22 @@ export function getDemoEvents() {
 export function getDemoLocalEvents() {
     return [
         {
-            title: 'モーニングルーチン',
+            title: chrome.i18n.getMessage('demo_local_event_title_morning_routine'),
             startTime: '08:00',
             endTime: '08:30'
         },
         {
-            title: '集中作業時間',
+            title: chrome.i18n.getMessage('demo_local_event_title_focus_time'),
             startTime: '13:45',
             endTime: '14:45'
         },
         {
-            title: '運動・ストレッチ',
+            title: chrome.i18n.getMessage('demo_local_event_title_exercise'),
             startTime: '16:45',
             endTime: '17:15'
         },
         {
-            title: '読書タイム',
+            title: chrome.i18n.getMessage('demo_local_event_title_reading_time'),
             startTime: '20:00',
             endTime: '21:00'
         }

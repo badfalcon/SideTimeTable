@@ -190,5 +190,189 @@
   "toggleSidePanelShortcut": {
     "message": "Open side panel",
     "description": "Description for open side panel shortcut command"
+  },
+  "demo_event_summary_morning_meeting": {
+    "message": "Morning Meeting",
+    "description": "Demo event: morning meeting title"
+  },
+  "demo_event_description_morning_meeting": {
+    "message": "Team morning meeting.",
+    "description": "Demo event: morning meeting description"
+  },
+  "demo_event_location_meeting_room_a": {
+    "message": "Meeting Room A",
+    "description": "Demo event: Meeting Room A"
+  },
+  "demo_event_calendar_main": {
+    "message": "Main Calendar",
+    "description": "Demo event: main calendar name"
+  },
+  "demo_event_summary_project_work": {
+    "message": "Project Work",
+    "description": "Demo event: project work title"
+  },
+  "demo_event_description_project_work": {
+    "message": "Project progress work.",
+    "description": "Demo event: project work description"
+  },
+  "demo_event_calendar_work": {
+    "message": "Work Calendar",
+    "description": "Demo event: work calendar name"
+  },
+  "demo_event_summary_lunch_meeting": {
+    "message": "Lunch Meeting",
+    "description": "Demo event: lunch meeting title"
+  },
+  "demo_event_description_lunch_meeting": {
+    "message": "Meeting at restaurant.",
+    "description": "Demo event: lunch meeting description"
+  },
+  "demo_event_location_restaurant_xyz": {
+    "message": "Restaurant XYZ",
+    "description": "Demo event: Restaurant XYZ"
+  },
+  "demo_event_calendar_business": {
+    "message": "Business Calendar",
+    "description": "Demo event: business calendar name"
+  },
+  "demo_event_summary_short_call": {
+    "message": "Short Call",
+    "description": "Demo event: short call title"
+  },
+  "demo_event_description_short_call": {
+    "message": "15-minute call.",
+    "description": "Demo event: short call description"
+  },
+  "demo_event_summary_design_review": {
+    "message": "Design Review",
+    "description": "Demo event: design review title"
+  },
+  "demo_event_description_design_review": {
+    "message": "Online design review.",
+    "description": "Demo event: design review description"
+  },
+  "demo_event_location_online": {
+    "message": "Online",
+    "description": "Demo event: online"
+  },
+  "demo_event_summary_overlap_a": {
+    "message": "Overlap Event A",
+    "description": "Demo event: overlap event A title"
+  },
+  "demo_event_description_overlap_a": {
+    "message": "Meeting in Room B.",
+    "description": "Demo event: overlap event A description"
+  },
+  "demo_event_location_meeting_room_b": {
+    "message": "Meeting Room B",
+    "description": "Demo event: Meeting Room B"
+  },
+  "demo_event_calendar_test": {
+    "message": "Test Calendar",
+    "description": "Demo event: test calendar name"
+  },
+  "demo_event_summary_overlap_b": {
+    "message": "Overlap Event B",
+    "description": "Demo event: overlap event B title"
+  },
+  "demo_event_description_overlap_b": {
+    "message": "Online meeting.",
+    "description": "Demo event: overlap event B description"
+  },
+  "demo_event_calendar_private": {
+    "message": "Private Calendar",
+    "description": "Demo event: private calendar name"
+  },
+  "demo_event_summary_overlap_c": {
+    "message": "Overlap Event C",
+    "description": "Demo event: overlap event C title"
+  },
+  "demo_event_description_overlap_c": {
+    "message": "Description for overlap event C.",
+    "description": "Demo event: overlap event C description"
+  },
+  "demo_event_calendar_overlap1": {
+    "message": "Overlap Calendar 1",
+    "description": "Demo event: overlap calendar 1 name"
+  },
+  "demo_event_summary_overlap_d": {
+    "message": "Overlap Event D",
+    "description": "Demo event: overlap event D title"
+  },
+  "demo_event_description_overlap_d": {
+    "message": "Meeting at cafe.",
+    "description": "Demo event: overlap event D description"
+  },
+  "demo_event_location_cafe": {
+    "message": "Cafe",
+    "description": "Demo event: cafe"
+  },
+  "demo_event_calendar_overlap2": {
+    "message": "Overlap Calendar 2",
+    "description": "Demo event: overlap calendar 2 name"
+  },
+  "demo_event_summary_morning_overlap_a": {
+    "message": "Morning Overlap A",
+    "description": "Demo event: morning overlap A title"
+  },
+  "demo_event_description_morning_overlap_a": {
+    "message": "Online morning meeting.",
+    "description": "Demo event: morning overlap A description"
+  },
+  "demo_event_calendar_morning1": {
+    "message": "Morning Calendar 1",
+    "description": "Demo event: morning calendar 1 name"
+  },
+  "demo_event_summary_morning_overlap_b": {
+    "message": "Morning Overlap B",
+    "description": "Demo event: morning overlap B title"
+  },
+  "demo_event_description_morning_overlap_b": {
+    "message": "Morning meeting in Room C.",
+    "description": "Demo event: morning overlap B description"
+  },
+  "demo_event_location_meeting_room_c": {
+    "message": "Meeting Room C",
+    "description": "Demo event: Meeting Room C"
+  },
+  "demo_event_calendar_morning2": {
+    "message": "Morning Calendar 2",
+    "description": "Demo event: morning calendar 2 name"
+  },
+  "demo_event_summary_morning_overlap_c": {
+    "message": "Morning Overlap C",
+    "description": "Demo event: morning overlap C title"
+  },
+  "demo_event_description_morning_overlap_c": {
+    "message": "Description for morning overlap C.",
+    "description": "Demo event: morning overlap C description"
+  },
+  "demo_event_calendar_morning3": {
+    "message": "Morning Calendar 3",
+    "description": "Demo event: morning calendar 3 name"
+  },
+  "demo_event_summary_evening_review": {
+    "message": "Evening Review",
+    "description": "Demo event: evening review title"
+  },
+  "demo_event_description_evening_review": {
+    "message": "Evening review session.",
+    "description": "Demo event: evening review description"
+  },
+  "demo_local_event_title_morning_routine": {
+    "message": "Morning Routine",
+    "description": "Demo local event: morning routine"
+  },
+  "demo_local_event_title_focus_time": {
+    "message": "Focus Time",
+    "description": "Demo local event: focus time"
+  },
+  "demo_local_event_title_exercise": {
+    "message": "Exercise Time",
+    "description": "Demo local event: exercise time"
+  },
+  "demo_local_event_title_reading_time": {
+    "message": "Reading Time",
+    "description": "Demo local event: reading time"
   }
 }
