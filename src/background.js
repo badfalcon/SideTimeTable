@@ -1,9 +1,11 @@
 /**
  * SideTimeTable - バックグラウンドスクリプト
- * 
+ *
  * このファイルはChrome拡張機能のバックグラウンドで実行され、
  * サイドパネルの設定やGoogleカレンダーとの連携を管理します。
  */
+
+import { StorageHelper } from './lib/storage-helper.js';
 
 // サイドパネルの設定 - アクションツールバーアイコンをクリックして開く
 chrome.sidePanel
@@ -96,13 +98,13 @@ function getCalendarList() {
                     const primaryCalendar = calendars.find(cal => cal.primary);
                     if (primaryCalendar) {
                         const primaryCalendarIds = [primaryCalendar.id];
-                        chrome.storage.sync.set({ selectedCalendars: primaryCalendarIds }, () => {
-                            if (chrome.runtime.lastError) {
-                                console.error("プライマリカレンダー選択設定エラー:", chrome.runtime.lastError);
-                            } else {
+                        StorageHelper.set({ selectedCalendars: primaryCalendarIds })
+                            .then(() => {
                                 console.log("プライマリカレンダーを自動選択しました:", primaryCalendar.summary);
-                            }
-                        });
+                            })
+                            .catch((error) => {
+                                console.error("プライマリカレンダー選択設定エラー:", error);
+                            });
                     }
                     
                     resolve(calendars);
@@ -129,14 +131,9 @@ function getCalendarEvents(targetDate = null) {
     return new Promise((resolve, reject) => {
         try {
             // 選択されたカレンダー一覧を取得
-            chrome.storage.sync.get({ selectedCalendars: [] }, (storageData) => {
-                if (chrome.runtime.lastError) {
-                    console.error("選択カレンダー取得エラー:", chrome.runtime.lastError);
-                    reject(chrome.runtime.lastError);
-                    return;
-                }
-
-                console.log("認証トークンをリクエスト中");
+            StorageHelper.get(['selectedCalendars'], { selectedCalendars: [] })
+                .then((storageData) => {
+                    console.log("認証トークンをリクエスト中");
                 chrome.identity.getAuthToken({interactive: true}, (token) => {
                     if (chrome.runtime.lastError || !token) {
                         const error = chrome.runtime.lastError || new Error("認証トークンが取得できませんでした");
@@ -306,7 +303,11 @@ function getCalendarEvents(targetDate = null) {
                     reject(error);
                 });
                 });
-            });
+                })
+                .catch((error) => {
+                    console.error("選択カレンダー取得エラー:", error);
+                    reject(error);
+                });
         } catch (error) {
             console.error("カレンダーイベント取得例外:", error);
             reject(error);

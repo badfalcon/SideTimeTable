@@ -4,16 +4,17 @@
  * このファイルはChrome拡張機能のオプションページを管理するためのJavaScriptコードです。
  */
 
-import { 
-    DEFAULT_SETTINGS, 
-    generateTimeList, 
-    loadSettings, 
-    saveSettings, 
-    reloadSidePanel, 
+import {
+    DEFAULT_SETTINGS,
+    generateTimeList,
+    loadSettings,
+    saveSettings,
+    reloadSidePanel,
     logError,
     loadSelectedCalendars,
     saveSelectedCalendars,
 } from '../lib/utils.js';
+import { StorageHelper } from '../lib/storage-helper.js';
 import { isDemoMode, setDemoMode } from '../lib/demo-data.js';
 
 /**
@@ -876,9 +877,9 @@ class SettingsManager {
      */
     async _getCurrentLanguageCode() {
         try {
-            const userLanguageSetting = await (window.getCurrentLanguageSetting ? 
-                window.getCurrentLanguageSetting() : 
-                chrome.storage.sync.get(['language']).then(result => result.language || 'auto'));
+            const userLanguageSetting = window.getCurrentLanguageSetting ?
+                await window.getCurrentLanguageSetting() :
+                (await StorageHelper.get(['language'], { language: 'auto' })).language;
             
             return window.resolveLanguageCode ? 
                 window.resolveLanguageCode(userLanguageSetting) :

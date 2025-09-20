@@ -5,7 +5,7 @@
  */
 
 import {TIME_CONSTANTS} from '../lib/utils.js';
-import {calculateBreakHours, calculateWorkHours} from '../lib/time-utils.js';
+import {calculateBreakHours, calculateWorkHours, isSameDay} from '../lib/time-utils.js';
 import {CurrentTimeLineManager} from '../lib/current-time-line-manager.js';
 
 // EventLayoutManager関連の定数
@@ -940,7 +940,7 @@ export class TimeTableManager {
      */
     adjustScrollPosition(targetDate) {
         const currentTime = new Date();
-        const isToday = this._isSameDay(currentTime, targetDate);
+        const isToday = isSameDay(currentTime, targetDate);
         
         let scrollTop;
         
@@ -975,21 +975,6 @@ export class TimeTableManager {
         console.log(`parentDivの高さ:`, this.parentDiv.clientHeight, this.parentDiv.scrollHeight);
     }
 
-    /**
-     * 2つの日付が同じ日かどうかを判定
-     * 
-     * @private
-     * @param {Date} date1 - 日付1
-     * @param {Date} date2 - 日付2
-     * @returns {boolean} 同じ日の場合true
-     */
-    _isSameDay(date1, date2) {
-        const d1 = new Date(date1);
-        const d2 = new Date(date2);
-        d1.setHours(0, 0, 0, 0);
-        d2.setHours(0, 0, 0, 0);
-        return d1.getTime() === d2.getTime();
-    }
 
     /**
      * 時間ラベルと補助線を動的に生成
