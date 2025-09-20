@@ -1,8 +1,10 @@
 /**
  * SideTimeTable - ユーティリティ関数
- * 
+ *
  * このファイルは拡張機能全体で使用される共通の関数や定数を提供します。
  */
+
+import { StorageHelper } from './storage-helper.js';
 
 // 時間関連の定数
 export const TIME_CONSTANTS = {
@@ -74,19 +76,7 @@ export function getFormattedDateFromDate(date) {
  * @returns {Promise} 保存処理のPromise
  */
 export function saveSettings(settings) {
-    return new Promise((resolve, reject) => {
-        try {
-            chrome.storage.sync.set(settings, () => {
-                if (chrome.runtime.lastError) {
-                    reject(chrome.runtime.lastError);
-                    return;
-                }
-                resolve();
-            });
-        } catch (error) {
-            reject(error);
-        }
-    });
+    return StorageHelper.set(settings);
 }
 
 /**
@@ -95,19 +85,7 @@ export function saveSettings(settings) {
  * @returns {Promise<Object>} 設定オブジェクトを返すPromise
  */
 export function loadSettings(defaultSettings = DEFAULT_SETTINGS) {
-    return new Promise((resolve, reject) => {
-        try {
-            chrome.storage.sync.get(defaultSettings, (items) => {
-                if (chrome.runtime.lastError) {
-                    reject(chrome.runtime.lastError);
-                    return;
-                }
-                resolve(items);
-            });
-        } catch (error) {
-            reject(error);
-        }
-    });
+    return StorageHelper.get(defaultSettings, defaultSettings);
 }
 
 /**
@@ -123,24 +101,11 @@ export function loadLocalEvents() {
  * @param {Date} targetDate - 対象の日付
  * @returns {Promise<Array>} イベントの配列を返すPromise
  */
-export function loadLocalEventsForDate(targetDate) {
-    return new Promise((resolve, reject) => {
-        try {
-            const targetDateStr = getFormattedDateFromDate(targetDate);
-            const storageKey = `localEvents_${targetDateStr}`;
-            
-            chrome.storage.sync.get({[storageKey]: []}, (data) => {
-                if (chrome.runtime.lastError) {
-                    reject(chrome.runtime.lastError);
-                    return;
-                }
-                
-                resolve(data[storageKey] || []);
-            });
-        } catch (error) {
-            reject(error);
-        }
-    });
+export async function loadLocalEventsForDate(targetDate) {
+    const targetDateStr = getFormattedDateFromDate(targetDate);
+    const storageKey = `localEvents_${targetDateStr}`;
+    const result = await StorageHelper.get([storageKey], { [storageKey]: [] });
+    return result[storageKey] || [];
 }
 
 /**
@@ -159,24 +124,9 @@ export function saveLocalEvents(events) {
  * @returns {Promise} 保存処理のPromise
  */
 export function saveLocalEventsForDate(events, targetDate) {
-    return new Promise((resolve, reject) => {
-        try {
-            const targetDateStr = getFormattedDateFromDate(targetDate);
-            const storageKey = `localEvents_${targetDateStr}`;
-            
-            chrome.storage.sync.set({
-                [storageKey]: events
-            }, () => {
-                if (chrome.runtime.lastError) {
-                    reject(chrome.runtime.lastError);
-                    return;
-                }
-                resolve();
-            });
-        } catch (error) {
-            reject(error);
-        }
-    });
+    const targetDateStr = getFormattedDateFromDate(targetDate);
+    const storageKey = `localEvents_${targetDateStr}`;
+    return StorageHelper.set({ [storageKey]: events });
 }
 
 /**
@@ -247,39 +197,16 @@ export function showAlertModal(message, alertModal, alertMessage, closeButton) {
  * @returns {Promise} 保存処理のPromise
  */
 export function saveSelectedCalendars(selectedCalendars) {
-    return new Promise((resolve, reject) => {
-        try {
-            chrome.storage.sync.set({ selectedCalendars }, () => {
-                if (chrome.runtime.lastError) {
-                    reject(chrome.runtime.lastError);
-                    return;
-                }
-                resolve();
-            });
-        } catch (error) {
-            reject(error);
-        }
-    });
+    return StorageHelper.set({ selectedCalendars });
 }
 
 /**
  * 選択されたカレンダーを読み込む
  * @returns {Promise<Array<string>>} 選択されたカレンダーIDの配列を返すPromise
  */
-export function loadSelectedCalendars() {
-    return new Promise((resolve, reject) => {
-        try {
-            chrome.storage.sync.get({ selectedCalendars: [] }, (data) => {
-                if (chrome.runtime.lastError) {
-                    reject(chrome.runtime.lastError);
-                    return;
-                }
-                resolve(data.selectedCalendars || []);
-            });
-        } catch (error) {
-            reject(error);
-        }
-    });
+export async function loadSelectedCalendars() {
+    const result = await StorageHelper.get(['selectedCalendars'], { selectedCalendars: [] });
+    return result.selectedCalendars || [];
 }
 
 

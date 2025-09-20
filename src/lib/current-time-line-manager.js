@@ -5,7 +5,7 @@
  * 責任を明確に分離することで、テストしやすく保守しやすい設計になっています。
  */
 
-import {calculateWorkHours} from './time-utils.js';
+import {calculateWorkHours, isSameDay} from './time-utils.js';
 import {isDemoMode} from './demo-data.js';
 
 /**
@@ -104,7 +104,7 @@ export class CurrentTimeLineManager {
     _shouldShowTimeLine(currentTime, targetDate) {
         try {
             // 24時間表示なので、今日の場合は常に表示
-            return this._isSameDay(currentTime, targetDate);
+            return isSameDay(currentTime, targetDate);
         } catch (error) {
             console.warn('現在時刻線の表示判定でエラーが発生しました:', error);
             return false;
@@ -163,19 +163,4 @@ export class CurrentTimeLineManager {
         return currentTime.getHours() * 60 + currentTime.getMinutes();
     }
 
-    /**
-     * 2つの日付が同じ日かどうかを判定
-     * 
-     * @private
-     * @param {Date} date1 - 日付1
-     * @param {Date} date2 - 日付2
-     * @returns {boolean} 同じ日の場合true
-     */
-    _isSameDay(date1, date2) {
-        const d1 = new Date(date1);
-        const d2 = new Date(date2);
-        d1.setHours(0, 0, 0, 0);
-        d2.setHours(0, 0, 0, 0);
-        return d1.getTime() === d2.getTime();
-    }
 }
