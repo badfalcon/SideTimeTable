@@ -378,7 +378,50 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                                     sendResponse({ error: detail, errorType: (error && error.name) || undefined });
                                 });
             return true; // 非同期応答を示す
-            
+
+        case "authenticateGoogle":
+            // Google認証を実行
+            chrome.identity.getAuthToken({interactive: true}, (token) => {
+                if (chrome.runtime.lastError || !token) {
+                    const error = chrome.runtime.lastError || new Error("認証に失敗しました");
+                    console.error("Google認証エラー:", error);
+                    sendResponse({ success: false, error: error.message });
+                    return;
+                }
+
+                console.log("Google認証成功");
+                sendResponse({ success: true, token: token });
+            });
+            return true; // 非同期応答を示す
+
+        case "disconnectGoogle":
+            // Googleアカウントとの連携を解除
+            chrome.identity.getAuthToken({interactive: false}, (token) => {
+                if (chrome.runtime.lastError || !token) {
+                    // トークンがない場合は既に切断済み
+                    console.log("認証トークンなし（既に切断済み）");
+                    sendResponse({ success: true, alreadyDisconnected: true });
+                    return;
+                }
+
+                // キャッシュされたトークンを削除
+                chrome.identity.removeCachedAuthToken({ token: token }, () => {
+                    if (chrome.runtime.lastError) {
+                        console.error("トークン削除エラー:", chrome.runtime.lastError);
+                        sendResponse({ success: false, error: chrome.runtime.lastError.message });
+                        return;
+                    }
+
+                    console.log("Google認証トークンを削除しました");
+                    sendResponse({
+                        success: true,
+                        requiresManualRevoke: true,
+                        revokeUrl: 'https://myaccount.google.com/permissions'
+                    });
+                });
+            });
+            return true; // 非同期応答を示す
+
         case "reloadSideTimeTable":
             // サイドパネルのリロードリクエストは単に応答を返す
             sendResponse({success: true});

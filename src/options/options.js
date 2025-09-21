@@ -1,7 +1,7 @@
 /**
- * SideTimeTable - オプションページ管理
- * 
- * このファイルはChrome拡張機能のオプションページを管理するためのJavaScriptコードです。
+ * SideTimeTable - オプションページ管理（コンポーネントベース）
+ *
+ * 新しいコンポーネントベースアーキテクチャを使用したオプションページ
  */
 
 import {
@@ -10,17 +10,357 @@ import {
     loadSettings,
     saveSettings,
     reloadSidePanel,
-    logError,
-    loadSelectedCalendars,
-    saveSelectedCalendars,
+    logError
 } from '../lib/utils.js';
 import { StorageHelper } from '../lib/storage-helper.js';
 import { isDemoMode, setDemoMode } from '../lib/demo-data.js';
+import {
+    ComponentManager,
+    GoogleIntegrationCard,
+    CalendarManagementCard,
+    TimeSettingsCard,
+    ColorSettingsCard,
+    LanguageSettingsCard,
+    ShortcutSettingsCard,
+    ControlButtonsComponent
+} from './components/index.js';
 
 /**
- * CalendarManager - カレンダー管理クラス
+ * OptionsPageManager - オプションページ全体管理クラス
  */
-class CalendarManager {
+class OptionsPageManager {
+    constructor() {
+        this.componentManager = new ComponentManager();
+        this.googleIntegrationCard = null;
+        this.calendarManagementCard = null;
+        this.timeSettingsCard = null;
+        this.colorSettingsCard = null;
+        this.languageSettingsCard = null;
+        this.shortcutSettingsCard = null;
+        this.controlButtons = null;
+    }
+
+    async initialize() {
+        const container = document.querySelector('.container');
+        this.componentManager.setContainer(container);
+
+        // Google連携カードを作成
+        this.googleIntegrationCard = new GoogleIntegrationCard(
+            this.handleGoogleIntegrationChange.bind(this)
+        );
+        this.componentManager.register('googleIntegration', this.googleIntegrationCard);
+
+        // カレンダー管理カードを作成
+        this.calendarManagementCard = new CalendarManagementCard();
+        this.componentManager.register('calendarManagement', this.calendarManagementCard);
+
+        // 時間設定カードを作成
+        this.timeSettingsCard = new TimeSettingsCard(this.handleTimeSettingsChange.bind(this));
+        this.componentManager.register('timeSettings', this.timeSettingsCard);
+
+        // 色設定カードを作成
+        this.colorSettingsCard = new ColorSettingsCard(this.handleColorSettingsChange.bind(this));
+        this.componentManager.register('colorSettings', this.colorSettingsCard);
+
+        // 言語設定カードを作成
+        this.languageSettingsCard = new LanguageSettingsCard(this.handleLanguageSettingsChange.bind(this));
+        this.componentManager.register('languageSettings', this.languageSettingsCard);
+
+        // ショートカット設定カードを作成
+        this.shortcutSettingsCard = new ShortcutSettingsCard();
+        this.componentManager.register('shortcutSettings', this.shortcutSettingsCard);
+
+        // コントロールボタンを作成
+        this.controlButtons = new ControlButtonsComponent(
+            this.handleSaveSettings.bind(this),
+            this.handleResetSettings.bind(this)
+        );
+        this.componentManager.register('controlButtons', this.controlButtons);
+
+        // 既存の設定を読み込んでコンポーネントに適用
+        await this._loadAndApplySettings();
+
+        // コンポーネントの初期化
+        await this.componentManager.initializeAll();
+
+        // コンポーネント生成後に再度多言語化を実行
+        if (window.localizeHtmlPageWithLang) {
+            try {
+                await window.localizeHtmlPageWithLang();
+                console.log('コンポーネント後の多言語化完了');
+            } catch (error) {
+                console.warn('コンポーネント後の多言語化エラー:', error);
+                if (typeof localizeHtmlPage === 'function') {
+                    localizeHtmlPage();
+                }
+            }
+        }
+
+        console.log('Options page initialized with components:', this.componentManager.getStats());
+    }
+
+    async _loadAndApplySettings() {
+        try {
+            // 既存の設定を読み込み
+            const settings = await loadSettings();
+
+            // 各コンポーネントに設定を適用
+            this.timeSettingsCard.updateSettings({
+                openTime: settings.openTime,
+                closeTime: settings.closeTime,
+                breakTimeFixed: settings.breakTimeFixed,
+                breakTimeStart: settings.breakTimeStart,
+                breakTimeEnd: settings.breakTimeEnd
+            });
+
+            this.colorSettingsCard.updateSettings({
+                workTimeColor: settings.workTimeColor,
+                localEventColor: settings.localEventColor,
+                googleEventColor: settings.googleEventColor
+            });
+
+            // 言語設定を読み込み
+            const languageSettings = await new Promise((resolve) => {
+                chrome.storage.sync.get(['language'], (result) => {
+                    resolve({ language: result.language || 'auto' });
+                });
+            });
+
+            this.languageSettingsCard.updateSettings(languageSettings);
+
+            // Google連携状態をチェック
+            const response = await new Promise((resolve) => {
+                chrome.runtime.sendMessage({action: 'checkGoogleAuth'}, resolve);
+            });
+
+            if (response.authenticated) {
+                this.googleIntegrationCard.updateIntegrationStatus(true);
+                this.calendarManagementCard.show();
+            }
+
+            console.log('設定をコンポーネントに適用しました');
+        } catch (error) {
+            console.error('設定読み込みエラー:', error);
+        }
+    }
+
+    async handleGoogleIntegrationChange(shouldIntegrate) {
+        try {
+            if (shouldIntegrate) {
+                this.googleIntegrationCard.setButtonEnabled(false);
+                this.googleIntegrationCard.updateIntegrationStatus(false, '接続中...');
+
+                const response = await new Promise((resolve) => {
+                    chrome.runtime.sendMessage({action: 'authenticateGoogle'}, resolve);
+                });
+
+                if (response.success) {
+                    this.googleIntegrationCard.updateIntegrationStatus(true);
+                    this.calendarManagementCard.show();
+                    // Google連携を有効化
+                    const settings = await loadSettings();
+                    await saveSettings({ ...settings, googleIntegrated: true });
+                    this._reloadSidePanel();
+                } else {
+                    throw new Error(response.error || '認証に失敗しました');
+                }
+            } else {
+                // Google連携を無効化
+                this.googleIntegrationCard.setButtonEnabled(false);
+                this.googleIntegrationCard.updateIntegrationStatus(false, '切断中...');
+
+                const response = await new Promise((resolve) => {
+                    chrome.runtime.sendMessage({action: 'disconnectGoogle'}, resolve);
+                });
+
+                if (response.success) {
+                    const settings = await loadSettings();
+                    await saveSettings({ ...settings, googleIntegrated: false });
+                    this.googleIntegrationCard.updateIntegrationStatus(false);
+                    this.calendarManagementCard.hide();
+                    this._reloadSidePanel();
+
+                    // 手動での認証削除が必要な場合は通知を表示
+                    if (response.requiresManualRevoke) {
+                        this._showManualRevokeNotification(response.revokeUrl);
+                    }
+                } else {
+                    throw new Error(response.error || '切断に失敗しました');
+                }
+            }
+        } catch (error) {
+            logError('Google連携変更', error);
+            this.googleIntegrationCard.updateIntegrationStatus(false, `エラー: ${error.message}`);
+        } finally {
+            this.googleIntegrationCard.setButtonEnabled(true);
+        }
+    }
+
+    async handleTimeSettingsChange(timeSettings) {
+        try {
+            // 既存の設定を読み込み、時間設定のみ更新
+            const currentSettings = await loadSettings();
+            const updatedSettings = {
+                ...currentSettings,
+                openTime: timeSettings.openTime,
+                closeTime: timeSettings.closeTime,
+                breakTimeFixed: timeSettings.breakTimeFixed,
+                breakTimeStart: timeSettings.breakTimeStart,
+                breakTimeEnd: timeSettings.breakTimeEnd
+            };
+
+            await saveSettings(updatedSettings);
+            console.log('時間設定を保存しました:', timeSettings);
+
+            // サイドパネルを再読み込み
+            this._reloadSidePanel();
+        } catch (error) {
+            logError('時間設定保存', error);
+        }
+    }
+
+    async handleColorSettingsChange(colorSettings) {
+        try {
+            // 既存の設定を読み込み、色設定のみ更新
+            const currentSettings = await loadSettings();
+            const updatedSettings = {
+                ...currentSettings,
+                workTimeColor: colorSettings.workTimeColor,
+                localEventColor: colorSettings.localEventColor,
+                googleEventColor: colorSettings.googleEventColor
+            };
+
+            await saveSettings(updatedSettings);
+            console.log('色設定を保存しました:', colorSettings);
+
+            // CSS変数を即座に更新
+            document.documentElement.style.setProperty('--side-calendar-work-time-color', colorSettings.workTimeColor);
+            document.documentElement.style.setProperty('--side-calendar-local-event-color', colorSettings.localEventColor);
+            document.documentElement.style.setProperty('--side-calendar-google-event-color', colorSettings.googleEventColor);
+
+            // サイドパネルを再読み込み
+            this._reloadSidePanel();
+        } catch (error) {
+            logError('色設定保存', error);
+        }
+    }
+
+    async handleLanguageSettingsChange(languageSettings) {
+        try {
+            // 言語設定を保存（既存のlocalize.jsと同じキーを使用）
+            await new Promise((resolve) => {
+                chrome.storage.sync.set({ 'language': languageSettings.language }, resolve);
+            });
+
+            console.log('言語設定を保存しました:', languageSettings);
+
+            // サイドパネルを再読み込み
+            this._reloadSidePanel();
+        } catch (error) {
+            logError('言語設定保存', error);
+        }
+    }
+
+    async handleSaveSettings() {
+        // 設定は各コンポーネントで自動保存されているので、
+        // ここでは確認メッセージのみ表示
+        console.log('すべての設定が保存されました');
+    }
+
+    async handleResetSettings() {
+        try {
+            // デフォルト設定に戻す
+            await saveSettings(DEFAULT_SETTINGS);
+
+            // 各コンポーネントをデフォルト設定で更新
+            this.timeSettingsCard.resetToDefaults();
+            this.colorSettingsCard.resetToDefaults();
+            this.languageSettingsCard.resetToDefaults();
+
+            // CSS変数もリセット
+            document.documentElement.style.setProperty('--side-calendar-work-time-color', DEFAULT_SETTINGS.workTimeColor);
+            document.documentElement.style.setProperty('--side-calendar-local-event-color', DEFAULT_SETTINGS.localEventColor);
+            document.documentElement.style.setProperty('--side-calendar-google-event-color', DEFAULT_SETTINGS.googleEventColor);
+
+            // サイドパネルを再読み込み
+            this._reloadSidePanel();
+
+            console.log('設定をデフォルトに戻しました');
+        } catch (error) {
+            logError('設定リセット', error);
+            throw error;
+        }
+    }
+
+    /**
+     * サイドパネルを再読み込み
+     * @private
+     */
+    _reloadSidePanel() {
+        try {
+            chrome.runtime.sendMessage({
+                action: 'reloadSideTimeTable'
+            });
+            console.log('サイドパネル再読み込み通知を送信しました');
+        } catch (error) {
+            console.warn('サイドパネル再読み込み通知に失敗:', error);
+        }
+    }
+
+    /**
+     * 手動での認証削除通知を表示
+     * @private
+     */
+    _showManualRevokeNotification(revokeUrl) {
+        // 既存の通知を削除
+        const existingNotice = document.querySelector('.manual-revoke-notice');
+        if (existingNotice) {
+            existingNotice.remove();
+        }
+
+        // 通知メッセージを作成
+        const notice = document.createElement('div');
+        notice.className = 'alert alert-warning alert-dismissible fade show manual-revoke-notice mt-3';
+        notice.innerHTML = `
+            <div class="d-flex align-items-start">
+                <i class="fas fa-exclamation-triangle me-2 mt-1"></i>
+                <div class="flex-grow-1">
+                    <strong>完全な切断のために追加の手順が必要です</strong><br>
+                    <small class="text-muted">
+                        拡張機能からトークンを削除しましたが、完全に切断するにはGoogleアカウントの設定で手動で許可を取り消してください。
+                    </small>
+                    <div class="mt-2">
+                        <a href="${revokeUrl}" target="_blank" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-external-link-alt me-1"></i>
+                            Googleアカウント設定を開く
+                        </a>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+
+        // 最初のカードの後に挿入
+        const firstCard = document.querySelector('.card');
+        if (firstCard && firstCard.parentNode) {
+            firstCard.parentNode.insertBefore(notice, firstCard.nextSibling);
+        } else {
+            document.body.appendChild(notice);
+        }
+
+        // 30秒後に自動削除
+        setTimeout(() => {
+            if (notice.parentNode) {
+                notice.remove();
+            }
+        }, 30000);
+    }
+}
+
+/**
+ * LegacyCalendarManager - 旧カレンダー管理クラス（削除予定）
+ */
+class LegacyCalendarManager {
     constructor() {
         this.availableCalendars = {};
         this.selectedCalendarIds = [];
@@ -944,8 +1284,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else if (typeof localizeHtmlPage === 'function') {
         localizeHtmlPage();
     }
-    
-    // 設定マネージャーの初期化と実行
-    const settingsManager = new SettingsManager();
-    settingsManager.initialize();
+
+    // 新しいコンポーネントベースのオプションページマネージャーを初期化
+    const optionsPageManager = new OptionsPageManager();
+    await optionsPageManager.initialize();
 });
