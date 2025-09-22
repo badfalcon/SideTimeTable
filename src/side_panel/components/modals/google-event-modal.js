@@ -55,6 +55,9 @@ export class GoogleEventModal extends ModalComponent {
         this.meetElement.className = 'google-event-meet';
         content.appendChild(this.meetElement);
 
+        // modalBodyへの参照を保存
+        this.modalBody = content;
+
         return content;
     }
 
@@ -87,6 +90,9 @@ export class GoogleEventModal extends ModalComponent {
 
         // Meet情報
         this._setMeetInfo(event);
+
+        // 参加者情報
+        this._setAttendeesInfo(event);
 
         this.show();
     }
@@ -263,6 +269,85 @@ export class GoogleEventModal extends ModalComponent {
 
             this.meetElement.appendChild(icon);
             this.meetElement.appendChild(link);
+        }
+    }
+
+    /**
+     * 参加者情報を設定
+     * @private
+     */
+    _setAttendeesInfo(event) {
+        // 参加者要素がない場合は作成
+        if (!this.attendeesElement) {
+            this.attendeesElement = document.createElement('div');
+            this.attendeesElement.className = 'mb-3';
+            this.attendeesElement.style.cssText = 'display: flex; align-items: flex-start; font-size: 14px;';
+            this.modalBody.appendChild(this.attendeesElement);
+        }
+
+        this.attendeesElement.innerHTML = '';
+
+        if (event.attendees && event.attendees.length > 0) {
+            const icon = document.createElement('i');
+            icon.className = 'fas fa-users me-1';
+            icon.style.cssText = 'margin-top: 2px; color: #6c757d;';
+
+            const container = document.createElement('div');
+            container.style.cssText = 'margin-left: 20px;';
+
+            const title = document.createElement('div');
+            title.textContent = `参加者 (${event.attendees.length}人)`;
+            title.style.cssText = 'font-weight: bold; margin-bottom: 5px;';
+
+            const attendeesList = document.createElement('div');
+
+            event.attendees.forEach(attendee => {
+                const attendeeDiv = document.createElement('div');
+                attendeeDiv.style.cssText = 'margin-bottom: 3px; display: flex; align-items: center;';
+
+                // 参加ステータスのアイコン
+                const statusIcon = document.createElement('i');
+                switch (attendee.responseStatus) {
+                    case 'accepted':
+                        statusIcon.className = 'fas fa-check-circle';
+                        statusIcon.style.color = '#28a745';
+                        statusIcon.title = '参加';
+                        break;
+                    case 'declined':
+                        statusIcon.className = 'fas fa-times-circle';
+                        statusIcon.style.color = '#dc3545';
+                        statusIcon.title = '不参加';
+                        break;
+                    case 'tentative':
+                        statusIcon.className = 'fas fa-question-circle';
+                        statusIcon.style.color = '#ffc107';
+                        statusIcon.title = '仮参加';
+                        break;
+                    default:
+                        statusIcon.className = 'fas fa-circle';
+                        statusIcon.style.color = '#6c757d';
+                        statusIcon.title = '未回答';
+                }
+                statusIcon.style.cssText += ' margin-right: 8px; font-size: 12px;';
+
+                // 参加者名とメール
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = attendee.displayName || attendee.email;
+                if (attendee.organizer) {
+                    nameSpan.textContent += ' (主催者)';
+                    nameSpan.style.fontWeight = 'bold';
+                }
+
+                attendeeDiv.appendChild(statusIcon);
+                attendeeDiv.appendChild(nameSpan);
+                attendeesList.appendChild(attendeeDiv);
+            });
+
+            container.appendChild(title);
+            container.appendChild(attendeesList);
+
+            this.attendeesElement.appendChild(icon);
+            this.attendeesElement.appendChild(container);
         }
     }
 

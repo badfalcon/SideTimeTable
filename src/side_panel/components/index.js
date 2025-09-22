@@ -72,9 +72,7 @@ export class SidePanelComponentManager {
                     if (!component.initialized) {
                         component.createElement();
                         component.initialized = true;
-                        console.log(`コンポーネント '${name}' を初期化しました`);
                     } else {
-                        console.log(`コンポーネント '${name}' は既に初期化済みです`);
                     }
                 }
             } catch (error) {
@@ -129,7 +127,6 @@ export class SidePanelComponentManager {
             try {
                 if (component && typeof component.destroy === 'function') {
                     component.destroy();
-                    console.log(`コンポーネント '${name}' を破棄しました`);
                 }
             } catch (error) {
                 console.error(`コンポーネント '${name}' の破棄に失敗:`, error);
@@ -176,22 +173,4 @@ export class SidePanelComponentManager {
         }
     }
 
-    /**
-     * デバッグ情報を出力
-     */
-    debug() {
-        console.group('SidePanelComponentManager Debug Info');
-        console.log('初期化状態:', this.initialized);
-        console.log('コンポーネント数:', this.size());
-        console.log('コンポーネント一覧:', this.getComponentNames());
-
-        for (const [name, component] of this.components) {
-            console.log(`- ${name}:`, {
-                element: component.element ? 'あり' : 'なし',
-                visible: component.element ? !component.element.hidden : 'N/A',
-                className: component.options?.className || 'なし'
-            });
-        }
-        console.groupEnd();
-    }
 }

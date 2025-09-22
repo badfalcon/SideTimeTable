@@ -164,7 +164,6 @@ export class GoogleEventManager {
 
             // デモイベントを取得
             const demoEvents = await getDemoEvents();
-            console.log('デモイベント処理開始:', demoEvents.length + '件');
             
             await this._processEvents(demoEvents);
 
@@ -180,22 +179,29 @@ export class GoogleEventManager {
      * @private
      */
     async _processEvents(events) {
-        for (const event of events) {
-            switch (event.eventType) {
-                case 'workingLocation':
-                case 'focusTime':
-                case 'outOfOffice':
-                    // 作業場所、集中時間、外出の場合は何も表示しない
-                    continue;
-                case 'default':
-                    await this._createGoogleEventElement(event);
-                    break;
-                default:
-                    // その他のイベントタイプは表示しない
-                    continue;
+        for (let i = 0; i < events.length; i++) {
+            try {
+                const event = events[i];
+                const uniqueId = `${event.id}-${i}`;
+
+                switch (event.eventType) {
+                    case 'workingLocation':
+                    case 'focusTime':
+                    case 'outOfOffice':
+                        continue;
+                    case 'default':
+                        const uniqueEvent = { ...event, uniqueId };
+                        await this._createGoogleEventElement(uniqueEvent);
+                        break;
+                    default:
+                        continue;
+                }
+            } catch (error) {
+                console.error(`イベント${i}の処理中にエラーが発生:`, error);
             }
         }
     }
+
 
     /**
      * Googleイベント要素を作成
@@ -256,13 +262,13 @@ export class GoogleEventManager {
             eventDiv.style.color = event.calendarForegroundColor;
         }
         
-        // ロケール対応の時間表示を非同期で設定
-        await this._setEventContentWithLocale(eventDiv, startDate, event.summary);
+        // ロケール対応の時間表示を非同期で設定（参加者情報付き）
+        await this._setEventContentWithLocale(eventDiv, startDate, event.summary, event);
 
         this.googleEventsDiv.appendChild(eventDiv);
 
         // イベントレイアウトマネージャーに登録
-        const eventId = event.id || `google-${Date.now()}-${Math.random()}`;
+        const eventId = event.uniqueId || event.id || `google-${Date.now()}-${Math.random()}`;
         if (this.eventLayoutManager && typeof this.eventLayoutManager.registerEvent === 'function') {
             this.eventLayoutManager.registerEvent({
                 startTime: startDate,
@@ -282,20 +288,34 @@ export class GoogleEventManager {
      * @param {HTMLElement} eventDiv - イベント要素
      * @param {Date} startDate - 開始時刻
      * @param {string} summary - イベントのタイトル
+     * @param {Object} event - イベント全体の情報
      * @private
      */
-    async _setEventContentWithLocale(eventDiv, startDate, summary) {
+    async _setEventContentWithLocale(eventDiv, startDate, summary, event) {
         try {
             // 現在のロケールを取得
             const locale = await window.getCurrentLocale();
-            
+
             // 時間をロケール形式でフォーマット
             const startHours = String(startDate.getHours()).padStart(2, '0');
             const startMinutes = String(startDate.getMinutes()).padStart(2, '0');
             const timeString = `${startHours}:${startMinutes}`;
-            
+
             const formattedTime = window.formatTimeForLocale(timeString, locale);
-            eventDiv.textContent = `${formattedTime} - ${summary}`;
+
+            // 参加者情報がある場合は追加情報を表示
+            let displayText = `${formattedTime} - ${summary}`;
+
+            if (event.attendees && event.attendees.length > 0) {
+                // 自分の参加ステータスを確認
+                const myStatus = this._getMyAttendanceStatus(event.attendees);
+                if (myStatus) {
+                    const statusIcon = this._getStatusIcon(myStatus);
+                    displayText = `${formattedTime} ${statusIcon} ${summary}`;
+                }
+            }
+
+            eventDiv.textContent = displayText;
         } catch (error) {
             // エラーの場合は従来の表示方法を使用
             console.warn('ロケール時間フォーマットエラー:', error);
@@ -303,6 +323,37 @@ export class GoogleEventManager {
                 hour: '2-digit',
                 minute: '2-digit'
             })} - ${summary}`;
+        }
+    }
+
+    /**
+     * 自分の参加ステータスを取得
+     * @param {Array} attendees - 参加者配列
+     * @returns {string|null} 参加ステータス
+     * @private
+     */
+    _getMyAttendanceStatus(attendees) {
+        // 簡単な実装：最初の参加者のステータスを返す
+        // 実際には現在のユーザーのメールアドレスと照合する必要がある
+        return attendees[0]?.responseStatus || null;
+    }
+
+    /**
+     * ステータスに応じたアイコンを取得
+     * @param {string} status - 参加ステータス
+     * @returns {string} アイコン文字
+     * @private
+     */
+    _getStatusIcon(status) {
+        switch (status) {
+            case 'accepted':
+                return '✅';
+            case 'declined':
+                return '❌';
+            case 'tentative':
+                return '❓';
+            default:
+                return '⚪';
         }
     }
 
@@ -356,9 +407,7 @@ export class LocalEventManager {
 
         // デモモードの場合はモックデータを使用
         if (isDemoMode()) {
-            console.log('デモモードでローカルモックデータを使用します');
             const demoEvents = await getDemoLocalEvents();
-            console.log('デモローカルイベント取得:', demoEvents.length + '件');
 
             for (const event of demoEvents) {
                 try {
@@ -377,9 +426,6 @@ export class LocalEventManager {
             
         loadFunction()
             .then(async events => {
-                console.log('ローカルイベント取得:', events.length + '件');
-                console.log('対象日付:', targetDate ? targetDate.toISOString() : '今日');
-                console.log('使用した関数:', targetDate ? 'loadLocalEventsForDate' : 'loadLocalEvents');
 
                 for (const event of events) {
                     try {

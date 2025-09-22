@@ -31,7 +31,6 @@ export class ModalComponent extends Component {
 
         // 既に内容が作成済みの場合はスキップ
         if (modal.children.length > 0) {
-            console.log(`モーダルコンポーネント ${this.options.id} の内容は既に作成済みです`);
             return modal;
         }
 
