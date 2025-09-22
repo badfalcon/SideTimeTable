@@ -2,6 +2,7 @@
  * TimelineComponent - タイムライン表示コンポーネント
  */
 import { Component } from '../base/component.js';
+import { CurrentTimeLineManager } from '../../../lib/current-time-line-manager.js';
 
 export class TimelineComponent extends Component {
     constructor(options = {}) {
@@ -20,13 +21,10 @@ export class TimelineComponent extends Component {
         this.eventsLayer = null;
         this.localEventsContainer = null;
         this.googleEventsContainer = null;
-        this.currentTimeLine = null;
 
-        // 現在時刻ライン表示フラグ
+        // 現在時刻ライン管理
         this.showCurrentTimeLine = options.showCurrentTimeLine !== false;
-
-        // 現在時刻ライン更新タイマー
-        this.currentTimeTimer = null;
+        this.currentTimeLineManager = null;
     }
 
     createElement() {
@@ -114,45 +112,10 @@ export class TimelineComponent extends Component {
      * @private
      */
     _setupCurrentTimeLine() {
-        if (!this.isToday()) {
-            return;
+        if (!this.currentTimeLineManager) {
+            this.currentTimeLineManager = new CurrentTimeLineManager(this.eventsLayer);
         }
-
-        // 現在時刻ライン要素を作成
-        this.currentTimeLine = document.createElement('div');
-        this.currentTimeLine.className = 'current-time-line';
-        this.currentTimeLine.id = 'currentTimeLine';
-
-        this.eventsLayer.appendChild(this.currentTimeLine);
-
-        // 初期位置を設定
-        this._updateCurrentTimeLine();
-
-        // 1分ごとに更新
-        this.currentTimeTimer = setInterval(() => {
-            this._updateCurrentTimeLine();
-        }, 60000);
-    }
-
-    /**
-     * 現在時刻ラインの位置を更新
-     * @private
-     */
-    _updateCurrentTimeLine() {
-        if (!this.currentTimeLine || !this.isToday()) {
-            return;
-        }
-
-        const now = new Date();
-        const hours = now.getHours();
-        const minutes = now.getMinutes();
-        const totalMinutes = hours * 60 + minutes;
-
-        // 1分 = 1px として計算
-        const topPosition = totalMinutes;
-
-        this.currentTimeLine.style.top = `${topPosition}px`;
-        this.currentTimeLine.style.display = '';
+        this.currentTimeLineManager.update();
     }
 
     /**
@@ -162,15 +125,10 @@ export class TimelineComponent extends Component {
     setCurrentTimeLineVisible(visible) {
         this.showCurrentTimeLine = visible;
 
-        if (this.currentTimeLine) {
-            this.currentTimeLine.style.display = visible && this.isToday() ? '' : 'none';
-        }
-
-        if (visible && this.isToday() && !this.currentTimeTimer) {
+        if (visible) {
             this._setupCurrentTimeLine();
-        } else if (!visible && this.currentTimeTimer) {
-            clearInterval(this.currentTimeTimer);
-            this.currentTimeTimer = null;
+        } else if (this.currentTimeLineManager) {
+            this.currentTimeLineManager.forceHide();
         }
     }
 
@@ -337,10 +295,10 @@ export class TimelineComponent extends Component {
      * リソースをクリーンアップ
      */
     destroy() {
-        // 現在時刻ライン更新タイマーを停止
-        if (this.currentTimeTimer) {
-            clearInterval(this.currentTimeTimer);
-            this.currentTimeTimer = null;
+        // 現在時刻ライン管理を破棄
+        if (this.currentTimeLineManager) {
+            this.currentTimeLineManager.destroy();
+            this.currentTimeLineManager = null;
         }
 
         super.destroy();

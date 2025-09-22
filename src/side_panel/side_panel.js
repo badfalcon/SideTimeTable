@@ -115,6 +115,12 @@ class SidePanelUIController {
             }
         });
 
+        // 現在時刻ライン要素を削除
+        const existingTimeLine = document.getElementById('currentTimeLine');
+        if (existingTimeLine) {
+            existingTimeLine.remove();
+        }
+
         // その他の重複する可能性のある要素を削除
         const duplicateElements = document.querySelectorAll('[id*="sideTimeTable"], [id*="EventDialog"], [id*="Modal"]');
         duplicateElements.forEach(element => {
