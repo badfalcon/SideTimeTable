@@ -152,9 +152,9 @@ function getCalendarEvents(targetDate = null) {
                     endOfDay.setHours(23, 59, 59, 999);
                     
                     const selectedCalendarIds = storageData.selectedCalendars || [];
-                    
+
                     let calendarsPromise;
-                    
+
                     if (selectedCalendarIds.length === 0) {
                         // 選択されたカレンダーがない場合は、Googleカレンダーで表示設定されたカレンダーを使用
                         const calendarListUrl = `https://www.googleapis.com/calendar/v3/users/me/calendarList`;
@@ -172,27 +172,33 @@ function getCalendarEvents(targetDate = null) {
                             return response.json();
                         })
                         .then(listData => {
-                            const calendars = (listData.items || [])
-                                // GoogleカレンダーのUIで「表示」にチェックされているカレンダーのみ
-                                .filter(cal => cal.selected)
-                                // 念のため、アクセスできないものを除外
-                                .filter(cal => cal.accessRole && cal.accessRole !== 'none');
+                            const allCalendars = listData.items || [];
+                            const selectedCalendars = allCalendars.filter(cal => cal.selected);
+                            const accessibleCalendars = selectedCalendars.filter(cal => cal.accessRole && cal.accessRole !== 'none');
 
-                            if (calendars.length === 0) {
-                                console.log('表示対象のカレンダーがありません。primaryのみ取得します。');
+                            // プライマリカレンダーを必ず含める
+                            const calendarsToReturn = [...accessibleCalendars];
+                            const primaryCalendar = allCalendars.find(cal => cal.primary);
+
+                            // プライマリカレンダーがselectedフラグに関係なく確実に含まれるようにする
+                            if (primaryCalendar && !calendarsToReturn.some(cal => cal.id === primaryCalendar.id)) {
+                                calendarsToReturn.unshift(primaryCalendar);
+                            }
+
+                            if (calendarsToReturn.length === 0) {
                                 return [ { id: 'primary' } ];
                             }
 
-                            return calendars.map(c => ({ id: c.id }));
+                            return calendarsToReturn.map(c => ({ id: c.id }));
                         });
                     } else {
                         // 選択されたカレンダーを使用
-                        console.log(`選択されたカレンダー: ${selectedCalendarIds.length}件`);
                         calendarsPromise = Promise.resolve(selectedCalendarIds.map(id => ({ id })));
                     }
 
                     calendarsPromise
                 .then(calendarsToFetch => {
+
                     // 今日の日付の範囲を設定（上で計算済みのstartOfDay/endOfDayを使用）
                     const baseUrl = 'https://www.googleapis.com/calendar/v3/calendars';
 

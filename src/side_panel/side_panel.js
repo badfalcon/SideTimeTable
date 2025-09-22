@@ -1,9 +1,15 @@
 /**
- * SideTimeTable - サイドパネルタイムテーブル管理
- * 
- * このファイルはChrome拡張機能のサイドパネルに表示されるタイムテーブルを
- * 管理するためのJavaScriptコードです。
+ * SideTimeTable - サイドパネルタイムテーブル管理（コンポーネント版）
  */
+
+import {
+    SidePanelComponentManager,
+    HeaderComponent,
+    TimelineComponent,
+    LocalEventModal,
+    GoogleEventModal,
+    AlertModal
+} from './components/index.js';
 
 import { TimeTableManager, EventLayoutManager } from './time-manager.js';
 import { GoogleEventManager, LocalEventManager } from './event-handlers.js';
@@ -15,169 +21,255 @@ import { isDemoMode, setDemoMode } from '../lib/demo-data.js';
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "reloadSideTimeTable") {
         location.reload();
-        // 応答を返す
         sendResponse({ success: true });
     }
-    return true; // 非同期応答を示す
+    return true;
 });
 
 /**
- * UIController - UI要素とイベントリスナーの管理
+ * SidePanelUIController - コンポーネントベースのUI管理クラス
  */
-class UIController {
+class SidePanelUIController {
     constructor() {
-        this.timeTableManager = null;
-        this.eventLayoutManager = null;
-        this.googleEventManager = null;
-        this.localEventManager = null;
-        this.updateInterval = null;
-        this.loadEventsDebounceTimeout = null;
-        // 現在の日付（時間部分は00:00:00に正規化）
+        // コンポーネント管理
+        this.componentManager = new SidePanelComponentManager();
+
+        // 個別コンポーネント参照
+        this.headerComponent = null;
+        this.timelineComponent = null;
+        this.localEventModal = null;
+        this.googleEventModal = null;
+        this.alertModal = null;
+
+        // 状態管理
         this.currentDate = new Date();
         this.currentDate.setHours(0, 0, 0, 0);
+        this.updateInterval = null;
+        this.loadEventsDebounceTimeout = null;
     }
 
     /**
      * 初期化
      */
-    initialize() {
-        // URLパラメータでデモモードを確認
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('demo') === 'true') {
-            setDemoMode(true);
+    async initialize() {
+        try {
+            // URLパラメータでデモモードを確認
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('demo') === 'true') {
+                setDemoMode(true);
+            }
+
+            // 既存のDOM要素を削除（重複防止）
+            this._removeExistingElements();
+
+            // コンポーネントを作成・登録
+            await this._createComponents();
+
+            // 既存のマネージャークラスを初期化
+            await this._initializeManagers();
+
+            // イベントリスナーを設定
+            this._setupEventListeners();
+
+            // 初期データを読み込み
+            await this._loadInitialData();
+
+            // 定期更新を開始
+            this._startPeriodicUpdate();
+
+            console.log('サイドパネルUI初期化完了（コンポーネント版）');
+
+        } catch (error) {
+            console.error('サイドパネルUI初期化エラー:', error);
+            this._showError('初期化中にエラーが発生しました: ' + error.message);
+        }
+    }
+
+    /**
+     * 既存のDOM要素を削除（重複防止）
+     * @private
+     */
+    _removeExistingElements() {
+        // 既存のヘッダー要素を削除
+        const existingHeader = document.getElementById('sideTimeTableHeaderWrapper');
+        if (existingHeader) {
+            existingHeader.remove();
+            console.log('既存のヘッダー要素を削除しました');
         }
 
-        // DOM要素の取得
-        const parentDiv = document.getElementById('sideTimeTable');
-        const baseDiv = document.getElementById('sideTimeTableBase');
-        const googleEventsDiv = document.getElementById('sideTimeTableEventsGoogle');
-        const localEventsDiv = document.getElementById('sideTimeTableEventsLocal');
+        // 既存のタイムテーブル要素を削除
+        const existingTimeTable = document.getElementById('sideTimeTable');
+        if (existingTimeTable) {
+            existingTimeTable.remove();
+            console.log('既存のタイムテーブル要素を削除しました');
+        }
 
-        // 各マネージャーの初期化
-        this.timeTableManager = new TimeTableManager(parentDiv, baseDiv);
-        this.eventLayoutManager = new EventLayoutManager(baseDiv);
-        this.googleEventManager = new GoogleEventManager(this.timeTableManager, googleEventsDiv, this.eventLayoutManager);
-        this.localEventManager = new LocalEventManager(this.timeTableManager, localEventsDiv, this.eventLayoutManager);
+        // 既存のモーダル要素を削除
+        const existingModals = [
+            'localEventDialog',
+            'googleEventDialog',
+            'alertModal'
+        ];
 
-        // 時間選択リストの初期化
-        this._initializeTimeList();
-
-        // ダイアログ要素の設定
-        this._setupDialogElements();
-
-        // 設定の読み込み
-        this._loadSettings();
-
-        // イベントリスナーの設定
-        this._setupEventListeners();
-
-        // 日付表示の初期化
-        this._updateDateDisplay();
-
-        // 定期的な更新の設定
-        this._setupPeriodicUpdates();
-    }
-
-    /**
-     * 時間選択リストを初期化
-     * @private
-     */
-    _initializeTimeList() {
-        const timeList = document.getElementById('time-list');
-        generateTimeList(timeList);
-    }
-
-    /**
-     * ダイアログ要素を設定
-     * @private
-     */
-    _setupDialogElements() {
-        // ローカルイベントダイアログ要素
-        const localEventDialog = document.getElementById('localEventDialog');
-        const eventTitleInput = document.getElementById('eventTitle');
-        const eventStartTimeInput = document.getElementById('eventStartTime');
-        const eventEndTimeInput = document.getElementById('eventEndTime');
-        const saveEventButton = document.getElementById('saveEventButton');
-        const deleteEventButton = document.getElementById('deleteEventButton');
-
-        // ローカルイベントマネージャーにダイアログ要素を設定
-        this.localEventManager.setDialogElements({
-            dialog: localEventDialog,
-            titleInput: eventTitleInput,
-            startTimeInput: eventStartTimeInput,
-            endTimeInput: eventEndTimeInput,
-            saveButton: saveEventButton,
-            deleteButton: deleteEventButton
+        existingModals.forEach(modalId => {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.remove();
+                console.log(`既存のモーダル要素 ${modalId} を削除しました`);
+            }
         });
 
-        // アラートモーダル要素
-        const alertModal = document.getElementById('alertModal');
-        const alertMessage = document.getElementById('alertMessage');
-        const closeAlertButton = document.getElementById('closeAlertButton');
-
-        // ローカルイベントマネージャーにアラートモーダル要素を設定
-        this.localEventManager.setAlertModalElements({
-            modal: alertModal,
-            messageElement: alertMessage,
-            closeButton: closeAlertButton
+        // その他の重複する可能性のある要素を削除
+        const duplicateElements = document.querySelectorAll('[id*="sideTimeTable"], [id*="EventDialog"], [id*="Modal"]');
+        duplicateElements.forEach(element => {
+            if (element.id !== 'time-list') { // time-listは保持
+                element.remove();
+                console.log(`重複要素 ${element.id} を削除しました`);
+            }
         });
     }
 
     /**
-     * 設定を読み込む
+     * コンポーネントを作成・登録
      * @private
      */
-    _loadSettings() {
-        loadSettings()
-            .then(async settings => {
-                try {
-                    // CSS変数の設定
-                    document.documentElement.style.setProperty('--side-calendar-work-time-color', settings.workTimeColor);
-                    document.documentElement.style.setProperty('--side-calendar-local-event-color', settings.localEventColor);
-                    document.documentElement.style.setProperty('--side-calendar-google-event-color', settings.googleEventColor);
+    async _createComponents() {
+        // ヘッダーコンポーネント
+        this.headerComponent = new HeaderComponent({
+            onAddEvent: () => this._handleAddLocalEvent(),
+            onDateChange: (date) => this._handleDateChange(date),
+            onSettingsClick: () => this._openSettings()
+        });
 
-                    // 各マネージャーに設定を適用（デモモードの場合は強制的にGoogle連携を有効）
-                    const googleIntegrated = isDemoMode() || settings.googleIntegrated;
-                    this.googleEventManager.setGoogleIntegration(googleIntegrated);
-                    this.timeTableManager.applySettings(settings);
+        // タイムラインコンポーネント
+        this.timelineComponent = new TimelineComponent({
+            showCurrentTimeLine: true
+        });
 
-                    console.log('タイムテーブル作成開始');
-                    // タイムテーブルの作成
-                    await this.timeTableManager.createBaseTable(this.currentDate, settings.breakTimeFixed, settings.breakTimeStart, settings.breakTimeEnd);
+        // モーダルコンポーネント
+        this.localEventModal = new LocalEventModal({
+            onSave: (eventData, mode) => this._handleSaveLocalEvent(eventData, mode),
+            onDelete: (event) => this._handleDeleteLocalEvent(event),
+            onCancel: () => this._handleCancelLocalEvent()
+        });
 
-                    console.log('イベント取得開始');
-                    // イベントの取得と表示 - 少し遅延を入れて確実に実行されるようにする
-                    setTimeout(async () => {
-                        // ローカルイベントの取得
-                        console.log('ローカルイベント取得開始');
-                        await this.localEventManager.loadLocalEvents();
+        this.googleEventModal = new GoogleEventModal();
 
-                        // Googleイベントの取得（デモモードの場合も含む）
-                        if (googleIntegrated) {
-                            console.log('Googleイベント取得開始');
-                            this.googleEventManager.fetchEvents();
-                        } else {
-                            // Google連携がない場合は、ローカルイベントのみでレイアウト計算
-                            this.eventLayoutManager.calculateLayout();
-                        }
+        this.alertModal = new AlertModal();
 
-                        // 現在時刻の線を更新
-                        this.timeTableManager.updateCurrentTimeLine(this.currentDate);
-                        
-                        // スクロール位置を調整（全ての初期化が完了した後）
-                        setTimeout(() => {
-                            requestAnimationFrame(() => {
-                                this.timeTableManager.adjustScrollPosition(this.currentDate);
-                            });
-                        }, 300);
-                    }, 100); // 100ミリ秒の遅延
-                } catch (error) {
-                    logError('設定適用', error);
-                }
-            })
-            .catch(error => {
-                logError('設定読み込み', error);
-            });
+        // コンポーネントマネージャーに登録
+        this.componentManager.register('header', this.headerComponent);
+        this.componentManager.register('timeline', this.timelineComponent);
+        this.componentManager.register('localEventModal', this.localEventModal);
+        this.componentManager.register('googleEventModal', this.googleEventModal);
+        this.componentManager.register('alertModal', this.alertModal);
+
+        // DOMに追加
+        const container = document.getElementById('side-panel-container') || document.body;
+        this.headerComponent.appendTo(container);
+        this.timelineComponent.appendTo(container);
+        this.localEventModal.appendTo(container);
+        this.googleEventModal.appendTo(container);
+        this.alertModal.appendTo(container);
+
+        // 全コンポーネントを初期化
+        this.componentManager.initializeAll();
+
+        // コンポーネント初期化後にマネージャーを再初期化
+        await this._reinitializeManagers();
+    }
+
+    /**
+     * コンポーネント初期化後にマネージャーを再初期化
+     * @private
+     */
+    async _reinitializeManagers() {
+        // DOM要素が確実に存在する状態でマネージャーを再初期化
+        const timeTableBase = document.getElementById('sideTimeTableBase');
+
+        if (timeTableBase) {
+            // EventLayoutManagerを再作成
+            const { EventLayoutManager } = await import('./time-manager.js');
+            this.eventLayoutManager = new EventLayoutManager(timeTableBase);
+
+            // イベントマネージャーのeventLayoutManagerを更新
+            if (this.googleEventManager) {
+                this.googleEventManager.eventLayoutManager = this.eventLayoutManager;
+            }
+            if (this.localEventManager) {
+                this.localEventManager.eventLayoutManager = this.eventLayoutManager;
+            }
+        }
+    }
+
+    /**
+     * 既存のマネージャークラスを初期化
+     * @private
+     */
+    async _initializeManagers() {
+        // 時間リストを生成
+        generateTimeList();
+
+        // イベントマネージャーを初期化
+        const { GoogleEventManager, LocalEventManager } = await import('./event-handlers.js');
+        const { EventLayoutManager } = await import('./time-manager.js');
+
+        // レイアウトマネージャーを初期化
+        const timeTableBase = document.getElementById('sideTimeTableBase') || this.timelineComponent.element?.querySelector('.side-time-table-base');
+        this.eventLayoutManager = new EventLayoutManager(timeTableBase);
+
+        // Googleイベントマネージャーを初期化
+        this.googleEventManager = new GoogleEventManager(
+            null, // timeTableManagerは使用していないためnull
+            this.timelineComponent.getGoogleEventsContainer(),
+            this.eventLayoutManager
+        );
+
+        // ローカルイベントマネージャーを初期化
+        this.localEventManager = new LocalEventManager(
+            null, // timeTableManagerは使用していないためnull
+            this.timelineComponent.getLocalEventsContainer(),
+            this.eventLayoutManager
+        );
+
+        // 設定を読み込んで初期設定を適用
+        await this._applyInitialSettings();
+    }
+
+    /**
+     * 初期設定を適用
+     * @private
+     */
+    async _applyInitialSettings() {
+        try {
+            const settings = await loadSettings();
+
+            // 業務時間の背景を設定
+            if (settings.openTime && settings.closeTime && settings.workTimeColor) {
+                this.timelineComponent.setWorkTimeBackground(
+                    settings.openTime,
+                    settings.closeTime,
+                    settings.workTimeColor
+                );
+            }
+
+            // CSS変数を設定
+            if (settings.workTimeColor) {
+                document.documentElement.style.setProperty('--side-calendar-work-time-color', settings.workTimeColor);
+            }
+            if (settings.localEventColor) {
+                document.documentElement.style.setProperty('--side-calendar-local-event-color', settings.localEventColor);
+            }
+            if (settings.googleEventColor) {
+                document.documentElement.style.setProperty('--side-calendar-google-event-color', settings.googleEventColor);
+            }
+
+            // 現在日付を設定
+            this.headerComponent.setCurrentDate(this.currentDate);
+
+        } catch (error) {
+            console.warn('初期設定の適用に失敗:', error);
+        }
     }
 
     /**
@@ -185,274 +277,412 @@ class UIController {
      * @private
      */
     _setupEventListeners() {
-        // 設定アイコンのクリックイベント
-        const settingsIcon = document.getElementById('settingsIcon');
-        settingsIcon.addEventListener('click', () => {
-            chrome.runtime.openOptionsPage();
+        // リサイズイベント
+        const resizeObserver = new ResizeObserver(() => {
+            this._handleResize();
         });
 
-        // ローカルイベント関連の要素
-        const addLocalEventButton = document.getElementById('addLocalEventButton');
-        const localEventDialog = document.getElementById('localEventDialog');
-        const closeDialog = document.getElementById('closeDialog');
-        const saveEventButton = document.getElementById('saveEventButton');
-        const cancelEventButton = document.getElementById('cancelEventButton');
-        const eventTitleInput = document.getElementById('eventTitle');
-        const eventStartTimeInput = document.getElementById('eventStartTime');
-        const eventEndTimeInput = document.getElementById('eventEndTime');
-
-        // 新規イベント追加ボタン
-        addLocalEventButton.addEventListener('click', () => {
-            localEventDialog.style.display = 'flex';
-            // フォームをリセット
-            eventTitleInput.value = '';
-            eventStartTimeInput.value = '';
-            eventEndTimeInput.value = '';
-
-            // 保存ボタンのクリックイベントを設定
-            saveEventButton.onclick = () => {
-                this.localEventManager.addNewEvent();
-            };
-        });
-
-        // ダイアログを閉じるボタン
-        closeDialog.addEventListener('click', () => {
-            localEventDialog.style.display = 'none';
-        });
-
-        // キャンセルボタン
-        cancelEventButton.addEventListener('click', () => {
-            localEventDialog.style.display = 'none';
-        });
-
-        // アラートモーダル関連
-        const alertModal = document.getElementById('alertModal');
-        const closeAlertModal = document.getElementById('closeAlertModal');
-        const closeAlertButton = document.getElementById('closeAlertButton');
-
-        // アラートモーダルを閉じるボタン
-        if (closeAlertButton) {
-            closeAlertButton.addEventListener('click', () => {
-                alertModal.style.display = 'none';
-            });
+        if (this.timelineComponent.element) {
+            resizeObserver.observe(this.timelineComponent.element);
         }
 
-        // アラートモーダルの×ボタン
-        if (closeAlertModal) {
-            closeAlertModal.addEventListener('click', () => {
-                alertModal.style.display = 'none';
-            });
-        }
-
-        // モーダル外クリックで閉じる
-        window.addEventListener('click', (event) => {
-            if (event.target === alertModal) {
-                alertModal.style.display = 'none';
-            }
-            if (event.target === localEventDialog) {
-                localEventDialog.style.display = 'none';
-            }
-        });
-
-        // 日付ナビゲーションボタン
-        const prevDateButton = document.getElementById('prevDateButton');
-        const nextDateButton = document.getElementById('nextDateButton');
-        const currentDateDisplay = document.getElementById('currentDateDisplay');
-
-        prevDateButton.addEventListener('click', () => {
-            this._navigateDate(-1);
-        });
-
-        nextDateButton.addEventListener('click', () => {
-            this._navigateDate(1);
-        });
-
-        // 日付入力の変更イベント
-        currentDateDisplay.addEventListener('change', (event) => {
-            this._onDatePickerChange(event.target.value);
-        });
-        
+        // ローカライゼーション
+        this._setupLocalization();
     }
 
     /**
-     * 日付表示を更新
+     * ローカライゼーションを設定
      * @private
      */
-    _updateDateDisplay() {
-        const dateDisplay = document.getElementById('currentDateDisplay');
-        
-        // 今日かどうかを判定
-        const isTodayFlag = isToday(this.currentDate);
+    _setupLocalization() {
+        if (window.localizeElementText) {
+            // 初回ローカライズ
+            window.localizeElementText(document.body);
 
-        // input要素のvalue属性に日付を設定
-        const year = this.currentDate.getFullYear();
-        const month = String(this.currentDate.getMonth() + 1).padStart(2, '0');
-        const day = String(this.currentDate.getDate()).padStart(2, '0');
-        dateDisplay.value = `${year}-${month}-${day}`;
-        
-        // 今日の場合はクラスを追加
-        if (isTodayFlag) {
-            dateDisplay.classList.add('today');
+            // コンポーネントのローカライズ
+            this.componentManager.localizeAll();
+        }
+    }
+
+    /**
+     * 初期データを読み込み
+     * @private
+     */
+    async _loadInitialData() {
+        await this._loadEventsForCurrentDate();
+        this._scrollToAppropriateTime();
+    }
+
+    /**
+     * 現在日付のイベントを読み込み
+     * @private
+     */
+    async _loadEventsForCurrentDate() {
+        try {
+            // ローカルイベントとGoogleイベントを並行で読み込み
+            const [localResult, googleResult] = await Promise.allSettled([
+                this._loadLocalEventsForDate(this.currentDate),
+                this.googleEventManager.fetchEvents(this.currentDate)
+            ]);
+
+            // 結果をログ出力
+            if (localResult.status === 'fulfilled') {
+                console.log('ローカルイベント読み込み完了:', localResult.value?.length || 0, '件');
+            } else {
+                console.warn('ローカルイベント読み込み失敗:', localResult.reason);
+            }
+
+            if (googleResult.status === 'fulfilled') {
+                console.log('Googleイベント読み込み完了:', googleResult.value?.length || 0, '件');
+            } else {
+                console.warn('Googleイベント読み込み失敗:', googleResult.reason);
+            }
+
+        } catch (error) {
+            console.error('イベント読み込みエラー:', error);
+        }
+    }
+
+    /**
+     * ローカルイベントを読み込んで表示
+     * @private
+     */
+    async _loadLocalEventsForDate(targetDate) {
+        try {
+            const { loadLocalEventsForDate } = await import('../lib/utils.js');
+            const events = await loadLocalEventsForDate(targetDate);
+
+            // ローカルイベントコンテナをクリア
+            this.timelineComponent.clearLocalEvents();
+
+            // イベントを作成して表示
+            const localContainer = this.timelineComponent.getLocalEventsContainer();
+            for (const event of events) {
+                const eventDiv = this._createLocalEventDiv(event);
+                localContainer.appendChild(eventDiv);
+            }
+
+            return events;
+        } catch (error) {
+            console.error('ローカルイベント読み込みエラー:', error);
+            return [];
+        }
+    }
+
+
+    /**
+     * ローカルイベントDIVを作成
+     * @private
+     */
+    _createLocalEventDiv(event) {
+        const eventDiv = document.createElement('div');
+        eventDiv.className = 'local-event';
+        eventDiv.textContent = `${event.startTime} - ${event.endTime}: ${event.title}`;
+
+        // クリックイベント（編集）
+        eventDiv.addEventListener('click', () => {
+            this.localEventModal.showEdit(event);
+        });
+
+        // 位置とサイズを計算
+        const startMinutes = this._timeToMinutes(event.startTime);
+        const endMinutes = this._timeToMinutes(event.endTime);
+        const duration = endMinutes - startMinutes;
+
+        eventDiv.style.cssText = `
+            position: absolute;
+            top: ${startMinutes}px;
+            height: ${duration}px;
+            left: 60px;
+            right: 10px;
+            background-color: var(--side-calendar-local-event-color, #bbf2b1);
+            border: 1px solid #999;
+            padding: 2px 5px;
+            font-size: 12px;
+            line-height: 1.2;
+            overflow: hidden;
+            cursor: pointer;
+            border-radius: 3px;
+        `;
+
+        return eventDiv;
+    }
+
+
+    /**
+     * 時刻を分に変換
+     * @private
+     */
+    _timeToMinutes(time) {
+        const [hours, minutes] = time.split(':').map(Number);
+        return hours * 60 + minutes;
+    }
+
+    /**
+     * 適切な時刻にスクロール
+     * @private
+     */
+    _scrollToAppropriateTime() {
+        if (isToday(this.currentDate)) {
+            // 今日の場合は現在時刻にスクロール
+            this.timelineComponent.scrollToCurrentTime();
         } else {
-            dateDisplay.classList.remove('today');
+            // 他の日の場合は業務開始時刻にスクロール
+            loadSettings().then(settings => {
+                if (settings.openTime) {
+                    this.timelineComponent.scrollToWorkTime(settings.openTime);
+                }
+            }).catch(console.warn);
         }
     }
 
     /**
-     * 日付を移動
-     * @param {number} days - 移動する日数（正の数で未来、負の数で過去）
+     * 定期更新を開始
      * @private
      */
-    _navigateDate(days) {
-        this.currentDate.setDate(this.currentDate.getDate() + days);
-        this._updateDateDisplay();
-        this._loadEventsForCurrentDate();
+    _startPeriodicUpdate() {
+        // 現在時刻ラインは各コンポーネントで自動更新されるため、
+        // ここでは日付変更の監視のみ行う
+        this.updateInterval = setInterval(() => {
+            const now = new Date();
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // 日付が変わった場合
+            if (!isToday(this.currentDate) && isToday(today)) {
+                this.currentDate = today;
+                this.headerComponent.setCurrentDate(this.currentDate);
+                this._loadEventsForCurrentDate();
+            }
+        }, 60000); // 1分ごとにチェック
     }
 
     /**
-     * 今日の日付に移動
+     * 日付変更ハンドラー
      * @private
      */
-    _navigateToToday() {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        
-        // 既に今日の場合は何もしない
-        if (this.currentDate.getTime() === today.getTime()) {
-            return;
+    _handleDateChange(date) {
+        this.currentDate = new Date(date);
+        this.currentDate.setHours(0, 0, 0, 0);
+
+        // イベントを再読み込み
+        this._debounceLoadEvents();
+
+        // 現在時刻ラインの表示を更新
+        this.timelineComponent.setCurrentTimeLineVisible(isToday(this.currentDate));
+
+        // スクロール位置を調整
+        this._scrollToAppropriateTime();
+    }
+
+    /**
+     * ローカルイベント追加ハンドラー
+     * @private
+     */
+    _handleAddLocalEvent() {
+        // 現在時刻を基にデフォルト時刻を設定
+        const now = new Date();
+        const startTime = `${String(now.getHours()).padStart(2, '0')}:${String(Math.floor(now.getMinutes() / 15) * 15).padStart(2, '0')}`;
+        const endHour = now.getHours() + 1;
+        const endTime = `${String(endHour).padStart(2, '0')}:${String(Math.floor(now.getMinutes() / 15) * 15).padStart(2, '0')}`;
+
+        this.localEventModal.showCreate(startTime, endTime);
+    }
+
+    /**
+     * ローカルイベント保存ハンドラー
+     * @private
+     */
+    async _handleSaveLocalEvent(eventData, mode) {
+        try {
+            const { loadLocalEvents, saveLocalEvents } = await import('../lib/utils.js');
+
+            if (mode === 'create') {
+                // 新規作成
+                const localEvents = await loadLocalEvents();
+                localEvents.push({
+                    title: eventData.title,
+                    startTime: eventData.startTime,
+                    endTime: eventData.endTime
+                });
+                await saveLocalEvents(localEvents);
+            } else if (mode === 'edit') {
+                // 編集
+                const localEvents = await loadLocalEvents();
+                const eventIndex = localEvents.findIndex(e =>
+                    e.title === this.localEventModal.currentEvent.title &&
+                    e.startTime === this.localEventModal.currentEvent.startTime &&
+                    e.endTime === this.localEventModal.currentEvent.endTime
+                );
+
+                if (eventIndex !== -1) {
+                    localEvents[eventIndex] = {
+                        title: eventData.title,
+                        startTime: eventData.startTime,
+                        endTime: eventData.endTime
+                    };
+                    await saveLocalEvents(localEvents);
+                }
+            }
+
+            // イベント表示を再読み込み
+            await this._loadLocalEventsForDate(this.currentDate);
+
+        } catch (error) {
+            console.error('ローカルイベント保存エラー:', error);
+            this.alertModal.showError('イベントの保存に失敗しました: ' + error.message);
         }
-        
-        this.currentDate = today;
-        this._updateDateDisplay();
-        this._loadEventsForCurrentDate();
     }
 
     /**
-     * 日付ピッカーの変更を処理
-     * @param {string} dateValue - YYYY-MM-DD形式の日付文字列
+     * ローカルイベント削除ハンドラー
      * @private
      */
-    _onDatePickerChange(dateValue) {
-        if (dateValue) {
-            // 新しい日付を設定
-            const newDate = new Date(dateValue);
-            newDate.setHours(0, 0, 0, 0);
-            
-            this.currentDate = newDate;
-            this._loadEventsForCurrentDate();
+    async _handleDeleteLocalEvent(event) {
+        try {
+            const { loadLocalEvents, saveLocalEvents } = await import('../lib/utils.js');
+
+            const localEvents = await loadLocalEvents();
+            const updatedEvents = localEvents.filter(e =>
+                !(e.title === event.title &&
+                  e.startTime === event.startTime &&
+                  e.endTime === event.endTime)
+            );
+
+            await saveLocalEvents(updatedEvents);
+
+            // イベント表示を再読み込み
+            await this._loadLocalEventsForDate(this.currentDate);
+
+        } catch (error) {
+            console.error('ローカルイベント削除エラー:', error);
+            this.alertModal.showError('イベントの削除に失敗しました: ' + error.message);
         }
     }
 
     /**
-     * 現在の日付のイベントを読み込み（デバウンス付き）
+     * ローカルイベントキャンセルハンドラー
      * @private
      */
-    _loadEventsForCurrentDate() {
-        // 既存のタイマーをクリア
+    _handleCancelLocalEvent() {
+        // 特に処理なし（モーダルが閉じられるのみ）
+    }
+
+    /**
+     * 設定画面を開く
+     * @private
+     */
+    _openSettings() {
+        try {
+            chrome.runtime.openOptionsPage();
+        } catch (error) {
+            console.warn('設定画面の表示に失敗:', error);
+            // フォールバック
+            const optionsUrl = chrome.runtime.getURL('src/options/options.html');
+            window.open(optionsUrl, '_blank');
+        }
+    }
+
+    /**
+     * リサイズハンドラー
+     * @private
+     */
+    _handleResize() {
+        // レイアウト調整（コンポーネント版では特別な処理は不要）
+        console.log('リサイズ検出 - レイアウト調整');
+    }
+
+    /**
+     * イベント読み込みのデバウンス
+     * @private
+     */
+    _debounceLoadEvents() {
         if (this.loadEventsDebounceTimeout) {
             clearTimeout(this.loadEventsDebounceTimeout);
         }
-        
-        // 300ms後に実行
+
         this.loadEventsDebounceTimeout = setTimeout(() => {
-            this._loadEventsImmediate();
+            this._loadEventsForCurrentDate();
         }, 300);
     }
 
     /**
-     * 現在の日付のイベントを即座に読み込み
+     * デバウンス処理
      * @private
      */
-    _loadEventsImmediate() {
-        // 既存のイベントをクリア
-        this.eventLayoutManager.events = [];
-        this.localEventManager.localEventsDiv.innerHTML = '';
-        this.googleEventManager.googleEventsDiv.innerHTML = '';
-        
-        // TimeTableManagerの時間設定を対象日付で更新
-        loadSettings()
-            .then(async settings => {
-                // タイムテーブルを新しい日付で再作成
-                await this.timeTableManager.createBaseTable(this.currentDate, settings.breakTimeFixed, settings.breakTimeStart, settings.breakTimeEnd);
-                
-                // 現在時刻線を更新（今日以外では非表示になる）
-                this.timeTableManager.updateCurrentTimeLine(this.currentDate);
-                
-                // ローカルイベントの取得
-                await this.localEventManager.loadLocalEvents(this.currentDate);
-                
-                // Googleイベントの取得（デモモードの場合も含む）
-                const googleIntegrated = isDemoMode() || settings.googleIntegrated;
-                if (googleIntegrated) {
-                    this.googleEventManager.fetchEvents(this.currentDate);
-                } else {
-                    // Google連携がない場合は、ローカルイベントのみでレイアウト計算
-                    setTimeout(() => {
-                        this.eventLayoutManager.calculateLayout();
-                    }, 100);
-                }
-                
-                // スクロール位置を調整
-                setTimeout(() => {
-                    requestAnimationFrame(() => {
-                        this.timeTableManager.adjustScrollPosition(this.currentDate);
-                    });
-                }, 300);
-            })
-            .catch(error => {
-                logError('設定読み込み', error);
-                // エラーの場合もレイアウト計算
-                setTimeout(() => {
-                    this.eventLayoutManager.calculateLayout();
-                }, 100);
-            });
+    _debounce(func, delay) {
+        if (this.debounceTimeout) {
+            clearTimeout(this.debounceTimeout);
+        }
+        this.debounceTimeout = setTimeout(func, delay);
     }
 
     /**
-     * 定期的な更新を設定
+     * エラー表示
      * @private
      */
-    _setupPeriodicUpdates() {
-        let lastHourlyUpdate = -1; // 前回の毎時更新を記録
-        
-        this.updateInterval = setInterval(() => {
-            const currentTime = new Date();
-            const currentMinutes = currentTime.getMinutes();
-            const currentSeconds = currentTime.getSeconds();
-            const currentHour = currentTime.getHours();
-
-            // 毎時0分に予定を更新（重複実行を防ぐため時刻チェックを追加）
-            if (currentMinutes === 0 && currentSeconds === 0 && lastHourlyUpdate !== currentHour) {
-                lastHourlyUpdate = currentHour;
-                // 現在表示中の日付でイベントを取得
-                this.googleEventManager.fetchEvents(this.currentDate);
-            }
-
-            if (currentSeconds === 0) {
-                // 毎分0秒に現在時刻の線を更新
-                this.timeTableManager.updateCurrentTimeLine(this.currentDate);
-            }
-        }, 1000);
-    }
-}
-
-// DOMが読み込まれたときに実行
-document.addEventListener('DOMContentLoaded', async function() {
-    // 多言語化（グローバル関数として呼び出し）
-    if (window.localizeHtmlPageWithLang) {
-        try {
-            await window.localizeHtmlPageWithLang();
-            console.log('多言語化処理完了');
-        } catch (error) {
-            console.warn('多言語化処理でエラー:', error);
-            // フォールバックとして標準の多言語化を実行
-            if (window.localizeHtmlPage) {
-                window.localizeHtmlPage();
-            }
+    _showError(message) {
+        if (this.alertModal) {
+            this.alertModal.showError(message);
+        } else {
+            console.error(message);
         }
     }
 
-    // UIコントローラーの初期化と実行
-    const uiController = new UIController();
-    uiController.initialize();
+    /**
+     * リソースのクリーンアップ
+     */
+    destroy() {
+        // 定期更新を停止
+        if (this.updateInterval) {
+            clearInterval(this.updateInterval);
+            this.updateInterval = null;
+        }
+
+        // デバウンスタイマーをクリア
+        if (this.loadEventsDebounceTimeout) {
+            clearTimeout(this.loadEventsDebounceTimeout);
+        }
+
+        if (this.debounceTimeout) {
+            clearTimeout(this.debounceTimeout);
+        }
+
+        // 全コンポーネントを破棄
+        this.componentManager.destroyAll();
+    }
+}
+
+// グローバルスコープでインスタンスを管理
+let uiController = null;
+let isInitialized = false;
+
+// DOMContentLoaded時に初期化
+document.addEventListener('DOMContentLoaded', async () => {
+    // 二重初期化を防ぐ
+    if (isInitialized) {
+        console.warn('サイドパネルは既に初期化済みです');
+        return;
+    }
+
+    try {
+        isInitialized = true;
+        uiController = new SidePanelUIController();
+        await uiController.initialize();
+        console.log('サイドパネル初期化完了（コンポーネント版）');
+    } catch (error) {
+        console.error('サイドパネル初期化失敗:', error);
+        isInitialized = false; // エラー時はリセット
+    }
 });
+
+// ページアンロード時にクリーンアップ
+window.addEventListener('beforeunload', () => {
+    if (uiController) {
+        uiController.destroy();
+        uiController = null;
+    }
+});
+
+// デバッグ用にグローバルに公開
+window.sidePanelController = () => uiController;
