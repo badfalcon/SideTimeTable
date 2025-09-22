@@ -228,8 +228,14 @@ export class GoogleEventManager {
         eventDiv.dataset.location = event.location || '';
         eventDiv.dataset.hangoutLink = event.hangoutLink || '';
 
-        // クリックイベントの追加
-        eventDiv.addEventListener('click', () => this._showEventDetails(event));
+        // クリックイベントの追加（新しいモーダルコンポーネントを使用）
+        eventDiv.addEventListener('click', () => {
+            // 親のSidePanelUIControllerからgoogleEventModalを取得
+            const sidePanelController = window.sidePanelController;
+            if (sidePanelController && sidePanelController.googleEventModal) {
+                sidePanelController.googleEventModal.showEvent(event);
+            }
+        });
 
         // 24時間座標系での位置計算（0:00からの分数をピクセルに変換）
         const startOffset = (startDate.getHours() * 60 + startDate.getMinutes());
@@ -300,207 +306,7 @@ export class GoogleEventManager {
         }
     }
 
-    /**
-     * イベントの詳細を表示
-     * @private
-     */
-    _showEventDetails(event) {
-        const dialog = document.getElementById('googleEventDialog');
-        const closeBtn = document.getElementById('closeGoogleEventDialog');
 
-        // タイトル設定（タイトル自体をGoogleカレンダーのイベントページへのリンクにする）
-        const titleEl = dialog.querySelector('.google-event-title');
-        titleEl.innerHTML = '';
-
-        const titleText = event.summary || '(無題)';
-
-        // 最優先は API レスポンスの htmlLink
-        let linkHref = event.htmlLink || '';
-
-        if (linkHref) {
-            const a = document.createElement('a');
-            a.href = linkHref;
-            a.target = '_blank';
-            a.rel = 'noopener';
-            a.textContent = titleText;
-            // 見た目の調整（最小差分: 下線 + 色継承）
-            a.style.color = 'inherit';
-            a.style.textDecoration = 'underline';
-            a.title = 'カレンダーで開く';
-            titleEl.appendChild(a);
-        } else {
-            // リンクが作れない場合はテキスト表示にフォールバック
-            titleEl.textContent = titleText;
-        }
-
-        // カレンダー名設定
-        const calendarEl = dialog.querySelector('.google-event-calendar');
-        if (event.calendarName) {
-            calendarEl.textContent = `カレンダー: ${event.calendarName}`;
-            calendarEl.style.display = 'block';
-        } else {
-            calendarEl.style.display = 'none';
-        }
-
-        // 日時設定
-        const startDate = new Date(event.start.dateTime);
-        const endDate = new Date(event.end.dateTime);
-        this._setEventDetailsTimeWithLocale(dialog.querySelector('.google-event-time'), startDate, endDate);
-
-        // 説明設定
-        const descriptionEl = dialog.querySelector('.google-event-description');
-        if (event.description) {
-            // HTMLタグを適切に処理するためinnerHTMLを使用
-            descriptionEl.innerHTML = this._sanitizeHtml(event.description);
-            descriptionEl.style.display = 'block';
-        } else {
-            descriptionEl.style.display = 'none';
-        }
-
-        // 場所設定（テキストのみ）
-        const locationEl = dialog.querySelector('.google-event-location');
-        let mapsUrl = '';
-        if (event.location) {
-            const locationText = `場所: ${event.location}`;
-            mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`;
-            locationEl.textContent = locationText;
-            locationEl.style.display = 'block';
-        } else {
-            locationEl.style.display = 'none';
-        }
-
-        // アクションボタン領域（Meet と Map を横並び）
-        const meetEl = dialog.querySelector('.google-event-meet');
-        const buttons = [];
-        // Meet ボタン
-        if (event.hangoutLink) {
-            buttons.push(`<button class="btn btn-primary" id="openMeetButton" title="Google Meet を新しいタブで開く"><i class="fas fa-video"></i> Meetを開く</button>`);
-        }
-        // Map ボタン（場所がある場合）
-        if (mapsUrl) {
-            buttons.push(`<button class="btn btn-secondary" id="openMapButton" title="Google マップで開く"><i class="fas fa-map-marker-alt"></i> マップを開く</button>`);
-        }
-        if (buttons.length > 0) {
-            meetEl.innerHTML = buttons.join(' ');
-            // クリックハンドラ
-            const openMeetButton = dialog.querySelector('#openMeetButton');
-            if (openMeetButton) {
-                openMeetButton.onclick = () => {
-                    try {
-                        window.open(event.hangoutLink, '_blank', 'noopener');
-                    } catch (e) {
-                        console.error('Meetを開けませんでした:', e);
-                    }
-                };
-            }
-            const openMapButton = dialog.querySelector('#openMapButton');
-            if (openMapButton) {
-                openMapButton.onclick = () => {
-                    try {
-                        window.open(mapsUrl, '_blank', 'noopener');
-                    } catch (e) {
-                        console.error('マップを開けませんでした:', e);
-                    }
-                };
-            }
-            meetEl.style.display = 'block';
-        } else {
-            meetEl.style.display = 'none';
-        }
-
-        // モーダルを表示
-        dialog.style.display = 'flex';
-
-        // 閉じるボタンのイベントリスナー
-        closeBtn.onclick = () => {
-            dialog.style.display = 'none';
-        };
-
-        // モーダルの外側をクリックしたときに閉じる
-        dialog.onclick = (e) => {
-            if (e.target === dialog) {
-                dialog.style.display = 'none';
-            }
-        };
-    }
-
-    /**
-     * ロケールに対応した時間表示でイベント詳細の時間を設定
-     * @param {HTMLElement} timeElement - 時間表示要素
-     * @param {Date} startDate - 開始時刻
-     * @param {Date} endDate - 終了時刻
-     * @private
-     */
-    async _setEventDetailsTimeWithLocale(timeElement, startDate, endDate) {
-        try {
-            // 現在のロケールを取得
-            const locale = await window.getCurrentLocale();
-            
-            // 日時をロケール形式でフォーマット
-            const formattedDate = window.formatDateForLocale(startDate, locale);
-            const startHours = String(startDate.getHours()).padStart(2, '0');
-            const startMinutes = String(startDate.getMinutes()).padStart(2, '0');
-            const endHours = String(endDate.getHours()).padStart(2, '0');
-            const endMinutes = String(endDate.getMinutes()).padStart(2, '0');
-            
-            const formattedTimeRange = window.formatTimeRangeForLocale(
-                `${startHours}:${startMinutes}`,
-                `${endHours}:${endMinutes}`,
-                locale
-            );
-            
-            timeElement.textContent = `${formattedDate} ${formattedTimeRange}`;
-        } catch (error) {
-            // エラーの場合は従来の表示方法を使用
-            console.warn('ロケール時間フォーマットエラー:', error);
-            timeElement.textContent = `${startDate.toLocaleString()} - ${endDate.toLocaleString()}`;
-        }
-    }
-
-    /**
-     * HTMLをサニタイズ（安全なタグのみ許可）
-     * @param {string} html - サニタイズするHTML文字列
-     * @returns {string} サニタイズされたHTML文字列
-     * @private
-     */
-    _sanitizeHtml(html) {
-        // 改行をbrタグに変換
-        let sanitized = html.replace(/\n/g, '<br>');
-        
-        // 安全なHTMLタグのみを許可
-        const allowedTags = ['a', 'br', 'b', 'strong', 'i', 'em', 'u', 'p', 'div', 'span'];
-        const allowedAttributes = ['href', 'target', 'title'];
-        
-        // 簡易HTMLサニタイザー
-        // より厳密な場合は DOMPurify などのライブラリを使用することを推奨
-        sanitized = sanitized.replace(/<(\/?)([\w]+)([^>]*)>/g, (match, slash, tag, attrs) => {
-            const lowerTag = tag.toLowerCase();
-            
-            if (!allowedTags.includes(lowerTag)) {
-                return ''; // 許可されていないタグは削除
-            }
-            
-            if (slash) {
-                return `</${lowerTag}>`;
-            }
-            
-            // 属性をフィルタリング
-            const filteredAttrs = attrs.replace(/(\w+)=["']([^"']*)["']/g, (attrMatch, name, value) => {
-                if (allowedAttributes.includes(name.toLowerCase())) {
-                    // target="_blank"の場合はrel="noopener"を追加
-                    if (name.toLowerCase() === 'target' && value === '_blank') {
-                        return `${name}="${value}" rel="noopener"`;
-                    }
-                    return `${name}="${value}"`;
-                }
-                return '';
-            });
-            
-            return `<${lowerTag}${filteredAttrs}>`;
-        });
-        
-        return sanitized;
-    }
 }
 
 /**

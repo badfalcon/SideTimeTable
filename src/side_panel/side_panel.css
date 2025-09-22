@@ -231,18 +231,25 @@ button {
     height: 100%;
     overflow: auto;
     background-color: rgba(0, 0, 0, 0.5); /* 半透明の背景を少し濃く */
+    align-items: center;
+    justify-content: center;
+}
+
+.modal[style*="display: block"] {
+    display: flex !important;
 }
 
 .modal-content {
     background-color: #fff; /* 純白の背景 */
-    margin: auto;
     padding: 30px; /* 内側の余白を広く */
     border: 1px solid #ccc; /* グレーの境界線 */
-    width: 70%; /* 幅調整 */
+    width: 90%; /* 小さな画面でも使いやすく */
     max-width: 500px; /* 最大幅を設定 */
+    max-height: 90vh; /* 高さ制限 */
     border-radius: 10px; /* 少し大きめの角丸 */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 影の追加 */
     position: relative;
+    overflow-y: auto; /* 内容が長い場合のスクロール */
 }
 
 .modal-content h2 {
