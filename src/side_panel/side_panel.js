@@ -310,6 +310,9 @@ class SidePanelUIController {
      * @private
      */
     async _loadInitialData() {
+        // TimelineComponentに初期日付を設定
+        this.timelineComponent.setCurrentDate(this.currentDate);
+
         await this._loadEventsForCurrentDate();
         this._scrollToAppropriateTime();
     }
@@ -382,6 +385,9 @@ class SidePanelUIController {
     _handleDateChange(date) {
         this.currentDate = new Date(date);
         this.currentDate.setHours(0, 0, 0, 0);
+
+        // TimelineComponentに日付を設定
+        this.timelineComponent.setCurrentDate(this.currentDate);
 
         // イベントを再読み込み
         this._debounceLoadEvents();

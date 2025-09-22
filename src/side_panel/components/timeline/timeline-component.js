@@ -25,6 +25,9 @@ export class TimelineComponent extends Component {
         // 現在時刻ライン管理
         this.showCurrentTimeLine = options.showCurrentTimeLine !== false;
         this.currentTimeLineManager = null;
+
+        // 表示対象の日付
+        this.currentDate = new Date();
     }
 
     createElement() {
@@ -113,7 +116,7 @@ export class TimelineComponent extends Component {
      */
     _setupCurrentTimeLine() {
         if (!this.currentTimeLineManager) {
-            this.currentTimeLineManager = new CurrentTimeLineManager(this.eventsLayer);
+            this.currentTimeLineManager = new CurrentTimeLineManager(this.eventsLayer, this.currentDate);
         }
         this.currentTimeLineManager.update();
     }
@@ -180,14 +183,25 @@ export class TimelineComponent extends Component {
     }
 
     /**
-     * 今日かどうかをチェック
+     * 表示中の日付が今日かどうかを判定
      * @returns {boolean} 今日の場合true
      */
     isToday() {
-        // この関数は外部から日付情報を受け取る必要があります
-        // 実装時にHeaderComponentから日付情報を取得するようにします
         const today = new Date();
-        return true; // 仮実装
+        return today.toDateString() === this.currentDate.toDateString();
+    }
+
+    /**
+     * 表示対象の日付を設定
+     * @param {Date} date 表示対象の日付
+     */
+    setCurrentDate(date) {
+        this.currentDate = date;
+
+        // CurrentTimeLineManagerにも日付を設定
+        if (this.currentTimeLineManager) {
+            this.currentTimeLineManager.setTargetDate(date);
+        }
     }
 
     /**
