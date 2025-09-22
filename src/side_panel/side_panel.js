@@ -669,6 +669,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         isInitialized = true;
         uiController = new SidePanelUIController();
         await uiController.initialize();
+
+        // グローバルアクセス用に公開
+        window.sidePanelController = uiController;
+
         console.log('サイドパネル初期化完了（コンポーネント版）');
     } catch (error) {
         console.error('サイドパネル初期化失敗:', error);
@@ -681,8 +685,6 @@ window.addEventListener('beforeunload', () => {
     if (uiController) {
         uiController.destroy();
         uiController = null;
+        window.sidePanelController = null;
     }
 });
-
-// デバッグ用にグローバルに公開
-window.sidePanelController = () => uiController;
