@@ -34,7 +34,6 @@ export class TimelineComponent extends Component {
 
         // 既に内容が作成済みの場合はスキップ
         if (container.children.length > 0) {
-            console.log('タイムラインコンポーネントの内容は既に作成済みです');
             return container;
         }
 

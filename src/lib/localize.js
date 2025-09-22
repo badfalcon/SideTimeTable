@@ -80,7 +80,6 @@ async function localizeHtmlPageWithLang() {
         const userLanguageSetting = await getCurrentLanguageSetting();
         const targetLanguage = resolveLanguageCode(userLanguageSetting);
         
-        console.log('言語設定:', userLanguageSetting, '→', targetLanguage);
         
         // 設定された言語でローカライズを実行
         await localizeWithLanguage(targetLanguage);
@@ -104,7 +103,6 @@ async function localizeWithLanguage(targetLang) {
         const response = await fetch(messagesUrl);
         const messages = await response.json();
         
-        console.log('メッセージファイル読み込み:', targetLang, Object.keys(messages).length, '件');
         
         // HTML要素をローカライズ
         document.querySelectorAll('[data-localize]').forEach(element => {

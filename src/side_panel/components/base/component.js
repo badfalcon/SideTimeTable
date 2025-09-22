@@ -27,7 +27,6 @@ export class Component {
     createElement() {
         // 既に要素が作成済みの場合は再利用
         if (this.element) {
-            console.log(`コンポーネント ${this.options.id || 'unknown'} は既に作成済みです`);
             return this.element;
         }
 
@@ -35,7 +34,6 @@ export class Component {
         if (this.options.id) {
             const existingElement = document.getElementById(this.options.id);
             if (existingElement) {
-                console.log(`既存要素 ${this.options.id} を削除します`);
                 existingElement.remove();
             }
         }
@@ -54,7 +52,6 @@ export class Component {
             this.element.style.display = 'none';
         }
 
-        console.log(`コンポーネント ${this.options.id || 'div'} を作成しました`);
         return this.element;
     }
 

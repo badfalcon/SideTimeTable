@@ -87,7 +87,6 @@ class OptionsPageManager {
         if (window.localizeHtmlPageWithLang) {
             try {
                 await window.localizeHtmlPageWithLang();
-                console.log('コンポーネント後の多言語化完了');
             } catch (error) {
                 console.warn('コンポーネント後の多言語化エラー:', error);
                 if (typeof localizeHtmlPage === 'function') {
@@ -96,7 +95,6 @@ class OptionsPageManager {
             }
         }
 
-        console.log('Options page initialized with components:', this.componentManager.getStats());
     }
 
     async _loadAndApplySettings() {
@@ -138,7 +136,6 @@ class OptionsPageManager {
                 this.calendarManagementCard.show();
             }
 
-            console.log('設定をコンポーネントに適用しました');
         } catch (error) {
             console.error('設定読み込みエラー:', error);
         }
@@ -210,7 +207,6 @@ class OptionsPageManager {
             };
 
             await saveSettings(updatedSettings);
-            console.log('時間設定を保存しました:', timeSettings);
 
             // サイドパネルを再読み込み
             this._reloadSidePanel();
@@ -231,7 +227,6 @@ class OptionsPageManager {
             };
 
             await saveSettings(updatedSettings);
-            console.log('色設定を保存しました:', colorSettings);
 
             // CSS変数を即座に更新
             document.documentElement.style.setProperty('--side-calendar-work-time-color', colorSettings.workTimeColor);
@@ -252,7 +247,6 @@ class OptionsPageManager {
                 chrome.storage.sync.set({ 'language': languageSettings.language }, resolve);
             });
 
-            console.log('言語設定を保存しました:', languageSettings);
 
             // サイドパネルを再読み込み
             this._reloadSidePanel();
@@ -264,7 +258,6 @@ class OptionsPageManager {
     async handleSaveSettings() {
         // 設定は各コンポーネントで自動保存されているので、
         // ここでは確認メッセージのみ表示
-        console.log('すべての設定が保存されました');
     }
 
     async handleResetSettings() {
@@ -285,7 +278,6 @@ class OptionsPageManager {
             // サイドパネルを再読み込み
             this._reloadSidePanel();
 
-            console.log('設定をデフォルトに戻しました');
         } catch (error) {
             logError('設定リセット', error);
             throw error;
@@ -301,7 +293,6 @@ class OptionsPageManager {
             chrome.runtime.sendMessage({
                 action: 'reloadSideTimeTable'
             });
-            console.log('サイドパネル再読み込み通知を送信しました');
         } catch (error) {
             console.warn('サイドパネル再読み込み通知に失敗:', error);
         }
@@ -954,7 +945,6 @@ class SettingsManager {
         // ボタンを無効化
         googleIntegrationButton.disabled = true;
         
-        console.log('Googleカレンダーとの連携を試みます');
 
         // 応答待ちのタイムアウトを設定（15秒）
         let responded = false;
@@ -972,7 +962,6 @@ class SettingsManager {
             if (chrome.runtime.lastError) {
                 console.warn('認証事前チェックに失敗:', chrome.runtime.lastError);
             } else {
-                console.log('認証事前チェック結果:', authResp);
             }
             
             // 実際のイベント取得（= 認可フロー開始）
@@ -980,7 +969,6 @@ class SettingsManager {
             chrome.runtime.sendMessage({ action: 'getEvents', requestId }, (response) => {
                 responded = true;
                 clearTimeout(timeoutId);
-                console.log('Googleカレンダーとの連携結果:', response);
                 
                 if (chrome.runtime.lastError) {
                     logError('Google連携', chrome.runtime.lastError);
@@ -1018,7 +1006,6 @@ class SettingsManager {
                 // 設定を保存
                 saveSettings({ googleIntegrated: this.settings.googleIntegrated })
                     .then(async () => {
-                        console.log('Googleカレンダーとの連携情報を保存しました');
                         
                         // UI更新
                         await this._updateUI();
@@ -1080,7 +1067,7 @@ class SettingsManager {
                 // サイドパネルをリロード（少し遅延を入れて確実に保存が完了するようにする）
                 setTimeout(() => {
                     reloadSidePanel()
-                        .then(() => console.log('サイドパネルのリロードに成功しました'))
+                        .then(() => {})
                         .catch(error => logError('サイドパネルリロード', error));
                 }, 500);
             })
@@ -1128,7 +1115,7 @@ class SettingsManager {
                     // サイドパネルをリロード
                     setTimeout(() => {
                         reloadSidePanel()
-                            .then(() => console.log('サイドパネルのリロードに成功しました'))
+                            .then(() => {})
                             .catch(error => logError('サイドパネルリロード', error));
                     }, 500);
                 })
@@ -1273,7 +1260,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (window.localizeHtmlPageWithLang) {
         try {
             await window.localizeHtmlPageWithLang();
-            console.log('オプションページ多言語化完了');
         } catch (error) {
             console.warn('多言語化処理でエラー:', error);
             // フォールバックとして標準の多言語化を実行

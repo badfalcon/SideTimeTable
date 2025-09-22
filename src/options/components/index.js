@@ -72,7 +72,6 @@ export class ComponentManager {
                 if (component.loadData && typeof component.loadData === 'function') {
                     await component.loadData();
                 }
-                console.log(`✓ Component initialized: ${name}`);
             } catch (error) {
                 console.error(`✗ Component initialization failed: ${name}`, error);
             }
@@ -88,7 +87,6 @@ export class ComponentManager {
                 if (component.destroy && typeof component.destroy === 'function') {
                     component.destroy();
                 }
-                console.log(`✓ Component destroyed: ${name}`);
             } catch (error) {
                 console.error(`✗ Component destruction failed: ${name}`, error);
             }

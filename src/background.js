@@ -14,25 +14,20 @@ chrome.sidePanel
 
 // 拡張機能がインストールされたときの処理
 chrome.runtime.onInstalled.addListener(() => {
-    console.log("拡張機能がインストールされました");
+    // 初期設定など必要に応じて追加
 });
 
 // キーボードショートカットのハンドラー
 // StackOverflowの解決策：awaitを使わず、callbackで即座にsidePanel.open()を呼ぶ
 if (chrome.commands && chrome.commands.onCommand && chrome.commands.onCommand.addListener) {
     chrome.commands.onCommand.addListener((command) => {
-        console.log("ショートカットコマンド受信:", command);
         
         switch (command) {
             case 'open-side-panel':
                 // async操作を最小限に抑え、即座にsidePanel.open()を呼ぶ
                 chrome.tabs.query({ active: true, currentWindow: true }, ([activeTab]) => {
                     if (activeTab) {
-                        console.log("サイドパネルを開く試行:", activeTab.id);
-                        chrome.sidePanel.open({ tabId: activeTab.id })
-                            .then(() => {
-                                console.log("サイドパネル開閉成功！");
-                            });
+                        chrome.sidePanel.open({ tabId: activeTab.id });
                     } else {
                         console.error("アクティブタブが見つかりません");
                     }
@@ -53,10 +48,8 @@ if (chrome.commands && chrome.commands.onCommand && chrome.commands.onCommand.ad
  * @returns {Promise<Array>} カレンダー一覧を返すPromise
  */
 function getCalendarList() {
-    console.log("Googleカレンダー一覧取得開始");
     return new Promise((resolve, reject) => {
         try {
-            console.log("認証トークンをリクエスト中");
             chrome.identity.getAuthToken({interactive: true}, (token) => {
                 if (chrome.runtime.lastError || !token) {
                     const error = chrome.runtime.lastError || new Error("認証トークンが取得できませんでした");
@@ -65,11 +58,7 @@ function getCalendarList() {
                     return;
                 }
 
-                console.log("認証トークン取得成功");
-                
                 const calendarListUrl = `https://www.googleapis.com/calendar/v3/users/me/calendarList`;
-
-                console.log("カレンダー一覧をフェッチ中");
                 fetch(calendarListUrl, {
                     headers: {
                         Authorization: "Bearer " + token
@@ -92,16 +81,12 @@ function getCalendarList() {
                             foregroundColor: cal.foregroundColor
                         }));
 
-                    console.log(`カレンダー一覧取得完了: ${calendars.length}件`);
                     
                     // プライマリカレンダーのみを自動選択状態にする
                     const primaryCalendar = calendars.find(cal => cal.primary);
                     if (primaryCalendar) {
                         const primaryCalendarIds = [primaryCalendar.id];
                         StorageHelper.set({ selectedCalendars: primaryCalendarIds })
-                            .then(() => {
-                                console.log("プライマリカレンダーを自動選択しました:", primaryCalendar.summary);
-                            })
                             .catch((error) => {
                                 console.error("プライマリカレンダー選択設定エラー:", error);
                             });
@@ -127,13 +112,11 @@ function getCalendarList() {
  * @returns {Promise<Array>} イベントの配列を返すPromise
  */
 function getCalendarEvents(targetDate = null) {
-    console.log("Googleカレンダーイベント取得開始");
     return new Promise((resolve, reject) => {
         try {
             // 選択されたカレンダー一覧を取得
             StorageHelper.get(['selectedCalendars'], { selectedCalendars: [] })
                 .then((storageData) => {
-                    console.log("認証トークンをリクエスト中");
                 chrome.identity.getAuthToken({interactive: true}, (token) => {
                     if (chrome.runtime.lastError || !token) {
                         const error = chrome.runtime.lastError || new Error("認証トークンが取得できませんでした");
@@ -142,7 +125,6 @@ function getCalendarEvents(targetDate = null) {
                         return;
                     }
 
-                    console.log("認証トークン取得成功");
                     
                     // 対象日付の範囲を設定
                     const targetDay = targetDate || new Date();
@@ -159,7 +141,6 @@ function getCalendarEvents(targetDate = null) {
                         // 選択されたカレンダーがない場合は、Googleカレンダーで表示設定されたカレンダーを使用
                         const calendarListUrl = `https://www.googleapis.com/calendar/v3/users/me/calendarList`;
 
-                        console.log("選択カレンダーなし。全カレンダー一覧をフェッチ中");
                         calendarsPromise = fetch(calendarListUrl, {
                             headers: {
                                 Authorization: "Bearer " + token
@@ -229,7 +210,6 @@ function getCalendarEvents(targetDate = null) {
                         });
                     });
 
-                    console.log(`選択中のカレンダー数: ${fetches.length} 件。各カレンダーのイベントを取得します。`);
 
                     return Promise.all(fetches);
                 })
@@ -281,7 +261,6 @@ function getCalendarEvents(targetDate = null) {
                             }
                         });
                         
-                        console.log(`合計 ${allEvents.length} 件のイベントを取得しました（全カレンダー）`);
                         resolve(allEvents);
                     } catch (colorError) {
                         console.warn('カレンダー色情報取得エラー:', colorError);
@@ -326,18 +305,15 @@ function getCalendarEvents(targetDate = null) {
  * @returns {Promise<boolean>} 認証状態を返すPromise
  */
 function checkGoogleAuth() {
-    console.log("Google認証状態確認開始");
     return new Promise((resolve, reject) => {
         try {
             chrome.identity.getAuthToken({interactive: false}, (token) => {
                 if (chrome.runtime.lastError) {
-                    console.log("認証状態確認エラー:", chrome.runtime.lastError);
                     resolve(false); // エラーがあっても認証されていないだけなのでrejectしない
                     return;
                 }
                 
                 const isAuthenticated = !!token;
-                console.log("認証状態:", isAuthenticated ? "認証済み" : "未認証");
                 resolve(isAuthenticated);
             });
         } catch (error) {
@@ -349,7 +325,6 @@ function checkGoogleAuth() {
 
 // メッセージリスナー
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    console.log("メッセージ受信:", request.action);
     
     switch (request.action) {
         case "getEvents":
@@ -395,7 +370,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     return;
                 }
 
-                console.log("Google認証成功");
                 sendResponse({ success: true, token: token });
             });
             return true; // 非同期応答を示す
@@ -405,7 +379,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             chrome.identity.getAuthToken({interactive: false}, (token) => {
                 if (chrome.runtime.lastError || !token) {
                     // トークンがない場合は既に切断済み
-                    console.log("認証トークンなし（既に切断済み）");
                     sendResponse({ success: true, alreadyDisconnected: true });
                     return;
                 }
@@ -418,7 +391,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                         return;
                     }
 
-                    console.log("Google認証トークンを削除しました");
                     sendResponse({
                         success: true,
                         requiresManualRevoke: true,

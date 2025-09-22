@@ -11,7 +11,7 @@ import {
     AlertModal
 } from './components/index.js';
 
-import { TimeTableManager, EventLayoutManager } from './time-manager.js';
+import { EventLayoutManager } from './time-manager.js';
 import { GoogleEventManager, LocalEventManager } from './event-handlers.js';
 import { generateTimeList, loadSettings, logError } from '../lib/utils.js';
 import { isToday } from '../lib/time-utils.js';
@@ -77,7 +77,6 @@ class SidePanelUIController {
             // 定期更新を開始
             this._startPeriodicUpdate();
 
-            console.log('サイドパネルUI初期化完了（コンポーネント版）');
 
         } catch (error) {
             console.error('サイドパネルUI初期化エラー:', error);
@@ -94,14 +93,12 @@ class SidePanelUIController {
         const existingHeader = document.getElementById('sideTimeTableHeaderWrapper');
         if (existingHeader) {
             existingHeader.remove();
-            console.log('既存のヘッダー要素を削除しました');
         }
 
         // 既存のタイムテーブル要素を削除
         const existingTimeTable = document.getElementById('sideTimeTable');
         if (existingTimeTable) {
             existingTimeTable.remove();
-            console.log('既存のタイムテーブル要素を削除しました');
         }
 
         // 既存のモーダル要素を削除
@@ -115,7 +112,6 @@ class SidePanelUIController {
             const modal = document.getElementById(modalId);
             if (modal) {
                 modal.remove();
-                console.log(`既存のモーダル要素 ${modalId} を削除しました`);
             }
         });
 
@@ -124,7 +120,6 @@ class SidePanelUIController {
         duplicateElements.forEach(element => {
             if (element.id !== 'time-list') { // time-listは保持
                 element.remove();
-                console.log(`重複要素 ${element.id} を削除しました`);
             }
         });
     }
@@ -319,23 +314,14 @@ class SidePanelUIController {
      */
     async _loadEventsForCurrentDate() {
         try {
-            // ローカルイベントとGoogleイベントを並行で読み込み
+            // GoogleイベントとローカルイベントをManagerクラス経由で読み込み
             const [localResult, googleResult] = await Promise.allSettled([
-                this._loadLocalEventsForDate(this.currentDate),
+                this.localEventManager.loadLocalEvents(this.currentDate),
                 this.googleEventManager.fetchEvents(this.currentDate)
             ]);
 
             // 結果をログ出力
             if (localResult.status === 'fulfilled') {
-                console.log('ローカルイベント読み込み完了:', localResult.value?.length || 0, '件');
-            } else {
-                console.warn('ローカルイベント読み込み失敗:', localResult.reason);
-            }
-
-            if (googleResult.status === 'fulfilled') {
-                console.log('Googleイベント読み込み完了:', googleResult.value?.length || 0, '件');
-            } else {
-                console.warn('Googleイベント読み込み失敗:', googleResult.reason);
             }
 
         } catch (error) {
@@ -343,80 +329,6 @@ class SidePanelUIController {
         }
     }
 
-    /**
-     * ローカルイベントを読み込んで表示
-     * @private
-     */
-    async _loadLocalEventsForDate(targetDate) {
-        try {
-            const { loadLocalEventsForDate } = await import('../lib/utils.js');
-            const events = await loadLocalEventsForDate(targetDate);
-
-            // ローカルイベントコンテナをクリア
-            this.timelineComponent.clearLocalEvents();
-
-            // イベントを作成して表示
-            const localContainer = this.timelineComponent.getLocalEventsContainer();
-            for (const event of events) {
-                const eventDiv = this._createLocalEventDiv(event);
-                localContainer.appendChild(eventDiv);
-            }
-
-            return events;
-        } catch (error) {
-            console.error('ローカルイベント読み込みエラー:', error);
-            return [];
-        }
-    }
-
-
-    /**
-     * ローカルイベントDIVを作成
-     * @private
-     */
-    _createLocalEventDiv(event) {
-        const eventDiv = document.createElement('div');
-        eventDiv.className = 'local-event';
-        eventDiv.textContent = `${event.startTime} - ${event.endTime}: ${event.title}`;
-
-        // クリックイベント（編集）
-        eventDiv.addEventListener('click', () => {
-            this.localEventModal.showEdit(event);
-        });
-
-        // 位置とサイズを計算
-        const startMinutes = this._timeToMinutes(event.startTime);
-        const endMinutes = this._timeToMinutes(event.endTime);
-        const duration = endMinutes - startMinutes;
-
-        eventDiv.style.cssText = `
-            position: absolute;
-            top: ${startMinutes}px;
-            height: ${duration}px;
-            left: 60px;
-            right: 10px;
-            background-color: var(--side-calendar-local-event-color, #bbf2b1);
-            border: 1px solid #999;
-            padding: 2px 5px;
-            font-size: 12px;
-            line-height: 1.2;
-            overflow: hidden;
-            cursor: pointer;
-            border-radius: 3px;
-        `;
-
-        return eventDiv;
-    }
-
-
-    /**
-     * 時刻を分に変換
-     * @private
-     */
-    _timeToMinutes(time) {
-        const [hours, minutes] = time.split(':').map(Number);
-        return hours * 60 + minutes;
-    }
 
     /**
      * 適切な時刻にスクロール
@@ -526,7 +438,7 @@ class SidePanelUIController {
             }
 
             // イベント表示を再読み込み
-            await this._loadLocalEventsForDate(this.currentDate);
+            await this.localEventManager.loadLocalEvents(this.currentDate);
 
         } catch (error) {
             console.error('ローカルイベント保存エラー:', error);
@@ -552,7 +464,7 @@ class SidePanelUIController {
             await saveLocalEvents(updatedEvents);
 
             // イベント表示を再読み込み
-            await this._loadLocalEventsForDate(this.currentDate);
+            await this.localEventManager.loadLocalEvents(this.currentDate);
 
         } catch (error) {
             console.error('ローカルイベント削除エラー:', error);
@@ -589,7 +501,6 @@ class SidePanelUIController {
      */
     _handleResize() {
         // レイアウト調整（コンポーネント版では特別な処理は不要）
-        console.log('リサイズ検出 - レイアウト調整');
     }
 
     /**
@@ -648,6 +559,12 @@ class SidePanelUIController {
             clearTimeout(this.debounceTimeout);
         }
 
+        // EventLayoutManagerのクリーンアップ
+        if (this.eventLayoutManager) {
+            this.eventLayoutManager.destroy();
+            this.eventLayoutManager = null;
+        }
+
         // 全コンポーネントを破棄
         this.componentManager.destroyAll();
     }
@@ -673,7 +590,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         // グローバルアクセス用に公開
         window.sidePanelController = uiController;
 
-        console.log('サイドパネル初期化完了（コンポーネント版）');
     } catch (error) {
         console.error('サイドパネル初期化失敗:', error);
         isInitialized = false; // エラー時はリセット

@@ -32,7 +32,6 @@ export class HeaderComponent extends Component {
 
         // 既に内容が作成済みの場合はスキップ
         if (wrapper.children.length > 0) {
-            console.log('ヘッダーコンポーネントの内容は既に作成済みです');
             return wrapper;
         }
 
