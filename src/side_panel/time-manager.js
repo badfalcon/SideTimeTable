@@ -6,7 +6,6 @@
 
 import {TIME_CONSTANTS} from '../lib/utils.js';
 import {calculateBreakHours, calculateWorkHours, isSameDay} from '../lib/time-utils.js';
-import {CurrentTimeLineManager} from '../lib/current-time-line-manager.js';
 
 // EventLayoutManager関連の定数
 const LAYOUT_CONSTANTS = {
