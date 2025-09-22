@@ -575,11 +575,11 @@ export class EventLayoutManager {
                     adjustedLaneWidth = minTotalWidth;
                 }
                 
-                console.log(`サイズ計算: 利用可能幅=${availableWidth}px, レーン数=${laneCount}`);
-                console.log(`Padding: 左右${totalEventPadding}px, コンテンツ幅=${adjustedLaneWidth - totalEventPadding}px`);
-                console.log(`調整後: レーン幅=${adjustedLaneWidth}px, 間隔=${adjustedGap}px`);
-
                 // Flexコンテナを探すか作成
+                if (!this.baseElement) {
+                    return;
+                }
+
                 let flexContainer = document.getElementById('event-flex-container');
                 if (!flexContainer) {
                     flexContainer = document.createElement('div');

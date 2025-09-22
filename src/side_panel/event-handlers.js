@@ -7,6 +7,7 @@
 import {
     loadLocalEvents,
     loadLocalEventsForDate,
+    loadSettings,
     logError,
     saveLocalEvents,
     showAlertModal,
@@ -46,33 +47,30 @@ export class GoogleEventManager {
      * Googleカレンダーから予定を取得
      * @param {Date} targetDate - 対象の日付（省略時は今日）
      */
-    fetchEvents(targetDate = null) {
-        console.log('Googleイベント取得開始');
-        console.log('Google連携状態:', this.isGoogleIntegrated);
+    async fetchEvents(targetDate = null) {
+        // 現在の設定を動的に確認
+        const settings = await loadSettings();
+        const isGoogleIntegrated = settings.googleIntegrated === true;
 
-        if (!this.isGoogleIntegrated) {
-            console.log('Google連携が無効です');
+        if (!isGoogleIntegrated) {
             return Promise.resolve();
         }
 
         // デモモードの場合はモックデータを使用
         if (isDemoMode()) {
-            console.log('デモモードでモックデータを使用します');
             return this._processDemoEvents();
         }
 
         // 進行中のリクエストがある場合はそれを返す（重複防止）
         if (this.currentFetchPromise) {
-            console.log('既にイベント取得中です。既存のPromiseを返します');
             return this.currentFetchPromise;
         }
 
         // 同じ日付での重複呼び出し制限チェック
         const targetDay = targetDate || new Date();
         const targetDateStr = targetDay.toDateString(); // 日付文字列で比較
-        
+
         if (this.lastFetchDate === targetDateStr && this.currentFetchPromise) {
-            console.log('同じ日付で既にAPI呼び出し中のため、スキップします');
             return this.currentFetchPromise; // 既存のPromiseを返す
         }
 
@@ -84,9 +82,6 @@ export class GoogleEventManager {
             const message = { action: "getEvents", requestId };
             if (targetDate) {
                 message.targetDate = targetDate.toISOString();
-                console.log('Google イベント取得 対象日付:', targetDate.toISOString());
-            } else {
-                console.log('Google イベント取得 対象日付: 今日');
             }
             
             chrome.runtime.sendMessage(message, (response) => {
@@ -98,18 +93,18 @@ export class GoogleEventManager {
             });
         })
             .then(async response => {
-                console.log('イベント取得応答:', response);
-
                 // 以前の表示をクリア
                 this.googleEventsDiv.innerHTML = '';
 
                 // Googleイベントのみをレイアウトマネージャーから削除
-                const events = [...this.eventLayoutManager.events];
-                events.forEach(event => {
-                    if (event && event.type === 'google') {
-                        this.eventLayoutManager.removeEvent(event.id);
-                    }
-                });
+                if (this.eventLayoutManager && this.eventLayoutManager.events) {
+                    const events = [...this.eventLayoutManager.events];
+                    events.forEach(event => {
+                        if (event && event.type === 'google') {
+                            this.eventLayoutManager.removeEvent(event.id);
+                        }
+                    });
+                }
 
                 if (!response) {
                     logError('Googleイベント取得', '応答がありません');
@@ -127,16 +122,17 @@ export class GoogleEventManager {
                     return;
                 }
 
-                if (!response.events || response.events.length === 0) {
-                    console.log('イベントがありません');
+                // eventsプロパティの存在確認
+                if (!response.events || !Array.isArray(response.events) || response.events.length === 0) {
                     return;
                 }
 
-                console.log('イベント処理開始:', response.events.length + '件');
                 await this._processEvents(response.events);
 
                 // イベントレイアウトを計算して適用
-                this.eventLayoutManager.calculateLayout();
+                if (this.eventLayoutManager && typeof this.eventLayoutManager.calculateLayout === 'function') {
+                    this.eventLayoutManager.calculateLayout();
+                }
             })
             .catch(error => {
                 logError('Googleイベント取得例外', error);
@@ -185,7 +181,6 @@ export class GoogleEventManager {
      */
     async _processEvents(events) {
         for (const event of events) {
-            console.log(event);
             switch (event.eventType) {
                 case 'workingLocation':
                 case 'focusTime':
@@ -261,15 +256,18 @@ export class GoogleEventManager {
         this.googleEventsDiv.appendChild(eventDiv);
 
         // イベントレイアウトマネージャーに登録
-        this.eventLayoutManager.registerEvent({
-            startTime: startDate,
-            endTime: endDate,
-            element: eventDiv,
-            title: event.summary,
-            type: 'google',
-            id: event.id || `google-${Date.now()}-${Math.random()}`,
-            calendarId: event.calendarId
-        });
+        const eventId = event.id || `google-${Date.now()}-${Math.random()}`;
+        if (this.eventLayoutManager && typeof this.eventLayoutManager.registerEvent === 'function') {
+            this.eventLayoutManager.registerEvent({
+                startTime: startDate,
+                endTime: endDate,
+                element: eventDiv,
+                title: event.summary,
+                type: 'google',
+                id: eventId,
+                calendarId: event.calendarId
+            });
+        }
     }
 
 
