@@ -234,6 +234,15 @@ export class EventLayoutManager {
     }
 
     /**
+     * 全てのイベントを削除してレイアウトをクリア
+     */
+    clearAllEvents() {
+        this.events = [];
+        this.layoutGroups = [];
+        this.timeValueCache.clear();
+    }
+
+    /**
      * 時間値をキャッシュから取得または計算してキャッシュに保存
      * @param {Date} time - 時間オブジェクト
      * @returns {number} 0:00からの経過分数
