@@ -323,6 +323,12 @@ class SidePanelUIController {
      */
     async _loadEventsForCurrentDate() {
         try {
+            // 既存のイベントをクリア（重複防止）
+            this.timelineComponent.clearAllEvents();
+            if (this.eventLayoutManager) {
+                this.eventLayoutManager.clearAllEvents();
+            }
+
             // GoogleイベントとローカルイベントをManagerクラス経由で読み込み
             const [localResult, googleResult] = await Promise.allSettled([
                 this.localEventManager.loadLocalEvents(this.currentDate),
@@ -385,6 +391,14 @@ class SidePanelUIController {
     _handleDateChange(date) {
         this.currentDate = new Date(date);
         this.currentDate.setHours(0, 0, 0, 0);
+
+        // 古い日付のイベントを即座に削除
+        this.timelineComponent.clearAllEvents();
+
+        // EventLayoutManagerの状態もクリア
+        if (this.eventLayoutManager) {
+            this.eventLayoutManager.clearAllEvents();
+        }
 
         // TimelineComponentに日付を設定
         this.timelineComponent.setCurrentDate(this.currentDate);
