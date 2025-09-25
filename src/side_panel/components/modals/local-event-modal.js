@@ -332,6 +332,9 @@ export class LocalEventModal extends ModalComponent {
 
         this._clearError();
         this.show();
+
+        // Apply localization after showing modal
+        this._localizeModal();
     }
 
     /**
@@ -356,6 +359,9 @@ export class LocalEventModal extends ModalComponent {
 
         this._clearError();
         this.show();
+
+        // Apply localization after showing modal
+        this._localizeModal();
     }
 
     /**
@@ -382,5 +388,27 @@ export class LocalEventModal extends ModalComponent {
         this.currentEvent = null;
         this.mode = 'create';
         this._clearError();
+    }
+
+    /**
+     * Apply localization to modal elements
+     * @private
+     */
+    _localizeModal() {
+        if (window.localizeElementText && this.element) {
+            window.localizeElementText(this.element);
+        } else if (this.element) {
+            // Fallback: manual localization for key elements
+            const elementsToLocalize = this.element.querySelectorAll('[data-localize]');
+            elementsToLocalize.forEach(element => {
+                const key = element.getAttribute('data-localize');
+                if (key && chrome.i18n && chrome.i18n.getMessage) {
+                    const message = chrome.i18n.getMessage(key.replace('__MSG_', '').replace('__', ''));
+                    if (message) {
+                        element.textContent = message;
+                    }
+                }
+            });
+        }
     }
 }
