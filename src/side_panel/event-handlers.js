@@ -15,6 +15,7 @@ import {
 } from '../lib/utils.js';
 import {createTimeOnDate} from '../lib/time-utils.js';
 import {getDemoEvents, getDemoLocalEvents, isDemoMode} from '../lib/demo-data.js';
+import {AlarmManager} from '../lib/alarm-manager.js';
 
 /**
  * GoogleEventManager - Google event management class

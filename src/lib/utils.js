@@ -67,7 +67,12 @@ export function getFormattedDate() {
  * @returns {string} Date string in YYYY-MM-DD format
  */
 export function getFormattedDateFromDate(date) {
-    return date.toISOString().split('T')[0]; // Get string in YYYY-MM-DD format
+    // Use local timezone to avoid date shifting issues
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
 }
 
 /**
@@ -123,7 +128,7 @@ export function saveLocalEvents(events) {
  * @param {Date} targetDate - Target date
  * @returns {Promise} Promise for save process
  */
-export function saveLocalEventsForDate(events, targetDate) {
+export async function saveLocalEventsForDate(events, targetDate) {
     const targetDateStr = getFormattedDateFromDate(targetDate);
     const storageKey = `localEvents_${targetDateStr}`;
     return StorageHelper.set({ [storageKey]: events });
