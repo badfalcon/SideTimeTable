@@ -293,24 +293,32 @@ export async function getDemoEvents() {
 export async function getDemoLocalEvents() {
     return [
         {
+            id: 'demo_local_1',
             title: await getLocalizedMessage('demo_local_event_title_morning_routine'),
             startTime: '08:00',
-            endTime: '08:30'
+            endTime: '08:30',
+            reminder: true
         },
         {
+            id: 'demo_local_2',
             title: await getLocalizedMessage('demo_local_event_title_focus_time'),
             startTime: '13:45',
-            endTime: '14:45'
+            endTime: '14:45',
+            reminder: false
         },
         {
+            id: 'demo_local_3',
             title: await getLocalizedMessage('demo_local_event_title_exercise'),
             startTime: '16:45',
-            endTime: '17:15'
+            endTime: '17:15',
+            reminder: true
         },
         {
+            id: 'demo_local_4',
             title: await getLocalizedMessage('demo_local_event_title_reading_time'),
             startTime: '20:00',
-            endTime: '21:00'
+            endTime: '21:00',
+            reminder: false
         }
     ];
 }

@@ -378,6 +378,7 @@ export class LocalEventManager {
         this.eventDialogElements = null;
         this.alertModalElements = null;
         this.currentTargetDate = new Date(); // Currently displayed date
+        this.onEventClick = null; // Callback for event clicks
     }
 
     /**
@@ -397,6 +398,14 @@ export class LocalEventManager {
     }
 
     /**
+     * Set event click callback
+     * @param {Function} callback - Callback function for event clicks
+     */
+    setEventClickCallback(callback) {
+        this.onEventClick = callback;
+    }
+
+    /**
      * Load local events
      * @param {Date} targetDate - Target date (today if omitted)
      */
@@ -412,7 +421,7 @@ export class LocalEventManager {
 
             for (const event of demoEvents) {
                 try {
-                    const eventDiv = await this._createEventDiv(event.title, event.startTime, event.endTime);
+                    const eventDiv = await this._createEventDiv(event);
                     this.localEventsDiv.appendChild(eventDiv);
                 } catch (error) {
                     logError('Demo event display', error);
@@ -430,7 +439,7 @@ export class LocalEventManager {
 
                 for (const event of events) {
                     try {
-                        const eventDiv = await this._createEventDiv(event.title, event.startTime, event.endTime);
+                        const eventDiv = await this._createEventDiv(event);
                         this.localEventsDiv.appendChild(eventDiv);
                     } catch (error) {
                         logError('Event display', error);
@@ -448,7 +457,8 @@ export class LocalEventManager {
      * Create event element
      * @private
      */
-    async _createEventDiv(title, startTime, endTime) {
+    async _createEventDiv(event) {
+        const { title, startTime, endTime } = event;
         const eventDiv = document.createElement('div');
         eventDiv.className = 'event local-event';
         eventDiv.title = title;
@@ -481,7 +491,7 @@ export class LocalEventManager {
         await this._setLocalEventContentWithLocale(eventDiv, startTime, endTime, title);
 
         // Setup edit functionality
-        this._setupEventEdit(eventDiv, {title, startTime, endTime});
+        this._setupEventEdit(eventDiv, event);
 
         // Register with event layout manager
         this.eventLayoutManager.registerEvent({
@@ -490,7 +500,7 @@ export class LocalEventManager {
             element: eventDiv,
             type: 'local',
             title: title,
-            id: `local-${title}-${startTime}-${endTime}`
+            id: event.id || `local-${title}-${startTime}-${endTime}`
         });
 
         return eventDiv;
@@ -524,28 +534,11 @@ export class LocalEventManager {
      * @private
      */
     _setupEventEdit(eventDiv, event) {
-        if (!this.eventDialogElements) return;
-
-        const elements = this.eventDialogElements;
-
         eventDiv.addEventListener('click', () => {
-            // Display edit dialog
-            elements.dialog.style.display = 'flex';
-
-            // Set existing event information in form
-            elements.titleInput.value = event.title;
-            elements.startTimeInput.value = event.startTime;
-            elements.endTimeInput.value = event.endTime;
-
-            // Process when save button is clicked
-            elements.saveButton.onclick = () => {
-                this._handleEventUpdate(event);
-            };
-
-            // Process when delete button is clicked
-            elements.deleteButton.onclick = () => {
-                this._handleEventDelete(event);
-            };
+            // Use callback to notify parent component
+            if (this.onEventClick) {
+                this.onEventClick(event);
+            }
         });
     }
 
@@ -657,15 +650,23 @@ export class LocalEventManager {
         const endTime = elements.endTimeInput.value;
 
         if (title && startTime && endTime) {
+            const newEvent = {
+                id: `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                title,
+                startTime,
+                endTime,
+                reminder: false // Default for old method
+            };
+
             loadLocalEvents()
                 .then(localEvents => {
                     // Add new event
-                    localEvents.push({title, startTime, endTime});
+                    localEvents.push(newEvent);
                     return saveLocalEvents(localEvents);
                 })
                 .then(async () => {
                     // Create and display event element
-                    const eventDiv = await this._createEventDiv(title, startTime, endTime);
+                    const eventDiv = await this._createEventDiv(newEvent);
                     this.localEventsDiv.appendChild(eventDiv);
 
                     // Recalculate event layout

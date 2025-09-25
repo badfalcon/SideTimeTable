@@ -200,6 +200,11 @@ class SidePanelUIController {
             }
             if (this.localEventManager) {
                 this.localEventManager.eventLayoutManager = this.eventLayoutManager;
+
+                // Set event click callback
+                this.localEventManager.setEventClickCallback((event) => {
+                    this.localEventModal.showEdit(event);
+                });
             }
         }
     }
@@ -233,6 +238,11 @@ class SidePanelUIController {
             this.timelineComponent.getLocalEventsContainer(),
             this.eventLayoutManager
         );
+
+        // Set event click callback
+        this.localEventManager.setEventClickCallback((event) => {
+            this.localEventModal.showEdit(event);
+        });
 
         // Load settings and apply initial configuration
         await this._applyInitialSettings();
