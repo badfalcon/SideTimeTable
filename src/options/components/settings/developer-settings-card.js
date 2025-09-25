@@ -1,5 +1,5 @@
 /**
- * DeveloperSettingsCard - 開発者設定カードコンポーネント
+ * DeveloperSettingsCard - Developer settings card component
  */
 import { CardComponent } from '../base/card-component.js';
 import { isDemoMode, setDemoMode } from '../../../lib/demo-data.js';
@@ -8,20 +8,20 @@ export class DeveloperSettingsCard extends CardComponent {
     constructor(onSettingsChange) {
         super({
             id: 'developer-settings-card',
-            title: '開発者設定',
-            subtitle: '開発・テスト用の設定です。通常は変更する必要がありません。',
+            title: 'Developer Settings',
+            subtitle: 'Settings for development and testing. Normally no changes are required.',
             icon: 'fas fa-code',
             iconColor: 'text-danger',
             classes: '',
-            hidden: true // デフォルトで非表示
+            hidden: true // Hidden by default
         });
 
         this.onSettingsChange = onSettingsChange;
 
-        // フォーム要素
+        // Form elements
         this.demoModeToggle = null;
 
-        // 現在の設定値
+        // Current settings values
         this.settings = {
             demoMode: false
         };
@@ -30,31 +30,31 @@ export class DeveloperSettingsCard extends CardComponent {
     createElement() {
         const card = super.createElement();
 
-        // 開発者設定フォームを作成
+        // Create developer settings form
         const form = this._createForm();
         this.addContent(form);
 
-        // 現在の設定を読み込み
+        // Load current settings
         this._loadCurrentSettings();
 
-        // イベントリスナーを設定
+        // Setup event listeners
         this._setupEventListeners();
 
         return card;
     }
 
     /**
-     * フォームを作成
+     * Create form
      * @private
      */
     _createForm() {
         const form = document.createElement('form');
 
-        // デモモード設定
+        // Demo mode settings
         const demoModeSection = this._createDemoModeSection();
         form.appendChild(demoModeSection);
 
-        // 追加の開発者向け情報
+        // Additional developer information
         const infoSection = this._createInfoSection();
         form.appendChild(infoSection);
 
@@ -62,30 +62,30 @@ export class DeveloperSettingsCard extends CardComponent {
     }
 
     /**
-     * デモモードセクションを作成
+     * Create demo mode section
      * @private
      */
     _createDemoModeSection() {
         const section = document.createElement('div');
         section.className = 'form-check mb-3';
 
-        // チェックボックス
+        // Checkbox
         this.demoModeToggle = document.createElement('input');
         this.demoModeToggle.type = 'checkbox';
         this.demoModeToggle.className = 'form-check-input';
         this.demoModeToggle.id = 'demo-mode-toggle';
 
-        // ラベル
+        // Label
         const label = document.createElement('label');
         label.className = 'form-check-label';
         label.htmlFor = 'demo-mode-toggle';
 
         const labelText = document.createElement('span');
-        labelText.textContent = 'デモモード';
+        labelText.textContent = 'Demo Mode';
 
         const helpText = document.createElement('small');
         helpText.className = 'text-muted d-block';
-        helpText.textContent = 'サンプルデータを表示します（APIへのアクセスは行いません）';
+        helpText.textContent = 'Display sample data (no API access will be made)';
 
         label.appendChild(labelText);
         label.appendChild(helpText);
@@ -97,44 +97,44 @@ export class DeveloperSettingsCard extends CardComponent {
     }
 
     /**
-     * 情報セクションを作成
+     * Create info section
      * @private
      */
     _createInfoSection() {
         const section = document.createElement('div');
         section.className = 'mt-4 p-3 bg-light rounded';
 
-        // タイトル
+        // Title
         const title = document.createElement('h6');
         title.className = 'mb-3';
         title.innerHTML = `
             <i class="fas fa-info-circle me-1"></i>
-            開発者向け情報
+            Developer Information
         `;
 
-        // 情報リスト
+        // Info list
         const infoList = document.createElement('div');
         infoList.className = 'small';
 
         const infoItems = [
             {
-                label: '拡張機能ID',
-                value: chrome.runtime?.id || '取得できません',
+                label: 'Extension ID',
+                value: chrome.runtime?.id || 'Cannot retrieve',
                 copyable: true
             },
             {
-                label: 'マニフェストバージョン',
-                value: chrome.runtime?.getManifest?.()?.manifest_version || '不明',
+                label: 'Manifest Version',
+                value: chrome.runtime?.getManifest?.()?.manifest_version || 'Unknown',
                 copyable: false
             },
             {
-                label: 'バージョン',
-                value: chrome.runtime?.getManifest?.()?.version || '不明',
+                label: 'Version',
+                value: chrome.runtime?.getManifest?.()?.version || 'Unknown',
                 copyable: false
             },
             {
-                label: 'デモモード状態',
-                value: () => this.settings.demoMode ? '有効' : '無効',
+                label: 'Demo Mode Status',
+                value: () => this.settings.demoMode ? 'Enabled' : 'Disabled',
                 copyable: false,
                 dynamic: true
             }
@@ -152,29 +152,29 @@ export class DeveloperSettingsCard extends CardComponent {
     }
 
     /**
-     * 情報行を作成
+     * Create info row
      * @private
      */
     _createInfoRow(item) {
         const row = document.createElement('div');
         row.className = 'd-flex justify-content-between align-items-center py-1 border-bottom';
 
-        // ラベル
+        // Label
         const label = document.createElement('span');
         label.className = 'fw-semibold';
         label.textContent = item.label + ':';
 
-        // 値とボタンのコンテナ
+        // Container for value and buttons
         const valueContainer = document.createElement('div');
         valueContainer.className = 'd-flex align-items-center gap-2';
 
-        // 値
+        // Value
         const value = document.createElement('code');
         value.className = 'small';
 
         if (item.dynamic) {
             value.textContent = item.value();
-            // 動的値の場合は更新用の参照を保存
+            // Save reference for updating dynamic values
             if (!this.dynamicElements) this.dynamicElements = [];
             this.dynamicElements.push({ element: value, getValue: item.value });
         } else {
@@ -183,13 +183,13 @@ export class DeveloperSettingsCard extends CardComponent {
 
         valueContainer.appendChild(value);
 
-        // コピーボタン（必要な場合）
+        // Copy button (if needed)
         if (item.copyable) {
             const copyBtn = document.createElement('button');
             copyBtn.type = 'button';
             copyBtn.className = 'btn btn-outline-secondary btn-sm';
             copyBtn.innerHTML = '<i class="fas fa-copy"></i>';
-            copyBtn.title = 'クリップボードにコピー';
+            copyBtn.title = 'Copy to clipboard';
 
             copyBtn.addEventListener('click', () => {
                 this._copyToClipboard(item.value);
@@ -206,7 +206,7 @@ export class DeveloperSettingsCard extends CardComponent {
     }
 
     /**
-     * 現在の設定を読み込み
+     * Load current settings
      * @private
      */
     _loadCurrentSettings() {
@@ -215,7 +215,7 @@ export class DeveloperSettingsCard extends CardComponent {
     }
 
     /**
-     * UIを更新
+     * Update UI
      * @private
      */
     _updateUI() {
@@ -223,7 +223,7 @@ export class DeveloperSettingsCard extends CardComponent {
             this.demoModeToggle.checked = this.settings.demoMode;
         }
 
-        // 動的要素を更新
+        // Update dynamic elements
         if (this.dynamicElements) {
             this.dynamicElements.forEach(({ element, getValue }) => {
                 element.textContent = getValue();
@@ -232,40 +232,40 @@ export class DeveloperSettingsCard extends CardComponent {
     }
 
     /**
-     * イベントリスナーを設定
+     * Setup event listeners
      * @private
      */
     _setupEventListeners() {
-        // デモモード切り替え
+        // Demo mode toggle
         this.demoModeToggle?.addEventListener('change', (e) => {
             this._handleDemoModeChange(e.target.checked);
         });
     }
 
     /**
-     * デモモード変更を処理
+     * Handle demo mode change
      * @private
      */
     _handleDemoModeChange(enabled) {
         this.settings.demoMode = enabled;
         setDemoMode(enabled);
 
-        // UIを更新
+        // Update UI
         this._updateUI();
 
-        // 変更をコールバック
+        // Callback with changes
         if (this.onSettingsChange) {
             this.onSettingsChange({
                 demoMode: enabled
             });
         }
 
-        // 変更通知を表示
+        // Show change notification
         this._showModeChangeNotification(enabled);
     }
 
     /**
-     * モード変更通知を表示
+     * Show mode change notification
      * @private
      */
     _showModeChangeNotification(enabled) {
@@ -273,14 +273,14 @@ export class DeveloperSettingsCard extends CardComponent {
         notification.className = 'alert alert-info alert-dismissible fade show mt-3';
         notification.innerHTML = `
             <i class="fas fa-${enabled ? 'flask' : 'globe'} me-1"></i>
-            <strong>デモモードを${enabled ? '有効' : '無効'}にしました</strong><br>
-            <small>変更を反映するには、サイドパネルを再読み込みしてください。</small>
+            <strong>Demo mode ${enabled ? 'enabled' : 'disabled'}</strong><br>
+            <small>Please reload the side panel to apply the changes.</small>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         `;
 
         this.bodyElement.appendChild(notification);
 
-        // 5秒後に自動削除
+        // Auto-remove after 5 seconds
         setTimeout(() => {
             if (notification.parentNode) {
                 notification.remove();
@@ -289,7 +289,7 @@ export class DeveloperSettingsCard extends CardComponent {
     }
 
     /**
-     * クリップボードにコピー
+     * Copy to clipboard
      * @private
      */
     async _copyToClipboard(text) {
@@ -297,7 +297,7 @@ export class DeveloperSettingsCard extends CardComponent {
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 await navigator.clipboard.writeText(text);
             } else {
-                // フォールバック
+                // Fallback
                 const textArea = document.createElement('textarea');
                 textArea.value = text;
                 document.body.appendChild(textArea);
@@ -306,12 +306,12 @@ export class DeveloperSettingsCard extends CardComponent {
                 document.body.removeChild(textArea);
             }
         } catch (error) {
-            console.error('クリップボードコピーエラー:', error);
+            console.error('Clipboard copy error:', error);
         }
     }
 
     /**
-     * コピー通知を表示
+     * Show copy notification
      * @private
      */
     _showCopyNotification(button) {
@@ -326,7 +326,7 @@ export class DeveloperSettingsCard extends CardComponent {
     }
 
     /**
-     * 開発者設定の表示/非表示を切り替え
+     * Toggle developer settings visibility
      */
     toggleVisibility() {
         const isHidden = this.element.style.display === 'none';
@@ -335,7 +335,7 @@ export class DeveloperSettingsCard extends CardComponent {
     }
 
     /**
-     * 現在の設定を取得
+     * Get current settings
      */
     getSettings() {
         return {
@@ -344,7 +344,7 @@ export class DeveloperSettingsCard extends CardComponent {
     }
 
     /**
-     * 設定を更新
+     * Update settings
      */
     updateSettings(settings) {
         this.settings = { ...this.settings, ...settings };
@@ -352,7 +352,7 @@ export class DeveloperSettingsCard extends CardComponent {
     }
 
     /**
-     * デバッグ情報を追加
+     * Add debug information
      */
     addDebugInfo() {
         const debugSection = document.createElement('div');
@@ -361,13 +361,13 @@ export class DeveloperSettingsCard extends CardComponent {
         debugSection.innerHTML = `
             <h6 class="text-warning">
                 <i class="fas fa-bug me-1"></i>
-                デバッグ情報
+                Debug Information
             </h6>
             <div class="small">
-                <div>ページ読み込み時刻: ${new Date().toLocaleString()}</div>
-                <div>ユーザーエージェント: ${navigator.userAgent.substring(0, 50)}...</div>
-                <div>ローカルストレージ利用可能: ${typeof(Storage) !== "undefined" ? 'はい' : 'いいえ'}</div>
-                <div>Chrome拡張API利用可能: ${typeof chrome !== 'undefined' && chrome.runtime ? 'はい' : 'いいえ'}</div>
+                <div>Page load time: ${new Date().toLocaleString()}</div>
+                <div>User agent: ${navigator.userAgent.substring(0, 50)}...</div>
+                <div>Local storage available: ${typeof(Storage) !== "undefined" ? 'Yes' : 'No'}</div>
+                <div>Chrome extension API available: ${typeof chrome !== 'undefined' && chrome.runtime ? 'Yes' : 'No'}</div>
             </div>
         `;
 

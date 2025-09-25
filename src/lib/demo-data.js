@@ -1,20 +1,20 @@
 /**
- * SideTimeTable - デモデータ
- * 
- * サンプル画像用のモックイベントデータ
+ * SideTimeTable - Demo Data
+ *
+ * Mock event data for sample images
  */
 
 /**
- * ロケール対応のメッセージを取得
- * @param {string} key - メッセージキー
- * @returns {Promise<string>} ローカライズされたメッセージ
+ * Get locale-compatible message
+ * @param {string} key - Message key
+ * @returns {Promise<string>} Localized message
  */
 async function getLocalizedMessage(key) {
     try {
-        // 現在のロケール設定を取得
+        // Get current locale setting
         const locale = await window.getCurrentLocale();
         
-        // メッセージファイルのパスを決定
+        // Determine message file path
         const messageFiles = {
             'en': '_locales/en/messages.json',
             'ja': '_locales/ja/messages.json'
@@ -28,20 +28,20 @@ async function getLocalizedMessage(key) {
             return messages[key]?.message || key;
         }
     } catch (error) {
-        console.warn('ローカライズメッセージ取得エラー:', error);
+        console.warn('Localized message acquisition error:', error);
     }
     
-    // フォールバック
+    // Fallback
     return await getLocalizedMessage(key) || key;
 }
 
 /**
- * デモ用のGoogleカレンダーイベントデータ
- * @returns {Promise<Array>} デモイベントの配列を返すPromise
+ * Demo Google Calendar event data
+ * @returns {Promise<Array>} Promise that returns array of demo events
  */
 export async function getDemoEvents() {
     const today = new Date();
-    // 今日の日付でイベントを生成
+    // Generate events with today's date
     const events = [
         {
             id: 'demo-1',
@@ -287,8 +287,8 @@ export async function getDemoEvents() {
 }
 
 /**
- * デモ用のローカルイベントデータ
- * @returns {Promise<Array>} デモローカルイベントの配列を返すPromise
+ * Demo local event data
+ * @returns {Promise<Array>} Promise that returns array of demo local events
  */
 export async function getDemoLocalEvents() {
     return [
@@ -316,18 +316,18 @@ export async function getDemoLocalEvents() {
 }
 
 /**
- * デモモードかどうかを判定
- * @returns {boolean} デモモードの場合true
+ * Determine if in demo mode
+ * @returns {boolean} true if in demo mode
  */
 export function isDemoMode() {
-    // URLパラメータまたは設定でデモモードを判定
+    // Determine demo mode from URL parameters or settings
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get('demo') === 'true' || localStorage.getItem('sideTimeTableDemo') === 'true';
 }
 
 /**
- * デモモードを有効/無効にする
- * @param {boolean} enabled - デモモードを有効にするかどうか
+ * Enable/disable demo mode
+ * @param {boolean} enabled - Whether to enable demo mode
  */
 export function setDemoMode(enabled) {
     if (enabled) {

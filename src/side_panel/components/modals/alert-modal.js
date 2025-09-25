@@ -1,5 +1,5 @@
 /**
- * AlertModal - アラート表示モーダル
+ * AlertModal - Alert display modal
  */
 import { ModalComponent } from './modal-component.js';
 
@@ -7,53 +7,53 @@ export class AlertModal extends ModalComponent {
     constructor(options = {}) {
         super({
             id: 'alertModal',
-            closeOnBackdropClick: false, // アラートは明示的に閉じる
+            closeOnBackdropClick: false, // Alerts must be closed explicitly
             ...options
         });
 
-        // 表示要素
+        // Display elements
         this.messageElement = null;
         this.confirmButton = null;
 
-        // コールバック
+        // Callback
         this.onConfirm = options.onConfirm || null;
 
-        // アラートタイプ（info, warning, error, success）
+        // Alert type (info, warning, error, success)
         this.alertType = 'info';
     }
 
     createContent() {
         const content = document.createElement('div');
 
-        // メッセージ要素
+        // Message element
         this.messageElement = document.createElement('p');
         this.messageElement.id = 'alertMessage';
         content.appendChild(this.messageElement);
 
-        // 確認ボタン
+        // Confirmation button
         this.confirmButton = document.createElement('button');
         this.confirmButton.id = 'closeAlertButton';
         this.confirmButton.className = 'btn btn-primary';
-        this.confirmButton.textContent = '閉じる';
+        this.confirmButton.textContent = 'Close';
         content.appendChild(this.confirmButton);
 
-        // イベントリスナーを設定
+        // Set up event listeners
         this._setupAlertEventListeners();
 
         return content;
     }
 
     /**
-     * アラート用イベントリスナーを設定
+     * Set up alert event listeners
      * @private
      */
     _setupAlertEventListeners() {
-        // 確認ボタン
+        // Confirmation button
         this.addEventListener(this.confirmButton, 'click', () => {
             this._handleConfirm();
         });
 
-        // Enterキーで確認
+        // Confirm with Enter key
         this.addEventListener(document, 'keydown', (e) => {
             if (e.key === 'Enter' && this.isVisible()) {
                 this._handleConfirm();
@@ -62,7 +62,7 @@ export class AlertModal extends ModalComponent {
     }
 
     /**
-     * 確認処理
+     * Confirmation processing
      * @private
      */
     _handleConfirm() {
@@ -73,81 +73,81 @@ export class AlertModal extends ModalComponent {
     }
 
     /**
-     * 情報アラートを表示
-     * @param {string} message メッセージ
-     * @param {Function} onConfirm 確認時のコールバック
+     * Display information alert
+     * @param {string} message Message
+     * @param {Function} onConfirm Callback on confirmation
      */
     showInfo(message, onConfirm = null) {
         this._showAlert(message, 'info', onConfirm);
     }
 
     /**
-     * 警告アラートを表示
-     * @param {string} message メッセージ
-     * @param {Function} onConfirm 確認時のコールバック
+     * Display warning alert
+     * @param {string} message Message
+     * @param {Function} onConfirm Callback on confirmation
      */
     showWarning(message, onConfirm = null) {
         this._showAlert(message, 'warning', onConfirm);
     }
 
     /**
-     * エラーアラートを表示
-     * @param {string} message メッセージ
-     * @param {Function} onConfirm 確認時のコールバック
+     * Display error alert
+     * @param {string} message Message
+     * @param {Function} onConfirm Callback on confirmation
      */
     showError(message, onConfirm = null) {
         this._showAlert(message, 'error', onConfirm);
     }
 
     /**
-     * 成功アラートを表示
-     * @param {string} message メッセージ
-     * @param {Function} onConfirm 確認時のコールバック
+     * Display success alert
+     * @param {string} message Message
+     * @param {Function} onConfirm Callback on confirmation
      */
     showSuccess(message, onConfirm = null) {
         this._showAlert(message, 'success', onConfirm);
     }
 
     /**
-     * アラートを表示
+     * Display alert
      * @private
      */
     _showAlert(message, type, onConfirm) {
         this.alertType = type;
         this.onConfirm = onConfirm;
 
-        // メッセージを設定
+        // Set message
         this.messageElement.textContent = message;
 
-        // アラートタイプに応じてスタイルを調整
+        // Adjust style according to alert type
         this._updateAlertStyle();
 
         this.show();
     }
 
     /**
-     * アラートタイプに応じてスタイルを更新
+     * Update style according to alert type
      * @private
      */
     _updateAlertStyle() {
-        // ボタンのクラスを更新
+        // Update button class
         this.confirmButton.className = this._getButtonClass();
 
-        // モーダルコンテンツにアラートタイプクラスを追加
+        // Add alert type class to modal content
         if (this.modalContent) {
-            // 既存のアラートタイプクラスを削除
+            // Remove existing alert type classes
             this.modalContent.classList.remove('alert-info', 'alert-warning', 'alert-error', 'alert-success');
 
-            // 新しいアラートタイプクラスを追加
+            // Add new alert type class
             this.modalContent.classList.add(`alert-${this.alertType}`);
         }
 
-        // アイコンを追加（存在しない場合）
+        // Add icon (if it doesn't exist)
         this._updateAlertIcon();
     }
 
     /**
-     * アラートタイプに応じたボタンクラスを取得
+     * Get button class according to alert type
      * @private
      */
     _getButtonClass() {
@@ -167,17 +167,17 @@ export class AlertModal extends ModalComponent {
     }
 
     /**
-     * アラートアイコンを更新
+     * Update alert icon
      * @private
      */
     _updateAlertIcon() {
-        // 既存のアイコンを削除
+        // Remove existing icon
         const existingIcon = this.messageElement?.previousElementSibling?.querySelector('i');
         if (existingIcon) {
             existingIcon.parentElement.remove();
         }
 
-        // アイコンコンテナを作成
+        // Create icon container
         const iconContainer = document.createElement('div');
         iconContainer.className = 'alert-icon-container mb-2 text-center';
 
@@ -202,13 +202,13 @@ export class AlertModal extends ModalComponent {
         icon.style.fontSize = '2em';
         iconContainer.appendChild(icon);
 
-        // メッセージの前に挿入
+        // Insert before message
         this.messageElement.parentNode.insertBefore(iconContainer, this.messageElement);
     }
 
     /**
-     * 確認ボタンのテキストを設定
-     * @param {string} text ボタンテキスト
+     * Set confirmation button text
+     * @param {string} text Button text
      */
     setConfirmButtonText(text) {
         if (this.confirmButton) {
@@ -217,8 +217,8 @@ export class AlertModal extends ModalComponent {
     }
 
     /**
-     * 確認ボタンにローカライズキーを設定
-     * @param {string} key ローカライズキー
+     * Set localization key for confirmation button
+     * @param {string} key Localization key
      */
     setConfirmButtonLocalize(key) {
         if (this.confirmButton) {
@@ -227,20 +227,20 @@ export class AlertModal extends ModalComponent {
     }
 
     /**
-     * モーダルを閉じる際のクリーンアップ
+     * Cleanup when closing the modal
      */
     hide() {
         super.hide();
         this.onConfirm = null;
         this.alertType = 'info';
 
-        // アイコンを削除
+        // Remove icon
         const iconContainer = this.modalContent?.querySelector('.alert-icon-container');
         if (iconContainer) {
             iconContainer.remove();
         }
 
-        // アラートタイプクラスを削除
+        // Remove alert type classes
         if (this.modalContent) {
             this.modalContent.classList.remove('alert-info', 'alert-warning', 'alert-error', 'alert-success');
         }

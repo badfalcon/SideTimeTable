@@ -1,23 +1,23 @@
 /**
- * SideTimeTable - ユーティリティ関数
+ * SideTimeTable - Utility Functions
  *
- * このファイルは拡張機能全体で使用される共通の関数や定数を提供します。
+ * This file provides common functions and constants used throughout the extension.
  */
 
 import { StorageHelper } from './storage-helper.js';
 
-// 時間関連の定数
+// Time-related constants
 export const TIME_CONSTANTS = {
-    HOUR_MILLIS: 3600000,  // 1時間あたりのミリ秒数
-    MINUTE_MILLIS: 60000,  // 1分あたりのミリ秒数
-    UNIT_HEIGHT: 60,       // 1時間あたりの高さ（ピクセル）
+    HOUR_MILLIS: 3600000,  // Milliseconds per hour
+    MINUTE_MILLIS: 60000,  // Milliseconds per minute
+    UNIT_HEIGHT: 60,       // Height per hour (pixels)
     DEFAULT_OPEN_HOUR: '09:00',
     DEFAULT_CLOSE_HOUR: '18:00',
     DEFAULT_BREAK_START: '12:00',
     DEFAULT_BREAK_END: '13:00'
 };
 
-// デフォルト設定
+// Default settings
 export const DEFAULT_SETTINGS = {
     googleIntegrated: false,
     openTime: TIME_CONSTANTS.DEFAULT_OPEN_HOUR,
@@ -28,18 +28,18 @@ export const DEFAULT_SETTINGS = {
     breakTimeEnd: TIME_CONSTANTS.DEFAULT_BREAK_END,
     localEventColor: '#bbf2b1',
     googleEventColor: '#c3d6f7',
-    selectedCalendars: [], // 選択されたカレンダーID配列
-    language: 'auto' // 言語設定（auto/en/ja）
+    selectedCalendars: [], // Array of selected calendar IDs
+    language: 'auto' // Language setting (auto/en/ja)
 };
 
 /**
- * 時間選択リストを生成する
- * @param {HTMLElement} timeListElement - datalistのDOM要素
+ * Generate time selection list
+ * @param {HTMLElement} timeListElement - datalist DOM element
  */
 export function generateTimeList(timeListElement) {
     if (!timeListElement) return;
     
-    timeListElement.innerHTML = ''; // 既存の選択肢をクリア
+    timeListElement.innerHTML = ''; // Clear existing options
     
     for (let hour = 7; hour < 21; hour++) {
         for (let minute = 0; minute < 60; minute += 15) {
@@ -53,53 +53,53 @@ export function generateTimeList(timeListElement) {
 }
 
 /**
- * 現在の日付を取得（YYYY-MM-DD形式）
- * @returns {string} YYYY-MM-DD形式の日付文字列
+ * Get current date (YYYY-MM-DD format)
+ * @returns {string} Date string in YYYY-MM-DD format
  */
 export function getFormattedDate() {
     const today = new Date();
-    return today.toISOString().split('T')[0]; // YYYY-MM-DD 形式の文字列を取得
+    return today.toISOString().split('T')[0]; // Get string in YYYY-MM-DD format
 }
 
 /**
- * 指定した日付を取得（YYYY-MM-DD形式）
- * @param {Date} date - 対象の日付
- * @returns {string} YYYY-MM-DD形式の日付文字列
+ * Get specified date (YYYY-MM-DD format)
+ * @param {Date} date - Target date
+ * @returns {string} Date string in YYYY-MM-DD format
  */
 export function getFormattedDateFromDate(date) {
-    return date.toISOString().split('T')[0]; // YYYY-MM-DD 形式の文字列を取得
+    return date.toISOString().split('T')[0]; // Get string in YYYY-MM-DD format
 }
 
 /**
- * 設定を保存する
- * @param {Object} settings - 保存する設定オブジェクト
- * @returns {Promise} 保存処理のPromise
+ * Save settings
+ * @param {Object} settings - Settings object to save
+ * @returns {Promise} Promise for save process
  */
 export function saveSettings(settings) {
     return StorageHelper.set(settings);
 }
 
 /**
- * 設定を読み込む
- * @param {Object} defaultSettings - デフォルト設定（省略時はDEFAULT_SETTINGSを使用）
- * @returns {Promise<Object>} 設定オブジェクトを返すPromise
+ * Load settings
+ * @param {Object} defaultSettings - Default settings (uses DEFAULT_SETTINGS if omitted)
+ * @returns {Promise<Object>} Promise that returns settings object
  */
 export function loadSettings(defaultSettings = DEFAULT_SETTINGS) {
     return StorageHelper.get(defaultSettings, defaultSettings);
 }
 
 /**
- * ローカルイベントを読み込む
- * @returns {Promise<Array>} イベントの配列を返すPromise
+ * Load local events
+ * @returns {Promise<Array>} Promise that returns array of events
  */
 export function loadLocalEvents() {
     return loadLocalEventsForDate(new Date());
 }
 
 /**
- * 指定した日付のローカルイベントを読み込む
- * @param {Date} targetDate - 対象の日付
- * @returns {Promise<Array>} イベントの配列を返すPromise
+ * Load local events for specified date
+ * @param {Date} targetDate - Target date
+ * @returns {Promise<Array>} Promise that returns array of events
  */
 export async function loadLocalEventsForDate(targetDate) {
     const targetDateStr = getFormattedDateFromDate(targetDate);
@@ -109,19 +109,19 @@ export async function loadLocalEventsForDate(targetDate) {
 }
 
 /**
- * ローカルイベントを保存する
- * @param {Array} events - 保存するイベントの配列
- * @returns {Promise} 保存処理のPromise
+ * Save local events
+ * @param {Array} events - Array of events to save
+ * @returns {Promise} Promise for save process
  */
 export function saveLocalEvents(events) {
     return saveLocalEventsForDate(events, new Date());
 }
 
 /**
- * 指定した日付のローカルイベントを保存する
- * @param {Array} events - 保存するイベントの配列
- * @param {Date} targetDate - 対象の日付
- * @returns {Promise} 保存処理のPromise
+ * Save local events for specified date
+ * @param {Array} events - Array of events to save
+ * @param {Date} targetDate - Target date
+ * @returns {Promise} Promise for save process
  */
 export function saveLocalEventsForDate(events, targetDate) {
     const targetDateStr = getFormattedDateFromDate(targetDate);
@@ -130,8 +130,8 @@ export function saveLocalEventsForDate(events, targetDate) {
 }
 
 /**
- * サイドパネルをリロードする
- * @returns {Promise} リロード処理のPromise
+ * Reload side panel
+ * @returns {Promise} Promise for reload process
  */
 export function reloadSidePanel() {
     return new Promise((resolve, reject) => {
@@ -143,7 +143,7 @@ export function reloadSidePanel() {
                 }
                 
                 if (!response || !response.success) {
-                    reject(new Error('リロードに失敗しました'));
+                    reject(new Error('Reload failed'));
                     return;
                 }
                 
@@ -156,20 +156,20 @@ export function reloadSidePanel() {
 }
 
 /**
- * エラーをログに記録する
- * @param {string} context - エラーが発生したコンテキスト
- * @param {Error|string} error - エラーオブジェクトまたはエラーメッセージ
+ * Log error to console
+ * @param {string} context - Context where the error occurred
+ * @param {Error|string} error - Error object or error message
  */
 export function logError(context, error) {
-    console.error(`[${context}] エラー:`, error);
+    console.error(`[${context}] Error:`, error);
 }
 
 /**
- * アラートモーダルを表示する
- * @param {string} message - 表示するメッセージ
- * @param {HTMLElement} alertModal - アラートモーダルのDOM要素
- * @param {HTMLElement} alertMessage - メッセージを表示する要素
- * @param {HTMLElement} closeButton - 閉じるボタン
+ * Display alert modal
+ * @param {string} message - Message to display
+ * @param {HTMLElement} alertModal - Alert modal DOM element
+ * @param {HTMLElement} alertMessage - Element to display the message
+ * @param {HTMLElement} closeButton - Close button
  */
 export function showAlertModal(message, alertModal, alertMessage, closeButton) {
     if (!alertModal || !alertMessage) return;
@@ -183,7 +183,7 @@ export function showAlertModal(message, alertModal, alertMessage, closeButton) {
         };
     }
     
-    // モーダル外クリックで閉じる
+    // Close modal when clicking outside
     window.onclick = (event) => {
         if (event.target === alertModal) {
             alertModal.style.display = 'none';
@@ -192,17 +192,17 @@ export function showAlertModal(message, alertModal, alertMessage, closeButton) {
 }
 
 /**
- * 選択されたカレンダーを保存する
- * @param {Array<string>} selectedCalendars - 選択されたカレンダーIDの配列
- * @returns {Promise} 保存処理のPromise
+ * Save selected calendars
+ * @param {Array<string>} selectedCalendars - Array of selected calendar IDs
+ * @returns {Promise} Promise for save process
  */
 export function saveSelectedCalendars(selectedCalendars) {
     return StorageHelper.set({ selectedCalendars });
 }
 
 /**
- * 選択されたカレンダーを読み込む
- * @returns {Promise<Array<string>>} 選択されたカレンダーIDの配列を返すPromise
+ * Load selected calendars
+ * @returns {Promise<Array<string>>} Promise that returns array of selected calendar IDs
  */
 export async function loadSelectedCalendars() {
     const result = await StorageHelper.get(['selectedCalendars'], { selectedCalendars: [] });

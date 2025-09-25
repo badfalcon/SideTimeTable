@@ -1,5 +1,5 @@
 /**
- * CalendarManagementCard - カレンダー管理カードコンポーネント
+ * CalendarManagementCard - Calendar management card component
  */
 import { CardComponent } from '../base/card-component.js';
 import { loadSelectedCalendars, saveSelectedCalendars, logError } from '../../../lib/utils.js';
@@ -8,9 +8,9 @@ export class CalendarManagementCard extends CardComponent {
     constructor() {
         super({
             id: 'calendar-management-card',
-            title: 'カレンダー管理',
+            title: 'Calendar Management',
             titleLocalize: '__MSG_calendarSelection__',
-            subtitle: '表示するGoogleカレンダーを選択し、色を設定できます。',
+            subtitle: 'Select Google Calendars to display and configure their colors.',
             subtitleLocalize: '__MSG_calendarSelectionDescription__',
             icon: 'fas fa-calendar-alt',
             iconColor: 'text-success',
@@ -22,7 +22,7 @@ export class CalendarManagementCard extends CardComponent {
         this.hasAutoFetched = false;
         this.allCalendars = [];
 
-        // UI要素の参照
+        // UI element references
         this.refreshBtn = null;
         this.loadingIndicator = null;
         this.calendarList = null;
@@ -34,15 +34,15 @@ export class CalendarManagementCard extends CardComponent {
     createElement() {
         const card = super.createElement();
 
-        // コントロールボタン
+        // Control buttons
         const controlsDiv = this._createControlsSection();
         this.addContent(controlsDiv);
 
-        // 検索フィールド
+        // Search field
         const searchDiv = this._createSearchSection();
         this.addContent(searchDiv);
 
-        // カレンダーリストコンテナ
+        // Calendar list container
         const listContainer = this._createListContainer();
         this.addContent(listContainer);
 
@@ -52,23 +52,23 @@ export class CalendarManagementCard extends CardComponent {
     }
 
     /**
-     * コントロールセクションを作成
+     * Create control section
      * @private
      */
     _createControlsSection() {
         const controlsDiv = document.createElement('div');
         controlsDiv.className = 'd-flex align-items-center mb-3';
 
-        // 更新ボタン
+        // Refresh button
         this.refreshBtn = document.createElement('button');
         this.refreshBtn.id = 'refresh-calendars-btn';
         this.refreshBtn.className = 'btn btn-outline-primary btn-sm';
         this.refreshBtn.innerHTML = `
             <i class="fas fa-refresh me-1"></i>
-            <span data-localize="__MSG_refreshCalendars__">更新</span>
+            <span data-localize="__MSG_refreshCalendars__">Refresh</span>
         `;
 
-        // ローディングインジケーター
+        // Loading indicator
         this.loadingIndicator = document.createElement('div');
         this.loadingIndicator.id = 'calendar-loading-indicator';
         this.loadingIndicator.className = 'ms-2';
@@ -86,7 +86,7 @@ export class CalendarManagementCard extends CardComponent {
     }
 
     /**
-     * 検索セクションを作成
+     * Create search section
      * @private
      */
     _createSearchSection() {
@@ -96,20 +96,20 @@ export class CalendarManagementCard extends CardComponent {
         const inputGroup = document.createElement('div');
         inputGroup.className = 'input-group';
 
-        // 検索アイコン
+        // Search icon
         const iconSpan = document.createElement('span');
         iconSpan.className = 'input-group-text';
         iconSpan.innerHTML = '<i class="fas fa-search text-muted"></i>';
 
-        // 検索入力フィールド
+        // Search input field
         this.searchInput = document.createElement('input');
         this.searchInput.type = 'text';
         this.searchInput.id = 'calendar-search';
         this.searchInput.className = 'form-control';
-        this.searchInput.placeholder = 'カレンダーを検索...';
+        this.searchInput.placeholder = 'Search calendars...';
         this.searchInput.setAttribute('data-localize-placeholder', '__MSG_searchCalendars__');
 
-        // クリアボタン
+        // Clear button
         this.clearSearchBtn = document.createElement('button');
         this.clearSearchBtn.id = 'clear-search-btn';
         this.clearSearchBtn.className = 'btn btn-outline-secondary';
@@ -126,24 +126,24 @@ export class CalendarManagementCard extends CardComponent {
     }
 
     /**
-     * リストコンテナを作成
+     * Create list container
      * @private
      */
     _createListContainer() {
         const container = document.createElement('div');
 
-        // カレンダーリスト
+        // Calendar list
         this.calendarList = document.createElement('div');
         this.calendarList.id = 'calendar-list';
         this.calendarList.className = 'list-group';
 
-        // 見つからないメッセージ
+        // Not found message
         this.noCalendarsMsg = document.createElement('div');
         this.noCalendarsMsg.id = 'no-calendars-msg';
         this.noCalendarsMsg.className = 'text-muted';
         this.noCalendarsMsg.style.display = 'none';
         this.noCalendarsMsg.setAttribute('data-localize', '__MSG_noCalendarsFound__');
-        this.noCalendarsMsg.textContent = 'カレンダーが見つかりませんでした。';
+        this.noCalendarsMsg.textContent = 'No calendars found.';
 
         container.appendChild(this.calendarList);
         container.appendChild(this.noCalendarsMsg);
@@ -152,14 +152,14 @@ export class CalendarManagementCard extends CardComponent {
     }
 
     /**
-     * イベントリスナーを設定
+     * Setup event listeners
      * @private
      */
     _setupEventListeners() {
-        // 更新ボタン
+        // Refresh button
         this.refreshBtn?.addEventListener('click', () => this.refreshCalendars());
 
-        // 検索機能
+        // Search functionality
         this.searchInput?.addEventListener('input', (e) => this._handleSearch(e.target.value));
         this.searchInput?.addEventListener('keyup', (e) => {
             if (e.key === 'Escape') {
@@ -169,7 +169,7 @@ export class CalendarManagementCard extends CardComponent {
 
         this.clearSearchBtn?.addEventListener('click', () => this._clearSearch());
 
-        // イベント委譲でカレンダーチェックボックス処理
+        // Handle calendar checkbox using event delegation
         this.calendarList?.addEventListener('change', (e) => {
             if (e.target.type === 'checkbox') {
                 this._handleCalendarToggle(e);
@@ -178,25 +178,25 @@ export class CalendarManagementCard extends CardComponent {
     }
 
     /**
-     * データを読み込み
+     * Load data
      */
     async loadData() {
         try {
             this.selectedCalendarIds = this._validateSelectedIds(await loadSelectedCalendars());
             this.render();
         } catch (error) {
-            logError('カレンダーデータ読み込み', error);
-            this._showError('カレンダーデータの読み込みに失敗しました');
+            logError('Calendar data loading', error);
+            this._showError('Failed to load calendar data');
         }
     }
 
     /**
-     * カードを表示
+     * Show card
      */
     show() {
         this.setVisible(true);
 
-        // 初回表示時にカレンダーを自動取得
+        // Auto-fetch calendars on first display
         if (!this.hasAutoFetched && (!this.allCalendars || this.allCalendars.length === 0)) {
             this.hasAutoFetched = true;
             this.refreshCalendars();
@@ -204,14 +204,14 @@ export class CalendarManagementCard extends CardComponent {
     }
 
     /**
-     * カードを非表示
+     * Hide card
      */
     hide() {
         this.setVisible(false);
     }
 
     /**
-     * カレンダー一覧を更新
+     * Refresh calendar list
      */
     async refreshCalendars() {
         this._setLoading(true);
@@ -231,7 +231,7 @@ export class CalendarManagementCard extends CardComponent {
             if (response.calendars) {
                 this.allCalendars = response.calendars;
 
-                // プライマリカレンダーのみを自動選択（選択されていない場合）
+                // Auto-select primary calendar only (if not selected)
                 if (this.selectedCalendarIds.length === 0) {
                     const primaryCalendar = response.calendars.find(cal => cal.primary);
                     if (primaryCalendar) {
@@ -239,7 +239,7 @@ export class CalendarManagementCard extends CardComponent {
                     }
                 }
 
-                // プライマリカレンダーが選択に含まれていない場合は追加
+                // Add primary calendar if not included in selection
                 const primaryCalendar = response.calendars.find(cal => cal.primary);
                 if (primaryCalendar && !this.selectedCalendarIds.includes(primaryCalendar.id)) {
                     this.selectedCalendarIds.unshift(primaryCalendar.id);
@@ -249,15 +249,15 @@ export class CalendarManagementCard extends CardComponent {
                 this.render();
             }
         } catch (error) {
-            logError('カレンダー一覧更新', error);
-            this._showError(`カレンダーの更新に失敗しました: ${error.message || '不明なエラー'}`);
+            logError('Calendar list update', error);
+            this._showError(`Failed to update calendars: ${error.message || 'Unknown error'}`);
         } finally {
             this._setLoading(false);
         }
     }
 
     /**
-     * カレンダーリストを描画
+     * Render calendar list
      */
     render() {
         if (!this.allCalendars || this.allCalendars.length === 0) {
@@ -265,14 +265,14 @@ export class CalendarManagementCard extends CardComponent {
             return;
         }
 
-        // 検索フィルターを適用
+        // Apply search filter
         const searchTerm = this.searchInput?.value.toLowerCase().trim() || '';
         const filteredCalendars = searchTerm
             ? this.allCalendars.filter(calendar =>
                 calendar.summary.toLowerCase().includes(searchTerm))
             : this.allCalendars;
 
-        // カレンダーをソート（プライマリを最初に）
+        // Sort calendars (primary first)
         const sortedCalendars = [...filteredCalendars].sort((a, b) => {
             if (a.primary && !b.primary) return -1;
             if (!a.primary && b.primary) return 1;
@@ -297,7 +297,7 @@ export class CalendarManagementCard extends CardComponent {
     }
 
     /**
-     * カレンダーアイテムを作成
+     * Create calendar item
      * @private
      */
     _createCalendarItem(calendar, isSelected) {
@@ -305,7 +305,7 @@ export class CalendarManagementCard extends CardComponent {
         item.className = 'list-group-item d-flex align-items-center py-2';
         item.dataset.calendarId = calendar.id;
 
-        // チェックボックス
+        // Checkbox
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
         checkbox.className = 'form-check-input me-3';
@@ -316,7 +316,7 @@ export class CalendarManagementCard extends CardComponent {
             checkbox.checked = true;
         }
 
-        // カレンダー情報
+        // Calendar information
         const info = document.createElement('div');
         info.className = 'flex-grow-1';
 
@@ -329,7 +329,7 @@ export class CalendarManagementCard extends CardComponent {
 
         info.appendChild(name);
 
-        // カラーインジケーター
+        // Color indicator
         const colorIndicator = document.createElement('div');
         colorIndicator.className = 'me-2';
         colorIndicator.style.cssText = `
@@ -348,7 +348,7 @@ export class CalendarManagementCard extends CardComponent {
     }
 
     /**
-     * 検索処理
+     * Handle search
      * @private
      */
     _handleSearch(searchTerm) {
@@ -356,7 +356,7 @@ export class CalendarManagementCard extends CardComponent {
     }
 
     /**
-     * 検索をクリア
+     * Clear search
      * @private
      */
     _clearSearch() {
@@ -367,7 +367,7 @@ export class CalendarManagementCard extends CardComponent {
     }
 
     /**
-     * カレンダー選択の切り替え
+     * Toggle calendar selection
      * @private
      */
     async _handleCalendarToggle(event) {
@@ -387,13 +387,13 @@ export class CalendarManagementCard extends CardComponent {
         try {
             await saveSelectedCalendars(this.selectedCalendarIds);
         } catch (error) {
-            logError('カレンダー選択保存', error);
-            this._showError('設定の保存に失敗しました');
+            logError('Calendar selection save', error);
+            this._showError('Failed to save settings');
         }
     }
 
     /**
-     * ローディング状態を設定
+     * Set loading state
      * @private
      */
     _setLoading(loading) {
@@ -406,7 +406,7 @@ export class CalendarManagementCard extends CardComponent {
     }
 
     /**
-     * 空の状態を表示
+     * Show empty state
      * @private
      */
     _showEmptyState() {
@@ -415,16 +415,16 @@ export class CalendarManagementCard extends CardComponent {
     }
 
     /**
-     * 検索結果なしを表示
+     * Show no search results
      * @private
      */
     _showNoSearchResults() {
-        this.calendarList.innerHTML = '<div class="text-muted text-center p-3">検索結果が見つかりませんでした</div>';
+        this.calendarList.innerHTML = '<div class="text-muted text-center p-3">No search results found</div>';
         this.noCalendarsMsg.style.display = 'none';
     }
 
     /**
-     * 空の状態を非表示
+     * Hide empty state
      * @private
      */
     _hideEmptyState() {
@@ -432,7 +432,7 @@ export class CalendarManagementCard extends CardComponent {
     }
 
     /**
-     * 検索UIを更新
+     * Update search UI
      * @private
      */
     _updateSearchUI(searchTerm) {
@@ -442,14 +442,14 @@ export class CalendarManagementCard extends CardComponent {
     }
 
     /**
-     * エラーを表示
+     * Show error
      * @private
      */
     _showError(message) {
         const errorDiv = document.createElement('div');
         errorDiv.className = 'alert alert-danger alert-dismissible fade show';
         errorDiv.innerHTML = `
-            <strong>エラー:</strong> ${message}
+            <strong>Error:</strong> ${message}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         `;
 
@@ -459,7 +459,7 @@ export class CalendarManagementCard extends CardComponent {
     }
 
     /**
-     * 選択されたIDを検証
+     * Validate selected IDs
      * @private
      */
     _validateSelectedIds(ids) {

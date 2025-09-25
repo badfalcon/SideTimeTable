@@ -1,7 +1,7 @@
 /**
- * SideTimeTable - イベント管理モジュール
- * 
- * このファイルはGoogleカレンダーイベントとローカルイベントの管理を行います。
+ * SideTimeTable - Event Management Module
+ *
+ * This file manages Google Calendar events and local events.
  */
 
 import {
@@ -17,38 +17,38 @@ import {createTimeOnDate} from '../lib/time-utils.js';
 import {getDemoEvents, getDemoLocalEvents, isDemoMode} from '../lib/demo-data.js';
 
 /**
- * GoogleEventManager - Googleイベント管理クラス
+ * GoogleEventManager - Google event management class
  */
 export class GoogleEventManager {
     /**
-     * コンストラクタ
-     * @param {Object} timeTableManager - タイムテーブルマネージャーのインスタンス
-     * @param {HTMLElement} googleEventsDiv - Googleイベント表示用のDOM要素
-     * @param {Object} eventLayoutManager - イベントレイアウトマネージャーのインスタンス
+     * Constructor
+     * @param {Object} timeTableManager - Instance of timetable manager
+     * @param {HTMLElement} googleEventsDiv - DOM element for displaying Google events
+     * @param {Object} eventLayoutManager - Instance of event layout manager
      */
     constructor(timeTableManager, googleEventsDiv, eventLayoutManager) {
         this.timeTableManager = timeTableManager;
         this.googleEventsDiv = googleEventsDiv;
         this.eventLayoutManager = eventLayoutManager;
         this.isGoogleIntegrated = false;
-        this.lastFetchDate = null; // 最後にAPI呼び出しした日付
-        this.currentFetchPromise = null; // 現在実行中のfetch Promise
+        this.lastFetchDate = null; // Last date when API was called
+        this.currentFetchPromise = null; // Currently executing fetch Promise
     }
 
     /**
-     * Google連携設定を適用
-     * @param {boolean} isIntegrated - Google連携が有効かどうか
+     * Apply Google integration settings
+     * @param {boolean} isIntegrated - Whether Google integration is enabled
      */
     setGoogleIntegration(isIntegrated) {
         this.isGoogleIntegrated = isIntegrated;
     }
 
     /**
-     * Googleカレンダーから予定を取得
-     * @param {Date} targetDate - 対象の日付（省略時は今日）
+     * Fetch events from Google Calendar
+     * @param {Date} targetDate - Target date (today if omitted)
      */
     async fetchEvents(targetDate = null) {
-        // 現在の設定を動的に確認
+        // Dynamically check current settings
         const settings = await loadSettings();
         const isGoogleIntegrated = settings.googleIntegrated === true;
 
@@ -56,27 +56,27 @@ export class GoogleEventManager {
             return Promise.resolve();
         }
 
-        // デモモードの場合はモックデータを使用
+        // Use mock data in demo mode
         if (isDemoMode()) {
             return this._processDemoEvents();
         }
 
-        // 進行中のリクエストがある場合はそれを返す（重複防止）
+        // If there's a request in progress, return it (prevent duplicates)
         if (this.currentFetchPromise) {
             return this.currentFetchPromise;
         }
 
-        // 同じ日付での重複呼び出し制限チェック
+        // Check for duplicate call restriction on same date
         const targetDay = targetDate || new Date();
-        const targetDateStr = targetDay.toDateString(); // 日付文字列で比較
+        const targetDateStr = targetDay.toDateString(); // Compare by date string
 
         if (this.lastFetchDate === targetDateStr && this.currentFetchPromise) {
-            return this.currentFetchPromise; // 既存のPromiseを返す
+            return this.currentFetchPromise; // Return existing Promise
         }
 
         this.lastFetchDate = targetDateStr;
 
-        // イベントを取得（Google色を直接使用）
+        // Fetch events (use Google colors directly)
         this.currentFetchPromise = new Promise((resolve, reject) => {
             const requestId = `req-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
             const message = { action: "getEvents", requestId };
@@ -93,10 +93,10 @@ export class GoogleEventManager {
             });
         })
             .then(async response => {
-                // 以前の表示をクリア
+                // Clear previous display
                 this.googleEventsDiv.innerHTML = '';
 
-                // Googleイベントのみをレイアウトマネージャーから削除
+                // Remove only Google events from layout manager
                 if (this.eventLayoutManager && this.eventLayoutManager.events) {
                     const events = [...this.eventLayoutManager.events];
                     events.forEach(event => {
@@ -107,38 +107,38 @@ export class GoogleEventManager {
                 }
 
                 if (!response) {
-                    logError('Googleイベント取得', '応答がありません');
+                    logError('Google event fetch', 'No response');
                     return;
                 }
 
                 if (response.error) {
-                    logError('Googleイベント取得', response.error);
+                    logError('Google event fetch', response.error);
                     const errorDiv = document.createElement('div');
                     errorDiv.className = 'error-message';
                     const rid = response.requestId ? ` [Request ID: ${response.requestId}]` : '';
                     const errType = response.errorType ? ` (${response.errorType})` : '';
-                    errorDiv.textContent = (chrome.i18n.getMessage("errorPrefix") || 'エラー: ') + response.error + errType + rid;
+                    errorDiv.textContent = (chrome.i18n.getMessage("errorPrefix") || 'Error: ') + response.error + errType + rid;
                     this.googleEventsDiv.appendChild(errorDiv);
                     return;
                 }
 
-                // eventsプロパティの存在確認
+                // Check existence of events property
                 if (!response.events || !Array.isArray(response.events) || response.events.length === 0) {
                     return;
                 }
 
                 await this._processEvents(response.events);
 
-                // イベントレイアウトを計算して適用
+                // Calculate and apply event layout
                 if (this.eventLayoutManager && typeof this.eventLayoutManager.calculateLayout === 'function') {
                     this.eventLayoutManager.calculateLayout();
                 }
             })
             .catch(error => {
-                logError('Googleイベント取得例外', error);
+                logError('Google event fetch exception', error);
             })
             .finally(() => {
-                // リクエスト完了時にPromiseをクリア
+                // Clear Promise when request completes
                 this.currentFetchPromise = null;
             });
 
@@ -146,15 +146,15 @@ export class GoogleEventManager {
     }
 
     /**
-     * デモイベントを処理して表示
+     * Process and display demo events
      * @private
      */
     async _processDemoEvents() {
         return new Promise(async (resolve) => {
-            // 以前の表示をクリア
+            // Clear previous display
             this.googleEventsDiv.innerHTML = '';
 
-            // Googleイベントのみをレイアウトマネージャーから削除
+            // Remove only Google events from layout manager
             const events = [...this.eventLayoutManager.events];
             events.forEach(event => {
                 if (event && event.type === 'google') {
@@ -162,12 +162,12 @@ export class GoogleEventManager {
                 }
             });
 
-            // デモイベントを取得
+            // Get demo events
             const demoEvents = await getDemoEvents();
             
             await this._processEvents(demoEvents);
 
-            // イベントレイアウトを計算して適用
+            // Calculate and apply event layout
             this.eventLayoutManager.calculateLayout();
             
             resolve();
@@ -175,7 +175,7 @@ export class GoogleEventManager {
     }
 
     /**
-     * イベントデータを処理して表示
+     * Process event data and display
      * @private
      */
     async _processEvents(events) {
@@ -197,18 +197,18 @@ export class GoogleEventManager {
                         continue;
                 }
             } catch (error) {
-                console.error(`イベント${i}の処理中にエラーが発生:`, error);
+                console.error(`Error occurred during processing event ${i}:`, error);
             }
         }
     }
 
 
     /**
-     * Googleイベント要素を作成
+     * Create Google event element
      * @private
      */
     async _createGoogleEventElement(event) {
-        // 終日イベントはスキップ
+        // Skip all-day events
         if (event.start.date || event.end.date) {
             return;
         }
@@ -220,54 +220,54 @@ export class GoogleEventManager {
         const startDate = new Date(event.start.dateTime || event.start.date);
         let endDate = new Date(event.end.dateTime || event.end.date);
 
-        // 開始時間と終了時間が同じ場合は15分の予定として扱う
+        // If start and end times are the same, treat as 15-minute appointment
         if (startDate.getTime() >= endDate.getTime()) {
-            endDate = new Date(startDate.getTime() + 15 * 60 * 1000); // 15分追加
+            endDate = new Date(startDate.getTime() + 15 * 60 * 1000); // Add 15 minutes
         }
 
-        // データ属性に時刻情報を追加
+        // Add time information to data attributes
         eventDiv.dataset.startTime = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         eventDiv.dataset.endTime = endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-        // イベントの詳細データを保存
+        // Save event detail data
         eventDiv.dataset.description = event.description || '';
         eventDiv.dataset.location = event.location || '';
         eventDiv.dataset.hangoutLink = event.hangoutLink || '';
 
-        // クリックイベントの追加（新しいモーダルコンポーネントを使用）
+        // Add click event (using new modal component)
         eventDiv.addEventListener('click', () => {
-            // 親のSidePanelUIControllerからgoogleEventModalを取得
+            // Get googleEventModal from parent SidePanelUIController
             const sidePanelController = window.sidePanelController;
             if (sidePanelController && sidePanelController.googleEventModal) {
                 sidePanelController.googleEventModal.showEvent(event);
             }
         });
 
-        // 24時間座標系での位置計算（0:00からの分数をピクセルに変換）
+        // Calculate position in 24-hour coordinate system (convert minutes from 0:00 to pixels)
         const startOffset = (startDate.getHours() * 60 + startDate.getMinutes());
         const duration = (endDate - startDate) / TIME_CONSTANTS.MINUTE_MILLIS;
 
         if (duration < 30) {
-            eventDiv.className = 'event google-event short'; // 30分未満の場合はpaddingを減らす
-            eventDiv.style.height = `${duration}px`; // padding分を引かない
+            eventDiv.className = 'event google-event short'; // Reduce padding for events less than 30 minutes
+            eventDiv.style.height = `${duration}px`; // Don't subtract padding
         } else {
-            eventDiv.style.height = `${duration - 10}px`; // padding分を引く
+            eventDiv.style.height = `${duration - 10}px`; // Subtract padding
         }
 
         eventDiv.style.top = `${startOffset}px`;
         
-        // Google色を直接適用
+        // Apply Google colors directly
         if (event.calendarBackgroundColor) {
             eventDiv.style.backgroundColor = event.calendarBackgroundColor;
             eventDiv.style.color = event.calendarForegroundColor;
         }
         
-        // ロケール対応の時間表示を非同期で設定（参加者情報付き）
+        // Set locale-aware time display asynchronously (with attendee information)
         await this._setEventContentWithLocale(eventDiv, startDate, event.summary, event);
 
         this.googleEventsDiv.appendChild(eventDiv);
 
-        // イベントレイアウトマネージャーに登録
+        // Register with event layout manager
         const eventId = event.uniqueId || event.id || `google-${Date.now()}-${Math.random()}`;
         if (this.eventLayoutManager && typeof this.eventLayoutManager.registerEvent === 'function') {
             this.eventLayoutManager.registerEvent({
@@ -284,30 +284,30 @@ export class GoogleEventManager {
 
 
     /**
-     * ロケールに対応した時間表示でイベント内容を設定
-     * @param {HTMLElement} eventDiv - イベント要素
-     * @param {Date} startDate - 開始時刻
-     * @param {string} summary - イベントのタイトル
-     * @param {Object} event - イベント全体の情報
+     * Set event content with locale-aware time display
+     * @param {HTMLElement} eventDiv - Event element
+     * @param {Date} startDate - Start time
+     * @param {string} summary - Event title
+     * @param {Object} event - Full event information
      * @private
      */
     async _setEventContentWithLocale(eventDiv, startDate, summary, event) {
         try {
-            // 現在のロケールを取得
+            // Get current locale
             const locale = await window.getCurrentLocale();
 
-            // 時間をロケール形式でフォーマット
+            // Format time in locale format
             const startHours = String(startDate.getHours()).padStart(2, '0');
             const startMinutes = String(startDate.getMinutes()).padStart(2, '0');
             const timeString = `${startHours}:${startMinutes}`;
 
             const formattedTime = window.formatTimeForLocale(timeString, locale);
 
-            // 参加者情報がある場合は追加情報を表示
+            // Show additional information if attendee information is available
             let displayText = `${formattedTime} - ${summary}`;
 
             if (event.attendees && event.attendees.length > 0) {
-                // 自分の参加ステータスを確認
+                // Check own attendance status
                 const myStatus = this._getMyAttendanceStatus(event.attendees);
                 if (myStatus) {
                     const statusIcon = this._getStatusIcon(myStatus);
@@ -317,8 +317,8 @@ export class GoogleEventManager {
 
             eventDiv.textContent = displayText;
         } catch (error) {
-            // エラーの場合は従来の表示方法を使用
-            console.warn('ロケール時間フォーマットエラー:', error);
+            // Use traditional display method in case of error
+            console.warn('Locale time format error:', error);
             eventDiv.textContent = `${startDate.toLocaleTimeString([], {
                 hour: '2-digit',
                 minute: '2-digit'
@@ -327,21 +327,21 @@ export class GoogleEventManager {
     }
 
     /**
-     * 自分の参加ステータスを取得
-     * @param {Array} attendees - 参加者配列
-     * @returns {string|null} 参加ステータス
+     * Get own attendance status
+     * @param {Array} attendees - Attendees array
+     * @returns {string|null} Attendance status
      * @private
      */
     _getMyAttendanceStatus(attendees) {
-        // 簡単な実装：最初の参加者のステータスを返す
-        // 実際には現在のユーザーのメールアドレスと照合する必要がある
+        // Simple implementation: return status of first attendee
+        // In practice, need to match against current user's email address
         return attendees[0]?.responseStatus || null;
     }
 
     /**
-     * ステータスに応じたアイコンを取得
-     * @param {string} status - 参加ステータス
-     * @returns {string} アイコン文字
+     * Get icon according to status
+     * @param {string} status - Attendance status
+     * @returns {string} Icon character
      * @private
      */
     _getStatusIcon(status) {
@@ -361,14 +361,14 @@ export class GoogleEventManager {
 }
 
 /**
- * LocalEventManager - ローカルイベント管理クラス
+ * LocalEventManager - Local event management class
  */
 export class LocalEventManager {
     /**
-     * コンストラクタ
-     * @param {Object} timeTableManager - タイムテーブルマネージャーのインスタンス
-     * @param {HTMLElement} localEventsDiv - ローカルイベント表示用のDOM要素
-     * @param {Object} eventLayoutManager - イベントレイアウトマネージャーのインスタンス
+     * Constructor
+     * @param {Object} timeTableManager - Instance of timetable manager
+     * @param {HTMLElement} localEventsDiv - DOM element for displaying local events
+     * @param {Object} eventLayoutManager - Instance of event layout manager
      */
     constructor(timeTableManager, localEventsDiv, eventLayoutManager) {
         this.timeTableManager = timeTableManager;
@@ -376,36 +376,36 @@ export class LocalEventManager {
         this.eventLayoutManager = eventLayoutManager;
         this.eventDialogElements = null;
         this.alertModalElements = null;
-        this.currentTargetDate = new Date(); // 現在表示中の日付
+        this.currentTargetDate = new Date(); // Currently displayed date
     }
 
     /**
-     * ダイアログ要素を設定
-     * @param {Object} elements - ダイアログ関連の要素
+     * Set dialog elements
+     * @param {Object} elements - Dialog-related elements
      */
     setDialogElements(elements) {
         this.eventDialogElements = elements;
     }
 
     /**
-     * アラートモーダル要素を設定
-     * @param {Object} elements - アラートモーダル関連の要素
+     * Set alert modal elements
+     * @param {Object} elements - Alert modal-related elements
      */
     setAlertModalElements(elements) {
         this.alertModalElements = elements;
     }
 
     /**
-     * ローカルイベントをロード
-     * @param {Date} targetDate - 対象の日付（省略時は今日）
+     * Load local events
+     * @param {Date} targetDate - Target date (today if omitted)
      */
     async loadLocalEvents(targetDate = null) {
-        // 対象日付を更新
+        // Update target date
         this.currentTargetDate = targetDate || new Date();
         
-        this.localEventsDiv.innerHTML = ''; // 以前の表示をクリア
+        this.localEventsDiv.innerHTML = ''; // Clear previous display
 
-        // デモモードの場合はモックデータを使用
+        // Use mock data in demo mode
         if (isDemoMode()) {
             const demoEvents = await getDemoLocalEvents();
 
@@ -414,7 +414,7 @@ export class LocalEventManager {
                     const eventDiv = await this._createEventDiv(event.title, event.startTime, event.endTime);
                     this.localEventsDiv.appendChild(eventDiv);
                 } catch (error) {
-                    logError('デモイベント表示', error);
+                    logError('Demo event display', error);
                 }
             }
             return;
@@ -432,19 +432,19 @@ export class LocalEventManager {
                         const eventDiv = await this._createEventDiv(event.title, event.startTime, event.endTime);
                         this.localEventsDiv.appendChild(eventDiv);
                     } catch (error) {
-                        logError('イベント表示', error);
+                        logError('Event display', error);
                     }
                 }
 
-                // 注: レイアウト計算はside_panel.jsで行うため、ここでは行わない
+                // Note: Layout calculation is done in side_panel.js, so not done here
             })
             .catch(error => {
-                logError('ローカルイベント読み込み', error);
+                logError('Local event loading', error);
             });
     }
 
     /**
-     * イベント要素を作成
+     * Create event element
      * @private
      */
     async _createEventDiv(title, startTime, endTime) {
@@ -452,18 +452,18 @@ export class LocalEventManager {
         eventDiv.className = 'event local-event';
         eventDiv.title = title;
 
-        // 対象日付に時間を設定
+        // Set time on target date
         const [startHours, startMinutes] = startTime.split(':');
         const [endHours, endMinutes] = endTime.split(':');
         
         const startDate = createTimeOnDate(this.currentTargetDate, parseInt(startHours), parseInt(startMinutes));
         const endDate = createTimeOnDate(this.currentTargetDate, parseInt(endHours), parseInt(endMinutes));
 
-        // データ属性に時刻情報を追加
+        // Add time information to data attributes
         eventDiv.dataset.startTime = startTime;
         eventDiv.dataset.endTime = endTime;
 
-        // 24時間座標系での位置計算（0:00からの分数をピクセルに変換）
+        // Calculate position in 24-hour coordinate system (convert minutes from 0:00 to pixels)
         const startOffset = (startDate.getHours() * 60 + startDate.getMinutes());
         const duration = (endDate.getTime() - startDate.getTime()) / TIME_CONSTANTS.MINUTE_MILLIS;
 
@@ -476,13 +476,13 @@ export class LocalEventManager {
 
         eventDiv.style.top = `${startOffset}px`;
         
-        // ロケール対応の時間表示を非同期で設定
+        // Set locale-aware time display asynchronously
         await this._setLocalEventContentWithLocale(eventDiv, startTime, endTime, title);
 
-        // 編集機能を設定
+        // Setup edit functionality
         this._setupEventEdit(eventDiv, {title, startTime, endTime});
 
-        // イベントレイアウトマネージャーに登録
+        // Register with event layout manager
         this.eventLayoutManager.registerEvent({
             startTime: startDate,
             endTime: endDate,
@@ -496,30 +496,30 @@ export class LocalEventManager {
     }
 
     /**
-     * ロケールに対応した時間表示でローカルイベント内容を設定
-     * @param {HTMLElement} eventDiv - イベント要素
-     * @param {string} startTime - 開始時刻（HH:mm形式）
-     * @param {string} endTime - 終了時刻（HH:mm形式）
-     * @param {string} title - イベントのタイトル
+     * Set local event content with locale-aware time display
+     * @param {HTMLElement} eventDiv - Event element
+     * @param {string} startTime - Start time (HH:mm format)
+     * @param {string} endTime - End time (HH:mm format)
+     * @param {string} title - Event title
      * @private
      */
     async _setLocalEventContentWithLocale(eventDiv, startTime, endTime, title) {
         try {
-            // 現在のロケールを取得
+            // Get current locale
             const locale = await window.getCurrentLocale();
             
-            // 時間範囲をロケール形式でフォーマット
+            // Format time range in locale format
             const formattedTimeRange = window.formatTimeRangeForLocale(startTime, endTime, locale);
             eventDiv.textContent = `${formattedTimeRange}: ${title}`;
         } catch (error) {
-            // エラーの場合は従来の表示方法を使用
-            console.warn('ロケール時間フォーマットエラー:', error);
+            // Use traditional display method in case of error
+            console.warn('Locale time format error:', error);
             eventDiv.textContent = `${startTime} - ${endTime}: ${title}`;
         }
     }
 
     /**
-     * イベント編集機能をセットアップ
+     * Setup event edit functionality
      * @private
      */
     _setupEventEdit(eventDiv, event) {
@@ -528,20 +528,20 @@ export class LocalEventManager {
         const elements = this.eventDialogElements;
 
         eventDiv.addEventListener('click', () => {
-            // 編集用ダイアログを表示
+            // Display edit dialog
             elements.dialog.style.display = 'flex';
 
-            // フォームに既存のイベント情報を設定
+            // Set existing event information in form
             elements.titleInput.value = event.title;
             elements.startTimeInput.value = event.startTime;
             elements.endTimeInput.value = event.endTime;
 
-            // 保存ボタンがクリックされたときの処理
+            // Process when save button is clicked
             elements.saveButton.onclick = () => {
                 this._handleEventUpdate(event);
             };
 
-            // 削除ボタンがクリックされたときの処理
+            // Process when delete button is clicked
             elements.deleteButton.onclick = () => {
                 this._handleEventDelete(event);
             };
@@ -549,7 +549,7 @@ export class LocalEventManager {
     }
 
     /**
-     * イベント更新処理
+     * Handle event update
      * @private
      */
     _handleEventUpdate(originalEvent) {
@@ -563,7 +563,7 @@ export class LocalEventManager {
         if (newTitle && newStartTime && newEndTime) {
             loadLocalEvents()
                 .then(localEvents => {
-                    // 元のイベントを見つけて更新
+                    // Find and update original event
                     const eventIndex = localEvents.findIndex(e => 
                         e.title === originalEvent.title && 
                         e.startTime === originalEvent.startTime && 
@@ -581,33 +581,33 @@ export class LocalEventManager {
                     }
                 })
                 .then(() => {
-                    this._showAlertModal(chrome.i18n.getMessage("eventUpdated") || 'イベントを更新しました');
-                    this.loadLocalEvents(); // イベント表示を更新
+                    this._showAlertModal(chrome.i18n.getMessage("eventUpdated") || 'Event updated');
+                    this.loadLocalEvents(); // Update event display
                 })
                 .catch(error => {
-                    logError('イベント更新', error);
-                    this._showAlertModal('イベントの更新に失敗しました');
+                    logError('Event update', error);
+                    this._showAlertModal('Failed to update event');
                 })
                 .finally(() => {
                     elements.dialog.style.display = 'none';
                 });
         } else {
-            this._showAlertModal(chrome.i18n.getMessage("fillAllFields") || '全ての項目を入力してください');
+            this._showAlertModal(chrome.i18n.getMessage("fillAllFields") || 'Please fill in all fields');
         }
     }
 
     /**
-     * イベント削除処理
+     * Handle event deletion
      * @private
      */
     _handleEventDelete(event) {
-        if (confirm(chrome.i18n.getMessage("confirmDeleteEvent") || 'イベントを削除しますか？')) {
-            // イベントIDを生成
+        if (confirm(chrome.i18n.getMessage("confirmDeleteEvent") || 'Delete this event?')) {
+            // Generate event ID
             const eventId = `local-${event.title}-${event.startTime}-${event.endTime}`;
 
             loadLocalEvents()
                 .then(localEvents => {
-                    // 対象のイベントを除外
+                    // Exclude target event
                     const updatedEvents = localEvents.filter(e => 
                         !(e.title === event.title && 
                           e.startTime === event.startTime && 
@@ -617,9 +617,9 @@ export class LocalEventManager {
                     return saveLocalEvents(updatedEvents);
                 })
                 .then(() => {
-                    this._showAlertModal(chrome.i18n.getMessage("eventDeleted") || 'イベントを削除しました');
+                    this._showAlertModal(chrome.i18n.getMessage("eventDeleted") || 'Event deleted');
 
-                    // イベント表示を更新（DOM要素の削除）
+                    // Update event display (remove DOM elements)
                     const eventElements = this.localEventsDiv.querySelectorAll('.local-event');
                     for (const element of eventElements) {
                         if (element.textContent.includes(`${event.startTime} - ${event.endTime}: ${event.title}`)) {
@@ -628,13 +628,13 @@ export class LocalEventManager {
                         }
                     }
 
-                    // イベントレイアウトマネージャーから削除してからレイアウトを再計算
+                    // Remove from event layout manager and recalculate layout
                     this.eventLayoutManager.removeEvent(eventId);
                     this.eventLayoutManager.calculateLayout();
                 })
                 .catch(error => {
-                    logError('イベント削除', error);
-                    this._showAlertModal('イベントの削除に失敗しました');
+                    logError('Event deletion', error);
+                    this._showAlertModal('Failed to delete event');
                 })
                 .finally(() => {
                     if (this.eventDialogElements) {
@@ -645,7 +645,7 @@ export class LocalEventManager {
     }
 
     /**
-     * 新しいイベントを追加
+     * Add new event
      */
     addNewEvent() {
         if (!this.eventDialogElements) return;
@@ -658,34 +658,34 @@ export class LocalEventManager {
         if (title && startTime && endTime) {
             loadLocalEvents()
                 .then(localEvents => {
-                    // 新しいイベントを追加
+                    // Add new event
                     localEvents.push({title, startTime, endTime});
                     return saveLocalEvents(localEvents);
                 })
                 .then(async () => {
-                    // イベント要素を作成して表示
+                    // Create and display event element
                     const eventDiv = await this._createEventDiv(title, startTime, endTime);
                     this.localEventsDiv.appendChild(eventDiv);
 
-                    // イベントレイアウトを再計算
+                    // Recalculate event layout
                     this.eventLayoutManager.calculateLayout();
 
-                    this._showAlertModal(chrome.i18n.getMessage("eventSaved") || 'イベントを保存しました');
+                    this._showAlertModal(chrome.i18n.getMessage("eventSaved") || 'Event saved');
                 })
                 .catch(error => {
-                    logError('イベント追加', error);
-                    this._showAlertModal('イベントの保存に失敗しました');
+                    logError('Event addition', error);
+                    this._showAlertModal('Failed to save event');
                 })
                 .finally(() => {
                     elements.dialog.style.display = 'none';
                 });
         } else {
-            this._showAlertModal(chrome.i18n.getMessage("fillAllFields") || '全ての項目を入力してください');
+            this._showAlertModal(chrome.i18n.getMessage("fillAllFields") || 'Please fill in all fields');
         }
     }
 
     /**
-     * アラートモーダルを表示
+     * Display alert modal
      * @private
      */
     _showAlertModal(message) {

@@ -1,14 +1,14 @@
 /**
- * GoogleIntegrationCard - Google連携設定カードコンポーネント
+ * GoogleIntegrationCard - Google integration settings card component
  */
 import { CardComponent } from '../base/card-component.js';
 
 export class GoogleIntegrationCard extends CardComponent {
     constructor(onIntegrationChange) {
         super({
-            title: 'Google カレンダー連携',
+            title: 'Google Calendar Integration',
             titleLocalize: '__MSG_integration__',
-            subtitle: 'Google カレンダーと連携して予定を表示します。',
+            subtitle: 'Integrate with Google Calendar to display events.',
             subtitleLocalize: '__MSG_googleIntegration__',
             icon: 'fab fa-google',
             iconColor: 'text-primary'
@@ -23,20 +23,20 @@ export class GoogleIntegrationCard extends CardComponent {
     createElement() {
         const card = super.createElement();
 
-        // Google連携ボタンとステータスの作成
+        // Create Google integration button and status
         const controlsDiv = document.createElement('div');
         controlsDiv.className = 'd-flex align-items-center';
 
-        // Google連携ボタン
+        // Google integration button
         this.integrationButton = this._createGoogleButton();
         controlsDiv.appendChild(this.integrationButton);
 
-        // ステータス表示
+        // Status display
         this.statusElement = document.createElement('span');
         this.statusElement.id = 'google-integration-status';
         this.statusElement.className = 'ms-2';
         this.statusElement.setAttribute('data-localize', '__MSG_notIntegrated__');
-        this.statusElement.textContent = '未連携';
+        this.statusElement.textContent = 'Not integrated';
         controlsDiv.appendChild(this.statusElement);
 
         this.addContent(controlsDiv);
@@ -46,9 +46,9 @@ export class GoogleIntegrationCard extends CardComponent {
     }
 
     /**
-     * Google連携ボタンを作成
+     * Create Google integration button
      * @private
-     * @returns {HTMLElement} Googleボタン要素
+     * @returns {HTMLElement} Google button element
      */
     _createGoogleButton() {
         const button = document.createElement('button');
@@ -61,7 +61,7 @@ export class GoogleIntegrationCard extends CardComponent {
         const wrapper = document.createElement('div');
         wrapper.className = 'gsi-material-button-content-wrapper';
 
-        // Googleアイコン
+        // Google icon
         const iconDiv = document.createElement('div');
         iconDiv.className = 'gsi-material-button-icon';
         iconDiv.innerHTML = `
@@ -79,12 +79,12 @@ export class GoogleIntegrationCard extends CardComponent {
             </svg>
         `;
 
-        // ボタンテキスト
+        // Button text
         const textSpan = document.createElement('span');
         textSpan.className = 'gsi-material-button-contents';
         textSpan.textContent = 'Sign in with Google';
 
-        // 隠しテキスト
+        // Hidden text
         const hiddenSpan = document.createElement('span');
         hiddenSpan.style.display = 'none';
         hiddenSpan.textContent = 'Sign in with Google';
@@ -100,7 +100,7 @@ export class GoogleIntegrationCard extends CardComponent {
     }
 
     /**
-     * イベントリスナーを設定
+     * Set up event listeners
      * @private
      */
     _setupEventListeners() {
@@ -112,9 +112,9 @@ export class GoogleIntegrationCard extends CardComponent {
     }
 
     /**
-     * 連携状態を更新
-     * @param {boolean} integrated 連携状態
-     * @param {string} statusText ステータステキスト（オプション）
+     * Update integration status
+     * @param {boolean} integrated Integration status
+     * @param {string} statusText Status text (optional)
      */
     updateIntegrationStatus(integrated, statusText = null) {
         this.isIntegrated = integrated;
@@ -125,14 +125,14 @@ export class GoogleIntegrationCard extends CardComponent {
                 this.statusElement.removeAttribute('data-localize');
             } else if (integrated) {
                 this.statusElement.setAttribute('data-localize', '__MSG_integrated__');
-                this.statusElement.textContent = '連携済み';
+                this.statusElement.textContent = 'Integrated';
             } else {
                 this.statusElement.setAttribute('data-localize', '__MSG_notIntegrated__');
-                this.statusElement.textContent = '未連携';
+                this.statusElement.textContent = 'Not integrated';
             }
         }
 
-        // ボタンテキストの更新
+        // Update button text
         if (this.integrationButton) {
             const textSpan = this.integrationButton.querySelector('.gsi-material-button-contents');
             if (textSpan) {
@@ -142,8 +142,8 @@ export class GoogleIntegrationCard extends CardComponent {
     }
 
     /**
-     * ボタンの有効/無効を切り替え
-     * @param {boolean} enabled ボタンを有効にするかどうか
+     * Toggle button enable/disable
+     * @param {boolean} enabled Whether to enable the button
      */
     setButtonEnabled(enabled) {
         if (this.integrationButton) {
@@ -153,8 +153,8 @@ export class GoogleIntegrationCard extends CardComponent {
     }
 
     /**
-     * 連携状態を取得
-     * @returns {boolean} 現在の連携状態
+     * Get integration status
+     * @returns {boolean} Current integration status
      */
     getIntegrationStatus() {
         return this.isIntegrated;

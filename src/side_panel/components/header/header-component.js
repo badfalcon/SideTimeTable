@@ -1,5 +1,5 @@
 /**
- * HeaderComponent - サイドパネルヘッダーコンポーネント
+ * HeaderComponent - Side panel header component
  */
 import { Component } from '../base/component.js';
 
@@ -11,90 +11,90 @@ export class HeaderComponent extends Component {
             ...options
         });
 
-        // コールバック関数
+        // Callback functions
         this.onAddEvent = options.onAddEvent || null;
         this.onDateChange = options.onDateChange || null;
         this.onSettingsClick = options.onSettingsClick || null;
 
-        // UI要素
+        // UI elements
         this.addEventButton = null;
         this.prevDateButton = null;
         this.nextDateButton = null;
         this.dateInput = null;
         this.settingsButton = null;
 
-        // 現在の日付
+        // Current date
         this.currentDate = new Date();
     }
 
     createElement() {
         const wrapper = super.createElement();
 
-        // 既に内容が作成済みの場合はスキップ
+        // Skip if content is already created
         if (wrapper.children.length > 0) {
             return wrapper;
         }
 
-        // ヘッダー構造を作成
+        // Create header structure
         const header = document.createElement('div');
         header.id = 'sideTimeTableHeader';
 
-        // 追加ボタン
+        // Add button
         this.addEventButton = document.createElement('i');
         this.addEventButton.className = 'fas fa-plus-circle add-local-event-icon';
         this.addEventButton.id = 'addLocalEventButton';
         this.addEventButton.setAttribute('data-localize-title', '__MSG_addEvent__');
 
-        // 日付ナビゲーション
+        // Date navigation
         const dateNavigation = this._createDateNavigation();
 
-        // 設定ボタン
+        // Settings button
         this.settingsButton = document.createElement('i');
         this.settingsButton.className = 'fas fa-cog settings-icon';
         this.settingsButton.id = 'settingsIcon';
         this.settingsButton.setAttribute('data-localize-title', '__MSG_settings__');
 
-        // ヘッダーに要素を追加
+        // Add elements to header
         header.appendChild(this.addEventButton);
         header.appendChild(dateNavigation);
         header.appendChild(this.settingsButton);
 
         wrapper.appendChild(header);
 
-        // イベントリスナーを設定
+        // Setup event listeners
         this._setupEventListeners();
 
-        // 初期日付を設定
+        // Set initial date
         this._updateDateDisplay();
 
         return wrapper;
     }
 
     /**
-     * 日付ナビゲーション要素を作成
+     * Create date navigation elements
      * @private
      */
     _createDateNavigation() {
         const container = document.createElement('div');
         container.id = 'dateNavigation';
 
-        // 前の日ボタン
+        // Previous day button
         this.prevDateButton = document.createElement('i');
         this.prevDateButton.className = 'fas fa-chevron-left nav-arrow';
         this.prevDateButton.id = 'prevDateButton';
-        this.prevDateButton.title = '前の日';
+        this.prevDateButton.title = 'Previous day';
 
-        // 日付入力
+        // Date input
         this.dateInput = document.createElement('input');
         this.dateInput.type = 'date';
         this.dateInput.id = 'currentDateDisplay';
         this.dateInput.setAttribute('data-localize-title', '__MSG_clickToSelectDate__');
 
-        // 次の日ボタン
+        // Next day button
         this.nextDateButton = document.createElement('i');
         this.nextDateButton.className = 'fas fa-chevron-right nav-arrow';
         this.nextDateButton.id = 'nextDateButton';
-        this.nextDateButton.title = '次の日';
+        this.nextDateButton.title = 'Next day';
 
         container.appendChild(this.prevDateButton);
         container.appendChild(this.dateInput);
@@ -104,18 +104,18 @@ export class HeaderComponent extends Component {
     }
 
     /**
-     * イベントリスナーを設定
+     * Setup event listeners
      * @private
      */
     _setupEventListeners() {
-        // 追加ボタン
+        // Add button
         this.addEventListener(this.addEventButton, 'click', () => {
             if (this.onAddEvent) {
                 this.onAddEvent();
             }
         });
 
-        // 日付ナビゲーション
+        // Date navigation
         this.addEventListener(this.prevDateButton, 'click', () => {
             this._navigateDate(-1);
         });
@@ -128,7 +128,7 @@ export class HeaderComponent extends Component {
             this._handleDateInputChange();
         });
 
-        // 設定ボタン
+        // Settings button
         this.addEventListener(this.settingsButton, 'click', () => {
             if (this.onSettingsClick) {
                 this.onSettingsClick();
@@ -137,7 +137,7 @@ export class HeaderComponent extends Component {
     }
 
     /**
-     * 日付を指定日数だけ移動
+     * Move date by specified number of days
      * @private
      */
     _navigateDate(days) {
@@ -147,7 +147,7 @@ export class HeaderComponent extends Component {
     }
 
     /**
-     * 日付入力の変更を処理
+     * Handle date input change
      * @private
      */
     _handleDateInputChange() {
@@ -158,12 +158,12 @@ export class HeaderComponent extends Component {
     }
 
     /**
-     * 日付表示を更新
+     * Update date display
      * @private
      */
     _updateDateDisplay() {
         if (this.dateInput) {
-            // YYYY-MM-DD形式で設定
+            // Set in YYYY-MM-DD format
             const year = this.currentDate.getFullYear();
             const month = String(this.currentDate.getMonth() + 1).padStart(2, '0');
             const day = String(this.currentDate.getDate()).padStart(2, '0');
@@ -172,15 +172,15 @@ export class HeaderComponent extends Component {
     }
 
     /**
-     * 現在の日付を設定
-     * @param {Date} date 新しい日付
+     * Set current date
+     * @param {Date} date New date
      */
     setCurrentDate(date) {
         if (date instanceof Date && !isNaN(date.getTime())) {
             this.currentDate = new Date(date);
             this._updateDateDisplay();
 
-            // コールバックを呼び出し
+            // Call callback
             if (this.onDateChange) {
                 this.onDateChange(this.currentDate);
             }
@@ -188,23 +188,23 @@ export class HeaderComponent extends Component {
     }
 
     /**
-     * 現在の日付を取得
-     * @returns {Date} 現在の日付
+     * Get current date
+     * @returns {Date} Current date
      */
     getCurrentDate() {
         return new Date(this.currentDate);
     }
 
     /**
-     * 今日の日付に設定
+     * Set to today's date
      */
     setToday() {
         this.setCurrentDate(new Date());
     }
 
     /**
-     * ボタンの有効/無効を設定
-     * @param {boolean} enabled 有効にするかどうか
+     * Set button enabled/disabled state
+     * @param {boolean} enabled Whether to enable
      */
     setButtonsEnabled(enabled) {
         const buttons = [
@@ -227,8 +227,8 @@ export class HeaderComponent extends Component {
     }
 
     /**
-     * 追加ボタンの表示/非表示を切り替え
-     * @param {boolean} visible 表示するかどうか
+     * Toggle add button visibility
+     * @param {boolean} visible Whether to show
      */
     setAddButtonVisible(visible) {
         if (this.addEventButton) {
@@ -237,8 +237,8 @@ export class HeaderComponent extends Component {
     }
 
     /**
-     * 日付が今日かどうかをチェック
-     * @returns {boolean} 今日の場合true
+     * Check if date is today
+     * @returns {boolean} true if today
      */
     isToday() {
         const today = new Date();
@@ -246,9 +246,9 @@ export class HeaderComponent extends Component {
     }
 
     /**
-     * 日付ナビゲーションの範囲制限を設定
-     * @param {Date|null} minDate 最小日付
-     * @param {Date|null} maxDate 最大日付
+     * Set date navigation range limits
+     * @param {Date|null} minDate Minimum date
+     * @param {Date|null} maxDate Maximum date
      */
     setDateRange(minDate = null, maxDate = null) {
         if (this.dateInput) {

@@ -1,27 +1,27 @@
 /**
- * Components Index - コンポーネント統合モジュール
+ * Components Index - Component integration module
  *
- * すべてのUIコンポーネントを一元管理し、外部からの使用を簡素化
+ * Centrally manages all UI components and simplifies external usage
  */
 
-// 基底コンポーネント
+// Base components
 export { CardComponent } from './base/card-component.js';
 export { ControlButtonsComponent } from './base/control-buttons-component.js';
 
-// カレンダー関連コンポーネント
+// Calendar-related components
 export { GoogleIntegrationCard } from './calendar/google-integration-card.js';
 export { CalendarManagementCard } from './calendar/calendar-management-card.js';
 
-// 設定関連コンポーネント
+// Settings-related components
 export { TimeSettingsCard } from './settings/time-settings-card.js';
 export { ColorSettingsCard } from './settings/color-settings-card.js';
 export { LanguageSettingsCard } from './settings/language-settings-card.js';
 export { ShortcutSettingsCard } from './settings/shortcut-settings-card.js';
 
 /**
- * ComponentManager - コンポーネントライフサイクル管理
+ * ComponentManager - Component lifecycle management
  *
- * 複数のコンポーネントを統合管理し、初期化・破棄を効率的に行う
+ * Integrates management of multiple components and efficiently handles initialization and destruction
  */
 export class ComponentManager {
     constructor() {
@@ -30,7 +30,7 @@ export class ComponentManager {
     }
 
     /**
-     * コンテナを設定
+     * Set container
      * @param {HTMLElement} container
      */
     setContainer(container) {
@@ -38,14 +38,14 @@ export class ComponentManager {
     }
 
     /**
-     * コンポーネントを登録
-     * @param {string} name コンポーネント名
-     * @param {Object} component コンポーネントインスタンス
+     * Register component
+     * @param {string} name Component name
+     * @param {Object} component Component instance
      */
     register(name, component) {
         this.components.set(name, component);
 
-        // コンテナが設定されている場合は自動的に追加
+        // Automatically add if container is set
         if (this.container && component.createElement) {
             if (!component.element) {
                 component.createElement();
@@ -55,16 +55,16 @@ export class ComponentManager {
     }
 
     /**
-     * コンポーネントを取得
-     * @param {string} name コンポーネント名
-     * @returns {Object|null} コンポーネントインスタンス
+     * Get component
+     * @param {string} name Component name
+     * @returns {Object|null} Component instance
      */
     get(name) {
         return this.components.get(name);
     }
 
     /**
-     * すべてのコンポーネントを初期化
+     * Initialize all components
      */
     async initializeAll() {
         for (const [name, component] of this.components) {
@@ -79,7 +79,7 @@ export class ComponentManager {
     }
 
     /**
-     * すべてのコンポーネントを破棄
+     * Destroy all components
      */
     destroyAll() {
         for (const [name, component] of this.components) {
@@ -95,9 +95,9 @@ export class ComponentManager {
     }
 
     /**
-     * 特定タイプのコンポーネントを一括操作
-     * @param {string} method メソッド名
-     * @param {...any} args メソッド引数
+     * Batch operations on specific type of components
+     * @param {string} method Method name
+     * @param {...any} args Method arguments
      */
     broadcast(method, ...args) {
         for (const [name, component] of this.components) {
@@ -112,16 +112,16 @@ export class ComponentManager {
     }
 
     /**
-     * 登録されているコンポーネント一覧を取得
-     * @returns {string[]} コンポーネント名の配列
+     * Get list of registered components
+     * @returns {string[]} Array of component names
      */
     list() {
         return Array.from(this.components.keys());
     }
 
     /**
-     * コンポーネントの統計情報を取得
-     * @returns {Object} 統計情報
+     * Get component statistics
+     * @returns {Object} Statistics information
      */
     getStats() {
         const total = this.components.size;

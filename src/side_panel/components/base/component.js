@@ -1,5 +1,5 @@
 /**
- * Component - サイドパネル用ベースコンポーネントクラス
+ * Component - Base component class for side panel
  */
 export class Component {
     constructor(options = {}) {
@@ -10,27 +10,27 @@ export class Component {
             ...options
         };
 
-        // DOM要素
+        // DOM element
         this.element = null;
 
-        // 初期化状態
+        // Initialization state
         this.initialized = false;
 
-        // イベントリスナーの管理
+        // Event listener management
         this.eventListeners = [];
     }
 
     /**
-     * コンポーネントの要素を作成
-     * @returns {HTMLElement} 作成された要素
+     * Create component element
+     * @returns {HTMLElement} Created element
      */
     createElement() {
-        // 既に要素が作成済みの場合は再利用
+        // Reuse if element is already created
         if (this.element) {
             return this.element;
         }
 
-        // 既存のDOMに同じIDの要素が存在する場合は削除
+        // Remove existing element with same ID from DOM if it exists
         if (this.options.id) {
             const existingElement = document.getElementById(this.options.id);
             if (existingElement) {
@@ -56,9 +56,9 @@ export class Component {
     }
 
     /**
-     * 指定された親要素に追加
-     * @param {HTMLElement} parent 親要素
-     * @returns {HTMLElement} 追加された要素
+     * Append to specified parent element
+     * @param {HTMLElement} parent Parent element
+     * @returns {HTMLElement} Appended element
      */
     appendTo(parent) {
         if (!this.element) {
@@ -73,9 +73,9 @@ export class Component {
     }
 
     /**
-     * 指定された要素の前に挿入
-     * @param {HTMLElement} sibling 挿入先の兄弟要素
-     * @returns {HTMLElement} 挿入された要素
+     * Insert before specified element
+     * @param {HTMLElement} sibling Target sibling element for insertion
+     * @returns {HTMLElement} Inserted element
      */
     insertBefore(sibling) {
         if (!this.element) {
@@ -90,11 +90,11 @@ export class Component {
     }
 
     /**
-     * イベントリスナーを追加（自動管理）
-     * @param {HTMLElement|string} target 対象要素またはセレクタ
-     * @param {string} event イベント名
-     * @param {Function} handler ハンドラ関数
-     * @param {Object} options イベントオプション
+     * Add event listener (automatic management)
+     * @param {HTMLElement|string} target Target element or selector
+     * @param {string} event Event name
+     * @param {Function} handler Handler function
+     * @param {Object} options Event options
      */
     addEventListener(target, event, handler, options = {}) {
         let element;
@@ -108,7 +108,7 @@ export class Component {
         if (element && typeof element.addEventListener === 'function') {
             element.addEventListener(event, handler, options);
 
-            // クリーンアップ用に記録
+            // Record for cleanup
             this.eventListeners.push({
                 element,
                 event,
@@ -119,8 +119,8 @@ export class Component {
     }
 
     /**
-     * 表示/非表示を切り替え
-     * @param {boolean} visible 表示するかどうか
+     * Toggle visibility
+     * @param {boolean} visible Whether to show
      */
     setVisible(visible) {
         if (this.element) {
@@ -130,21 +130,21 @@ export class Component {
     }
 
     /**
-     * 要素を表示
+     * Show element
      */
     show() {
         this.setVisible(true);
     }
 
     /**
-     * 要素を非表示
+     * Hide element
      */
     hide() {
         this.setVisible(false);
     }
 
     /**
-     * 要素を削除
+     * Remove element
      */
     remove() {
         if (this.element && this.element.parentNode) {
@@ -153,10 +153,10 @@ export class Component {
     }
 
     /**
-     * リソースをクリーンアップ
+     * Clean up resources
      */
     destroy() {
-        // イベントリスナーを削除
+        // Remove event listeners
         this.eventListeners.forEach(({ element, event, handler, options }) => {
             if (element && typeof element.removeEventListener === 'function') {
                 element.removeEventListener(event, handler, options);
@@ -164,14 +164,14 @@ export class Component {
         });
         this.eventListeners = [];
 
-        // DOM要素を削除
+        // Remove DOM element
         this.remove();
         this.element = null;
         this.initialized = false;
     }
 
     /**
-     * 要素内の文字列をローカライズ
+     * Localize strings within element
      */
     localize() {
         if (this.element && window.localizeElementText) {
@@ -180,9 +180,9 @@ export class Component {
     }
 
     /**
-     * CSS変数を設定
-     * @param {string} name CSS変数名（--なしで指定）
-     * @param {string} value 値
+     * Set CSS variable
+     * @param {string} name CSS variable name (specify without --)
+     * @param {string} value Value
      */
     setCSSVariable(name, value) {
         if (this.element) {
@@ -191,9 +191,9 @@ export class Component {
     }
 
     /**
-     * CSS変数を取得
-     * @param {string} name CSS変数名（--なしで指定）
-     * @returns {string} 値
+     * Get CSS variable
+     * @param {string} name CSS variable name (specify without --)
+     * @returns {string} Value
      */
     getCSSVariable(name) {
         if (this.element) {

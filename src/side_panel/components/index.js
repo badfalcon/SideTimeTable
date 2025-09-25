@@ -1,5 +1,5 @@
 /**
- * Side Panel Components - コンポーネントエクスポート
+ * Side Panel Components - Component exports
  */
 
 // Base Components
@@ -18,7 +18,7 @@ export { GoogleEventModal } from './modals/google-event-modal.js';
 export { AlertModal } from './modals/alert-modal.js';
 
 /**
- * ComponentManager - サイドパネル用コンポーネント管理クラス
+ * ComponentManager - Side panel component management class
  */
 export class SidePanelComponentManager {
     constructor() {
@@ -27,48 +27,48 @@ export class SidePanelComponentManager {
     }
 
     /**
-     * コンポーネントを登録
-     * @param {string} name コンポーネント名
-     * @param {Component} component コンポーネントインスタンス
+     * Register a component
+     * @param {string} name Component name
+     * @param {Component} component Component instance
      */
     register(name, component) {
         if (this.components.has(name)) {
-            console.warn(`コンポーネント '${name}' は既に登録されています`);
+            console.warn(`Component '${name}' is already registered`);
         }
         this.components.set(name, component);
     }
 
     /**
-     * コンポーネントを取得
-     * @param {string} name コンポーネント名
-     * @returns {Component|null} コンポーネントインスタンス
+     * Get a component
+     * @param {string} name Component name
+     * @returns {Component|null} Component instance
      */
     get(name) {
         return this.components.get(name) || null;
     }
 
     /**
-     * コンポーネントが存在するかチェック
-     * @param {string} name コンポーネント名
-     * @returns {boolean} 存在するかどうか
+     * Check if component exists
+     * @param {string} name Component name
+     * @returns {boolean} Whether it exists
      */
     has(name) {
         return this.components.has(name);
     }
 
     /**
-     * 全てのコンポーネントを初期化
+     * Initialize all components
      */
     initializeAll() {
         if (this.initialized) {
-            console.warn('コンポーネントは既に初期化済みです');
+            console.warn('Components are already initialized');
             return;
         }
 
         for (const [name, component] of this.components) {
             try {
                 if (component && typeof component.createElement === 'function') {
-                    // 既に初期化済みかチェック
+                    // Check if already initialized
                     if (!component.initialized) {
                         component.createElement();
                         component.initialized = true;
@@ -76,14 +76,14 @@ export class SidePanelComponentManager {
                     }
                 }
             } catch (error) {
-                console.error(`コンポーネント '${name}' の初期化に失敗:`, error);
+                console.error(`Component '${name}' initialization failed:`, error);
             }
         }
         this.initialized = true;
     }
 
     /**
-     * 全てのコンポーネントをローカライズ
+     * Localize all components
      */
     localizeAll() {
         for (const [name, component] of this.components) {
@@ -92,14 +92,14 @@ export class SidePanelComponentManager {
                     component.localize();
                 }
             } catch (error) {
-                console.warn(`コンポーネント '${name}' のローカライズに失敗:`, error);
+                console.warn(`Component '${name}' localization failed:`, error);
             }
         }
     }
 
     /**
-     * 指定されたコンポーネントを表示
-     * @param {string} name コンポーネント名
+     * Show specified component
+     * @param {string} name Component name
      */
     show(name) {
         const component = this.get(name);
@@ -109,8 +109,8 @@ export class SidePanelComponentManager {
     }
 
     /**
-     * 指定されたコンポーネントを非表示
-     * @param {string} name コンポーネント名
+     * Hide specified component
+     * @param {string} name Component name
      */
     hide(name) {
         const component = this.get(name);
@@ -120,7 +120,7 @@ export class SidePanelComponentManager {
     }
 
     /**
-     * 全てのコンポーネントを破棄
+     * Destroy all components
      */
     destroyAll() {
         for (const [name, component] of this.components) {
@@ -129,7 +129,7 @@ export class SidePanelComponentManager {
                     component.destroy();
                 }
             } catch (error) {
-                console.error(`コンポーネント '${name}' の破棄に失敗:`, error);
+                console.error(`Component '${name}' destruction failed:`, error);
             }
         }
         this.components.clear();
@@ -137,33 +137,33 @@ export class SidePanelComponentManager {
     }
 
     /**
-     * 登録されているコンポーネント一覧を取得
-     * @returns {Array<string>} コンポーネント名の配列
+     * Get list of registered components
+     * @returns {Array<string>} Array of component names
      */
     getComponentNames() {
         return Array.from(this.components.keys());
     }
 
     /**
-     * 初期化状態を取得
-     * @returns {boolean} 初期化済みかどうか
+     * Get initialization state
+     * @returns {boolean} Whether initialized
      */
     isInitialized() {
         return this.initialized;
     }
 
     /**
-     * コンポーネント数を取得
-     * @returns {number} 登録されているコンポーネント数
+     * Get number of components
+     * @returns {number} Number of registered components
      */
     size() {
         return this.components.size;
     }
 
     /**
-     * 全てのコンポーネントにCSS変数を設定
-     * @param {string} name CSS変数名（--なしで指定）
-     * @param {string} value 値
+     * Set CSS variable for all components
+     * @param {string} name CSS variable name (specify without --)
+     * @param {string} value Value
      */
     setCSSVariableForAll(name, value) {
         for (const component of this.components.values()) {

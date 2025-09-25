@@ -1,5 +1,5 @@
 /**
- * LocalEventModal - ローカルイベント編集モーダル
+ * LocalEventModal - Local event editing modal
  */
 import { ModalComponent } from './modal-component.js';
 
@@ -10,7 +10,7 @@ export class LocalEventModal extends ModalComponent {
             ...options
         });
 
-        // フォーム要素
+        // Form elements
         this.titleInput = null;
         this.startTimeInput = null;
         this.endTimeInput = null;
@@ -18,32 +18,32 @@ export class LocalEventModal extends ModalComponent {
         this.deleteButton = null;
         this.cancelButton = null;
 
-        // 編集中のイベント
+        // Event being edited
         this.currentEvent = null;
 
-        // コールバック
+        // Callbacks
         this.onSave = options.onSave || null;
         this.onDelete = options.onDelete || null;
         this.onCancel = options.onCancel || null;
 
-        // 編集モード（create/edit）
+        // Edit mode (create/edit)
         this.mode = 'create';
     }
 
     createContent() {
         const content = document.createElement('div');
 
-        // タイトル
+        // Title
         const title = document.createElement('h2');
         title.setAttribute('data-localize', '__MSG_eventDialogTitle__');
-        title.textContent = '予定を作成/編集';
+        title.textContent = 'Create/Edit Event';
         content.appendChild(title);
 
-        // タイトル入力
+        // Title input
         const titleLabel = document.createElement('label');
         titleLabel.htmlFor = 'eventTitle';
         titleLabel.setAttribute('data-localize', '__MSG_eventTitle__');
-        titleLabel.textContent = 'タイトル:';
+        titleLabel.textContent = 'Title:';
         content.appendChild(titleLabel);
 
         this.titleInput = document.createElement('input');
@@ -52,11 +52,11 @@ export class LocalEventModal extends ModalComponent {
         this.titleInput.required = true;
         content.appendChild(this.titleInput);
 
-        // 開始時刻入力
+        // Start time input
         const startLabel = document.createElement('label');
         startLabel.htmlFor = 'eventStartTime';
         startLabel.setAttribute('data-localize', '__MSG_startTime__');
-        startLabel.textContent = '開始時刻:';
+        startLabel.textContent = 'Start Time:';
         content.appendChild(startLabel);
 
         this.startTimeInput = document.createElement('input');
@@ -66,11 +66,11 @@ export class LocalEventModal extends ModalComponent {
         this.startTimeInput.required = true;
         content.appendChild(this.startTimeInput);
 
-        // 終了時刻入力
+        // End time input
         const endLabel = document.createElement('label');
         endLabel.htmlFor = 'eventEndTime';
         endLabel.setAttribute('data-localize', '__MSG_endTime__');
-        endLabel.textContent = '終了時刻:';
+        endLabel.textContent = 'End Time:';
         content.appendChild(endLabel);
 
         this.endTimeInput = document.createElement('input');
@@ -80,63 +80,63 @@ export class LocalEventModal extends ModalComponent {
         this.endTimeInput.required = true;
         content.appendChild(this.endTimeInput);
 
-        // ボタングループ
+        // Button group
         const buttonGroup = document.createElement('div');
         buttonGroup.className = 'modal-buttons';
 
-        // 保存ボタン
+        // Save button
         this.saveButton = document.createElement('button');
         this.saveButton.id = 'saveEventButton';
         this.saveButton.className = 'btn btn-success';
         this.saveButton.setAttribute('data-localize', '__MSG_save__');
-        this.saveButton.textContent = '保存';
+        this.saveButton.textContent = 'Save';
 
-        // 削除ボタン
+        // Delete button
         this.deleteButton = document.createElement('button');
         this.deleteButton.id = 'deleteEventButton';
         this.deleteButton.className = 'btn btn-danger';
         this.deleteButton.setAttribute('data-localize', '__MSG_delete__');
-        this.deleteButton.textContent = '削除';
+        this.deleteButton.textContent = 'Delete';
 
-        // キャンセルボタン
+        // Cancel button
         this.cancelButton = document.createElement('button');
         this.cancelButton.id = 'cancelEventButton';
         this.cancelButton.className = 'btn btn-secondary';
         this.cancelButton.setAttribute('data-localize', '__MSG_cancel__');
-        this.cancelButton.textContent = 'キャンセル';
+        this.cancelButton.textContent = 'Cancel';
 
         buttonGroup.appendChild(this.saveButton);
         buttonGroup.appendChild(this.deleteButton);
         buttonGroup.appendChild(this.cancelButton);
         content.appendChild(buttonGroup);
 
-        // イベントリスナーを設定
+        // Set up event listeners
         this._setupFormEventListeners();
 
         return content;
     }
 
     /**
-     * フォーム用イベントリスナーを設定
+     * Set up form event listeners
      * @private
      */
     _setupFormEventListeners() {
-        // 保存ボタン
+        // Save button
         this.addEventListener(this.saveButton, 'click', () => {
             this._handleSave();
         });
 
-        // 削除ボタン
+        // Delete button
         this.addEventListener(this.deleteButton, 'click', () => {
             this._handleDelete();
         });
 
-        // キャンセルボタン
+        // Cancel button
         this.addEventListener(this.cancelButton, 'click', () => {
             this._handleCancel();
         });
 
-        // Enterキーで保存
+        // Save with Enter key
         this.addEventListener(this.titleInput, 'keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -144,7 +144,7 @@ export class LocalEventModal extends ModalComponent {
             }
         });
 
-        // 時刻入力の検証
+        // Time input validation
         this.addEventListener(this.startTimeInput, 'change', () => {
             this._validateTimes();
         });
@@ -155,7 +155,7 @@ export class LocalEventModal extends ModalComponent {
     }
 
     /**
-     * 保存処理
+     * Save processing
      * @private
      */
     _handleSave() {
@@ -178,7 +178,7 @@ export class LocalEventModal extends ModalComponent {
     }
 
     /**
-     * 削除処理
+     * Delete processing
      * @private
      */
     _handleDelete() {
@@ -194,7 +194,7 @@ export class LocalEventModal extends ModalComponent {
     }
 
     /**
-     * キャンセル処理
+     * Cancel processing
      * @private
      */
     _handleCancel() {
@@ -206,31 +206,31 @@ export class LocalEventModal extends ModalComponent {
     }
 
     /**
-     * フォームの検証
+     * Form validation
      * @private
      */
     _validateForm() {
-        // タイトルチェック
+        // Title check
         if (!this.titleInput.value.trim()) {
-            this._showError('タイトルを入力してください');
+            this._showError('Please enter a title');
             this.titleInput.focus();
             return false;
         }
 
-        // 時刻チェック
+        // Time check
         if (!this.startTimeInput.value) {
-            this._showError('開始時刻を入力してください');
+            this._showError('Please enter a start time');
             this.startTimeInput.focus();
             return false;
         }
 
         if (!this.endTimeInput.value) {
-            this._showError('終了時刻を入力してください');
+            this._showError('Please enter an end time');
             this.endTimeInput.focus();
             return false;
         }
 
-        // 時刻の妥当性チェック
+        // Time validity check
         if (!this._validateTimes()) {
             return false;
         }
@@ -239,19 +239,19 @@ export class LocalEventModal extends ModalComponent {
     }
 
     /**
-     * 時刻の妥当性を検証
+     * Validate time validity
      * @private
      */
     _validateTimes() {
         if (!this.startTimeInput.value || !this.endTimeInput.value) {
-            return true; // 空の場合はスキップ
+            return true; // Skip if empty
         }
 
         const startTime = this.startTimeInput.value;
         const endTime = this.endTimeInput.value;
 
         if (startTime >= endTime) {
-            this._showError('終了時刻は開始時刻より後にしてください');
+            this._showError('End time must be later than start time');
             this.endTimeInput.focus();
             return false;
         }
@@ -261,11 +261,11 @@ export class LocalEventModal extends ModalComponent {
     }
 
     /**
-     * エラーメッセージを表示
+     * Display error message
      * @private
      */
     _showError(message) {
-        // 既存のエラーメッセージを削除
+        // Remove existing error messages
         this._clearError();
 
         const errorDiv = document.createElement('div');
@@ -277,7 +277,7 @@ export class LocalEventModal extends ModalComponent {
     }
 
     /**
-     * エラーメッセージをクリア
+     * Clear error messages
      * @private
      */
     _clearError() {
@@ -288,55 +288,55 @@ export class LocalEventModal extends ModalComponent {
     }
 
     /**
-     * 新規作成モードで表示
-     * @param {string} defaultStartTime デフォルト開始時刻
-     * @param {string} defaultEndTime デフォルト終了時刻
+     * Display in create new mode
+     * @param {string} defaultStartTime Default start time
+     * @param {string} defaultEndTime Default end time
      */
     showCreate(defaultStartTime = '', defaultEndTime = '') {
         this.mode = 'create';
         this.currentEvent = null;
 
-        // フォームをリセット
+        // Reset form
         this.titleInput.value = '';
         this.startTimeInput.value = defaultStartTime;
         this.endTimeInput.value = defaultEndTime;
 
-        // ボタン表示を調整
+        // Adjust button display
         this.deleteButton.style.display = 'none';
 
-        // タイトルを更新
-        this.setTitle('予定を作成');
+        // Update title
+        this.setTitle('Create Event');
 
         this._clearError();
         this.show();
     }
 
     /**
-     * 編集モードで表示
-     * @param {Object} event 編集するイベント
+     * Display in edit mode
+     * @param {Object} event Event to edit
      */
     showEdit(event) {
         this.mode = 'edit';
         this.currentEvent = event;
 
-        // フォームに値を設定
+        // Set values in form
         this.titleInput.value = event.title || '';
         this.startTimeInput.value = event.startTime || '';
         this.endTimeInput.value = event.endTime || '';
 
-        // ボタン表示を調整
+        // Adjust button display
         this.deleteButton.style.display = '';
 
-        // タイトルを更新
-        this.setTitle('予定を編集');
+        // Update title
+        this.setTitle('Edit Event');
 
         this._clearError();
         this.show();
     }
 
     /**
-     * フォームデータを取得
-     * @returns {Object} フォームデータ
+     * Get form data
+     * @returns {Object} Form data
      */
     getFormData() {
         return {
@@ -347,7 +347,7 @@ export class LocalEventModal extends ModalComponent {
     }
 
     /**
-     * フォームをリセット
+     * Reset form
      */
     resetForm() {
         if (this.titleInput) this.titleInput.value = '';
