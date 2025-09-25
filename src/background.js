@@ -6,6 +6,7 @@
  */
 
 import { StorageHelper } from './lib/storage-helper.js';
+import { AlarmManager } from './lib/alarm-manager.js';
 
 // Side panel configuration - opens when clicking the action toolbar icon
 chrome.sidePanel
@@ -409,5 +410,44 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             console.warn("Unknown action:", request.action);
             sendResponse({error: "Unknown action"});
             return false; // Synchronous response
+    }
+});
+
+// Alarm listener for event reminders
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+    if (alarm.name.startsWith(AlarmManager.ALARM_PREFIX)) {
+        await AlarmManager.showReminderNotification(alarm.name);
+    }
+});
+
+// Notification click handler
+chrome.notifications.onClicked.addListener((notificationId) => {
+    if (notificationId.startsWith('reminder_')) {
+        // Open side panel when notification is clicked
+        chrome.tabs.query({ active: true, currentWindow: true }, ([activeTab]) => {
+            if (activeTab) {
+                chrome.sidePanel.open({ tabId: activeTab.id });
+            }
+        });
+
+        // Clear the notification
+        chrome.notifications.clear(notificationId);
+    }
+});
+
+// Notification button click handler
+chrome.notifications.onButtonClicked.addListener((notificationId, buttonIndex) => {
+    if (notificationId.startsWith('reminder_')) {
+        if (buttonIndex === 0) {
+            // "Open SideTimeTable" button clicked
+            chrome.tabs.query({ active: true, currentWindow: true }, ([activeTab]) => {
+                if (activeTab) {
+                    chrome.sidePanel.open({ tabId: activeTab.id });
+                }
+            });
+        }
+
+        // Clear the notification regardless of which button was clicked
+        chrome.notifications.clear(notificationId);
     }
 });

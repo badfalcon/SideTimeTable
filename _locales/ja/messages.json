@@ -47,6 +47,40 @@
     "message": "キャンセル",
     "description": "キャンセルボタンのテキスト"
   },
+  "remindMeBefore": {
+    "message": "5分前にリマインドする",
+    "description": "イベントリマインダーのチェックボックスラベル"
+  },
+  "eventReminder": {
+    "message": "イベント リマインダー",
+    "description": "リマインダー通知のタイトル"
+  },
+  "startsInMinutes": {
+    "message": "「$EVENT_TITLE$」があと$MINUTES$分で開始されます（$START_TIME$）",
+    "description": "イベントリマインダーの通知メッセージ",
+    "placeholders": {
+      "event_title": {
+        "content": "$1",
+        "example": "会議"
+      },
+      "minutes": {
+        "content": "$2",
+        "example": "5"
+      },
+      "start_time": {
+        "content": "$3",
+        "example": "14:30"
+      }
+    }
+  },
+  "openSideTimeTable": {
+    "message": "SideTimeTableを開く",
+    "description": "サイドパネルを開く通知ボタンのテキスト"
+  },
+  "dismissNotification": {
+    "message": "閉じる",
+    "description": "通知を閉じるボタンのテキスト"
+  },
   "fillAllFields": {
     "message": "すべてのフィールドを入力してください",
     "description": "必須フィールドが空の場合のエラーメッセージ"

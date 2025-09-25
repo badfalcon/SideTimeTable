@@ -16,6 +16,7 @@ import { GoogleEventManager, LocalEventManager } from './event-handlers.js';
 import { generateTimeList, loadSettings, logError } from '../lib/utils.js';
 import { isToday } from '../lib/time-utils.js';
 import { isDemoMode, setDemoMode } from '../lib/demo-data.js';
+import { AlarmManager } from '../lib/alarm-manager.js';
 
 // Reload message listener
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -433,20 +434,29 @@ class SidePanelUIController {
      */
     async _handleSaveLocalEvent(eventData, mode) {
         try {
-            const { loadLocalEvents, saveLocalEvents } = await import('../lib/utils.js');
+            const { loadLocalEventsForDate, saveLocalEventsForDate } = await import('../lib/utils.js');
 
             if (mode === 'create') {
                 // New creation
-                const localEvents = await loadLocalEvents();
-                localEvents.push({
+                const localEvents = await loadLocalEventsForDate(this.currentDate);
+                const newEvent = {
+                    id: `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                     title: eventData.title,
                     startTime: eventData.startTime,
-                    endTime: eventData.endTime
-                });
-                await saveLocalEvents(localEvents);
+                    endTime: eventData.endTime,
+                    reminder: eventData.reminder !== false
+                };
+                localEvents.push(newEvent);
+                await saveLocalEventsForDate(localEvents, this.currentDate);
+
+                // Set reminder if enabled
+                if (newEvent.reminder) {
+                    const dateStr = this.getCurrentDateString();
+                    await AlarmManager.setReminder(newEvent, dateStr);
+                }
             } else if (mode === 'edit') {
                 // Edit
-                const localEvents = await loadLocalEvents();
+                const localEvents = await loadLocalEventsForDate(this.currentDate);
                 const eventIndex = localEvents.findIndex(e =>
                     e.title === this.localEventModal.currentEvent.title &&
                     e.startTime === this.localEventModal.currentEvent.startTime &&
@@ -454,12 +464,29 @@ class SidePanelUIController {
                 );
 
                 if (eventIndex !== -1) {
+                    const currentEvent = localEvents[eventIndex];
+                    const dateStr = this.getCurrentDateString();
+
+                    // Clear old reminder
+                    if (currentEvent.id) {
+                        await AlarmManager.clearReminder(currentEvent.id, dateStr);
+                    }
+
+                    // Update event data
                     localEvents[eventIndex] = {
+                        id: currentEvent.id || `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                         title: eventData.title,
                         startTime: eventData.startTime,
-                        endTime: eventData.endTime
+                        endTime: eventData.endTime,
+                        reminder: eventData.reminder !== false
                     };
-                    await saveLocalEvents(localEvents);
+
+                    await saveLocalEventsForDate(localEvents, this.currentDate);
+
+                    // Set new reminder if enabled
+                    if (localEvents[eventIndex].reminder) {
+                        await AlarmManager.setReminder(localEvents[eventIndex], dateStr);
+                    }
                 }
             }
 
@@ -478,16 +505,30 @@ class SidePanelUIController {
      */
     async _handleDeleteLocalEvent(event) {
         try {
-            const { loadLocalEvents, saveLocalEvents } = await import('../lib/utils.js');
+            const { loadLocalEventsForDate, saveLocalEventsForDate } = await import('../lib/utils.js');
 
-            const localEvents = await loadLocalEvents();
+            const localEvents = await loadLocalEventsForDate(this.currentDate);
+
+            // Find event to delete for reminder cleanup
+            const eventToDelete = localEvents.find(e =>
+                e.title === event.title &&
+                e.startTime === event.startTime &&
+                e.endTime === event.endTime
+            );
+
+            // Clear reminder if exists
+            if (eventToDelete && eventToDelete.id) {
+                const dateStr = this.getCurrentDateString();
+                await AlarmManager.clearReminder(eventToDelete.id, dateStr);
+            }
+
             const updatedEvents = localEvents.filter(e =>
                 !(e.title === event.title &&
                   e.startTime === event.startTime &&
                   e.endTime === event.endTime)
             );
 
-            await saveLocalEvents(updatedEvents);
+            await saveLocalEventsForDate(updatedEvents, this.currentDate);
 
             // Reload event display
             await this.localEventManager.loadLocalEvents(this.currentDate);
@@ -504,6 +545,23 @@ class SidePanelUIController {
      */
     _handleCancelLocalEvent() {
         // No special processing (modal just closes)
+    }
+
+    /**
+     * Get current date string for event storage
+     * @returns {string} Date string in YYYY-MM-DD format
+     * @private
+     */
+    getCurrentDateString() {
+        // Use the currently displayed date from timeline, or today if not set
+        const targetDate = this.currentDate || new Date();
+
+        // Use local timezone to avoid date shifting issues
+        const year = targetDate.getFullYear();
+        const month = String(targetDate.getMonth() + 1).padStart(2, '0');
+        const day = String(targetDate.getDate()).padStart(2, '0');
+
+        return `${year}-${month}-${day}`;
     }
 
     /**

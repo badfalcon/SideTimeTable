@@ -47,6 +47,40 @@
     "message": "Cancel",
     "description": "Cancel button text"
   },
+  "remindMeBefore": {
+    "message": "Remind me 5 minutes before",
+    "description": "Checkbox label for event reminder"
+  },
+  "eventReminder": {
+    "message": "Event Reminder",
+    "description": "Title for reminder notification"
+  },
+  "startsInMinutes": {
+    "message": "$EVENT_TITLE$ starts in $MINUTES$ minutes ($START_TIME$)",
+    "description": "Notification message for event reminder",
+    "placeholders": {
+      "event_title": {
+        "content": "$1",
+        "example": "Meeting"
+      },
+      "minutes": {
+        "content": "$2",
+        "example": "5"
+      },
+      "start_time": {
+        "content": "$3",
+        "example": "14:30"
+      }
+    }
+  },
+  "openSideTimeTable": {
+    "message": "Open SideTimeTable",
+    "description": "Notification button text to open side panel"
+  },
+  "dismissNotification": {
+    "message": "Dismiss",
+    "description": "Notification button text to dismiss"
+  },
   "fillAllFields": {
     "message": "Please fill in all fields",
     "description": "Error message when required fields are empty"

@@ -80,6 +80,27 @@ export class LocalEventModal extends ModalComponent {
         this.endTimeInput.required = true;
         content.appendChild(this.endTimeInput);
 
+        // Reminder checkbox
+        const reminderContainer = document.createElement('div');
+        reminderContainer.className = 'reminder-container';
+        reminderContainer.style.cssText = 'margin: 10px 0; display: flex; align-items: center;';
+
+        this.reminderCheckbox = document.createElement('input');
+        this.reminderCheckbox.type = 'checkbox';
+        this.reminderCheckbox.id = 'eventReminder';
+        this.reminderCheckbox.checked = true; // Default: enabled
+        this.reminderCheckbox.style.cssText = 'margin: 0; flex-shrink: 0;';
+
+        const reminderLabel = document.createElement('label');
+        reminderLabel.htmlFor = 'eventReminder';
+        reminderLabel.setAttribute('data-localize', '__MSG_remindMeBefore__');
+        reminderLabel.textContent = 'Remind me 5 minutes before';
+        reminderLabel.style.cssText = 'margin-left: 8px; user-select: none; cursor: pointer; display: inline-block;';
+
+        reminderContainer.appendChild(this.reminderCheckbox);
+        reminderContainer.appendChild(reminderLabel);
+        content.appendChild(reminderContainer);
+
         // Button group
         const buttonGroup = document.createElement('div');
         buttonGroup.className = 'modal-buttons';
@@ -167,7 +188,8 @@ export class LocalEventModal extends ModalComponent {
             id: this.currentEvent?.id || null,
             title: this.titleInput.value.trim(),
             startTime: this.startTimeInput.value,
-            endTime: this.endTimeInput.value
+            endTime: this.endTimeInput.value,
+            reminder: this.reminderCheckbox.checked
         };
 
         if (this.onSave) {
@@ -300,6 +322,7 @@ export class LocalEventModal extends ModalComponent {
         this.titleInput.value = '';
         this.startTimeInput.value = defaultStartTime;
         this.endTimeInput.value = defaultEndTime;
+        this.reminderCheckbox.checked = true;
 
         // Adjust button display
         this.deleteButton.style.display = 'none';
@@ -323,6 +346,7 @@ export class LocalEventModal extends ModalComponent {
         this.titleInput.value = event.title || '';
         this.startTimeInput.value = event.startTime || '';
         this.endTimeInput.value = event.endTime || '';
+        this.reminderCheckbox.checked = event.reminder !== false;
 
         // Adjust button display
         this.deleteButton.style.display = '';
@@ -342,7 +366,8 @@ export class LocalEventModal extends ModalComponent {
         return {
             title: this.titleInput?.value.trim() || '',
             startTime: this.startTimeInput?.value || '',
-            endTime: this.endTimeInput?.value || ''
+            endTime: this.endTimeInput?.value || '',
+            reminder: this.reminderCheckbox?.checked || false
         };
     }
 
@@ -353,6 +378,7 @@ export class LocalEventModal extends ModalComponent {
         if (this.titleInput) this.titleInput.value = '';
         if (this.startTimeInput) this.startTimeInput.value = '';
         if (this.endTimeInput) this.endTimeInput.value = '';
+        if (this.reminderCheckbox) this.reminderCheckbox.checked = true;
         this.currentEvent = null;
         this.mode = 'create';
         this._clearError();
