@@ -1,85 +1,85 @@
 /**
- * ShortcutSettingsCard - ショートカット設定カードコンポーネント
+ * ShortcutSettingsCard - Keyboard shortcut settings card component
  */
 import { CardComponent } from '../base/card-component.js';
 
 export class ShortcutSettingsCard extends CardComponent {
     constructor() {
         super({
-            title: 'キーボードショートカット',
+            title: 'Keyboard Shortcuts',
             titleLocalize: '__MSG_shortcutSettings__',
-            subtitle: 'サイドパネルを開くためのショートカットキーです。',
+            subtitle: 'Shortcut keys for opening the side panel.',
             subtitleLocalize: '__MSG_shortcutDescription__',
             icon: 'fas fa-keyboard',
             iconColor: 'text-secondary'
         });
 
-        // UI要素
+        // UI elements
         this.configureButton = null;
         this.shortcutDisplay = null;
 
-        // 現在のショートカット情報
+        // Current shortcut information
         this.currentShortcut = null;
     }
 
     createElement() {
         const card = super.createElement();
 
-        // ショートカット設定エリアを作成
+        // Create shortcut settings area
         const settingsArea = this._createShortcutSettings();
         this.addContent(settingsArea);
 
-        // 現在のショートカットを取得・表示
+        // Get and display current shortcuts
         this._loadCurrentShortcut();
 
-        // イベントリスナーを設定
+        // Set up event listeners
         this._setupEventListeners();
 
         return card;
     }
 
     /**
-     * ショートカット設定エリアを作成
+     * Create shortcut settings area
      * @private
      */
     _createShortcutSettings() {
         const container = document.createElement('div');
         container.className = 'mb-3';
 
-        // ラベル
+        // Label
         const label = document.createElement('label');
         label.className = 'form-label';
         label.setAttribute('data-localize', '__MSG_currentShortcut__');
-        label.textContent = '現在のショートカット:';
+        label.textContent = 'Current Shortcut:';
 
-        // コントロールエリア
+        // Control area
         const controlsDiv = document.createElement('div');
         controlsDiv.className = 'd-flex align-items-center gap-2';
 
-        // 設定ボタン
+        // Settings button
         this.configureButton = document.createElement('button');
         this.configureButton.id = 'configure-shortcuts-btn';
         this.configureButton.className = 'btn btn-outline-secondary text-nowrap flex-shrink-0';
         this.configureButton.type = 'button';
         this.configureButton.innerHTML = `
             <i class="fas fa-external-link-alt me-1"></i>
-            <span data-localize="__MSG_configureShortcuts__">設定</span>
+            <span data-localize="__MSG_configureShortcuts__">Configure</span>
         `;
 
-        // ショートカット表示
+        // Shortcut display
         this.shortcutDisplay = document.createElement('span');
         this.shortcutDisplay.id = 'shortcut-key';
         this.shortcutDisplay.className = 'form-control-plaintext text-muted flex-grow-1';
-        this.shortcutDisplay.textContent = '読み込み中...';
+        this.shortcutDisplay.textContent = 'Loading...';
 
         controlsDiv.appendChild(this.configureButton);
         controlsDiv.appendChild(this.shortcutDisplay);
 
-        // ヘルプテキスト
+        // Help text
         const helpText = document.createElement('small');
         helpText.className = 'form-text text-muted';
         helpText.setAttribute('data-localize', '__MSG_shortcutHelp__');
-        helpText.textContent = '設定を変更する場合は、Chrome の拡張機能管理ページ（chrome://extensions/shortcuts）で行ってください。';
+        helpText.textContent = 'To change settings, please use the Chrome extension management page (chrome://extensions/shortcuts).';
 
         container.appendChild(label);
         container.appendChild(controlsDiv);
@@ -90,18 +90,18 @@ export class ShortcutSettingsCard extends CardComponent {
 
 
     /**
-     * イベントリスナーを設定
+     * Set up event listeners
      * @private
      */
     _setupEventListeners() {
-        // 設定ボタンのクリック
+        // Settings button click
         this.configureButton?.addEventListener('click', () => {
             this._openShortcutsPage();
         });
     }
 
     /**
-     * 現在のショートカットを読み込み
+     * Load current shortcuts
      * @private
      */
     async _loadCurrentShortcut() {
@@ -111,7 +111,7 @@ export class ShortcutSettingsCard extends CardComponent {
                     chrome.commands.getAll(resolve);
                 });
 
-                // サイドパネル用のコマンドを検索
+                // Search for side panel commands
                 const sideTimeTableCommand = commands.find(cmd =>
                     cmd.name === 'open-side-panel' ||
                     cmd.name === '_execute_action' ||
@@ -126,16 +126,16 @@ export class ShortcutSettingsCard extends CardComponent {
                     this._updateShortcutDisplay(null);
                 }
             } else {
-                this._updateShortcutDisplay(null, '拡張機能APIにアクセスできません');
+                this._updateShortcutDisplay(null, 'Cannot access extension API');
             }
         } catch (error) {
-            console.error('ショートカット取得エラー:', error);
-            this._updateShortcutDisplay(null, 'エラーが発生しました');
+            console.error('Shortcut fetch error:', error);
+            this._updateShortcutDisplay(null, 'An error occurred');
         }
     }
 
     /**
-     * ショートカット表示を更新
+     * Update shortcut display
      * @private
      */
     _updateShortcutDisplay(shortcut, errorMessage = null) {
@@ -148,35 +148,35 @@ export class ShortcutSettingsCard extends CardComponent {
             this.shortcutDisplay.textContent = shortcut;
             this.shortcutDisplay.className = 'form-control-plaintext text-dark fw-bold flex-grow-1';
         } else {
-            this.shortcutDisplay.textContent = chrome.i18n?.getMessage('noShortcutSet') || '未設定';
+            this.shortcutDisplay.textContent = chrome.i18n?.getMessage('noShortcutSet') || 'Not Set';
             this.shortcutDisplay.className = 'form-control-plaintext text-muted flex-grow-1';
         }
     }
 
     /**
-     * ショートカット設定ページを開く
+     * Open shortcuts settings page
      * @private
      */
     _openShortcutsPage() {
         const shortcutsUrl = 'chrome://extensions/shortcuts';
 
         try {
-            // 新しいタブで開く
+            // Open in new tab
             if (chrome.tabs && chrome.tabs.create) {
                 chrome.tabs.create({ url: shortcutsUrl });
             } else {
-                // フォールバック: 直接開く
+                // Fallback: open directly
                 window.open(shortcutsUrl, '_blank');
             }
         } catch (error) {
-            // 最終フォールバック: クリップボードにコピー
+            // Final fallback: copy to clipboard
             this._copyToClipboard(shortcutsUrl);
             this._showCopyNotification();
         }
     }
 
     /**
-     * クリップボードにコピー
+     * Copy to clipboard
      * @private
      */
     async _copyToClipboard(text) {
@@ -184,7 +184,7 @@ export class ShortcutSettingsCard extends CardComponent {
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 await navigator.clipboard.writeText(text);
             } else {
-                // フォールバック
+                // Fallback
                 const textArea = document.createElement('textarea');
                 textArea.value = text;
                 document.body.appendChild(textArea);
@@ -193,12 +193,12 @@ export class ShortcutSettingsCard extends CardComponent {
                 document.body.removeChild(textArea);
             }
         } catch (error) {
-            console.error('クリップボードコピーエラー:', error);
+            console.error('Clipboard copy error:', error);
         }
     }
 
     /**
-     * コピー通知を表示
+     * Show copy notification
      * @private
      */
     _showCopyNotification() {
@@ -206,13 +206,13 @@ export class ShortcutSettingsCard extends CardComponent {
         notification.className = 'alert alert-info alert-dismissible fade show mt-3';
         notification.innerHTML = `
             <i class="fas fa-copy me-1"></i>
-            URLをクリップボードにコピーしました。ブラウザのアドレスバーに貼り付けて移動してください。
+            URL has been copied to clipboard. Please paste it into your browser's address bar to navigate.
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         `;
 
         this.bodyElement.appendChild(notification);
 
-        // 5秒後に自動削除
+        // Auto-remove after 5 seconds
         setTimeout(() => {
             if (notification.parentNode) {
                 notification.remove();
@@ -221,22 +221,22 @@ export class ShortcutSettingsCard extends CardComponent {
     }
 
     /**
-     * ショートカット情報を再読み込み
+     * Reload shortcut information
      */
     async refreshShortcuts() {
-        this.shortcutDisplay.textContent = '読み込み中...';
+        this.shortcutDisplay.textContent = 'Loading...';
         await this._loadCurrentShortcut();
     }
 
     /**
-     * 現在のショートカットを取得
+     * Get current shortcut
      */
     getCurrentShortcut() {
         return this.currentShortcut;
     }
 
     /**
-     * ショートカットの有効性をチェック
+     * Check shortcut availability
      */
     async checkShortcutAvailability() {
         try {
@@ -248,7 +248,7 @@ export class ShortcutSettingsCard extends CardComponent {
 
             return commands.some(cmd => cmd.shortcut);
         } catch (error) {
-            console.error('ショートカット有効性チェックエラー:', error);
+            console.error('Shortcut availability check error:', error);
             return false;
         }
     }

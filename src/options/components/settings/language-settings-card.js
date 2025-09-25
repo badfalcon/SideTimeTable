@@ -1,14 +1,14 @@
 /**
- * LanguageSettingsCard - 言語設定カードコンポーネント
+ * LanguageSettingsCard - Language settings card component
  */
 import { CardComponent } from '../base/card-component.js';
 
 export class LanguageSettingsCard extends CardComponent {
     constructor(onSettingsChange) {
         super({
-            title: '言語設定',
+            title: 'Language Settings',
             titleLocalize: '__MSG_languageSettings__',
-            subtitle: '拡張機能の表示言語を選択できます。',
+            subtitle: 'Select the display language for the extension.',
             subtitleLocalize: '__MSG_languageDescription__',
             icon: 'fas fa-language',
             iconColor: 'text-primary'
@@ -16,34 +16,34 @@ export class LanguageSettingsCard extends CardComponent {
 
         this.onSettingsChange = onSettingsChange;
 
-        // フォーム要素
+        // Form elements
         this.languageSelect = null;
         this.currentLanguageDisplay = null;
 
-        // 現在の設定値
+        // Current settings values
         this.settings = {
             language: 'auto'
         };
 
-        // 利用可能な言語
+        // Available languages
         this.availableLanguages = [
-            { value: 'auto', key: '__MSG_languageAuto__', text: '自動（ブラウザーの言語）' },
-            { value: 'en', key: '__MSG_languageEnglish__', text: 'English（英語）' },
-            { value: 'ja', key: '__MSG_languageJapanese__', text: '日本語' }
+            { value: 'auto', key: '__MSG_languageAuto__', text: 'Auto (Browser Language)' },
+            { value: 'en', key: '__MSG_languageEnglish__', text: 'English' },
+            { value: 'ja', key: '__MSG_languageJapanese__', text: 'Japanese (日本語)' }
         ];
     }
 
     createElement() {
         const card = super.createElement();
 
-        // フォーム要素を作成
+        // Create form elements
         const form = this._createForm();
         this.addContent(form);
 
-        // 現在のブラウザー言語を表示
+        // Display current browser language
         this._updateCurrentLanguageDisplay();
 
-        // イベントリスナーを設定
+        // Setup event listeners
         this._setupEventListeners();
 
         return card;
@@ -51,21 +51,21 @@ export class LanguageSettingsCard extends CardComponent {
 
 
     /**
-     * フォームを作成
+     * Create form
      * @private
      */
     _createForm() {
         const form = document.createElement('form');
 
-        // グリッドレイアウト
+        // Grid layout
         const row = document.createElement('div');
         row.className = 'row';
 
-        // 言語選択カラム
+        // Language selection column
         const selectCol = this._createLanguageSelectColumn();
         row.appendChild(selectCol);
 
-        // 現在の言語表示カラム
+        // Current language display column
         const displayCol = this._createCurrentLanguageColumn();
         row.appendChild(displayCol);
 
@@ -75,26 +75,26 @@ export class LanguageSettingsCard extends CardComponent {
     }
 
     /**
-     * 言語選択カラムを作成
+     * Create language selection column
      * @private
      */
     _createLanguageSelectColumn() {
         const col = document.createElement('div');
         col.className = 'col-md-6 mb-3';
 
-        // ラベル
+        // Label
         const label = document.createElement('label');
         label.htmlFor = 'language-settings-select';
         label.className = 'form-label fw-semibold';
         label.setAttribute('data-localize', '__MSG_selectLanguage__');
-        label.textContent = '言語選択:';
+        label.textContent = 'Select Language:';
 
-        // セレクトボックス
+        // Select box
         this.languageSelect = document.createElement('select');
         this.languageSelect.className = 'form-select';
         this.languageSelect.id = 'language-settings-select';
 
-        // オプションを追加
+        // Add options
         this.availableLanguages.forEach(lang => {
             const option = document.createElement('option');
             option.value = lang.value;
@@ -108,11 +108,11 @@ export class LanguageSettingsCard extends CardComponent {
             this.languageSelect.appendChild(option);
         });
 
-        // ヘルプテキスト
+        // Help text
         const helpText = document.createElement('small');
         helpText.className = 'form-text text-muted mt-1';
         helpText.setAttribute('data-localize', '__MSG_languageHelp__');
-        helpText.textContent = '言語を変更した場合、変更を適用するために拡張機能を再読み込みする必要があります。';
+        helpText.textContent = 'If the language is changed, you need to reload the extension to apply the changes.';
 
         col.appendChild(label);
         col.appendChild(this.languageSelect);
@@ -122,31 +122,31 @@ export class LanguageSettingsCard extends CardComponent {
     }
 
     /**
-     * 現在の言語表示カラムを作成
+     * Create current language display column
      * @private
      */
     _createCurrentLanguageColumn() {
         const col = document.createElement('div');
         col.className = 'col-md-6 mb-3';
 
-        // ラベル
+        // Label
         const label = document.createElement('label');
         label.className = 'form-label fw-semibold';
         label.setAttribute('data-localize', '__MSG_currentLanguage__');
-        label.textContent = '現在のブラウザー言語:';
+        label.textContent = 'Current Browser Language:';
 
-        // 表示領域
+        // Display area
         const display = document.createElement('div');
         display.className = 'p-2 bg-light rounded';
 
-        // アイコンと表示テキスト
+        // Icon and display text
         const icon = document.createElement('i');
         icon.className = 'fas fa-info-circle text-info me-1';
 
         this.currentLanguageDisplay = document.createElement('span');
         this.currentLanguageDisplay.id = 'current-language-display';
         this.currentLanguageDisplay.className = 'text-dark';
-        this.currentLanguageDisplay.textContent = '検出中...';
+        this.currentLanguageDisplay.textContent = 'Detecting...';
 
         display.appendChild(icon);
         display.appendChild(this.currentLanguageDisplay);
@@ -158,7 +158,7 @@ export class LanguageSettingsCard extends CardComponent {
     }
 
     /**
-     * 現在のブラウザー言語表示を更新
+     * Update current browser language display
      * @private
      */
     _updateCurrentLanguageDisplay() {
@@ -170,7 +170,7 @@ export class LanguageSettingsCard extends CardComponent {
     }
 
     /**
-     * 言語表示をフォーマット
+     * Format language display
      * @private
      */
     _formatLanguageDisplay(langCode) {
@@ -197,18 +197,18 @@ export class LanguageSettingsCard extends CardComponent {
     }
 
     /**
-     * イベントリスナーを設定
+     * Setup event listeners
      * @private
      */
     _setupEventListeners() {
-        // 言語選択の変更
+        // Language selection change
         this.languageSelect?.addEventListener('change', () => {
             this._handleLanguageChange();
         });
     }
 
     /**
-     * 言語設定変更を処理
+     * Handle language setting change
      * @private
      */
     _handleLanguageChange() {
@@ -217,40 +217,40 @@ export class LanguageSettingsCard extends CardComponent {
 
         this.settings = newSettings;
 
-        // 変更をコールバック
+        // Callback with changes
         if (this.onSettingsChange) {
             this.onSettingsChange(newSettings);
         }
 
-        // 言語が変更された場合は再読み込みの確認を表示
+        // Show reload confirmation if language was changed
         if (newSettings.language !== previousLanguage) {
             this._showReloadConfirmation();
         }
     }
 
     /**
-     * 再読み込み確認を表示
+     * Show reload confirmation
      * @private
      */
     _showReloadConfirmation() {
-        // 既存の確認メッセージを削除
+        // Remove existing confirmation message
         const existingNotice = this.element.querySelector('.language-reload-notice');
         if (existingNotice) {
             existingNotice.remove();
         }
 
-        // 確認メッセージを作成
+        // Create confirmation message
         const notice = document.createElement('div');
         notice.className = 'alert alert-info alert-dismissible fade show language-reload-notice mt-3';
         notice.innerHTML = `
             <div class="d-flex align-items-center">
                 <i class="fas fa-sync-alt me-2"></i>
                 <div class="flex-grow-1">
-                    <strong>言語設定を変更しました</strong><br>
-                    <small>変更を反映するにはページの再読み込みが必要です。</small>
+                    <strong>Language setting changed</strong><br>
+                    <small>A page reload is required to apply the changes.</small>
                 </div>
                 <button type="button" class="btn btn-sm btn-primary ms-2" id="reload-page-btn">
-                    ページ再読み込み
+                    Reload Page
                 </button>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
@@ -258,7 +258,7 @@ export class LanguageSettingsCard extends CardComponent {
 
         this.bodyElement.appendChild(notice);
 
-        // 再読み込みボタンのイベント
+        // Reload button event
         const reloadBtn = notice.querySelector('#reload-page-btn');
         if (reloadBtn) {
             reloadBtn.addEventListener('click', () => {
@@ -268,21 +268,21 @@ export class LanguageSettingsCard extends CardComponent {
     }
 
     /**
-     * 拡張機能を再読み込み
+     * Reload extension
      * @private
      */
     _reloadExtension() {
         if (chrome.runtime && chrome.runtime.reload) {
             chrome.runtime.reload();
         } else {
-            // フォールバック: ページを再読み込み
+            // Fallback: reload page
             window.location.reload();
         }
     }
 
 
     /**
-     * 現在の設定を取得
+     * Get current settings
      */
     getSettings() {
         return {
@@ -291,7 +291,7 @@ export class LanguageSettingsCard extends CardComponent {
     }
 
     /**
-     * 設定を更新
+     * Update settings
      */
     updateSettings(settings) {
         this.settings = { ...this.settings, ...settings };
@@ -302,7 +302,7 @@ export class LanguageSettingsCard extends CardComponent {
     }
 
     /**
-     * デフォルト設定にリセット
+     * Reset to default settings
      */
     resetToDefaults() {
         const defaultSettings = {
@@ -314,7 +314,7 @@ export class LanguageSettingsCard extends CardComponent {
     }
 
     /**
-     * サポートされている言語一覧を取得
+     * Get list of supported languages
      */
     getSupportedLanguages() {
         return this.availableLanguages.map(lang => ({

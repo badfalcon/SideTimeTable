@@ -1,5 +1,5 @@
 /**
- * GoogleEventModal - Googleイベント詳細モーダル
+ * GoogleEventModal - Google event details modal
  */
 import { ModalComponent } from './modal-component.js';
 
@@ -10,7 +10,7 @@ export class GoogleEventModal extends ModalComponent {
             ...options
         });
 
-        // 表示要素
+        // Display elements
         this.titleElement = null;
         this.calendarElement = null;
         this.timeElement = null;
@@ -18,87 +18,87 @@ export class GoogleEventModal extends ModalComponent {
         this.locationElement = null;
         this.meetElement = null;
 
-        // 現在表示中のイベント
+        // Currently displayed event
         this.currentEvent = null;
     }
 
     createContent() {
         const content = document.createElement('div');
 
-        // イベントタイトル
+        // Event title
         this.titleElement = document.createElement('h2');
         this.titleElement.className = 'google-event-title';
         content.appendChild(this.titleElement);
 
-        // カレンダー名
+        // Calendar name
         this.calendarElement = document.createElement('div');
         this.calendarElement.className = 'google-event-calendar mb-2';
         content.appendChild(this.calendarElement);
 
-        // 開催時刻
+        // Event time
         this.timeElement = document.createElement('div');
         this.timeElement.className = 'google-event-time mb-2';
         content.appendChild(this.timeElement);
 
-        // 説明
+        // Description
         this.descriptionElement = document.createElement('div');
         this.descriptionElement.className = 'google-event-description mb-2';
         content.appendChild(this.descriptionElement);
 
-        // 場所
+        // Location
         this.locationElement = document.createElement('div');
         this.locationElement.className = 'google-event-location mb-2';
         content.appendChild(this.locationElement);
 
-        // Meet情報
+        // Meet information
         this.meetElement = document.createElement('div');
         this.meetElement.className = 'google-event-meet';
         content.appendChild(this.meetElement);
 
-        // modalBodyへの参照を保存
+        // Save reference to modalBody
         this.modalBody = content;
 
         return content;
     }
 
     /**
-     * Googleイベントを表示
-     * @param {Object} event Googleイベントデータ
+     * Display Google event
+     * @param {Object} event Google event data
      */
     showEvent(event) {
         this.currentEvent = event;
 
-        // エレメントが存在しない場合は作成
+        // Create element if it doesn't exist
         if (!this.element) {
             this.createElement();
         }
 
-        // タイトル
-        this.titleElement.textContent = event.summary || 'タイトルなし';
+        // Title
+        this.titleElement.textContent = event.summary || 'No Title';
 
-        // カレンダー名
+        // Calendar name
         this._setCalendarInfo(event);
 
-        // 時刻情報
+        // Time information
         this._setTimeInfo(event);
 
-        // 説明
+        // Description
         this._setDescription(event);
 
-        // 場所
+        // Location
         this._setLocation(event);
 
-        // Meet情報
+        // Meet information
         this._setMeetInfo(event);
 
-        // 参加者情報
+        // Attendees information
         this._setAttendeesInfo(event);
 
         this.show();
     }
 
     /**
-     * カレンダー情報を設定
+     * Set calendar information
      * @private
      */
     _setCalendarInfo(event) {
@@ -111,7 +111,7 @@ export class GoogleEventModal extends ModalComponent {
             const text = document.createElement('span');
             text.textContent = event.calendarName;
 
-            // カレンダー色がある場合は背景色を設定
+            // Set background color if calendar color is available
             if (event.calendarBackgroundColor) {
                 const colorIndicator = document.createElement('span');
                 colorIndicator.style.cssText = `
@@ -132,7 +132,7 @@ export class GoogleEventModal extends ModalComponent {
     }
 
     /**
-     * 時刻情報を設定
+     * Set time information
      * @private
      */
     _setTimeInfo(event) {
@@ -152,7 +152,7 @@ export class GoogleEventModal extends ModalComponent {
     }
 
     /**
-     * イベント時刻をフォーマット
+     * Format event time
      * @private
      */
     _formatEventTime(event) {
@@ -161,18 +161,18 @@ export class GoogleEventModal extends ModalComponent {
             const end = event.end.dateTime || event.end.date;
 
             if (!start || !end) {
-                return '時刻情報なし';
+                return 'No time information';
             }
 
             const startDate = new Date(start);
             const endDate = new Date(end);
 
-            // 終日イベントの場合
+            // For all-day events
             if (event.start.date && event.end.date) {
-                return '終日';
+                return 'All day';
             }
 
-            // 時刻付きイベントの場合
+            // For timed events
             const startTime = startDate.toLocaleTimeString('ja-JP', {
                 hour: '2-digit',
                 minute: '2-digit'
@@ -185,13 +185,13 @@ export class GoogleEventModal extends ModalComponent {
 
             return `${startTime} ～ ${endTime}`;
         } catch (error) {
-            console.warn('時刻フォーマットエラー:', error);
-            return '時刻情報エラー';
+            console.warn('Time format error:', error);
+            return 'Time information error';
         }
     }
 
     /**
-     * 説明を設定
+     * Set description
      * @private
      */
     _setDescription(event) {
@@ -204,7 +204,7 @@ export class GoogleEventModal extends ModalComponent {
             const text = document.createElement('div');
             text.style.cssText = 'margin-left: 20px; white-space: pre-wrap; word-break: break-word;';
 
-            // HTMLタグを除去してテキストのみ表示
+            // Remove HTML tags and display text only
             text.textContent = this._stripHtml(event.description);
 
             this.descriptionElement.appendChild(icon);
@@ -213,7 +213,7 @@ export class GoogleEventModal extends ModalComponent {
     }
 
     /**
-     * 場所を設定
+     * Set location
      * @private
      */
     _setLocation(event) {
@@ -232,13 +232,13 @@ export class GoogleEventModal extends ModalComponent {
     }
 
     /**
-     * Meet情報を設定
+     * Set Meet information
      * @private
      */
     _setMeetInfo(event) {
         this.meetElement.innerHTML = '';
 
-        // Google MeetのURLを検索
+        // Search for Google Meet URL
         const meetUrl = this._extractMeetUrl(event);
 
         if (meetUrl) {
@@ -248,14 +248,14 @@ export class GoogleEventModal extends ModalComponent {
             const link = document.createElement('a');
             link.href = meetUrl;
             link.target = '_blank';
-            link.textContent = 'Google Meetに参加';
+            link.textContent = 'Join Google Meet';
             link.style.cssText = 'color: #4285f4; text-decoration: none;';
 
             this.meetElement.appendChild(icon);
             this.meetElement.appendChild(link);
         }
 
-        // その他のビデオ会議リンクを検索
+        // Search for other video conference links
         const otherVideoUrl = this._extractVideoUrl(event);
         if (otherVideoUrl && !meetUrl) {
             const icon = document.createElement('i');
@@ -264,7 +264,7 @@ export class GoogleEventModal extends ModalComponent {
             const link = document.createElement('a');
             link.href = otherVideoUrl;
             link.target = '_blank';
-            link.textContent = 'ビデオ会議に参加';
+            link.textContent = 'Join video conference';
             link.style.cssText = 'color: #4285f4; text-decoration: none;';
 
             this.meetElement.appendChild(icon);
@@ -273,11 +273,11 @@ export class GoogleEventModal extends ModalComponent {
     }
 
     /**
-     * 参加者情報を設定
+     * Set attendees information
      * @private
      */
     _setAttendeesInfo(event) {
-        // 参加者要素がない場合は作成
+        // Create attendees element if it doesn't exist
         if (!this.attendeesElement) {
             this.attendeesElement = document.createElement('div');
             this.attendeesElement.className = 'mb-3';
@@ -296,7 +296,7 @@ export class GoogleEventModal extends ModalComponent {
             container.style.cssText = 'margin-left: 20px;';
 
             const title = document.createElement('div');
-            title.textContent = `参加者 (${event.attendees.length}人)`;
+            title.textContent = `Attendees (${event.attendees.length})`;
             title.style.cssText = 'font-weight: bold; margin-bottom: 5px;';
 
             const attendeesList = document.createElement('div');
@@ -305,36 +305,36 @@ export class GoogleEventModal extends ModalComponent {
                 const attendeeDiv = document.createElement('div');
                 attendeeDiv.style.cssText = 'margin-bottom: 3px; display: flex; align-items: center;';
 
-                // 参加ステータスのアイコン
+                // Participation status icon
                 const statusIcon = document.createElement('i');
                 switch (attendee.responseStatus) {
                     case 'accepted':
                         statusIcon.className = 'fas fa-check-circle';
                         statusIcon.style.color = '#28a745';
-                        statusIcon.title = '参加';
+                        statusIcon.title = 'Accepted';
                         break;
                     case 'declined':
                         statusIcon.className = 'fas fa-times-circle';
                         statusIcon.style.color = '#dc3545';
-                        statusIcon.title = '不参加';
+                        statusIcon.title = 'Declined';
                         break;
                     case 'tentative':
                         statusIcon.className = 'fas fa-question-circle';
                         statusIcon.style.color = '#ffc107';
-                        statusIcon.title = '仮参加';
+                        statusIcon.title = 'Tentative';
                         break;
                     default:
                         statusIcon.className = 'fas fa-circle';
                         statusIcon.style.color = '#6c757d';
-                        statusIcon.title = '未回答';
+                        statusIcon.title = 'No response';
                 }
                 statusIcon.style.cssText += ' margin-right: 8px; font-size: 12px;';
 
-                // 参加者名とメール
+                // Attendee name and email
                 const nameSpan = document.createElement('span');
                 nameSpan.textContent = attendee.displayName || attendee.email;
                 if (attendee.organizer) {
-                    nameSpan.textContent += ' (主催者)';
+                    nameSpan.textContent += ' (Organizer)';
                     nameSpan.style.fontWeight = 'bold';
                 }
 
@@ -352,7 +352,7 @@ export class GoogleEventModal extends ModalComponent {
     }
 
     /**
-     * Google MeetのURLを抽出
+     * Extract Google Meet URL
      * @private
      */
     _extractMeetUrl(event) {
@@ -374,7 +374,7 @@ export class GoogleEventModal extends ModalComponent {
     }
 
     /**
-     * その他のビデオ会議URLを抽出
+     * Extract other video conference URLs
      * @private
      */
     _extractVideoUrl(event) {
@@ -402,7 +402,7 @@ export class GoogleEventModal extends ModalComponent {
     }
 
     /**
-     * HTMLタグを除去
+     * Remove HTML tags
      * @private
      */
     _stripHtml(html) {
@@ -412,15 +412,15 @@ export class GoogleEventModal extends ModalComponent {
     }
 
     /**
-     * 現在表示中のイベントを取得
-     * @returns {Object|null} 現在のイベント
+     * Get currently displayed event
+     * @returns {Object|null} Current event
      */
     getCurrentEvent() {
         return this.currentEvent;
     }
 
     /**
-     * モーダルを閉じる際のクリーンアップ
+     * Cleanup when closing the modal
      */
     hide() {
         super.hide();

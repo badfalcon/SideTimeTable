@@ -1,5 +1,5 @@
 /**
- * ControlButtonsComponent - 保存/リセットボタンコンポーネント
+ * ControlButtonsComponent - Save/Reset buttons component
  */
 export class ControlButtonsComponent {
     constructor(onSave, onReset) {
@@ -15,19 +15,19 @@ export class ControlButtonsComponent {
         const container = document.createElement('div');
         container.className = 'd-flex gap-2 mt-4';
 
-        // 保存ボタン
+        // Save button
         this.saveButton = document.createElement('button');
         this.saveButton.id = 'saveButton';
         this.saveButton.className = 'btn btn-primary';
         this.saveButton.setAttribute('data-localize', '__MSG_save__');
-        this.saveButton.textContent = '保存';
+        this.saveButton.textContent = 'Save';
 
-        // リセットボタン
+        // Reset button
         this.resetButton = document.createElement('button');
         this.resetButton.id = 'resetButton';
         this.resetButton.className = 'btn btn-outline-secondary';
         this.resetButton.setAttribute('data-localize', '__MSG_resetToDefault__');
-        this.resetButton.textContent = 'デフォルトに戻す';
+        this.resetButton.textContent = 'Reset to Default';
 
         container.appendChild(this.saveButton);
         container.appendChild(this.resetButton);
@@ -59,20 +59,20 @@ export class ControlButtonsComponent {
             }
             this.setSaveState('saved');
 
-            // 2秒後に通常状態に戻す
+            // Return to normal state after 2 seconds
             setTimeout(() => {
                 this.setSaveState('idle');
             }, 2000);
         } catch (error) {
-            console.error('保存エラー:', error);
+            console.error('Save error:', error);
             this.setSaveState('idle');
-            this._showError('設定の保存に失敗しました');
+            this._showError('Failed to save settings');
         }
     }
 
     async _handleReset() {
-        // 確認ダイアログ
-        const confirmed = confirm('すべての設定をデフォルトに戻しますか？この操作は元に戻せません。');
+        // Confirmation dialog
+        const confirmed = confirm('Reset all settings to default? This action cannot be undone.');
         if (!confirmed) return;
 
         this.setResetState('resetting');
@@ -81,10 +81,10 @@ export class ControlButtonsComponent {
             if (this.onReset) {
                 await this.onReset();
             }
-            this._showSuccess('設定をデフォルトに戻しました');
+            this._showSuccess('Settings reset to default');
         } catch (error) {
-            console.error('リセットエラー:', error);
-            this._showError('設定のリセットに失敗しました');
+            console.error('Reset error:', error);
+            this._showError('Failed to reset settings');
         } finally {
             this.setResetState('idle');
         }
@@ -100,21 +100,21 @@ export class ControlButtonsComponent {
                 this.saveButton.disabled = true;
                 this.saveButton.innerHTML = `
                     <span class="spinner-border spinner-border-sm me-1" role="status"></span>
-                    保存中...
+                    Saving...
                 `;
                 break;
             case 'saved':
                 this.saveButton.disabled = false;
                 this.saveButton.innerHTML = `
                     <i class="fas fa-check me-1"></i>
-                    保存済み
+                    Saved
                 `;
                 this.saveButton.className = 'btn btn-success';
                 break;
             case 'idle':
             default:
                 this.saveButton.disabled = false;
-                this.saveButton.innerHTML = '保存';
+                this.saveButton.innerHTML = 'Save';
                 this.saveButton.className = 'btn btn-primary';
                 break;
         }
@@ -128,13 +128,13 @@ export class ControlButtonsComponent {
                 this.resetButton.disabled = true;
                 this.resetButton.innerHTML = `
                     <span class="spinner-border spinner-border-sm me-1" role="status"></span>
-                    リセット中...
+                    Resetting...
                 `;
                 break;
             case 'idle':
             default:
                 this.resetButton.disabled = false;
-                this.resetButton.innerHTML = 'デフォルトに戻す';
+                this.resetButton.innerHTML = 'Reset to Default';
                 break;
         }
     }
@@ -148,7 +148,7 @@ export class ControlButtonsComponent {
     }
 
     _showNotification(message, type) {
-        // 既存の通知を削除
+        // Remove existing notifications
         const existing = this.element?.parentElement?.querySelector('.control-notification');
         if (existing) {
             existing.remove();
@@ -165,7 +165,7 @@ export class ControlButtonsComponent {
             this.element.parentElement.insertBefore(notification, this.element.nextSibling);
         }
 
-        // 3秒後に自動削除
+        // Auto-remove after 3 seconds
         setTimeout(() => {
             if (notification.parentNode) {
                 notification.remove();

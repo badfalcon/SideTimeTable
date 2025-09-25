@@ -1,59 +1,59 @@
 /**
- * SideTimeTable - バックグラウンドスクリプト
+ * SideTimeTable - Background Script
  *
- * このファイルはChrome拡張機能のバックグラウンドで実行され、
- * サイドパネルの設定やGoogleカレンダーとの連携を管理します。
+ * This file runs in the background of the Chrome extension,
+ * managing side panel settings and Google Calendar integration.
  */
 
 import { StorageHelper } from './lib/storage-helper.js';
 
-// サイドパネルの設定 - アクションツールバーアイコンをクリックして開く
+// Side panel configuration - opens when clicking the action toolbar icon
 chrome.sidePanel
     .setPanelBehavior({openPanelOnActionClick: true})
-    .catch((error) => console.error("サイドパネル設定エラー:", error));
+    .catch((error) => console.error("Side panel setup error:", error));
 
-// 拡張機能がインストールされたときの処理
+// Handler for when the extension is installed
 chrome.runtime.onInstalled.addListener(() => {
-    // 初期設定など必要に応じて追加
+    // Add initial setup as needed
 });
 
-// キーボードショートカットのハンドラー
-// StackOverflowの解決策：awaitを使わず、callbackで即座にsidePanel.open()を呼ぶ
+// Keyboard shortcut handler
+// StackOverflow solution: don't use await, call sidePanel.open() immediately with callback
 if (chrome.commands && chrome.commands.onCommand && chrome.commands.onCommand.addListener) {
     chrome.commands.onCommand.addListener((command) => {
         
         switch (command) {
             case 'open-side-panel':
-                // async操作を最小限に抑え、即座にsidePanel.open()を呼ぶ
+                // Minimize async operations and call sidePanel.open() immediately
                 chrome.tabs.query({ active: true, currentWindow: true }, ([activeTab]) => {
                     if (activeTab) {
                         chrome.sidePanel.open({ tabId: activeTab.id });
                     } else {
-                        console.error("アクティブタブが見つかりません");
+                        console.error("Active tab not found");
                     }
                 });
                 break;
                 
             default:
-                console.warn("未知のコマンド:", command);
+                console.warn("Unknown command:", command);
                 break;
         }
     });
 } else {
-    console.warn("chrome.commands API が利用できない環境です。manifest.json の commands 設定を確認してください。");
+    console.warn("chrome.commands API is not available. Please check the commands configuration in manifest.json.");
 }
 
 /**
- * Googleカレンダー一覧を取得する
- * @returns {Promise<Array>} カレンダー一覧を返すPromise
+ * Get Google Calendar list
+ * @returns {Promise<Array>} Promise that returns calendar list
  */
 function getCalendarList() {
     return new Promise((resolve, reject) => {
         try {
             chrome.identity.getAuthToken({interactive: true}, (token) => {
                 if (chrome.runtime.lastError || !token) {
-                    const error = chrome.runtime.lastError || new Error("認証トークンが取得できませんでした");
-                    console.error("認証トークン取得エラー:", error);
+                    const error = chrome.runtime.lastError || new Error("Failed to get authentication token");
+                    console.error("Authentication token acquisition error:", error);
                     reject(error);
                     return;
                 }
@@ -66,7 +66,7 @@ function getCalendarList() {
                 })
                 .then(response => {
                     if (!response.ok) {
-                        throw new Error(`CalendarList APIエラー: ${response.status} ${response.statusText}`);
+                        throw new Error(`CalendarList API error: ${response.status} ${response.statusText}`);
                     }
                     return response.json();
                 })
@@ -82,51 +82,51 @@ function getCalendarList() {
                         }));
 
                     
-                    // プライマリカレンダーのみを自動選択状態にする
+                    // Automatically select only the primary calendar
                     const primaryCalendar = calendars.find(cal => cal.primary);
                     if (primaryCalendar) {
                         const primaryCalendarIds = [primaryCalendar.id];
                         StorageHelper.set({ selectedCalendars: primaryCalendarIds })
                             .catch((error) => {
-                                console.error("プライマリカレンダー選択設定エラー:", error);
+                                console.error("Primary calendar selection setting error:", error);
                             });
                     }
                     
                     resolve(calendars);
                 })
                 .catch(error => {
-                    console.error("カレンダー一覧取得エラー:", error);
+                    console.error("Calendar list acquisition error:", error);
                     reject(error);
                 });
             });
         } catch (error) {
-            console.error("カレンダー一覧取得例外:", error);
+            console.error("Calendar list acquisition exception:", error);
             reject(error);
         }
     });
 }
 
 /**
- * Googleカレンダーからイベントを取得する
- * @param {Date} targetDate - 対象の日付（省略時は今日）
- * @returns {Promise<Array>} イベントの配列を返すPromise
+ * Get events from Google Calendar
+ * @param {Date} targetDate - Target date (today if omitted)
+ * @returns {Promise<Array>} Promise that returns array of events
  */
 function getCalendarEvents(targetDate = null) {
     return new Promise((resolve, reject) => {
         try {
-            // 選択されたカレンダー一覧を取得
+            // Get list of selected calendars
             StorageHelper.get(['selectedCalendars'], { selectedCalendars: [] })
                 .then((storageData) => {
                 chrome.identity.getAuthToken({interactive: true}, (token) => {
                     if (chrome.runtime.lastError || !token) {
-                        const error = chrome.runtime.lastError || new Error("認証トークンが取得できませんでした");
-                        console.error("認証トークン取得エラー:", error);
+                        const error = chrome.runtime.lastError || new Error("Failed to get authentication token");
+                        console.error("Authentication token acquisition error:", error);
                         reject(error);
                         return;
                     }
 
                     
-                    // 対象日付の範囲を設定
+                    // Set target date range
                     const targetDay = targetDate || new Date();
                     const startOfDay = new Date(targetDay);
                     startOfDay.setHours(0, 0, 0, 0);
@@ -138,7 +138,7 @@ function getCalendarEvents(targetDate = null) {
                     let calendarsPromise;
 
                     if (selectedCalendarIds.length === 0) {
-                        // 選択されたカレンダーがない場合は、Googleカレンダーで表示設定されたカレンダーを使用
+                        // If no calendars are selected, use calendars set to display in Google Calendar
                         const calendarListUrl = `https://www.googleapis.com/calendar/v3/users/me/calendarList`;
 
                         calendarsPromise = fetch(calendarListUrl, {
@@ -148,7 +148,7 @@ function getCalendarEvents(targetDate = null) {
                         })
                         .then(response => {
                             if (!response.ok) {
-                                throw new Error(`CalendarList APIエラー: ${response.status} ${response.statusText}`);
+                                throw new Error(`CalendarList API error: ${response.status} ${response.statusText}`);
                             }
                             return response.json();
                         })
@@ -157,11 +157,11 @@ function getCalendarEvents(targetDate = null) {
                             const selectedCalendars = allCalendars.filter(cal => cal.selected);
                             const accessibleCalendars = selectedCalendars.filter(cal => cal.accessRole && cal.accessRole !== 'none');
 
-                            // プライマリカレンダーを必ず含める
+                            // Always include primary calendar
                             const calendarsToReturn = [...accessibleCalendars];
                             const primaryCalendar = allCalendars.find(cal => cal.primary);
 
-                            // プライマリカレンダーがselectedフラグに関係なく確実に含まれるようにする
+                            // Ensure primary calendar is included regardless of selected flag
                             if (primaryCalendar && !calendarsToReturn.some(cal => cal.id === primaryCalendar.id)) {
                                 calendarsToReturn.unshift(primaryCalendar);
                             }
@@ -173,14 +173,14 @@ function getCalendarEvents(targetDate = null) {
                             return calendarsToReturn.map(c => ({ id: c.id }));
                         });
                     } else {
-                        // 選択されたカレンダーを使用
+                        // Use selected calendars
                         calendarsPromise = Promise.resolve(selectedCalendarIds.map(id => ({ id })));
                     }
 
                     calendarsPromise
                 .then(calendarsToFetch => {
 
-                    // 今日の日付の範囲を設定（上で計算済みのstartOfDay/endOfDayを使用）
+                    // Set today's date range (use previously calculated startOfDay/endOfDay)
                     const baseUrl = 'https://www.googleapis.com/calendar/v3/calendars';
 
                     const fetches = calendarsToFetch.map(cal => {
@@ -190,14 +190,14 @@ function getCalendarEvents(targetDate = null) {
                         })
                         .then(res => {
                             if (!res.ok) {
-                                // 個別カレンダーのエラーはログだけ出してスキップ
-                                console.warn(`カレンダー(${cal.id})の取得に失敗: ${res.status} ${res.statusText}`);
+                                // For individual calendar errors, just log and skip
+                                console.warn(`Failed to get calendar(${cal.id}): ${res.status} ${res.statusText}`);
                                 return { items: [] };
                             }
                             return res.json();
                         })
                         .then(data => {
-                            // 各イベントにカレンダーIDを追加
+                            // Add calendar ID to each event
                             const events = data.items || [];
                             events.forEach(event => {
                                 event.calendarId = cal.id;
@@ -205,7 +205,7 @@ function getCalendarEvents(targetDate = null) {
                             return { calendarId: cal.id, events };
                         })
                         .catch(err => {
-                            console.warn(`カレンダー(${cal.id})取得時の例外をスキップ:`, err);
+                            console.warn(`Skip exception when getting calendar(${cal.id}):`, err);
                             return { calendarId: cal.id, events: [] };
                         });
                     });
@@ -214,7 +214,7 @@ function getCalendarEvents(targetDate = null) {
                     return Promise.all(fetches);
                 })
                 .then(async (resultsPerCalendar) => {
-                    // カレンダー情報を取得してイベントに色情報を追加
+                    // Get calendar information and add color information to events
                     try {
                         const calendarListUrl = `https://www.googleapis.com/calendar/v3/users/me/calendarList`;
                         const calendarResponse = await fetch(calendarListUrl, {
@@ -233,17 +233,17 @@ function getCalendarEvents(targetDate = null) {
                             });
                         }
                         
-                        // 結果を平坦化し、色情報を追加
+                        // Flatten results and add color information
                         const allEvents = [];
                         resultsPerCalendar.forEach(result => {
                             if (result.events) {
                                 result.events.forEach(event => {
-                                    // キャンセルされたイベントをスキップ
+                                    // Skip cancelled events
                                     if (event.status === 'cancelled') {
                                         return;
                                     }
                                     
-                                    // 参加を辞退したイベントをスキップ
+                                    // Skip declined events
                                     if (event.attendees && event.attendees.some(attendee => 
                                         attendee.self && attendee.responseStatus === 'declined'
                                     )) {
@@ -263,15 +263,15 @@ function getCalendarEvents(targetDate = null) {
                         
                         resolve(allEvents);
                     } catch (colorError) {
-                        console.warn('カレンダー色情報取得エラー:', colorError);
-                        // 色情報なしでもイベント自体は返す（キャンセルされたイベントと参加を辞退したイベントは除外）
+                        console.warn('Calendar color information acquisition error:', colorError);
+                        // Return events even without color information (excluding cancelled and declined events)
                         const merged = resultsPerCalendar.flatMap(r => 
                             (r.events || []).filter(event => {
-                                // キャンセルされたイベントを除外
+                                // Exclude cancelled events
                                 if (event.status === 'cancelled') {
                                     return false;
                                 }
-                                // 参加を辞退したイベントを除外
+                                // Exclude declined events
                                 if (event.attendees && event.attendees.some(attendee => 
                                     attendee.self && attendee.responseStatus === 'declined'
                                 )) {
@@ -284,32 +284,32 @@ function getCalendarEvents(targetDate = null) {
                     }
                 })
                 .catch(error => {
-                    console.error("カレンダーイベント取得エラー:", error);
+                    console.error("Calendar event acquisition error:", error);
                     reject(error);
                 });
                 });
                 })
                 .catch((error) => {
-                    console.error("選択カレンダー取得エラー:", error);
+                    console.error("Selected calendar acquisition error:", error);
                     reject(error);
                 });
         } catch (error) {
-            console.error("カレンダーイベント取得例外:", error);
+            console.error("Calendar event acquisition exception:", error);
             reject(error);
         }
     });
 }
 
 /**
- * Googleアカウントの認証状態を確認する
- * @returns {Promise<boolean>} 認証状態を返すPromise
+ * Check Google account authentication status
+ * @returns {Promise<boolean>} Promise that returns authentication status
  */
 function checkGoogleAuth() {
     return new Promise((resolve, reject) => {
         try {
             chrome.identity.getAuthToken({interactive: false}, (token) => {
                 if (chrome.runtime.lastError) {
-                    resolve(false); // エラーがあっても認証されていないだけなのでrejectしない
+                    resolve(false); // Even if there's an error, just not authenticated so don't reject
                     return;
                 }
                 
@@ -317,13 +317,13 @@ function checkGoogleAuth() {
                 resolve(isAuthenticated);
             });
         } catch (error) {
-            console.error("認証状態確認例外:", error);
+            console.error("Authentication status check exception:", error);
             reject(error);
         }
     });
 }
 
-// メッセージリスナー
+// Message listener
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     
     switch (request.action) {
@@ -333,60 +333,60 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             getCalendarEvents(targetDate)
                 .then(events => sendResponse({events, requestId}))
                 .catch(error => {
-                    const detail = (error && (error.message || error.toString())) || "イベント取得エラー";
-                    console.error("イベント取得エラー詳細:", error);
+                    const detail = (error && (error.message || error.toString())) || "Event acquisition error";
+                    console.error("Event acquisition error details:", error);
                     sendResponse({ error: detail, errorType: (error && error.name) || undefined, requestId });
                 });
-            return true; // 非同期応答を示す
+            return true; // Indicates async response
             
         case "getCalendarList":
             const reqIdList = request.requestId;
             getCalendarList()
                 .then(calendars => sendResponse({calendars, requestId: reqIdList}))
                 .catch(error => {
-                    const detail = (error && (error.message || error.toString())) || "カレンダー一覧取得エラー";
-                    console.error("カレンダー一覧取得エラー詳細:", error);
+                    const detail = (error && (error.message || error.toString())) || "Calendar list acquisition error";
+                    console.error("Calendar list acquisition error details:", error);
                     sendResponse({ error: detail, errorType: (error && error.name) || undefined, requestId: reqIdList });
                 });
-            return true; // 非同期応答を示す
+            return true; // Indicates async response
             
         case "checkAuth":
             checkGoogleAuth()
                 .then(isAuthenticated => sendResponse({isAuthenticated}))
                 .catch(error => {
-                                    const detail = (error && (error.message || error.toString())) || "認証確認エラー";
-                                    console.error("認証確認エラー詳細:", error);
+                                    const detail = (error && (error.message || error.toString())) || "Authentication check error";
+                                    console.error("Authentication check error details:", error);
                                     sendResponse({ error: detail, errorType: (error && error.name) || undefined });
                                 });
-            return true; // 非同期応答を示す
+            return true; // Indicates async response
 
         case "authenticateGoogle":
-            // Google認証を実行
+            // Execute Google authentication
             chrome.identity.getAuthToken({interactive: true}, (token) => {
                 if (chrome.runtime.lastError || !token) {
-                    const error = chrome.runtime.lastError || new Error("認証に失敗しました");
-                    console.error("Google認証エラー:", error);
+                    const error = chrome.runtime.lastError || new Error("Authentication failed");
+                    console.error("Google authentication error:", error);
                     sendResponse({ success: false, error: error.message });
                     return;
                 }
 
                 sendResponse({ success: true, token: token });
             });
-            return true; // 非同期応答を示す
+            return true; // Indicates async response
 
         case "disconnectGoogle":
-            // Googleアカウントとの連携を解除
+            // Disconnect Google account integration
             chrome.identity.getAuthToken({interactive: false}, (token) => {
                 if (chrome.runtime.lastError || !token) {
-                    // トークンがない場合は既に切断済み
+                    // If no token, already disconnected
                     sendResponse({ success: true, alreadyDisconnected: true });
                     return;
                 }
 
-                // キャッシュされたトークンを削除
+                // Remove cached token
                 chrome.identity.removeCachedAuthToken({ token: token }, () => {
                     if (chrome.runtime.lastError) {
-                        console.error("トークン削除エラー:", chrome.runtime.lastError);
+                        console.error("Token removal error:", chrome.runtime.lastError);
                         sendResponse({ success: false, error: chrome.runtime.lastError.message });
                         return;
                     }
@@ -398,16 +398,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     });
                 });
             });
-            return true; // 非同期応答を示す
+            return true; // Indicates async response
 
         case "reloadSideTimeTable":
-            // サイドパネルのリロードリクエストは単に応答を返す
+            // Side panel reload request just returns a response
             sendResponse({success: true});
-            return false; // 同期応答
+            return false; // Synchronous response
             
         default:
-            console.warn("未知のアクション:", request.action);
-            sendResponse({error: "未知のアクション"});
-            return false; // 同期応答
+            console.warn("Unknown action:", request.action);
+            sendResponse({error: "Unknown action"});
+            return false; // Synchronous response
     }
 });

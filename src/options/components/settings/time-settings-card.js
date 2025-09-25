@@ -1,5 +1,5 @@
 /**
- * TimeSettingsCard - 時間設定カードコンポーネント
+ * TimeSettingsCard - Time settings card component
  */
 import { CardComponent } from '../base/card-component.js';
 import { generateTimeList } from '../../../lib/utils.js';
@@ -7,7 +7,7 @@ import { generateTimeList } from '../../../lib/utils.js';
 export class TimeSettingsCard extends CardComponent {
     constructor(onSettingsChange) {
         super({
-            title: '時間設定',
+            title: 'Time Settings',
             titleLocalize: '__MSG_timeSettings__',
             icon: 'fas fa-clock',
             iconColor: 'text-info'
@@ -15,7 +15,7 @@ export class TimeSettingsCard extends CardComponent {
 
         this.onSettingsChange = onSettingsChange;
 
-        // フォーム要素
+        // Form elements
         this.openTimeInput = null;
         this.closeTimeInput = null;
         this.breakTimeFixedCheckbox = null;
@@ -23,7 +23,7 @@ export class TimeSettingsCard extends CardComponent {
         this.breakTimeEndInput = null;
         this.timeDatalist = null;
 
-        // 現在の設定値
+        // Current settings values
         this.settings = {
             openTime: '09:00',
             closeTime: '18:00',
@@ -36,35 +36,35 @@ export class TimeSettingsCard extends CardComponent {
     createElement() {
         const card = super.createElement();
 
-        // フォーム要素を作成
+        // Create form elements
         const form = this._createForm();
         this.addContent(form);
 
-        // 時間リストを生成
+        // Generate time list
         this._generateTimeList();
 
-        // イベントリスナーを設定
+        // Set up event listeners
         this._setupEventListeners();
 
         return card;
     }
 
     /**
-     * フォームを作成
+     * Create form
      * @private
      */
     _createForm() {
         const form = document.createElement('form');
 
-        // 就業時間セクション
+        // Work hours section
         const workHoursSection = this._createWorkHoursSection();
         form.appendChild(workHoursSection);
 
-        // 休憩時間セクション
+        // Break time section
         const breakTimeSection = this._createBreakTimeSection();
         form.appendChild(breakTimeSection);
 
-        // 時間選択リスト
+        // Time selection list
         this.timeDatalist = document.createElement('datalist');
         this.timeDatalist.id = 'time-settings-time-list';
         form.appendChild(this.timeDatalist);
@@ -73,41 +73,41 @@ export class TimeSettingsCard extends CardComponent {
     }
 
     /**
-     * 就業時間セクションを作成
+     * Create work hours section
      * @private
      */
     _createWorkHoursSection() {
         const section = document.createElement('div');
         section.className = 'mb-3';
 
-        // ラベル
+        // Label
         const label = document.createElement('label');
         label.htmlFor = 'time-settings-open-time';
         label.className = 'form-label';
         label.setAttribute('data-localize', '__MSG_workHours__');
-        label.textContent = '就業時間:';
+        label.textContent = 'Work Hours:';
 
-        // 入力グループ
+        // Input group
         const inputGroup = document.createElement('div');
         inputGroup.className = 'input-group';
 
-        // 開始時刻
+        // Start time
         this.openTimeInput = document.createElement('input');
         this.openTimeInput.type = 'time';
         this.openTimeInput.className = 'form-control';
         this.openTimeInput.id = 'time-settings-open-time';
-        this.openTimeInput.step = '900'; // 15分刻み
+        this.openTimeInput.step = '900'; // 15-minute increments
         this.openTimeInput.value = this.settings.openTime;
         this.openTimeInput.setAttribute('list', 'time-settings-time-list');
         this.openTimeInput.setAttribute('data-localize-aria-label', '__MSG_startTime__');
 
-        // セパレーター
+        // Separator
         const separator = document.createElement('span');
         separator.className = 'input-group-text';
         separator.setAttribute('data-localize', '__MSG_to__');
         separator.textContent = '～';
 
-        // 終了時刻
+        // End time
         this.closeTimeInput = document.createElement('input');
         this.closeTimeInput.type = 'time';
         this.closeTimeInput.className = 'form-control';
@@ -128,21 +128,21 @@ export class TimeSettingsCard extends CardComponent {
     }
 
     /**
-     * 休憩時間セクションを作成
+     * Create break time section
      * @private
      */
     _createBreakTimeSection() {
         const section = document.createElement('div');
         section.className = 'mb-3';
 
-        // ラベル
+        // Label
         const label = document.createElement('label');
         label.htmlFor = 'time-settings-break-time-fixed';
         label.className = 'form-label';
         label.setAttribute('data-localize', '__MSG_breakTime__');
-        label.textContent = '休憩時間:';
+        label.textContent = 'Break Time:';
 
-        // チェックボックス
+        // Checkbox
         const checkboxDiv = document.createElement('div');
         checkboxDiv.className = 'form-check mb-2';
 
@@ -156,16 +156,16 @@ export class TimeSettingsCard extends CardComponent {
         checkboxLabel.className = 'form-check-label';
         checkboxLabel.htmlFor = 'time-settings-break-time-fixed';
         checkboxLabel.setAttribute('data-localize', '__MSG_fixed__');
-        checkboxLabel.textContent = '固定';
+        checkboxLabel.textContent = 'Fixed';
 
         checkboxDiv.appendChild(this.breakTimeFixedCheckbox);
         checkboxDiv.appendChild(checkboxLabel);
 
-        // 時間入力グループ
+        // Time input group
         const inputGroup = document.createElement('div');
         inputGroup.className = 'input-group';
 
-        // 開始時刻
+        // Start time
         this.breakTimeStartInput = document.createElement('input');
         this.breakTimeStartInput.type = 'time';
         this.breakTimeStartInput.className = 'form-control';
@@ -176,13 +176,13 @@ export class TimeSettingsCard extends CardComponent {
         this.breakTimeStartInput.setAttribute('list', 'time-settings-time-list');
         this.breakTimeStartInput.setAttribute('data-localize-aria-label', '__MSG_startTime__');
 
-        // セパレーター
+        // Separator
         const separator = document.createElement('span');
         separator.className = 'input-group-text';
         separator.setAttribute('data-localize', '__MSG_to__');
         separator.textContent = '～';
 
-        // 終了時刻
+        // End time
         this.breakTimeEndInput = document.createElement('input');
         this.breakTimeEndInput.type = 'time';
         this.breakTimeEndInput.className = 'form-control';
@@ -205,7 +205,7 @@ export class TimeSettingsCard extends CardComponent {
     }
 
     /**
-     * 時間選択リストを生成
+     * Generate time selection list
      * @private
      */
     _generateTimeList() {
@@ -215,15 +215,15 @@ export class TimeSettingsCard extends CardComponent {
     }
 
     /**
-     * イベントリスナーを設定
+     * Set up event listeners
      * @private
      */
     _setupEventListeners() {
-        // 就業時間の変更
+        // Work hours change
         this.openTimeInput?.addEventListener('change', () => this._handleTimeChange());
         this.closeTimeInput?.addEventListener('change', () => this._handleTimeChange());
 
-        // 休憩時間固定チェックボックス
+        // Fixed break time checkbox
         this.breakTimeFixedCheckbox?.addEventListener('change', (e) => {
             const isFixed = e.target.checked;
             this.breakTimeStartInput.disabled = !isFixed;
@@ -231,53 +231,53 @@ export class TimeSettingsCard extends CardComponent {
             this._handleTimeChange();
         });
 
-        // 休憩時間の変更
+        // Break time change
         this.breakTimeStartInput?.addEventListener('change', () => this._handleTimeChange());
         this.breakTimeEndInput?.addEventListener('change', () => this._handleTimeChange());
     }
 
     /**
-     * 時間設定変更を処理
+     * Handle time settings change
      * @private
      */
     _handleTimeChange() {
         const newSettings = this.getSettings();
 
-        // バリデーション
+        // Validation
         if (!this._validateTimeSettings(newSettings)) {
             return;
         }
 
         this.settings = newSettings;
 
-        // 変更をコールバック
+        // Callback with changes
         if (this.onSettingsChange) {
             this.onSettingsChange(newSettings);
         }
     }
 
     /**
-     * 時間設定をバリデーション
+     * Validate time settings
      * @private
      */
     _validateTimeSettings(settings) {
-        // 就業時間の妥当性チェック
+        // Validate work hours
         if (settings.openTime >= settings.closeTime) {
-            this._showValidationError('終了時刻は開始時刻より後に設定してください');
+            this._showValidationError('End time must be after start time');
             return false;
         }
 
-        // 休憩時間の妥当性チェック（固定の場合）
+        // Validate break time (when fixed)
         if (settings.breakTimeFixed) {
             if (settings.breakTimeStart >= settings.breakTimeEnd) {
-                this._showValidationError('休憩終了時刻は開始時刻より後に設定してください');
+                this._showValidationError('Break end time must be after start time');
                 return false;
             }
 
-            // 休憩時間が就業時間内にあるかチェック
+            // Check if break time is within work hours
             if (settings.breakTimeStart < settings.openTime ||
                 settings.breakTimeEnd > settings.closeTime) {
-                this._showValidationError('休憩時間は就業時間内に設定してください');
+                this._showValidationError('Break time must be within work hours');
                 return false;
             }
         }
@@ -286,27 +286,27 @@ export class TimeSettingsCard extends CardComponent {
     }
 
     /**
-     * バリデーションエラーを表示
+     * Show validation error
      * @private
      */
     _showValidationError(message) {
-        // 既存のエラーメッセージを削除
+        // Remove existing error message
         const existingError = this.element.querySelector('.time-validation-error');
         if (existingError) {
             existingError.remove();
         }
 
-        // エラーメッセージを作成
+        // Create error message
         const errorDiv = document.createElement('div');
         errorDiv.className = 'alert alert-warning alert-dismissible fade show time-validation-error mt-2';
         errorDiv.innerHTML = `
-            <small><strong>注意:</strong> ${message}</small>
+            <small><strong>Warning:</strong> ${message}</small>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         `;
 
         this.bodyElement.appendChild(errorDiv);
 
-        // 3秒後に自動削除
+        // Auto-remove after 3 seconds
         setTimeout(() => {
             if (errorDiv.parentNode) {
                 errorDiv.remove();
@@ -315,7 +315,7 @@ export class TimeSettingsCard extends CardComponent {
     }
 
     /**
-     * 現在の設定を取得
+     * Get current settings
      */
     getSettings() {
         return {
@@ -328,7 +328,7 @@ export class TimeSettingsCard extends CardComponent {
     }
 
     /**
-     * 設定を更新
+     * Update settings
      */
     updateSettings(settings) {
         this.settings = { ...this.settings, ...settings };
@@ -347,7 +347,7 @@ export class TimeSettingsCard extends CardComponent {
     }
 
     /**
-     * デフォルト設定にリセット
+     * Reset to default settings
      */
     resetToDefaults() {
         const defaultSettings = {

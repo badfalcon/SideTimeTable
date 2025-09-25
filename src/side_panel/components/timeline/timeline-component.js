@@ -1,5 +1,5 @@
 /**
- * TimelineComponent - タイムライン表示コンポーネント
+ * TimelineComponent - Timeline display component
  */
 import { Component } from '../base/component.js';
 import { CurrentTimeLineManager } from '../../../lib/current-time-line-manager.js';
@@ -12,41 +12,41 @@ export class TimelineComponent extends Component {
             ...options
         });
 
-        // 24時間のピクセル高（各時間60px）
+        // 24-hour pixel height (60px per hour)
         this.TOTAL_HEIGHT = 24 * 60;
         this.HOUR_HEIGHT = 60;
 
-        // UI要素
+        // UI elements
         this.baseLayer = null;
         this.eventsLayer = null;
         this.localEventsContainer = null;
         this.googleEventsContainer = null;
 
-        // 現在時刻ライン管理
+        // Current time line management
         this.showCurrentTimeLine = options.showCurrentTimeLine !== false;
         this.currentTimeLineManager = null;
 
-        // 表示対象の日付
+        // Target date for display
         this.currentDate = new Date();
     }
 
     createElement() {
         const container = super.createElement();
 
-        // 既に内容が作成済みの場合はスキップ
+        // Skip if content is already created
         if (container.children.length > 0) {
             return container;
         }
 
-        // ベースレイヤー（時間軸）を作成
+        // Create base layer (time axis)
         this.baseLayer = this._createBaseLayer();
         container.appendChild(this.baseLayer);
 
-        // イベントレイヤーを作成
+        // Create events layer
         this.eventsLayer = this._createEventsLayer();
         container.appendChild(this.eventsLayer);
 
-        // 現在時刻ラインを作成（今日の場合）
+        // Create current time line (for today)
         if (this.showCurrentTimeLine) {
             this._setupCurrentTimeLine();
         }
@@ -55,7 +55,7 @@ export class TimelineComponent extends Component {
     }
 
     /**
-     * ベースレイヤー（時間軸）を作成
+     * Create base layer (time axis)
      * @private
      */
     _createBaseLayer() {
@@ -63,17 +63,17 @@ export class TimelineComponent extends Component {
         baseDiv.className = 'side-time-table-base';
         baseDiv.id = 'sideTimeTableBase';
 
-        // 24時間分の時間ラベルと補助線を作成
+        // Create time labels and guide lines for 24 hours
         for (let hour = 0; hour < 24; hour++) {
             const topPosition = hour * this.HOUR_HEIGHT;
 
-            // 時間ラベル
+            // Time label
             const label = document.createElement('div');
             label.className = 'hour-label';
             label.style.top = `${topPosition}px`;
             label.textContent = `${hour}:00`;
 
-            // 補助線
+            // Guide line
             const line = document.createElement('div');
             line.className = 'hour-line';
             line.style.top = `${topPosition}px`;
@@ -86,7 +86,7 @@ export class TimelineComponent extends Component {
     }
 
     /**
-     * イベントレイヤーを作成
+     * Create events layer
      * @private
      */
     _createEventsLayer() {
@@ -94,12 +94,12 @@ export class TimelineComponent extends Component {
         eventsDiv.className = 'side-time-table-events';
         eventsDiv.id = 'sideTimeTableEvents';
 
-        // ローカルイベントコンテナ
+        // Local events container
         this.localEventsContainer = document.createElement('div');
         this.localEventsContainer.className = 'side-time-table-events-local';
         this.localEventsContainer.id = 'sideTimeTableEventsLocal';
 
-        // Googleイベントコンテナ
+        // Google events container
         this.googleEventsContainer = document.createElement('div');
         this.googleEventsContainer.className = 'side-time-table-events-google';
         this.googleEventsContainer.id = 'sideTimeTableEventsGoogle';
@@ -111,7 +111,7 @@ export class TimelineComponent extends Component {
     }
 
     /**
-     * 現在時刻ラインを設定
+     * Set up current time line
      * @private
      */
     _setupCurrentTimeLine() {
@@ -122,8 +122,8 @@ export class TimelineComponent extends Component {
     }
 
     /**
-     * 現在時刻ラインを表示/非表示
-     * @param {boolean} visible 表示するかどうか
+     * Show/hide current time line
+     * @param {boolean} visible Whether to show or not
      */
     setCurrentTimeLineVisible(visible) {
         this.showCurrentTimeLine = visible;
@@ -136,13 +136,13 @@ export class TimelineComponent extends Component {
     }
 
     /**
-     * 業務時間の背景を設定
-     * @param {string} startTime 開始時刻（HH:MM形式）
-     * @param {string} endTime 終了時刻（HH:MM形式）
-     * @param {string} color 背景色
+     * Set work time background
+     * @param {string} startTime Start time (HH:MM format)
+     * @param {string} endTime End time (HH:MM format)
+     * @param {string} color Background color
      */
     setWorkTimeBackground(startTime, endTime, color = '#f8f9fa') {
-        // 既存の業務時間背景を削除
+        // Remove existing work time background
         const existingBg = this.baseLayer?.querySelector('.work-time-background');
         if (existingBg) {
             existingBg.remove();
@@ -160,7 +160,7 @@ export class TimelineComponent extends Component {
             const endMinutes = endHour * 60 + endMinute;
 
             if (startMinutes >= endMinutes) {
-                return; // 無効な時間範囲
+                return; // Invalid time range
             }
 
             const background = document.createElement('div');
@@ -178,13 +178,13 @@ export class TimelineComponent extends Component {
 
             this.baseLayer?.appendChild(background);
         } catch (error) {
-            console.warn('業務時間背景の設定に失敗:', error);
+            console.warn('Failed to set work time background:', error);
         }
     }
 
     /**
-     * 表示中の日付が今日かどうかを判定
-     * @returns {boolean} 今日の場合true
+     * Check if the displayed date is today
+     * @returns {boolean} True if today
      */
     isToday() {
         const today = new Date();
@@ -192,21 +192,21 @@ export class TimelineComponent extends Component {
     }
 
     /**
-     * 表示対象の日付を設定
-     * @param {Date} date 表示対象の日付
+     * Set the target date for display
+     * @param {Date} date Target date for display
      */
     setCurrentDate(date) {
         this.currentDate = date;
 
-        // CurrentTimeLineManagerにも日付を設定
+        // Set date for CurrentTimeLineManager as well
         if (this.currentTimeLineManager) {
             this.currentTimeLineManager.setTargetDate(date);
         }
     }
 
     /**
-     * 指定時刻にスクロール
-     * @param {string} time 時刻（HH:MM形式）
+     * Scroll to specified time
+     * @param {string} time Time (HH:MM format)
      */
     scrollToTime(time) {
         if (!time || !this.element) {
@@ -216,16 +216,16 @@ export class TimelineComponent extends Component {
         try {
             const [hour, minute] = time.split(':').map(Number);
             const totalMinutes = hour * 60 + minute;
-            const scrollTop = Math.max(0, totalMinutes - 200); // 200px上にマージン
+            const scrollTop = Math.max(0, totalMinutes - 200); // 200px margin above
 
             this.element.scrollTop = scrollTop;
         } catch (error) {
-            console.warn('時刻へのスクロールに失敗:', error);
+            console.warn('Failed to scroll to time:', error);
         }
     }
 
     /**
-     * 現在時刻にスクロール
+     * Scroll to current time
      */
     scrollToCurrentTime() {
         if (!this.isToday()) {
@@ -238,8 +238,8 @@ export class TimelineComponent extends Component {
     }
 
     /**
-     * 業務開始時刻にスクロール
-     * @param {string} startTime 業務開始時刻（HH:MM形式）
+     * Scroll to work start time
+     * @param {string} startTime Work start time (HH:MM format)
      */
     scrollToWorkTime(startTime) {
         if (startTime) {
@@ -248,7 +248,7 @@ export class TimelineComponent extends Component {
     }
 
     /**
-     * ローカルイベントコンテナをクリア
+     * Clear local events container
      */
     clearLocalEvents() {
         if (this.localEventsContainer) {
@@ -257,7 +257,7 @@ export class TimelineComponent extends Component {
     }
 
     /**
-     * Googleイベントコンテナをクリア
+     * Clear Google events container
      */
     clearGoogleEvents() {
         if (this.googleEventsContainer) {
@@ -266,7 +266,7 @@ export class TimelineComponent extends Component {
     }
 
     /**
-     * 全てのイベントをクリア
+     * Clear all events
      */
     clearAllEvents() {
         this.clearLocalEvents();
@@ -274,42 +274,42 @@ export class TimelineComponent extends Component {
     }
 
     /**
-     * ローカルイベントコンテナを取得
-     * @returns {HTMLElement} ローカルイベントコンテナ
+     * Get local events container
+     * @returns {HTMLElement} Local events container
      */
     getLocalEventsContainer() {
         return this.localEventsContainer;
     }
 
     /**
-     * Googleイベントコンテナを取得
-     * @returns {HTMLElement} Googleイベントコンテナ
+     * Get Google events container
+     * @returns {HTMLElement} Google events container
      */
     getGoogleEventsContainer() {
         return this.googleEventsContainer;
     }
 
     /**
-     * 時間軸の高さを取得
-     * @returns {number} 総高さ（ピクセル）
+     * Get time axis height
+     * @returns {number} Total height (pixels)
      */
     getTotalHeight() {
         return this.TOTAL_HEIGHT;
     }
 
     /**
-     * 1時間の高さを取得
-     * @returns {number} 1時間の高さ（ピクセル）
+     * Get one hour height
+     * @returns {number} One hour height (pixels)
      */
     getHourHeight() {
         return this.HOUR_HEIGHT;
     }
 
     /**
-     * リソースをクリーンアップ
+     * Clean up resources
      */
     destroy() {
-        // 現在時刻ライン管理を破棄
+        // Destroy current time line management
         if (this.currentTimeLineManager) {
             this.currentTimeLineManager.destroy();
             this.currentTimeLineManager = null;

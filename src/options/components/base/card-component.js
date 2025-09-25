@@ -1,7 +1,7 @@
 /**
- * CardComponent - Bootstrap カード基底クラス
+ * CardComponent - Bootstrap card base class
  *
- * 再利用可能なカードUIコンポーネントの基底クラス
+ * Base class for reusable card UI components
  */
 export class CardComponent {
     constructor(options = {}) {
@@ -23,8 +23,8 @@ export class CardComponent {
     }
 
     /**
-     * カードHTML要素を作成
-     * @returns {HTMLElement} 作成されたカード要素
+     * Create card HTML element
+     * @returns {HTMLElement} Created card element
      */
     createElement() {
         const card = document.createElement('div');
@@ -39,10 +39,10 @@ export class CardComponent {
         const cardBody = document.createElement('div');
         cardBody.className = 'card-body';
 
-        // タイトル要素の作成
+        // Create title element
         if (this.options.title) {
             if (this.options.icon) {
-                // アイコン付きタイトル
+                // Title with icon
                 const titleContainer = document.createElement('div');
                 titleContainer.className = 'd-flex align-items-center mb-3';
 
@@ -61,7 +61,7 @@ export class CardComponent {
                 titleContainer.appendChild(this.titleElement);
                 cardBody.appendChild(titleContainer);
             } else {
-                // 通常のタイトル
+                // Regular title
                 this.titleElement = document.createElement('h2');
                 this.titleElement.className = 'card-title';
                 this.titleElement.textContent = this.options.title;
@@ -72,7 +72,7 @@ export class CardComponent {
             }
         }
 
-        // サブタイトル要素の作成
+        // Create subtitle element
         if (this.options.subtitle) {
             this.subtitleElement = document.createElement('p');
             this.subtitleElement.className = 'card-text';
@@ -92,8 +92,8 @@ export class CardComponent {
     }
 
     /**
-     * カード本体にコンテンツを追加
-     * @param {HTMLElement|string} content 追加するコンテンツ
+     * Add content to card body
+     * @param {HTMLElement|string} content Content to add
      */
     addContent(content) {
         if (!this.bodyElement) {
@@ -110,8 +110,8 @@ export class CardComponent {
     }
 
     /**
-     * カードの表示/非表示を切り替え
-     * @param {boolean} visible 表示するかどうか
+     * Toggle card visibility
+     * @param {boolean} visible Whether to show the card
      */
     setVisible(visible) {
         if (this.element) {
@@ -120,8 +120,8 @@ export class CardComponent {
     }
 
     /**
-     * カードタイトルを更新
-     * @param {string} title 新しいタイトル
+     * Update card title
+     * @param {string} title New title
      */
     setTitle(title) {
         if (this.titleElement) {
@@ -130,8 +130,8 @@ export class CardComponent {
     }
 
     /**
-     * カードサブタイトルを更新
-     * @param {string} subtitle 新しいサブタイトル
+     * Update card subtitle
+     * @param {string} subtitle New subtitle
      */
     setSubtitle(subtitle) {
         if (this.subtitleElement) {
@@ -140,24 +140,24 @@ export class CardComponent {
     }
 
     /**
-     * DOM要素を取得
-     * @returns {HTMLElement} カード要素
+     * Get DOM element
+     * @returns {HTMLElement} Card element
      */
     getElement() {
         return this.element;
     }
 
     /**
-     * カード本体要素を取得
-     * @returns {HTMLElement} カード本体要素
+     * Get card body element
+     * @returns {HTMLElement} Card body element
      */
     getBodyElement() {
         return this.bodyElement;
     }
 
     /**
-     * 指定したコンテナにカードを追加
-     * @param {HTMLElement} container 追加先のコンテナ
+     * Append card to specified container
+     * @param {HTMLElement} container Target container
      */
     appendTo(container) {
         if (!this.element) {
@@ -167,7 +167,7 @@ export class CardComponent {
     }
 
     /**
-     * カードを破棄
+     * Destroy card
      */
     destroy() {
         if (this.element && this.element.parentNode) {

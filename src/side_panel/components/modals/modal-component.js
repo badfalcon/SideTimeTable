@@ -1,5 +1,5 @@
 /**
- * ModalComponent - ベースモーダルコンポーネント
+ * ModalComponent - Base modal component
  */
 import { Component } from '../base/component.js';
 
@@ -7,21 +7,21 @@ export class ModalComponent extends Component {
     constructor(options = {}) {
         super({
             className: 'modal',
-            hidden: true, // 初期状態で非表示
+            hidden: true, // Initially hidden
             ...options
         });
 
         this.modalContent = null;
         this.closeButton = null;
 
-        // コールバック
+        // Callbacks
         this.onClose = options.onClose || null;
         this.onShow = options.onShow || null;
 
-        // モーダル外クリックで閉じるかどうか
+        // Whether to close on backdrop click
         this.closeOnBackdropClick = options.closeOnBackdropClick !== false;
 
-        // ESCキーで閉じるかどうか
+        // Whether to close on Escape key
         this.closeOnEscape = options.closeOnEscape !== false;
     }
 
@@ -29,23 +29,23 @@ export class ModalComponent extends Component {
         const modal = super.createElement();
         modal.setAttribute('hidden', '');
 
-        // 既に内容が作成済みの場合はスキップ
+        // Skip if content already created
         if (modal.children.length > 0) {
             return modal;
         }
 
-        // モーダルコンテンツ
+        // Modal content
         this.modalContent = document.createElement('div');
         this.modalContent.className = 'modal-content';
 
-        // 閉じるボタン
+        // Close button
         this.closeButton = document.createElement('span');
         this.closeButton.className = 'close';
         this.closeButton.innerHTML = '&times;';
 
         this.modalContent.appendChild(this.closeButton);
 
-        // カスタムコンテンツを作成
+        // Create custom content
         const customContent = this.createContent();
         if (customContent) {
             this.modalContent.appendChild(customContent);
@@ -53,31 +53,31 @@ export class ModalComponent extends Component {
 
         modal.appendChild(this.modalContent);
 
-        // イベントリスナーを設定
+        // Setup event listeners
         this._setupEventListeners();
 
         return modal;
     }
 
     /**
-     * カスタムコンテンツを作成（サブクラスでオーバーライド）
-     * @returns {HTMLElement|null} コンテンツ要素
+     * Create custom content (override in subclasses)
+     * @returns {HTMLElement|null} Content element
      */
     createContent() {
         return null;
     }
 
     /**
-     * イベントリスナーを設定
+     * Setup event listeners
      * @private
      */
     _setupEventListeners() {
-        // 閉じるボタン
+        // Close button
         this.addEventListener(this.closeButton, 'click', () => {
             this.hide();
         });
 
-        // バックドロップクリック
+        // Backdrop click
         if (this.closeOnBackdropClick) {
             this.addEventListener(this.element, 'click', (e) => {
                 if (e.target === this.element) {
@@ -97,32 +97,32 @@ export class ModalComponent extends Component {
     }
 
     /**
-     * モーダルを表示
+     * Show modal
      */
     show() {
         if (this.element) {
             this.element.removeAttribute('hidden');
             this.element.style.display = 'block';
 
-            // コールバック実行
+            // Execute callback
             if (this.onShow) {
                 this.onShow();
             }
 
-            // フォーカス管理
+            // Focus management
             this._focusFirstInput();
         }
     }
 
     /**
-     * モーダルを非表示
+     * Hide modal
      */
     hide() {
         if (this.element) {
             this.element.setAttribute('hidden', '');
             this.element.style.display = 'none';
 
-            // コールバック実行
+            // Execute callback
             if (this.onClose) {
                 this.onClose();
             }
@@ -130,15 +130,15 @@ export class ModalComponent extends Component {
     }
 
     /**
-     * モーダルが表示されているかチェック
-     * @returns {boolean} 表示状態
+     * Check if modal is visible
+     * @returns {boolean} Visibility state
      */
     isVisible() {
         return this.element && !this.element.hasAttribute('hidden');
     }
 
     /**
-     * 最初の入力要素にフォーカス
+     * Focus first input element
      * @private
      */
     _focusFirstInput() {
@@ -151,8 +151,8 @@ export class ModalComponent extends Component {
     }
 
     /**
-     * モーダルタイトルを設定
-     * @param {string} title タイトル
+     * Set modal title
+     * @param {string} title Title
      */
     setTitle(title) {
         let titleElement = this.modalContent?.querySelector('h2, .modal-title');
@@ -165,8 +165,8 @@ export class ModalComponent extends Component {
     }
 
     /**
-     * モーダルコンテンツにローカライズ属性を設定
-     * @param {string} key ローカライズキー
+     * Set localize attribute for modal content
+     * @param {string} key Localization key
      */
     setTitleLocalize(key) {
         let titleElement = this.modalContent?.querySelector('h2, .modal-title');

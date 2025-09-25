@@ -1,45 +1,45 @@
 /**
- * CurrentTimeLineManager - 現在時刻線の管理クラス
+ * CurrentTimeLineManager - Current time line management class
  *
- * このクラスは現在時刻を示す線の表示・非表示・位置更新を管理します。
- * タイムライン上に現在時刻を視覚的に表示するための専用クラスです。
+ * This class manages display, hiding, and position updates of the line showing current time.
+ * It is a dedicated class for visually displaying current time on the timeline.
  */
 
 /**
- * 現在時刻線を管理するクラス
+ * Class for managing current time line
  */
 export class CurrentTimeLineManager {
     /**
-     * CurrentTimeLineManagerのインスタンスを作成
+     * Create CurrentTimeLineManager instance
      *
-     * @param {HTMLElement} parentElement - 現在時刻線を配置する親要素
-     * @param {Date} targetDate - 対象の日付（省略時は今日）
+     * @param {HTMLElement} parentElement - Parent element to place current time line
+     * @param {Date} targetDate - Target date (today if omitted)
      */
     constructor(parentElement, targetDate = null) {
         /**
-         * 現在時刻線を配置する親要素
+         * Parent element to place current time line
          */
         this.parentElement = parentElement;
 
         /**
-         * 対象の日付
+         * Target date
          */
         this.targetDate = targetDate || new Date();
 
         /**
-         * 現在時刻線のDOM要素
+         * DOM element of current time line
          */
         this.timeLineElement = null;
 
         /**
-         * 更新タイマーのID
+         * Update timer ID
          */
         this.updateTimer = null;
     }
 
     /**
-     * 現在時刻線を更新
-     * 今日の場合のみ表示し、位置を現在時刻に合わせる
+     * Update current time line
+     * Show only for today and adjust position to current time
      */
     update() {
         if (!this._shouldShowTimeLine()) {
@@ -47,18 +47,18 @@ export class CurrentTimeLineManager {
             return;
         }
 
-        // 現在時刻線の要素を取得または作成
+        // Get or create current time line element
         this._ensureTimeLineElement();
 
-        // 位置を更新
+        // Update position
         this._updatePosition();
 
-        // 表示
+        // Show
         this.show();
     }
 
     /**
-     * 現在時刻線を強制的に非表示にする
+     * Force hide current time line
      */
     forceHide() {
         this.hide();
@@ -66,8 +66,8 @@ export class CurrentTimeLineManager {
     }
 
     /**
-     * 対象日付を設定
-     * @param {Date} targetDate - 対象の日付
+     * Set target date
+     * @param {Date} targetDate - Target date
      */
     setTargetDate(targetDate) {
         this.targetDate = targetDate;
@@ -75,7 +75,7 @@ export class CurrentTimeLineManager {
     }
 
     /**
-     * 現在時刻線の要素を削除
+     * Remove current time line element
      */
     destroy() {
         this._stopUpdateTimer();
@@ -87,12 +87,12 @@ export class CurrentTimeLineManager {
     }
 
     /**
-     * 現在時刻線のDOM要素が存在することを保証
+     * Ensure current time line DOM element exists
      * @private
      */
     _ensureTimeLineElement() {
         if (!this.timeLineElement) {
-            // 既存の要素があれば削除
+            // Remove existing element if any
             const existing = document.getElementById('currentTimeLine');
             if (existing) {
                 existing.remove();
@@ -106,8 +106,8 @@ export class CurrentTimeLineManager {
     }
 
     /**
-     * 現在時刻線を表示すべきかどうかを判定
-     * @returns {boolean} 表示すべきならtrue
+     * Determine if current time line should be displayed
+     * @returns {boolean} true if should be displayed
      * @private
      */
     _shouldShowTimeLine() {
@@ -115,20 +115,20 @@ export class CurrentTimeLineManager {
             const today = new Date();
             return today.toDateString() === this.targetDate.toDateString();
         } catch (error) {
-            console.warn('現在時刻線の表示判定でエラーが発生しました:', error);
+            console.warn('Error occurred in current time line display determination:', error);
             return false;
         }
     }
 
     /**
-     * 現在時刻線を表示する
+     * Show current time line
      * @private
      */
     show() {
         if (this.timeLineElement) {
             this.timeLineElement.style.display = '';
 
-            // 1分ごとに更新するタイマーを開始
+            // Start timer to update every minute
             if (!this.updateTimer) {
                 this.updateTimer = setInterval(() => {
                     this._updatePosition();
@@ -138,7 +138,7 @@ export class CurrentTimeLineManager {
     }
 
     /**
-     * 現在時刻線を非表示にする
+     * Hide current time line
      * @private
      */
     hide() {
@@ -149,7 +149,7 @@ export class CurrentTimeLineManager {
     }
 
     /**
-     * 現在時刻線の位置を計算
+     * Calculate current time line position
      * @private
      */
     _updatePosition() {
@@ -160,14 +160,14 @@ export class CurrentTimeLineManager {
         const minutes = now.getMinutes();
         const totalMinutes = hours * 60 + minutes;
 
-        // 1分 = 1px として計算
+        // Calculate as 1 minute = 1px
         const topPosition = totalMinutes;
 
         this.timeLineElement.style.top = `${topPosition}px`;
     }
 
     /**
-     * 更新タイマーを停止
+     * Stop update timer
      * @private
      */
     _stopUpdateTimer() {

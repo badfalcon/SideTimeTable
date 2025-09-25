@@ -1,30 +1,30 @@
-// ローカライズ文言を取得して要素に設定
+// Get localized text and set to element
 function replace_i18n(element, tag) {
     const msg = tag.replace(/__MSG_(\w+)__/g, (match, v1) => chrome.i18n.getMessage(v1) || '');
     if (msg !== tag) element.innerHTML = msg;
 }
 
-// HTML内をローカライズする
+// Localize HTML content
 function localizeHtmlPage() {
     document.querySelectorAll('[data-localize]').forEach(element => {
         replace_i18n(element, element.getAttribute('data-localize'));
     });
 
-    // aria-label属性のローカライズ
+    // Localize aria-label attributes
     document.querySelectorAll('[data-localize-aria-label]').forEach(element => {
         const tag = element.getAttribute('data-localize-aria-label');
         const msg = tag.replace(/__MSG_(\w+)__/g, (match, v1) => chrome.i18n.getMessage(v1) || '');
         if (msg !== tag) element.setAttribute('aria-label', msg);
     });
 
-    // placeholder属性のローカライズ
+    // Localize placeholder attributes
     document.querySelectorAll('[data-localize-placeholder]').forEach(element => {
         const tag = element.getAttribute('data-localize-placeholder');
         const msg = tag.replace(/__MSG_(\w+)__/g, (match, v1) => chrome.i18n.getMessage(v1) || '');
         if (msg !== tag) element.setAttribute('placeholder', msg);
     });
 
-    // title属性のローカライズ
+    // Localize title attributes
     document.querySelectorAll('[data-localize-title]').forEach(element => {
         const tag = element.getAttribute('data-localize-title');
         const msg = tag.replace(/__MSG_(\w+)__/g, (match, v1) => chrome.i18n.getMessage(v1) || '');
@@ -37,60 +37,60 @@ function localizeHtmlPage() {
 }
 
 /**
- * 現在の言語設定を取得
- * @returns {string} 言語コード（en/ja/auto）
+ * Get current language setting
+ * @returns {string} Language code (en/ja/auto)
  */
 async function getCurrentLanguageSetting() {
     try {
         const result = await chrome.storage.sync.get(['language']);
         return result.language || 'auto';
     } catch (error) {
-        console.warn('言語設定取得エラー:', error);
+        console.warn('Language setting retrieval error:', error);
         return 'auto';
     }
 }
 
 /**
- * 実際に使用する言語コードを決定
- * @param {string} languageSetting - 設定値（auto/en/ja）
- * @returns {string} 実際の言語コード（en/ja）
+ * Determine actual language code to use
+ * @param {string} languageSetting - Setting value (auto/en/ja)
+ * @returns {string} Actual language code (en/ja)
  */
 function resolveLanguageCode(languageSetting) {
     if (languageSetting === 'auto') {
-        // ブラウザーの言語を取得
+        // Get browser language
         const browserLang = chrome.i18n.getUILanguage().toLowerCase();
         return browserLang.startsWith('ja') ? 'ja' : 'en';
     }
     return languageSetting;
 }
 
-// 言語設定に応じてローカライズ文言を取得
+// Get localized text according to language settings
 function getMessageWithLang(key) {
     const lang = localStorage.getItem('sideTimeTableLang') || (chrome.i18n && chrome.i18n.getUILanguage ? chrome.i18n.getUILanguage().slice(0,2) : 'ja');
-    // manifest/_localesの仕様上、chrome.i18n.getMessageは自動で切り替わるが、
-    // manifestのdefault_localeがjaならenでもen_USでもenが使われる
-    // ここではkeyのみで取得（chrome.i18n.getMessageは自動切替）
+    // According to manifest/_locales spec, chrome.i18n.getMessage switches automatically,
+    // but if manifest's default_locale is ja, then en or en_US will use en
+    // Get only by key here (chrome.i18n.getMessage switches automatically)
     return chrome.i18n.getMessage(key) || '';
 }
 
-// HTML内をローカライズ（言語設定を反映）
+// Localize HTML content (reflecting language settings)
 async function localizeHtmlPageWithLang() {
     try {
-        // ユーザーの言語設定を取得
+        // Get user's language setting
         const userLanguageSetting = await getCurrentLanguageSetting();
         const targetLanguage = resolveLanguageCode(userLanguageSetting);
         
         
-        // 設定された言語でローカライズを実行
+        // Execute localization in set language
         await localizeWithLanguage(targetLanguage);
     } catch (error) {
-        console.warn('言語設定によるローカライズに失敗:', error);
-        // フォールバックとして標準のローカライズを実行
+        console.warn('Localization by language setting failed:', error);
+        // Execute standard localization as fallback
         localizeHtmlPage();
     }
 }
 
-// 指定された言語でローカライズを実行
+// Execute localization in specified language
 async function localizeWithLanguage(targetLang) {
     const messageFiles = {
         'en': '/_locales/en/messages.json',
@@ -98,13 +98,13 @@ async function localizeWithLanguage(targetLang) {
     };
     
     try {
-        // 指定言語のメッセージファイルを取得
+        // Get message file for specified language
         const messagesUrl = chrome.runtime.getURL(messageFiles[targetLang] || messageFiles['en']);
         const response = await fetch(messagesUrl);
         const messages = await response.json();
         
         
-        // HTML要素をローカライズ
+        // Localize HTML elements
         document.querySelectorAll('[data-localize]').forEach(element => {
             const tag = element.getAttribute('data-localize');
             const msg = tag.replace(/__MSG_(\w+)__/g, (match, v1) => {
@@ -121,7 +121,7 @@ async function localizeWithLanguage(targetLang) {
             if (msg !== tag) element.setAttribute('aria-label', msg);
         });
         
-        // placeholder属性のローカライズ
+        // Localize placeholder attributes
         document.querySelectorAll('[data-localize-placeholder]').forEach(element => {
             const tag = element.getAttribute('data-localize-placeholder');
             const msg = tag.replace(/__MSG_(\w+)__/g, (match, v1) => {
@@ -130,7 +130,7 @@ async function localizeWithLanguage(targetLang) {
             if (msg !== tag) element.setAttribute('placeholder', msg);
         });
         
-        // title属性のローカライズ
+        // Localize title attributes
         document.querySelectorAll('[data-localize-title]').forEach(element => {
             const tag = element.getAttribute('data-localize-title');
             const msg = tag.replace(/__MSG_(\w+)__/g, (match, v1) => {
@@ -140,13 +140,13 @@ async function localizeWithLanguage(targetLang) {
         });
         
     } catch (error) {
-        console.warn('メッセージファイルの読み込みに失敗:', error);
-        // フォールバックとして標準のローカライズを実行
+        console.warn('Failed to load message file:', error);
+        // Execute standard localization as fallback
         localizeHtmlPage();
     }
 }
 
-// グローバル関数として公開（従来の形式を維持）
+// Export as global functions (maintain legacy format)
 window.getCurrentLanguageSetting = getCurrentLanguageSetting;
 window.resolveLanguageCode = resolveLanguageCode;
 window.getMessageWithLang = getMessageWithLang;

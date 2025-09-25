@@ -1,20 +1,20 @@
 /**
- * TimeUtils - 時間計算の純粋関数集
- * 
- * このファイルは時間関連の計算を行う純粋関数を提供します。
- * 副作用がなく、同じ入力に対して常に同じ出力を返すため、
- * テストしやすく、デバッグしやすい設計になっています。
+ * TimeUtils - Pure function collection for time calculations
+ *
+ * This file provides pure functions for time-related calculations.
+ * With no side effects and always returning the same output for the same input,
+ * the design is easy to test and debug.
  */
 
 /**
- * 指定した日付に指定した時間を設定した新しいDateオブジェクトを作成
- * 
- * @param {Date} date - ベースとなる日付
- * @param {number} hour - 時（0-23）
- * @param {number} minute - 分（0-59）
- * @param {number} second - 秒（0-59、デフォルト: 0）
- * @param {number} millisecond - ミリ秒（0-999、デフォルト: 0）
- * @returns {Date} 新しいDateオブジェクト
+ * Create a new Date object with specified time set on specified date
+ *
+ * @param {Date} date - Base date
+ * @param {number} hour - Hour (0-23)
+ * @param {number} minute - Minute (0-59)
+ * @param {number} second - Second (0-59, default: 0)
+ * @param {number} millisecond - Millisecond (0-999, default: 0)
+ * @returns {Date} New Date object
  */
 export function createTimeOnDate(date, hour, minute, second = 0, millisecond = 0) {
     const newDate = new Date(date);
@@ -23,37 +23,37 @@ export function createTimeOnDate(date, hour, minute, second = 0, millisecond = 0
 }
 
 /**
- * "HH:MM" 形式の時間文字列をパースして時と分を返す
- * 
- * @param {string} timeString - "HH:MM" 形式の時間文字列
- * @returns {{hour: number, minute: number}} パース結果
- * @throws {Error} 不正な形式の場合
+ * Parse time string in "HH:MM" format and return hour and minute
+ *
+ * @param {string} timeString - Time string in "HH:MM" format
+ * @returns {{hour: number, minute: number}} Parse result
+ * @throws {Error} If format is invalid
  */
 export function parseTimeString(timeString) {
     if (!timeString || typeof timeString !== 'string') {
-        throw new Error('時間文字列が無効です');
+        throw new Error('Invalid time string');
     }
     
     const parts = timeString.split(':');
     if (parts.length !== 2) {
-        throw new Error('時間文字列は "HH:MM" 形式である必要があります');
+        throw new Error('Time string must be in "HH:MM" format');
     }
     
     const hour = parseInt(parts[0], 10);
     const minute = parseInt(parts[1], 10);
     
     if (isNaN(hour) || isNaN(minute) || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
-        throw new Error('無効な時間値です');
+        throw new Error('Invalid time value');
     }
     
     return { hour, minute };
 }
 
 /**
- * 指定した日付が今日かどうかを判定
- * 
- * @param {Date} date - 判定対象の日付
- * @returns {boolean} 今日の場合true
+ * Determine if specified date is today
+ *
+ * @param {Date} date - Date to check
+ * @returns {boolean} true if today
  */
 export function isToday(date) {
     const today = new Date();
@@ -61,11 +61,11 @@ export function isToday(date) {
 }
 
 /**
- * 2つの日付が同じ日かどうかを判定
- * 
- * @param {Date} date1 - 比較対象の日付1
- * @param {Date} date2 - 比較対象の日付2
- * @returns {boolean} 同じ日の場合true
+ * Determine if two dates are the same day
+ *
+ * @param {Date} date1 - Date 1 to compare
+ * @param {Date} date2 - Date 2 to compare
+ * @returns {boolean} true if same day
  */
 export function isSameDay(date1, date2) {
     const d1 = new Date(date1);
@@ -76,11 +76,11 @@ export function isSameDay(date1, date2) {
 }
 
 /**
- * 2つの時間の差をミリ秒で計算
- * 
- * @param {Date|number} startTime - 開始時間
- * @param {Date|number} endTime - 終了時間
- * @returns {number} 時間差（ミリ秒）
+ * Calculate time difference between two times in milliseconds
+ *
+ * @param {Date|number} startTime - Start time
+ * @param {Date|number} endTime - End time
+ * @returns {number} Time difference (milliseconds)
  */
 export function calculateTimeDifference(startTime, endTime) {
     const start = startTime instanceof Date ? startTime.getTime() : startTime;
@@ -89,12 +89,12 @@ export function calculateTimeDifference(startTime, endTime) {
 }
 
 /**
- * 指定した日付における業務開始・終了時間を計算
- * 
- * @param {Date} date - 対象の日付
- * @param {string} openHour - 業務開始時間（"HH:MM"形式）
- * @param {string} closeHour - 業務終了時間（"HH:MM"形式）
- * @returns {{openTime: Date, closeTime: Date, hourDiff: number}} 計算結果
+ * Calculate business start and end times for specified date
+ *
+ * @param {Date} date - Target date
+ * @param {string} openHour - Business start time ("HH:MM" format)
+ * @param {string} closeHour - Business end time ("HH:MM" format)
+ * @returns {{openTime: Date, closeTime: Date, hourDiff: number}} Calculation result
  */
 export function calculateWorkHours(date, openHour, closeHour) {
     const { hour: openTimeHour, minute: openTimeMinute } = parseTimeString(openHour);
@@ -108,12 +108,12 @@ export function calculateWorkHours(date, openHour, closeHour) {
 }
 
 /**
- * 指定した日付における休憩時間を計算
- * 
- * @param {Date} date - 対象の日付
- * @param {string} breakStart - 休憩開始時間（"HH:MM"形式）
- * @param {string} breakEnd - 休憩終了時間（"HH:MM"形式）
- * @returns {{breakStartTime: Date, breakEndTime: Date}} 計算結果
+ * Calculate break time for specified date
+ *
+ * @param {Date} date - Target date
+ * @param {string} breakStart - Break start time ("HH:MM" format)
+ * @param {string} breakEnd - Break end time ("HH:MM" format)
+ * @returns {{breakStartTime: Date, breakEndTime: Date}} Calculation result
  */
 export function calculateBreakHours(date, breakStart, breakEnd) {
     const { hour: breakStartHour, minute: breakStartMinute } = parseTimeString(breakStart);
@@ -126,12 +126,12 @@ export function calculateBreakHours(date, breakStart, breakEnd) {
 }
 
 /**
- * 現在時刻が指定した時間範囲内かどうかを判定
- * 
- * @param {Date} currentTime - 現在時刻
- * @param {Date} startTime - 開始時間
- * @param {Date} endTime - 終了時間
- * @returns {boolean} 範囲内の場合true
+ * Determine if current time is within specified time range
+ *
+ * @param {Date} currentTime - Current time
+ * @param {Date} startTime - Start time
+ * @param {Date} endTime - End time
+ * @returns {boolean} true if within range
  */
 export function isTimeInRange(currentTime, startTime, endTime) {
     const current = currentTime.getTime();
@@ -141,12 +141,12 @@ export function isTimeInRange(currentTime, startTime, endTime) {
 }
 
 /**
- * 現在時刻が今日の業務時間内かどうかを判定
- * 
- * @param {Date} currentTime - 現在時刻
- * @param {string} openHour - 業務開始時間（"HH:MM"形式）
- * @param {string} closeHour - 業務終了時間（"HH:MM"形式）
- * @returns {boolean} 業務時間内の場合true
+ * Determine if current time is within today's business hours
+ *
+ * @param {Date} currentTime - Current time
+ * @param {string} openHour - Business start time ("HH:MM" format)
+ * @param {string} closeHour - Business end time ("HH:MM" format)
+ * @returns {boolean} true if within business hours
  */
 export function isCurrentTimeInWorkHours(currentTime, openHour, closeHour) {
     if (!isToday(currentTime)) {
