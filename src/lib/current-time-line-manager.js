@@ -12,27 +12,27 @@ export class CurrentTimeLineManager {
     /**
      * Create CurrentTimeLineManager instance
      *
-     * @param {HTMLElement} parentElement - Parent element to place current time line
-     * @param {Date} targetDate - Target date (today if omitted)
+     * @param {HTMLElement} parentElement - The parent element to place the current time line
+     * @param {Date} targetDate - The target date (today if omitted)
      */
     constructor(parentElement, targetDate = null) {
         /**
-         * Parent element to place current time line
+         * The parent element to place the current time line
          */
         this.parentElement = parentElement;
 
         /**
-         * Target date
+         * The target date
          */
         this.targetDate = targetDate || new Date();
 
         /**
-         * DOM element of current time line
+         * The DOM element of the current time line
          */
         this.timeLineElement = null;
 
         /**
-         * Update timer ID
+         * The update timer ID
          */
         this.updateTimer = null;
     }
@@ -67,7 +67,7 @@ export class CurrentTimeLineManager {
 
     /**
      * Set target date
-     * @param {Date} targetDate - Target date
+     * @param {Date} targetDate - The target date
      */
     setTargetDate(targetDate) {
         this.targetDate = targetDate;

@@ -46,7 +46,7 @@ if (chrome.commands && chrome.commands.onCommand && chrome.commands.onCommand.ad
 
 /**
  * Get Google Calendar list
- * @returns {Promise<Array>} Promise that returns calendar list
+ * @returns {Promise<Array>} A promise that returns the calendar list
  */
 function getCalendarList() {
     return new Promise((resolve, reject) => {
@@ -109,13 +109,13 @@ function getCalendarList() {
 
 /**
  * Get events from Google Calendar
- * @param {Date} targetDate - Target date (today if omitted)
- * @returns {Promise<Array>} Promise that returns array of events
+ * @param {Date} targetDate - The target date (today if omitted)
+ * @returns {Promise<Array>} A promise that returns an array of events
  */
 function getCalendarEvents(targetDate = null) {
     return new Promise((resolve, reject) => {
         try {
-            // Get list of selected calendars
+            // Get the list of selected calendars
             StorageHelper.get(['selectedCalendars'], { selectedCalendars: [] })
                 .then((storageData) => {
                 chrome.identity.getAuthToken({interactive: true}, (token) => {
@@ -127,7 +127,7 @@ function getCalendarEvents(targetDate = null) {
                     }
 
                     
-                    // Set target date range
+                    // Set the target date range
                     const targetDay = targetDate || new Date();
                     const startOfDay = new Date(targetDay);
                     startOfDay.setHours(0, 0, 0, 0);
@@ -139,7 +139,7 @@ function getCalendarEvents(targetDate = null) {
                     let calendarsPromise;
 
                     if (selectedCalendarIds.length === 0) {
-                        // If no calendars are selected, use calendars set to display in Google Calendar
+                        // If no calendars are selected, use the calendars set to display in Google Calendar
                         const calendarListUrl = `https://www.googleapis.com/calendar/v3/users/me/calendarList`;
 
                         calendarsPromise = fetch(calendarListUrl, {
@@ -158,11 +158,11 @@ function getCalendarEvents(targetDate = null) {
                             const selectedCalendars = allCalendars.filter(cal => cal.selected);
                             const accessibleCalendars = selectedCalendars.filter(cal => cal.accessRole && cal.accessRole !== 'none');
 
-                            // Always include primary calendar
+                            // Always include the primary calendar
                             const calendarsToReturn = [...accessibleCalendars];
                             const primaryCalendar = allCalendars.find(cal => cal.primary);
 
-                            // Ensure primary calendar is included regardless of selected flag
+                            // Ensure the primary calendar is included regardless of the selected flag
                             if (primaryCalendar && !calendarsToReturn.some(cal => cal.id === primaryCalendar.id)) {
                                 calendarsToReturn.unshift(primaryCalendar);
                             }
@@ -174,7 +174,7 @@ function getCalendarEvents(targetDate = null) {
                             return calendarsToReturn.map(c => ({ id: c.id }));
                         });
                     } else {
-                        // Use selected calendars
+                        // Use the selected calendars
                         calendarsPromise = Promise.resolve(selectedCalendarIds.map(id => ({ id })));
                     }
 
@@ -215,7 +215,7 @@ function getCalendarEvents(targetDate = null) {
                     return Promise.all(fetches);
                 })
                 .then(async (resultsPerCalendar) => {
-                    // Get calendar information and add color information to events
+                    // Get the calendar information and add color information to the events
                     try {
                         const calendarListUrl = `https://www.googleapis.com/calendar/v3/users/me/calendarList`;
                         const calendarResponse = await fetch(calendarListUrl, {
@@ -234,7 +234,7 @@ function getCalendarEvents(targetDate = null) {
                             });
                         }
                         
-                        // Flatten results and add color information
+                        // Flatten the results and add color information
                         const allEvents = [];
                         resultsPerCalendar.forEach(result => {
                             if (result.events) {
@@ -303,7 +303,7 @@ function getCalendarEvents(targetDate = null) {
 
 /**
  * Check Google account authentication status
- * @returns {Promise<boolean>} Promise that returns authentication status
+ * @returns {Promise<boolean>} A promise that returns the authentication status
  */
 function checkGoogleAuth() {
     return new Promise((resolve, reject) => {

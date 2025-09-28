@@ -52,14 +52,6 @@ export function generateTimeList(timeListElement) {
     }
 }
 
-/**
- * Get current date (YYYY-MM-DD format)
- * @returns {string} Date string in YYYY-MM-DD format
- */
-export function getFormattedDate() {
-    const today = new Date();
-    return today.toISOString().split('T')[0]; // Get string in YYYY-MM-DD format
-}
 
 /**
  * Get specified date (YYYY-MM-DD format)
@@ -67,7 +59,7 @@ export function getFormattedDate() {
  * @returns {string} Date string in YYYY-MM-DD format
  */
 export function getFormattedDateFromDate(date) {
-    // Use local timezone to avoid date shifting issues
+    // Use local timezone to avoid date-shifting issues
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
@@ -113,20 +105,12 @@ export async function loadLocalEventsForDate(targetDate) {
     return result[storageKey] || [];
 }
 
-/**
- * Save local events
- * @param {Array} events - Array of events to save
- * @returns {Promise} Promise for save process
- */
-export function saveLocalEvents(events) {
-    return saveLocalEventsForDate(events, new Date());
-}
 
 /**
  * Save local events for specified date
  * @param {Array} events - Array of events to save
  * @param {Date} targetDate - Target date
- * @returns {Promise} Promise for save process
+ * @returns {Promise} Promise for the save process
  */
 export async function saveLocalEventsForDate(events, targetDate) {
     const targetDateStr = getFormattedDateFromDate(targetDate);
@@ -136,7 +120,7 @@ export async function saveLocalEventsForDate(events, targetDate) {
 
 /**
  * Reload side panel
- * @returns {Promise} Promise for reload process
+ * @returns {Promise} Promise for the reload process
  */
 export function reloadSidePanel() {
     return new Promise((resolve, reject) => {
@@ -169,37 +153,11 @@ export function logError(context, error) {
     console.error(`[${context}] Error:`, error);
 }
 
-/**
- * Display alert modal
- * @param {string} message - Message to display
- * @param {HTMLElement} alertModal - Alert modal DOM element
- * @param {HTMLElement} alertMessage - Element to display the message
- * @param {HTMLElement} closeButton - Close button
- */
-export function showAlertModal(message, alertModal, alertMessage, closeButton) {
-    if (!alertModal || !alertMessage) return;
-    
-    alertMessage.textContent = message;
-    alertModal.style.display = 'flex';
-    
-    if (closeButton) {
-        closeButton.onclick = () => {
-            alertModal.style.display = 'none';
-        };
-    }
-    
-    // Close modal when clicking outside
-    window.onclick = (event) => {
-        if (event.target === alertModal) {
-            alertModal.style.display = 'none';
-        }
-    };
-}
 
 /**
  * Save selected calendars
  * @param {Array<string>} selectedCalendars - Array of selected calendar IDs
- * @returns {Promise} Promise for save process
+ * @returns {Promise} Promise for the save process
  */
 export function saveSelectedCalendars(selectedCalendars) {
     return StorageHelper.set({ selectedCalendars });
@@ -207,7 +165,7 @@ export function saveSelectedCalendars(selectedCalendars) {
 
 /**
  * Load selected calendars
- * @returns {Promise<Array<string>>} Promise that returns array of selected calendar IDs
+ * @returns {Promise<Array<string>>} Promise that returns an array of selected calendar IDs
  */
 export async function loadSelectedCalendars() {
     const result = await StorageHelper.get(['selectedCalendars'], { selectedCalendars: [] });

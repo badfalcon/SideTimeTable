@@ -18,10 +18,10 @@ export class ModalComponent extends Component {
         this.onClose = options.onClose || null;
         this.onShow = options.onShow || null;
 
-        // Whether to close on backdrop click
+        // Whether to close on the backdrop click
         this.closeOnBackdropClick = options.closeOnBackdropClick !== false;
 
-        // Whether to close on Escape key
+        // Whether to close on the Escape key
         this.closeOnEscape = options.closeOnEscape !== false;
     }
 
@@ -29,7 +29,7 @@ export class ModalComponent extends Component {
         const modal = super.createElement();
         modal.setAttribute('hidden', '');
 
-        // Skip if content already created
+        // Skip if the content is already created
         if (modal.children.length > 0) {
             return modal;
         }
@@ -45,7 +45,7 @@ export class ModalComponent extends Component {
 
         this.modalContent.appendChild(this.closeButton);
 
-        // Create custom content
+        // Create the custom content
         const customContent = this.createContent();
         if (customContent) {
             this.modalContent.appendChild(customContent);
@@ -53,7 +53,7 @@ export class ModalComponent extends Component {
 
         modal.appendChild(this.modalContent);
 
-        // Setup event listeners
+        // Setup the event listeners
         this._setupEventListeners();
 
         return modal;
@@ -61,7 +61,7 @@ export class ModalComponent extends Component {
 
     /**
      * Create custom content (override in subclasses)
-     * @returns {HTMLElement|null} Content element
+     * @returns {HTMLElement|null} The content element
      */
     createContent() {
         return null;
@@ -131,7 +131,7 @@ export class ModalComponent extends Component {
 
     /**
      * Check if modal is visible
-     * @returns {boolean} Visibility state
+     * @returns {boolean} The visibility state
      */
     isVisible() {
         return this.element && !this.element.hasAttribute('hidden');

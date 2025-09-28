@@ -5,18 +5,18 @@
  */
 
 import {TIME_CONSTANTS} from '../lib/utils.js';
-import {calculateBreakHours, calculateWorkHours, isSameDay} from '../lib/time-utils.js';
+import {calculateWorkHours, isSameDay} from '../lib/time-utils.js';
 
 // Constants for EventLayoutManager
 const LAYOUT_CONSTANTS = {
-    BASE_LEFT: 65,           // Basic left position for events (px)
-    GAP: 5,                  // Basic gap between events (px)
-    RESERVED_SPACE_MARGIN: 25,    // Reserved space margin other than baseLeft (px)
-    MIN_WIDTH: 100,          // Minimum guaranteed width (px)
-    DEFAULT_WIDTH: 200,      // Default maximum width (px)
-    MIN_CONTENT_WIDTH: 20,   // Minimum content width (px)
+    BASE_LEFT: 65,           // The basic left position for events (px)
+    GAP: 5,                  // The basic gap between events (px)
+    RESERVED_SPACE_MARGIN: 25,    // The reserved space margin other than baseLeft (px)
+    MIN_WIDTH: 100,          // The minimum guaranteed width (px)
+    DEFAULT_WIDTH: 200,      // The default maximum width (px)
+    MIN_CONTENT_WIDTH: 20,   // The minimum content width (px)
     MIN_GAP: 2,              // Minimum gap (px)
-    MIN_DISPLAY_WIDTH: 40,   // Threshold for title-only display (px)
+    MIN_DISPLAY_WIDTH: 40,   // The threshold for title-only display (px)
     Z_INDEX: 5,              // Z-index for flex containers
 
     // Padding settings
@@ -26,10 +26,10 @@ const LAYOUT_CONSTANTS = {
         MICRO: 6             // Micro padding (5+ lanes)
     },
 
-    // Thresholds by number of lanes
+    // The thresholds by number of lanes
     LANE_THRESHOLDS: {
-        COMPACT: 2,          // Number of lanes for compact mode
-        MICRO: 4             // Number of lanes for micro mode
+        COMPACT: 2,          // The number of lanes for compact mode
+        MICRO: 4             // The number of lanes for micro mode
     }
 };
 
@@ -50,7 +50,7 @@ const LAYOUT_CONSTANTS = {
  *   element: document.getElementById('event1'),
  *   type: 'local'
  * });
- * layoutManager.calculateLayout(); // Calculate and apply layout
+ * layoutManager.calculateLayout(); // Calculate and apply the layout
  */
 export class EventLayoutManager {
     /**
@@ -101,13 +101,13 @@ export class EventLayoutManager {
          */
         this.resizeObserver = null;
 
-        // Initialize resize observer
+        // Initialize the resize observer
         this._initializeResizeObserver();
     }
 
     /**
      * Calculate maximum width
-     * @returns {number} Calculated maximum width
+     * @returns {number} The calculated maximum width
      * @private
      */
     _calculateMaxWidth() {
@@ -145,11 +145,11 @@ export class EventLayoutManager {
      * @private
      */
     _handleResize() {
-        // Recalculate maximum width
+        // Recalculate the maximum width
         const oldMaxWidth = this.maxWidth;
         this.maxWidth = this._calculateMaxWidth();
 
-        // Recalculate layout only if width changed
+        // Recalculate the layout only if the width changed
         if (Math.abs(oldMaxWidth - this.maxWidth) > 5) { // Update on 5px+ change
             this.calculateLayout();
         }
@@ -157,19 +157,19 @@ export class EventLayoutManager {
 
     /**
      * Update base element (when changed dynamically)
-     * @param {HTMLElement} newBaseElement - New base element
+     * @param {HTMLElement} newBaseElement - The new base element
      */
     updateBaseElement(newBaseElement) {
-        // Stop existing observer
+        // Stop the existing observer
         if (this.resizeObserver) {
             this.resizeObserver.disconnect();
         }
 
-        // Set new element
+        // Set the new element
         this.baseElement = newBaseElement;
         this.maxWidth = this._calculateMaxWidth();
 
-        // Initialize new observer
+        // Initialize the new observer
         this._initializeResizeObserver();
 
         // Recalculate layout
@@ -181,7 +181,7 @@ export class EventLayoutManager {
     /**
      * Register an event
      *
-     * @param {Object} event - Event object to register
+     * @param {Object} event - The event object to register
      * @param {string} event.id - Unique ID of the event
      * @param {Date} event.startTime - Start time
      * @param {Date} event.endTime - End time
@@ -206,7 +206,7 @@ export class EventLayoutManager {
             return;
         }
 
-        // Update existing event (if same ID)
+        // Update the existing event (if same ID)
         const existingIndex = this.events.findIndex(e => e.id === event.id);
         if (existingIndex !== -1) {
             this.events[existingIndex] = { ...this.events[existingIndex], ...event };
@@ -218,7 +218,7 @@ export class EventLayoutManager {
     /**
      * Remove an event with the specified ID
      *
-     * @param {string} eventId - ID of the event to remove
+     * @param {string} eventId - The ID of the event to remove
      * @returns {boolean} Whether the removal was successful
      *
      * @example
@@ -244,8 +244,8 @@ export class EventLayoutManager {
 
     /**
      * Get time value from cache or calculate and save to cache
-     * @param {Date} time - Time object
-     * @returns {number} Minutes elapsed from 0:00
+     * @param {Date} time - The time object
+     * @returns {number} The minutes elapsed from 0:00
      * @private
      */
     _getCachedTimeValue(time) {
@@ -263,8 +263,8 @@ export class EventLayoutManager {
     /**
      * Determine if two events overlap in time
      *
-     * @param {Object} event1 - First event
-     * @param {Object} event2 - Second event
+     * @param {Object} event1 - The first event
+     * @param {Object} event2 - The second event
      * @returns {boolean} True if overlapping
      * @private
      *
@@ -283,7 +283,7 @@ export class EventLayoutManager {
 
     /**
      * Group overlapping events
-     * @returns {Array<Array<Object>>} Array of grouped events
+     * @returns {Array<Array<Object>>} An array of grouped events
      * @private
      */
     _groupOverlappingEvents() {
@@ -296,7 +296,7 @@ export class EventLayoutManager {
             const group = [event];
             processedEvents.add(event.id);
 
-            // Find other events that overlap with this event
+            // Find the other events that overlap with this event
             for (const otherEvent of this.events) {
                 if (processedEvents.has(otherEvent.id)) continue;
 
@@ -323,28 +323,28 @@ export class EventLayoutManager {
 
     /**
      * Assign lanes to events within a group
-     * @param {Array<Object>} group - Group of events
-     * @returns {Array<Object>} Array of events with lane information
+     * @param {Array<Object>} group - A group of events
+     * @returns {Array<Object>} An array of events with lane information
      * @private
      */
     _assignLanesToGroup(group) {
-        // Sort by start time
+        // Sort by the start time
         const sortedEvents = group.sort((a, b) =>
             this._getCachedTimeValue(a.startTime) - this._getCachedTimeValue(b.startTime)
         );
 
-        // Event list per lane
+        // The event list per lane
         const lanes = [];
 
         for (const event of sortedEvents) {
             let assignedLane = -1;
 
-            // Find an available lane among existing lanes
+            // Find an available lane among the existing lanes
             for (let i = 0; i < lanes.length; i++) {
                 const laneEvents = lanes[i];
                 let canPlaceInLane = true;
 
-                // Check if it doesn't overlap with all events in this lane
+                // Check if it doesn't overlap with all the events in this lane
                 for (const laneEvent of laneEvents) {
                     if (this._areEventsOverlapping(event, laneEvent)) {
                         canPlaceInLane = false;
@@ -368,7 +368,7 @@ export class EventLayoutManager {
             event.lane = assignedLane;
         }
 
-        // Set total number of lanes for each event
+        // Set the total number of lanes for each event
         const totalLanes = lanes.length;
         for (const event of sortedEvents) {
             event.totalLanes = totalLanes;
@@ -382,7 +382,7 @@ export class EventLayoutManager {
      *
      * @param {boolean} [disableTransitions=false] - Whether to temporarily disable CSS transitions
      * @example
-     * // Calculate layout after registering events
+     * // Calculate the layout after registering events
      * layoutManager.registerEvent(event1);
      * layoutManager.registerEvent(event2);
      * layoutManager.calculateLayout();
@@ -390,7 +390,7 @@ export class EventLayoutManager {
     calculateLayout(disableTransitions = false) {
         if (this.events.length === 0) return;
 
-        // Temporarily disable transitions if requested
+        // Temporarily disable the transitions if requested
         if (disableTransitions) {
             this.events.forEach(event => {
                 if (event.element) {
@@ -399,13 +399,13 @@ export class EventLayoutManager {
             });
         }
 
-        // Recalculate maximum width
+        // Recalculate the maximum width
         this.maxWidth = this._calculateMaxWidth();
 
-        // Group overlapping events
+        // Group the overlapping events
         this.layoutGroups = this._groupOverlappingEvents();
 
-        // Apply layout to each group
+        // Apply the layout to each group
         for (const group of this.layoutGroups) {
             if (group.length === 1) {
                 this._applySingleEventLayout(group[0]);
@@ -415,7 +415,7 @@ export class EventLayoutManager {
             }
         }
 
-        // Restore transitions after layout is applied
+        // Restore the transitions after the layout is applied
         if (disableTransitions) {
             // Use requestAnimationFrame to ensure layout is applied before restoring transitions
             requestAnimationFrame(() => {
@@ -430,7 +430,7 @@ export class EventLayoutManager {
 
     /**
      * Apply layout for a single event
-     * @param {Object} event - Event object
+     * @param {Object} event - The event object
      * @private
      */
     _applySingleEventLayout(event) {
@@ -443,7 +443,7 @@ export class EventLayoutManager {
 
     /**
      * Apply layout for multiple events
-     * @param {Array<Object>} events - Array of events with lane information
+     * @param {Array<Object>} events - An array of events with lane information
      * @private
      */
     _applyMultiEventLayout(events) {
@@ -451,7 +451,7 @@ export class EventLayoutManager {
             const totalLanes = Math.max(...events.map(e => e.totalLanes));
             const laneCount = totalLanes;
 
-            // Calculate available width (considering gaps)
+            // Calculate the available width (considering gaps)
             const totalGap = LAYOUT_CONSTANTS.GAP * (laneCount - 1);
             const availableWidth = this.maxWidth - totalGap;
             const laneWidth = Math.max(availableWidth / laneCount, LAYOUT_CONSTANTS.MIN_CONTENT_WIDTH);
@@ -467,7 +467,7 @@ export class EventLayoutManager {
                     event.element.style.width = `${laneWidth}px`;
                     event.element.style.zIndex = LAYOUT_CONSTANTS.Z_INDEX;
 
-                    // Adjust padding based on number of lanes
+                    // Adjust the padding based on the number of lanes
                     let padding;
                     if (laneCount <= LAYOUT_CONSTANTS.LANE_THRESHOLDS.COMPACT) {
                         padding = LAYOUT_CONSTANTS.PADDING.BASIC;
@@ -479,7 +479,7 @@ export class EventLayoutManager {
 
                     event.element.style.padding = `${padding}px`;
 
-                    // Show title only if too narrow
+                    // Show the title only if too narrow
                     if (laneWidth < LAYOUT_CONSTANTS.MIN_DISPLAY_WIDTH) {
                         event.element.classList.add('narrow-display');
                     } else {
@@ -496,7 +496,7 @@ export class EventLayoutManager {
      * Clean up resources
      */
     destroy() {
-        // Stop resize observer
+        // Stop the resize observer
         if (this.resizeObserver) {
             this.resizeObserver.disconnect();
             this.resizeObserver = null;
@@ -511,7 +511,7 @@ export class EventLayoutManager {
         // Clear cache
         this.timeValueCache.clear();
 
-        // Clear event arrays
+        // Clear the event arrays
         this.events = [];
         this.layoutGroups = [];
     }

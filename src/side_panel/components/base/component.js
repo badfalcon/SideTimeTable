@@ -16,21 +16,21 @@ export class Component {
         // Initialization state
         this.initialized = false;
 
-        // Event listener management
+        // The event listener management
         this.eventListeners = [];
     }
 
     /**
      * Create component element
-     * @returns {HTMLElement} Created element
+     * @returns {HTMLElement} The created element
      */
     createElement() {
-        // Reuse if element is already created
+        // Reuse if the element is already created
         if (this.element) {
             return this.element;
         }
 
-        // Remove existing element with same ID from DOM if it exists
+        // Remove the existing element with the same ID from the DOM if it exists
         if (this.options.id) {
             const existingElement = document.getElementById(this.options.id);
             if (existingElement) {
@@ -108,7 +108,7 @@ export class Component {
         if (element && typeof element.addEventListener === 'function') {
             element.addEventListener(event, handler, options);
 
-            // Record for cleanup
+            // Record for the cleanup
             this.eventListeners.push({
                 element,
                 event,
@@ -156,7 +156,7 @@ export class Component {
      * Clean up resources
      */
     destroy() {
-        // Remove event listeners
+        // Remove the event listeners
         this.eventListeners.forEach(({ element, event, handler, options }) => {
             if (element && typeof element.removeEventListener === 'function') {
                 element.removeEventListener(event, handler, options);
@@ -164,7 +164,7 @@ export class Component {
         });
         this.eventListeners = [];
 
-        // Remove DOM element
+        // Remove the DOM element
         this.remove();
         this.element = null;
         this.initialized = false;
@@ -193,7 +193,7 @@ export class Component {
     /**
      * Get CSS variable
      * @param {string} name CSS variable name (specify without --)
-     * @returns {string} Value
+     * @returns {string} The value
      */
     getCSSVariable(name) {
         if (this.element) {
