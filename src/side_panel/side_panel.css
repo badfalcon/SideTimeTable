@@ -146,7 +146,7 @@ h1 {
 .event {
     position: absolute;
     left: 65px;
-    width: 200px;
+    /* width: 200px; - Removed fixed width, dynamic width is set by EventLayoutManager */
     padding: 5px 10px;
     background: lightgray;
     border-radius: 5px;
@@ -155,6 +155,10 @@ h1 {
     transition: left 0.3s, width 0.3s; /* Smooth transition for movement */
     overflow: hidden; /* Prevent text from overflowing */
     text-overflow: ellipsis; /* Show overflowed text with ellipsis */
+}
+
+.event.no-transition {
+    transition: none !important;
 }
 
 .short {
