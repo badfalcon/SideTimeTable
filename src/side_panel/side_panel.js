@@ -47,6 +47,7 @@ class SidePanelUIController {
         this.currentDate.setHours(0, 0, 0, 0);
         this.updateInterval = null;
         this.loadEventsDebounceTimeout = null;
+        this.wasViewingToday = true; // Track if user was viewing today
     }
 
     /**
@@ -386,10 +387,14 @@ class SidePanelUIController {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
 
-            // When date has changed
-            if (!isToday(this.currentDate) && isToday(today)) {
+            // Only auto-advance to today if user was previously viewing today
+            // This prevents forced switching when user is intentionally viewing past/future dates
+            if (this.wasViewingToday && !isToday(this.currentDate)) {
                 this.currentDate = today;
+                this.wasViewingToday = true; // Still viewing today after auto-advance
                 this.headerComponent.setCurrentDate(this.currentDate);
+                this.timelineComponent.setCurrentDate(this.currentDate);
+                this.timelineComponent.setCurrentTimeLineVisible(true);
                 this._loadEventsForCurrentDate();
             }
         }, 60000); // Check every minute
@@ -402,6 +407,9 @@ class SidePanelUIController {
     _handleDateChange(date) {
         this.currentDate = new Date(date);
         this.currentDate.setHours(0, 0, 0, 0);
+
+        // Track if user is viewing today
+        this.wasViewingToday = isToday(this.currentDate);
 
         // Immediately remove old date events
         this.timelineComponent.clearAllEvents();
