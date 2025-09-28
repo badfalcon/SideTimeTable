@@ -1,24 +1,24 @@
 /**
- * Side Panel Components - Component exports
+ * Side Panel Components - The component exports
  */
 
-// Base Components
+// The base Components
 export { Component } from './base/component.js';
 
-// Header Components
+// The header Components
 export { HeaderComponent } from './header/header-component.js';
 
-// Timeline Components
+// The timeline Components
 export { TimelineComponent } from './timeline/timeline-component.js';
 
-// Modal Components
+// The modal Components
 export { ModalComponent } from './modals/modal-component.js';
 export { LocalEventModal } from './modals/local-event-modal.js';
 export { GoogleEventModal } from './modals/google-event-modal.js';
 export { AlertModal } from './modals/alert-modal.js';
 
 /**
- * ComponentManager - Side panel component management class
+ * ComponentManager - The side panel component management class
  */
 export class SidePanelComponentManager {
     constructor() {
@@ -28,8 +28,8 @@ export class SidePanelComponentManager {
 
     /**
      * Register a component
-     * @param {string} name Component name
-     * @param {Component} component Component instance
+     * @param {string} name The component name
+     * @param {Component} component The component instance
      */
     register(name, component) {
         if (this.components.has(name)) {

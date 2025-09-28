@@ -15,7 +15,7 @@ export class TimeSettingsCard extends CardComponent {
 
         this.onSettingsChange = onSettingsChange;
 
-        // Form elements
+        // The form elements
         this.openTimeInput = null;
         this.closeTimeInput = null;
         this.breakTimeFixedCheckbox = null;
@@ -23,7 +23,7 @@ export class TimeSettingsCard extends CardComponent {
         this.breakTimeEndInput = null;
         this.timeDatalist = null;
 
-        // Current settings values
+        // The current settings values
         this.settings = {
             openTime: '09:00',
             closeTime: '18:00',
@@ -36,14 +36,14 @@ export class TimeSettingsCard extends CardComponent {
     createElement() {
         const card = super.createElement();
 
-        // Create form elements
+        // Create the form elements
         const form = this._createForm();
         this.addContent(form);
 
-        // Generate time list
+        // Generate the time list
         this._generateTimeList();
 
-        // Set up event listeners
+        // Set up the event listeners
         this._setupEventListeners();
 
         return card;
@@ -56,15 +56,15 @@ export class TimeSettingsCard extends CardComponent {
     _createForm() {
         const form = document.createElement('form');
 
-        // Work hours section
+        // The work hours section
         const workHoursSection = this._createWorkHoursSection();
         form.appendChild(workHoursSection);
 
-        // Break time section
+        // The break time section
         const breakTimeSection = this._createBreakTimeSection();
         form.appendChild(breakTimeSection);
 
-        // Time selection list
+        // The time selection list
         this.timeDatalist = document.createElement('datalist');
         this.timeDatalist.id = 'time-settings-time-list';
         form.appendChild(this.timeDatalist);
@@ -80,18 +80,18 @@ export class TimeSettingsCard extends CardComponent {
         const section = document.createElement('div');
         section.className = 'mb-3';
 
-        // Label
+        // The label
         const label = document.createElement('label');
         label.htmlFor = 'time-settings-open-time';
         label.className = 'form-label';
         label.setAttribute('data-localize', '__MSG_workHours__');
         label.textContent = 'Work Hours:';
 
-        // Input group
+        // The input group
         const inputGroup = document.createElement('div');
         inputGroup.className = 'input-group';
 
-        // Start time
+        // The start time
         this.openTimeInput = document.createElement('input');
         this.openTimeInput.type = 'time';
         this.openTimeInput.className = 'form-control';
@@ -101,13 +101,13 @@ export class TimeSettingsCard extends CardComponent {
         this.openTimeInput.setAttribute('list', 'time-settings-time-list');
         this.openTimeInput.setAttribute('data-localize-aria-label', '__MSG_startTime__');
 
-        // Separator
+        // The separator
         const separator = document.createElement('span');
         separator.className = 'input-group-text';
         separator.setAttribute('data-localize', '__MSG_to__');
         separator.textContent = '～';
 
-        // End time
+        // The end time
         this.closeTimeInput = document.createElement('input');
         this.closeTimeInput.type = 'time';
         this.closeTimeInput.className = 'form-control';
@@ -135,14 +135,14 @@ export class TimeSettingsCard extends CardComponent {
         const section = document.createElement('div');
         section.className = 'mb-3';
 
-        // Label
+        // The label
         const label = document.createElement('label');
         label.htmlFor = 'time-settings-break-time-fixed';
         label.className = 'form-label';
         label.setAttribute('data-localize', '__MSG_breakTime__');
         label.textContent = 'Break Time:';
 
-        // Checkbox
+        // The checkbox
         const checkboxDiv = document.createElement('div');
         checkboxDiv.className = 'form-check mb-2';
 
@@ -161,11 +161,11 @@ export class TimeSettingsCard extends CardComponent {
         checkboxDiv.appendChild(this.breakTimeFixedCheckbox);
         checkboxDiv.appendChild(checkboxLabel);
 
-        // Time input group
+        // The time input group
         const inputGroup = document.createElement('div');
         inputGroup.className = 'input-group';
 
-        // Start time
+        // The start time
         this.breakTimeStartInput = document.createElement('input');
         this.breakTimeStartInput.type = 'time';
         this.breakTimeStartInput.className = 'form-control';
@@ -176,13 +176,13 @@ export class TimeSettingsCard extends CardComponent {
         this.breakTimeStartInput.setAttribute('list', 'time-settings-time-list');
         this.breakTimeStartInput.setAttribute('data-localize-aria-label', '__MSG_startTime__');
 
-        // Separator
+        // The separator
         const separator = document.createElement('span');
         separator.className = 'input-group-text';
         separator.setAttribute('data-localize', '__MSG_to__');
         separator.textContent = '～';
 
-        // End time
+        // The end time
         this.breakTimeEndInput = document.createElement('input');
         this.breakTimeEndInput.type = 'time';
         this.breakTimeEndInput.className = 'form-control';

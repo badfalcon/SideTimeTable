@@ -7,10 +7,10 @@
 
 export class StorageHelper {
     /**
-     * Retrieve data from Chrome storage
-     * @param {string|Object|Array} keys - Storage keys to retrieve
-     * @param {Object} defaultValues - Default values if keys don't exist
-     * @returns {Promise<Object>} Retrieved data with defaults applied
+     * Retrieve the data from Chrome storage
+     * @param {string|Object|Array} keys - The storage keys to retrieve
+     * @param {Object} defaultValues - The default values if the keys don't exist
+     * @returns {Promise<Object>} The retrieved data with the defaults applied
      */
     static async get(keys, defaultValues = {}) {
         return new Promise((resolve, reject) => {
@@ -20,7 +20,7 @@ export class StorageHelper {
                         reject(chrome.runtime.lastError);
                         return;
                     }
-                    // Merge with defaults for any missing keys
+                    // Merge with the defaults for any missing keys
                     const mergedResult = { ...defaultValues, ...result };
                     resolve(mergedResult);
                 });
@@ -31,9 +31,9 @@ export class StorageHelper {
     }
 
     /**
-     * Store data in Chrome storage
-     * @param {Object} data - Data to store
-     * @returns {Promise<void>} Promise that resolves when data is saved
+     * Store the data in Chrome storage
+     * @param {Object} data - The data to store
+     * @returns {Promise<void>} A promise that resolves when the data is saved
      */
     static async set(data) {
         return new Promise((resolve, reject) => {
@@ -52,9 +52,9 @@ export class StorageHelper {
     }
 
     /**
-     * Remove data from Chrome storage
-     * @param {string|Array<string>} keys - Keys to remove
-     * @returns {Promise<void>} Promise that resolves when data is removed
+     * Remove the data from Chrome storage
+     * @param {string|Array<string>} keys - The keys to remove
+     * @returns {Promise<void>} A promise that resolves when the data is removed
      */
     static async remove(keys) {
         return new Promise((resolve, reject) => {
@@ -73,8 +73,8 @@ export class StorageHelper {
     }
 
     /**
-     * Clear all data from Chrome storage
-     * @returns {Promise<void>} Promise that resolves when storage is cleared
+     * Clear all the data from Chrome storage
+     * @returns {Promise<void>} A promise that resolves when the storage is cleared
      */
     static async clear() {
         return new Promise((resolve, reject) => {
@@ -93,8 +93,8 @@ export class StorageHelper {
     }
 
     /**
-     * Get storage quota information
-     * @returns {Promise<Object>} Storage quota information
+     * Get the storage quota information
+     * @returns {Promise<Object>} The storage quota information
      */
     static async getBytesInUse(keys = null) {
         return new Promise((resolve, reject) => {

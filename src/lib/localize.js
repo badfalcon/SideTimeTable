@@ -1,6 +1,6 @@
 /**
- * Get current language setting
- * @returns {string} Language code (en/ja/auto)
+ * Get the current language setting
+ * @returns {string} The language code (en/ja/auto)
  */
 async function getCurrentLanguageSetting() {
     try {
@@ -13,44 +13,44 @@ async function getCurrentLanguageSetting() {
 }
 
 /**
- * Determine actual language code to use
- * @param {string} languageSetting - Setting value (auto/en/ja)
- * @returns {string} Actual language code (en/ja)
+ * Determine the actual language code to use
+ * @param {string} languageSetting - The setting value (auto/en/ja)
+ * @returns {string} The actual language code (en/ja)
  */
 function resolveLanguageCode(languageSetting) {
     if (languageSetting === 'auto') {
-        // Get browser language
+        // Get the browser language
         const browserLang = chrome.i18n.getUILanguage().toLowerCase();
         return browserLang.startsWith('ja') ? 'ja' : 'en';
     }
     return languageSetting;
 }
 
-// Get localized text according to language settings
+// Get the localized text according to the language settings
 function getMessageWithLang(key) {
     const lang = localStorage.getItem('sideTimeTableLang') || (chrome.i18n && chrome.i18n.getUILanguage ? chrome.i18n.getUILanguage().slice(0,2) : 'ja');
-    // According to manifest/_locales spec, chrome.i18n.getMessage switches automatically,
-    // but if manifest's default_locale is ja, then en or en_US will use en
-    // Get only by key here (chrome.i18n.getMessage switches automatically)
+    // According to the manifest/_locales spec, chrome.i18n.getMessage switches automatically,
+    // but if the manifest's default_locale is ja, then en or en_US will use en
+    // Get only by the key here (chrome.i18n.getMessage switches automatically)
     return chrome.i18n.getMessage(key) || '';
 }
 
-// Localize HTML content (reflecting language settings)
+// Localize the HTML content (reflecting the language settings)
 async function localizeHtmlPageWithLang() {
     try {
-        // Get user's language setting
+        // Get the user's language setting
         const userLanguageSetting = await getCurrentLanguageSetting();
         const targetLanguage = resolveLanguageCode(userLanguageSetting);
         
         
-        // Execute localization in set language
+        // Execute the localization in the set language
         await localizeWithLanguage(targetLanguage);
     } catch (error) {
         console.warn('Localization by language setting failed:', error);
     }
 }
 
-// Execute localization in specified language
+// Execute the localization in the specified language
 async function localizeWithLanguage(targetLang) {
     const messageFiles = {
         'en': '/_locales/en/messages.json',
@@ -58,13 +58,13 @@ async function localizeWithLanguage(targetLang) {
     };
     
     try {
-        // Get message file for specified language
+        // Get the message file for the specified language
         const messagesUrl = chrome.runtime.getURL(messageFiles[targetLang] || messageFiles['en']);
         const response = await fetch(messagesUrl);
         const messages = await response.json();
         
         
-        // Localize HTML elements
+        // Localize the HTML elements
         document.querySelectorAll('[data-localize]').forEach(element => {
             const tag = element.getAttribute('data-localize');
             const msg = tag.replace(/__MSG_(\w+)__/g, (match, v1) => {
@@ -81,7 +81,7 @@ async function localizeWithLanguage(targetLang) {
             if (msg !== tag) element.setAttribute('aria-label', msg);
         });
         
-        // Localize placeholder attributes
+        // Localize the placeholder attributes
         document.querySelectorAll('[data-localize-placeholder]').forEach(element => {
             const tag = element.getAttribute('data-localize-placeholder');
             const msg = tag.replace(/__MSG_(\w+)__/g, (match, v1) => {
@@ -90,7 +90,7 @@ async function localizeWithLanguage(targetLang) {
             if (msg !== tag) element.setAttribute('placeholder', msg);
         });
         
-        // Localize title attributes
+        // Localize the title attributes
         document.querySelectorAll('[data-localize-title]').forEach(element => {
             const tag = element.getAttribute('data-localize-title');
             const msg = tag.replace(/__MSG_(\w+)__/g, (match, v1) => {
@@ -104,7 +104,7 @@ async function localizeWithLanguage(targetLang) {
     }
 }
 
-// Export as global functions (maintain legacy format)
+// Export as the global functions (maintain the legacy format)
 window.getCurrentLanguageSetting = getCurrentLanguageSetting;
 window.resolveLanguageCode = resolveLanguageCode;
 window.getMessageWithLang = getMessageWithLang;

@@ -18,10 +18,10 @@ export class DeveloperSettingsCard extends CardComponent {
 
         this.onSettingsChange = onSettingsChange;
 
-        // Form elements
+        // The form elements
         this.demoModeToggle = null;
 
-        // Current settings values
+        // The current settings values
         this.settings = {
             demoMode: false
         };
@@ -30,14 +30,14 @@ export class DeveloperSettingsCard extends CardComponent {
     createElement() {
         const card = super.createElement();
 
-        // Create developer settings form
+        // Create the developer settings form
         const form = this._createForm();
         this.addContent(form);
 
-        // Load current settings
+        // Load the current settings
         this._loadCurrentSettings();
 
-        // Setup event listeners
+        // Setup the event listeners
         this._setupEventListeners();
 
         return card;
@@ -50,11 +50,11 @@ export class DeveloperSettingsCard extends CardComponent {
     _createForm() {
         const form = document.createElement('form');
 
-        // Demo mode settings
+        // The demo mode settings
         const demoModeSection = this._createDemoModeSection();
         form.appendChild(demoModeSection);
 
-        // Additional developer information
+        // The additional developer information
         const infoSection = this._createInfoSection();
         form.appendChild(infoSection);
 
@@ -69,13 +69,13 @@ export class DeveloperSettingsCard extends CardComponent {
         const section = document.createElement('div');
         section.className = 'form-check mb-3';
 
-        // Checkbox
+        // The checkbox
         this.demoModeToggle = document.createElement('input');
         this.demoModeToggle.type = 'checkbox';
         this.demoModeToggle.className = 'form-check-input';
         this.demoModeToggle.id = 'demo-mode-toggle';
 
-        // Label
+        // The label
         const label = document.createElement('label');
         label.className = 'form-check-label';
         label.htmlFor = 'demo-mode-toggle';
@@ -104,7 +104,7 @@ export class DeveloperSettingsCard extends CardComponent {
         const section = document.createElement('div');
         section.className = 'mt-4 p-3 bg-light rounded';
 
-        // Title
+        // The title
         const title = document.createElement('h6');
         title.className = 'mb-3';
         title.innerHTML = `
@@ -112,7 +112,7 @@ export class DeveloperSettingsCard extends CardComponent {
             Developer Information
         `;
 
-        // Info list
+        // The info list
         const infoList = document.createElement('div');
         infoList.className = 'small';
 
@@ -159,16 +159,16 @@ export class DeveloperSettingsCard extends CardComponent {
         const row = document.createElement('div');
         row.className = 'd-flex justify-content-between align-items-center py-1 border-bottom';
 
-        // Label
+        // The label
         const label = document.createElement('span');
         label.className = 'fw-semibold';
         label.textContent = item.label + ':';
 
-        // Container for value and buttons
+        // The container for value and buttons
         const valueContainer = document.createElement('div');
         valueContainer.className = 'd-flex align-items-center gap-2';
 
-        // Value
+        // The value
         const value = document.createElement('code');
         value.className = 'small';
 

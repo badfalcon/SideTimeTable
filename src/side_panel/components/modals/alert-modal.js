@@ -1,5 +1,5 @@
 /**
- * AlertModal - Alert display modal
+ * AlertModal - The alert display modal
  */
 import { ModalComponent } from './modal-component.js';
 
@@ -11,33 +11,33 @@ export class AlertModal extends ModalComponent {
             ...options
         });
 
-        // Display elements
+        // The display elements
         this.messageElement = null;
         this.confirmButton = null;
 
-        // Callback
+        // The callback
         this.onConfirm = options.onConfirm || null;
 
-        // Alert type (info, warning, error, success)
+        // The alert type (info, warning, error, success)
         this.alertType = 'info';
     }
 
     createContent() {
         const content = document.createElement('div');
 
-        // Message element
+        // The message element
         this.messageElement = document.createElement('p');
         this.messageElement.id = 'alertMessage';
         content.appendChild(this.messageElement);
 
-        // Confirmation button
+        // The confirmation button
         this.confirmButton = document.createElement('button');
         this.confirmButton.id = 'closeAlertButton';
         this.confirmButton.className = 'btn btn-primary';
         this.confirmButton.textContent = 'Close';
         content.appendChild(this.confirmButton);
 
-        // Set up event listeners
+        // Set up the event listeners
         this._setupAlertEventListeners();
 
         return content;
@@ -48,12 +48,12 @@ export class AlertModal extends ModalComponent {
      * @private
      */
     _setupAlertEventListeners() {
-        // Confirmation button
+        // The confirmation button
         this.addEventListener(this.confirmButton, 'click', () => {
             this._handleConfirm();
         });
 
-        // Confirm with Enter key
+        // Confirm with the Enter key
         this.addEventListener(document, 'keydown', (e) => {
             if (e.key === 'Enter' && this.isVisible()) {
                 this._handleConfirm();
@@ -74,8 +74,8 @@ export class AlertModal extends ModalComponent {
 
     /**
      * Display information alert
-     * @param {string} message Message
-     * @param {Function} onConfirm Callback on confirmation
+     * @param {string} message The message
+     * @param {Function} onConfirm The callback on confirmation
      */
     showInfo(message, onConfirm = null) {
         this._showAlert(message, 'info', onConfirm);
@@ -83,8 +83,8 @@ export class AlertModal extends ModalComponent {
 
     /**
      * Display warning alert
-     * @param {string} message Message
-     * @param {Function} onConfirm Callback on confirmation
+     * @param {string} message The message
+     * @param {Function} onConfirm The callback on confirmation
      */
     showWarning(message, onConfirm = null) {
         this._showAlert(message, 'warning', onConfirm);
@@ -92,8 +92,8 @@ export class AlertModal extends ModalComponent {
 
     /**
      * Display error alert
-     * @param {string} message Message
-     * @param {Function} onConfirm Callback on confirmation
+     * @param {string} message The message
+     * @param {Function} onConfirm The callback on confirmation
      */
     showError(message, onConfirm = null) {
         this._showAlert(message, 'error', onConfirm);
@@ -101,8 +101,8 @@ export class AlertModal extends ModalComponent {
 
     /**
      * Display success alert
-     * @param {string} message Message
-     * @param {Function} onConfirm Callback on confirmation
+     * @param {string} message The message
+     * @param {Function} onConfirm The callback on confirmation
      */
     showSuccess(message, onConfirm = null) {
         this._showAlert(message, 'success', onConfirm);
@@ -116,10 +116,10 @@ export class AlertModal extends ModalComponent {
         this.alertType = type;
         this.onConfirm = onConfirm;
 
-        // Set message
+        // Set the message
         this.messageElement.textContent = message;
 
-        // Adjust style according to alert type
+        // Adjust the style according to the alert type
         this._updateAlertStyle();
 
         this.show();
@@ -130,10 +130,10 @@ export class AlertModal extends ModalComponent {
      * @private
      */
     _updateAlertStyle() {
-        // Update button class
+        // Update the button class
         this.confirmButton.className = this._getButtonClass();
 
-        // Add alert type class to modal content
+        // Add the alert type class to the modal content
         if (this.modalContent) {
             // Remove existing alert type classes
             this.modalContent.classList.remove('alert-info', 'alert-warning', 'alert-error', 'alert-success');

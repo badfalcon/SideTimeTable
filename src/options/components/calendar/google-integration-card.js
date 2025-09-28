@@ -1,5 +1,5 @@
 /**
- * GoogleIntegrationCard - Google integration settings card component
+ * GoogleIntegrationCard - The Google integration settings card component
  */
 import { CardComponent } from '../base/card-component.js';
 
@@ -23,15 +23,15 @@ export class GoogleIntegrationCard extends CardComponent {
     createElement() {
         const card = super.createElement();
 
-        // Create Google integration button and status
+        // Create the Google integration button and status
         const controlsDiv = document.createElement('div');
         controlsDiv.className = 'd-flex align-items-center';
 
-        // Google integration button
+        // The Google integration button
         this.integrationButton = this._createGoogleButton();
         controlsDiv.appendChild(this.integrationButton);
 
-        // Status display
+        // The status display
         this.statusElement = document.createElement('span');
         this.statusElement.id = 'google-integration-status';
         this.statusElement.className = 'ms-2';
@@ -46,9 +46,9 @@ export class GoogleIntegrationCard extends CardComponent {
     }
 
     /**
-     * Create Google integration button
+     * Create the Google integration button
      * @private
-     * @returns {HTMLElement} Google button element
+     * @returns {HTMLElement} The Google button element
      */
     _createGoogleButton() {
         const button = document.createElement('button');
@@ -61,7 +61,7 @@ export class GoogleIntegrationCard extends CardComponent {
         const wrapper = document.createElement('div');
         wrapper.className = 'gsi-material-button-content-wrapper';
 
-        // Google icon
+        // The Google icon
         const iconDiv = document.createElement('div');
         iconDiv.className = 'gsi-material-button-icon';
         iconDiv.innerHTML = `
@@ -79,12 +79,12 @@ export class GoogleIntegrationCard extends CardComponent {
             </svg>
         `;
 
-        // Button text
+        // The button text
         const textSpan = document.createElement('span');
         textSpan.className = 'gsi-material-button-contents';
         textSpan.textContent = 'Sign in with Google';
 
-        // Hidden text
+        // The hidden text
         const hiddenSpan = document.createElement('span');
         hiddenSpan.style.display = 'none';
         hiddenSpan.textContent = 'Sign in with Google';
@@ -100,7 +100,7 @@ export class GoogleIntegrationCard extends CardComponent {
     }
 
     /**
-     * Set up event listeners
+     * Set up the event listeners
      * @private
      */
     _setupEventListeners() {
@@ -112,9 +112,9 @@ export class GoogleIntegrationCard extends CardComponent {
     }
 
     /**
-     * Update integration status
-     * @param {boolean} integrated Integration status
-     * @param {string} statusText Status text (optional)
+     * Update the integration status
+     * @param {boolean} integrated The integration status
+     * @param {string} statusText The status text (optional)
      */
     updateIntegrationStatus(integrated, statusText = null) {
         this.isIntegrated = integrated;
@@ -132,7 +132,7 @@ export class GoogleIntegrationCard extends CardComponent {
             }
         }
 
-        // Update button text
+        // Update the button text
         if (this.integrationButton) {
             const textSpan = this.integrationButton.querySelector('.gsi-material-button-contents');
             if (textSpan) {
@@ -142,7 +142,7 @@ export class GoogleIntegrationCard extends CardComponent {
     }
 
     /**
-     * Toggle button enable/disable
+     * Toggle the button enable/disable
      * @param {boolean} enabled Whether to enable the button
      */
     setButtonEnabled(enabled) {
@@ -153,8 +153,8 @@ export class GoogleIntegrationCard extends CardComponent {
     }
 
     /**
-     * Get integration status
-     * @returns {boolean} Current integration status
+     * Get the integration status
+     * @returns {boolean} The current integration status
      */
     getIntegrationStatus() {
         return this.isIntegrated;

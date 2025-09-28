@@ -115,7 +115,7 @@ function getCalendarList() {
 function getCalendarEvents(targetDate = null) {
     return new Promise((resolve, reject) => {
         try {
-            // Get the list of selected calendars
+            // Get the list of the selected calendars
             StorageHelper.get(['selectedCalendars'], { selectedCalendars: [] })
                 .then((storageData) => {
                 chrome.identity.getAuthToken({interactive: true}, (token) => {
@@ -181,7 +181,7 @@ function getCalendarEvents(targetDate = null) {
                     calendarsPromise
                 .then(calendarsToFetch => {
 
-                    // Set today's date range (use previously calculated startOfDay/endOfDay)
+                    // Set today's date range (use the previously calculated startOfDay/endOfDay)
                     const baseUrl = 'https://www.googleapis.com/calendar/v3/calendars';
 
                     const fetches = calendarsToFetch.map(cal => {
@@ -198,7 +198,7 @@ function getCalendarEvents(targetDate = null) {
                             return res.json();
                         })
                         .then(data => {
-                            // Add calendar ID to each event
+                            // Add the calendar ID to each event
                             const events = data.items || [];
                             events.forEach(event => {
                                 event.calendarId = cal.id;
@@ -215,7 +215,7 @@ function getCalendarEvents(targetDate = null) {
                     return Promise.all(fetches);
                 })
                 .then(async (resultsPerCalendar) => {
-                    // Get the calendar information and add color information to the events
+                    // Get the calendar information and add the color information to the events
                     try {
                         const calendarListUrl = `https://www.googleapis.com/calendar/v3/users/me/calendarList`;
                         const calendarResponse = await fetch(calendarListUrl, {
@@ -234,17 +234,17 @@ function getCalendarEvents(targetDate = null) {
                             });
                         }
                         
-                        // Flatten the results and add color information
+                        // Flatten the results and add the color information
                         const allEvents = [];
                         resultsPerCalendar.forEach(result => {
                             if (result.events) {
                                 result.events.forEach(event => {
-                                    // Skip cancelled events
+                                    // Skip the cancelled events
                                     if (event.status === 'cancelled') {
                                         return;
                                     }
                                     
-                                    // Skip declined events
+                                    // Skip the declined events
                                     if (event.attendees && event.attendees.some(attendee => 
                                         attendee.self && attendee.responseStatus === 'declined'
                                     )) {
@@ -265,14 +265,14 @@ function getCalendarEvents(targetDate = null) {
                         resolve(allEvents);
                     } catch (colorError) {
                         console.warn('Calendar color information acquisition error:', colorError);
-                        // Return events even without color information (excluding cancelled and declined events)
+                        // Return the events even without color information (excluding the cancelled and declined events)
                         const merged = resultsPerCalendar.flatMap(r => 
                             (r.events || []).filter(event => {
-                                // Exclude cancelled events
+                                // Exclude the cancelled events
                                 if (event.status === 'cancelled') {
                                     return false;
                                 }
-                                // Exclude declined events
+                                // Exclude the declined events
                                 if (event.attendees && event.attendees.some(attendee => 
                                     attendee.self && attendee.responseStatus === 'declined'
                                 )) {
@@ -362,7 +362,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             return true; // Indicates async response
 
         case "authenticateGoogle":
-            // Execute Google authentication
+            // Execute the Google authentication
             chrome.identity.getAuthToken({interactive: true}, (token) => {
                 if (chrome.runtime.lastError || !token) {
                     const error = chrome.runtime.lastError || new Error("Authentication failed");
@@ -376,7 +376,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             return true; // Indicates async response
 
         case "disconnectGoogle":
-            // Disconnect Google account integration
+            // Disconnect the Google account integration
             chrome.identity.getAuthToken({interactive: false}, (token) => {
                 if (chrome.runtime.lastError || !token) {
                     // If no token, already disconnected
@@ -384,7 +384,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     return;
                 }
 
-                // Remove cached token
+                // Remove the cached token
                 chrome.identity.removeCachedAuthToken({ token: token }, () => {
                     if (chrome.runtime.lastError) {
                         console.error("Token removal error:", chrome.runtime.lastError);
@@ -402,7 +402,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             return true; // Indicates async response
 
         case "reloadSideTimeTable":
-            // Side panel reload request just returns a response
+            // The side panel reload request just returns a response
             sendResponse({success: true});
             return false; // Synchronous response
             
@@ -423,7 +423,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 // Notification click handler
 chrome.notifications.onClicked.addListener((notificationId) => {
     if (notificationId.startsWith('reminder_')) {
-        // Open side panel when notification is clicked
+        // Open the side panel when the notification is clicked
         chrome.tabs.query({ active: true, currentWindow: true }, ([activeTab]) => {
             if (activeTab) {
                 chrome.sidePanel.open({ tabId: activeTab.id });
@@ -439,7 +439,7 @@ chrome.notifications.onClicked.addListener((notificationId) => {
 chrome.notifications.onButtonClicked.addListener((notificationId, buttonIndex) => {
     if (notificationId.startsWith('reminder_')) {
         if (buttonIndex === 0) {
-            // "Open SideTimeTable" button clicked
+            // The "Open SideTimeTable" button clicked
             chrome.tabs.query({ active: true, currentWindow: true }, ([activeTab]) => {
                 if (activeTab) {
                     chrome.sidePanel.open({ tabId: activeTab.id });

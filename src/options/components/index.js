@@ -1,27 +1,27 @@
 /**
- * Components Index - Component integration module
+ * Components Index - The component integration module
  *
- * Centrally manages all UI components and simplifies external usage
+ * Centrally manages all the UI components and simplifies external usage
  */
 
-// Base components
+// The base components
 export { CardComponent } from './base/card-component.js';
 export { ControlButtonsComponent } from './base/control-buttons-component.js';
 
-// Calendar-related components
+// The calendar-related components
 export { GoogleIntegrationCard } from './calendar/google-integration-card.js';
 export { CalendarManagementCard } from './calendar/calendar-management-card.js';
 
-// Settings-related components
+// The settings-related components
 export { TimeSettingsCard } from './settings/time-settings-card.js';
 export { ColorSettingsCard } from './settings/color-settings-card.js';
 export { LanguageSettingsCard } from './settings/language-settings-card.js';
 export { ShortcutSettingsCard } from './settings/shortcut-settings-card.js';
 
 /**
- * ComponentManager - Component lifecycle management
+ * ComponentManager - The component lifecycle management
  *
- * Integrates management of multiple components and efficiently handles initialization and destruction
+ * Integrates the management of multiple components and efficiently handles initialization and destruction
  */
 export class ComponentManager {
     constructor() {
@@ -30,7 +30,7 @@ export class ComponentManager {
     }
 
     /**
-     * Set container
+     * Set the container
      * @param {HTMLElement} container
      */
     setContainer(container) {
@@ -38,14 +38,14 @@ export class ComponentManager {
     }
 
     /**
-     * Register component
-     * @param {string} name Component name
-     * @param {Object} component Component instance
+     * Register the component
+     * @param {string} name The component name
+     * @param {Object} component The component instance
      */
     register(name, component) {
         this.components.set(name, component);
 
-        // Automatically add if container is set
+        // Automatically add if the container is set
         if (this.container && component.createElement) {
             if (!component.element) {
                 component.createElement();
@@ -56,7 +56,7 @@ export class ComponentManager {
 
 
     /**
-     * Initialize all components
+     * Initialize all the components
      */
     async initializeAll() {
         for (const [name, component] of this.components) {
@@ -71,7 +71,7 @@ export class ComponentManager {
     }
 
     /**
-     * Destroy all components
+     * Destroy all the components
      */
     destroyAll() {
         for (const [name, component] of this.components) {

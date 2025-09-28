@@ -1,20 +1,20 @@
 /**
  * SideTimeTable - Demo Data
  *
- * Mock event data for sample images
+ * Mock event data for the sample images
  */
 
 /**
- * Get locale-compatible message
- * @param {string} key - Message key
- * @returns {Promise<string>} Localized message
+ * Get a locale-compatible message
+ * @param {string} key - The message key
+ * @returns {Promise<string>} The localized message
  */
 async function getLocalizedMessage(key) {
     try {
-        // Get current locale setting
+        // Get the current locale setting
         const locale = await window.getCurrentLocale();
         
-        // Determine message file path
+        // Determine the message file path
         const messageFiles = {
             'en': '_locales/en/messages.json',
             'ja': '_locales/ja/messages.json'
@@ -31,17 +31,17 @@ async function getLocalizedMessage(key) {
         console.warn('Localized message acquisition error:', error);
     }
     
-    // Fallback
+    // The fallback
     return await getLocalizedMessage(key) || key;
 }
 
 /**
- * Demo Google Calendar event data
- * @returns {Promise<Array>} Promise that returns array of demo events
+ * The demo Google Calendar event data
+ * @returns {Promise<Array>} A promise that returns an array of demo events
  */
 export async function getDemoEvents() {
     const today = new Date();
-    // Generate events with today's date
+    // Generate the events with today's date
     const events = [
         {
             id: 'demo-1',
@@ -287,8 +287,8 @@ export async function getDemoEvents() {
 }
 
 /**
- * Demo local event data
- * @returns {Promise<Array>} Promise that returns array of demo local events
+ * The demo local event data
+ * @returns {Promise<Array>} A promise that returns an array of demo local events
  */
 export async function getDemoLocalEvents() {
     return [
@@ -324,18 +324,18 @@ export async function getDemoLocalEvents() {
 }
 
 /**
- * Determine if in demo mode
- * @returns {boolean} true if in demo mode
+ * Determine if in the demo mode
+ * @returns {boolean} true if in the demo mode
  */
 export function isDemoMode() {
-    // Determine demo mode from URL parameters or settings
+    // Determine the demo mode from the URL parameters or settings
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get('demo') === 'true' || localStorage.getItem('sideTimeTableDemo') === 'true';
 }
 
 /**
- * Enable/disable demo mode
- * @param {boolean} enabled - Whether to enable demo mode
+ * Enable/disable the demo mode
+ * @param {boolean} enabled - Whether to enable the demo mode
  */
 export function setDemoMode(enabled) {
     if (enabled) {

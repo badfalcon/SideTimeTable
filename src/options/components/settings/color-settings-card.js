@@ -14,12 +14,12 @@ export class ColorSettingsCard extends CardComponent {
 
         this.onSettingsChange = onSettingsChange;
 
-        // Color picker elements
+        // The color picker elements
         this.workTimeColorInput = null;
         this.localEventColorInput = null;
         this.googleEventColorInput = null;
 
-        // Current setting values
+        // The current setting values
         this.settings = {
             workTimeColor: '#d4d4d4',
             localEventColor: '#bbf2b1',
@@ -30,11 +30,11 @@ export class ColorSettingsCard extends CardComponent {
     createElement() {
         const card = super.createElement();
 
-        // Create form elements
+        // Create the form elements
         const form = this._createForm();
         this.addContent(form);
 
-        // Set up event listeners
+        // Set up the event listeners
         this._setupEventListeners();
 
         return card;
@@ -47,11 +47,11 @@ export class ColorSettingsCard extends CardComponent {
     _createForm() {
         const form = document.createElement('form');
 
-        // Grid layout
+        // The grid layout
         const row = document.createElement('div');
         row.className = 'row';
 
-        // Work time color
+        // The work time color
         const workTimeCol = this._createColorInputColumn(
             'work-time-color',
             '__MSG_workTimeColor__',
@@ -61,7 +61,7 @@ export class ColorSettingsCard extends CardComponent {
         );
         row.appendChild(workTimeCol);
 
-        // Local event color
+        // The local event color
         const localEventCol = this._createColorInputColumn(
             'local-event-color',
             '__MSG_localEventColor__',
@@ -71,7 +71,7 @@ export class ColorSettingsCard extends CardComponent {
         );
         row.appendChild(localEventCol);
 
-        // Google event color
+        // The Google event color
         const googleEventCol = this._createColorInputColumn(
             'google-event-color',
             '__MSG_googleEventColor__',
@@ -83,7 +83,7 @@ export class ColorSettingsCard extends CardComponent {
 
         form.appendChild(row);
 
-        // Preset button area
+        // The preset button area
         const presetArea = this._createPresetArea();
         form.appendChild(presetArea);
 
@@ -98,21 +98,21 @@ export class ColorSettingsCard extends CardComponent {
         const col = document.createElement('div');
         col.className = 'col-md-4 mb-3';
 
-        // Label
+        // The label
         const label = document.createElement('label');
         label.htmlFor = `color-settings-${id}`;
         label.className = 'form-label';
         label.setAttribute('data-localize', localizeKey);
         label.textContent = labelText;
 
-        // Color picker
+        // The color picker
         const input = document.createElement('input');
         input.type = 'color';
         input.className = 'form-control form-control-color';
         input.id = `color-settings-${id}`;
         input.value = defaultValue;
 
-        // Preview display
+        // The preview display
         const preview = document.createElement('div');
         preview.className = 'mt-2 p-2 rounded border';
         preview.style.backgroundColor = defaultValue;
@@ -120,10 +120,10 @@ export class ColorSettingsCard extends CardComponent {
         preview.style.fontSize = '0.875rem';
         preview.textContent = 'Preview';
 
-        // Set up input element
+        // Set up the input element
         inputSetter(input);
 
-        // Save function to update preview
+        // Save the function to update preview
         input._preview = preview;
 
         col.appendChild(label);
@@ -141,16 +141,16 @@ export class ColorSettingsCard extends CardComponent {
         const area = document.createElement('div');
         area.className = 'mt-4 pt-3 border-top';
 
-        // Preset title
+        // The preset title
         const title = document.createElement('h6');
         title.className = 'mb-3';
         title.textContent = 'Color Presets';
 
-        // Preset button container
+        // The preset button container
         const buttonContainer = document.createElement('div');
         buttonContainer.className = 'd-flex flex-wrap gap-2';
 
-        // Preset data
+        // The preset data
         const presets = [
             {
                 name: 'Default',
@@ -207,7 +207,7 @@ export class ColorSettingsCard extends CardComponent {
         button.className = 'btn btn-outline-secondary btn-sm';
         button.textContent = preset.name;
 
-        // Add color preview
+        // Add the color preview
         const colorPreview = document.createElement('span');
         colorPreview.className = 'd-inline-block ms-1';
         colorPreview.style.cssText = `
@@ -223,7 +223,7 @@ export class ColorSettingsCard extends CardComponent {
 
         button.appendChild(colorPreview);
 
-        // Click event
+        // The click event
         button.addEventListener('click', () => {
             this.updateSettings(preset.colors);
             this._handleColorChange();
@@ -242,7 +242,7 @@ export class ColorSettingsCard extends CardComponent {
         const g = parseInt(hexColor.slice(3, 5), 16);
         const b = parseInt(hexColor.slice(5, 7), 16);
 
-        // Calculate luminance
+        // Calculate the luminance
         const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
 
         return luminance > 0.5 ? '#000000' : '#ffffff';
@@ -264,7 +264,7 @@ export class ColorSettingsCard extends CardComponent {
      * @private
      */
     _setupEventListeners() {
-        // Change events for each color picker
+        // The change events for each color picker
         this.workTimeColorInput?.addEventListener('input', (e) => {
             this._updatePreview(e.target, e.target.value);
         });
@@ -292,7 +292,7 @@ export class ColorSettingsCard extends CardComponent {
         const newSettings = this.getSettings();
         this.settings = newSettings;
 
-        // Callback changes
+        // Callback the changes
         if (this.onSettingsChange) {
             this.onSettingsChange(newSettings);
         }
@@ -351,7 +351,7 @@ export class ColorSettingsCard extends CardComponent {
     setLivePreview(enabled) {
         const eventType = enabled ? 'input' : 'change';
 
-        // Remove existing listeners and reset
+        // Remove the existing listeners and reset
         [this.workTimeColorInput, this.localEventColorInput, this.googleEventColorInput]
             .filter(input => input)
             .forEach(input => {

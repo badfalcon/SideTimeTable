@@ -1,7 +1,7 @@
 /**
  * SideTimeTable - Options Page Management (Component-Based)
  *
- * Options page using new component-based architecture
+ * The options page using the new component-based architecture
  */
 
 import {
@@ -26,7 +26,7 @@ import {
 } from './components/index.js';
 
 /**
- * OptionsPageManager - Overall options page management class
+ * OptionsPageManager - The overall options page management class
  */
 class OptionsPageManager {
     constructor() {
@@ -76,13 +76,13 @@ class OptionsPageManager {
         );
         this.componentManager.register('controlButtons', this.controlButtons);
 
-        // Load existing settings and apply to components
+        // Load the existing settings and apply them to the components
         await this._loadAndApplySettings();
 
-        // Initialize components
+        // Initialize the components
         await this.componentManager.initializeAll();
 
-        // Re-execute localization after component generation
+        // Re-execute the localization after the component generation
         if (window.localizeHtmlPageWithLang) {
             try {
                 await window.localizeHtmlPageWithLang();
@@ -95,10 +95,10 @@ class OptionsPageManager {
 
     async _loadAndApplySettings() {
         try {
-            // Load existing settings
+            // Load the existing settings
             const settings = await loadSettings();
 
-            // Apply settings to each component
+            // Apply the settings to each component
             this.timeSettingsCard.updateSettings({
                 openTime: settings.openTime,
                 closeTime: settings.closeTime,
@@ -113,7 +113,7 @@ class OptionsPageManager {
                 googleEventColor: settings.googleEventColor
             });
 
-            // Load language settings
+            // Load the language settings
             const languageSettings = await new Promise((resolve) => {
                 chrome.storage.sync.get(['language'], (result) => {
                     resolve({ language: result.language || 'auto' });
@@ -122,7 +122,7 @@ class OptionsPageManager {
 
             this.languageSettingsCard.updateSettings(languageSettings);
 
-            // Check Google integration status
+            // Check the Google integration status
             const response = await new Promise((resolve) => {
                 chrome.runtime.sendMessage({action: 'checkGoogleAuth'}, resolve);
             });
@@ -150,7 +150,7 @@ class OptionsPageManager {
                 if (response.success) {
                     this.googleIntegrationCard.updateIntegrationStatus(true);
                     this.calendarManagementCard.show();
-                    // Enable Google integration
+                    // Enable the Google integration
                     const settings = await loadSettings();
                     await saveSettings({ ...settings, googleIntegrated: true });
                     this._reloadSidePanel();
@@ -158,7 +158,7 @@ class OptionsPageManager {
                     throw new Error(response.error || 'Authentication failed');
                 }
             } else {
-                // Disable Google integration
+                // Disable the Google integration
                 this.googleIntegrationCard.setButtonEnabled(false);
                 this.googleIntegrationCard.updateIntegrationStatus(false, 'Disconnecting...');
 
@@ -173,7 +173,7 @@ class OptionsPageManager {
                     this.calendarManagementCard.hide();
                     this._reloadSidePanel();
 
-                    // Show notification if manual authentication deletion is required
+                    // Show the notification if the manual authentication deletion is required
                     if (response.requiresManualRevoke) {
                         this._showManualRevokeNotification(response.revokeUrl);
                     }
@@ -191,7 +191,7 @@ class OptionsPageManager {
 
     async handleTimeSettingsChange(timeSettings) {
         try {
-            // Load existing settings, update only time settings
+            // Load the existing settings, update only the time settings
             const currentSettings = await loadSettings();
             const updatedSettings = {
                 ...currentSettings,
@@ -204,7 +204,7 @@ class OptionsPageManager {
 
             await saveSettings(updatedSettings);
 
-            // Reload side panel
+            // Reload the side panel
             this._reloadSidePanel();
         } catch (error) {
             logError('Time settings save', error);
@@ -213,7 +213,7 @@ class OptionsPageManager {
 
     async handleColorSettingsChange(colorSettings) {
         try {
-            // Load existing settings and update only color settings
+            // Load the existing settings and update only the color settings
             const currentSettings = await loadSettings();
             const updatedSettings = {
                 ...currentSettings,
@@ -224,12 +224,12 @@ class OptionsPageManager {
 
             await saveSettings(updatedSettings);
 
-            // Update CSS variables immediately
+            // Update the CSS variables immediately
             document.documentElement.style.setProperty('--side-calendar-work-time-color', colorSettings.workTimeColor);
             document.documentElement.style.setProperty('--side-calendar-local-event-color', colorSettings.localEventColor);
             document.documentElement.style.setProperty('--side-calendar-google-event-color', colorSettings.googleEventColor);
 
-            // Reload side panel
+            // Reload the side panel
             this._reloadSidePanel();
         } catch (error) {
             logError('Color settings save', error);
@@ -238,13 +238,13 @@ class OptionsPageManager {
 
     async handleLanguageSettingsChange(languageSettings) {
         try {
-            // Save language settings (using the same keys as existing localize.js)
+            // Save the language settings (using the same keys as the existing localize.js)
             await new Promise((resolve) => {
                 chrome.storage.sync.set({ 'language': languageSettings.language }, resolve);
             });
 
 
-            // Reload side panel
+            // Reload the side panel
             this._reloadSidePanel();
         } catch (error) {
             logError('Language settings save', error);
@@ -254,20 +254,20 @@ class OptionsPageManager {
 
     async handleResetSettings() {
         try {
-            // Reset to default settings
+            // Reset to the default settings
             await saveSettings(DEFAULT_SETTINGS);
 
-            // Update each component with default settings
+            // Update each component with the default settings
             this.timeSettingsCard.resetToDefaults();
             this.colorSettingsCard.resetToDefaults();
             this.languageSettingsCard.resetToDefaults();
 
-            // Reset CSS variables too
+            // Reset the CSS variables too
             document.documentElement.style.setProperty('--side-calendar-work-time-color', DEFAULT_SETTINGS.workTimeColor);
             document.documentElement.style.setProperty('--side-calendar-local-event-color', DEFAULT_SETTINGS.localEventColor);
             document.documentElement.style.setProperty('--side-calendar-google-event-color', DEFAULT_SETTINGS.googleEventColor);
 
-            // Reload side panel
+            // Reload the side panel
             this._reloadSidePanel();
 
         } catch (error) {
@@ -277,7 +277,7 @@ class OptionsPageManager {
     }
 
     /**
-     * Reload side panel
+     * Reload the side panel
      * @private
      */
     _reloadSidePanel() {
@@ -291,11 +291,11 @@ class OptionsPageManager {
     }
 
     /**
-     * Show manual authentication removal notification
+     * Show the manual authentication removal notification
      * @private
      */
     _showManualRevokeNotification(revokeUrl) {
-        // Remove existing notifications
+        // Remove the existing notifications
         const existingNotice = document.querySelector('.manual-revoke-notice');
         if (existingNotice) {
             existingNotice.remove();
@@ -342,7 +342,7 @@ class OptionsPageManager {
 
 // Execute when DOM is loaded
 document.addEventListener('DOMContentLoaded', async () => {
-    // Localization (execute in language based on settings)
+    // The localization (execute in the language based on the settings)
     if (window.localizeHtmlPageWithLang) {
         try {
             await window.localizeHtmlPageWithLang();
