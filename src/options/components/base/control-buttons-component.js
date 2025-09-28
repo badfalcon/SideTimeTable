@@ -1,5 +1,5 @@
 /**
- * ControlButtonsComponent - Reset button component
+ * ControlButtonsComponent - The reset button component
  */
 export class ControlButtonsComponent {
     constructor(onReset) {
@@ -12,7 +12,7 @@ export class ControlButtonsComponent {
         const container = document.createElement('div');
         container.className = 'd-flex gap-2 mt-4';
 
-        // Reset button
+        // The reset button
         this.resetButton = document.createElement('button');
         this.resetButton.id = 'resetButton';
         this.resetButton.className = 'btn btn-outline-secondary';
@@ -35,7 +35,7 @@ export class ControlButtonsComponent {
 
 
     async _handleReset() {
-        // Confirmation dialog
+        // The confirmation dialog
         const confirmed = confirm('Reset all settings to default? This action cannot be undone.');
         if (!confirmed) return;
 
@@ -83,7 +83,7 @@ export class ControlButtonsComponent {
     }
 
     _showNotification(message, type) {
-        // Remove existing notifications
+        // Remove the existing notifications
         const existing = this.element?.parentElement?.querySelector('.control-notification');
         if (existing) {
             existing.remove();

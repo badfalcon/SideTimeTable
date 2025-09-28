@@ -7,14 +7,14 @@
  */
 
 /**
- * Create a new Date object with specified time set on specified date
+ * Create a new Date object with the specified time set on the specified date
  *
- * @param {Date} date - Base date
- * @param {number} hour - Hour (0-23)
- * @param {number} minute - Minute (0-59)
- * @param {number} second - Second (0-59, default: 0)
- * @param {number} millisecond - Millisecond (0-999, default: 0)
- * @returns {Date} New Date object
+ * @param {Date} date - The base date
+ * @param {number} hour - The hour (0-23)
+ * @param {number} minute - The minute (0-59)
+ * @param {number} second - The second (0-59, default: 0)
+ * @param {number} millisecond - The millisecond (0-999, default: 0)
+ * @returns {Date} A new Date object
  */
 export function createTimeOnDate(date, hour, minute, second = 0, millisecond = 0) {
     const newDate = new Date(date);
@@ -23,10 +23,10 @@ export function createTimeOnDate(date, hour, minute, second = 0, millisecond = 0
 }
 
 /**
- * Parse time string in "HH:MM" format and return hour and minute
+ * Parse the time string in "HH:MM" format and return the hour and minute
  *
- * @param {string} timeString - Time string in "HH:MM" format
- * @returns {{hour: number, minute: number}} Parse result
+ * @param {string} timeString - The time string in "HH:MM" format
+ * @returns {{hour: number, minute: number}} The parse result
  * @throws {Error} If the format is invalid
  */
 export function parseTimeString(timeString) {
@@ -52,7 +52,7 @@ export function parseTimeString(timeString) {
 /**
  * Determine if the specified date is today
  *
- * @param {Date} date - Date to check
+ * @param {Date} date - The date to check
  * @returns {boolean} true if today
  */
 export function isToday(date) {
@@ -61,11 +61,11 @@ export function isToday(date) {
 }
 
 /**
- * Determine if two dates are the same day
+ * Determine if the two dates are the same day
  *
- * @param {Date} date1 - Date 1 to compare
- * @param {Date} date2 - Date 2 to compare
- * @returns {boolean} true if same day
+ * @param {Date} date1 - The date 1 to compare
+ * @param {Date} date2 - The date 2 to compare
+ * @returns {boolean} true if the same day
  */
 export function isSameDay(date1, date2) {
     const d1 = new Date(date1);
@@ -76,11 +76,11 @@ export function isSameDay(date1, date2) {
 }
 
 /**
- * Calculate the time difference between two times in milliseconds
+ * Calculate the time difference between the two times in milliseconds
  *
- * @param {Date|number} startTime - Start time
- * @param {Date|number} endTime - End time
- * @returns {number} Time difference (milliseconds)
+ * @param {Date|number} startTime - The start time
+ * @param {Date|number} endTime - The end time
+ * @returns {number} The time difference (milliseconds)
  */
 export function calculateTimeDifference(startTime, endTime) {
     const start = startTime instanceof Date ? startTime.getTime() : startTime;
@@ -89,12 +89,12 @@ export function calculateTimeDifference(startTime, endTime) {
 }
 
 /**
- * Calculate business start and end times for a specified date
+ * Calculate the business start and end times for a specified date
  *
- * @param {Date} date - Target date
- * @param {string} openHour - Business start time ("HH:MM" format)
- * @param {string} closeHour - Business end time ("HH:MM" format)
- * @returns {{openTime: Date, closeTime: Date, hourDiff: number}} Calculation result
+ * @param {Date} date - The target date
+ * @param {string} openHour - The business start time ("HH:MM" format)
+ * @param {string} closeHour - The business end time ("HH:MM" format)
+ * @returns {{openTime: Date, closeTime: Date, hourDiff: number}} The calculation result
  */
 export function calculateWorkHours(date, openHour, closeHour) {
     const { hour: openTimeHour, minute: openTimeMinute } = parseTimeString(openHour);

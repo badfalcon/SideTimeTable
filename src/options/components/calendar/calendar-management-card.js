@@ -1,5 +1,5 @@
 /**
- * CalendarManagementCard - Calendar management card component
+ * CalendarManagementCard - The calendar management card component
  */
 import { CardComponent } from '../base/card-component.js';
 import { loadSelectedCalendars, saveSelectedCalendars, logError } from '../../../lib/utils.js';
@@ -22,7 +22,7 @@ export class CalendarManagementCard extends CardComponent {
         this.hasAutoFetched = false;
         this.allCalendars = [];
 
-        // UI element references
+        // The UI element references
         this.refreshBtn = null;
         this.loadingIndicator = null;
         this.calendarList = null;
@@ -34,15 +34,15 @@ export class CalendarManagementCard extends CardComponent {
     createElement() {
         const card = super.createElement();
 
-        // Control buttons
+        // The control buttons
         const controlsDiv = this._createControlsSection();
         this.addContent(controlsDiv);
 
-        // Search field
+        // The search field
         const searchDiv = this._createSearchSection();
         this.addContent(searchDiv);
 
-        // Calendar list container
+        // The calendar list container
         const listContainer = this._createListContainer();
         this.addContent(listContainer);
 
@@ -52,14 +52,14 @@ export class CalendarManagementCard extends CardComponent {
     }
 
     /**
-     * Create control section
+     * Create the control section
      * @private
      */
     _createControlsSection() {
         const controlsDiv = document.createElement('div');
         controlsDiv.className = 'd-flex align-items-center mb-3';
 
-        // Refresh button
+        // The refresh button
         this.refreshBtn = document.createElement('button');
         this.refreshBtn.id = 'refresh-calendars-btn';
         this.refreshBtn.className = 'btn btn-outline-primary btn-sm';
@@ -68,7 +68,7 @@ export class CalendarManagementCard extends CardComponent {
             <span data-localize="__MSG_refreshCalendars__">Refresh</span>
         `;
 
-        // Loading indicator
+        // The loading indicator
         this.loadingIndicator = document.createElement('div');
         this.loadingIndicator.id = 'calendar-loading-indicator';
         this.loadingIndicator.className = 'ms-2';
@@ -86,7 +86,7 @@ export class CalendarManagementCard extends CardComponent {
     }
 
     /**
-     * Create search section
+     * Create the search section
      * @private
      */
     _createSearchSection() {
@@ -96,12 +96,12 @@ export class CalendarManagementCard extends CardComponent {
         const inputGroup = document.createElement('div');
         inputGroup.className = 'input-group';
 
-        // Search icon
+        // The search icon
         const iconSpan = document.createElement('span');
         iconSpan.className = 'input-group-text';
         iconSpan.innerHTML = '<i class="fas fa-search text-muted"></i>';
 
-        // Search input field
+        // The search input field
         this.searchInput = document.createElement('input');
         this.searchInput.type = 'text';
         this.searchInput.id = 'calendar-search';
@@ -109,7 +109,7 @@ export class CalendarManagementCard extends CardComponent {
         this.searchInput.placeholder = 'Search calendars...';
         this.searchInput.setAttribute('data-localize-placeholder', '__MSG_searchCalendars__');
 
-        // Clear button
+        // The clear button
         this.clearSearchBtn = document.createElement('button');
         this.clearSearchBtn.id = 'clear-search-btn';
         this.clearSearchBtn.className = 'btn btn-outline-secondary';
@@ -132,12 +132,12 @@ export class CalendarManagementCard extends CardComponent {
     _createListContainer() {
         const container = document.createElement('div');
 
-        // Calendar list
+        // The calendar list
         this.calendarList = document.createElement('div');
         this.calendarList.id = 'calendar-list';
         this.calendarList.className = 'list-group';
 
-        // Not found message
+        // The not found message
         this.noCalendarsMsg = document.createElement('div');
         this.noCalendarsMsg.id = 'no-calendars-msg';
         this.noCalendarsMsg.className = 'text-muted';
@@ -156,10 +156,10 @@ export class CalendarManagementCard extends CardComponent {
      * @private
      */
     _setupEventListeners() {
-        // Refresh button
+        // The refresh button
         this.refreshBtn?.addEventListener('click', () => this.refreshCalendars());
 
-        // Search functionality
+        // The search functionality
         this.searchInput?.addEventListener('input', (e) => this._handleSearch(e.target.value));
         this.searchInput?.addEventListener('keyup', (e) => {
             if (e.key === 'Escape') {
@@ -169,7 +169,7 @@ export class CalendarManagementCard extends CardComponent {
 
         this.clearSearchBtn?.addEventListener('click', () => this._clearSearch());
 
-        // Handle calendar checkbox using event delegation
+        // Handle the calendar checkbox using event delegation
         this.calendarList?.addEventListener('change', (e) => {
             if (e.target.type === 'checkbox') {
                 this._handleCalendarToggle(e);
@@ -196,7 +196,7 @@ export class CalendarManagementCard extends CardComponent {
     show() {
         this.setVisible(true);
 
-        // Auto-fetch calendars on first display
+        // Auto-fetch the calendars on first display
         if (!this.hasAutoFetched && (!this.allCalendars || this.allCalendars.length === 0)) {
             this.hasAutoFetched = true;
             this.refreshCalendars();
@@ -231,7 +231,7 @@ export class CalendarManagementCard extends CardComponent {
             if (response.calendars) {
                 this.allCalendars = response.calendars;
 
-                // Auto-select primary calendar only (if not selected)
+                // Auto-select the primary calendar only (if not selected)
                 if (this.selectedCalendarIds.length === 0) {
                     const primaryCalendar = response.calendars.find(cal => cal.primary);
                     if (primaryCalendar) {
@@ -239,7 +239,7 @@ export class CalendarManagementCard extends CardComponent {
                     }
                 }
 
-                // Add primary calendar if not included in selection
+                // Add the primary calendar if not included in selection
                 const primaryCalendar = response.calendars.find(cal => cal.primary);
                 if (primaryCalendar && !this.selectedCalendarIds.includes(primaryCalendar.id)) {
                     this.selectedCalendarIds.unshift(primaryCalendar.id);
@@ -265,14 +265,14 @@ export class CalendarManagementCard extends CardComponent {
             return;
         }
 
-        // Apply search filter
+        // Apply the search filter
         const searchTerm = this.searchInput?.value.toLowerCase().trim() || '';
         const filteredCalendars = searchTerm
             ? this.allCalendars.filter(calendar =>
                 calendar.summary.toLowerCase().includes(searchTerm))
             : this.allCalendars;
 
-        // Sort calendars (primary first)
+        // Sort the calendars (primary first)
         const sortedCalendars = [...filteredCalendars].sort((a, b) => {
             if (a.primary && !b.primary) return -1;
             if (!a.primary && b.primary) return 1;
@@ -305,7 +305,7 @@ export class CalendarManagementCard extends CardComponent {
         item.className = 'list-group-item d-flex align-items-center py-2';
         item.dataset.calendarId = calendar.id;
 
-        // Checkbox
+        // The checkbox
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
         checkbox.className = 'form-check-input me-3';
@@ -316,7 +316,7 @@ export class CalendarManagementCard extends CardComponent {
             checkbox.checked = true;
         }
 
-        // Calendar information
+        // The calendar information
         const info = document.createElement('div');
         info.className = 'flex-grow-1';
 
@@ -329,7 +329,7 @@ export class CalendarManagementCard extends CardComponent {
 
         info.appendChild(name);
 
-        // Color indicator
+        // The color indicator
         const colorIndicator = document.createElement('div');
         colorIndicator.className = 'me-2';
         colorIndicator.style.cssText = `

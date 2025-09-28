@@ -1,5 +1,5 @@
 /**
- * TimelineComponent - Timeline display component
+ * TimelineComponent - The timeline display component
  */
 import { Component } from '../base/component.js';
 import { CurrentTimeLineManager } from '../../../lib/current-time-line-manager.js';
@@ -26,7 +26,7 @@ export class TimelineComponent extends Component {
         this.showCurrentTimeLine = options.showCurrentTimeLine !== false;
         this.currentTimeLineManager = null;
 
-        // The target date for display
+        // The target date for the display
         this.currentDate = new Date();
     }
 
@@ -38,7 +38,7 @@ export class TimelineComponent extends Component {
             return container;
         }
 
-        // Create the base layer (time axis)
+        // Create the base layer (the time axis)
         this.baseLayer = this._createBaseLayer();
         container.appendChild(this.baseLayer);
 
@@ -55,7 +55,7 @@ export class TimelineComponent extends Component {
     }
 
     /**
-     * Create base layer (time axis)
+     * Create the base layer (the time axis)
      * @private
      */
     _createBaseLayer() {
@@ -63,17 +63,17 @@ export class TimelineComponent extends Component {
         baseDiv.className = 'side-time-table-base';
         baseDiv.id = 'sideTimeTableBase';
 
-        // Create the time labels and guide lines for 24 hours
+        // Create the time labels and the guide lines for 24 hours
         for (let hour = 0; hour < 24; hour++) {
             const topPosition = hour * this.HOUR_HEIGHT;
 
-            // Time label
+            // The time label
             const label = document.createElement('div');
             label.className = 'hour-label';
             label.style.top = `${topPosition}px`;
             label.textContent = `${hour}:00`;
 
-            // Guide line
+            // The guide line
             const line = document.createElement('div');
             line.className = 'hour-line';
             line.style.top = `${topPosition}px`;
@@ -86,7 +86,7 @@ export class TimelineComponent extends Component {
     }
 
     /**
-     * Create events layer
+     * Create the events layer
      * @private
      */
     _createEventsLayer() {

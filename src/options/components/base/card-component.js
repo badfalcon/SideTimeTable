@@ -1,7 +1,7 @@
 /**
- * CardComponent - Bootstrap card base class
+ * CardComponent - The Bootstrap card base class
  *
- * Base class for reusable card UI components
+ * The base class for the reusable card UI components
  */
 export class CardComponent {
     constructor(options = {}) {
@@ -23,8 +23,8 @@ export class CardComponent {
     }
 
     /**
-     * Create card HTML element
-     * @returns {HTMLElement} Created card element
+     * Create the card HTML element
+     * @returns {HTMLElement} The created card element
      */
     createElement() {
         const card = document.createElement('div');
@@ -39,10 +39,10 @@ export class CardComponent {
         const cardBody = document.createElement('div');
         cardBody.className = 'card-body';
 
-        // Create title element
+        // Create the title element
         if (this.options.title) {
             if (this.options.icon) {
-                // Title with icon
+                // The title with the icon
                 const titleContainer = document.createElement('div');
                 titleContainer.className = 'd-flex align-items-center mb-3';
 
@@ -61,7 +61,7 @@ export class CardComponent {
                 titleContainer.appendChild(this.titleElement);
                 cardBody.appendChild(titleContainer);
             } else {
-                // Regular title
+                // The regular title
                 this.titleElement = document.createElement('h2');
                 this.titleElement.className = 'card-title';
                 this.titleElement.textContent = this.options.title;
@@ -72,7 +72,7 @@ export class CardComponent {
             }
         }
 
-        // Create subtitle element
+        // Create the subtitle element
         if (this.options.subtitle) {
             this.subtitleElement = document.createElement('p');
             this.subtitleElement.className = 'card-text';
@@ -92,12 +92,12 @@ export class CardComponent {
     }
 
     /**
-     * Add content to card body
-     * @param {HTMLElement|string} content Content to add
+     * Add the content to the card body
+     * @param {HTMLElement|string} content The content to add
      */
     addContent(content) {
         if (!this.bodyElement) {
-            throw new Error('Card element must be created first');
+            throw new Error('The card element must be created first');
         }
 
         if (typeof content === 'string') {
@@ -110,7 +110,7 @@ export class CardComponent {
     }
 
     /**
-     * Toggle card visibility
+     * Toggle the card visibility
      * @param {boolean} visible Whether to show the card
      */
     setVisible(visible) {
@@ -120,8 +120,8 @@ export class CardComponent {
     }
 
     /**
-     * Update card title
-     * @param {string} title New title
+     * Update the card title
+     * @param {string} title The new title
      */
     setTitle(title) {
         if (this.titleElement) {
@@ -130,8 +130,8 @@ export class CardComponent {
     }
 
     /**
-     * Update card subtitle
-     * @param {string} subtitle New subtitle
+     * Update the card subtitle
+     * @param {string} subtitle The new subtitle
      */
     setSubtitle(subtitle) {
         if (this.subtitleElement) {
@@ -140,24 +140,24 @@ export class CardComponent {
     }
 
     /**
-     * Get DOM element
-     * @returns {HTMLElement} Card element
+     * Get the DOM element
+     * @returns {HTMLElement} The card element
      */
     getElement() {
         return this.element;
     }
 
     /**
-     * Get card body element
-     * @returns {HTMLElement} Card body element
+     * Get the card body element
+     * @returns {HTMLElement} The card body element
      */
     getBodyElement() {
         return this.bodyElement;
     }
 
     /**
-     * Append card to specified container
-     * @param {HTMLElement} container Target container
+     * Append the card to the specified container
+     * @param {HTMLElement} container The target container
      */
     appendTo(container) {
         if (!this.element) {
@@ -167,7 +167,7 @@ export class CardComponent {
     }
 
     /**
-     * Destroy card
+     * Destroy the card
      */
     destroy() {
         if (this.element && this.element.parentNode) {

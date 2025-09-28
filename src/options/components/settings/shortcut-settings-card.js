@@ -14,25 +14,25 @@ export class ShortcutSettingsCard extends CardComponent {
             iconColor: 'text-secondary'
         });
 
-        // UI elements
+        // The UI elements
         this.configureButton = null;
         this.shortcutDisplay = null;
 
-        // Current shortcut information
+        // The current shortcut information
         this.currentShortcut = null;
     }
 
     createElement() {
         const card = super.createElement();
 
-        // Create shortcut settings area
+        // Create the shortcut settings area
         const settingsArea = this._createShortcutSettings();
         this.addContent(settingsArea);
 
-        // Get and display current shortcuts
+        // Get and display the current shortcuts
         this._loadCurrentShortcut();
 
-        // Set up event listeners
+        // Set up the event listeners
         this._setupEventListeners();
 
         return card;
@@ -46,17 +46,17 @@ export class ShortcutSettingsCard extends CardComponent {
         const container = document.createElement('div');
         container.className = 'mb-3';
 
-        // Label
+        // The label
         const label = document.createElement('label');
         label.className = 'form-label';
         label.setAttribute('data-localize', '__MSG_currentShortcut__');
         label.textContent = 'Current Shortcut:';
 
-        // Control area
+        // The control area
         const controlsDiv = document.createElement('div');
         controlsDiv.className = 'd-flex align-items-center gap-2';
 
-        // Settings button
+        // The settings button
         this.configureButton = document.createElement('button');
         this.configureButton.id = 'configure-shortcuts-btn';
         this.configureButton.className = 'btn btn-outline-secondary text-nowrap flex-shrink-0';
@@ -66,7 +66,7 @@ export class ShortcutSettingsCard extends CardComponent {
             <span data-localize="__MSG_configureShortcuts__">Configure</span>
         `;
 
-        // Shortcut display
+        // The shortcut display
         this.shortcutDisplay = document.createElement('span');
         this.shortcutDisplay.id = 'shortcut-key';
         this.shortcutDisplay.className = 'form-control-plaintext text-muted flex-grow-1';
@@ -75,7 +75,7 @@ export class ShortcutSettingsCard extends CardComponent {
         controlsDiv.appendChild(this.configureButton);
         controlsDiv.appendChild(this.shortcutDisplay);
 
-        // Help text
+        // The help text
         const helpText = document.createElement('small');
         helpText.className = 'form-text text-muted';
         helpText.setAttribute('data-localize', '__MSG_shortcutHelp__');

@@ -1,7 +1,7 @@
 /**
  * SideTimeTable - Time Management Module
  *
- * This file manages the basic structure of the timetable and time-related functions.
+ * This file manages the basic structure of the timetable and the time-related functions.
  */
 
 import {TIME_CONSTANTS} from '../lib/utils.js';
@@ -9,39 +9,39 @@ import {calculateWorkHours, isSameDay} from '../lib/time-utils.js';
 
 // Constants for EventLayoutManager
 const LAYOUT_CONSTANTS = {
-    BASE_LEFT: 65,           // The basic left position for events (px)
-    GAP: 5,                  // The basic gap between events (px)
-    RESERVED_SPACE_MARGIN: 25,    // The reserved space margin other than baseLeft (px)
+    BASE_LEFT: 65,           // The basic left position for the events (px)
+    GAP: 5,                  // The basic gap between the events (px)
+    RESERVED_SPACE_MARGIN: 25,    // The reserved space margin other than the baseLeft (px)
     MIN_WIDTH: 100,          // The minimum guaranteed width (px)
     DEFAULT_WIDTH: 200,      // The default maximum width (px)
     MIN_CONTENT_WIDTH: 20,   // The minimum content width (px)
     MIN_GAP: 2,              // Minimum gap (px)
-    MIN_DISPLAY_WIDTH: 40,   // The threshold for title-only display (px)
-    Z_INDEX: 5,              // Z-index for flex containers
+    MIN_DISPLAY_WIDTH: 40,   // The threshold for the title-only display (px)
+    Z_INDEX: 5,              // The Z-index for the flex containers
 
     // Padding settings
     PADDING: {
-        BASIC: 10,           // Basic padding (2 lanes or less)
-        COMPACT: 8,          // Compact padding (3-4 lanes)
-        MICRO: 6             // Micro padding (5+ lanes)
+        BASIC: 10,           // The basic padding (2 lanes or less)
+        COMPACT: 8,          // The compact padding (3-4 lanes)
+        MICRO: 6             // The micro padding (5+ lanes)
     },
 
-    // The thresholds by number of lanes
+    // The thresholds by the number of lanes
     LANE_THRESHOLDS: {
-        COMPACT: 2,          // The number of lanes for compact mode
-        MICRO: 4             // The number of lanes for micro mode
+        COMPACT: 2,          // The number of lanes for the compact mode
+        MICRO: 4             // The number of lanes for the micro mode
     }
 };
 
 /**
- * EventLayoutManager - Class for managing event layout
+ * EventLayoutManager - The class for managing the event layout
  *
- * This class adjusts display positions when multiple events overlap in time.
- * It efficiently performs event overlap detection and layout calculations,
- * optimizing the visual placement of events in the UI.
+ * This class adjusts the display positions when multiple events overlap in time.
+ * It efficiently performs the event overlap detection and layout calculations,
+ * optimizing the visual placement of the events in the UI.
  *
  * @example
- * // Usage example:
+ * // The usage example:
  * const layoutManager = new EventLayoutManager();
  * layoutManager.registerEvent({
  *   id: 'event1',
@@ -54,48 +54,48 @@ const LAYOUT_CONSTANTS = {
  */
 export class EventLayoutManager {
     /**
-     * Create an instance of EventLayoutManager
+     * Create an instance of the EventLayoutManager
      *
      * @constructor
-     * @param {HTMLElement} [baseElement] - Reference to sideTimeTableBase element (for width calculation)
+     * @param {HTMLElement} [baseElement] - The reference to the sideTimeTableBase element (for width calculation)
      */
     constructor(baseElement = null) {
         /**
-         * Array of registered events
+         * The array of the registered events
          * @type {Array<Object>}
          * @private
          */
         this.events = [];
 
         /**
-         * Array of calculated layout groups
+         * The array of the calculated layout groups
          * @type {Array<Array<Object>>}
          * @private
          */
         this.layoutGroups = [];
 
         /**
-         * Reference to sideTimeTableBase element
+         * The reference to the sideTimeTableBase element
          * @type {HTMLElement|null}
          * @private
          */
         this.baseElement = baseElement;
 
         /**
-         * Maximum width of events (pixels)
+         * The maximum width of the events (pixels)
          * @type {number}
          */
         this.maxWidth = this._calculateMaxWidth();
 
         /**
-         * Cache for time values (for performance improvement)
+         * The cache for the time values (for performance improvement)
          * @type {Map<string, number>}
          * @private
          */
         this.timeValueCache = new Map();
 
         /**
-         * Resize observer
+         * The resize observer
          * @type {ResizeObserver|null}
          * @private
          */

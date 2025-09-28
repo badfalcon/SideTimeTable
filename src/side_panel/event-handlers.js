@@ -1,7 +1,7 @@
 /**
  * SideTimeTable - Event Management Module
  *
- * This file manages Google Calendar events and local events.
+ * This file manages the Google Calendar events and the local events.
  */
 
 import {
@@ -15,13 +15,13 @@ import {createTimeOnDate} from '../lib/time-utils.js';
 import {getDemoEvents, getDemoLocalEvents, isDemoMode} from '../lib/demo-data.js';
 
 /**
- * GoogleEventManager - Google event management class
+ * GoogleEventManager - The Google event management class
  */
 export class GoogleEventManager {
     /**
      * Constructor
      * @param {Object} timeTableManager - An instance of the timetable manager
-     * @param {HTMLElement} googleEventsDiv - The DOM element for displaying Google events
+     * @param {HTMLElement} googleEventsDiv - The DOM element for displaying the Google events
      * @param {Object} eventLayoutManager - An instance of the event layout manager
      */
     constructor(timeTableManager, googleEventsDiv, eventLayoutManager) {
@@ -32,7 +32,7 @@ export class GoogleEventManager {
     }
 
     /**
-     * Fetch events from Google Calendar
+     * Fetch the events from Google Calendar
      * @param {Date} targetDate - The target date (today if omitted)
      */
     async fetchEvents(targetDate = null) {
@@ -54,17 +54,17 @@ export class GoogleEventManager {
             return this.currentFetchPromise;
         }
 
-        // Check for duplicate call restriction on the same date
+        // Check for the duplicate call restriction on the same date
         const targetDay = targetDate || new Date();
         const targetDateStr = targetDay.toDateString(); // Compare by the date string
 
         if (this.lastFetchDate === targetDateStr && this.currentFetchPromise) {
-            return this.currentFetchPromise; // Return existing Promise
+            return this.currentFetchPromise; // Return the existing Promise
         }
 
         this.lastFetchDate = targetDateStr;
 
-        // Fetch events (use Google colors directly)
+        // Fetch the events (use the Google colors directly)
         this.currentFetchPromise = new Promise((resolve, reject) => {
             const requestId = `req-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
             const message = { action: "getEvents", requestId };
@@ -84,7 +84,7 @@ export class GoogleEventManager {
                 // Clear the previous display
                 this.googleEventsDiv.innerHTML = '';
 
-                // Remove only Google events from layout manager
+                // Remove only the Google events from the layout manager
                 if (this.eventLayoutManager && this.eventLayoutManager.events) {
                     const events = [...this.eventLayoutManager.events];
                     events.forEach(event => {

@@ -3,8 +3,8 @@
  */
 
 /**
- * Get current language setting
- * @returns {Promise<string>} Language code (en/ja)
+ * Get the current language setting
+ * @returns {Promise<string>} The language code (en/ja)
  */
 async function getCurrentLocale() {
     try {
@@ -13,7 +13,7 @@ async function getCurrentLocale() {
             return window.resolveLanguageCode(setting);
         }
         
-        // Fallback
+        // The fallback
         const result = await chrome.storage.sync.get(['language']);
         const languageSetting = result.language || 'auto';
         
@@ -28,10 +28,10 @@ async function getCurrentLocale() {
 }
 
 /**
- * Format time according to locale
- * @param {string} timeString - Time string in HH:mm format
- * @param {string} locale - Locale (ja/en)
- * @returns {string} Formatted time
+ * Format the time according to the locale
+ * @param {string} timeString - The time string in HH:mm format
+ * @param {string} locale - The locale (ja/en)
+ * @returns {string} The formatted time
  */
 function formatTimeForLocale(timeString, locale = 'ja') {
     if (!timeString) return '';
@@ -63,10 +63,10 @@ function formatTimeForLocale(timeString, locale = 'ja') {
 }
 
 /**
- * Format date according to locale
- * @param {Date} date - Date object
- * @param {string} locale - Locale (ja/en)
- * @returns {string} Formatted date
+ * Format the date according to the locale
+ * @param {Date} date - The date object
+ * @param {string} locale - The locale (ja/en)
+ * @returns {string} The formatted date
  */
 function formatDateForLocale(date, locale = 'ja') {
     if (!date) return '';
@@ -94,10 +94,10 @@ function formatDateForLocale(date, locale = 'ja') {
 }
 
 /**
- * Format date with weekday according to locale
- * @param {Date} date - Date object
- * @param {string} locale - Locale (ja/en)
- * @returns {string} Formatted date (with weekday)
+ * Format the date with the weekday according to the locale
+ * @param {Date} date - The date object
+ * @param {string} locale - The locale (ja/en)
+ * @returns {string} The formatted date (with the weekday)
  */
 function formatDateWithWeekdayForLocale(date, locale = 'ja') {
     if (!date) return '';
@@ -127,11 +127,11 @@ function formatDateWithWeekdayForLocale(date, locale = 'ja') {
 }
 
 /**
- * Format time range according to locale
- * @param {string} startTime - Start time (HH:mm)
- * @param {string} endTime - End time (HH:mm)
- * @param {string} locale - Locale (ja/en)
- * @returns {string} Formatted time range
+ * Format the time range according to the locale
+ * @param {string} startTime - The start time (HH:mm)
+ * @param {string} endTime - The end time (HH:mm)
+ * @param {string} locale - The locale (ja/en)
+ * @returns {string} The formatted time range
  */
 function formatTimeRangeForLocale(startTime, endTime, locale = 'ja') {
     const formattedStart = formatTimeForLocale(startTime, locale);
@@ -145,9 +145,9 @@ function formatTimeRangeForLocale(startTime, endTime, locale = 'ja') {
 }
 
 /**
- * Format current time according to locale
- * @param {string} locale - Locale (ja/en)
- * @returns {string} Formatted current time
+ * Format the current time according to the locale
+ * @param {string} locale - The locale (ja/en)
+ * @returns {string} The formatted current time
  */
 function formatCurrentTimeForLocale(locale = 'ja') {
     const now = new Date();
@@ -174,7 +174,7 @@ function formatCurrentTimeForLocale(locale = 'ja') {
     }
 }
 
-// Export as global functions
+// Export as the global functions
 window.getCurrentLocale = getCurrentLocale;
 window.formatTimeForLocale = formatTimeForLocale;
 window.formatDateForLocale = formatDateForLocale;

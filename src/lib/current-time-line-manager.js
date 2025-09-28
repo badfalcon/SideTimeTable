@@ -1,16 +1,16 @@
 /**
- * CurrentTimeLineManager - Current time line management class
+ * CurrentTimeLineManager - The current time line management class
  *
- * This class manages display, hiding, and position updates of the line showing current time.
- * It is a dedicated class for visually displaying current time on the timeline.
+ * This class manages the display, hiding, and position updates of the line showing the current time.
+ * It is a dedicated class for visually displaying the current time on the timeline.
  */
 
 /**
- * Class for managing current time line
+ * The class for managing the current time line
  */
 export class CurrentTimeLineManager {
     /**
-     * Create CurrentTimeLineManager instance
+     * Create a CurrentTimeLineManager instance
      *
      * @param {HTMLElement} parentElement - The parent element to place the current time line
      * @param {Date} targetDate - The target date (today if omitted)
@@ -38,8 +38,8 @@ export class CurrentTimeLineManager {
     }
 
     /**
-     * Update current time line
-     * Show only for today and adjust position to current time
+     * Update the current time line
+     * Show only for today and adjust the position to the current time
      */
     update() {
         if (!this._shouldShowTimeLine()) {
@@ -47,18 +47,18 @@ export class CurrentTimeLineManager {
             return;
         }
 
-        // Get or create current time line element
+        // Get or create the current time line element
         this._ensureTimeLineElement();
 
-        // Update position
+        // Update the position
         this._updatePosition();
 
-        // Show
+        // Show the element
         this.show();
     }
 
     /**
-     * Force hide current time line
+     * Force hide the current time line
      */
     forceHide() {
         this.hide();
@@ -66,7 +66,7 @@ export class CurrentTimeLineManager {
     }
 
     /**
-     * Set target date
+     * Set the target date
      * @param {Date} targetDate - The target date
      */
     setTargetDate(targetDate) {
@@ -75,7 +75,7 @@ export class CurrentTimeLineManager {
     }
 
     /**
-     * Remove current time line element
+     * Remove the current time line element
      */
     destroy() {
         this._stopUpdateTimer();
@@ -87,12 +87,12 @@ export class CurrentTimeLineManager {
     }
 
     /**
-     * Ensure current time line DOM element exists
+     * Ensure the current time line DOM element exists
      * @private
      */
     _ensureTimeLineElement() {
         if (!this.timeLineElement) {
-            // Remove existing element if any
+            // Remove the existing element if any
             const existing = document.getElementById('currentTimeLine');
             if (existing) {
                 existing.remove();
@@ -106,8 +106,8 @@ export class CurrentTimeLineManager {
     }
 
     /**
-     * Determine if current time line should be displayed
-     * @returns {boolean} true if should be displayed
+     * Determine if the current time line should be displayed
+     * @returns {boolean} true if it should be displayed
      * @private
      */
     _shouldShowTimeLine() {
@@ -115,20 +115,20 @@ export class CurrentTimeLineManager {
             const today = new Date();
             return today.toDateString() === this.targetDate.toDateString();
         } catch (error) {
-            console.warn('Error occurred in current time line display determination:', error);
+            console.warn('An error occurred in the current time line display determination:', error);
             return false;
         }
     }
 
     /**
-     * Show current time line
+     * Show the current time line
      * @private
      */
     show() {
         if (this.timeLineElement) {
             this.timeLineElement.style.display = '';
 
-            // Start timer to update every minute
+            // Start the timer to update every minute
             if (!this.updateTimer) {
                 this.updateTimer = setInterval(() => {
                     this._updatePosition();
@@ -138,7 +138,7 @@ export class CurrentTimeLineManager {
     }
 
     /**
-     * Hide current time line
+     * Hide the current time line
      * @private
      */
     hide() {
@@ -149,7 +149,7 @@ export class CurrentTimeLineManager {
     }
 
     /**
-     * Calculate current time line position
+     * Calculate the current time line position
      * @private
      */
     _updatePosition() {
@@ -167,7 +167,7 @@ export class CurrentTimeLineManager {
     }
 
     /**
-     * Stop update timer
+     * Stop the update timer
      * @private
      */
     _stopUpdateTimer() {

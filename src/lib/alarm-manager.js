@@ -6,9 +6,9 @@ export class AlarmManager {
     static REMINDER_MINUTES = 5;
 
     /**
-     * Set reminder for an event
-     * @param {Object} event Event object with id, title, startTime
-     * @param {string} dateStr Date string (YYYY-MM-DD)
+     * Set a reminder for an event
+     * @param {Object} event The event object with id, title, startTime
+     * @param {string} dateStr The date string (YYYY-MM-DD)
      */
     static async setReminder(event, dateStr) {
         if (!event.reminder || !event.startTime) {
@@ -19,16 +19,16 @@ export class AlarmManager {
             const alarmName = `${this.ALARM_PREFIX}${dateStr}_${event.id}`;
             const reminderTime = this.calculateReminderTime(event.startTime, dateStr);
 
-            // Only set alarm for future times
+            // Only set the alarm for the future times
             if (reminderTime <= Date.now()) {
                 console.log('Reminder time is in the past, skipping:', event.title);
                 return;
             }
 
-            // Clear existing alarm if any
+            // Clear the existing alarm if any
             await chrome.alarms.clear(alarmName);
 
-            // Create new alarm
+            // Create a new alarm
             await chrome.alarms.create(alarmName, {
                 when: reminderTime
             });
@@ -40,9 +40,9 @@ export class AlarmManager {
     }
 
     /**
-     * Clear reminder for an event
-     * @param {string} eventId Event ID
-     * @param {string} dateStr Date string (YYYY-MM-DD)
+     * Clear the reminder for an event
+     * @param {string} eventId The event ID
+     * @param {string} dateStr The date string (YYYY-MM-DD)
      */
     static async clearReminder(eventId, dateStr) {
         try {
@@ -55,8 +55,8 @@ export class AlarmManager {
     }
 
     /**
-     * Clear all reminders for a specific date
-     * @param {string} dateStr Date string (YYYY-MM-DD)
+     * Clear all the reminders for a specific date
+     * @param {string} dateStr The date string (YYYY-MM-DD)
      */
     static async clearDateReminders(dateStr) {
         try {
@@ -76,10 +76,10 @@ export class AlarmManager {
     }
 
     /**
-     * Calculate reminder time (5 minutes before event start)
-     * @param {string} timeStr Time string (HH:mm)
-     * @param {string} dateStr Date string (YYYY-MM-DD)
-     * @returns {number} Reminder timestamp
+     * Calculate the reminder time (5 minutes before the event start)
+     * @param {string} timeStr The time string (HH:mm)
+     * @param {string} dateStr The date string (YYYY-MM-DD)
+     * @returns {number} The reminder timestamp
      */
     static calculateReminderTime(timeStr, dateStr) {
         try {
@@ -88,7 +88,7 @@ export class AlarmManager {
             // Parse the date string properly (YYYY-MM-DD format)
             const [year, month, day] = dateStr.split('-').map(Number);
 
-            // Create date in local timezone using Date constructor
+            // Create the date in the local timezone using the Date constructor
             const eventDate = new Date(year, month - 1, day, hours, minutes, 0);
 
             // Subtract 5 minutes
@@ -103,12 +103,12 @@ export class AlarmManager {
     }
 
     /**
-     * Show notification for event reminder
-     * @param {string} alarmName Alarm name
+     * Show the notification for the event reminder
+     * @param {string} alarmName The alarm name
      */
     static async showReminderNotification(alarmName) {
         try {
-            // Extract event info from alarm name
+            // Extract the event info from the alarm name
             const parts = alarmName.replace(this.ALARM_PREFIX, '').split('_');
             if (parts.length < 2) {
                 console.warn('Invalid alarm name format:', alarmName);
@@ -118,17 +118,17 @@ export class AlarmManager {
             const dateStr = parts[0];
             const eventId = parts.slice(1).join('_');
 
-            // Get event details from storage
+            // Get the event details from the storage
             const eventData = await this.getEventData(eventId, dateStr);
             if (!eventData) {
                 console.warn('Event data not found for reminder:', alarmName);
                 return;
             }
 
-            // Create notification
+            // Create the notification
             const notificationId = `reminder_${alarmName}`;
 
-            // Create notification with fallback for icon issues
+            // Create the notification with a fallback for icon issues
             const notificationOptions = {
                 type: 'basic',
                 title: chrome.i18n.getMessage('eventReminder') || 'Event Reminder',
@@ -142,11 +142,11 @@ export class AlarmManager {
             };
 
             try {
-                // Try with icon first
+                // Try with the icon first
                 notificationOptions.iconUrl = chrome.runtime.getURL('src/img/icon48.png');
                 await chrome.notifications.create(notificationId, notificationOptions);
             } catch (iconError) {
-                // Fallback: Create notification without icon
+                // Fallback: Create the notification without the icon
                 delete notificationOptions.iconUrl;
                 await chrome.notifications.create(notificationId, notificationOptions);
             }
@@ -158,10 +158,10 @@ export class AlarmManager {
     }
 
     /**
-     * Get event data from storage
-     * @param {string} eventId Event ID
-     * @param {string} dateStr Date string
-     * @returns {Object|null} Event data
+     * Get the event data from the storage
+     * @param {string} eventId The event ID
+     * @param {string} dateStr The date string
+     * @returns {Object|null} The event data
      */
     static async getEventData(eventId, dateStr) {
         try {
@@ -177,8 +177,8 @@ export class AlarmManager {
     }
 
     /**
-     * Set reminders for all events on a specific date
-     * @param {string} dateStr Date string (YYYY-MM-DD)
+     * Set the reminders for all the events on a specific date
+     * @param {string} dateStr The date string (YYYY-MM-DD)
      */
     static async setDateReminders(dateStr) {
         try {
@@ -186,10 +186,10 @@ export class AlarmManager {
             const result = await chrome.storage.sync.get(storageKey);
             const events = result[storageKey] || [];
 
-            // Clear existing reminders for this date first
+            // Clear the existing reminders for this date first
             await this.clearDateReminders(dateStr);
 
-            // Set new reminders
+            // Set the new reminders
             for (const event of events) {
                 if (event.reminder) {
                     await this.setReminder(event, dateStr);

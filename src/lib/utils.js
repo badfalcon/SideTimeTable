@@ -8,9 +8,9 @@ import { StorageHelper } from './storage-helper.js';
 
 // Time-related constants
 export const TIME_CONSTANTS = {
-    HOUR_MILLIS: 3600000,  // Milliseconds per hour
-    MINUTE_MILLIS: 60000,  // Milliseconds per minute
-    UNIT_HEIGHT: 60,       // Height per hour (pixels)
+    HOUR_MILLIS: 3600000,  // The milliseconds per hour
+    MINUTE_MILLIS: 60000,  // The milliseconds per minute
+    UNIT_HEIGHT: 60,       // The height per hour (pixels)
     DEFAULT_OPEN_HOUR: '09:00',
     DEFAULT_CLOSE_HOUR: '18:00',
     DEFAULT_BREAK_START: '12:00',
@@ -28,18 +28,18 @@ export const DEFAULT_SETTINGS = {
     breakTimeEnd: TIME_CONSTANTS.DEFAULT_BREAK_END,
     localEventColor: '#bbf2b1',
     googleEventColor: '#c3d6f7',
-    selectedCalendars: [], // Array of selected calendar IDs
+    selectedCalendars: [], // An array of the selected calendar IDs
     language: 'auto' // Language setting (auto/en/ja)
 };
 
 /**
- * Generate time selection list
- * @param {HTMLElement} timeListElement - datalist DOM element
+ * Generate the time selection list
+ * @param {HTMLElement} timeListElement - The datalist DOM element
  */
 export function generateTimeList(timeListElement) {
     if (!timeListElement) return;
     
-    timeListElement.innerHTML = ''; // Clear existing options
+    timeListElement.innerHTML = ''; // Clear the existing options
     
     for (let hour = 7; hour < 21; hour++) {
         for (let minute = 0; minute < 60; minute += 15) {
@@ -54,12 +54,12 @@ export function generateTimeList(timeListElement) {
 
 
 /**
- * Get specified date (YYYY-MM-DD format)
- * @param {Date} date - Target date
- * @returns {string} Date string in YYYY-MM-DD format
+ * Get the specified date (YYYY-MM-DD format)
+ * @param {Date} date - The target date
+ * @returns {string} The date string in YYYY-MM-DD format
  */
 export function getFormattedDateFromDate(date) {
-    // Use local timezone to avoid date-shifting issues
+    // Use the local timezone to avoid the date-shifting issues
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
@@ -68,35 +68,35 @@ export function getFormattedDateFromDate(date) {
 }
 
 /**
- * Save settings
- * @param {Object} settings - Settings object to save
- * @returns {Promise} Promise for save process
+ * Save the settings
+ * @param {Object} settings - The settings object to save
+ * @returns {Promise} A promise for the save process
  */
 export function saveSettings(settings) {
     return StorageHelper.set(settings);
 }
 
 /**
- * Load settings
- * @param {Object} defaultSettings - Default settings (uses DEFAULT_SETTINGS if omitted)
- * @returns {Promise<Object>} Promise that returns settings object
+ * Load the settings
+ * @param {Object} defaultSettings - The default settings (uses DEFAULT_SETTINGS if omitted)
+ * @returns {Promise<Object>} A promise that returns the settings object
  */
 export function loadSettings(defaultSettings = DEFAULT_SETTINGS) {
     return StorageHelper.get(defaultSettings, defaultSettings);
 }
 
 /**
- * Load local events
- * @returns {Promise<Array>} Promise that returns array of events
+ * Load the local events
+ * @returns {Promise<Array>} A promise that returns an array of events
  */
 export function loadLocalEvents() {
     return loadLocalEventsForDate(new Date());
 }
 
 /**
- * Load local events for specified date
- * @param {Date} targetDate - Target date
- * @returns {Promise<Array>} Promise that returns array of events
+ * Load the local events for the specified date
+ * @param {Date} targetDate - The target date
+ * @returns {Promise<Array>} A promise that returns an array of events
  */
 export async function loadLocalEventsForDate(targetDate) {
     const targetDateStr = getFormattedDateFromDate(targetDate);
@@ -107,10 +107,10 @@ export async function loadLocalEventsForDate(targetDate) {
 
 
 /**
- * Save local events for specified date
- * @param {Array} events - Array of events to save
- * @param {Date} targetDate - Target date
- * @returns {Promise} Promise for the save process
+ * Save the local events for the specified date
+ * @param {Array} events - An array of the events to save
+ * @param {Date} targetDate - The target date
+ * @returns {Promise} A promise for the save process
  */
 export async function saveLocalEventsForDate(events, targetDate) {
     const targetDateStr = getFormattedDateFromDate(targetDate);
@@ -119,8 +119,8 @@ export async function saveLocalEventsForDate(events, targetDate) {
 }
 
 /**
- * Reload side panel
- * @returns {Promise} Promise for the reload process
+ * Reload the side panel
+ * @returns {Promise} A promise for the reload process
  */
 export function reloadSidePanel() {
     return new Promise((resolve, reject) => {
@@ -145,9 +145,9 @@ export function reloadSidePanel() {
 }
 
 /**
- * Log error to console
- * @param {string} context - Context where the error occurred
- * @param {Error|string} error - Error object or error message
+ * Log the error to the console
+ * @param {string} context - The context where the error occurred
+ * @param {Error|string} error - The error object or the error message
  */
 export function logError(context, error) {
     console.error(`[${context}] Error:`, error);
@@ -155,17 +155,17 @@ export function logError(context, error) {
 
 
 /**
- * Save selected calendars
- * @param {Array<string>} selectedCalendars - Array of selected calendar IDs
- * @returns {Promise} Promise for the save process
+ * Save the selected calendars
+ * @param {Array<string>} selectedCalendars - An array of the selected calendar IDs
+ * @returns {Promise} A promise for the save process
  */
 export function saveSelectedCalendars(selectedCalendars) {
     return StorageHelper.set({ selectedCalendars });
 }
 
 /**
- * Load selected calendars
- * @returns {Promise<Array<string>>} Promise that returns an array of selected calendar IDs
+ * Load the selected calendars
+ * @returns {Promise<Array<string>>} A promise that returns an array of the selected calendar IDs
  */
 export async function loadSelectedCalendars() {
     const result = await StorageHelper.get(['selectedCalendars'], { selectedCalendars: [] });

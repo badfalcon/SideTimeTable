@@ -16,16 +16,16 @@ export class LanguageSettingsCard extends CardComponent {
 
         this.onSettingsChange = onSettingsChange;
 
-        // Form elements
+        // The form elements
         this.languageSelect = null;
         this.currentLanguageDisplay = null;
 
-        // Current settings values
+        // The current settings values
         this.settings = {
             language: 'auto'
         };
 
-        // Available languages
+        // The available languages
         this.availableLanguages = [
             { value: 'auto', key: '__MSG_languageAuto__', text: 'Auto (Browser Language)' },
             { value: 'en', key: '__MSG_languageEnglish__', text: 'English' },
@@ -36,14 +36,14 @@ export class LanguageSettingsCard extends CardComponent {
     createElement() {
         const card = super.createElement();
 
-        // Create form elements
+        // Create the form elements
         const form = this._createForm();
         this.addContent(form);
 
-        // Display current browser language
+        // Display the current browser language
         this._updateCurrentLanguageDisplay();
 
-        // Setup event listeners
+        // Setup the event listeners
         this._setupEventListeners();
 
         return card;
@@ -57,15 +57,15 @@ export class LanguageSettingsCard extends CardComponent {
     _createForm() {
         const form = document.createElement('form');
 
-        // Grid layout
+        // The grid layout
         const row = document.createElement('div');
         row.className = 'row';
 
-        // Language selection column
+        // The language selection column
         const selectCol = this._createLanguageSelectColumn();
         row.appendChild(selectCol);
 
-        // Current language display column
+        // The current language display column
         const displayCol = this._createCurrentLanguageColumn();
         row.appendChild(displayCol);
 
@@ -82,19 +82,19 @@ export class LanguageSettingsCard extends CardComponent {
         const col = document.createElement('div');
         col.className = 'col-md-6 mb-3';
 
-        // Label
+        // The label
         const label = document.createElement('label');
         label.htmlFor = 'language-settings-select';
         label.className = 'form-label fw-semibold';
         label.setAttribute('data-localize', '__MSG_selectLanguage__');
         label.textContent = 'Select Language:';
 
-        // Select box
+        // The select box
         this.languageSelect = document.createElement('select');
         this.languageSelect.className = 'form-select';
         this.languageSelect.id = 'language-settings-select';
 
-        // Add options
+        // Add the options
         this.availableLanguages.forEach(lang => {
             const option = document.createElement('option');
             option.value = lang.value;
@@ -108,7 +108,7 @@ export class LanguageSettingsCard extends CardComponent {
             this.languageSelect.appendChild(option);
         });
 
-        // Help text
+        // The help text
         const helpText = document.createElement('small');
         helpText.className = 'form-text text-muted mt-1';
         helpText.setAttribute('data-localize', '__MSG_languageHelp__');
@@ -129,17 +129,17 @@ export class LanguageSettingsCard extends CardComponent {
         const col = document.createElement('div');
         col.className = 'col-md-6 mb-3';
 
-        // Label
+        // The label
         const label = document.createElement('label');
         label.className = 'form-label fw-semibold';
         label.setAttribute('data-localize', '__MSG_currentLanguage__');
         label.textContent = 'Current Browser Language:';
 
-        // Display area
+        // The display area
         const display = document.createElement('div');
         display.className = 'p-2 bg-light rounded';
 
-        // Icon and display text
+        // The icon and display text
         const icon = document.createElement('i');
         icon.className = 'fas fa-info-circle text-info me-1';
 
@@ -201,7 +201,7 @@ export class LanguageSettingsCard extends CardComponent {
      * @private
      */
     _setupEventListeners() {
-        // Language selection change
+        // The language selection change
         this.languageSelect?.addEventListener('change', () => {
             this._handleLanguageChange();
         });
@@ -217,12 +217,12 @@ export class LanguageSettingsCard extends CardComponent {
 
         this.settings = newSettings;
 
-        // Callback with changes
+        // Callback with the changes
         if (this.onSettingsChange) {
             this.onSettingsChange(newSettings);
         }
 
-        // Show reload confirmation if language was changed
+        // Show the reload confirmation if language was changed
         if (newSettings.language !== previousLanguage) {
             this._showReloadConfirmation();
         }
@@ -233,13 +233,13 @@ export class LanguageSettingsCard extends CardComponent {
      * @private
      */
     _showReloadConfirmation() {
-        // Remove existing confirmation message
+        // Remove the existing confirmation message
         const existingNotice = this.element.querySelector('.language-reload-notice');
         if (existingNotice) {
             existingNotice.remove();
         }
 
-        // Create confirmation message
+        // Create the confirmation message
         const notice = document.createElement('div');
         notice.className = 'alert alert-info alert-dismissible fade show language-reload-notice mt-3';
         notice.innerHTML = `
@@ -258,7 +258,7 @@ export class LanguageSettingsCard extends CardComponent {
 
         this.bodyElement.appendChild(notice);
 
-        // Reload button event
+        // The reload button event
         const reloadBtn = notice.querySelector('#reload-page-btn');
         if (reloadBtn) {
             reloadBtn.addEventListener('click', () => {
@@ -275,7 +275,7 @@ export class LanguageSettingsCard extends CardComponent {
         if (chrome.runtime && chrome.runtime.reload) {
             chrome.runtime.reload();
         } else {
-            // Fallback: reload page
+            // Fallback: reload the page
             window.location.reload();
         }
     }

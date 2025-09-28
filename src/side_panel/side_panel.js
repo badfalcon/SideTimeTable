@@ -18,7 +18,7 @@ import { isToday } from '../lib/time-utils.js';
 import { isDemoMode, setDemoMode } from '../lib/demo-data.js';
 import { AlarmManager } from '../lib/alarm-manager.js';
 
-// Reload message listener
+// The reload message listener
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "reloadSideTimeTable") {
         location.reload();
@@ -28,26 +28,26 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 /**
- * SidePanelUIController - Component-based UI management class
+ * SidePanelUIController - The component-based UI management class
  */
 class SidePanelUIController {
     constructor() {
-        // Component management
+        // The component management
         this.componentManager = new SidePanelComponentManager();
 
-        // Individual component references
+        // The individual component references
         this.headerComponent = null;
         this.timelineComponent = null;
         this.localEventModal = null;
         this.googleEventModal = null;
         this.alertModal = null;
 
-        // State management
+        // The state management
         this.currentDate = new Date();
         this.currentDate.setHours(0, 0, 0, 0);
         this.updateInterval = null;
         this.loadEventsDebounceTimeout = null;
-        this.wasViewingToday = true; // Track if user was viewing today
+        this.wasViewingToday = true; // Track if the user was viewing today
     }
 
     /**
@@ -55,28 +55,28 @@ class SidePanelUIController {
      */
     async initialize() {
         try {
-            // Check demo mode via URL parameter
+            // Check the demo mode via the URL parameter
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('demo') === 'true') {
                 setDemoMode(true);
             }
 
-            // Remove existing DOM elements (prevent duplicates)
+            // Remove the existing DOM elements (prevent duplicates)
             this._removeExistingElements();
 
-            // Create and register components
+            // Create and register the components
             await this._createComponents();
 
-            // Initialize existing manager classes
+            // Initialize the existing manager classes
             await this._initializeManagers();
 
-            // Set up event listeners
+            // Set up the event listeners
             this._setupEventListeners();
 
-            // Load initial data
+            // Load the initial data
             await this._loadInitialData();
 
-            // Start periodic updates
+            // Start the periodic updates
             this._startPeriodicUpdate();
 
 
@@ -87,23 +87,23 @@ class SidePanelUIController {
     }
 
     /**
-     * Remove existing DOM elements (prevent duplicates)
+     * Remove the existing DOM elements (prevent duplicates)
      * @private
      */
     _removeExistingElements() {
-        // Remove existing header element
+        // Remove the existing header element
         const existingHeader = document.getElementById('sideTimeTableHeaderWrapper');
         if (existingHeader) {
             existingHeader.remove();
         }
 
-        // Remove existing timetable element
+        // Remove the existing timetable element
         const existingTimeTable = document.getElementById('sideTimeTable');
         if (existingTimeTable) {
             existingTimeTable.remove();
         }
 
-        // Remove existing modal elements
+        // Remove the existing modal elements
         const existingModals = [
             'localEventDialog',
             'googleEventDialog',
@@ -117,13 +117,13 @@ class SidePanelUIController {
             }
         });
 
-        // Remove current time line element
+        // Remove the current time line element
         const existingTimeLine = document.getElementById('currentTimeLine');
         if (existingTimeLine) {
             existingTimeLine.remove();
         }
 
-        // Remove other potentially duplicate elements
+        // Remove the other potentially duplicate elements
         const duplicateElements = document.querySelectorAll('[id*="sideTimeTable"], [id*="EventDialog"], [id*="Modal"]');
         duplicateElements.forEach(element => {
             if (element.id !== 'time-list') { // Keep time-list
@@ -133,23 +133,23 @@ class SidePanelUIController {
     }
 
     /**
-     * Create and register components
+     * Create and register the components
      * @private
      */
     async _createComponents() {
-        // Header component
+        // The header component
         this.headerComponent = new HeaderComponent({
             onAddEvent: () => this._handleAddLocalEvent(),
             onDateChange: (date) => this._handleDateChange(date),
             onSettingsClick: () => this._openSettings()
         });
 
-        // Timeline component
+        // The timeline component
         this.timelineComponent = new TimelineComponent({
             showCurrentTimeLine: true
         });
 
-        // Modal components
+        // The modal components
         this.localEventModal = new LocalEventModal({
             onSave: (eventData, mode) => this._handleSaveLocalEvent(eventData, mode),
             onDelete: (event) => this._handleDeleteLocalEvent(event),
@@ -160,14 +160,14 @@ class SidePanelUIController {
 
         this.alertModal = new AlertModal();
 
-        // Register with component manager
+        // Register with the component manager
         this.componentManager.register('header', this.headerComponent);
         this.componentManager.register('timeline', this.timelineComponent);
         this.componentManager.register('localEventModal', this.localEventModal);
         this.componentManager.register('googleEventModal', this.googleEventModal);
         this.componentManager.register('alertModal', this.alertModal);
 
-        // Add to DOM
+        // Add to the DOM
         const container = document.getElementById('side-panel-container') || document.body;
         this.headerComponent.appendTo(container);
         this.timelineComponent.appendTo(container);
@@ -175,10 +175,10 @@ class SidePanelUIController {
         this.googleEventModal.appendTo(container);
         this.alertModal.appendTo(container);
 
-        // Initialize all components
+        // Initialize all the components
         this.componentManager.initializeAll();
 
-        // Reinitialize managers after component initialization
+        // Reinitialize the managers after component initialization
         await this._reinitializeManagers();
     }
 
@@ -187,22 +187,22 @@ class SidePanelUIController {
      * @private
      */
     async _reinitializeManagers() {
-        // Reinitialize managers when DOM elements definitely exist
+        // Reinitialize the managers when DOM elements definitely exist
         const timeTableBase = document.getElementById('sideTimeTableBase');
 
         if (timeTableBase) {
-            // Recreate EventLayoutManager
+            // Recreate the EventLayoutManager
             const { EventLayoutManager } = await import('./time-manager.js');
             this.eventLayoutManager = new EventLayoutManager(timeTableBase);
 
-            // Update eventLayoutManager of event managers
+            // Update the eventLayoutManager of event managers
             if (this.googleEventManager) {
                 this.googleEventManager.eventLayoutManager = this.eventLayoutManager;
             }
             if (this.localEventManager) {
                 this.localEventManager.eventLayoutManager = this.eventLayoutManager;
 
-                // Set event click callback
+                // Set the event click callback
                 this.localEventManager.setEventClickCallback((event) => {
                     this.localEventModal.showEdit(event);
                 });
@@ -215,37 +215,37 @@ class SidePanelUIController {
      * @private
      */
     async _initializeManagers() {
-        // Generate time list
+        // Generate the time list
         generateTimeList();
 
-        // Initialize event managers
+        // Initialize the event managers
         const { GoogleEventManager, LocalEventManager } = await import('./event-handlers.js');
         const { EventLayoutManager } = await import('./time-manager.js');
 
-        // Initialize layout manager
+        // Initialize the layout manager
         const timeTableBase = document.getElementById('sideTimeTableBase') || this.timelineComponent.element?.querySelector('.side-time-table-base');
         this.eventLayoutManager = new EventLayoutManager(timeTableBase);
 
-        // Initialize Google event manager
+        // Initialize the Google event manager
         this.googleEventManager = new GoogleEventManager(
             null, // timeTableManager not used so null
             this.timelineComponent.getGoogleEventsContainer(),
             this.eventLayoutManager
         );
 
-        // Initialize local event manager
+        // Initialize the local event manager
         this.localEventManager = new LocalEventManager(
             null, // timeTableManager not used so null
             this.timelineComponent.getLocalEventsContainer(),
             this.eventLayoutManager
         );
 
-        // Set event click callback
+        // Set the event click callback
         this.localEventManager.setEventClickCallback((event) => {
             this.localEventModal.showEdit(event);
         });
 
-        // Load settings and apply initial configuration
+        // Load the settings and apply initial configuration
         await this._applyInitialSettings();
     }
 
@@ -257,7 +257,7 @@ class SidePanelUIController {
         try {
             const settings = await loadSettings();
 
-            // Set work time background
+            // Set the work time background
             if (settings.openTime && settings.closeTime && settings.workTimeColor) {
                 this.timelineComponent.setWorkTimeBackground(
                     settings.openTime,
@@ -266,7 +266,7 @@ class SidePanelUIController {
                 );
             }
 
-            // Set CSS variables
+            // Set the CSS variables
             if (settings.workTimeColor) {
                 document.documentElement.style.setProperty('--side-calendar-work-time-color', settings.workTimeColor);
             }
@@ -277,7 +277,7 @@ class SidePanelUIController {
                 document.documentElement.style.setProperty('--side-calendar-google-event-color', settings.googleEventColor);
             }
 
-            // Set current date
+            // Set the current date
             this.headerComponent.setCurrentDate(this.currentDate);
 
         } catch (error) {
@@ -393,11 +393,11 @@ class SidePanelUIController {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
 
-            // Only auto-advance to today if user was previously viewing today
-            // This prevents forced switching when user is intentionally viewing past/future dates
+            // Only auto-advance to today if the user was previously viewing today
+            // This prevents forced switching when the user is intentionally viewing past/future dates
             if (this.wasViewingToday && !isToday(this.currentDate)) {
                 this.currentDate = today;
-                this.wasViewingToday = true; // Still viewing today after auto-advance
+                this.wasViewingToday = true; // Still viewing today after the auto-advance
                 this.headerComponent.setCurrentDate(this.currentDate);
                 this.timelineComponent.setCurrentDate(this.currentDate);
                 this.timelineComponent.setCurrentTimeLineVisible(true);
@@ -414,27 +414,27 @@ class SidePanelUIController {
         this.currentDate = new Date(date);
         this.currentDate.setHours(0, 0, 0, 0);
 
-        // Track if user is viewing today
+        // Track if the user is viewing today
         this.wasViewingToday = isToday(this.currentDate);
 
-        // Immediately remove old date events
+        // Immediately remove the old date events
         this.timelineComponent.clearAllEvents();
 
-        // Clear EventLayoutManager state as well
+        // Clear the EventLayoutManager state as well
         if (this.eventLayoutManager) {
             this.eventLayoutManager.clearAllEvents();
         }
 
-        // Set date to TimelineComponent
+        // Set the date to TimelineComponent
         this.timelineComponent.setCurrentDate(this.currentDate);
 
-        // Reload events
+        // Reload the events
         this._debounceLoadEvents();
 
-        // Update current time line display
+        // Update the current time line display
         this.timelineComponent.setCurrentTimeLineVisible(isToday(this.currentDate));
 
-        // Adjust scroll position
+        // Adjust the scroll position
         this._scrollToAppropriateTime();
     }
 
@@ -443,7 +443,7 @@ class SidePanelUIController {
      * @private
      */
     _handleAddLocalEvent() {
-        // Set default time based on current time
+        // Set the default time based on the current time
         const now = new Date();
         const startTime = `${String(now.getHours()).padStart(2, '0')}:${String(Math.floor(now.getMinutes() / 15) * 15).padStart(2, '0')}`;
         const endHour = now.getHours() + 1;
