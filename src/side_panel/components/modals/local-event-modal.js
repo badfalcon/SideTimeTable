@@ -18,7 +18,7 @@ export class LocalEventModal extends ModalComponent {
         this.deleteButton = null;
         this.cancelButton = null;
 
-        // Event being edited
+        // The event being edited
         this.currentEvent = null;
 
         // Callbacks
@@ -52,7 +52,7 @@ export class LocalEventModal extends ModalComponent {
         this.titleInput.required = true;
         content.appendChild(this.titleInput);
 
-        // Start time input
+        // The start time input
         const startLabel = document.createElement('label');
         startLabel.htmlFor = 'eventStartTime';
         startLabel.setAttribute('data-localize', '__MSG_startTime__');
@@ -66,7 +66,7 @@ export class LocalEventModal extends ModalComponent {
         this.startTimeInput.required = true;
         content.appendChild(this.startTimeInput);
 
-        // End time input
+        // The end time input
         const endLabel = document.createElement('label');
         endLabel.htmlFor = 'eventEndTime';
         endLabel.setAttribute('data-localize', '__MSG_endTime__');
@@ -131,7 +131,7 @@ export class LocalEventModal extends ModalComponent {
         buttonGroup.appendChild(this.cancelButton);
         content.appendChild(buttonGroup);
 
-        // Set up event listeners
+        // Set up the event listeners
         this._setupFormEventListeners();
 
         return content;
@@ -165,7 +165,7 @@ export class LocalEventModal extends ModalComponent {
             }
         });
 
-        // Time input validation
+        // The time input validation
         this.addEventListener(this.startTimeInput, 'change', () => {
             this._validateTimes();
         });
@@ -252,7 +252,7 @@ export class LocalEventModal extends ModalComponent {
             return false;
         }
 
-        // Time validity check
+        // The time validity check
         if (!this._validateTimes()) {
             return false;
         }
@@ -287,7 +287,7 @@ export class LocalEventModal extends ModalComponent {
      * @private
      */
     _showError(message) {
-        // Remove existing error messages
+        // Remove the existing error messages
         this._clearError();
 
         const errorDiv = document.createElement('div');
@@ -324,7 +324,7 @@ export class LocalEventModal extends ModalComponent {
         this.endTimeInput.value = defaultEndTime;
         this.reminderCheckbox.checked = true;
 
-        // Adjust button display
+        // Adjust the button display
         this.deleteButton.style.display = 'none';
 
         // Update title
@@ -333,7 +333,7 @@ export class LocalEventModal extends ModalComponent {
         this._clearError();
         this.show();
 
-        // Apply localization after showing modal
+        // Apply the localization after showing the modal
         this._localizeModal();
     }
 
@@ -345,13 +345,13 @@ export class LocalEventModal extends ModalComponent {
         this.mode = 'edit';
         this.currentEvent = event;
 
-        // Set values in form
+        // Set the values in the form
         this.titleInput.value = event.title || '';
         this.startTimeInput.value = event.startTime || '';
         this.endTimeInput.value = event.endTime || '';
         this.reminderCheckbox.checked = event.reminder !== false;
 
-        // Adjust button display
+        // Adjust the button display
         this.deleteButton.style.display = '';
 
         // Update title
@@ -360,13 +360,13 @@ export class LocalEventModal extends ModalComponent {
         this._clearError();
         this.show();
 
-        // Apply localization after showing modal
+        // Apply the localization after showing the modal
         this._localizeModal();
     }
 
     /**
      * Get form data
-     * @returns {Object} Form data
+     * @returns {Object} The form data
      */
     getFormData() {
         return {

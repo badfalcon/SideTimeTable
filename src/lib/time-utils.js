@@ -27,7 +27,7 @@ export function createTimeOnDate(date, hour, minute, second = 0, millisecond = 0
  *
  * @param {string} timeString - Time string in "HH:MM" format
  * @returns {{hour: number, minute: number}} Parse result
- * @throws {Error} If format is invalid
+ * @throws {Error} If the format is invalid
  */
 export function parseTimeString(timeString) {
     if (!timeString || typeof timeString !== 'string') {
@@ -50,7 +50,7 @@ export function parseTimeString(timeString) {
 }
 
 /**
- * Determine if specified date is today
+ * Determine if the specified date is today
  *
  * @param {Date} date - Date to check
  * @returns {boolean} true if today
@@ -76,7 +76,7 @@ export function isSameDay(date1, date2) {
 }
 
 /**
- * Calculate time difference between two times in milliseconds
+ * Calculate the time difference between two times in milliseconds
  *
  * @param {Date|number} startTime - Start time
  * @param {Date|number} endTime - End time
@@ -89,7 +89,7 @@ export function calculateTimeDifference(startTime, endTime) {
 }
 
 /**
- * Calculate business start and end times for specified date
+ * Calculate business start and end times for a specified date
  *
  * @param {Date} date - Target date
  * @param {string} openHour - Business start time ("HH:MM" format)
@@ -105,54 +105,4 @@ export function calculateWorkHours(date, openHour, closeHour) {
     const hourDiff = calculateTimeDifference(openTime, closeTime) / (60 * 60 * 1000);
     
     return { openTime, closeTime, hourDiff };
-}
-
-/**
- * Calculate break time for specified date
- *
- * @param {Date} date - Target date
- * @param {string} breakStart - Break start time ("HH:MM" format)
- * @param {string} breakEnd - Break end time ("HH:MM" format)
- * @returns {{breakStartTime: Date, breakEndTime: Date}} Calculation result
- */
-export function calculateBreakHours(date, breakStart, breakEnd) {
-    const { hour: breakStartHour, minute: breakStartMinute } = parseTimeString(breakStart);
-    const { hour: breakEndHour, minute: breakEndMinute } = parseTimeString(breakEnd);
-    
-    const breakStartTime = createTimeOnDate(date, breakStartHour, breakStartMinute);
-    const breakEndTime = createTimeOnDate(date, breakEndHour, breakEndMinute);
-    
-    return { breakStartTime, breakEndTime };
-}
-
-/**
- * Determine if current time is within specified time range
- *
- * @param {Date} currentTime - Current time
- * @param {Date} startTime - Start time
- * @param {Date} endTime - End time
- * @returns {boolean} true if within range
- */
-export function isTimeInRange(currentTime, startTime, endTime) {
-    const current = currentTime.getTime();
-    const start = startTime.getTime();
-    const end = endTime.getTime();
-    return current >= start && current <= end;
-}
-
-/**
- * Determine if current time is within today's business hours
- *
- * @param {Date} currentTime - Current time
- * @param {string} openHour - Business start time ("HH:MM" format)
- * @param {string} closeHour - Business end time ("HH:MM" format)
- * @returns {boolean} true if within business hours
- */
-export function isCurrentTimeInWorkHours(currentTime, openHour, closeHour) {
-    if (!isToday(currentTime)) {
-        return false;
-    }
-    
-    const { openTime, closeTime } = calculateWorkHours(currentTime, openHour, closeHour);
-    return isTimeInRange(currentTime, openTime, closeTime);
 }

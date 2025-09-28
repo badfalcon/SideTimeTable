@@ -1,41 +1,3 @@
-// Get localized text and set to element
-function replace_i18n(element, tag) {
-    const msg = tag.replace(/__MSG_(\w+)__/g, (match, v1) => chrome.i18n.getMessage(v1) || '');
-    if (msg !== tag) element.innerHTML = msg;
-}
-
-// Localize HTML content
-function localizeHtmlPage() {
-    document.querySelectorAll('[data-localize]').forEach(element => {
-        replace_i18n(element, element.getAttribute('data-localize'));
-    });
-
-    // Localize aria-label attributes
-    document.querySelectorAll('[data-localize-aria-label]').forEach(element => {
-        const tag = element.getAttribute('data-localize-aria-label');
-        const msg = tag.replace(/__MSG_(\w+)__/g, (match, v1) => chrome.i18n.getMessage(v1) || '');
-        if (msg !== tag) element.setAttribute('aria-label', msg);
-    });
-
-    // Localize placeholder attributes
-    document.querySelectorAll('[data-localize-placeholder]').forEach(element => {
-        const tag = element.getAttribute('data-localize-placeholder');
-        const msg = tag.replace(/__MSG_(\w+)__/g, (match, v1) => chrome.i18n.getMessage(v1) || '');
-        if (msg !== tag) element.setAttribute('placeholder', msg);
-    });
-
-    // Localize title attributes
-    document.querySelectorAll('[data-localize-title]').forEach(element => {
-        const tag = element.getAttribute('data-localize-title');
-        const msg = tag.replace(/__MSG_(\w+)__/g, (match, v1) => chrome.i18n.getMessage(v1) || '');
-        if (msg !== tag) element.setAttribute('title', msg);
-    });
-
-    Array.from(document.getElementsByTagName('html')).forEach(element => {
-        replace_i18n(element, element.innerHTML);
-    });
-}
-
 /**
  * Get current language setting
  * @returns {string} Language code (en/ja/auto)
@@ -85,8 +47,6 @@ async function localizeHtmlPageWithLang() {
         await localizeWithLanguage(targetLanguage);
     } catch (error) {
         console.warn('Localization by language setting failed:', error);
-        // Execute standard localization as fallback
-        localizeHtmlPage();
     }
 }
 
@@ -141,8 +101,6 @@ async function localizeWithLanguage(targetLang) {
         
     } catch (error) {
         console.warn('Failed to load message file:', error);
-        // Execute standard localization as fallback
-        localizeHtmlPage();
     }
 }
 

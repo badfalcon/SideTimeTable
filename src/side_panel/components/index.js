@@ -38,23 +38,6 @@ export class SidePanelComponentManager {
         this.components.set(name, component);
     }
 
-    /**
-     * Get a component
-     * @param {string} name Component name
-     * @returns {Component|null} Component instance
-     */
-    get(name) {
-        return this.components.get(name) || null;
-    }
-
-    /**
-     * Check if component exists
-     * @param {string} name Component name
-     * @returns {boolean} Whether it exists
-     */
-    has(name) {
-        return this.components.has(name);
-    }
 
     /**
      * Initialize all components
@@ -97,27 +80,6 @@ export class SidePanelComponentManager {
         }
     }
 
-    /**
-     * Show specified component
-     * @param {string} name Component name
-     */
-    show(name) {
-        const component = this.get(name);
-        if (component && typeof component.show === 'function') {
-            component.show();
-        }
-    }
-
-    /**
-     * Hide specified component
-     * @param {string} name Component name
-     */
-    hide(name) {
-        const component = this.get(name);
-        if (component && typeof component.hide === 'function') {
-            component.hide();
-        }
-    }
 
     /**
      * Destroy all components
@@ -135,42 +97,4 @@ export class SidePanelComponentManager {
         this.components.clear();
         this.initialized = false;
     }
-
-    /**
-     * Get list of registered components
-     * @returns {Array<string>} Array of component names
-     */
-    getComponentNames() {
-        return Array.from(this.components.keys());
-    }
-
-    /**
-     * Get initialization state
-     * @returns {boolean} Whether initialized
-     */
-    isInitialized() {
-        return this.initialized;
-    }
-
-    /**
-     * Get number of components
-     * @returns {number} Number of registered components
-     */
-    size() {
-        return this.components.size;
-    }
-
-    /**
-     * Set CSS variable for all components
-     * @param {string} name CSS variable name (specify without --)
-     * @param {string} value Value
-     */
-    setCSSVariableForAll(name, value) {
-        for (const component of this.components.values()) {
-            if (component && typeof component.setCSSVariable === 'function') {
-                component.setCSSVariable(name, value);
-            }
-        }
-    }
-
 }

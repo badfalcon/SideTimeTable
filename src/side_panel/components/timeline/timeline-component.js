@@ -22,31 +22,31 @@ export class TimelineComponent extends Component {
         this.localEventsContainer = null;
         this.googleEventsContainer = null;
 
-        // Current time line management
+        // The current time line management
         this.showCurrentTimeLine = options.showCurrentTimeLine !== false;
         this.currentTimeLineManager = null;
 
-        // Target date for display
+        // The target date for display
         this.currentDate = new Date();
     }
 
     createElement() {
         const container = super.createElement();
 
-        // Skip if content is already created
+        // Skip if the content is already created
         if (container.children.length > 0) {
             return container;
         }
 
-        // Create base layer (time axis)
+        // Create the base layer (time axis)
         this.baseLayer = this._createBaseLayer();
         container.appendChild(this.baseLayer);
 
-        // Create events layer
+        // Create the events layer
         this.eventsLayer = this._createEventsLayer();
         container.appendChild(this.eventsLayer);
 
-        // Create current time line (for today)
+        // Create the current time line (for today)
         if (this.showCurrentTimeLine) {
             this._setupCurrentTimeLine();
         }
@@ -63,7 +63,7 @@ export class TimelineComponent extends Component {
         baseDiv.className = 'side-time-table-base';
         baseDiv.id = 'sideTimeTableBase';
 
-        // Create time labels and guide lines for 24 hours
+        // Create the time labels and guide lines for 24 hours
         for (let hour = 0; hour < 24; hour++) {
             const topPosition = hour * this.HOUR_HEIGHT;
 
@@ -94,12 +94,12 @@ export class TimelineComponent extends Component {
         eventsDiv.className = 'side-time-table-events';
         eventsDiv.id = 'sideTimeTableEvents';
 
-        // Local events container
+        // The local events container
         this.localEventsContainer = document.createElement('div');
         this.localEventsContainer.className = 'side-time-table-events-local';
         this.localEventsContainer.id = 'sideTimeTableEventsLocal';
 
-        // Google events container
+        // The Google events container
         this.googleEventsContainer = document.createElement('div');
         this.googleEventsContainer.className = 'side-time-table-events-google';
         this.googleEventsContainer.id = 'sideTimeTableEventsGoogle';
@@ -142,7 +142,7 @@ export class TimelineComponent extends Component {
      * @param {string} color Background color
      */
     setWorkTimeBackground(startTime, endTime, color = '#f8f9fa') {
-        // Remove existing work time background
+        // Remove the existing work time background
         const existingBg = this.baseLayer?.querySelector('.work-time-background');
         if (existingBg) {
             existingBg.remove();
@@ -198,7 +198,7 @@ export class TimelineComponent extends Component {
     setCurrentDate(date) {
         this.currentDate = date;
 
-        // Set date for CurrentTimeLineManager as well
+        // Set the date for CurrentTimeLineManager as well
         if (this.currentTimeLineManager) {
             this.currentTimeLineManager.setTargetDate(date);
         }
@@ -275,7 +275,7 @@ export class TimelineComponent extends Component {
 
     /**
      * Get local events container
-     * @returns {HTMLElement} Local events container
+     * @returns {HTMLElement} The local events container
      */
     getLocalEventsContainer() {
         return this.localEventsContainer;
@@ -283,7 +283,7 @@ export class TimelineComponent extends Component {
 
     /**
      * Get Google events container
-     * @returns {HTMLElement} Google events container
+     * @returns {HTMLElement} The Google events container
      */
     getGoogleEventsContainer() {
         return this.googleEventsContainer;
@@ -291,7 +291,7 @@ export class TimelineComponent extends Component {
 
     /**
      * Get time axis height
-     * @returns {number} Total height (pixels)
+     * @returns {number} The total height (pixels)
      */
     getTotalHeight() {
         return this.TOTAL_HEIGHT;
@@ -299,7 +299,7 @@ export class TimelineComponent extends Component {
 
     /**
      * Get one hour height
-     * @returns {number} One hour height (pixels)
+     * @returns {number} The one hour height (pixels)
      */
     getHourHeight() {
         return this.HOUR_HEIGHT;
@@ -309,7 +309,7 @@ export class TimelineComponent extends Component {
      * Clean up resources
      */
     destroy() {
-        // Destroy current time line management
+        // Destroy the current time line management
         if (this.currentTimeLineManager) {
             this.currentTimeLineManager.destroy();
             this.currentTimeLineManager = null;

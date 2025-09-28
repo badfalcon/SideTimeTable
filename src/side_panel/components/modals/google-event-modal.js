@@ -18,7 +18,7 @@ export class GoogleEventModal extends ModalComponent {
         this.locationElement = null;
         this.meetElement = null;
 
-        // Currently displayed event
+        // The currently displayed event
         this.currentEvent = null;
     }
 
@@ -55,7 +55,7 @@ export class GoogleEventModal extends ModalComponent {
         this.meetElement.className = 'google-event-meet';
         content.appendChild(this.meetElement);
 
-        // Save reference to modalBody
+        // Save the reference to the modalBody
         this.modalBody = content;
 
         return content;
@@ -68,7 +68,7 @@ export class GoogleEventModal extends ModalComponent {
     showEvent(event) {
         this.currentEvent = event;
 
-        // Create element if it doesn't exist
+        // Create the element if it doesn't exist
         if (!this.element) {
             this.createElement();
         }
@@ -111,7 +111,7 @@ export class GoogleEventModal extends ModalComponent {
             const text = document.createElement('span');
             text.textContent = event.calendarName;
 
-            // Set background color if calendar color is available
+            // Set the background color if the calendar color is available
             if (event.calendarBackgroundColor) {
                 const colorIndicator = document.createElement('span');
                 colorIndicator.style.cssText = `
@@ -172,7 +172,7 @@ export class GoogleEventModal extends ModalComponent {
                 return 'All day';
             }
 
-            // For timed events
+            // For the timed events
             const startTime = startDate.toLocaleTimeString('ja-JP', {
                 hour: '2-digit',
                 minute: '2-digit'
@@ -204,7 +204,7 @@ export class GoogleEventModal extends ModalComponent {
             const text = document.createElement('div');
             text.style.cssText = 'margin-left: 20px; white-space: pre-wrap; word-break: break-word;';
 
-            // Remove HTML tags and display text only
+            // Remove the HTML tags and display text only
             text.textContent = this._stripHtml(event.description);
 
             this.descriptionElement.appendChild(icon);
@@ -255,7 +255,7 @@ export class GoogleEventModal extends ModalComponent {
             this.meetElement.appendChild(link);
         }
 
-        // Search for other video conference links
+        // Search for the other video conference links
         const otherVideoUrl = this._extractVideoUrl(event);
         if (otherVideoUrl && !meetUrl) {
             const icon = document.createElement('i');
@@ -277,7 +277,7 @@ export class GoogleEventModal extends ModalComponent {
      * @private
      */
     _setAttendeesInfo(event) {
-        // Create attendees element if it doesn't exist
+        // Create the attendees element if it doesn't exist
         if (!this.attendeesElement) {
             this.attendeesElement = document.createElement('div');
             this.attendeesElement.className = 'mb-3';
@@ -305,7 +305,7 @@ export class GoogleEventModal extends ModalComponent {
                 const attendeeDiv = document.createElement('div');
                 attendeeDiv.style.cssText = 'margin-bottom: 3px; display: flex; align-items: center;';
 
-                // Participation status icon
+                // The participation status icon
                 const statusIcon = document.createElement('i');
                 switch (attendee.responseStatus) {
                     case 'accepted':
@@ -330,7 +330,7 @@ export class GoogleEventModal extends ModalComponent {
                 }
                 statusIcon.style.cssText += ' margin-right: 8px; font-size: 12px;';
 
-                // Attendee name and email
+                // The attendee name and email
                 const nameSpan = document.createElement('span');
                 nameSpan.textContent = attendee.displayName || attendee.email;
                 if (attendee.organizer) {
@@ -413,7 +413,7 @@ export class GoogleEventModal extends ModalComponent {
 
     /**
      * Get currently displayed event
-     * @returns {Object|null} Current event
+     * @returns {Object|null} The current event
      */
     getCurrentEvent() {
         return this.currentEvent;

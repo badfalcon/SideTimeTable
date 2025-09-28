@@ -54,14 +54,6 @@ export class ComponentManager {
         }
     }
 
-    /**
-     * Get component
-     * @param {string} name Component name
-     * @returns {Object|null} Component instance
-     */
-    get(name) {
-        return this.components.get(name);
-    }
 
     /**
      * Initialize all components
@@ -94,45 +86,4 @@ export class ComponentManager {
         this.components.clear();
     }
 
-    /**
-     * Batch operations on specific type of components
-     * @param {string} method Method name
-     * @param {...any} args Method arguments
-     */
-    broadcast(method, ...args) {
-        for (const [name, component] of this.components) {
-            if (component[method] && typeof component[method] === 'function') {
-                try {
-                    component[method](...args);
-                } catch (error) {
-                    console.error(`✗ Broadcast failed for ${name}.${method}:`, error);
-                }
-            }
-        }
-    }
-
-    /**
-     * Get list of registered components
-     * @returns {string[]} Array of component names
-     */
-    list() {
-        return Array.from(this.components.keys());
-    }
-
-    /**
-     * Get component statistics
-     * @returns {Object} Statistics information
-     */
-    getStats() {
-        const total = this.components.size;
-        const visible = Array.from(this.components.values())
-            .filter(comp => comp.element && comp.element.style.display !== 'none').length;
-
-        return {
-            total,
-            visible,
-            hidden: total - visible,
-            names: this.list()
-        };
-    }
 }

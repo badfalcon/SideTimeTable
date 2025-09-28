@@ -30,12 +30,12 @@ export class HeaderComponent extends Component {
     createElement() {
         const wrapper = super.createElement();
 
-        // Skip if content is already created
+        // Skip if the content is already created
         if (wrapper.children.length > 0) {
             return wrapper;
         }
 
-        // Create header structure
+        // Create the header structure
         const header = document.createElement('div');
         header.id = 'sideTimeTableHeader';
 
@@ -54,17 +54,17 @@ export class HeaderComponent extends Component {
         this.settingsButton.id = 'settingsIcon';
         this.settingsButton.setAttribute('data-localize-title', '__MSG_settings__');
 
-        // Add elements to header
+        // Add the elements to the header
         header.appendChild(this.addEventButton);
         header.appendChild(dateNavigation);
         header.appendChild(this.settingsButton);
 
         wrapper.appendChild(header);
 
-        // Setup event listeners
+        // Setup the event listeners
         this._setupEventListeners();
 
-        // Set initial date
+        // Set the initial date
         this._updateDateDisplay();
 
         return wrapper;
@@ -78,7 +78,7 @@ export class HeaderComponent extends Component {
         const container = document.createElement('div');
         container.id = 'dateNavigation';
 
-        // Previous day button
+        // The previous day button
         this.prevDateButton = document.createElement('i');
         this.prevDateButton.className = 'fas fa-chevron-left nav-arrow';
         this.prevDateButton.id = 'prevDateButton';
@@ -90,7 +90,7 @@ export class HeaderComponent extends Component {
         this.dateInput.id = 'currentDateDisplay';
         this.dateInput.setAttribute('data-localize-title', '__MSG_clickToSelectDate__');
 
-        // Next day button
+        // The next day button
         this.nextDateButton = document.createElement('i');
         this.nextDateButton.className = 'fas fa-chevron-right nav-arrow';
         this.nextDateButton.id = 'nextDateButton';
@@ -189,7 +189,7 @@ export class HeaderComponent extends Component {
 
     /**
      * Get current date
-     * @returns {Date} Current date
+     * @returns {Date} The current date
      */
     getCurrentDate() {
         return new Date(this.currentDate);
