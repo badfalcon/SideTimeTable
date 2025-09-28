@@ -347,6 +347,12 @@ class SidePanelUIController {
                 this.googleEventManager.fetchEvents(this.currentDate)
             ]);
 
+            // Calculate layout after all events are loaded
+            // Disable transitions during initial load to prevent visible resize animation
+            if (this.eventLayoutManager) {
+                this.eventLayoutManager.calculateLayout(true);
+            }
+
             // Log results
             if (localResult.status === 'fulfilled') {
             }
@@ -511,6 +517,11 @@ class SidePanelUIController {
             // Reload event display
             await this.localEventManager.loadLocalEvents(this.currentDate);
 
+            // Calculate layout after event save/update
+            if (this.eventLayoutManager) {
+                this.eventLayoutManager.calculateLayout();
+            }
+
         } catch (error) {
             console.error('Local event save error:', error);
             this.alertModal.showError('Failed to save event: ' + error.message);
@@ -550,6 +561,11 @@ class SidePanelUIController {
 
             // Reload event display
             await this.localEventManager.loadLocalEvents(this.currentDate);
+
+            // Calculate layout after event save/update
+            if (this.eventLayoutManager) {
+                this.eventLayoutManager.calculateLayout();
+            }
 
         } catch (error) {
             console.error('Local event deletion error:', error);

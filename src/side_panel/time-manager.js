@@ -380,14 +380,24 @@ export class EventLayoutManager {
     /**
      * Calculate and apply layout for all events
      *
+     * @param {boolean} [disableTransitions=false] - Whether to temporarily disable CSS transitions
      * @example
      * // Calculate layout after registering events
      * layoutManager.registerEvent(event1);
      * layoutManager.registerEvent(event2);
      * layoutManager.calculateLayout();
      */
-    calculateLayout() {
+    calculateLayout(disableTransitions = false) {
         if (this.events.length === 0) return;
+
+        // Temporarily disable transitions if requested
+        if (disableTransitions) {
+            this.events.forEach(event => {
+                if (event.element) {
+                    event.element.classList.add('no-transition');
+                }
+            });
+        }
 
         // Recalculate maximum width
         this.maxWidth = this._calculateMaxWidth();
@@ -403,6 +413,18 @@ export class EventLayoutManager {
                 const eventsWithLanes = this._assignLanesToGroup(group);
                 this._applyMultiEventLayout(eventsWithLanes);
             }
+        }
+
+        // Restore transitions after layout is applied
+        if (disableTransitions) {
+            // Use requestAnimationFrame to ensure layout is applied before restoring transitions
+            requestAnimationFrame(() => {
+                this.events.forEach(event => {
+                    if (event.element) {
+                        event.element.classList.remove('no-transition');
+                    }
+                });
+            });
         }
     }
 

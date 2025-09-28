@@ -256,7 +256,13 @@ export class GoogleEventManager {
         }
 
         eventDiv.style.top = `${startOffset}px`;
-        
+
+        // Set initial width and position to prevent visible resize during layout calculation
+        // This will be overridden by EventLayoutManager, but prevents initial flash
+        const initialWidth = this.eventLayoutManager ? this.eventLayoutManager.maxWidth : 200;
+        eventDiv.style.width = `${initialWidth}px`;
+        eventDiv.style.left = '65px';
+
         // Apply Google colors directly
         if (event.calendarBackgroundColor) {
             eventDiv.style.backgroundColor = event.calendarBackgroundColor;
@@ -486,7 +492,13 @@ export class LocalEventManager {
         }
 
         eventDiv.style.top = `${startOffset}px`;
-        
+
+        // Set initial width and position to prevent visible resize during layout calculation
+        // This will be overridden by EventLayoutManager, but prevents initial flash
+        const initialWidth = this.eventLayoutManager ? this.eventLayoutManager.maxWidth : 200;
+        eventDiv.style.width = `${initialWidth}px`;
+        eventDiv.style.left = '65px';
+
         // Set locale-aware time display asynchronously
         await this._setLocalEventContentWithLocale(eventDiv, startTime, endTime, title);
 
