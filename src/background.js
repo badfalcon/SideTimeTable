@@ -71,7 +71,7 @@ function getCalendarList() {
                     }
                     return response.json();
                 })
-                .then(listData => {
+                .then(async listData => {
                     const calendars = (listData.items || [])
                         .filter(cal => cal.accessRole && cal.accessRole !== 'none')
                         .map(cal => ({
@@ -82,17 +82,18 @@ function getCalendarList() {
                             foregroundColor: cal.foregroundColor
                         }));
 
-                    
+
                     // Automatically select only the primary calendar
                     const primaryCalendar = calendars.find(cal => cal.primary);
                     if (primaryCalendar) {
                         const primaryCalendarIds = [primaryCalendar.id];
-                        StorageHelper.set({ selectedCalendars: primaryCalendarIds })
-                            .catch((error) => {
-                                console.error("Primary calendar selection setting error:", error);
-                            });
+                        try {
+                            await StorageHelper.set({ selectedCalendars: primaryCalendarIds });
+                        } catch (error) {
+                            console.error("Primary calendar selection setting error:", error);
+                        }
                     }
-                    
+
                     resolve(calendars);
                 })
                 .catch(error => {
@@ -383,7 +384,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     return;
                 }
 
-                sendResponse({ success: true, token: token });
+                // After successful authentication, fetch calendar list to set up primary calendar
+                getCalendarList()
+                    .then(() => {
+                        sendResponse({ success: true, token: token });
+                    })
+                    .catch((error) => {
+                        console.error("Calendar list initialization error:", error);
+                        // Still return success as authentication worked
+                        sendResponse({ success: true, token: token });
+                    });
             });
             return true; // Indicates async response
 
