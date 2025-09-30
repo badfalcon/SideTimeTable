@@ -82,7 +82,7 @@ class SidePanelUIController {
 
         } catch (error) {
             console.error('Side panel UI initialization error:', error);
-            this._showError('Error occurred during initialization: ' + error.message);
+            this._showError(chrome.i18n.getMessage('initializationError') + ': ' + error.message);
         }
     }
 

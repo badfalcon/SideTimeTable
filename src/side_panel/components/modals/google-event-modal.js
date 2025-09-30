@@ -74,7 +74,7 @@ export class GoogleEventModal extends ModalComponent {
         }
 
         // Title
-        this.titleElement.textContent = event.summary || 'No Title';
+        this.titleElement.textContent = event.summary || chrome.i18n.getMessage('noTitle');
 
         // Calendar name
         this._setCalendarInfo(event);
@@ -161,7 +161,7 @@ export class GoogleEventModal extends ModalComponent {
             const end = event.end.dateTime || event.end.date;
 
             if (!start || !end) {
-                return 'No time information';
+                return chrome.i18n.getMessage('noTimeInfo');
             }
 
             const startDate = new Date(start);
@@ -169,7 +169,7 @@ export class GoogleEventModal extends ModalComponent {
 
             // For all-day events
             if (event.start.date && event.end.date) {
-                return 'All day';
+                return chrome.i18n.getMessage('allDay');
             }
 
             // For the timed events
@@ -186,7 +186,7 @@ export class GoogleEventModal extends ModalComponent {
             return `${startTime} ～ ${endTime}`;
         } catch (error) {
             console.warn('Time format error:', error);
-            return 'Time information error';
+            return chrome.i18n.getMessage('timeInfoError');
         }
     }
 
@@ -248,7 +248,7 @@ export class GoogleEventModal extends ModalComponent {
             const link = document.createElement('a');
             link.href = meetUrl;
             link.target = '_blank';
-            link.textContent = 'Join Google Meet';
+            link.textContent = chrome.i18n.getMessage('joinGoogleMeet');
             link.style.cssText = 'color: #4285f4; text-decoration: none;';
 
             this.meetElement.appendChild(icon);
@@ -264,7 +264,7 @@ export class GoogleEventModal extends ModalComponent {
             const link = document.createElement('a');
             link.href = otherVideoUrl;
             link.target = '_blank';
-            link.textContent = 'Join video conference';
+            link.textContent = chrome.i18n.getMessage('joinVideoConference');
             link.style.cssText = 'color: #4285f4; text-decoration: none;';
 
             this.meetElement.appendChild(icon);
@@ -296,7 +296,7 @@ export class GoogleEventModal extends ModalComponent {
             container.style.cssText = 'margin-left: 20px;';
 
             const title = document.createElement('div');
-            title.textContent = `Attendees (${event.attendees.length})`;
+            title.textContent = `${chrome.i18n.getMessage('attendees')} (${event.attendees.length})`;
             title.style.cssText = 'font-weight: bold; margin-bottom: 5px;';
 
             const attendeesList = document.createElement('div');
@@ -311,22 +311,22 @@ export class GoogleEventModal extends ModalComponent {
                     case 'accepted':
                         statusIcon.className = 'fas fa-check-circle';
                         statusIcon.style.color = '#28a745';
-                        statusIcon.title = 'Accepted';
+                        statusIcon.title = chrome.i18n.getMessage('accepted');
                         break;
                     case 'declined':
                         statusIcon.className = 'fas fa-times-circle';
                         statusIcon.style.color = '#dc3545';
-                        statusIcon.title = 'Declined';
+                        statusIcon.title = chrome.i18n.getMessage('declined');
                         break;
                     case 'tentative':
                         statusIcon.className = 'fas fa-question-circle';
                         statusIcon.style.color = '#ffc107';
-                        statusIcon.title = 'Tentative';
+                        statusIcon.title = chrome.i18n.getMessage('tentative');
                         break;
                     default:
                         statusIcon.className = 'fas fa-circle';
                         statusIcon.style.color = '#6c757d';
-                        statusIcon.title = 'No response';
+                        statusIcon.title = chrome.i18n.getMessage('noResponse');
                 }
                 statusIcon.style.cssText += ' margin-right: 8px; font-size: 12px;';
 
@@ -334,7 +334,7 @@ export class GoogleEventModal extends ModalComponent {
                 const nameSpan = document.createElement('span');
                 nameSpan.textContent = attendee.displayName || attendee.email;
                 if (attendee.organizer) {
-                    nameSpan.textContent += ' (Organizer)';
+                    nameSpan.textContent += ` (${chrome.i18n.getMessage('organizer')})`;
                     nameSpan.style.fontWeight = 'bold';
                 }
 
