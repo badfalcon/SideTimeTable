@@ -178,6 +178,11 @@ class SidePanelUIController {
         // Initialize all the components
         this.componentManager.initializeAll();
 
+        // Apply localization to dynamically created elements
+        if (window.localizeHtmlPageWithLang) {
+            await window.localizeHtmlPageWithLang();
+        }
+
         // Reinitialize the managers after component initialization
         await this._reinitializeManagers();
     }

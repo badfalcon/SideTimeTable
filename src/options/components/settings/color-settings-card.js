@@ -118,7 +118,7 @@ export class ColorSettingsCard extends CardComponent {
         preview.style.backgroundColor = defaultValue;
         preview.style.color = this._getContrastColor(defaultValue);
         preview.style.fontSize = '0.875rem';
-        preview.textContent = 'Preview';
+        preview.textContent = chrome.i18n.getMessage('preview');
 
         // Set up the input element
         inputSetter(input);
@@ -144,7 +144,7 @@ export class ColorSettingsCard extends CardComponent {
         // The preset title
         const title = document.createElement('h6');
         title.className = 'mb-3';
-        title.textContent = 'Color Presets';
+        title.textContent = chrome.i18n.getMessage('colorPresets');
 
         // The preset button container
         const buttonContainer = document.createElement('div');
@@ -153,7 +153,7 @@ export class ColorSettingsCard extends CardComponent {
         // The preset data
         const presets = [
             {
-                name: 'Default',
+                nameKey: 'presetDefault',
                 colors: {
                     workTimeColor: '#d4d4d4',
                     localEventColor: '#bbf2b1',
@@ -161,7 +161,7 @@ export class ColorSettingsCard extends CardComponent {
                 }
             },
             {
-                name: 'Monochrome',
+                nameKey: 'presetMonochrome',
                 colors: {
                     workTimeColor: '#f0f0f0',
                     localEventColor: '#e0e0e0',
@@ -169,7 +169,7 @@ export class ColorSettingsCard extends CardComponent {
                 }
             },
             {
-                name: 'Pastel',
+                nameKey: 'presetPastel',
                 colors: {
                     workTimeColor: '#fdf2e9',
                     localEventColor: '#e8f5e8',
@@ -177,7 +177,7 @@ export class ColorSettingsCard extends CardComponent {
                 }
             },
             {
-                name: 'Vivid',
+                nameKey: 'presetVivid',
                 colors: {
                     workTimeColor: '#ffecb3',
                     localEventColor: '#c8e6c9',
@@ -205,7 +205,7 @@ export class ColorSettingsCard extends CardComponent {
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'btn btn-outline-secondary btn-sm';
-        button.textContent = preset.name;
+        button.textContent = chrome.i18n.getMessage(preset.nameKey);
 
         // Add the color preview
         const colorPreview = document.createElement('span');
