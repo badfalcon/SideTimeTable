@@ -76,25 +76,53 @@ This project follows a modular ES6 class-based architecture with clear separatio
 
 ## Development Commands
 
-**This project does not use npm, webpack, or any build system.** Files are used directly by Chrome for simplicity and transparency.
+**This project uses webpack + babel for building.** ES6 modules are bundled and transformed to CommonJS for Chrome extension compatibility.
 
-**Packaging for distribution:**
-- `zip_project.bat` (Windows) - PowerShell-based packaging excluding development files
-- `zip_project.sh` (Unix/macOS) - Shell equivalent for packaging
-- Excludes: `.git`, `.idea`, `.md` files, `docs/`, sample configs, and development scripts
+**Build commands:**
+```bash
+npm install           # Install dependencies (required once)
+npm run build         # Production build (output to dist/)
+npm run dev           # Development mode with file watching
+npm run package       # Create release zip file (builds + packages)
+```
+
+**Build system architecture:**
+- **Webpack**: Bundles ES6 modules into CommonJS format
+- **Babel**: Transforms modern JavaScript (ES6+) for compatibility
+- **Entry points**: `background.js`, `side_panel.js`, `options.js`
+- **Output**: `dist/` directory with bundled `.bundle.js` files
+- **Configuration files**:
+  - `webpack.config.js`: Webpack configuration with babel-loader
+  - `babel.config.js`: Babel presets for ES6 → CommonJS transformation
+  - `build-zip.js`: Automated release packaging script
+
+**IntelliJ IDEA integration:**
+- Pre-configured run configurations in `.idea/runConfigurations/`:
+  - `Build.xml`: Production build
+  - `Dev__Watch_.xml`: Development mode with file watching
+  - `Package__Release_.xml`: Create release zip file
 
 ## Extension Development
 
 **Loading the extension:**
-1. Open Chrome and navigate to `chrome://extensions/`
-2. Enable "Developer mode"
-3. Click "Load unpacked" and select the project root directory (contains manifest.json)
+1. Run `npm install` to install dependencies
+2. Run `npm run build` to build the extension
+3. Open Chrome and navigate to `chrome://extensions/`
+4. Enable "Developer mode"
+5. Click "Load unpacked" and select the project root directory (contains manifest.json)
 
 **Development workflow:**
-- Edit files directly in `src/` directory
-- Reload extension in Chrome to see changes (click refresh icon or Ctrl+R on extensions page)
-- Use Developer Tools for debugging (F12 on side panel)
-- No build process required - instant feedback loop
+1. Run `npm run dev` to start file watching (recommended for active development)
+2. Edit source files in `src/` directory
+3. Webpack automatically rebuilds on file save
+4. Reload extension in Chrome to see changes (click refresh icon or Ctrl+R on extensions page)
+5. Use Developer Tools for debugging (F12 on side panel, or click "service worker" link for background.js)
+
+**Why webpack/babel is needed:**
+- Chrome Extension Manifest V3 service workers do not support ES6 `import`/`export`
+- Webpack bundles all modules and their dependencies into single files
+- Babel transforms ES6+ syntax to CommonJS for compatibility
+- HTML-loaded scripts (`side_panel.js`, `options.js`) are also bundled for consistency
 
 **Google API Setup:**
 - OAuth2 configuration in `manifest.json` with `oauth2.client_id` and `oauth2.scopes`
@@ -284,12 +312,35 @@ This project follows a modular ES6 class-based architecture with clear separatio
 - **`.idea/`**: IntelliJ IDEA project configuration
 - **`.git/`**: Git version control (excluded from distribution)
 
+### Build System Files
+- **`webpack.config.js`**: Webpack configuration for bundling
+- **`babel.config.js`**: Babel configuration for ES6 → CommonJS transformation
+- **`build-zip.js`**: Automated release package creation script
+- **`package.json`**: npm dependencies and scripts
+- **`dist/`**: Build output directory (gitignored)
+  - `background.bundle.js`: Bundled background service worker
+  - `side_panel.bundle.js`: Bundled side panel script
+  - `options.bundle.js`: Bundled options page script
+
 ### Distribution Files
 - **`store-descriptions.md`**: Chrome Web Store listing content in Japanese and English
 - **`README.md`**: Project overview and installation instructions
 - **`LICENSE`**: Apache License 2.0 (referenced in README)
+- **`SideTimeTable-release.zip`**: Auto-generated release package (gitignored)
 
 ## Recent Improvements (Latest Updates)
+
+### Build System Integration (2025)
+- **Webpack + Babel introduction**: Full build system for ES6 → CommonJS transformation
+- **Automated bundling**: All JavaScript files bundled for consistent module handling
+- **Service worker compatibility**: Background script now works correctly with ES6 imports
+- **Development workflow**: File watching with automatic rebuild on save
+- **Release automation**: `npm run package` creates distribution-ready zip file
+- **IntelliJ IDEA integration**: Pre-configured run configurations for Build, Dev, Package
+
+### UI/UX Improvements
+- **Removed attendance status icons**: Event cards now display only time and title (no ✅❌❓ icons)
+- **Cleaner event display**: Simplified event card design for better readability
 
 ### Current Time Line Management
 - **Resolved duplicate time line issue**: Replaced duplicate implementations with unified `CurrentTimeLineManager`
@@ -308,4 +359,4 @@ This project follows a modular ES6 class-based architecture with clear separatio
 - **Lane assignment**: Improved algorithm ensures proper horizontal spacing without overlaps
 - **ResponsiveObserver**: Dynamic width adjustments for optimal layout
 
-This architecture demonstrates modern Chrome extension development with clean separation of concerns, robust error handling, comprehensive internationalization support, and production-ready code quality.
+This architecture demonstrates modern Chrome extension development with clean separation of concerns, robust error handling, comprehensive internationalization support, production-ready code quality, and a professional build system for maintainable development.
