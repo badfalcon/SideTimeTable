@@ -2,6 +2,7 @@ const path = require('path');
 
 module.exports = {
   mode: 'production',
+  devtool: 'source-map',
   entry: {
     background: './src/background.js',
     side_panel: './src/side_panel/side_panel.js',
