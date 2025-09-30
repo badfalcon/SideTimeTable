@@ -82,6 +82,9 @@ class OptionsPageManager {
         // Initialize the components
         await this.componentManager.initializeAll();
 
+        // Check Google auth status after components are initialized
+        await this._checkGoogleAuthStatus();
+
         // Re-execute the localization after the component generation
         if (window.localizeHtmlPageWithLang) {
             try {
@@ -122,6 +125,13 @@ class OptionsPageManager {
 
             this.languageSettingsCard.updateSettings(languageSettings);
 
+        } catch (error) {
+            console.error('Settings loading error:', error);
+        }
+    }
+
+    async _checkGoogleAuthStatus() {
+        try {
             // Check the Google integration status
             const response = await new Promise((resolve) => {
                 chrome.runtime.sendMessage({action: 'checkGoogleAuth'}, resolve);
@@ -131,9 +141,8 @@ class OptionsPageManager {
                 this.googleIntegrationCard.updateIntegrationStatus(true);
                 this.calendarManagementCard.show();
             }
-
         } catch (error) {
-            console.error('Settings loading error:', error);
+            console.error('Google auth status check error:', error);
         }
     }
 

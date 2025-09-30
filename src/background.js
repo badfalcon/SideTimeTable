@@ -361,6 +361,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                                 });
             return true; // Indicates async response
 
+        case "checkGoogleAuth":
+            checkGoogleAuth()
+                .then(isAuthenticated => {
+                    sendResponse({authenticated: isAuthenticated});
+                })
+                .catch(error => {
+                    const detail = (error && (error.message || error.toString())) || "Authentication check error";
+                    console.error("Authentication check error details:", error);
+                    sendResponse({ error: detail, errorType: (error && error.name) || undefined });
+                });
+            return true; // Indicates async response
+
         case "authenticateGoogle":
             // Execute the Google authentication
             chrome.identity.getAuthToken({interactive: true}, (token) => {
