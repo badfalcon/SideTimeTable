@@ -295,50 +295,10 @@ export class GoogleEventManager {
 
         const formattedTime = window.formatTimeForLocale(timeString, locale);
 
-        // Show additional information if the attendee information is available
-        let displayText = `${formattedTime} - ${summary}`;
-
-        if (event.attendees && event.attendees.length > 0) {
-            // Check the own attendance status
-            const myStatus = this._getMyAttendanceStatus(event.attendees);
-            if (myStatus) {
-                const statusIcon = this._getStatusIcon(myStatus);
-                displayText = `${formattedTime} ${statusIcon} ${summary}`;
-            }
-        }
+        // Display time and title without attendance status
+        const displayText = `${formattedTime} - ${summary}`;
 
         eventDiv.textContent = displayText;
-    }
-
-    /**
-     * Get own attendance status
-     * @param {Array} attendees - Attendees array
-     * @returns {string|null} Attendance status
-     * @private
-     */
-    _getMyAttendanceStatus(attendees) {
-        // Simple implementation: return status of first attendee
-        // In practice, need to match against current user's email address
-        return attendees[0]?.responseStatus || null;
-    }
-
-    /**
-     * Get icon according to status
-     * @param {string} status - Attendance status
-     * @returns {string} The icon character
-     * @private
-     */
-    _getStatusIcon(status) {
-        switch (status) {
-            case 'accepted':
-                return '✅';
-            case 'declined':
-                return '❌';
-            case 'tentative':
-                return '❓';
-            default:
-                return '⚪';
-        }
     }
 
 
