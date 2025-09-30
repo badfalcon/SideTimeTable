@@ -36,7 +36,7 @@ export class ControlButtonsComponent {
 
     async _handleReset() {
         // The confirmation dialog
-        const confirmed = confirm('Reset all settings to default? This action cannot be undone.');
+        const confirmed = confirm(chrome.i18n.getMessage('confirmResetSettings'));
         if (!confirmed) return;
 
         this.setResetState('resetting');
@@ -45,10 +45,10 @@ export class ControlButtonsComponent {
             if (this.onReset) {
                 await this.onReset();
             }
-            this._showSuccess('Settings reset to default');
+            this._showSuccess(chrome.i18n.getMessage('settingsReset'));
         } catch (error) {
             console.error('Reset error:', error);
-            this._showError('Failed to reset settings');
+            this._showError(chrome.i18n.getMessage('resetFailed'));
         } finally {
             this.setResetState('idle');
         }
@@ -63,13 +63,13 @@ export class ControlButtonsComponent {
                 this.resetButton.disabled = true;
                 this.resetButton.innerHTML = `
                     <span class="spinner-border spinner-border-sm me-1" role="status"></span>
-                    Resetting...
+                    ${chrome.i18n.getMessage('resetting')}
                 `;
                 break;
             case 'idle':
             default:
                 this.resetButton.disabled = false;
-                this.resetButton.innerHTML = 'Reset to Default';
+                this.resetButton.innerHTML = chrome.i18n.getMessage('resetToDefault');
                 break;
         }
     }
