@@ -205,6 +205,14 @@
     "message": "設定をデフォルトに戻しました",
     "description": "設定リセット完了メッセージ"
   },
+  "resetting": {
+    "message": "リセット中...",
+    "description": "設定リセット中に表示されるテキスト"
+  },
+  "resetFailed": {
+    "message": "設定のリセットに失敗しました",
+    "description": "設定リセット失敗時のエラーメッセージ"
+  },
   "clickToToday": {
     "message": "クリックで今日に移動",
     "description": "日付表示クリック時のツールチップ"
