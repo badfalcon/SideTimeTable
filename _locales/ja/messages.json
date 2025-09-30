@@ -512,5 +512,73 @@
   "nextDay": {
     "message": "翌日",
     "description": "翌日ボタンのツールチップ"
+  },
+  "noTitle": {
+    "message": "タイトルなし",
+    "description": "イベントにタイトルがない場合のデフォルトテキスト"
+  },
+  "noTimeInfo": {
+    "message": "時刻情報なし",
+    "description": "イベントの時刻情報がない場合のテキスト"
+  },
+  "allDay": {
+    "message": "終日",
+    "description": "終日イベントのラベル"
+  },
+  "timeInfoError": {
+    "message": "時刻情報エラー",
+    "description": "時刻フォーマットエラー時のメッセージ"
+  },
+  "joinGoogleMeet": {
+    "message": "Google Meetに参加",
+    "description": "Google Meetに参加するリンクテキスト"
+  },
+  "joinVideoConference": {
+    "message": "ビデオ会議に参加",
+    "description": "他のビデオ会議に参加するリンクテキスト"
+  },
+  "attendees": {
+    "message": "参加者",
+    "description": "参加者リストのラベル"
+  },
+  "accepted": {
+    "message": "参加",
+    "description": "参加者が招待を承諾したステータス"
+  },
+  "declined": {
+    "message": "不参加",
+    "description": "参加者が招待を辞退したステータス"
+  },
+  "tentative": {
+    "message": "仮承諾",
+    "description": "参加者が仮承諾したステータス"
+  },
+  "noResponse": {
+    "message": "未回答",
+    "description": "参加者がまだ回答していないステータス"
+  },
+  "organizer": {
+    "message": "主催者",
+    "description": "イベント主催者のラベル"
+  },
+  "pleaseEnterTitle": {
+    "message": "タイトルを入力してください",
+    "description": "イベントタイトルが空の場合のエラー"
+  },
+  "pleaseEnterStartTime": {
+    "message": "開始時刻を入力してください",
+    "description": "開始時刻が未入力の場合のエラー"
+  },
+  "pleaseEnterEndTime": {
+    "message": "終了時刻を入力してください",
+    "description": "終了時刻が未入力の場合のエラー"
+  },
+  "endTimeMustBeLater": {
+    "message": "終了時刻は開始時刻より後にしてください",
+    "description": "終了時刻が開始時刻より前の場合のエラー"
+  },
+  "initializationError": {
+    "message": "初期化中にエラーが発生しました",
+    "description": "初期化失敗時のエラーメッセージ"
   }
 }

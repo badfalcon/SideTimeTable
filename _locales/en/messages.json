@@ -512,5 +512,73 @@
   "nextDay": {
     "message": "Next day",
     "description": "Next day button tooltip"
+  },
+  "noTitle": {
+    "message": "No Title",
+    "description": "Default text when event has no title"
+  },
+  "noTimeInfo": {
+    "message": "No time information",
+    "description": "Text when event time information is missing"
+  },
+  "allDay": {
+    "message": "All day",
+    "description": "Label for all-day events"
+  },
+  "timeInfoError": {
+    "message": "Time information error",
+    "description": "Error message for time formatting issues"
+  },
+  "joinGoogleMeet": {
+    "message": "Join Google Meet",
+    "description": "Link text to join Google Meet"
+  },
+  "joinVideoConference": {
+    "message": "Join video conference",
+    "description": "Link text to join other video conference"
+  },
+  "attendees": {
+    "message": "Attendees",
+    "description": "Label for attendees list"
+  },
+  "accepted": {
+    "message": "Accepted",
+    "description": "Status when attendee accepted invitation"
+  },
+  "declined": {
+    "message": "Declined",
+    "description": "Status when attendee declined invitation"
+  },
+  "tentative": {
+    "message": "Tentative",
+    "description": "Status when attendee tentatively accepted"
+  },
+  "noResponse": {
+    "message": "No response",
+    "description": "Status when attendee has not responded"
+  },
+  "organizer": {
+    "message": "Organizer",
+    "description": "Label for event organizer"
+  },
+  "pleaseEnterTitle": {
+    "message": "Please enter a title",
+    "description": "Error when event title is empty"
+  },
+  "pleaseEnterStartTime": {
+    "message": "Please enter a start time",
+    "description": "Error when start time is missing"
+  },
+  "pleaseEnterEndTime": {
+    "message": "Please enter an end time",
+    "description": "Error when end time is missing"
+  },
+  "endTimeMustBeLater": {
+    "message": "End time must be later than start time",
+    "description": "Error when end time is before start time"
+  },
+  "initializationError": {
+    "message": "Error occurred during initialization",
+    "description": "Error message when initialization fails"
   }
 }

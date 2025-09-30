@@ -234,20 +234,20 @@ export class LocalEventModal extends ModalComponent {
     _validateForm() {
         // Title check
         if (!this.titleInput.value.trim()) {
-            this._showError('Please enter a title');
+            this._showError(chrome.i18n.getMessage('pleaseEnterTitle'));
             this.titleInput.focus();
             return false;
         }
 
         // Time check
         if (!this.startTimeInput.value) {
-            this._showError('Please enter a start time');
+            this._showError(chrome.i18n.getMessage('pleaseEnterStartTime'));
             this.startTimeInput.focus();
             return false;
         }
 
         if (!this.endTimeInput.value) {
-            this._showError('Please enter an end time');
+            this._showError(chrome.i18n.getMessage('pleaseEnterEndTime'));
             this.endTimeInput.focus();
             return false;
         }
@@ -273,7 +273,7 @@ export class LocalEventModal extends ModalComponent {
         const endTime = this.endTimeInput.value;
 
         if (startTime >= endTime) {
-            this._showError('End time must be later than start time');
+            this._showError(chrome.i18n.getMessage('endTimeMustBeLater'));
             this.endTimeInput.focus();
             return false;
         }
