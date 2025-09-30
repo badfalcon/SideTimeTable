@@ -82,7 +82,7 @@ export class HeaderComponent extends Component {
         this.prevDateButton = document.createElement('i');
         this.prevDateButton.className = 'fas fa-chevron-left nav-arrow';
         this.prevDateButton.id = 'prevDateButton';
-        this.prevDateButton.title = 'Previous day';
+        this.prevDateButton.setAttribute('data-localize-title', '__MSG_previousDay__');
 
         // Date input
         this.dateInput = document.createElement('input');
@@ -94,7 +94,7 @@ export class HeaderComponent extends Component {
         this.nextDateButton = document.createElement('i');
         this.nextDateButton.className = 'fas fa-chevron-right nav-arrow';
         this.nextDateButton.id = 'nextDateButton';
-        this.nextDateButton.title = 'Next day';
+        this.nextDateButton.setAttribute('data-localize-title', '__MSG_nextDay__');
 
         container.appendChild(this.prevDateButton);
         container.appendChild(this.dateInput);

@@ -125,10 +125,10 @@ export class GoogleIntegrationCard extends CardComponent {
                 this.statusElement.removeAttribute('data-localize');
             } else if (integrated) {
                 this.statusElement.setAttribute('data-localize', '__MSG_integrated__');
-                this.statusElement.textContent = 'Integrated';
+                this.statusElement.textContent = chrome.i18n.getMessage('integrated');
             } else {
                 this.statusElement.setAttribute('data-localize', '__MSG_notIntegrated__');
-                this.statusElement.textContent = 'Not integrated';
+                this.statusElement.textContent = chrome.i18n.getMessage('notIntegrated');
             }
         }
 
@@ -136,7 +136,9 @@ export class GoogleIntegrationCard extends CardComponent {
         if (this.integrationButton) {
             const textSpan = this.integrationButton.querySelector('.gsi-material-button-contents');
             if (textSpan) {
-                textSpan.textContent = integrated ? 'Disconnect Google' : 'Sign in with Google';
+                textSpan.textContent = integrated
+                    ? chrome.i18n.getMessage('disconnectGoogle')
+                    : chrome.i18n.getMessage('signInWithGoogle');
             }
         }
     }

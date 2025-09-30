@@ -105,7 +105,7 @@ export class TimeSettingsCard extends CardComponent {
         const separator = document.createElement('span');
         separator.className = 'input-group-text';
         separator.setAttribute('data-localize', '__MSG_to__');
-        separator.textContent = '～';
+        separator.textContent = chrome.i18n.getMessage('to');
 
         // The end time
         this.closeTimeInput = document.createElement('input');
@@ -180,7 +180,7 @@ export class TimeSettingsCard extends CardComponent {
         const separator = document.createElement('span');
         separator.className = 'input-group-text';
         separator.setAttribute('data-localize', '__MSG_to__');
-        separator.textContent = '～';
+        separator.textContent = chrome.i18n.getMessage('to');
 
         // The end time
         this.breakTimeEndInput = document.createElement('input');
