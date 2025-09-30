@@ -45,13 +45,11 @@ class OptionsPageManager {
         this.componentManager.setContainer(container);
 
         // Create the Google integration card
-        this.googleIntegrationCard = new GoogleIntegrationCard(
-            this.handleGoogleIntegrationChange.bind(this)
-        );
+        this.googleIntegrationCard = new GoogleIntegrationCard(this.handleGoogleIntegrationChange.bind(this));
         this.componentManager.register('googleIntegration', this.googleIntegrationCard);
 
         // Create the calendar management card
-        this.calendarManagementCard = new CalendarManagementCard();
+        this.calendarManagementCard = new CalendarManagementCard(this.handleCalendarSelectionChange.bind(this));
         this.componentManager.register('calendarManagement', this.calendarManagementCard);
 
         // Create the time settings card
@@ -71,9 +69,7 @@ class OptionsPageManager {
         this.componentManager.register('shortcutSettings', this.shortcutSettingsCard);
 
         // Create control buttons
-        this.controlButtons = new ControlButtonsComponent(
-            this.handleResetSettings.bind(this)
-        );
+        this.controlButtons = new ControlButtonsComponent(this.handleResetSettings.bind(this));
         this.componentManager.register('controlButtons', this.controlButtons);
 
         // Load the existing settings and apply them to the components
@@ -257,6 +253,15 @@ class OptionsPageManager {
             this._reloadSidePanel();
         } catch (error) {
             logError('Language settings save', error);
+        }
+    }
+
+    async handleCalendarSelectionChange(selectedCalendarIds) {
+        try {
+            // Reload the side panel to reflect calendar changes
+            this._reloadSidePanel();
+        } catch (error) {
+            logError('Calendar selection change', error);
         }
     }
 

@@ -5,7 +5,7 @@ import { CardComponent } from '../base/card-component.js';
 import { loadSelectedCalendars, saveSelectedCalendars, logError } from '../../../lib/utils.js';
 
 export class CalendarManagementCard extends CardComponent {
-    constructor() {
+    constructor(onCalendarSelectionChange) {
         super({
             id: 'calendar-management-card',
             title: 'Calendar Management',
@@ -17,6 +17,7 @@ export class CalendarManagementCard extends CardComponent {
             hidden: true
         });
 
+        this.onCalendarSelectionChange = onCalendarSelectionChange;
         this.availableCalendars = {};
         this.selectedCalendarIds = [];
         this.hasAutoFetched = false;
@@ -386,6 +387,10 @@ export class CalendarManagementCard extends CardComponent {
 
         try {
             await saveSelectedCalendars(this.selectedCalendarIds);
+            // Notify parent via callback
+            if (this.onCalendarSelectionChange) {
+                this.onCalendarSelectionChange(this.selectedCalendarIds);
+            }
         } catch (error) {
             logError('Calendar selection save', error);
             this._showError('Failed to save settings');
