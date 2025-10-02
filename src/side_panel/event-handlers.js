@@ -15,6 +15,51 @@ import {createTimeOnDate} from '../lib/time-utils.js';
 import {getDemoEvents, getDemoLocalEvents, isDemoMode} from '../lib/demo-data.js';
 
 /**
+ * Constants for event styling and layout
+ */
+const EVENT_STYLING = {
+    DURATION_THRESHOLDS: {
+        MICRO: 15,     // 15 minutes or less
+        COMPACT: 30    // 30 minutes or less
+    },
+    HEIGHT: {
+        MIN_HEIGHT: 10,      // Minimum clickable height in pixels
+        PADDING_OFFSET: 10   // Padding to subtract from normal events
+    },
+    CSS_CLASSES: {
+        MICRO: 'micro',
+        COMPACT: 'compact'
+    },
+    DEFAULT_VALUES: {
+        ZERO_DURATION_MINUTES: 15,    // Default duration for zero-duration events
+        INITIAL_WIDTH: 200,           // Default width before layout calculation
+        INITIAL_LEFT_OFFSET: 65       // Default left position (60px time labels + 5px margin)
+    }
+};
+
+/**
+ * Apply duration-based styling to event element
+ * @param {HTMLElement} eventDiv - The event element
+ * @param {number} duration - Duration in minutes
+ * @param {string} baseClasses - Base CSS classes (e.g., 'event google-event')
+ */
+function applyDurationBasedStyling(eventDiv, duration, baseClasses) {
+    let sizeClass = '';
+
+    if (duration <= EVENT_STYLING.DURATION_THRESHOLDS.MICRO) {
+        sizeClass = EVENT_STYLING.CSS_CLASSES.MICRO;
+        eventDiv.style.height = `${Math.max(duration, EVENT_STYLING.HEIGHT.MIN_HEIGHT)}px`;
+    } else if (duration <= EVENT_STYLING.DURATION_THRESHOLDS.COMPACT) {
+        sizeClass = EVENT_STYLING.CSS_CLASSES.COMPACT;
+        eventDiv.style.height = `${duration}px`; // Don't subtract padding for short events
+    } else {
+        eventDiv.style.height = `${duration - EVENT_STYLING.HEIGHT.PADDING_OFFSET}px`;
+    }
+
+    eventDiv.className = `${baseClasses} ${sizeClass}`.trim();
+}
+
+/**
  * GoogleEventManager - The Google event management class
  */
 export class GoogleEventManager {
@@ -207,9 +252,9 @@ export class GoogleEventManager {
         const startDate = new Date(event.start.dateTime || event.start.date);
         let endDate = new Date(event.end.dateTime || event.end.date);
 
-        // If the start and end times are the same, treat as a 15-minute appointment
+        // If the start and end times are the same, treat as a default duration appointment
         if (startDate.getTime() >= endDate.getTime()) {
-            endDate = new Date(startDate.getTime() + 15 * 60 * 1000); // Add 15 minutes
+            endDate = new Date(startDate.getTime() + EVENT_STYLING.DEFAULT_VALUES.ZERO_DURATION_MINUTES * 60 * 1000);
         }
 
         // Add time information to data attributes
@@ -234,20 +279,16 @@ export class GoogleEventManager {
         const startOffset = (startDate.getHours() * 60 + startDate.getMinutes());
         const duration = (endDate - startDate) / TIME_CONSTANTS.MINUTE_MILLIS;
 
-        if (duration < 30) {
-            eventDiv.className = 'event google-event short'; // Reduce padding for events less than 30 minutes
-            eventDiv.style.height = `${duration}px`; // Don't subtract padding
-        } else {
-            eventDiv.style.height = `${duration - 10}px`; // Subtract padding
-        }
+        // Apply duration-based styling
+        applyDurationBasedStyling(eventDiv, duration, 'event google-event');
 
         eventDiv.style.top = `${startOffset}px`;
 
         // Set the initial width and position to prevent visible resize during layout calculation
         // This will be overridden by EventLayoutManager, but prevents initial flash
-        const initialWidth = this.eventLayoutManager ? this.eventLayoutManager.maxWidth : 200;
+        const initialWidth = this.eventLayoutManager ? this.eventLayoutManager.maxWidth : EVENT_STYLING.DEFAULT_VALUES.INITIAL_WIDTH;
         eventDiv.style.width = `${initialWidth}px`;
-        eventDiv.style.left = '65px';
+        eventDiv.style.left = `${EVENT_STYLING.DEFAULT_VALUES.INITIAL_LEFT_OFFSET}px`;
 
         // Apply the Google colors directly
         if (event.calendarBackgroundColor) {
@@ -404,20 +445,16 @@ export class LocalEventManager {
         const startOffset = (startDate.getHours() * 60 + startDate.getMinutes());
         const duration = (endDate.getTime() - startDate.getTime()) / TIME_CONSTANTS.MINUTE_MILLIS;
 
-        if (duration < 30) {
-            eventDiv.className = 'event local-event short';
-            eventDiv.style.height = `${duration}px`;
-        } else {
-            eventDiv.style.height = `${duration - 10}px`;
-        }
+        // Apply duration-based styling
+        applyDurationBasedStyling(eventDiv, duration, 'event local-event');
 
         eventDiv.style.top = `${startOffset}px`;
 
         // Set the initial width and position to prevent visible resize during layout calculation
         // This will be overridden by EventLayoutManager, but prevents initial flash
-        const initialWidth = this.eventLayoutManager ? this.eventLayoutManager.maxWidth : 200;
+        const initialWidth = this.eventLayoutManager ? this.eventLayoutManager.maxWidth : EVENT_STYLING.DEFAULT_VALUES.INITIAL_WIDTH;
         eventDiv.style.width = `${initialWidth}px`;
-        eventDiv.style.left = '65px';
+        eventDiv.style.left = `${EVENT_STYLING.DEFAULT_VALUES.INITIAL_LEFT_OFFSET}px`;
 
         // Set locale-aware time display asynchronously
         await this._setLocalEventContentWithLocale(eventDiv, startTime, endTime, title);
