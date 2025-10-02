@@ -74,7 +74,23 @@ export class GoogleEventModal extends ModalComponent {
         }
 
         // Title
-        this.titleElement.textContent = event.summary || chrome.i18n.getMessage('noTitle');
+        this.titleElement.innerHTML = '';
+        if (event.htmlLink) {
+            const titleLink = document.createElement('a');
+            titleLink.href = event.htmlLink;
+            titleLink.target = '_blank';
+            titleLink.textContent = event.summary || chrome.i18n.getMessage('noTitle');
+            titleLink.style.cssText = 'color: inherit; text-decoration: none;';
+            titleLink.addEventListener('mouseenter', () => {
+                titleLink.style.textDecoration = 'underline';
+            });
+            titleLink.addEventListener('mouseleave', () => {
+                titleLink.style.textDecoration = 'none';
+            });
+            this.titleElement.appendChild(titleLink);
+        } else {
+            this.titleElement.textContent = event.summary || chrome.i18n.getMessage('noTitle');
+        }
 
         // Calendar name
         this._setCalendarInfo(event);
