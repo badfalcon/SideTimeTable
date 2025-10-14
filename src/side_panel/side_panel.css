@@ -3,6 +3,7 @@
     --side-calendar-break-time-color: #fda9ca;
     --side-calendar-local-event-color: #bbf2b1;
     --side-calendar-google-event-color: #c3d6f7;
+    --side-calendar-current-time-line-color: #ff0000;
 }
 
 body {
@@ -177,7 +178,7 @@ h1 {
     position: absolute;
     width: calc(100% - 60px);
     height: 2px;
-    background-color: red;
+    background-color: var(--side-calendar-current-time-line-color);
     left: 60px;
     z-index: 32;
     border-left: none;
