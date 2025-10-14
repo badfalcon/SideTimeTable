@@ -2,7 +2,6 @@
     --side-calendar-work-time-color: #d4d4d4;
     --side-calendar-break-time-color: #fda9ca;
     --side-calendar-local-event-color: #bbf2b1;
-    --side-calendar-google-event-color: #c3d6f7;
     --side-calendar-current-time-line-color: #ff0000;
 }
 
@@ -167,7 +166,7 @@ h1 {
 }
 
 .google-event {
-    background-color: var(--side-calendar-google-event-color);
+    /* Background color is set dynamically from Google Calendar API */
 }
 
 .local-event {

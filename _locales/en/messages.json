@@ -165,10 +165,6 @@
     "message": "Local Event Color:",
     "description": "Label for local event color input"
   },
-  "googleEventColor": {
-    "message": "Google Event Color:",
-    "description": "Label for Google event color input"
-  },
   "currentTimeLineColor": {
     "message": "Current Time Line Color:",
     "description": "Label for current time line color input"

@@ -278,9 +278,6 @@ class SidePanelUIController {
             if (settings.localEventColor) {
                 document.documentElement.style.setProperty('--side-calendar-local-event-color', settings.localEventColor);
             }
-            if (settings.googleEventColor) {
-                document.documentElement.style.setProperty('--side-calendar-google-event-color', settings.googleEventColor);
-            }
             if (settings.currentTimeLineColor) {
                 document.documentElement.style.setProperty('--side-calendar-current-time-line-color', settings.currentTimeLineColor);
             }
