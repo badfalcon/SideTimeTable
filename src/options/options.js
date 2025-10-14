@@ -109,7 +109,8 @@ class OptionsPageManager {
             this.colorSettingsCard.updateSettings({
                 workTimeColor: settings.workTimeColor,
                 localEventColor: settings.localEventColor,
-                googleEventColor: settings.googleEventColor
+                googleEventColor: settings.googleEventColor,
+                currentTimeLineColor: settings.currentTimeLineColor
             });
 
             // Load the language settings
@@ -224,7 +225,8 @@ class OptionsPageManager {
                 ...currentSettings,
                 workTimeColor: colorSettings.workTimeColor,
                 localEventColor: colorSettings.localEventColor,
-                googleEventColor: colorSettings.googleEventColor
+                googleEventColor: colorSettings.googleEventColor,
+                currentTimeLineColor: colorSettings.currentTimeLineColor
             };
 
             await saveSettings(updatedSettings);
@@ -233,6 +235,7 @@ class OptionsPageManager {
             document.documentElement.style.setProperty('--side-calendar-work-time-color', colorSettings.workTimeColor);
             document.documentElement.style.setProperty('--side-calendar-local-event-color', colorSettings.localEventColor);
             document.documentElement.style.setProperty('--side-calendar-google-event-color', colorSettings.googleEventColor);
+            document.documentElement.style.setProperty('--side-calendar-current-time-line-color', colorSettings.currentTimeLineColor);
 
             // Reload the side panel
             this._reloadSidePanel();
@@ -280,6 +283,7 @@ class OptionsPageManager {
             document.documentElement.style.setProperty('--side-calendar-work-time-color', DEFAULT_SETTINGS.workTimeColor);
             document.documentElement.style.setProperty('--side-calendar-local-event-color', DEFAULT_SETTINGS.localEventColor);
             document.documentElement.style.setProperty('--side-calendar-google-event-color', DEFAULT_SETTINGS.googleEventColor);
+            document.documentElement.style.setProperty('--side-calendar-current-time-line-color', DEFAULT_SETTINGS.currentTimeLineColor);
 
             // Reload the side panel
             this._reloadSidePanel();

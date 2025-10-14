@@ -169,6 +169,10 @@
     "message": "Google イベント:",
     "description": "Googleイベント色入力のラベル"
   },
+  "currentTimeLineColor": {
+    "message": "現在時刻の線:",
+    "description": "現在時刻の線の色入力のラベル"
+  },
   "calendarSelection": {
     "message": "カレンダー管理",
     "description": "カレンダー管理セクションのタイトル"

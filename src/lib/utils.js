@@ -28,6 +28,7 @@ export const DEFAULT_SETTINGS = {
     breakTimeEnd: TIME_CONSTANTS.DEFAULT_BREAK_END,
     localEventColor: '#bbf2b1',
     googleEventColor: '#c3d6f7',
+    currentTimeLineColor: '#ff0000', // Current time line color
     selectedCalendars: [], // An array of the selected calendar IDs
     language: 'auto' // Language setting (auto/en/ja)
 };

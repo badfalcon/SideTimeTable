@@ -18,12 +18,14 @@ export class ColorSettingsCard extends CardComponent {
         this.workTimeColorInput = null;
         this.localEventColorInput = null;
         this.googleEventColorInput = null;
+        this.currentTimeLineColorInput = null;
 
         // The current setting values
         this.settings = {
             workTimeColor: '#d4d4d4',
             localEventColor: '#bbf2b1',
-            googleEventColor: '#c3d6f7'
+            googleEventColor: '#c3d6f7',
+            currentTimeLineColor: '#ff0000'
         };
     }
 
@@ -82,6 +84,22 @@ export class ColorSettingsCard extends CardComponent {
         row.appendChild(googleEventCol);
 
         form.appendChild(row);
+
+        // Second row for current time line color
+        const row2 = document.createElement('div');
+        row2.className = 'row';
+
+        // The current time line color
+        const currentTimeLineCol = this._createColorInputColumn(
+            'current-time-line-color',
+            '__MSG_currentTimeLineColor__',
+            'Current Time Line:',
+            this.settings.currentTimeLineColor,
+            (input) => this.currentTimeLineColorInput = input
+        );
+        row2.appendChild(currentTimeLineCol);
+
+        form.appendChild(row2);
 
         // The preset button area
         const presetArea = this._createPresetArea();
@@ -282,6 +300,12 @@ export class ColorSettingsCard extends CardComponent {
         });
 
         this.googleEventColorInput?.addEventListener('change', () => this._handleColorChange());
+
+        this.currentTimeLineColorInput?.addEventListener('input', (e) => {
+            this._updatePreview(e.target, e.target.value);
+        });
+
+        this.currentTimeLineColorInput?.addEventListener('change', () => this._handleColorChange());
     }
 
     /**
@@ -305,7 +329,8 @@ export class ColorSettingsCard extends CardComponent {
         return {
             workTimeColor: this.workTimeColorInput?.value || this.settings.workTimeColor,
             localEventColor: this.localEventColorInput?.value || this.settings.localEventColor,
-            googleEventColor: this.googleEventColorInput?.value || this.settings.googleEventColor
+            googleEventColor: this.googleEventColorInput?.value || this.settings.googleEventColor,
+            currentTimeLineColor: this.currentTimeLineColorInput?.value || this.settings.currentTimeLineColor
         };
     }
 
@@ -329,6 +354,11 @@ export class ColorSettingsCard extends CardComponent {
             this.googleEventColorInput.value = this.settings.googleEventColor;
             this._updatePreview(this.googleEventColorInput, this.settings.googleEventColor);
         }
+
+        if (this.currentTimeLineColorInput) {
+            this.currentTimeLineColorInput.value = this.settings.currentTimeLineColor;
+            this._updatePreview(this.currentTimeLineColorInput, this.settings.currentTimeLineColor);
+        }
     }
 
     /**
@@ -338,7 +368,8 @@ export class ColorSettingsCard extends CardComponent {
         const defaultSettings = {
             workTimeColor: '#d4d4d4',
             localEventColor: '#bbf2b1',
-            googleEventColor: '#c3d6f7'
+            googleEventColor: '#c3d6f7',
+            currentTimeLineColor: '#ff0000'
         };
 
         this.updateSettings(defaultSettings);
@@ -352,7 +383,7 @@ export class ColorSettingsCard extends CardComponent {
         const eventType = enabled ? 'input' : 'change';
 
         // Remove the existing listeners and reset
-        [this.workTimeColorInput, this.localEventColorInput, this.googleEventColorInput]
+        [this.workTimeColorInput, this.localEventColorInput, this.googleEventColorInput, this.currentTimeLineColorInput]
             .filter(input => input)
             .forEach(input => {
                 const newInput = input.cloneNode(true);

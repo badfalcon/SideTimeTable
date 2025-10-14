@@ -169,6 +169,10 @@
     "message": "Google Event Color:",
     "description": "Label for Google event color input"
   },
+  "currentTimeLineColor": {
+    "message": "Current Time Line Color:",
+    "description": "Label for current time line color input"
+  },
   "calendarSelection": {
     "message": "Calendar Management",
     "description": "Title of the calendar management section"

@@ -281,6 +281,9 @@ class SidePanelUIController {
             if (settings.googleEventColor) {
                 document.documentElement.style.setProperty('--side-calendar-google-event-color', settings.googleEventColor);
             }
+            if (settings.currentTimeLineColor) {
+                document.documentElement.style.setProperty('--side-calendar-current-time-line-color', settings.currentTimeLineColor);
+            }
 
             // Set the current date
             this.headerComponent.setCurrentDate(this.currentDate);
