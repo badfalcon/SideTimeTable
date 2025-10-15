@@ -158,15 +158,15 @@
     "description": "色設定セクションのタイトル"
   },
   "workTimeColor": {
-    "message": "業務時間:",
+    "message": "業務時間",
     "description": "業務時間色入力のラベル"
   },
   "localEventColor": {
-    "message": "ローカルイベント:",
+    "message": "ローカルイベント",
     "description": "ローカルイベント色入力のラベル"
   },
   "currentTimeLineColor": {
-    "message": "現在時刻の線:",
+    "message": "現在時刻の線",
     "description": "現在時刻の線の色入力のラベル"
   },
   "calendarSelection": {
