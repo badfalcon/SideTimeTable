@@ -47,7 +47,7 @@ export class ColorSettingsCard extends CardComponent {
     _createForm() {
         const form = document.createElement('form');
 
-        // The grid layout
+        // The grid layout - all 3 color settings in one row
         const row = document.createElement('div');
         row.className = 'row';
 
@@ -55,7 +55,7 @@ export class ColorSettingsCard extends CardComponent {
         const workTimeCol = this._createColorInputColumn(
             'work-time-color',
             '__MSG_workTimeColor__',
-            'Work Time:',
+            'Work Time Color',
             this.settings.workTimeColor,
             (input) => this.workTimeColorInput = input
         );
@@ -65,29 +65,23 @@ export class ColorSettingsCard extends CardComponent {
         const localEventCol = this._createColorInputColumn(
             'local-event-color',
             '__MSG_localEventColor__',
-            'Local Event:',
+            'Local Event Color',
             this.settings.localEventColor,
             (input) => this.localEventColorInput = input
         );
         row.appendChild(localEventCol);
 
-        form.appendChild(row);
-
-        // Second row for current time line color
-        const row2 = document.createElement('div');
-        row2.className = 'row';
-
         // The current time line color
         const currentTimeLineCol = this._createColorInputColumn(
             'current-time-line-color',
             '__MSG_currentTimeLineColor__',
-            'Current Time Line:',
+            'Current Time Line Color',
             this.settings.currentTimeLineColor,
             (input) => this.currentTimeLineColorInput = input
         );
-        row2.appendChild(currentTimeLineCol);
+        row.appendChild(currentTimeLineCol);
 
-        form.appendChild(row2);
+        form.appendChild(row);
 
         // The preset button area
         const presetArea = this._createPresetArea();
@@ -104,37 +98,52 @@ export class ColorSettingsCard extends CardComponent {
         const col = document.createElement('div');
         col.className = 'col-md-4 mb-3';
 
-        // The label
-        const label = document.createElement('label');
-        label.htmlFor = `color-settings-${id}`;
-        label.className = 'form-label';
-        label.setAttribute('data-localize', localizeKey);
-        label.textContent = labelText;
+        // Container that combines all elements
+        const container = document.createElement('div');
+        container.className = 'd-flex align-items-center gap-2 p-3 border rounded';
+        container.style.backgroundColor = '#f8f9fa';
 
-        // The color picker
+        // The color picker (smaller, inline)
         const input = document.createElement('input');
         input.type = 'color';
         input.className = 'form-control form-control-color';
         input.id = `color-settings-${id}`;
         input.value = defaultValue;
+        input.style.width = '50px';
+        input.style.height = '50px';
+        input.style.flexShrink = '0';
+        input.style.cursor = 'pointer';
 
-        // The preview display
+        // Text container (label + preview color name)
+        const textContainer = document.createElement('div');
+        textContainer.className = 'flex-grow-1';
+
+        // The label
+        const label = document.createElement('label');
+        label.htmlFor = `color-settings-${id}`;
+        label.className = 'form-label mb-1 fw-bold d-block';
+        label.setAttribute('data-localize', localizeKey);
+        label.textContent = labelText;
+        label.style.cursor = 'pointer';
+
+        // The preview (color value display)
         const preview = document.createElement('div');
-        preview.className = 'mt-2 p-2 rounded border';
-        preview.style.backgroundColor = defaultValue;
-        preview.style.color = this._getContrastColor(defaultValue);
-        preview.style.fontSize = '0.875rem';
-        preview.textContent = chrome.i18n.getMessage('preview');
+        preview.className = 'text-muted small';
+        preview.textContent = defaultValue;
+        preview.style.fontSize = '0.85rem';
+
+        textContainer.appendChild(label);
+        textContainer.appendChild(preview);
 
         // Set up the input element
         inputSetter(input);
 
-        // Save the function to update preview
+        // Save the preview element reference
         input._preview = preview;
 
-        col.appendChild(label);
-        col.appendChild(input);
-        col.appendChild(preview);
+        container.appendChild(input);
+        container.appendChild(textContainer);
+        col.appendChild(container);
 
         return col;
     }
@@ -211,7 +220,12 @@ export class ColorSettingsCard extends CardComponent {
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'btn btn-outline-secondary btn-sm';
-        button.textContent = chrome.i18n.getMessage(preset.nameKey);
+
+        // Create text node for localization
+        const textSpan = document.createElement('span');
+        textSpan.setAttribute('data-localize', `__MSG_${preset.nameKey}__`);
+        textSpan.textContent = chrome.i18n.getMessage(preset.nameKey);
+        button.appendChild(textSpan);
 
         // Add the color preview
         const colorPreview = document.createElement('span');
@@ -259,8 +273,7 @@ export class ColorSettingsCard extends CardComponent {
      */
     _updatePreview(input, color) {
         if (input._preview) {
-            input._preview.style.backgroundColor = color;
-            input._preview.style.color = this._getContrastColor(color);
+            input._preview.textContent = color.toUpperCase();
         }
     }
 
