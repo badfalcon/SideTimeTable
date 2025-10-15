@@ -1,20 +1,20 @@
 /**
- * SideTimeTable - デモデータ
- * 
- * サンプル画像用のモックイベントデータ
+ * SideTimeTable - Demo Data
+ *
+ * Mock event data for the sample images
  */
 
 /**
- * ロケール対応のメッセージを取得
- * @param {string} key - メッセージキー
- * @returns {Promise<string>} ローカライズされたメッセージ
+ * Get a locale-compatible message
+ * @param {string} key - The message key
+ * @returns {Promise<string>} The localized message
  */
 async function getLocalizedMessage(key) {
     try {
-        // 現在のロケール設定を取得
+        // Get the current locale setting
         const locale = await window.getCurrentLocale();
         
-        // メッセージファイルのパスを決定
+        // Determine the message file path
         const messageFiles = {
             'en': '_locales/en/messages.json',
             'ja': '_locales/ja/messages.json'
@@ -28,20 +28,20 @@ async function getLocalizedMessage(key) {
             return messages[key]?.message || key;
         }
     } catch (error) {
-        console.warn('ローカライズメッセージ取得エラー:', error);
+        console.warn('Localized message acquisition error:', error);
     }
     
-    // フォールバック
+    // The fallback
     return await getLocalizedMessage(key) || key;
 }
 
 /**
- * デモ用のGoogleカレンダーイベントデータ
- * @returns {Promise<Array>} デモイベントの配列を返すPromise
+ * The demo Google Calendar event data
+ * @returns {Promise<Array>} A promise that returns an array of demo events
  */
 export async function getDemoEvents() {
     const today = new Date();
-    // 今日の日付でイベントを生成
+    // Generate the events with today's date
     const events = [
         {
             id: 'demo-1',
@@ -287,47 +287,55 @@ export async function getDemoEvents() {
 }
 
 /**
- * デモ用のローカルイベントデータ
- * @returns {Promise<Array>} デモローカルイベントの配列を返すPromise
+ * The demo local event data
+ * @returns {Promise<Array>} A promise that returns an array of demo local events
  */
 export async function getDemoLocalEvents() {
     return [
         {
+            id: 'demo_local_1',
             title: await getLocalizedMessage('demo_local_event_title_morning_routine'),
             startTime: '08:00',
-            endTime: '08:30'
+            endTime: '08:30',
+            reminder: true
         },
         {
+            id: 'demo_local_2',
             title: await getLocalizedMessage('demo_local_event_title_focus_time'),
             startTime: '13:45',
-            endTime: '14:45'
+            endTime: '14:45',
+            reminder: false
         },
         {
+            id: 'demo_local_3',
             title: await getLocalizedMessage('demo_local_event_title_exercise'),
             startTime: '16:45',
-            endTime: '17:15'
+            endTime: '17:15',
+            reminder: true
         },
         {
+            id: 'demo_local_4',
             title: await getLocalizedMessage('demo_local_event_title_reading_time'),
             startTime: '20:00',
-            endTime: '21:00'
+            endTime: '21:00',
+            reminder: false
         }
     ];
 }
 
 /**
- * デモモードかどうかを判定
- * @returns {boolean} デモモードの場合true
+ * Determine if in the demo mode
+ * @returns {boolean} true if in the demo mode
  */
 export function isDemoMode() {
-    // URLパラメータまたは設定でデモモードを判定
+    // Determine the demo mode from the URL parameters or settings
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get('demo') === 'true' || localStorage.getItem('sideTimeTableDemo') === 'true';
 }
 
 /**
- * デモモードを有効/無効にする
- * @param {boolean} enabled - デモモードを有効にするかどうか
+ * Enable/disable the demo mode
+ * @param {boolean} enabled - Whether to enable the demo mode
  */
 export function setDemoMode(enabled) {
     if (enabled) {

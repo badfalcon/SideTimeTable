@@ -2,7 +2,7 @@
     --side-calendar-work-time-color: #d4d4d4;
     --side-calendar-break-time-color: #fda9ca;
     --side-calendar-local-event-color: #bbf2b1;
-    --side-calendar-google-event-color: #c3d6f7;
+    --side-calendar-current-time-line-color: #ff0000;
 }
 
 body {
@@ -22,12 +22,12 @@ h1 {
     position: relative;
     padding-left: 60px;
     border: 1px solid #ccc;
-    height: calc(100vh - 120px); /* ビューポート高さ - ヘッダー・padding・margin等を引いて目一杯使用 */
-    overflow-y: auto; /* 縦スクロールを有効にする */
+    height: calc(100vh - 120px); /* Viewport height - header, padding, margin etc. for full use */
+    overflow-y: auto; /* Enable vertical scrolling */
 }
 
 #sideTimeTableHeaderWrapper{
-/* 上部に固定(sticky)   */
+/* Fixed to top (sticky) */
     position: sticky;
     top: 0;
     z-index: 100;
@@ -68,12 +68,12 @@ h1 {
     cursor: pointer;
     transition: color 0.2s ease;
     
-    /* inputのデフォルトスタイルを無効化 */
+    /* Disable default input styles */
     border: none;
     background: none;
     outline: none;
     
-    /* テキストスタイル */
+    /* Text styles */
     font-family: inherit;
     font-weight: normal;
     color: inherit;
@@ -88,7 +88,7 @@ h1 {
     font-weight: bold;
 }
 
-/* 日付ピッカーのカレンダーアイコンを透明にして機能は残す */
+/* Make date picker calendar icon transparent while keeping functionality */
 #currentDateDisplay::-webkit-calendar-picker-indicator {
     cursor: pointer;
 }
@@ -100,7 +100,7 @@ h1 {
 
 .add-local-event-icon {
     font-size: 24px;
-    cursor: pointer;     /* ポインターにカーソルを変更 */
+    cursor: pointer;     /* Change cursor to pointer */
 }
 
 #sideTimeTableHeader > h1 {
@@ -121,7 +121,7 @@ h1 {
     position: absolute;
     left: 0;
     right: 0;
-    height: 1440px; /* 24時間分の高さ (24 * 60px) */
+    height: 1440px; /* Height for 24 hours (24 * 60px) */
     padding-left: 60px;
     z-index: 10;
 }
@@ -130,7 +130,7 @@ h1 {
     position: absolute;
     left: 0;
     width: 100%;
-    height: 1440px; /* 24時間分の高さ (24 * 60px) */
+    height: 1440px; /* Height for 24 hours (24 * 60px) */
     z-index: 20;
 }
 
@@ -146,15 +146,19 @@ h1 {
 .event {
     position: absolute;
     left: 65px;
-    width: 200px;
+    /* width: 200px; - Removed fixed width, dynamic width is set by EventLayoutManager */
     padding: 5px 10px;
     background: lightgray;
     border-radius: 5px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
     z-index: 21;
-    transition: left 0.3s, width 0.3s; /* スムーズな移動のためのトランジション */
-    overflow: hidden; /* テキストがはみ出さないようにする */
-    text-overflow: ellipsis; /* はみ出したテキストを省略記号で表示 */
+    transition: left 0.3s, width 0.3s; /* Smooth transition for movement */
+    overflow: hidden; /* Prevent text from overflowing */
+    text-overflow: ellipsis; /* Show overflowed text with ellipsis */
+}
+
+.event.no-transition {
+    transition: none !important;
 }
 
 .short {
@@ -162,7 +166,7 @@ h1 {
 }
 
 .google-event {
-    background-color: var(--side-calendar-google-event-color);
+    /* Background color is set dynamically from Google Calendar API */
 }
 
 .local-event {
@@ -173,7 +177,7 @@ h1 {
     position: absolute;
     width: calc(100% - 60px);
     height: 2px;
-    background-color: red;
+    background-color: var(--side-calendar-current-time-line-color);
     left: 60px;
     z-index: 32;
     border-left: none;
@@ -202,7 +206,7 @@ button {
     margin-top: 10px;
 }
 
-/* Googleイベントのアクション行（Meet と Map ボタンを横並び） */
+/* Google event action row (Meet and Map buttons side by side) */
 .google-event-meet {
     display: flex;
     align-items: center;
@@ -220,9 +224,9 @@ button {
     background-color: #0056b3;
 }
 
-/* ローカルイベント作成ダイアログのスタイル */
+/* Local event creation dialog styles */
 .modal {
-    display: none; /* 初期状態で隠す */
+    display: none; /* Hide in initial state */
     position: fixed;
     z-index: 100;
     left: 0;
@@ -230,19 +234,26 @@ button {
     width: 100%;
     height: 100%;
     overflow: auto;
-    background-color: rgba(0, 0, 0, 0.5); /* 半透明の背景を少し濃く */
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background slightly darker */
+    align-items: center;
+    justify-content: center;
+}
+
+.modal[style*="display: block"] {
+    display: flex !important;
 }
 
 .modal-content {
-    background-color: #fff; /* 純白の背景 */
-    margin: auto;
-    padding: 30px; /* 内側の余白を広く */
-    border: 1px solid #ccc; /* グレーの境界線 */
-    width: 70%; /* 幅調整 */
-    max-width: 500px; /* 最大幅を設定 */
-    border-radius: 10px; /* 少し大きめの角丸 */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 影の追加 */
+    background-color: #fff; /* Pure white background */
+    padding: 30px; /* Wide inner padding */
+    border: 1px solid #ccc; /* Gray border */
+    width: 90%; /* Easy to use even on small screens */
+    max-width: 500px; /* Set maximum width */
+    max-height: 90vh; /* Height restriction */
+    border-radius: 10px; /* Slightly larger rounded corners */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add shadow */
     position: relative;
+    overflow-y: auto; /* Scroll when content is long */
 }
 
 .modal-content h2 {
@@ -252,7 +263,7 @@ button {
 .close {
     color: #333;
     float: right;
-    font-size: 32px; /* 文字を少し大きく */
+    font-size: 32px; /* Make text slightly larger */
     font-weight: bold;
 }
 
@@ -263,7 +274,7 @@ button {
     cursor: pointer;
 }
 
-/* フォームのラベルと入力欄のスタイル */
+/* Form label and input field styles */
 label {
     display: block;
     margin-bottom: 5px;
@@ -272,7 +283,7 @@ label {
 
 input[type="text"],
 input[type="time"] {
-    width: calc(100% - 20px); /* 幅を調整 */
+    width: calc(100% - 20px); /* Adjust width */
     padding: 10px;
     margin-bottom: 15px;
     border: 1px solid #ddd;
@@ -288,8 +299,8 @@ button {
 }
 
 #saveEventButton {
-    background-color: #28a745; /* 緑色 */
-    color: #fff; /* 白色の文字 */
+    background-color: #28a745; /* Green color */
+    color: #fff; /* White text */
 }
 
 #saveEventButton:hover,
@@ -298,8 +309,8 @@ button {
 }
 
 #deleteEventButton {
-    background-color: #dc3545; /* 赤色 */
-    color: #fff; /* 白色の文字 */
+    background-color: #dc3545; /* Red color */
+    color: #fff; /* White text */
 }
 
 #deleteEventButton:hover,
@@ -308,8 +319,8 @@ button {
 }
 
 #cancelEventButton {
-    background-color: #6c757d; /* 灰色 */
-    color: #fff; /* 白色の文字 */
+    background-color: #6c757d; /* Gray color */
+    color: #fff; /* White text */
 }
 
 #cancelEventButton:hover,
@@ -317,14 +328,14 @@ button {
     background-color: #5a6268; /* Darker grey */
 }
 
-/* Google イベント詳細のカレンダー名 */
+/* Google event details calendar name */
 .google-event-calendar {
     font-size: 0.9em;
     color: #6c757d;
     font-style: italic;
 }
 
-/* Google イベント詳細内のリンク */
+/* Links within Google event details */
 .google-event-description a,
 .google-event-location a {
     color: #007bff;
@@ -337,7 +348,7 @@ button {
     text-decoration: none;
 }
 
-/* Flexbox レイアウト用のスタイル */
+/* Flexbox layout styles */
 #event-flex-container {
     position: absolute;
     top: 0;
@@ -352,28 +363,28 @@ button {
     flex-direction: column;
     min-height: 100%;
     pointer-events: none;
-    /* デバッグ用のボーダー - 本番では削除可能 */
+    /* Debug border - can be removed in production */
     /* border: 1px dashed rgba(0, 0, 255, 0.2); */
 }
 
-/* イベント要素のflexbox対応調整 */
+/* Event element flexbox adjustments */
 .event {
-    /* flex配置時のスムーズトランジション */
+    /* Smooth transition for flex positioning */
     transition: left 0.2s ease-out, width 0.2s ease-out;
     
-    /* テキストの省略設定を強化 */
+    /* Enhanced text ellipsis settings */
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
     
-    /* 最小幅を確保 */
+    /* Ensure minimum width */
     min-width: 60px;
     
-    /* レスポンシブフォントサイズ */
+    /* Responsive font size */
     font-size: clamp(0.75rem, 1vw, 1rem);
 }
 
-/* レーン数に応じた動的スタイル調整 */
+/* Dynamic style adjustments based on lane count */
 .event.compact {
     padding: 3px 8px;
     font-size: 0.85em;

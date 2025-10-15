@@ -4,7 +4,7 @@
   "name": "SideTimeTable",
   "version": "1.5.0",
   "description": "__MSG_appDesc__",
-  "permissions": ["sidePanel", "identity", "storage"],
+  "permissions": ["sidePanel", "identity", "storage", "notifications", "alarms"],
   "oauth2": {
     "client_id": "FILL_OUT_YOUR_CLIENT_ID",
     "scopes": ["https://www.googleapis.com/auth/calendar.readonly"]
@@ -17,7 +17,7 @@
     "default_path": "src/side_panel/side_panel.html"
   },
   "background": {
-    "service_worker": "src/background.js"
+    "service_worker": "dist/background.bundle.js"
   },
   "options_page": "src/options/options.html",
   "icons": {

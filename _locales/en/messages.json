@@ -47,6 +47,40 @@
     "message": "Cancel",
     "description": "Cancel button text"
   },
+  "remindMeBefore": {
+    "message": "Remind me 5 minutes before",
+    "description": "Checkbox label for event reminder"
+  },
+  "eventReminder": {
+    "message": "Event Reminder",
+    "description": "Title for reminder notification"
+  },
+  "startsInMinutes": {
+    "message": "$EVENT_TITLE$ starts in $MINUTES$ minutes ($START_TIME$)",
+    "description": "Notification message for event reminder",
+    "placeholders": {
+      "event_title": {
+        "content": "$1",
+        "example": "Meeting"
+      },
+      "minutes": {
+        "content": "$2",
+        "example": "5"
+      },
+      "start_time": {
+        "content": "$3",
+        "example": "14:30"
+      }
+    }
+  },
+  "openSideTimeTable": {
+    "message": "Open SideTimeTable",
+    "description": "Notification button text to open side panel"
+  },
+  "dismissNotification": {
+    "message": "Dismiss",
+    "description": "Notification button text to dismiss"
+  },
   "fillAllFields": {
     "message": "Please fill in all fields",
     "description": "Error message when required fields are empty"
@@ -124,16 +158,16 @@
     "description": "Section title for color settings"
   },
   "workTimeColor": {
-    "message": "Work Time Color:",
+    "message": "Work Time Color",
     "description": "Label for work time color input"
   },
   "localEventColor": {
-    "message": "Local Event Color:",
+    "message": "Local Event Color",
     "description": "Label for local event color input"
   },
-  "googleEventColor": {
-    "message": "Google Event Color:",
-    "description": "Label for Google event color input"
+  "currentTimeLineColor": {
+    "message": "Current Time Line Color",
+    "description": "Label for current time line color input"
   },
   "calendarSelection": {
     "message": "Calendar Management",
@@ -170,6 +204,14 @@
   "settingsReset": {
     "message": "Settings have been reset to default",
     "description": "Message when settings are reset to default"
+  },
+  "resetting": {
+    "message": "Resetting...",
+    "description": "Text shown while resetting settings"
+  },
+  "resetFailed": {
+    "message": "Failed to reset settings",
+    "description": "Error message when settings reset fails"
   },
   "clickToToday": {
     "message": "Click to go to today",
@@ -426,5 +468,117 @@
   "demo_local_event_title_reading_time": {
     "message": "Reading Time",
     "description": "Demo local event: reading time"
+  },
+  "preview": {
+    "message": "Preview",
+    "description": "Preview label for color settings"
+  },
+  "colorPresets": {
+    "message": "Color Presets",
+    "description": "Color presets section title"
+  },
+  "presetDefault": {
+    "message": "Default",
+    "description": "Default color preset name"
+  },
+  "presetMonochrome": {
+    "message": "Monochrome",
+    "description": "Monochrome color preset name"
+  },
+  "presetPastel": {
+    "message": "Pastel",
+    "description": "Pastel color preset name"
+  },
+  "presetVivid": {
+    "message": "Vivid",
+    "description": "Vivid color preset name"
+  },
+  "signInWithGoogle": {
+    "message": "Sign in with Google",
+    "description": "Google sign in button text"
+  },
+  "disconnectGoogle": {
+    "message": "Disconnect Google",
+    "description": "Google disconnect button text"
+  },
+  "to": {
+    "message": "to",
+    "description": "Time range separator (e.g., 9:00 to 18:00)"
+  },
+  "previousDay": {
+    "message": "Previous day",
+    "description": "Previous day button tooltip"
+  },
+  "nextDay": {
+    "message": "Next day",
+    "description": "Next day button tooltip"
+  },
+  "noTitle": {
+    "message": "No Title",
+    "description": "Default text when event has no title"
+  },
+  "noTimeInfo": {
+    "message": "No time information",
+    "description": "Text when event time information is missing"
+  },
+  "allDay": {
+    "message": "All day",
+    "description": "Label for all-day events"
+  },
+  "timeInfoError": {
+    "message": "Time information error",
+    "description": "Error message for time formatting issues"
+  },
+  "joinGoogleMeet": {
+    "message": "Join Google Meet",
+    "description": "Link text to join Google Meet"
+  },
+  "joinVideoConference": {
+    "message": "Join video conference",
+    "description": "Link text to join other video conference"
+  },
+  "attendees": {
+    "message": "Attendees",
+    "description": "Label for attendees list"
+  },
+  "accepted": {
+    "message": "Accepted",
+    "description": "Status when attendee accepted invitation"
+  },
+  "declined": {
+    "message": "Declined",
+    "description": "Status when attendee declined invitation"
+  },
+  "tentative": {
+    "message": "Tentative",
+    "description": "Status when attendee tentatively accepted"
+  },
+  "noResponse": {
+    "message": "No response",
+    "description": "Status when attendee has not responded"
+  },
+  "organizer": {
+    "message": "Organizer",
+    "description": "Label for event organizer"
+  },
+  "pleaseEnterTitle": {
+    "message": "Please enter a title",
+    "description": "Error when event title is empty"
+  },
+  "pleaseEnterStartTime": {
+    "message": "Please enter a start time",
+    "description": "Error when start time is missing"
+  },
+  "pleaseEnterEndTime": {
+    "message": "Please enter an end time",
+    "description": "Error when end time is missing"
+  },
+  "endTimeMustBeLater": {
+    "message": "End time must be later than start time",
+    "description": "Error when end time is before start time"
+  },
+  "initializationError": {
+    "message": "Error occurred during initialization",
+    "description": "Error message when initialization fails"
   }
 }

@@ -47,6 +47,40 @@
     "message": "キャンセル",
     "description": "キャンセルボタンのテキスト"
   },
+  "remindMeBefore": {
+    "message": "5分前にリマインドする",
+    "description": "イベントリマインダーのチェックボックスラベル"
+  },
+  "eventReminder": {
+    "message": "イベント リマインダー",
+    "description": "リマインダー通知のタイトル"
+  },
+  "startsInMinutes": {
+    "message": "「$EVENT_TITLE$」があと$MINUTES$分で開始されます（$START_TIME$）",
+    "description": "イベントリマインダーの通知メッセージ",
+    "placeholders": {
+      "event_title": {
+        "content": "$1",
+        "example": "会議"
+      },
+      "minutes": {
+        "content": "$2",
+        "example": "5"
+      },
+      "start_time": {
+        "content": "$3",
+        "example": "14:30"
+      }
+    }
+  },
+  "openSideTimeTable": {
+    "message": "SideTimeTableを開く",
+    "description": "サイドパネルを開く通知ボタンのテキスト"
+  },
+  "dismissNotification": {
+    "message": "閉じる",
+    "description": "通知を閉じるボタンのテキスト"
+  },
   "fillAllFields": {
     "message": "すべてのフィールドを入力してください",
     "description": "必須フィールドが空の場合のエラーメッセージ"
@@ -124,16 +158,16 @@
     "description": "色設定セクションのタイトル"
   },
   "workTimeColor": {
-    "message": "業務時間:",
+    "message": "業務時間",
     "description": "業務時間色入力のラベル"
   },
   "localEventColor": {
-    "message": "ローカルイベント:",
+    "message": "ローカルイベント",
     "description": "ローカルイベント色入力のラベル"
   },
-  "googleEventColor": {
-    "message": "Google イベント:",
-    "description": "Googleイベント色入力のラベル"
+  "currentTimeLineColor": {
+    "message": "現在時刻の線",
+    "description": "現在時刻の線の色入力のラベル"
   },
   "calendarSelection": {
     "message": "カレンダー管理",
@@ -170,6 +204,14 @@
   "settingsReset": {
     "message": "設定をデフォルトに戻しました",
     "description": "設定リセット完了メッセージ"
+  },
+  "resetting": {
+    "message": "リセット中...",
+    "description": "設定リセット中に表示されるテキスト"
+  },
+  "resetFailed": {
+    "message": "設定のリセットに失敗しました",
+    "description": "設定リセット失敗時のエラーメッセージ"
   },
   "clickToToday": {
     "message": "クリックで今日に移動",
@@ -426,5 +468,117 @@
   "demo_local_event_title_reading_time": {
     "message": "読書タイム",
     "description": "デモローカルイベント: 読書タイム"
+  },
+  "preview": {
+    "message": "プレビュー",
+    "description": "カラー設定のプレビューラベル"
+  },
+  "colorPresets": {
+    "message": "カラープリセット",
+    "description": "カラープリセットセクションのタイトル"
+  },
+  "presetDefault": {
+    "message": "デフォルト",
+    "description": "デフォルトカラープリセット名"
+  },
+  "presetMonochrome": {
+    "message": "モノクロ",
+    "description": "モノクロカラープリセット名"
+  },
+  "presetPastel": {
+    "message": "パステル",
+    "description": "パステルカラープリセット名"
+  },
+  "presetVivid": {
+    "message": "ビビッド",
+    "description": "ビビッドカラープリセット名"
+  },
+  "signInWithGoogle": {
+    "message": "Googleでログイン",
+    "description": "Googleログインボタンテキスト"
+  },
+  "disconnectGoogle": {
+    "message": "Google連携を解除",
+    "description": "Google連携解除ボタンテキスト"
+  },
+  "to": {
+    "message": "～",
+    "description": "時間範囲の区切り文字（例: 9:00～18:00）"
+  },
+  "previousDay": {
+    "message": "前日",
+    "description": "前日ボタンのツールチップ"
+  },
+  "nextDay": {
+    "message": "翌日",
+    "description": "翌日ボタンのツールチップ"
+  },
+  "noTitle": {
+    "message": "タイトルなし",
+    "description": "イベントにタイトルがない場合のデフォルトテキスト"
+  },
+  "noTimeInfo": {
+    "message": "時刻情報なし",
+    "description": "イベントの時刻情報がない場合のテキスト"
+  },
+  "allDay": {
+    "message": "終日",
+    "description": "終日イベントのラベル"
+  },
+  "timeInfoError": {
+    "message": "時刻情報エラー",
+    "description": "時刻フォーマットエラー時のメッセージ"
+  },
+  "joinGoogleMeet": {
+    "message": "Google Meetに参加",
+    "description": "Google Meetに参加するリンクテキスト"
+  },
+  "joinVideoConference": {
+    "message": "ビデオ会議に参加",
+    "description": "他のビデオ会議に参加するリンクテキスト"
+  },
+  "attendees": {
+    "message": "参加者",
+    "description": "参加者リストのラベル"
+  },
+  "accepted": {
+    "message": "参加",
+    "description": "参加者が招待を承諾したステータス"
+  },
+  "declined": {
+    "message": "不参加",
+    "description": "参加者が招待を辞退したステータス"
+  },
+  "tentative": {
+    "message": "仮承諾",
+    "description": "参加者が仮承諾したステータス"
+  },
+  "noResponse": {
+    "message": "未回答",
+    "description": "参加者がまだ回答していないステータス"
+  },
+  "organizer": {
+    "message": "主催者",
+    "description": "イベント主催者のラベル"
+  },
+  "pleaseEnterTitle": {
+    "message": "タイトルを入力してください",
+    "description": "イベントタイトルが空の場合のエラー"
+  },
+  "pleaseEnterStartTime": {
+    "message": "開始時刻を入力してください",
+    "description": "開始時刻が未入力の場合のエラー"
+  },
+  "pleaseEnterEndTime": {
+    "message": "終了時刻を入力してください",
+    "description": "終了時刻が未入力の場合のエラー"
+  },
+  "endTimeMustBeLater": {
+    "message": "終了時刻は開始時刻より後にしてください",
+    "description": "終了時刻が開始時刻より前の場合のエラー"
+  },
+  "initializationError": {
+    "message": "初期化中にエラーが発生しました",
+    "description": "初期化失敗時のエラーメッセージ"
   }
 }

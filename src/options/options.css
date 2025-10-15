@@ -7,13 +7,13 @@ body {
     padding: 20px;
 }
 
-/* カレンダー管理カードの調整 */
+/* Calendar management card adjustments */
 #calendar-management-card {
     width: 100%;
     box-sizing: border-box;
 }
 
-/* カレンダーリストのスクロール設定 */
+/* Calendar list scroll settings */
 #calendar-list {
     max-height: 300px;
     overflow-y: auto;
@@ -44,7 +44,7 @@ body {
     background: #999;
 }
 
-/* カレンダーリストアイテムのホバー効果 */
+/* Calendar list item hover effects */
 #calendar-list .form-check {
     width: 100%;
     margin: 0;
@@ -62,7 +62,7 @@ body {
     border-bottom: none;
 }
 
-/* フォームチェック要素の位置調整 */
+/* Form check element position adjustments */
 #calendar-list .form-check-input {
     position: static;
     margin-top: 0;
@@ -74,7 +74,7 @@ body {
     width: 100%;
 }
 
-/* カレンダーアイテムの改善されたスタイル */
+/* Improved calendar item styles */
 #calendar-list .list-group-item {
     border-left: none;
     border-right: none;
@@ -92,7 +92,7 @@ body {
     border-radius: 0;
 }
 
-/* カラーピッカーのスタイル改善 */
+/* Color picker style improvements */
 .form-control-color {
     width: 2.5rem;
     height: 2.5rem;
@@ -100,7 +100,7 @@ body {
     border-radius: 0.375rem;
 }
 
-/* レスポンシブ調整 */
+/* Responsive adjustments */
 @media (max-width: 768px) {
     body {
         padding: 15px;
@@ -131,7 +131,7 @@ body {
     }
 }
 
-/* カードの幅制限 */
+/* Card width restrictions */
 .card {
     max-width: 100%;
     overflow: hidden;

@@ -17,8 +17,10 @@
 
 ### Installation
 1. Clone the repository to your local machine.
-2. Follow browser-specific steps to load an unpacked extension.
-3. Ensure you've configured the necessary Google API credentials for OAuth2.
+2. Install dependencies: `npm install`
+3. Build the extension: `npm run build`
+4. Follow browser-specific steps to load an unpacked extension.
+5. Ensure you've configured the necessary Google API credentials for OAuth2.
 
 ### Usage
 - Click on the extension icon or use keyboard shortcuts to open the side panel.
@@ -28,16 +30,24 @@
 - **Demo Mode**: For development, enable demo mode to test with sample data without API access.
 
 ### Development and Customization
-- Clone this repository.
-- **Main Architecture**: ES6 modules with specialized manager classes:
+- Clone this repository and run `npm install`
+- **Build System**: Webpack + Babel for ES6 → CommonJS transformation
+  - `npm run dev`: Development mode with file watching (auto-rebuild on save)
+  - `npm run build`: Production build
+  - `npm run package`: Create release zip file (builds and packages automatically)
+- **Main Architecture**: ES6 modules bundled with webpack:
   - `src/background.js`: Service worker handling Google Calendar API and OAuth2
   - `src/side_panel/side_panel.js`: Main UI controller with `UIController` class
   - `src/side_panel/time-manager.js`: `TimeTableManager` and `EventLayoutManager` classes
   - `src/side_panel/event-handlers.js`: `GoogleEventManager` and `LocalEventManager` classes
   - `src/options/options.js`: Settings management with `CalendarManager` for calendar search functionality
 - **Styling**: Modify styles in `side_panel.css` with Bootstrap 5.3.0 framework
-- **Packaging**: Run `zip_project.bat` (Windows) or `zip_project.sh` (Unix/Linux/macOS) to create distribution package
-- **No build process required**: Files are used directly by Chrome - just reload the extension to see changes
+- **IntelliJ IDEA**: Pre-configured run configurations available (Build, Dev, Package)
+- **Development Workflow**:
+  1. Run `npm run dev` to start file watching
+  2. Edit source files in `src/`
+  3. Reload extension in Chrome to see changes
+  4. Use `npm run package` to create distribution zip
 
 ### License
 This plugin is released under the [Apache License 2.0]. See the `LICENSE` file for details.
@@ -61,8 +71,10 @@ This plugin is released under the [Apache License 2.0]. See the `LICENSE` file f
 
 ### インストール
 1. リポジトリをローカルマシンにクローンします。
-2. ブラウザに特化した手順に従い、未パックの拡張機能をロードします。
-3. 必要なGoogle APIのOAuth2クレデンシャルを設定していることを確認します。
+2. 依存関係をインストール: `npm install`
+3. 拡張機能をビルド: `npm run build`
+4. ブラウザに特化した手順に従い、未パックの拡張機能をロードします。
+5. 必要なGoogle APIのOAuth2クレデンシャルを設定していることを確認します。
 
 ### 使用方法
 - 拡張機能のアイコンをクリックするか、キーボードショートカットでサイドパネルを開きます。
@@ -83,16 +95,24 @@ This plugin is released under the [Apache License 2.0]. See the `LICENSE` file f
 - 複数イベントが重なる場合は、`maxWidth` の約90%をベースに均等割りし、レーン間ギャップ(5px)を差し引いてレーン幅を決定します。最小幅は 60px です。
 
 ### 開発とカスタマイズ
-- このリポジトリをクローンしてください。
-- **主要アーキテクチャ**: 特化したマネージャークラスを持つES6モジュール構成:
+- このリポジトリをクローンして `npm install` を実行してください
+- **ビルドシステム**: Webpack + BabelでES6 → CommonJS変換
+  - `npm run dev`: 開発モード（ファイル監視、保存時自動リビルド）
+  - `npm run build`: 本番ビルド
+  - `npm run package`: リリース用zipファイル作成（ビルドとパッケージを自動実行）
+- **主要アーキテクチャ**: webpackでバンドルされたES6モジュール構成:
   - `src/background.js`: Google Calendar APIとOAuth2を処理するサービスワーカー
   - `src/side_panel/side_panel.js`: `UIController` クラスによるメインUI制御
   - `src/side_panel/time-manager.js`: `TimeTableManager` と `EventLayoutManager` クラス
-  - `src/side_panel/event-handlers.js`: `GoogleEventManager` と `LocalEventManager` クラス  
+  - `src/side_panel/event-handlers.js`: `GoogleEventManager` と `LocalEventManager` クラス
   - `src/options/options.js`: カレンダー検索機能付き `CalendarManager` による設定管理
 - **スタイリング**: Bootstrap 5.3.0フレームワークで `side_panel.css` のスタイルを変更
-- **パッケージ化**: Windowsでは `zip_project.bat`、Unix/Linux/macOSでは `zip_project.sh` を実行して配布パッケージを作成
-- **ビルドプロセス不要**: ファイルはChromeで直接使用されます - 拡張機能をリロードするだけで変更が反映されます
+- **IntelliJ IDEA**: 実行設定が事前構成済み（Build、Dev、Package）
+- **開発ワークフロー**:
+  1. `npm run dev` でファイル監視を開始
+  2. `src/` 内のソースファイルを編集
+  3. Chromeで拡張機能をリロードして変更を確認
+  4. `npm run package` で配布用zipを作成
 
 ### ライセンス
 このプラグインは[Apache License 2.0]の下で公開されています。詳細は`LICENSE`ファイルを参照してください。
