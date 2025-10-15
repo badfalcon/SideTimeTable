@@ -158,15 +158,15 @@
     "description": "Section title for color settings"
   },
   "workTimeColor": {
-    "message": "Work Time Color:",
+    "message": "Work Time Color",
     "description": "Label for work time color input"
   },
   "localEventColor": {
-    "message": "Local Event Color:",
+    "message": "Local Event Color",
     "description": "Label for local event color input"
   },
   "currentTimeLineColor": {
-    "message": "Current Time Line Color:",
+    "message": "Current Time Line Color",
     "description": "Label for current time line color input"
   },
   "calendarSelection": {
