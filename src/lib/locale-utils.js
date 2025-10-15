@@ -3,8 +3,8 @@
  */
 
 /**
- * 現在の言語設定を取得
- * @returns {Promise<string>} 言語コード（en/ja）
+ * Get the current language setting
+ * @returns {Promise<string>} The language code (en/ja)
  */
 async function getCurrentLocale() {
     try {
@@ -13,7 +13,7 @@ async function getCurrentLocale() {
             return window.resolveLanguageCode(setting);
         }
         
-        // フォールバック
+        // The fallback
         const result = await chrome.storage.sync.get(['language']);
         const languageSetting = result.language || 'auto';
         
@@ -22,16 +22,16 @@ async function getCurrentLocale() {
         }
         return languageSetting;
     } catch (error) {
-        console.warn('ロケール取得エラー:', error);
+        console.warn('Locale acquisition error:', error);
         return chrome.i18n.getUILanguage().startsWith('ja') ? 'ja' : 'en';
     }
 }
 
 /**
- * 時間をロケールに応じてフォーマット
- * @param {string} timeString - HH:mm形式の時間文字列
- * @param {string} locale - ロケール（ja/en）
- * @returns {string} フォーマット済み時間
+ * Format the time according to the locale
+ * @param {string} timeString - The time string in HH:mm format
+ * @param {string} locale - The locale (ja/en)
+ * @returns {string} The formatted time
  */
 function formatTimeForLocale(timeString, locale = 'ja') {
     if (!timeString) return '';
@@ -42,14 +42,14 @@ function formatTimeForLocale(timeString, locale = 'ja') {
         date.setHours(hours, minutes, 0, 0);
         
         if (locale === 'en') {
-            // 英語: 12時間制
+            // English: 12-hour format
             return date.toLocaleTimeString('en-US', {
                 hour: 'numeric',
                 minute: '2-digit',
                 hour12: true
             });
         } else {
-            // 日本語: 24時間制
+            // Japanese: 24-hour format
             return date.toLocaleTimeString('ja-JP', {
                 hour: '2-digit',
                 minute: '2-digit',
@@ -57,30 +57,30 @@ function formatTimeForLocale(timeString, locale = 'ja') {
             });
         }
     } catch (error) {
-        console.warn('時間フォーマットエラー:', error);
+        console.warn('Time format error:', error);
         return timeString;
     }
 }
 
 /**
- * 日付をロケールに応じてフォーマット
- * @param {Date} date - 日付オブジェクト
- * @param {string} locale - ロケール（ja/en）
- * @returns {string} フォーマット済み日付
+ * Format the date according to the locale
+ * @param {Date} date - The date object
+ * @param {string} locale - The locale (ja/en)
+ * @returns {string} The formatted date
  */
 function formatDateForLocale(date, locale = 'ja') {
     if (!date) return '';
     
     try {
         if (locale === 'en') {
-            // 英語: MM/DD/YYYY
+            // English: MM/DD/YYYY
             return date.toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: '2-digit',
                 day: '2-digit'
             });
         } else {
-            // 日本語: YYYY/MM/DD
+            // Japanese: YYYY/MM/DD
             return date.toLocaleDateString('ja-JP', {
                 year: 'numeric',
                 month: '2-digit',
@@ -88,23 +88,23 @@ function formatDateForLocale(date, locale = 'ja') {
             });
         }
     } catch (error) {
-        console.warn('日付フォーマットエラー:', error);
+        console.warn('Date format error:', error);
         return date.toLocaleDateString();
     }
 }
 
 /**
- * 日付を曜日付きでロケールに応じてフォーマット
- * @param {Date} date - 日付オブジェクト
- * @param {string} locale - ロケール（ja/en）
- * @returns {string} フォーマット済み日付（曜日付き）
+ * Format the date with the weekday according to the locale
+ * @param {Date} date - The date object
+ * @param {string} locale - The locale (ja/en)
+ * @returns {string} The formatted date (with the weekday)
  */
 function formatDateWithWeekdayForLocale(date, locale = 'ja') {
     if (!date) return '';
     
     try {
         if (locale === 'en') {
-            // 英語: Mon, MM/DD/YYYY
+            // English: Mon, MM/DD/YYYY
             return date.toLocaleDateString('en-US', {
                 weekday: 'short',
                 year: 'numeric',
@@ -112,7 +112,7 @@ function formatDateWithWeekdayForLocale(date, locale = 'ja') {
                 day: '2-digit'
             });
         } else {
-            // 日本語: YYYY/MM/DD (月)
+            // Japanese: YYYY/MM/DD (Mon)
             return date.toLocaleDateString('ja-JP', {
                 year: 'numeric',
                 month: '2-digit',
@@ -121,17 +121,17 @@ function formatDateWithWeekdayForLocale(date, locale = 'ja') {
             });
         }
     } catch (error) {
-        console.warn('日付フォーマットエラー:', error);
+        console.warn('Date format error:', error);
         return date.toLocaleDateString();
     }
 }
 
 /**
- * 時間範囲をロケールに応じてフォーマット
- * @param {string} startTime - 開始時間（HH:mm）
- * @param {string} endTime - 終了時間（HH:mm）
- * @param {string} locale - ロケール（ja/en）
- * @returns {string} フォーマット済み時間範囲
+ * Format the time range according to the locale
+ * @param {string} startTime - The start time (HH:mm)
+ * @param {string} endTime - The end time (HH:mm)
+ * @param {string} locale - The locale (ja/en)
+ * @returns {string} The formatted time range
  */
 function formatTimeRangeForLocale(startTime, endTime, locale = 'ja') {
     const formattedStart = formatTimeForLocale(startTime, locale);
@@ -145,23 +145,23 @@ function formatTimeRangeForLocale(startTime, endTime, locale = 'ja') {
 }
 
 /**
- * 現在時刻をロケールに応じてフォーマット
- * @param {string} locale - ロケール（ja/en）
- * @returns {string} フォーマット済み現在時刻
+ * Format the current time according to the locale
+ * @param {string} locale - The locale (ja/en)
+ * @returns {string} The formatted current time
  */
 function formatCurrentTimeForLocale(locale = 'ja') {
     const now = new Date();
     
     try {
         if (locale === 'en') {
-            // 英語: 12時間制
+            // English: 12-hour format
             return now.toLocaleTimeString('en-US', {
                 hour: 'numeric',
                 minute: '2-digit',
                 hour12: true
             });
         } else {
-            // 日本語: 24時間制
+            // Japanese: 24-hour format
             return now.toLocaleTimeString('ja-JP', {
                 hour: '2-digit',
                 minute: '2-digit',
@@ -169,12 +169,12 @@ function formatCurrentTimeForLocale(locale = 'ja') {
             });
         }
     } catch (error) {
-        console.warn('現在時刻フォーマットエラー:', error);
+        console.warn('Current time format error:', error);
         return now.toLocaleTimeString();
     }
 }
 
-// グローバル関数として公開
+// Export as the global functions
 window.getCurrentLocale = getCurrentLocale;
 window.formatTimeForLocale = formatTimeForLocale;
 window.formatDateForLocale = formatDateForLocale;

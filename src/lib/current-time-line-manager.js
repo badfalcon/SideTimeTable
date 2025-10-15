@@ -1,91 +1,103 @@
 /**
- * CurrentTimeLineManager - 現在時刻線の管理クラス
- * 
- * このクラスは現在時刻を示す線の表示・非表示と位置計算を担当します。
- * 責任を明確に分離することで、テストしやすく保守しやすい設計になっています。
+ * CurrentTimeLineManager - The current time line management class
+ *
+ * This class manages the display, hiding, and position updates of the line showing the current time.
+ * It is a dedicated class for visually displaying the current time on the timeline.
  */
 
-import {calculateWorkHours} from './time-utils.js';
-import {isDemoMode} from './demo-data.js';
-
 /**
- * 現在時刻線を管理するクラス
+ * The class for managing the current time line
  */
 export class CurrentTimeLineManager {
     /**
-     * CurrentTimeLineManagerのインスタンスを作成
-     * 
-     * @param {HTMLElement} parentElement - 現在時刻線を配置する親要素
+     * Create a CurrentTimeLineManager instance
+     *
+     * @param {HTMLElement} parentElement - The parent element to place the current time line
+     * @param {Date} targetDate - The target date (today if omitted)
      */
-    constructor(parentElement) {
+    constructor(parentElement, targetDate = null) {
         /**
-         * 現在時刻線を配置する親要素
-         * @type {HTMLElement}
+         * The parent element to place the current time line
          */
         this.parentElement = parentElement;
 
         /**
-         * 現在時刻線のDOM要素
-         * @type {HTMLElement|null}
+         * The target date
+         */
+        this.targetDate = targetDate || new Date();
+
+        /**
+         * The DOM element of the current time line
          */
         this.timeLineElement = null;
+
+        /**
+         * The update timer ID
+         */
+        this.updateTimer = null;
     }
 
     /**
-     * 現在時刻線を更新
-     * 
-     * @param {Date} targetDate - 表示対象の日付
-     * @param {string} openHour - 業務開始時間（"HH:MM"形式）
-     * @param {string} closeHour - 業務終了時間（"HH:MM"形式）
-     * @returns {void}
+     * Update the current time line
+     * Show only for today and adjust the position to the current time
      */
-    update(targetDate, openHour, closeHour) {
-        const currentTime = new Date();
-        
-        // 現在時刻線の要素を取得または作成
+    update() {
+        if (!this._shouldShowTimeLine()) {
+            this.hide();
+            return;
+        }
+
+        // Get or create the current time line element
         this._ensureTimeLineElement();
-        
-        // 現在時刻が今日の業務時間内かどうかを判定
-        const shouldShow = this._shouldShowTimeLine(currentTime, targetDate, openHour, closeHour);
-        
-        if (shouldShow) {
-            this._showTimeLine(currentTime, targetDate, openHour, closeHour);
-        } else {
-            this._hideTimeLine();
-        }
+
+        // Update the position
+        this._updatePosition();
+
+        // Show the element
+        this.show();
     }
 
     /**
-     * 現在時刻線を強制的に非表示にする
-     * 
-     * @returns {void}
+     * Force hide the current time line
      */
-    hide() {
+    forceHide() {
+        this.hide();
+        this._stopUpdateTimer();
+    }
+
+    /**
+     * Set the target date
+     * @param {Date} targetDate - The target date
+     */
+    setTargetDate(targetDate) {
+        this.targetDate = targetDate;
+        this.update();
+    }
+
+    /**
+     * Remove the current time line element
+     */
+    destroy() {
+        this._stopUpdateTimer();
+
         if (this.timeLineElement) {
-            this.timeLineElement.style.display = 'none';
-        }
-    }
-
-    /**
-     * 現在時刻線の要素を削除
-     * 
-     * @returns {void}
-     */
-    remove() {
-        if (this.timeLineElement && this.timeLineElement.parentNode) {
-            this.timeLineElement.parentNode.removeChild(this.timeLineElement);
+            this.timeLineElement.remove();
             this.timeLineElement = null;
         }
     }
 
     /**
-     * 現在時刻線のDOM要素が存在することを保証
-     * 
+     * Ensure the current time line DOM element exists
      * @private
-     * @returns {void}
      */
     _ensureTimeLineElement() {
         if (!this.timeLineElement) {
+            // Remove the existing element if any
+            const existing = document.getElementById('currentTimeLine');
+            if (existing) {
+                existing.remove();
+            }
+
             this.timeLineElement = document.createElement('div');
             this.timeLineElement.id = 'currentTimeLine';
             this.timeLineElement.className = 'current-time-line';
@@ -94,88 +106,74 @@ export class CurrentTimeLineManager {
     }
 
     /**
-     * 現在時刻線を表示すべきかどうかを判定
-     * 
+     * Determine if the current time line should be displayed
+     * @returns {boolean} true if it should be displayed
      * @private
-     * @param {Date} currentTime - 現在時刻
-     * @param {Date} targetDate - 表示対象の日付
-     * @returns {boolean} 表示すべき場合true
      */
-    _shouldShowTimeLine(currentTime, targetDate) {
+    _shouldShowTimeLine() {
         try {
-            // 24時間表示なので、今日の場合は常に表示
-            return this._isSameDay(currentTime, targetDate);
+            const today = new Date();
+            return today.toDateString() === this.targetDate.toDateString();
         } catch (error) {
-            console.warn('現在時刻線の表示判定でエラーが発生しました:', error);
+            console.warn('An error occurred in the current time line display determination:', error);
             return false;
         }
     }
 
     /**
-     * 現在時刻線を表示する
-     * 
+     * Show the current time line
      * @private
-     * @param {Date} currentTime - 現在時刻
-     * @param {Date} targetDate - 表示対象の日付
-     * @param {string} openHour - 業務開始時間
-     * @param {string} closeHour - 業務終了時間
-     * @returns {void}
      */
-    _showTimeLine(currentTime, targetDate, openHour, closeHour) {
-        try {
-            const { openTime } = calculateWorkHours(targetDate, openHour, closeHour);
-            const offset = this._calculateTimeLinePosition(currentTime, openTime);
-            
-            this.timeLineElement.style.top = `${offset}px`;
-            this.timeLineElement.style.display = 'block';
-        } catch (error) {
-            console.error('現在時刻線の表示でエラーが発生しました:', error);
-            this._hideTimeLine();
+    show() {
+        if (this.timeLineElement) {
+            this.timeLineElement.style.display = '';
+
+            // Start the timer to update every minute
+            if (!this.updateTimer) {
+                this.updateTimer = setInterval(() => {
+                    this._updatePosition();
+                }, 60000);
+            }
         }
     }
 
     /**
-     * 現在時刻線を非表示にする
-     * 
+     * Hide the current time line
      * @private
-     * @returns {void}
      */
-    _hideTimeLine() {
+    hide() {
         if (this.timeLineElement) {
             this.timeLineElement.style.display = 'none';
         }
+        this._stopUpdateTimer();
     }
 
     /**
-     * 現在時刻線の位置を計算
-     * 
+     * Calculate the current time line position
      * @private
-     * @param {Date} currentTime - 現在時刻
-     * @returns {number} 位置（ピクセル）
      */
-    _calculateTimeLinePosition(currentTime) {
-        // デモモードの場合は固定位置（737px）を返す
-        if (isDemoMode()) {
-            return 737;
+    _updatePosition() {
+        if (!this.timeLineElement) return;
+
+        const now = new Date();
+        const hours = now.getHours();
+        const minutes = now.getMinutes();
+        const totalMinutes = hours * 60 + minutes;
+
+        // Calculate as 1 minute = 1px
+        const topPosition = totalMinutes;
+
+        this.timeLineElement.style.top = `${topPosition}px`;
+    }
+
+    /**
+     * Stop the update timer
+     * @private
+     */
+    _stopUpdateTimer() {
+        if (this.updateTimer) {
+            clearInterval(this.updateTimer);
+            this.updateTimer = null;
         }
-        
-        // 24時間座標系での位置計算（0:00からの分数）
-        return currentTime.getHours() * 60 + currentTime.getMinutes();
-    }
-
-    /**
-     * 2つの日付が同じ日かどうかを判定
-     * 
-     * @private
-     * @param {Date} date1 - 日付1
-     * @param {Date} date2 - 日付2
-     * @returns {boolean} 同じ日の場合true
-     */
-    _isSameDay(date1, date2) {
-        const d1 = new Date(date1);
-        const d2 = new Date(date2);
-        d1.setHours(0, 0, 0, 0);
-        d2.setHours(0, 0, 0, 0);
-        return d1.getTime() === d2.getTime();
     }
 }
