@@ -594,7 +594,39 @@
     "description": "Googleイベントリマインダートグルのラベル"
   },
   "googleEventReminderHelp": {
-    "message": "サイドパネルを閉じていても、各イベントの5分前に通知を受け取ります。",
+    "message": "サイドパネルを閉じていても、イベントの開始前に通知を受け取ります。",
     "description": "Googleイベントリマインダー機能のヘルプテキスト"
+  },
+  "reminderTimeLabel": {
+    "message": "次の時間前に通知:",
+    "description": "リマインダー時間選択のラベル"
+  },
+  "reminderTimeHelp": {
+    "message": "Googleカレンダーとローカルイベントのどちらにも適用されます。",
+    "description": "リマインダー時間設定のヘルプテキスト"
+  },
+  "reminderTime1Min": {
+    "message": "1分",
+    "description": "1分のリマインダーオプション"
+  },
+  "reminderTime5Min": {
+    "message": "5分",
+    "description": "5分のリマインダーオプション"
+  },
+  "reminderTime10Min": {
+    "message": "10分",
+    "description": "10分のリマインダーオプション"
+  },
+  "reminderTime15Min": {
+    "message": "15分",
+    "description": "15分のリマインダーオプション"
+  },
+  "reminderTime30Min": {
+    "message": "30分",
+    "description": "30分のリマインダーオプション"
+  },
+  "reminderTime60Min": {
+    "message": "1時間",
+    "description": "1時間のリマインダーオプション"
   }
 }

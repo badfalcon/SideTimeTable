@@ -129,7 +129,8 @@ class OptionsPageManager {
 
             // Load the reminder settings
             this.reminderSettingsCard.updateSettings({
-                googleEventReminder: settings.googleEventReminder || false
+                googleEventReminder: settings.googleEventReminder || false,
+                reminderMinutes: settings.reminderMinutes || 5
             });
 
         } catch (error) {
@@ -282,7 +283,8 @@ class OptionsPageManager {
             const currentSettings = await loadSettings();
             const updatedSettings = {
                 ...currentSettings,
-                googleEventReminder: reminderSettings.googleEventReminder
+                googleEventReminder: reminderSettings.googleEventReminder,
+                reminderMinutes: reminderSettings.reminderMinutes
             };
 
             await saveSettings(updatedSettings);

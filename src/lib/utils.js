@@ -30,7 +30,8 @@ export const DEFAULT_SETTINGS = {
     currentTimeLineColor: '#ff0000', // Current time line color
     selectedCalendars: [], // An array of the selected calendar IDs
     language: 'auto', // Language setting (auto/en/ja)
-    googleEventReminder: false // Automatic reminder for Google events
+    googleEventReminder: false, // Automatic reminder for Google events
+    reminderMinutes: 5 // Reminder time in minutes before event starts
 };
 
 /**
