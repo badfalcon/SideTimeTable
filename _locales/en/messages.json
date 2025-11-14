@@ -594,7 +594,39 @@
     "description": "Label for Google event reminder toggle"
   },
   "googleEventReminderHelp": {
-    "message": "You will receive notifications 5 minutes before each event starts, even when the side panel is closed.",
+    "message": "You will receive notifications before each event starts, even when the side panel is closed.",
     "description": "Help text for Google event reminder feature"
+  },
+  "reminderTimeLabel": {
+    "message": "Notify me before:",
+    "description": "Label for reminder time selection"
+  },
+  "reminderTimeHelp": {
+    "message": "This applies to both Google Calendar events and local events.",
+    "description": "Help text for reminder time setting"
+  },
+  "reminderTime1Min": {
+    "message": "1 minute",
+    "description": "1 minute reminder option"
+  },
+  "reminderTime5Min": {
+    "message": "5 minutes",
+    "description": "5 minutes reminder option"
+  },
+  "reminderTime10Min": {
+    "message": "10 minutes",
+    "description": "10 minutes reminder option"
+  },
+  "reminderTime15Min": {
+    "message": "15 minutes",
+    "description": "15 minutes reminder option"
+  },
+  "reminderTime30Min": {
+    "message": "30 minutes",
+    "description": "30 minutes reminder option"
+  },
+  "reminderTime60Min": {
+    "message": "1 hour",
+    "description": "1 hour reminder option"
   }
 }

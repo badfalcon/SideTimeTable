@@ -18,11 +18,23 @@ export class ReminderSettingsCard extends CardComponent {
 
         // Form elements
         this.googleReminderToggle = null;
+        this.reminderMinutesSelect = null;
 
         // Current settings values
         this.settings = {
-            googleEventReminder: false
+            googleEventReminder: false,
+            reminderMinutes: 5
         };
+
+        // Available reminder time options (in minutes)
+        this.reminderOptions = [
+            { value: 1, key: '__MSG_reminderTime1Min__', text: '1 minute' },
+            { value: 5, key: '__MSG_reminderTime5Min__', text: '5 minutes' },
+            { value: 10, key: '__MSG_reminderTime10Min__', text: '10 minutes' },
+            { value: 15, key: '__MSG_reminderTime15Min__', text: '15 minutes' },
+            { value: 30, key: '__MSG_reminderTime30Min__', text: '30 minutes' },
+            { value: 60, key: '__MSG_reminderTime60Min__', text: '1 hour' }
+        ];
     }
 
     createElement() {
@@ -48,6 +60,10 @@ export class ReminderSettingsCard extends CardComponent {
         // Google event reminder toggle
         const googleReminderSection = this._createGoogleReminderToggle();
         form.appendChild(googleReminderSection);
+
+        // Reminder time selection
+        const reminderTimeSection = this._createReminderTimeSelect();
+        form.appendChild(reminderTimeSection);
 
         return form;
     }
@@ -92,23 +108,77 @@ export class ReminderSettingsCard extends CardComponent {
     }
 
     /**
+     * Create reminder time selection
+     * @private
+     */
+    _createReminderTimeSelect() {
+        const container = document.createElement('div');
+        container.className = 'mb-3';
+
+        // Label
+        const label = document.createElement('label');
+        label.className = 'form-label fw-semibold';
+        label.htmlFor = 'reminder-minutes-select';
+        label.setAttribute('data-localize', '__MSG_reminderTimeLabel__');
+        label.textContent = 'Notify me before:';
+
+        // Select box
+        this.reminderMinutesSelect = document.createElement('select');
+        this.reminderMinutesSelect.className = 'form-select';
+        this.reminderMinutesSelect.id = 'reminder-minutes-select';
+
+        // Add options
+        this.reminderOptions.forEach(option => {
+            const optionElement = document.createElement('option');
+            optionElement.value = option.value;
+            optionElement.setAttribute('data-localize', option.key);
+            optionElement.textContent = option.text;
+
+            if (option.value === this.settings.reminderMinutes) {
+                optionElement.selected = true;
+            }
+
+            this.reminderMinutesSelect.appendChild(optionElement);
+        });
+
+        // Help text
+        const helpText = document.createElement('small');
+        helpText.className = 'form-text text-muted mt-1';
+        helpText.setAttribute('data-localize', '__MSG_reminderTimeHelp__');
+        helpText.textContent = 'This applies to both Google Calendar events and local events.';
+
+        container.appendChild(label);
+        container.appendChild(this.reminderMinutesSelect);
+        container.appendChild(helpText);
+
+        return container;
+    }
+
+    /**
      * Setup event listeners
      * @private
      */
     _setupEventListeners() {
         if (this.googleReminderToggle) {
             this.googleReminderToggle.addEventListener('change', () => {
-                this._handleGoogleReminderChange();
+                this._handleSettingsChange();
+            });
+        }
+
+        if (this.reminderMinutesSelect) {
+            this.reminderMinutesSelect.addEventListener('change', () => {
+                this._handleSettingsChange();
             });
         }
     }
 
     /**
-     * Handle Google reminder toggle change
+     * Handle settings change
      * @private
      */
-    _handleGoogleReminderChange() {
+    _handleSettingsChange() {
         this.settings.googleEventReminder = this.googleReminderToggle.checked;
+        this.settings.reminderMinutes = parseInt(this.reminderMinutesSelect.value, 10);
 
         if (this.onSettingsChange) {
             this.onSettingsChange(this.settings);
@@ -126,6 +196,13 @@ export class ReminderSettingsCard extends CardComponent {
                 this.googleReminderToggle.checked = settings.googleEventReminder;
             }
         }
+
+        if (settings.reminderMinutes !== undefined) {
+            this.settings.reminderMinutes = settings.reminderMinutes;
+            if (this.reminderMinutesSelect) {
+                this.reminderMinutesSelect.value = settings.reminderMinutes;
+            }
+        }
     }
 
     /**
@@ -133,8 +210,14 @@ export class ReminderSettingsCard extends CardComponent {
      */
     resetToDefaults() {
         this.settings.googleEventReminder = false;
+        this.settings.reminderMinutes = 5;
+
         if (this.googleReminderToggle) {
             this.googleReminderToggle.checked = false;
+        }
+
+        if (this.reminderMinutesSelect) {
+            this.reminderMinutesSelect.value = '5';
         }
     }
 

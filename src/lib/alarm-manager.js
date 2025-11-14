@@ -10,15 +10,22 @@ export class AlarmManager {
      * Set a reminder for an event
      * @param {Object} event The event object with id, title, startTime
      * @param {string} dateStr The date string (YYYY-MM-DD)
+     * @param {number} reminderMinutes Minutes before event to remind (optional, defaults to stored value)
      */
-    static async setReminder(event, dateStr) {
+    static async setReminder(event, dateStr, reminderMinutes = null) {
         if (!event.reminder || !event.startTime) {
             return;
         }
 
         try {
+            // Get reminder minutes from settings if not provided
+            if (reminderMinutes === null) {
+                const settings = await chrome.storage.sync.get(['reminderMinutes']);
+                reminderMinutes = settings.reminderMinutes || this.REMINDER_MINUTES;
+            }
+
             const alarmName = `${this.ALARM_PREFIX}${dateStr}_${event.id}`;
-            const reminderTime = this.calculateReminderTime(event.startTime, dateStr);
+            const reminderTime = this.calculateReminderTime(event.startTime, dateStr, reminderMinutes);
 
             // Only set the alarm for the future times
             if (reminderTime <= Date.now()) {
@@ -77,12 +84,13 @@ export class AlarmManager {
     }
 
     /**
-     * Calculate the reminder time (5 minutes before the event start)
+     * Calculate the reminder time
      * @param {string} timeStr The time string (HH:mm)
      * @param {string} dateStr The date string (YYYY-MM-DD)
+     * @param {number} reminderMinutes Minutes before event to remind
      * @returns {number} The reminder timestamp
      */
-    static calculateReminderTime(timeStr, dateStr) {
+    static calculateReminderTime(timeStr, dateStr, reminderMinutes) {
         try {
             const [hours, minutes] = timeStr.split(':').map(Number);
 
@@ -92,14 +100,13 @@ export class AlarmManager {
             // Create the date in the local timezone using the Date constructor
             const eventDate = new Date(year, month - 1, day, hours, minutes, 0);
 
-            // Subtract 5 minutes
-            const reminderTime = new Date(eventDate.getTime() - (this.REMINDER_MINUTES * 60 * 1000));
-
+            // Subtract the specified minutes
+            const reminderTime = new Date(eventDate.getTime() - (reminderMinutes * 60 * 1000));
 
             return reminderTime.getTime();
         } catch (error) {
             console.error('Error calculating reminder time:', error);
-            return Date.now() + (5 * 60 * 1000); // Fallback: 5 minutes from now
+            return Date.now() + (reminderMinutes * 60 * 1000); // Fallback: specified minutes from now
         }
     }
 
@@ -136,6 +143,9 @@ export class AlarmManager {
                 return;
             }
 
+            // Get reminder minutes (from eventData or settings)
+            const reminderMinutes = eventData.reminderMinutes || this.REMINDER_MINUTES;
+
             // Create the notification
             const notificationId = `reminder_${alarmName}`;
 
@@ -143,8 +153,8 @@ export class AlarmManager {
             const notificationOptions = {
                 type: 'basic',
                 title: chrome.i18n.getMessage('eventReminder') || 'Event Reminder',
-                message: chrome.i18n.getMessage('startsInMinutes', [eventData.title, this.REMINDER_MINUTES.toString(), eventData.startTime])
-                    || `"${eventData.title}" starts in ${this.REMINDER_MINUTES} minutes (${eventData.startTime})`,
+                message: chrome.i18n.getMessage('startsInMinutes', [eventData.title, reminderMinutes.toString(), eventData.startTime])
+                    || `"${eventData.title}" starts in ${reminderMinutes} minutes (${eventData.startTime})`,
                 buttons: [
                     { title: chrome.i18n.getMessage('openSideTimeTable') || 'Open SideTimeTable' },
                     { title: chrome.i18n.getMessage('dismissNotification') || 'Dismiss' }
@@ -217,15 +227,22 @@ export class AlarmManager {
      * Set a reminder for a Google event
      * @param {Object} event The Google event object
      * @param {string} dateStr The date string (YYYY-MM-DD)
+     * @param {number} reminderMinutes Minutes before event to remind (optional, defaults to stored value)
      */
-    static async setGoogleEventReminder(event, dateStr) {
+    static async setGoogleEventReminder(event, dateStr, reminderMinutes = null) {
         if (!event.start || !event.start.dateTime) {
             return; // Skip all-day events
         }
 
         try {
+            // Get reminder minutes from settings if not provided
+            if (reminderMinutes === null) {
+                const settings = await chrome.storage.sync.get(['reminderMinutes']);
+                reminderMinutes = settings.reminderMinutes || this.REMINDER_MINUTES;
+            }
+
             const alarmName = `${this.GOOGLE_ALARM_PREFIX}${dateStr}_${event.id}`;
-            const reminderTime = this.calculateGoogleEventReminderTime(event.start.dateTime);
+            const reminderTime = this.calculateGoogleEventReminderTime(event.start.dateTime, reminderMinutes);
 
             // Only set the alarm for the future times
             if (reminderTime <= Date.now()) {
@@ -248,7 +265,8 @@ export class AlarmManager {
                     id: event.id,
                     title: event.summary || 'No title',
                     startTime: this.formatTimeFromDateTime(event.start.dateTime),
-                    dateStr: dateStr
+                    dateStr: dateStr,
+                    reminderMinutes: reminderMinutes
                 }
             });
 
@@ -259,18 +277,19 @@ export class AlarmManager {
     }
 
     /**
-     * Calculate the reminder time for a Google event (5 minutes before)
+     * Calculate the reminder time for a Google event
      * @param {string} dateTimeStr ISO 8601 datetime string
+     * @param {number} reminderMinutes Minutes before event to remind
      * @returns {number} The reminder timestamp
      */
-    static calculateGoogleEventReminderTime(dateTimeStr) {
+    static calculateGoogleEventReminderTime(dateTimeStr, reminderMinutes) {
         try {
             const eventDate = new Date(dateTimeStr);
-            const reminderTime = new Date(eventDate.getTime() - (this.REMINDER_MINUTES * 60 * 1000));
+            const reminderTime = new Date(eventDate.getTime() - (reminderMinutes * 60 * 1000));
             return reminderTime.getTime();
         } catch (error) {
             console.error('Error calculating Google event reminder time:', error);
-            return Date.now() + (5 * 60 * 1000); // Fallback: 5 minutes from now
+            return Date.now() + (reminderMinutes * 60 * 1000); // Fallback: specified minutes from now
         }
     }
 
