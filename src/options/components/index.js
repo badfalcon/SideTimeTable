@@ -17,6 +17,7 @@ export { TimeSettingsCard } from './settings/time-settings-card.js';
 export { ColorSettingsCard } from './settings/color-settings-card.js';
 export { LanguageSettingsCard } from './settings/language-settings-card.js';
 export { ShortcutSettingsCard } from './settings/shortcut-settings-card.js';
+export { ReminderSettingsCard } from './settings/reminder-settings-card.js';
 
 /**
  * ComponentManager - The component lifecycle management

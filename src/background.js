@@ -14,8 +14,12 @@ chrome.sidePanel
     .catch((error) => console.error("Side panel setup error:", error));
 
 // Handler for when the extension is installed
-chrome.runtime.onInstalled.addListener(() => {
-    // Add initial setup as needed
+chrome.runtime.onInstalled.addListener(async () => {
+    // Set up daily alarm for Google event reminder sync (runs at 00:00 every day)
+    await setupDailyReminderSync();
+
+    // Initial sync on install
+    await syncGoogleEventReminders();
 });
 
 // Keyboard shortcut handler
@@ -427,7 +431,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             // The side panel reload request just returns a response
             sendResponse({success: true});
             return false; // Synchronous response
-            
+
+        case "updateReminderSettings":
+            // Handle reminder settings update
+            syncGoogleEventReminders()
+                .then(() => {
+                    sendResponse({ success: true });
+                })
+                .catch(error => {
+                    console.error('Failed to update reminder settings:', error);
+                    sendResponse({ success: false, error: error.message });
+                });
+            return true; // Indicates async response
+
         default:
             console.warn("Unknown action:", request.action);
             sendResponse({error: "Unknown action"});
@@ -437,7 +453,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 // Alarm listener for event reminders
 chrome.alarms.onAlarm.addListener(async (alarm) => {
-    if (alarm.name.startsWith(AlarmManager.ALARM_PREFIX)) {
+    if (alarm.name.startsWith(AlarmManager.ALARM_PREFIX) || alarm.name.startsWith(AlarmManager.GOOGLE_ALARM_PREFIX)) {
         await AlarmManager.showReminderNotification(alarm.name);
     }
 });
@@ -471,5 +487,72 @@ chrome.notifications.onButtonClicked.addListener((notificationId, buttonIndex) =
 
         // Clear the notification regardless of which button was clicked
         chrome.notifications.clear(notificationId);
+    }
+});
+
+/**
+ * Set up daily alarm for Google event reminder sync
+ */
+async function setupDailyReminderSync() {
+    try {
+        // Clear existing daily sync alarm
+        await chrome.alarms.clear('daily_reminder_sync');
+
+        // Calculate next midnight
+        const now = new Date();
+        const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0);
+
+        // Create alarm for midnight (00:00) every day
+        await chrome.alarms.create('daily_reminder_sync', {
+            when: tomorrow.getTime(),
+            periodInMinutes: 24 * 60 // Repeat every 24 hours
+        });
+
+        console.log('Daily reminder sync alarm set for:', tomorrow);
+    } catch (error) {
+        console.error('Failed to setup daily reminder sync:', error);
+    }
+}
+
+/**
+ * Sync Google event reminders for today
+ */
+async function syncGoogleEventReminders() {
+    try {
+        // Check if Google event reminders are enabled
+        const settings = await StorageHelper.get(['googleEventReminder', 'googleIntegrated'], {
+            googleEventReminder: false,
+            googleIntegrated: false
+        });
+
+        if (!settings.googleEventReminder || !settings.googleIntegrated) {
+            console.log('Google event reminders are disabled or not integrated, skipping sync');
+            return;
+        }
+
+        // Get today's date
+        const today = new Date();
+        const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+        // Fetch today's Google events
+        const events = await getCalendarEvents(today);
+
+        if (events && events.length > 0) {
+            // Set reminders for all events
+            await AlarmManager.setGoogleEventReminders(events, dateStr);
+            console.log(`Synced ${events.length} Google event reminders for ${dateStr}`);
+        } else {
+            console.log('No Google events found for today');
+        }
+    } catch (error) {
+        console.error('Failed to sync Google event reminders:', error);
+    }
+}
+
+// Listen for daily sync alarm
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+    if (alarm.name === 'daily_reminder_sync') {
+        console.log('Running daily Google event reminder sync');
+        await syncGoogleEventReminders();
     }
 });

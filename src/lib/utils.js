@@ -29,7 +29,8 @@ export const DEFAULT_SETTINGS = {
     localEventColor: '#bbf2b1',
     currentTimeLineColor: '#ff0000', // Current time line color
     selectedCalendars: [], // An array of the selected calendar IDs
-    language: 'auto' // Language setting (auto/en/ja)
+    language: 'auto', // Language setting (auto/en/ja)
+    googleEventReminder: false // Automatic reminder for Google events
 };
 
 /**

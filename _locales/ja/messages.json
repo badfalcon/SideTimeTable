@@ -580,5 +580,21 @@
   "initializationError": {
     "message": "初期化中にエラーが発生しました",
     "description": "初期化失敗時のエラーメッセージ"
+  },
+  "reminderSettings": {
+    "message": "リマインダー設定",
+    "description": "リマインダー設定カードのタイトル"
+  },
+  "reminderDescription": {
+    "message": "イベントの自動リマインダーを設定します。",
+    "description": "リマインダー設定カードの説明"
+  },
+  "googleEventReminderLabel": {
+    "message": "Googleカレンダーイベントのリマインダーを有効にする",
+    "description": "Googleイベントリマインダートグルのラベル"
+  },
+  "googleEventReminderHelp": {
+    "message": "サイドパネルを閉じていても、各イベントの5分前に通知を受け取ります。",
+    "description": "Googleイベントリマインダー機能のヘルプテキスト"
   }
 }
