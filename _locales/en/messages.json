@@ -580,5 +580,21 @@
   "initializationError": {
     "message": "Error occurred during initialization",
     "description": "Error message when initialization fails"
+  },
+  "reminderSettings": {
+    "message": "Reminder Settings",
+    "description": "Title for reminder settings card"
+  },
+  "reminderDescription": {
+    "message": "Configure automatic reminders for your events.",
+    "description": "Description for reminder settings card"
+  },
+  "googleEventReminderLabel": {
+    "message": "Enable reminders for Google Calendar events",
+    "description": "Label for Google event reminder toggle"
+  },
+  "googleEventReminderHelp": {
+    "message": "You will receive notifications 5 minutes before each event starts, even when the side panel is closed.",
+    "description": "Help text for Google event reminder feature"
   }
 }
