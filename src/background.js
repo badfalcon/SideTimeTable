@@ -505,6 +505,30 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 });
             return true; // Indicates async response
 
+        case "autoSyncReminders":
+            // Auto-sync with throttle (skip if synced within last 5 minutes)
+            (async () => {
+                try {
+                    const SYNC_THROTTLE_MS = 5 * 60 * 1000; // 5 minutes
+                    const lastSyncData = await StorageHelper.getLocal(['lastReminderSyncTime'], { lastReminderSyncTime: 0 });
+                    const lastSyncTime = lastSyncData.lastReminderSyncTime || 0;
+                    const now = Date.now();
+
+                    if (now - lastSyncTime < SYNC_THROTTLE_MS) {
+                        console.log(`[Auto Sync] Skipping sync (last sync was ${Math.round((now - lastSyncTime) / 1000)}s ago)`);
+                        sendResponse({ success: true, skipped: true, message: 'Skipped (recently synced)' });
+                    } else {
+                        console.log(`[Auto Sync] Starting sync (last sync was ${Math.round((now - lastSyncTime) / 1000)}s ago)`);
+                        await syncGoogleEventReminders();
+                        sendResponse({ success: true, skipped: false, message: 'Reminder sync completed' });
+                    }
+                } catch (error) {
+                    console.error('[Auto Sync] Failed to auto-sync reminders:', error);
+                    sendResponse({ success: false, error: error.message });
+                }
+            })();
+            return true; // Indicates async response
+
         default:
             console.warn("Unknown action:", request.action);
             sendResponse({error: "Unknown action"});
@@ -625,6 +649,9 @@ async function syncGoogleEventReminders() {
         } else {
             console.log('[Reminder Sync] No Google events found for today');
         }
+
+        // Record sync timestamp
+        await StorageHelper.setLocal({ lastReminderSyncTime: Date.now() });
     } catch (error) {
         console.error('[Reminder Sync] ERROR:', error);
         console.error('[Reminder Sync] Stack trace:', error.stack);
