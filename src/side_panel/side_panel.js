@@ -328,6 +328,9 @@ class SidePanelUIController {
      * @private
      */
     async _loadInitialData() {
+        // Auto-sync reminders when side panel opens (throttled to 5 minutes)
+        this._autoSyncReminders();
+
         // Set initial date to TimelineComponent
         this.timelineComponent.setCurrentDate(this.currentDate);
 
@@ -643,6 +646,30 @@ class SidePanelUIController {
         } catch (error) {
             console.error('Sync reminders error:', error);
             this.alertModal.showError('Failed to sync reminders: ' + error.message);
+        }
+    }
+
+    /**
+     * Auto-sync reminders with throttle (side panel open)
+     * @private
+     */
+    async _autoSyncReminders() {
+        try {
+            // Send message to background to auto-sync with throttle
+            const response = await chrome.runtime.sendMessage({ action: 'autoSyncReminders' });
+
+            if (response.success) {
+                if (response.skipped) {
+                    console.log('[Auto Sync] Skipped (recently synced)');
+                } else {
+                    console.log('[Auto Sync] Reminders synced on side panel open');
+                }
+            } else {
+                console.warn('[Auto Sync] Failed to auto-sync reminders:', response.error);
+            }
+        } catch (error) {
+            console.warn('[Auto Sync] Auto-sync error:', error);
+            // Don't show error to user - this is a background operation
         }
     }
 
