@@ -444,6 +444,67 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 });
             return true; // Indicates async response
 
+        case "testReminder":
+            // Test notification immediately (for debugging)
+            (async () => {
+                try {
+                    const testNotification = {
+                        type: 'basic',
+                        title: chrome.i18n.getMessage('eventReminder') || 'Event Reminder (Test)',
+                        message: 'This is a test reminder notification.',
+                        iconUrl: chrome.runtime.getURL('src/img/icon48.png'),
+                        buttons: [
+                            { title: chrome.i18n.getMessage('openSideTimeTable') || 'Open SideTimeTable' },
+                            { title: chrome.i18n.getMessage('dismissNotification') || 'Dismiss' }
+                        ],
+                        requireInteraction: true
+                    };
+                    await chrome.notifications.create('test_reminder', testNotification);
+                    sendResponse({ success: true, message: 'Test notification sent' });
+                } catch (error) {
+                    console.error('Failed to send test notification:', error);
+                    sendResponse({ success: false, error: error.message });
+                }
+            })();
+            return true; // Indicates async response
+
+        case "debugAlarms":
+            // Get all current alarms for debugging
+            (async () => {
+                try {
+                    const alarms = await chrome.alarms.getAll();
+                    const settings = await StorageHelper.get(['googleEventReminder', 'googleIntegrated', 'reminderMinutes'], {
+                        googleEventReminder: false,
+                        googleIntegrated: false,
+                        reminderMinutes: 5
+                    });
+                    sendResponse({
+                        success: true,
+                        alarms: alarms.map(a => ({
+                            name: a.name,
+                            scheduledTime: new Date(a.scheduledTime).toLocaleString()
+                        })),
+                        settings: settings
+                    });
+                } catch (error) {
+                    console.error('Failed to get alarm debug info:', error);
+                    sendResponse({ success: false, error: error.message });
+                }
+            })();
+            return true; // Indicates async response
+
+        case "forceSyncReminders":
+            // Force sync reminders immediately (for testing)
+            syncGoogleEventReminders()
+                .then(() => {
+                    sendResponse({ success: true, message: 'Reminder sync completed' });
+                })
+                .catch(error => {
+                    console.error('Failed to force sync reminders:', error);
+                    sendResponse({ success: false, error: error.message });
+                });
+            return true; // Indicates async response
+
         default:
             console.warn("Unknown action:", request.action);
             sendResponse({error: "Unknown action"});
@@ -519,33 +580,54 @@ async function setupDailyReminderSync() {
  */
 async function syncGoogleEventReminders() {
     try {
+        console.log('[Reminder Sync] Starting Google event reminder sync...');
+
         // Check if Google event reminders are enabled
-        const settings = await StorageHelper.get(['googleEventReminder', 'googleIntegrated'], {
+        const settings = await StorageHelper.get(['googleEventReminder', 'googleIntegrated', 'reminderMinutes'], {
             googleEventReminder: false,
-            googleIntegrated: false
+            googleIntegrated: false,
+            reminderMinutes: 5
         });
 
-        if (!settings.googleEventReminder || !settings.googleIntegrated) {
-            console.log('Google event reminders are disabled or not integrated, skipping sync');
+        console.log('[Reminder Sync] Settings:', settings);
+
+        if (!settings.googleEventReminder) {
+            console.log('[Reminder Sync] Google event reminders are DISABLED in settings');
+            return;
+        }
+
+        if (!settings.googleIntegrated) {
+            console.log('[Reminder Sync] Google is NOT INTEGRATED');
             return;
         }
 
         // Get today's date
         const today = new Date();
         const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        console.log('[Reminder Sync] Target date:', dateStr);
 
         // Fetch today's Google events
+        console.log('[Reminder Sync] Fetching Google events...');
         const events = await getCalendarEvents(today);
+        console.log('[Reminder Sync] Fetched events:', events ? events.length : 0);
 
         if (events && events.length > 0) {
+            console.log('[Reminder Sync] Event list:', events.map(e => ({
+                id: e.id,
+                summary: e.summary,
+                start: e.start?.dateTime || e.start?.date,
+                hasDateTime: !!e.start?.dateTime
+            })));
+
             // Set reminders for all events
             await AlarmManager.setGoogleEventReminders(events, dateStr);
-            console.log(`Synced ${events.length} Google event reminders for ${dateStr}`);
+            console.log(`[Reminder Sync] ✓ Synced ${events.length} Google event reminders for ${dateStr}`);
         } else {
-            console.log('No Google events found for today');
+            console.log('[Reminder Sync] No Google events found for today');
         }
     } catch (error) {
-        console.error('Failed to sync Google event reminders:', error);
+        console.error('[Reminder Sync] ERROR:', error);
+        console.error('[Reminder Sync] Stack trace:', error.stack);
     }
 }
 
