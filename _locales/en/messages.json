@@ -628,5 +628,9 @@
   "reminderTime60Min": {
     "message": "1 hour",
     "description": "1 hour reminder option"
+  },
+  "syncReminders": {
+    "message": "Sync Reminders",
+    "description": "Tooltip for sync reminders button"
   }
 }
