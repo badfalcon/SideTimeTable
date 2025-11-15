@@ -111,6 +111,23 @@ h1 {
 .add-local-event-icon:hover {
 }
 
+.sync-icon {
+    font-size: 20px;
+    color: #333;
+    cursor: pointer;
+    transition: transform 0.3s ease, color 0.2s ease;
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
+.sync-icon:hover {
+    color: #007bff;
+}
+
+.sync-icon.fa-spin {
+    color: #007bff;
+}
+
 .settings-icon {
     font-size: 24px;
     color: #333;

@@ -141,7 +141,8 @@ class SidePanelUIController {
         this.headerComponent = new HeaderComponent({
             onAddEvent: () => this._handleAddLocalEvent(),
             onDateChange: (date) => this._handleDateChange(date),
-            onSettingsClick: () => this._openSettings()
+            onSettingsClick: () => this._openSettings(),
+            onSyncClick: () => this._handleSyncReminders()
         });
 
         // The timeline component
@@ -615,6 +616,33 @@ class SidePanelUIController {
             // Fallback
             const optionsUrl = chrome.runtime.getURL('src/options/options.html');
             window.open(optionsUrl, '_blank');
+        }
+    }
+
+    /**
+     * Handle sync reminders button click
+     * @private
+     */
+    async _handleSyncReminders() {
+        try {
+            // Send message to background to force sync
+            const response = await chrome.runtime.sendMessage({ action: 'forceSyncReminders' });
+
+            if (response.success) {
+                console.log('Reminders synced successfully');
+
+                // Reload events to reflect any changes
+                await this._loadEventsForCurrentDate();
+
+                // Show success feedback (optional)
+                // You could add a toast notification here if desired
+            } else {
+                console.error('Failed to sync reminders:', response.error);
+                this.alertModal.showError('Failed to sync reminders: ' + (response.error || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Sync reminders error:', error);
+            this.alertModal.showError('Failed to sync reminders: ' + error.message);
         }
     }
 

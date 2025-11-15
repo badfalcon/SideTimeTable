@@ -15,13 +15,18 @@ export class HeaderComponent extends Component {
         this.onAddEvent = options.onAddEvent || null;
         this.onDateChange = options.onDateChange || null;
         this.onSettingsClick = options.onSettingsClick || null;
+        this.onSyncClick = options.onSyncClick || null;
 
         // UI elements
         this.addEventButton = null;
         this.prevDateButton = null;
         this.nextDateButton = null;
         this.dateInput = null;
+        this.syncButton = null;
         this.settingsButton = null;
+
+        // Sync state
+        this.isSyncing = false;
 
         // Current date
         this.currentDate = new Date();
@@ -48,6 +53,13 @@ export class HeaderComponent extends Component {
         // Date navigation
         const dateNavigation = this._createDateNavigation();
 
+        // Sync button
+        this.syncButton = document.createElement('i');
+        this.syncButton.className = 'fas fa-sync sync-icon';
+        this.syncButton.id = 'syncReminderButton';
+        this.syncButton.setAttribute('data-localize-title', '__MSG_syncReminders__');
+        this.syncButton.title = 'Sync Reminders';
+
         // Settings button
         this.settingsButton = document.createElement('i');
         this.settingsButton.className = 'fas fa-cog settings-icon';
@@ -57,6 +69,7 @@ export class HeaderComponent extends Component {
         // Add the elements to the header
         header.appendChild(this.addEventButton);
         header.appendChild(dateNavigation);
+        header.appendChild(this.syncButton);
         header.appendChild(this.settingsButton);
 
         wrapper.appendChild(header);
@@ -126,6 +139,11 @@ export class HeaderComponent extends Component {
 
         this.addEventListener(this.dateInput, 'change', () => {
             this._handleDateInputChange();
+        });
+
+        // Sync button
+        this.addEventListener(this.syncButton, 'click', () => {
+            this._handleSyncClick();
         });
 
         // Settings button
@@ -264,6 +282,50 @@ export class HeaderComponent extends Component {
                 const month = String(maxDate.getMonth() + 1).padStart(2, '0');
                 const day = String(maxDate.getDate()).padStart(2, '0');
                 this.dateInput.max = `${year}-${month}-${day}`;
+            }
+        }
+    }
+
+    /**
+     * Handle sync button click
+     * @private
+     */
+    async _handleSyncClick() {
+        if (this.isSyncing) {
+            return; // Already syncing
+        }
+
+        this.setSyncing(true);
+
+        try {
+            if (this.onSyncClick) {
+                await this.onSyncClick();
+            }
+        } catch (error) {
+            console.error('Sync failed:', error);
+        } finally {
+            this.setSyncing(false);
+        }
+    }
+
+    /**
+     * Set syncing state
+     * @param {boolean} syncing Whether syncing
+     */
+    setSyncing(syncing) {
+        this.isSyncing = syncing;
+
+        if (this.syncButton) {
+            if (syncing) {
+                // Add spinning animation
+                this.syncButton.classList.add('fa-spin');
+                this.syncButton.style.pointerEvents = 'none';
+                this.syncButton.style.opacity = '0.6';
+            } else {
+                // Remove spinning animation
+                this.syncButton.classList.remove('fa-spin');
+                this.syncButton.style.pointerEvents = '';
+                this.syncButton.style.opacity = '';
             }
         }
     }

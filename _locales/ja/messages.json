@@ -628,5 +628,9 @@
   "reminderTime60Min": {
     "message": "1時間",
     "description": "1時間のリマインダーオプション"
+  },
+  "syncReminders": {
+    "message": "リマインダーを同期",
+    "description": "リマインダー同期ボタンのツールチップ"
   }
 }
