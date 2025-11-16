@@ -41,6 +41,7 @@ h1 {
     align-items: center;
     background-color: #f0f0f0;
     width: 100%;
+    position: relative; /* For absolute positioning of date navigation */
 }
 
 .action-buttons {
@@ -53,7 +54,9 @@ h1 {
     display: flex;
     align-items: center;
     gap: 10px;
-    position: relative;
+    position: absolute; /* Absolute positioning for centering */
+    left: 50%;
+    transform: translateX(-50%); /* Center horizontally */
 }
 
 .nav-arrow {
