@@ -68,8 +68,8 @@ export class HeaderComponent extends Component {
 
         // Add the elements to the header
         header.appendChild(this.addEventButton);
-        header.appendChild(dateNavigation);
         header.appendChild(this.syncButton);
+        header.appendChild(dateNavigation);
         header.appendChild(this.settingsButton);
 
         wrapper.appendChild(header);
