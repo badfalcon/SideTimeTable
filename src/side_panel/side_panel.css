@@ -43,6 +43,12 @@ h1 {
     width: 100%;
 }
 
+.action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 0; /* No gap between add and sync buttons */
+}
+
 #dateNavigation {
     display: flex;
     align-items: center;
