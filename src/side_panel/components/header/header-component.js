@@ -44,21 +44,11 @@ export class HeaderComponent extends Component {
         const header = document.createElement('div');
         header.id = 'sideTimeTableHeader';
 
-        // Add button
-        this.addEventButton = document.createElement('i');
-        this.addEventButton.className = 'fas fa-plus-circle add-local-event-icon';
-        this.addEventButton.id = 'addLocalEventButton';
-        this.addEventButton.setAttribute('data-localize-title', '__MSG_addEvent__');
+        // Action buttons group (add + sync)
+        const actionButtons = this._createActionButtons();
 
         // Date navigation
         const dateNavigation = this._createDateNavigation();
-
-        // Sync button
-        this.syncButton = document.createElement('i');
-        this.syncButton.className = 'fas fa-sync sync-icon';
-        this.syncButton.id = 'syncReminderButton';
-        this.syncButton.setAttribute('data-localize-title', '__MSG_syncReminders__');
-        this.syncButton.title = 'Sync Reminders';
 
         // Settings button
         this.settingsButton = document.createElement('i');
@@ -67,8 +57,7 @@ export class HeaderComponent extends Component {
         this.settingsButton.setAttribute('data-localize-title', '__MSG_settings__');
 
         // Add the elements to the header
-        header.appendChild(this.addEventButton);
-        header.appendChild(this.syncButton);
+        header.appendChild(actionButtons);
         header.appendChild(dateNavigation);
         header.appendChild(this.settingsButton);
 
@@ -81,6 +70,33 @@ export class HeaderComponent extends Component {
         this._updateDateDisplay();
 
         return wrapper;
+    }
+
+    /**
+     * Create action buttons (add + sync)
+     * @private
+     */
+    _createActionButtons() {
+        const container = document.createElement('div');
+        container.className = 'action-buttons';
+
+        // Add button
+        this.addEventButton = document.createElement('i');
+        this.addEventButton.className = 'fas fa-plus-circle add-local-event-icon';
+        this.addEventButton.id = 'addLocalEventButton';
+        this.addEventButton.setAttribute('data-localize-title', '__MSG_addEvent__');
+
+        // Sync button
+        this.syncButton = document.createElement('i');
+        this.syncButton.className = 'fas fa-sync sync-icon';
+        this.syncButton.id = 'syncReminderButton';
+        this.syncButton.setAttribute('data-localize-title', '__MSG_syncReminders__');
+        this.syncButton.title = 'Sync Reminders';
+
+        container.appendChild(this.addEventButton);
+        container.appendChild(this.syncButton);
+
+        return container;
     }
 
     /**
