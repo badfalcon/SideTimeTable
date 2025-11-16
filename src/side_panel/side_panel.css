@@ -116,8 +116,6 @@ h1 {
     color: #333;
     cursor: pointer;
     transition: transform 0.3s ease, color 0.2s ease;
-    margin-left: 5px;
-    margin-right: 5px;
 }
 
 .sync-icon:hover {
