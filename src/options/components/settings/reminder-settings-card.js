@@ -29,6 +29,7 @@ export class ReminderSettingsCard extends CardComponent {
         // Available reminder time options (in minutes)
         this.reminderOptions = [
             { value: 1, key: '__MSG_reminderTime1Min__', text: '1 minute' },
+            { value: 3, key: '__MSG_reminderTime3Min__', text: '3 minutes' },
             { value: 5, key: '__MSG_reminderTime5Min__', text: '5 minutes' },
             { value: 10, key: '__MSG_reminderTime10Min__', text: '10 minutes' },
             { value: 15, key: '__MSG_reminderTime15Min__', text: '15 minutes' },

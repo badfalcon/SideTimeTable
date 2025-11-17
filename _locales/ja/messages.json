@@ -609,6 +609,10 @@
     "message": "1分",
     "description": "1分のリマインダーオプション"
   },
+  "reminderTime3Min": {
+    "message": "3分",
+    "description": "3分のリマインダーオプション"
+  },
   "reminderTime5Min": {
     "message": "5分",
     "description": "5分のリマインダーオプション"
