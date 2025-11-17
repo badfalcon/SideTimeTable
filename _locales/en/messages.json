@@ -609,6 +609,10 @@
     "message": "1 minute",
     "description": "1 minute reminder option"
   },
+  "reminderTime3Min": {
+    "message": "3 minutes",
+    "description": "3 minutes reminder option"
+  },
   "reminderTime5Min": {
     "message": "5 minutes",
     "description": "5 minutes reminder option"
