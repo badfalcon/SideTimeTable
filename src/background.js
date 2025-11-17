@@ -307,6 +307,74 @@ function getCalendarEvents(targetDate = null) {
 }
 
 /**
+ * Get events from PRIMARY Google Calendar only (for reminders)
+ * @param {Date} targetDate - The target date (today if omitted)
+ * @returns {Promise<Array>} A promise that returns an array of events
+ */
+function getPrimaryCalendarEvents(targetDate = null) {
+    return new Promise((resolve, reject) => {
+        try {
+            chrome.identity.getAuthToken({interactive: false}, (token) => {
+                if (chrome.runtime.lastError || !token) {
+                    const error = chrome.runtime.lastError || new Error("Failed to get authentication token");
+                    console.error("Authentication token acquisition error:", error);
+                    reject(error);
+                    return;
+                }
+
+                // Set the target date range
+                const targetDay = targetDate || new Date();
+                const startOfDay = new Date(targetDay);
+                startOfDay.setHours(0, 0, 0, 0);
+                const endOfDay = new Date(targetDay);
+                endOfDay.setHours(23, 59, 59, 999);
+
+                // Fetch from PRIMARY calendar only
+                const baseUrl = 'https://www.googleapis.com/calendar/v3/calendars';
+                const url = `${baseUrl}/primary/events?timeMin=${startOfDay.toISOString()}&timeMax=${endOfDay.toISOString()}&singleEvents=true&orderBy=startTime`;
+
+                fetch(url, {
+                    headers: { Authorization: "Bearer " + token }
+                })
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error(`Primary calendar API error: ${res.status} ${res.statusText}`);
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    const events = data.items || [];
+
+                    // Filter out cancelled and declined events
+                    const filteredEvents = events.filter(event => {
+                        // Skip cancelled events
+                        if (event.status === 'cancelled') {
+                            return false;
+                        }
+                        // Skip declined events
+                        if (event.attendees && event.attendees.some(attendee =>
+                            attendee.self && attendee.responseStatus === 'declined'
+                        )) {
+                            return false;
+                        }
+                        return true;
+                    });
+
+                    resolve(filteredEvents);
+                })
+                .catch(error => {
+                    console.error("Primary calendar event acquisition error:", error);
+                    reject(error);
+                });
+            });
+        } catch (error) {
+            console.error("Primary calendar event acquisition exception:", error);
+            reject(error);
+        }
+    });
+}
+
+/**
  * Check Google account authentication status
  * @returns {Promise<boolean>} A promise that returns the authentication status
  */
@@ -318,7 +386,7 @@ function checkGoogleAuth() {
                     resolve(false); // Even if there's an error, just not authenticated so don't reject
                     return;
                 }
-                
+
                 const isAuthenticated = !!token;
                 resolve(isAuthenticated);
             });
@@ -630,9 +698,9 @@ async function syncGoogleEventReminders() {
         const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
         console.log('[Reminder Sync] Target date:', dateStr);
 
-        // Fetch today's Google events
-        console.log('[Reminder Sync] Fetching Google events...');
-        const events = await getCalendarEvents(today);
+        // Fetch today's Google events from PRIMARY calendar only
+        console.log('[Reminder Sync] Fetching Google events from PRIMARY calendar only...');
+        const events = await getPrimaryCalendarEvents(today);
         console.log('[Reminder Sync] Fetched events:', events ? events.length : 0);
 
         if (events && events.length > 0) {
