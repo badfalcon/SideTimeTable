@@ -594,7 +594,7 @@
     "description": "Googleイベントリマインダートグルのラベル"
   },
   "googleEventReminderHelp": {
-    "message": "サイドパネルを閉じていても、イベントの開始前に通知を受け取ります。",
+    "message": "メインカレンダーのイベント開始前に通知を受け取ります。サイドパネルを閉じていても通知されます。",
     "description": "Googleイベントリマインダー機能のヘルプテキスト"
   },
   "reminderTimeLabel": {
