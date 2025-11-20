@@ -698,6 +698,25 @@ async function syncGoogleEventReminders() {
         const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
         console.log('[Reminder Sync] Target date:', dateStr);
 
+        // Clear old reminders from previous dates
+        console.log('[Reminder Sync] Clearing old reminders from previous dates...');
+        const allAlarms = await chrome.alarms.getAll();
+        const oldReminders = allAlarms.filter(alarm =>
+            alarm.name.startsWith(AlarmManager.GOOGLE_ALARM_PREFIX) &&
+            !alarm.name.includes(`${AlarmManager.GOOGLE_ALARM_PREFIX}${dateStr}_`)
+        );
+
+        for (const alarm of oldReminders) {
+            await chrome.alarms.clear(alarm.name);
+            // Also clear stored event data
+            const storageKey = `googleEventData_${alarm.name}`;
+            await chrome.storage.local.remove(storageKey);
+        }
+
+        if (oldReminders.length > 0) {
+            console.log(`[Reminder Sync] Cleared ${oldReminders.length} old reminders from previous dates`);
+        }
+
         // Fetch today's Google events from PRIMARY calendar only
         console.log('[Reminder Sync] Fetching Google events from PRIMARY calendar only...');
         const events = await getPrimaryCalendarEvents(today);
