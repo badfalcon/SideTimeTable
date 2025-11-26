@@ -77,6 +77,10 @@
     "message": "SideTimeTableを開く",
     "description": "サイドパネルを開く通知ボタンのテキスト"
   },
+  "joinMeet": {
+    "message": "Meet に参加",
+    "description": "通知ボタンのテキスト（Google Meet に参加）"
+  },
   "dismissNotification": {
     "message": "閉じる",
     "description": "通知を閉じるボタンのテキスト"
@@ -634,7 +638,7 @@
     "description": "1時間のリマインダーオプション"
   },
   "syncReminders": {
-    "message": "リマインダーを同期",
+    "message": "予定を同期",
     "description": "リマインダー同期ボタンのツールチップ"
   }
 }
