@@ -111,4 +111,49 @@ export class StorageHelper {
             }
         });
     }
+
+    /**
+     * Retrieve the data from Chrome local storage
+     * @param {string|Object|Array} keys - The storage keys to retrieve
+     * @param {Object} defaultValues - The default values if the keys don't exist
+     * @returns {Promise<Object>} The retrieved data with the defaults applied
+     */
+    static async getLocal(keys, defaultValues = {}) {
+        return new Promise((resolve, reject) => {
+            try {
+                chrome.storage.local.get(keys, (result) => {
+                    if (chrome.runtime.lastError) {
+                        reject(chrome.runtime.lastError);
+                        return;
+                    }
+                    // Merge with the defaults for any missing keys
+                    const mergedResult = { ...defaultValues, ...result };
+                    resolve(mergedResult);
+                });
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
+    /**
+     * Store the data in Chrome local storage
+     * @param {Object} data - The data to store
+     * @returns {Promise<void>} A promise that resolves when the data is saved
+     */
+    static async setLocal(data) {
+        return new Promise((resolve, reject) => {
+            try {
+                chrome.storage.local.set(data, () => {
+                    if (chrome.runtime.lastError) {
+                        reject(chrome.runtime.lastError);
+                        return;
+                    }
+                    resolve();
+                });
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
 }

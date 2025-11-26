@@ -22,6 +22,7 @@ import {
     ColorSettingsCard,
     LanguageSettingsCard,
     ShortcutSettingsCard,
+    ReminderSettingsCard,
     ControlButtonsComponent
 } from './components/index.js';
 
@@ -37,6 +38,7 @@ class OptionsPageManager {
         this.colorSettingsCard = null;
         this.languageSettingsCard = null;
         this.shortcutSettingsCard = null;
+        this.reminderSettingsCard = null;
         this.controlButtons = null;
     }
 
@@ -67,6 +69,10 @@ class OptionsPageManager {
         // Create the shortcut settings card
         this.shortcutSettingsCard = new ShortcutSettingsCard();
         this.componentManager.register('shortcutSettings', this.shortcutSettingsCard);
+
+        // Create the reminder settings card
+        this.reminderSettingsCard = new ReminderSettingsCard(this.handleReminderSettingsChange.bind(this));
+        this.componentManager.register('reminderSettings', this.reminderSettingsCard);
 
         // Create control buttons
         this.controlButtons = new ControlButtonsComponent(this.handleResetSettings.bind(this));
@@ -120,6 +126,12 @@ class OptionsPageManager {
             });
 
             this.languageSettingsCard.updateSettings(languageSettings);
+
+            // Load the reminder settings
+            this.reminderSettingsCard.updateSettings({
+                googleEventReminder: settings.googleEventReminder || false,
+                reminderMinutes: settings.reminderMinutes || 5
+            });
 
         } catch (error) {
             console.error('Settings loading error:', error);
@@ -265,6 +277,28 @@ class OptionsPageManager {
         }
     }
 
+    async handleReminderSettingsChange(reminderSettings) {
+        try {
+            // Load the existing settings and update only the reminder settings
+            const currentSettings = await loadSettings();
+            const updatedSettings = {
+                ...currentSettings,
+                googleEventReminder: reminderSettings.googleEventReminder,
+                reminderMinutes: reminderSettings.reminderMinutes
+            };
+
+            await saveSettings(updatedSettings);
+
+            // Notify background script about the change
+            chrome.runtime.sendMessage({
+                action: 'updateReminderSettings',
+                settings: reminderSettings
+            });
+
+        } catch (error) {
+            logError('Reminder settings save', error);
+        }
+    }
 
     async handleResetSettings() {
         try {
@@ -275,6 +309,7 @@ class OptionsPageManager {
             this.timeSettingsCard.resetToDefaults();
             this.colorSettingsCard.resetToDefaults();
             this.languageSettingsCard.resetToDefaults();
+            this.reminderSettingsCard.resetToDefaults();
 
             // Reset the CSS variables too
             document.documentElement.style.setProperty('--side-calendar-work-time-color', DEFAULT_SETTINGS.workTimeColor);

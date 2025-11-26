@@ -580,5 +580,61 @@
   "initializationError": {
     "message": "初期化中にエラーが発生しました",
     "description": "初期化失敗時のエラーメッセージ"
+  },
+  "reminderSettings": {
+    "message": "リマインダー設定",
+    "description": "リマインダー設定カードのタイトル"
+  },
+  "reminderDescription": {
+    "message": "イベントの自動リマインダーを設定します。",
+    "description": "リマインダー設定カードの説明"
+  },
+  "googleEventReminderLabel": {
+    "message": "Googleカレンダーイベントのリマインダーを有効にする",
+    "description": "Googleイベントリマインダートグルのラベル"
+  },
+  "googleEventReminderHelp": {
+    "message": "メインカレンダーのイベント開始前に通知を受け取ります。サイドパネルを閉じていても通知されます。",
+    "description": "Googleイベントリマインダー機能のヘルプテキスト"
+  },
+  "reminderTimeLabel": {
+    "message": "次の時間前に通知:",
+    "description": "リマインダー時間選択のラベル"
+  },
+  "reminderTimeHelp": {
+    "message": "Googleカレンダーとローカルイベントのどちらにも適用されます。",
+    "description": "リマインダー時間設定のヘルプテキスト"
+  },
+  "reminderTime1Min": {
+    "message": "1分",
+    "description": "1分のリマインダーオプション"
+  },
+  "reminderTime3Min": {
+    "message": "3分",
+    "description": "3分のリマインダーオプション"
+  },
+  "reminderTime5Min": {
+    "message": "5分",
+    "description": "5分のリマインダーオプション"
+  },
+  "reminderTime10Min": {
+    "message": "10分",
+    "description": "10分のリマインダーオプション"
+  },
+  "reminderTime15Min": {
+    "message": "15分",
+    "description": "15分のリマインダーオプション"
+  },
+  "reminderTime30Min": {
+    "message": "30分",
+    "description": "30分のリマインダーオプション"
+  },
+  "reminderTime60Min": {
+    "message": "1時間",
+    "description": "1時間のリマインダーオプション"
+  },
+  "syncReminders": {
+    "message": "リマインダーを同期",
+    "description": "リマインダー同期ボタンのツールチップ"
   }
 }

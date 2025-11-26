@@ -14,8 +14,12 @@ chrome.sidePanel
     .catch((error) => console.error("Side panel setup error:", error));
 
 // Handler for when the extension is installed
-chrome.runtime.onInstalled.addListener(() => {
-    // Add initial setup as needed
+chrome.runtime.onInstalled.addListener(async () => {
+    // Set up daily alarm for Google event reminder sync (runs at 00:00 every day)
+    await setupDailyReminderSync();
+
+    // Initial sync on install
+    await syncGoogleEventReminders();
 });
 
 // Keyboard shortcut handler
@@ -303,6 +307,74 @@ function getCalendarEvents(targetDate = null) {
 }
 
 /**
+ * Get events from PRIMARY Google Calendar only (for reminders)
+ * @param {Date} targetDate - The target date (today if omitted)
+ * @returns {Promise<Array>} A promise that returns an array of events
+ */
+function getPrimaryCalendarEvents(targetDate = null) {
+    return new Promise((resolve, reject) => {
+        try {
+            chrome.identity.getAuthToken({interactive: false}, (token) => {
+                if (chrome.runtime.lastError || !token) {
+                    const error = chrome.runtime.lastError || new Error("Failed to get authentication token");
+                    console.error("Authentication token acquisition error:", error);
+                    reject(error);
+                    return;
+                }
+
+                // Set the target date range
+                const targetDay = targetDate || new Date();
+                const startOfDay = new Date(targetDay);
+                startOfDay.setHours(0, 0, 0, 0);
+                const endOfDay = new Date(targetDay);
+                endOfDay.setHours(23, 59, 59, 999);
+
+                // Fetch from PRIMARY calendar only
+                const baseUrl = 'https://www.googleapis.com/calendar/v3/calendars';
+                const url = `${baseUrl}/primary/events?timeMin=${startOfDay.toISOString()}&timeMax=${endOfDay.toISOString()}&singleEvents=true&orderBy=startTime`;
+
+                fetch(url, {
+                    headers: { Authorization: "Bearer " + token }
+                })
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error(`Primary calendar API error: ${res.status} ${res.statusText}`);
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    const events = data.items || [];
+
+                    // Filter out cancelled and declined events
+                    const filteredEvents = events.filter(event => {
+                        // Skip cancelled events
+                        if (event.status === 'cancelled') {
+                            return false;
+                        }
+                        // Skip declined events
+                        if (event.attendees && event.attendees.some(attendee =>
+                            attendee.self && attendee.responseStatus === 'declined'
+                        )) {
+                            return false;
+                        }
+                        return true;
+                    });
+
+                    resolve(filteredEvents);
+                })
+                .catch(error => {
+                    console.error("Primary calendar event acquisition error:", error);
+                    reject(error);
+                });
+            });
+        } catch (error) {
+            console.error("Primary calendar event acquisition exception:", error);
+            reject(error);
+        }
+    });
+}
+
+/**
  * Check Google account authentication status
  * @returns {Promise<boolean>} A promise that returns the authentication status
  */
@@ -314,7 +386,7 @@ function checkGoogleAuth() {
                     resolve(false); // Even if there's an error, just not authenticated so don't reject
                     return;
                 }
-                
+
                 const isAuthenticated = !!token;
                 resolve(isAuthenticated);
             });
@@ -427,7 +499,104 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             // The side panel reload request just returns a response
             sendResponse({success: true});
             return false; // Synchronous response
-            
+
+        case "updateReminderSettings":
+            // Handle reminder settings update
+            syncGoogleEventReminders()
+                .then(() => {
+                    sendResponse({ success: true });
+                })
+                .catch(error => {
+                    console.error('Failed to update reminder settings:', error);
+                    sendResponse({ success: false, error: error.message });
+                });
+            return true; // Indicates async response
+
+        case "testReminder":
+            // Test notification immediately (for debugging)
+            (async () => {
+                try {
+                    const testNotification = {
+                        type: 'basic',
+                        title: chrome.i18n.getMessage('eventReminder') || 'Event Reminder (Test)',
+                        message: 'This is a test reminder notification.',
+                        iconUrl: chrome.runtime.getURL('src/img/icon48.png'),
+                        buttons: [
+                            { title: chrome.i18n.getMessage('openSideTimeTable') || 'Open SideTimeTable' },
+                            { title: chrome.i18n.getMessage('dismissNotification') || 'Dismiss' }
+                        ],
+                        requireInteraction: true
+                    };
+                    await chrome.notifications.create('test_reminder', testNotification);
+                    sendResponse({ success: true, message: 'Test notification sent' });
+                } catch (error) {
+                    console.error('Failed to send test notification:', error);
+                    sendResponse({ success: false, error: error.message });
+                }
+            })();
+            return true; // Indicates async response
+
+        case "debugAlarms":
+            // Get all current alarms for debugging
+            (async () => {
+                try {
+                    const alarms = await chrome.alarms.getAll();
+                    const settings = await StorageHelper.get(['googleEventReminder', 'googleIntegrated', 'reminderMinutes'], {
+                        googleEventReminder: false,
+                        googleIntegrated: false,
+                        reminderMinutes: 5
+                    });
+                    sendResponse({
+                        success: true,
+                        alarms: alarms.map(a => ({
+                            name: a.name,
+                            scheduledTime: new Date(a.scheduledTime).toLocaleString()
+                        })),
+                        settings: settings
+                    });
+                } catch (error) {
+                    console.error('Failed to get alarm debug info:', error);
+                    sendResponse({ success: false, error: error.message });
+                }
+            })();
+            return true; // Indicates async response
+
+        case "forceSyncReminders":
+            // Force sync reminders immediately (for testing)
+            syncGoogleEventReminders()
+                .then(() => {
+                    sendResponse({ success: true, message: 'Reminder sync completed' });
+                })
+                .catch(error => {
+                    console.error('Failed to force sync reminders:', error);
+                    sendResponse({ success: false, error: error.message });
+                });
+            return true; // Indicates async response
+
+        case "autoSyncReminders":
+            // Auto-sync with throttle (skip if synced within last 5 minutes)
+            (async () => {
+                try {
+                    const SYNC_THROTTLE_MS = 5 * 60 * 1000; // 5 minutes
+                    const lastSyncData = await StorageHelper.getLocal(['lastReminderSyncTime'], { lastReminderSyncTime: 0 });
+                    const lastSyncTime = lastSyncData.lastReminderSyncTime || 0;
+                    const now = Date.now();
+
+                    if (now - lastSyncTime < SYNC_THROTTLE_MS) {
+                        console.log(`[Auto Sync] Skipping sync (last sync was ${Math.round((now - lastSyncTime) / 1000)}s ago)`);
+                        sendResponse({ success: true, skipped: true, message: 'Skipped (recently synced)' });
+                    } else {
+                        console.log(`[Auto Sync] Starting sync (last sync was ${Math.round((now - lastSyncTime) / 1000)}s ago)`);
+                        await syncGoogleEventReminders();
+                        sendResponse({ success: true, skipped: false, message: 'Reminder sync completed' });
+                    }
+                } catch (error) {
+                    console.error('[Auto Sync] Failed to auto-sync reminders:', error);
+                    sendResponse({ success: false, error: error.message });
+                }
+            })();
+            return true; // Indicates async response
+
         default:
             console.warn("Unknown action:", request.action);
             sendResponse({error: "Unknown action"});
@@ -437,7 +606,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 // Alarm listener for event reminders
 chrome.alarms.onAlarm.addListener(async (alarm) => {
-    if (alarm.name.startsWith(AlarmManager.ALARM_PREFIX)) {
+    if (alarm.name.startsWith(AlarmManager.ALARM_PREFIX) || alarm.name.startsWith(AlarmManager.GOOGLE_ALARM_PREFIX)) {
         await AlarmManager.showReminderNotification(alarm.name);
     }
 });
@@ -471,5 +640,115 @@ chrome.notifications.onButtonClicked.addListener((notificationId, buttonIndex) =
 
         // Clear the notification regardless of which button was clicked
         chrome.notifications.clear(notificationId);
+    }
+});
+
+/**
+ * Set up daily alarm for Google event reminder sync
+ */
+async function setupDailyReminderSync() {
+    try {
+        // Clear existing daily sync alarm
+        await chrome.alarms.clear('daily_reminder_sync');
+
+        // Calculate next midnight
+        const now = new Date();
+        const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0);
+
+        // Create alarm for midnight (00:00) every day
+        await chrome.alarms.create('daily_reminder_sync', {
+            when: tomorrow.getTime(),
+            periodInMinutes: 24 * 60 // Repeat every 24 hours
+        });
+
+        console.log('Daily reminder sync alarm set for:', tomorrow);
+    } catch (error) {
+        console.error('Failed to setup daily reminder sync:', error);
+    }
+}
+
+/**
+ * Sync Google event reminders for today
+ */
+async function syncGoogleEventReminders() {
+    try {
+        console.log('[Reminder Sync] Starting Google event reminder sync...');
+
+        // Check if Google event reminders are enabled
+        const settings = await StorageHelper.get(['googleEventReminder', 'googleIntegrated', 'reminderMinutes'], {
+            googleEventReminder: false,
+            googleIntegrated: false,
+            reminderMinutes: 5
+        });
+
+        console.log('[Reminder Sync] Settings:', settings);
+
+        if (!settings.googleEventReminder) {
+            console.log('[Reminder Sync] Google event reminders are DISABLED in settings');
+            return;
+        }
+
+        if (!settings.googleIntegrated) {
+            console.log('[Reminder Sync] Google is NOT INTEGRATED');
+            return;
+        }
+
+        // Get today's date
+        const today = new Date();
+        const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        console.log('[Reminder Sync] Target date:', dateStr);
+
+        // Clear old reminders from previous dates
+        console.log('[Reminder Sync] Clearing old reminders from previous dates...');
+        const allAlarms = await chrome.alarms.getAll();
+        const oldReminders = allAlarms.filter(alarm =>
+            alarm.name.startsWith(AlarmManager.GOOGLE_ALARM_PREFIX) &&
+            !alarm.name.includes(`${AlarmManager.GOOGLE_ALARM_PREFIX}${dateStr}_`)
+        );
+
+        for (const alarm of oldReminders) {
+            await chrome.alarms.clear(alarm.name);
+            // Also clear stored event data
+            const storageKey = `googleEventData_${alarm.name}`;
+            await chrome.storage.local.remove(storageKey);
+        }
+
+        if (oldReminders.length > 0) {
+            console.log(`[Reminder Sync] Cleared ${oldReminders.length} old reminders from previous dates`);
+        }
+
+        // Fetch today's Google events from PRIMARY calendar only
+        console.log('[Reminder Sync] Fetching Google events from PRIMARY calendar only...');
+        const events = await getPrimaryCalendarEvents(today);
+        console.log('[Reminder Sync] Fetched events:', events ? events.length : 0);
+
+        if (events && events.length > 0) {
+            console.log('[Reminder Sync] Event list:', events.map(e => ({
+                id: e.id,
+                summary: e.summary,
+                start: e.start?.dateTime || e.start?.date,
+                hasDateTime: !!e.start?.dateTime
+            })));
+
+            // Set reminders for all events
+            await AlarmManager.setGoogleEventReminders(events, dateStr);
+            console.log(`[Reminder Sync] ✓ Synced ${events.length} Google event reminders for ${dateStr}`);
+        } else {
+            console.log('[Reminder Sync] No Google events found for today');
+        }
+
+        // Record sync timestamp
+        await StorageHelper.setLocal({ lastReminderSyncTime: Date.now() });
+    } catch (error) {
+        console.error('[Reminder Sync] ERROR:', error);
+        console.error('[Reminder Sync] Stack trace:', error.stack);
+    }
+}
+
+// Listen for daily sync alarm
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+    if (alarm.name === 'daily_reminder_sync') {
+        console.log('Running daily Google event reminder sync');
+        await syncGoogleEventReminders();
     }
 });
