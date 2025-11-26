@@ -71,6 +71,10 @@
     "message": "New day detected. Resetting previous day's events",
     "description": "Message when events are reset for new day"
   },
+  "joinMeet": {
+    "message": "Join Meet",
+    "description": "Notification button text to join Google Meet"
+  },
   "notAuthorized": {
     "message": "Google Calendar integration is not authorized",
     "description": "Message when Google Calendar integration is not authorized"

@@ -149,16 +149,24 @@ export class AlarmManager {
             // Create the notification
             const notificationId = `reminder_${alarmName}`;
 
+            // Decide buttons dynamically (Join Meet if a Meet link exists)
+            const hasMeetLink = !!(eventData && eventData.hangoutLink);
+
             // Create the notification with a fallback for icon issues
             const notificationOptions = {
                 type: 'basic',
                 title: chrome.i18n.getMessage('eventReminder') || 'Event Reminder',
                 message: chrome.i18n.getMessage('startsInMinutes', [eventData.title, reminderMinutes.toString(), eventData.startTime])
                     || `"${eventData.title}" starts in ${reminderMinutes} minutes (${eventData.startTime})`,
-                buttons: [
-                    { title: chrome.i18n.getMessage('openSideTimeTable') || 'Open SideTimeTable' },
-                    { title: chrome.i18n.getMessage('dismissNotification') || 'Dismiss' }
-                ],
+                buttons: hasMeetLink
+                    ? [
+                        { title: chrome.i18n.getMessage('joinMeet') || 'Join Meet' },
+                        { title: chrome.i18n.getMessage('dismissNotification') || 'Dismiss' }
+                    ]
+                    : [
+                        { title: chrome.i18n.getMessage('openSideTimeTable') || 'Open SideTimeTable' },
+                        { title: chrome.i18n.getMessage('dismissNotification') || 'Dismiss' }
+                    ],
                 requireInteraction: true
             };
 
@@ -266,7 +274,10 @@ export class AlarmManager {
                     title: event.summary || 'No title',
                     startTime: this.formatTimeFromDateTime(event.start.dateTime),
                     dateStr: dateStr,
-                    reminderMinutes: reminderMinutes
+                    reminderMinutes: reminderMinutes,
+                    // Links for quick navigation (if available)
+                    hangoutLink: event.hangoutLink || null,
+                    htmlLink: event.htmlLink || null
                 }
             });
 

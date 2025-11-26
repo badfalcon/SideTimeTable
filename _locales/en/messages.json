@@ -77,6 +77,10 @@
     "message": "Open SideTimeTable",
     "description": "Notification button text to open side panel"
   },
+  "joinMeet": {
+    "message": "Join Meet",
+    "description": "Notification button text to join Google Meet"
+  },
   "dismissNotification": {
     "message": "Dismiss",
     "description": "Notification button text to dismiss"

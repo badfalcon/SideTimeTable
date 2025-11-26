@@ -612,34 +612,60 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 });
 
 // Notification click handler
-chrome.notifications.onClicked.addListener((notificationId) => {
+// User preference: Clicking the notification body should open the Side Panel (never auto-open links)
+chrome.notifications.onClicked.addListener(async (notificationId) => {
     if (notificationId.startsWith('reminder_')) {
-        // Open the side panel when the notification is clicked
-        chrome.tabs.query({ active: true, currentWindow: true }, ([activeTab]) => {
-            if (activeTab) {
-                chrome.sidePanel.open({ tabId: activeTab.id });
-            }
-        });
-
-        // Clear the notification
-        chrome.notifications.clear(notificationId);
-    }
-});
-
-// Notification button click handler
-chrome.notifications.onButtonClicked.addListener((notificationId, buttonIndex) => {
-    if (notificationId.startsWith('reminder_')) {
-        if (buttonIndex === 0) {
-            // The "Open SideTimeTable" button clicked
+        try {
+            // Always open the side panel on body click
             chrome.tabs.query({ active: true, currentWindow: true }, ([activeTab]) => {
                 if (activeTab) {
                     chrome.sidePanel.open({ tabId: activeTab.id });
                 }
             });
+        } catch (e) {
+            console.error('Failed to handle notification click:', e);
+        } finally {
+            // Clear the notification
+            chrome.notifications.clear(notificationId);
         }
+    }
+});
 
-        // Clear the notification regardless of which button was clicked
-        chrome.notifications.clear(notificationId);
+// Notification button click handler
+chrome.notifications.onButtonClicked.addListener(async (notificationId, buttonIndex) => {
+    if (notificationId.startsWith('reminder_')) {
+        try {
+            const alarmName = notificationId.replace('reminder_', '');
+
+            if (buttonIndex === 0) {
+                // Primary button: If Google event with Meet link, open it; otherwise open SideTimeTable
+                if (alarmName.startsWith(AlarmManager.GOOGLE_ALARM_PREFIX)) {
+                    const eventData = await AlarmManager.getGoogleEventData(alarmName);
+                    const urlToOpen = eventData?.hangoutLink || eventData?.htmlLink;
+                    if (urlToOpen) {
+                        await chrome.tabs.create({ url: urlToOpen, active: true });
+                    } else {
+                        chrome.tabs.query({ active: true, currentWindow: true }, ([activeTab]) => {
+                            if (activeTab) {
+                                chrome.sidePanel.open({ tabId: activeTab.id });
+                            }
+                        });
+                    }
+                } else {
+                    // Local events: open side panel
+                    chrome.tabs.query({ active: true, currentWindow: true }, ([activeTab]) => {
+                        if (activeTab) {
+                            chrome.sidePanel.open({ tabId: activeTab.id });
+                        }
+                    });
+                }
+            }
+        } catch (e) {
+            console.error('Failed to handle notification button click:', e);
+        } finally {
+            // Clear the notification regardless of which button was clicked
+            chrome.notifications.clear(notificationId);
+        }
     }
 });
 
