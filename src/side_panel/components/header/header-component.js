@@ -15,13 +15,18 @@ export class HeaderComponent extends Component {
         this.onAddEvent = options.onAddEvent || null;
         this.onDateChange = options.onDateChange || null;
         this.onSettingsClick = options.onSettingsClick || null;
+        this.onSyncClick = options.onSyncClick || null;
 
         // UI elements
         this.addEventButton = null;
         this.prevDateButton = null;
         this.nextDateButton = null;
         this.dateInput = null;
+        this.syncButton = null;
         this.settingsButton = null;
+
+        // Sync state
+        this.isSyncing = false;
 
         // Current date
         this.currentDate = new Date();
@@ -39,11 +44,8 @@ export class HeaderComponent extends Component {
         const header = document.createElement('div');
         header.id = 'sideTimeTableHeader';
 
-        // Add button
-        this.addEventButton = document.createElement('i');
-        this.addEventButton.className = 'fas fa-plus-circle add-local-event-icon';
-        this.addEventButton.id = 'addLocalEventButton';
-        this.addEventButton.setAttribute('data-localize-title', '__MSG_addEvent__');
+        // Action buttons group (add + sync)
+        const actionButtons = this._createActionButtons();
 
         // Date navigation
         const dateNavigation = this._createDateNavigation();
@@ -55,7 +57,7 @@ export class HeaderComponent extends Component {
         this.settingsButton.setAttribute('data-localize-title', '__MSG_settings__');
 
         // Add the elements to the header
-        header.appendChild(this.addEventButton);
+        header.appendChild(actionButtons);
         header.appendChild(dateNavigation);
         header.appendChild(this.settingsButton);
 
@@ -68,6 +70,33 @@ export class HeaderComponent extends Component {
         this._updateDateDisplay();
 
         return wrapper;
+    }
+
+    /**
+     * Create action buttons (add + sync)
+     * @private
+     */
+    _createActionButtons() {
+        const container = document.createElement('div');
+        container.className = 'action-buttons';
+
+        // Add button
+        this.addEventButton = document.createElement('i');
+        this.addEventButton.className = 'fas fa-plus-circle add-local-event-icon';
+        this.addEventButton.id = 'addLocalEventButton';
+        this.addEventButton.setAttribute('data-localize-title', '__MSG_addEvent__');
+
+        // Sync button
+        this.syncButton = document.createElement('i');
+        this.syncButton.className = 'fas fa-sync sync-icon';
+        this.syncButton.id = 'syncReminderButton';
+        this.syncButton.setAttribute('data-localize-title', '__MSG_syncReminders__');
+        this.syncButton.title = 'Sync Reminders';
+
+        container.appendChild(this.addEventButton);
+        container.appendChild(this.syncButton);
+
+        return container;
     }
 
     /**
@@ -126,6 +155,11 @@ export class HeaderComponent extends Component {
 
         this.addEventListener(this.dateInput, 'change', () => {
             this._handleDateInputChange();
+        });
+
+        // Sync button
+        this.addEventListener(this.syncButton, 'click', () => {
+            this._handleSyncClick();
         });
 
         // Settings button
@@ -264,6 +298,50 @@ export class HeaderComponent extends Component {
                 const month = String(maxDate.getMonth() + 1).padStart(2, '0');
                 const day = String(maxDate.getDate()).padStart(2, '0');
                 this.dateInput.max = `${year}-${month}-${day}`;
+            }
+        }
+    }
+
+    /**
+     * Handle sync button click
+     * @private
+     */
+    async _handleSyncClick() {
+        if (this.isSyncing) {
+            return; // Already syncing
+        }
+
+        this.setSyncing(true);
+
+        try {
+            if (this.onSyncClick) {
+                await this.onSyncClick();
+            }
+        } catch (error) {
+            console.error('Sync failed:', error);
+        } finally {
+            this.setSyncing(false);
+        }
+    }
+
+    /**
+     * Set syncing state
+     * @param {boolean} syncing Whether syncing
+     */
+    setSyncing(syncing) {
+        this.isSyncing = syncing;
+
+        if (this.syncButton) {
+            if (syncing) {
+                // Add spinning animation
+                this.syncButton.classList.add('fa-spin');
+                this.syncButton.style.pointerEvents = 'none';
+                this.syncButton.style.opacity = '0.6';
+            } else {
+                // Remove spinning animation
+                this.syncButton.classList.remove('fa-spin');
+                this.syncButton.style.pointerEvents = '';
+                this.syncButton.style.opacity = '';
             }
         }
     }
