@@ -23,6 +23,7 @@ import {
     LanguageSettingsCard,
     ShortcutSettingsCard,
     ReminderSettingsCard,
+    DeveloperSettingsCard,
     ControlButtonsComponent
 } from './components/index.js';
 
@@ -39,6 +40,7 @@ class OptionsPageManager {
         this.languageSettingsCard = null;
         this.shortcutSettingsCard = null;
         this.reminderSettingsCard = null;
+        this.developerSettingsCard = null;
         this.controlButtons = null;
     }
 
@@ -77,6 +79,22 @@ class OptionsPageManager {
         // Create control buttons
         this.controlButtons = new ControlButtonsComponent(this.handleResetSettings.bind(this));
         this.componentManager.register('controlButtons', this.controlButtons);
+
+        // Conditionally add Developer Settings (Demo Mode) when developer features are enabled
+        try {
+            const { enableDeveloperFeatures = false, enableReminderDebug = false } = await chrome.storage.local.get(['enableDeveloperFeatures', 'enableReminderDebug']);
+            const devEnabled = !!(enableDeveloperFeatures || enableReminderDebug);
+            if (devEnabled) {
+                this.developerSettingsCard = new DeveloperSettingsCard(this.handleDeveloperSettingsChange?.bind?.(this));
+                this.componentManager.register('developerSettings', this.developerSettingsCard);
+                // Ensure visibility (card default is hidden:true)
+                try {
+                    this.developerSettingsCard.setVisible(true);
+                } catch (_) { /* noop */ }
+            }
+        } catch (e) {
+            console.warn('Failed to read developer features flags:', e);
+        }
 
         // Load the existing settings and apply them to the components
         await this._loadAndApplySettings();

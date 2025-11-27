@@ -66,11 +66,29 @@ export class ReminderSettingsCard extends CardComponent {
         const reminderTimeSection = this._createReminderTimeSelect();
         form.appendChild(reminderTimeSection);
 
-        // Debug/test section
-        const debugSection = this._createDebugSection();
-        form.appendChild(debugSection);
+        // Debug/test section (runtime gated via chrome.storage.local.enableDeveloperFeatures or legacy enableReminderDebug)
+        // Append asynchronously after initial render to avoid blocking UI
+        this._maybeAttachDebugSection(form);
 
         return form;
+    }
+
+    /**
+     * Conditionally attach debug section based on runtime flag in storage
+     * @param {HTMLElement} form
+     * @private
+     */
+    async _maybeAttachDebugSection(form) {
+        try {
+            const { enableDeveloperFeatures = false, enableReminderDebug = false } = await chrome.storage.local.get(['enableDeveloperFeatures', 'enableReminderDebug']);
+            const devEnabled = !!(enableDeveloperFeatures || enableReminderDebug);
+            if (devEnabled) {
+                const debugSection = this._createDebugSection();
+                form.appendChild(debugSection);
+            }
+        } catch (e) {
+            console.warn('Failed to read developer features flags:', e);
+        }
     }
 
     /**
