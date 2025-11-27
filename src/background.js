@@ -513,9 +513,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             return true; // Indicates async response
 
         case "testReminder":
-            // Test notification immediately (for debugging)
+            // Test notification immediately (developer features only)
             (async () => {
                 try {
+                    const { enableDeveloperFeatures = false, enableReminderDebug = false } = await chrome.storage.local.get(['enableDeveloperFeatures', 'enableReminderDebug']);
+                    const devEnabled = !!(enableDeveloperFeatures || enableReminderDebug);
+                    if (!devEnabled) {
+                        sendResponse({ success: false, error: 'Developer features are disabled. Enable with chrome.storage.local.set({ enableDeveloperFeatures: true }) (or legacy: enableReminderDebug).' });
+                        return;
+                    }
+
                     const testNotification = {
                         type: 'basic',
                         title: chrome.i18n.getMessage('eventReminder') || 'Event Reminder (Test)',
@@ -537,9 +544,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             return true; // Indicates async response
 
         case "debugAlarms":
-            // Get all current alarms for debugging
+            // Get all current alarms for debugging (developer features only)
             (async () => {
                 try {
+                    const { enableDeveloperFeatures = false, enableReminderDebug = false } = await chrome.storage.local.get(['enableDeveloperFeatures', 'enableReminderDebug']);
+                    const devEnabled = !!(enableDeveloperFeatures || enableReminderDebug);
+                    if (!devEnabled) {
+                        sendResponse({ success: false, error: 'Developer features are disabled. Enable with chrome.storage.local.set({ enableDeveloperFeatures: true }) (or legacy: enableReminderDebug).' });
+                        return;
+                    }
+
                     const alarms = await chrome.alarms.getAll();
                     const settings = await StorageHelper.get(['googleEventReminder', 'googleIntegrated', 'reminderMinutes'], {
                         googleEventReminder: false,

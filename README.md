@@ -49,6 +49,36 @@
   3. Reload extension in Chrome to see changes
   4. Use `npm run package` to create distribution zip
 
+#### Enabling Developer Features (Demo/Reminder Debug)
+SideTimeTable uses runtime storage flags to show developer-only features such as Demo Mode and Reminder debug tools. No build flags are required.
+
+Enable:
+```
+chrome.storage.local.set({ enableDeveloperFeatures: true })
+// Legacy (still supported):
+// chrome.storage.local.set({ enableReminderDebug: true })
+```
+
+Disable:
+```
+chrome.storage.local.set({ enableDeveloperFeatures: false, enableReminderDebug: false })
+```
+
+Apply changes:
+- Reload the Options page (and the side panel if necessary).
+
+What becomes available when enabled:
+- Options shows a `Developer Settings` card with a Demo Mode toggle (uses mock data, no API calls).
+- Options `Reminder Settings` card shows a `Debug & Test` section (send test notification, list alarms).
+- Background message actions (for development only):
+  - `chrome.runtime.sendMessage({ action: 'testReminder' })`
+  - `chrome.runtime.sendMessage({ action: 'debugAlarms' })`
+  - These only work when Developer Features are enabled.
+
+Notes:
+- `enableReminderDebug` remains for backward compatibility but may be deprecated later.
+- No extra Chrome permissions are required for these toggles.
+
 ### License
 This plugin is released under the [Apache License 2.0]. See the `LICENSE` file for details.
 
@@ -82,6 +112,36 @@ This plugin is released under the [Apache License 2.0]. See the `LICENSE` file f
 - **イベント管理**: インターフェースを通じて直接ローカルイベントを追加するか、複数のGoogleカレンダーを同期して自動で更新します。
 - **カスタマイズ**: 設定パネルで作業時間、休憩時間、色、言語設定を構成できます。
 - **デモモード**: 開発用として、APIアクセスなしでサンプルデータを使用してテストできるデモモードを有効にできます。
+
+#### 開発者機能（デモ／リマインダーデバッグ）の有効化
+ビルドフラグは不要で、ランタイムのストレージフラグでデベロッパー向け機能（デモ切替、リマインダーデバッグUI/機能）を表示・利用できます。
+
+有効化:
+```
+chrome.storage.local.set({ enableDeveloperFeatures: true })
+// 互換（レガシー）:
+// chrome.storage.local.set({ enableReminderDebug: true })
+```
+
+無効化:
+```
+chrome.storage.local.set({ enableDeveloperFeatures: false, enableReminderDebug: false })
+```
+
+反映方法:
+- Options ページを再読み込み（必要に応じてサイドパネルも再読み込み）。
+
+有効化するとできること:
+- Options に「Developer Settings」カードが表示され、Demo Mode のトグルが利用可能。
+- Options の「Reminder Settings」カードに「Debug & Test」セクションが表示され、テスト通知の発火やアラーム一覧の確認が可能。
+- 背景メッセージの開発用途アクション:
+  - `chrome.runtime.sendMessage({ action: 'testReminder' })`
+  - `chrome.runtime.sendMessage({ action: 'debugAlarms' })`
+  - いずれも Developer Features 有効時のみ有効。
+
+備考:
+- `enableReminderDebug` は後方互換としてサポートされます（将来的に非推奨予定）。
+- 追加の権限は不要です。
 
 #### 幅の自動調整について
 - サイドパネルの幅を変更すると、イベントの横幅が自動的に再計算されます。
