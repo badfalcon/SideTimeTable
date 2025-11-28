@@ -3,7 +3,7 @@
 ## 日本語版 (Japanese)
 
 ### 短い説明 (Short Description)
-日々のスケジュール管理をサイドパネルで。Googleカレンダー連携対応の便利なタイムテーブル拡張機能。
+日々のスケジュール管理をサイドパネルで。Googleカレンダー連携とリマインダー通知に対応した便利なタイムテーブル拡張機能。
 
 ### 詳細説明 (Detailed Description) - プレーンテキスト版
 
@@ -17,7 +17,9 @@ SideTimeTableは、Chromeのサイドパネルで今日の予定を素早く確�
 • Googleカレンダー連携: 複数のGoogleカレンダーを同期し、個人・チーム予定を一元管理
 • ローカルイベント管理: Google以外の予定も直接追加・編集可能
 • 高度なレイアウト: 重複する予定も見やすく自動配置
-• カスタマイズ設定: 作業時間、休憩時間、カラーテーマを自由に設定
+• リマインダー通知: 予定の◯分前にデスクトップ通知でお知らせ（通知タイミングは1/3/5/10/15/30/60分から選択可能）
+• Google予定の自動リマインド: 連携中のGoogle予定からリマインダーを自動作成（オン/オフ切り替え可）
+• カスタマイズ設定: 作業時間、休憩時間、リマインダー時刻、カラーテーマを自由に設定
 • キーボードショートカット: 設定可能なホットキーで素早くアクセス
 
 【こんな方におすすめ】
@@ -33,18 +35,19 @@ SideTimeTableは、Chromeのサイドパネルで今日の予定を素早く確�
 1. 拡張機能をインストール
 2. Googleアカウントと連携
 3. 表示したいカレンダーを選択
-4. サイドパネルで今日の予定を確認・管理
+4. オプションで「Google予定のリマインダー」と「通知タイミング（分前）」を設定
+5. サイドパネルで今日の予定を確認・管理
 
 【プライバシー】
 
-カレンダーデータは安全に処理され、必要最小限のアクセス権限のみを使用します。データは外部サーバーに送信されません。
+カレンダーデータは安全に処理され、必要最小限のアクセス権限（通知、アラーム、ID/カレンダー連携 など）のみを使用します。データは外部サーバーに送信されません。
 
 ---
 
 ## English Version
 
 ### Short Description
-Daily schedule management in your side panel. Convenient timetable extension with Google Calendar integration.
+Daily schedule management in your side panel. Timetable extension with Google Calendar integration and reminder notifications.
 
 ### Detailed Description - Plain Text Version
 
@@ -58,7 +61,9 @@ SideTimeTable is a Chrome extension that lets you quickly view and manage today'
 • Google Calendar Integration: Sync multiple Google Calendars to manage personal and team schedules in one place
 • Local Event Management: Add and edit non-Google events directly
 • Advanced Layout: Automatic smart positioning for overlapping events
-• Customizable Settings: Freely configure work hours, break times, and color themes
+• Reminder Notifications: Get desktop alerts minutes before events (choose from 1/3/5/10/15/30/60 minutes)
+• Auto-reminders for Google Events: Automatically create reminders from your connected Google Calendars (toggle on/off)
+• Customizable Settings: Freely configure work hours, break times, reminder lead time, and color themes
 • Keyboard Shortcuts: Quick access with configurable hotkeys
 
 [Perfect For]
@@ -74,11 +79,12 @@ SideTimeTable is a Chrome extension that lets you quickly view and manage today'
 1. Install the extension
 2. Connect with your Google account
 3. Select calendars to display
-4. View and manage today's events in the side panel
+4. In Options, enable “Google event reminders” and choose your reminder lead time (minutes)
+5. View and manage today's events in the side panel
 
 [Privacy]
 
-Your calendar data is processed securely with minimal required permissions. Data is not transmitted to external servers.
+Your calendar data is processed securely with minimal required permissions (notifications, alarms, identity/calendar integration, etc.). Data is not transmitted to external servers.
 
 [Perfect for Modern Workflows]
 
@@ -91,7 +97,7 @@ Transform your daily productivity with SideTimeTable - your schedule, simplified
 ## Keywords / Tags
 
 ### Japanese
-スケジュール, カレンダー, タイムテーブル, Googleカレンダー, サイドパネル, 時間管理, 予定管理, 仕事効率化, ビジネス, 生産性
+スケジュール, カレンダー, タイムテーブル, Googleカレンダー, サイドパネル, リマインダー, 通知, 時間管理, 予定管理, 仕事効率化, ビジネス, 生産性
 
 ### English  
-schedule, calendar, timetable, google calendar, side panel, time management, event management, productivity, business, workflow, daily planner, organizer
+schedule, calendar, timetable, google calendar, side panel, reminder, notifications, alerts, time management, event management, productivity, business, workflow, daily planner, organizer
