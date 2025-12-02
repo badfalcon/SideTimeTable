@@ -28,6 +28,51 @@ async function getCurrentLocale() {
 }
 
 /**
+ * Determine default time format based on UI language
+ * Policy: en-US -> 12h, otherwise -> 24h
+ * @returns {"12h"|"24h"}
+ */
+function determineDefaultTimeFormat() {
+    try {
+        const uiLang = chrome.i18n.getUILanguage();
+        return uiLang && uiLang.toLowerCase().startsWith('en-us') ? '12h' : '24h';
+    } catch (_) {
+        return '24h';
+    }
+}
+
+/**
+ * Get user's time format preference from storage with sensible default.
+ * Default policy: 24h globally, except en-US defaults to 12h.
+ * @returns {Promise<"12h"|"24h">}
+ */
+async function getTimeFormatPreference() {
+    try {
+        const result = await chrome.storage.sync.get(['timeFormat']);
+        const saved = result.timeFormat;
+        if (saved === '12h' || saved === '24h') return saved;
+        return determineDefaultTimeFormat();
+    } catch (error) {
+        console.warn('Time format preference error:', error);
+        return determineDefaultTimeFormat();
+    }
+}
+
+/**
+ * Persist user's time format preference.
+ * @param {"12h"|"24h"} format
+ * @returns {Promise<void>}
+ */
+async function setTimeFormatPreference(format) {
+    try {
+        if (format !== '12h' && format !== '24h') return;
+        await chrome.storage.sync.set({ timeFormat: format });
+    } catch (error) {
+        console.warn('Time format persistence error:', error);
+    }
+}
+
+/**
  * Format the time according to the locale
  * @param {string} timeString - The time string in HH:mm format
  * @param {string} locale - The locale (ja/en)
@@ -60,6 +105,46 @@ function formatTimeForLocale(timeString, locale = 'ja') {
         console.warn('Time format error:', error);
         return timeString;
     }
+}
+
+/**
+ * Core formatter (explicit hour cycle 12h/24h)
+ * Locale hint only affects digits/zero-padding language, not hour cycle.
+ * @param {string} timeString - The time string in HH:mm format
+ * @param {"12h"|"24h"} timeFormat - Desired hour cycle
+ * @param {string} localeHint - 'ja' or 'en' to pick numeral locale
+ * @returns {string}
+ */
+function formatTimeByFormat(timeString, timeFormat = '24h', localeHint = 'ja') {
+    if (!timeString) return '';
+    try {
+        const [hours, minutes] = timeString.split(':').map(Number);
+        const date = new Date();
+        date.setHours(hours, minutes, 0, 0);
+
+        const is12 = timeFormat === '12h';
+        const localeId = localeHint === 'en' ? 'en-US' : 'ja-JP';
+        return date.toLocaleTimeString(localeId, {
+            hour: is12 ? 'numeric' : '2-digit',
+            minute: '2-digit',
+            hour12: is12
+        });
+    } catch (error) {
+        console.warn('Time format (by format) error:', error);
+        return timeString;
+    }
+}
+
+/**
+ * Minimal public API: format a time string with options
+ * @param {string} timeString - HH:mm
+ * @param {{ format?: "12h"|"24h", locale?: 'ja'|'en' }} [options]
+ * @returns {string}
+ */
+function formatTime(timeString, options = {}) {
+    const format = options.format === '12h' || options.format === '24h' ? options.format : '24h';
+    const locale = options.locale === 'en' ? 'en' : 'ja';
+    return formatTimeByFormat(timeString, format, locale);
 }
 
 /**
@@ -126,58 +211,12 @@ function formatDateWithWeekdayForLocale(date, locale = 'ja') {
     }
 }
 
-/**
- * Format the time range according to the locale
- * @param {string} startTime - The start time (HH:mm)
- * @param {string} endTime - The end time (HH:mm)
- * @param {string} locale - The locale (ja/en)
- * @returns {string} The formatted time range
- */
-function formatTimeRangeForLocale(startTime, endTime, locale = 'ja') {
-    const formattedStart = formatTimeForLocale(startTime, locale);
-    const formattedEnd = formatTimeForLocale(endTime, locale);
-    
-    if (locale === 'en') {
-        return `${formattedStart} - ${formattedEnd}`;
-    } else {
-        return `${formattedStart}～${formattedEnd}`;
-    }
-}
-
-/**
- * Format the current time according to the locale
- * @param {string} locale - The locale (ja/en)
- * @returns {string} The formatted current time
- */
-function formatCurrentTimeForLocale(locale = 'ja') {
-    const now = new Date();
-    
-    try {
-        if (locale === 'en') {
-            // English: 12-hour format
-            return now.toLocaleTimeString('en-US', {
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true
-            });
-        } else {
-            // Japanese: 24-hour format
-            return now.toLocaleTimeString('ja-JP', {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: false
-            });
-        }
-    } catch (error) {
-        console.warn('Current time format error:', error);
-        return now.toLocaleTimeString();
-    }
-}
-
 // Export as the global functions
 window.getCurrentLocale = getCurrentLocale;
-window.formatTimeForLocale = formatTimeForLocale;
+window.getTimeFormatPreference = getTimeFormatPreference;
+window.setTimeFormatPreference = setTimeFormatPreference;
+window.formatTimeForLocale = formatTimeForLocale; // legacy
+window.formatTime = formatTime; // minimal API
+window.formatTimeByFormat = formatTimeByFormat;
 window.formatDateForLocale = formatDateForLocale;
 window.formatDateWithWeekdayForLocale = formatDateWithWeekdayForLocale;
-window.formatTimeRangeForLocale = formatTimeRangeForLocale;
-window.formatCurrentTimeForLocale = formatCurrentTimeForLocale;

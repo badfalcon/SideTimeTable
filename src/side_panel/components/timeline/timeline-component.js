@@ -22,12 +22,21 @@ export class TimelineComponent extends Component {
         this.localEventsContainer = null;
         this.googleEventsContainer = null;
 
+        // Hour label DOM cache for localization updates
+        this.hourLabels = [];
+
         // The current time line management
         this.showCurrentTimeLine = options.showCurrentTimeLine !== false;
         this.currentTimeLineManager = null;
 
         // The target date for the display
         this.currentDate = new Date();
+
+        // Locale (default to Japanese until resolved)
+        this.locale = 'ja';
+
+        // Time format preference (default 24h until resolved)
+        this.timeFormat = '24h';
     }
 
     createElement() {
@@ -51,6 +60,9 @@ export class TimelineComponent extends Component {
             this._setupCurrentTimeLine();
         }
 
+        // Initialize locale and update hour labels asynchronously
+        this._initLocaleAndRelabel();
+
         return container;
     }
 
@@ -64,6 +76,7 @@ export class TimelineComponent extends Component {
         baseDiv.id = 'sideTimeTableBase';
 
         // Create the time labels and the guide lines for 24 hours
+        this.hourLabels = [];
         for (let hour = 0; hour < 24; hour++) {
             const topPosition = hour * this.HOUR_HEIGHT;
 
@@ -71,7 +84,9 @@ export class TimelineComponent extends Component {
             const label = document.createElement('div');
             label.className = 'hour-label';
             label.style.top = `${topPosition}px`;
+            // Temporary text; will be localized after locale resolution
             label.textContent = `${hour}:00`;
+            this.hourLabels.push(label);
 
             // The guide line
             const line = document.createElement('div');
@@ -83,6 +98,79 @@ export class TimelineComponent extends Component {
         }
 
         return baseDiv;
+    }
+
+    /**
+     * Initialize locale information and relabel hour markers accordingly
+     * @private
+     */
+    _initLocaleAndRelabel() {
+        try {
+            // If locale utils are available, resolve and update
+            const hasLocale = window && typeof window.getCurrentLocale === 'function';
+            const hasTimePref = window && typeof window.getTimeFormatPreference === 'function';
+
+            if (hasLocale || hasTimePref) {
+                const tasks = [];
+                if (hasLocale) tasks.push(Promise.resolve(window.getCurrentLocale()));
+                if (hasTimePref) tasks.push(Promise.resolve(window.getTimeFormatPreference()));
+
+                Promise.all(tasks)
+                    .then(results => {
+                        if (hasLocale) {
+                            const locale = results[0];
+                            if (locale === 'en' || locale === 'ja') {
+                                this.locale = locale;
+                            }
+                        }
+                        if (hasTimePref) {
+                            const pref = results[hasLocale ? 1 : 0];
+                            if (pref === '12h' || pref === '24h') {
+                                this.timeFormat = pref;
+                            }
+                        }
+                        this._updateHourLabels();
+                    })
+                    .catch(() => {
+                        this._updateHourLabels();
+                    });
+            } else {
+                // Fallback: just update using defaults
+                this._updateHourLabels();
+            }
+        } catch (_) {
+            // Silent fallback
+            this._updateHourLabels();
+        }
+    }
+
+    /**
+     * Update hour labels based on current locale
+     * @private
+     */
+    _updateHourLabels() {
+        if (!this.hourLabels || this.hourLabels.length !== 24) return;
+
+        for (let hour = 0; hour < 24; hour++) {
+            const hh = hour.toString().padStart(2, '0');
+            const timeStr = `${hh}:00`;
+
+            let localized = null;
+            try {
+                if (window && typeof window.formatTime === 'function') {
+                    localized = window.formatTime(timeStr, { format: this.timeFormat, locale: this.locale });
+                } else if (window && typeof window.formatTimeByFormat === 'function') {
+                    localized = window.formatTimeByFormat(timeStr, this.timeFormat, this.locale);
+                } else if (window && typeof window.formatTimeForLocale === 'function') {
+                    // Backward compatibility
+                    localized = window.formatTimeForLocale(timeStr, this.locale);
+                }
+            } catch (_) {
+                // ignore
+            }
+
+            this.hourLabels[hour].textContent = localized || timeStr;
+        }
     }
 
     /**
