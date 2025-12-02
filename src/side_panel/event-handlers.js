@@ -328,15 +328,26 @@ export class GoogleEventManager {
      * @private
      */
     async _setEventContentWithLocale(eventDiv, startDate, summary, event) {
-        // Get the current locale
-        const locale = await window.getCurrentLocale();
+        // Resolve locale and time format in parallel
+        const [locale, timeFormat] = await Promise.all([
+            typeof window.getCurrentLocale === 'function' ? window.getCurrentLocale() : Promise.resolve('ja'),
+            typeof window.getTimeFormatPreference === 'function' ? window.getTimeFormatPreference() : Promise.resolve('24h')
+        ]);
 
-        // Format the time in locale format
+        // Build HH:mm
         const startHours = String(startDate.getHours()).padStart(2, '0');
         const startMinutes = String(startDate.getMinutes()).padStart(2, '0');
         const timeString = `${startHours}:${startMinutes}`;
 
-        const formattedTime = window.formatTimeForLocale(timeString, locale);
+        // Format using minimal API (with safe fallbacks)
+        let formattedTime;
+        if (typeof window.formatTime === 'function') {
+            formattedTime = window.formatTime(timeString, { format: timeFormat, locale });
+        } else if (typeof window.formatTimeByFormat === 'function') {
+            formattedTime = window.formatTimeByFormat(timeString, timeFormat, locale);
+        } else {
+            formattedTime = window.formatTimeForLocale(timeString, locale);
+        }
 
         // Display time and title without attendance status
         const displayText = `${formattedTime} - ${summary}`;
@@ -487,11 +498,27 @@ export class LocalEventManager {
      * @private
      */
     async _setLocalEventContentWithLocale(eventDiv, startTime, endTime, title) {
-        // Get the current locale
-        const locale = await window.getCurrentLocale();
+        // Resolve locale and time format in parallel
+        const [locale, timeFormat] = await Promise.all([
+            typeof window.getCurrentLocale === 'function' ? window.getCurrentLocale() : Promise.resolve('ja'),
+            typeof window.getTimeFormatPreference === 'function' ? window.getTimeFormatPreference() : Promise.resolve('24h')
+        ]);
 
-        // Format the time range in locale format
-        const formattedTimeRange = window.formatTimeRangeForLocale(startTime, endTime, locale);
+        // Format both ends using minimal API (with safe fallbacks)
+        const formatOne = (t) => {
+            if (typeof window.formatTime === 'function') {
+                return window.formatTime(t, { format: timeFormat, locale });
+            } else if (typeof window.formatTimeByFormat === 'function') {
+                return window.formatTimeByFormat(t, timeFormat, locale);
+            } else {
+                return window.formatTimeForLocale(t, locale);
+            }
+        };
+
+        const formattedStart = formatOne(startTime);
+        const formattedEnd = formatOne(endTime);
+        const sep = locale === 'en' ? ' - ' : '～';
+        const formattedTimeRange = `${formattedStart}${sep}${formattedEnd}`;
         eventDiv.textContent = `${formattedTimeRange}: ${title}`;
     }
 
