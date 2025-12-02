@@ -9,7 +9,7 @@ import {calculateWorkHours, isSameDay} from '../lib/time-utils.js';
 
 // Constants for EventLayoutManager
 const LAYOUT_CONSTANTS = {
-    BASE_LEFT: 65,           // The basic left position for the events (px)
+    BASE_LEFT: 40,           // The basic left position for the events (px)
     GAP: 5,                  // The basic gap between the events (px)
     RESERVED_SPACE_MARGIN: 25,    // The reserved space margin other than the baseLeft (px)
     MIN_WIDTH: 100,          // The minimum guaranteed width (px)

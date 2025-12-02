@@ -33,7 +33,7 @@ const EVENT_STYLING = {
     DEFAULT_VALUES: {
         ZERO_DURATION_MINUTES: 15,    // Default duration for zero-duration events
         INITIAL_WIDTH: 200,           // Default width before layout calculation
-        INITIAL_LEFT_OFFSET: 65       // Default left position (60px time labels + 5px margin)
+        INITIAL_LEFT_OFFSET: 40       // Default left position (30px time labels + 5px margin)
     }
 };
 
@@ -288,6 +288,8 @@ export class GoogleEventManager {
         // This will be overridden by EventLayoutManager, but prevents initial flash
         const initialWidth = this.eventLayoutManager ? this.eventLayoutManager.maxWidth : EVENT_STYLING.DEFAULT_VALUES.INITIAL_WIDTH;
         eventDiv.style.width = `${initialWidth}px`;
+        console.log(initialWidth);
+        console.log(EVENT_STYLING.DEFAULT_VALUES.INITIAL_LEFT_OFFSET);
         eventDiv.style.left = `${EVENT_STYLING.DEFAULT_VALUES.INITIAL_LEFT_OFFSET}px`;
 
         // Apply the Google colors directly
@@ -454,6 +456,7 @@ export class LocalEventManager {
         // This will be overridden by EventLayoutManager, but prevents initial flash
         const initialWidth = this.eventLayoutManager ? this.eventLayoutManager.maxWidth : EVENT_STYLING.DEFAULT_VALUES.INITIAL_WIDTH;
         eventDiv.style.width = `${initialWidth}px`;
+
         eventDiv.style.left = `${EVENT_STYLING.DEFAULT_VALUES.INITIAL_LEFT_OFFSET}px`;
 
         // Set locale-aware time display asynchronously
