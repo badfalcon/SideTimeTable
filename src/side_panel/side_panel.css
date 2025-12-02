@@ -7,7 +7,6 @@
 
 body {
     font-family: Arial, sans-serif;
-    padding: 10px;
     background-color: #f0f0f0;
     position: relative;
     overflow-y: auto;
@@ -20,7 +19,6 @@ h1 {
 
 .side-time-table {
     position: relative;
-    padding-left: 60px;
     border: 1px solid #ccc;
     height: calc(100vh - 120px); /* Viewport height - header, padding, margin etc. for full use */
     overflow-y: auto; /* Enable vertical scrolling */
@@ -146,7 +144,6 @@ h1 {
     left: 0;
     right: 0;
     height: 1440px; /* Height for 24 hours (24 * 60px) */
-    padding-left: 60px;
     z-index: 10;
 }
 
@@ -169,7 +166,7 @@ h1 {
 
 .event {
     position: absolute;
-    left: 65px;
+    left: 35px;
     /* width: 200px; - Removed fixed width, dynamic width is set by EventLayoutManager */
     padding: 5px 10px;
     background: lightgray;
@@ -199,10 +196,10 @@ h1 {
 
 .current-time-line {
     position: absolute;
-    width: calc(100% - 60px);
+    width: calc(100% - 40px);
     height: 2px;
     background-color: var(--side-calendar-current-time-line-color);
-    left: 60px;
+    left: 40px;
     z-index: 32;
     border-left: none;
 }
@@ -210,7 +207,7 @@ h1 {
 .hour-label {
     position: absolute;
     left: 0;
-    width: 55px;
+    width: 35px;
     text-align: right;
     padding-right: 5px;
     font-size: 12px;
@@ -220,8 +217,8 @@ h1 {
 
 .hour-line {
     position: absolute;
-    left: 60px;
-    width: calc(100% - 60px);
+    left: 40px;
+    width: calc(100% - 40px);
     border-top: 1px dashed #ccc;
     z-index: 31;
 }
