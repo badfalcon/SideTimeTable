@@ -35,8 +35,9 @@ export class ControlButtonsComponent {
 
 
     async _handleReset() {
-        // The confirmation dialog
-        const confirmed = confirm(chrome.i18n.getMessage('confirmResetSettings'));
+        // The confirmation dialog with localized message
+        const message = await this._getLocalizedMessage('confirmResetSettings');
+        const confirmed = confirm(message);
         if (!confirmed) return;
 
         this.setResetState('resetting');
@@ -125,5 +126,33 @@ export class ControlButtonsComponent {
         }
         this.element = null;
         this.resetButton = null;
+    }
+
+    /**
+     * Get localized message considering user's language setting
+     * @private
+     */
+    async _getLocalizedMessage(key) {
+        try {
+            // Try to use the language-aware localization if available
+            if (window.getCurrentLanguageSetting && window.resolveLanguageCode) {
+                const userLanguageSetting = await window.getCurrentLanguageSetting();
+                const targetLanguage = window.resolveLanguageCode(userLanguageSetting);
+
+                // Load the appropriate messages file
+                const messagesUrl = chrome.runtime.getURL(`/_locales/${targetLanguage}/messages.json`);
+                const response = await fetch(messagesUrl);
+                const messages = await response.json();
+
+                if (messages[key] && messages[key].message) {
+                    return messages[key].message;
+                }
+            }
+        } catch (error) {
+            console.warn('Failed to load localized message:', error);
+        }
+
+        // Fallback to default chrome.i18n.getMessage
+        return chrome.i18n.getMessage(key);
     }
 }

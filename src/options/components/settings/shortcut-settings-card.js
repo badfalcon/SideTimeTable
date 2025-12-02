@@ -148,6 +148,7 @@ export class ShortcutSettingsCard extends CardComponent {
             this.shortcutDisplay.textContent = shortcut;
             this.shortcutDisplay.className = 'form-control-plaintext text-dark fw-bold flex-grow-1';
         } else {
+            this.shortcutDisplay.setAttribute('data-localize', '__MSG_noShortcutSet__');
             this.shortcutDisplay.textContent = chrome.i18n?.getMessage('noShortcutSet') || 'Not Set';
             this.shortcutDisplay.className = 'form-control-plaintext text-muted flex-grow-1';
         }
