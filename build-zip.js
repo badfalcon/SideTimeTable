@@ -41,7 +41,6 @@ archive.directory('src/img/', 'src/img');
 // src/lib/ - Non-JS files and specific required JS files
 archive.file('src/lib/localize.js', { name: 'src/lib/localize.js' });
 archive.file('src/lib/locale-utils.js', { name: 'src/lib/locale-utils.js' });
-archive.glob('*.css', { cwd: 'src/lib' }, { prefix: 'src/lib' });
 archive.glob('*.min.js', { cwd: 'src/lib' }, { prefix: 'src/lib' });
 
 // _locales/
