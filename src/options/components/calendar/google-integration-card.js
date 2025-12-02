@@ -136,6 +136,7 @@ export class GoogleIntegrationCard extends CardComponent {
         if (this.integrationButton) {
             const textSpan = this.integrationButton.querySelector('.gsi-material-button-contents');
             if (textSpan) {
+                textSpan.setAttribute('data-localize', integrated ? '__MSG_disconnectGoogle__' : '__MSG_signInWithGoogle__');
                 textSpan.textContent = integrated
                     ? chrome.i18n.getMessage('disconnectGoogle')
                     : chrome.i18n.getMessage('signInWithGoogle');

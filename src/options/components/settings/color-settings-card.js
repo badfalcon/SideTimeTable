@@ -159,6 +159,7 @@ export class ColorSettingsCard extends CardComponent {
         // The preset title
         const title = document.createElement('h6');
         title.className = 'mb-3';
+        title.setAttribute('data-localize', '__MSG_colorPresets__');
         title.textContent = chrome.i18n.getMessage('colorPresets');
 
         // The preset button container

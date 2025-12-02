@@ -111,6 +111,9 @@ export class GoogleEventModal extends ModalComponent {
         this._setAttendeesInfo(event);
 
         this.show();
+
+        // Apply the localization after showing the modal
+        this._localizeModal();
     }
 
     /**
@@ -264,6 +267,7 @@ export class GoogleEventModal extends ModalComponent {
             const link = document.createElement('a');
             link.href = meetUrl;
             link.target = '_blank';
+            link.setAttribute('data-localize', '__MSG_joinGoogleMeet__');
             link.textContent = chrome.i18n.getMessage('joinGoogleMeet');
             link.style.cssText = 'color: #4285f4; text-decoration: none;';
 
@@ -280,6 +284,7 @@ export class GoogleEventModal extends ModalComponent {
             const link = document.createElement('a');
             link.href = otherVideoUrl;
             link.target = '_blank';
+            link.setAttribute('data-localize', '__MSG_joinVideoConference__');
             link.textContent = chrome.i18n.getMessage('joinVideoConference');
             link.style.cssText = 'color: #4285f4; text-decoration: none;';
 
@@ -312,8 +317,21 @@ export class GoogleEventModal extends ModalComponent {
             container.style.cssText = 'margin-left: 20px;';
 
             const title = document.createElement('div');
-            title.textContent = `${chrome.i18n.getMessage('attendees')} (${event.attendees.length})`;
             title.style.cssText = 'font-weight: bold; margin-bottom: 5px;';
+
+            // Store attendee count for later use
+            title.dataset.attendeeCount = event.attendees.length;
+
+            // Create a span for the localized text
+            const titleText = document.createElement('span');
+            titleText.setAttribute('data-localize', '__MSG_attendees__');
+            titleText.textContent = chrome.i18n.getMessage('attendees');
+
+            // Create a span for the count
+            const countText = document.createTextNode(` (${event.attendees.length})`);
+
+            title.appendChild(titleText);
+            title.appendChild(countText);
 
             const attendeesList = document.createElement('div');
 
@@ -441,5 +459,30 @@ export class GoogleEventModal extends ModalComponent {
     hide() {
         super.hide();
         this.currentEvent = null;
+    }
+
+    /**
+     * Apply localization to modal elements
+     * @private
+     */
+    async _localizeModal() {
+        if (window.localizeWithLanguage && this.element) {
+            // Use the project's language-aware localization
+            const userLanguageSetting = await window.getCurrentLanguageSetting?.() || 'auto';
+            const targetLanguage = window.resolveLanguageCode?.(userLanguageSetting) || 'en';
+            await window.localizeWithLanguage(targetLanguage);
+        } else if (this.element) {
+            // Fallback: manual localization for key elements
+            const elementsToLocalize = this.element.querySelectorAll('[data-localize]');
+            elementsToLocalize.forEach(element => {
+                const key = element.getAttribute('data-localize');
+                if (key && chrome.i18n && chrome.i18n.getMessage) {
+                    const message = chrome.i18n.getMessage(key.replace('__MSG_', '').replace('__', ''));
+                    if (message) {
+                        element.textContent = message;
+                    }
+                }
+            });
+        }
     }
 }

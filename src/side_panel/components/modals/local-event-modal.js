@@ -36,14 +36,14 @@ export class LocalEventModal extends ModalComponent {
         // Title
         const title = document.createElement('h2');
         title.setAttribute('data-localize', '__MSG_eventDialogTitle__');
-        title.textContent = 'Create/Edit Event';
+        title.textContent = chrome.i18n.getMessage('eventDialogTitle');
         content.appendChild(title);
 
         // Title input
         const titleLabel = document.createElement('label');
         titleLabel.htmlFor = 'eventTitle';
         titleLabel.setAttribute('data-localize', '__MSG_eventTitle__');
-        titleLabel.textContent = 'Title:';
+        titleLabel.textContent = chrome.i18n.getMessage('eventTitle');
         content.appendChild(titleLabel);
 
         this.titleInput = document.createElement('input');
@@ -56,7 +56,7 @@ export class LocalEventModal extends ModalComponent {
         const startLabel = document.createElement('label');
         startLabel.htmlFor = 'eventStartTime';
         startLabel.setAttribute('data-localize', '__MSG_startTime__');
-        startLabel.textContent = 'Start Time:';
+        startLabel.textContent = chrome.i18n.getMessage('startTime');
         content.appendChild(startLabel);
 
         this.startTimeInput = document.createElement('input');
@@ -70,7 +70,7 @@ export class LocalEventModal extends ModalComponent {
         const endLabel = document.createElement('label');
         endLabel.htmlFor = 'eventEndTime';
         endLabel.setAttribute('data-localize', '__MSG_endTime__');
-        endLabel.textContent = 'End Time:';
+        endLabel.textContent = chrome.i18n.getMessage('endTime');
         content.appendChild(endLabel);
 
         this.endTimeInput = document.createElement('input');
@@ -94,7 +94,7 @@ export class LocalEventModal extends ModalComponent {
         const reminderLabel = document.createElement('label');
         reminderLabel.htmlFor = 'eventReminder';
         reminderLabel.setAttribute('data-localize', '__MSG_remindMeBefore__');
-        reminderLabel.textContent = 'Remind me 5 minutes before';
+        reminderLabel.textContent = chrome.i18n.getMessage('remindMeBefore');
         reminderLabel.style.cssText = 'margin-left: 8px; user-select: none; cursor: pointer; display: inline-block;';
 
         reminderContainer.appendChild(this.reminderCheckbox);
@@ -110,21 +110,21 @@ export class LocalEventModal extends ModalComponent {
         this.saveButton.id = 'saveEventButton';
         this.saveButton.className = 'btn btn-success';
         this.saveButton.setAttribute('data-localize', '__MSG_save__');
-        this.saveButton.textContent = 'Save';
+        this.saveButton.textContent = chrome.i18n.getMessage('save');
 
         // Delete button
         this.deleteButton = document.createElement('button');
         this.deleteButton.id = 'deleteEventButton';
         this.deleteButton.className = 'btn btn-danger';
         this.deleteButton.setAttribute('data-localize', '__MSG_delete__');
-        this.deleteButton.textContent = 'Delete';
+        this.deleteButton.textContent = chrome.i18n.getMessage('delete');
 
         // Cancel button
         this.cancelButton = document.createElement('button');
         this.cancelButton.id = 'cancelEventButton';
         this.cancelButton.className = 'btn btn-secondary';
         this.cancelButton.setAttribute('data-localize', '__MSG_cancel__');
-        this.cancelButton.textContent = 'Cancel';
+        this.cancelButton.textContent = chrome.i18n.getMessage('cancel');
 
         buttonGroup.appendChild(this.saveButton);
         buttonGroup.appendChild(this.deleteButton);
@@ -328,7 +328,7 @@ export class LocalEventModal extends ModalComponent {
         this.deleteButton.style.display = 'none';
 
         // Update title
-        this.setTitle('Create Event');
+        this.setTitle(chrome.i18n.getMessage('eventDialogTitle'));
 
         this._clearError();
         this.show();
@@ -355,7 +355,7 @@ export class LocalEventModal extends ModalComponent {
         this.deleteButton.style.display = '';
 
         // Update title
-        this.setTitle('Edit Event');
+        this.setTitle(chrome.i18n.getMessage('eventDialogTitle'));
 
         this._clearError();
         this.show();
@@ -394,9 +394,12 @@ export class LocalEventModal extends ModalComponent {
      * Apply localization to modal elements
      * @private
      */
-    _localizeModal() {
-        if (window.localizeElementText && this.element) {
-            window.localizeElementText(this.element);
+    async _localizeModal() {
+        if (window.localizeWithLanguage && this.element) {
+            // Use the project's language-aware localization
+            const userLanguageSetting = await window.getCurrentLanguageSetting?.() || 'auto';
+            const targetLanguage = window.resolveLanguageCode?.(userLanguageSetting) || 'en';
+            await window.localizeWithLanguage(targetLanguage);
         } else if (this.element) {
             // Fallback: manual localization for key elements
             const elementsToLocalize = this.element.querySelectorAll('[data-localize]');
