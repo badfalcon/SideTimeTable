@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Successful - SideTimeTable Premium</title>
+  <link href="../lib/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css">
+  <style>
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    .success-container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      padding: 3rem;
+      max-width: 600px;
+      text-align: center;
+      animation: slideUp 0.5s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .success-icon {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+      animation: scaleIn 0.5s ease-out 0.3s both;
+    }
+
+    @keyframes scaleIn {
+      from {
+        transform: scale(0);
+      }
+      to {
+        transform: scale(1);
+      }
+    }
+
+    .success-icon i {
+      color: white;
+      font-size: 2.5rem;
+    }
+
+    .success-title {
+      color: #333;
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+
+    .success-message {
+      color: #666;
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+      line-height: 1.6;
+    }
+
+    .license-box {
+      background: #f8f9fa;
+      border: 2px dashed #dee2e6;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .license-label {
+      font-size: 0.875rem;
+      color: #666;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    .license-key {
+      font-family: 'Courier New', monospace;
+      font-size: 1.25rem;
+      color: #333;
+      font-weight: 700;
+      letter-spacing: 2px;
+      word-break: break-all;
+    }
+
+    .activation-status {
+      display: none;
+      margin-top: 1rem;
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-weight: 600;
+    }
+
+    .activation-status.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .activation-status.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-top: 2rem;
+    }
+
+    .btn-primary-custom {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      color: white;
+      padding: 0.75rem 2rem;
+      border-radius: 8px;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .btn-primary-custom:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+      color: white;
+    }
+
+    .btn-secondary-custom {
+      background: white;
+      border: 2px solid #dee2e6;
+      color: #666;
+      padding: 0.75rem 2rem;
+      border-radius: 8px;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary-custom:hover {
+      border-color: #667eea;
+      color: #667eea;
+      background: #f8f9fa;
+    }
+
+    .info-section {
+      margin-top: 2rem;
+      padding-top: 2rem;
+      border-top: 1px solid #dee2e6;
+      text-align: left;
+    }
+
+    .info-item {
+      display: flex;
+      align-items: start;
+      margin-bottom: 1rem;
+      padding: 0.75rem;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+
+    .info-item i {
+      color: #667eea;
+      margin-right: 0.75rem;
+      margin-top: 0.25rem;
+    }
+
+    .info-text {
+      flex: 1;
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 1rem;
+      height: 1rem;
+      border: 2px solid #f3f3f3;
+      border-top: 2px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="success-container">
+    <div class="success-icon">
+      <i class="fas fa-check"></i>
+    </div>
+
+    <h1 class="success-title">Welcome to Premium!</h1>
+
+    <p class="success-message">
+      Thank you for upgrading to SideTimeTable Premium. Your payment has been processed successfully.
+    </p>
+
+    <div class="license-box" id="licenseBox" style="display: none;">
+      <div class="license-label">Your License Key:</div>
+      <div class="license-key" id="licenseKey">Loading...</div>
+      <div class="activation-status" id="activationStatus"></div>
+    </div>
+
+    <div id="activatingMessage" style="color: #667eea; font-weight: 600; margin-bottom: 1rem;">
+      <span class="spinner"></span>
+      Activating your premium features...
+    </div>
+
+    <div class="action-buttons">
+      <a href="#" class="btn-primary-custom" id="openExtensionBtn">
+        <i class="fas fa-rocket"></i>
+        Start Using Premium
+      </a>
+      <a href="https://your-website.com/account" class="btn-secondary-custom" target="_blank">
+        <i class="fas fa-user-circle"></i>
+        Manage Account
+      </a>
+    </div>
+
+    <div class="info-section">
+      <div class="info-item">
+        <i class="fas fa-envelope"></i>
+        <div class="info-text">
+          A confirmation email with your license key has been sent to your email address.
+        </div>
+      </div>
+      <div class="info-item">
+        <i class="fas fa-question-circle"></i>
+        <div class="info-text">
+          Need help? Visit our <a href="https://your-website.com/support" target="_blank">support page</a> or contact us at support@your-domain.com
+        </div>
+      </div>
+      <div class="info-item">
+        <i class="fas fa-shield-check"></i>
+        <div class="info-text">
+          Your purchase is protected by our 7-day money-back guarantee.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../lib/bootstrap.bundle.min.js"></script>
+  <script type="module">
+    import { licenseManager } from '../lib/license-manager.js';
+
+    // Get URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const plan = urlParams.get('plan');
+    const sessionId = urlParams.get('session_id');
+    const licenseKey = urlParams.get('license_key');
+
+    // Activate license automatically
+    async function activateLicense() {
+      try {
+        if (licenseKey) {
+          // License key provided directly in URL
+          await activateWithKey(licenseKey);
+        } else if (sessionId) {
+          // Fetch license key from session
+          await fetchLicenseFromSession(sessionId);
+        } else {
+          // No license info, validate existing license
+          await licenseManager.initialize();
+          await licenseManager.validateLicense();
+          showSuccess();
+        }
+      } catch (error) {
+        console.error('Activation error:', error);
+        showError('Activation failed. Please try manual activation.');
+      }
+    }
+
+    async function activateWithKey(key) {
+      await licenseManager.initialize();
+      const result = await licenseManager.activateLicense(key);
+
+      if (result.success) {
+        document.getElementById('licenseKey').textContent = key;
+        document.getElementById('licenseBox').style.display = 'block';
+        showSuccess();
+      } else {
+        showError(result.error);
+      }
+    }
+
+    async function fetchLicenseFromSession(sessionId) {
+      const response = await fetch('https://your-license-api.com/api/get-license-by-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        await activateWithKey(data.licenseKey);
+      } else {
+        throw new Error('Failed to fetch license from session');
+      }
+    }
+
+    function showSuccess() {
+      document.getElementById('activatingMessage').style.display = 'none';
+      const statusEl = document.getElementById('activationStatus');
+      statusEl.className = 'activation-status success';
+      statusEl.textContent = '✓ Premium features activated successfully!';
+      statusEl.style.display = 'block';
+
+      // Notify extension background script
+      if (chrome && chrome.runtime) {
+        chrome.runtime.sendMessage({ action: 'licenseActivated' });
+      }
+    }
+
+    function showError(message) {
+      document.getElementById('activatingMessage').style.display = 'none';
+      const statusEl = document.getElementById('activationStatus');
+      statusEl.className = 'activation-status error';
+      statusEl.textContent = `✗ ${message}`;
+      statusEl.style.display = 'block';
+    }
+
+    // Open extension side panel
+    document.getElementById('openExtensionBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      if (chrome && chrome.runtime) {
+        chrome.runtime.sendMessage({ action: 'openSidePanel' });
+        window.close();
+      } else {
+        alert('Please open the extension from the Chrome toolbar.');
+      }
+    });
+
+    // Auto-activate on page load
+    activateLicense();
+  </script>
+</body>
+</html>

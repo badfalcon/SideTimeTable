@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Cancelled - SideTimeTable</title>
+  <link href="../lib/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css">
+  <style>
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    .cancel-container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      padding: 3rem;
+      max-width: 600px;
+      text-align: center;
+      animation: slideUp 0.5s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .cancel-icon {
+      width: 80px;
+      height: 80px;
+      background: #6c757d;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+      animation: scaleIn 0.5s ease-out 0.3s both;
+    }
+
+    @keyframes scaleIn {
+      from {
+        transform: scale(0);
+      }
+      to {
+        transform: scale(1);
+      }
+    }
+
+    .cancel-icon i {
+      color: white;
+      font-size: 2.5rem;
+    }
+
+    .cancel-title {
+      color: #333;
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+
+    .cancel-message {
+      color: #666;
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+      line-height: 1.6;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary-custom {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      color: white;
+      padding: 0.75rem 2rem;
+      border-radius: 8px;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .btn-primary-custom:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+      color: white;
+    }
+
+    .btn-secondary-custom {
+      background: white;
+      border: 2px solid #dee2e6;
+      color: #666;
+      padding: 0.75rem 2rem;
+      border-radius: 8px;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary-custom:hover {
+      border-color: #667eea;
+      color: #667eea;
+      background: #f8f9fa;
+    }
+
+    .features-reminder {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      text-align: left;
+    }
+
+    .features-reminder h3 {
+      font-size: 1.25rem;
+      color: #333;
+      margin-bottom: 1rem;
+      font-weight: 700;
+    }
+
+    .feature-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .feature-list li {
+      padding: 0.5rem 0;
+      color: #666;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .feature-list i {
+      color: #667eea;
+      font-size: 1.1rem;
+    }
+
+    .free-features {
+      margin-top: 2rem;
+      padding-top: 2rem;
+      border-top: 1px solid #dee2e6;
+    }
+
+    .free-features h4 {
+      font-size: 1rem;
+      color: #666;
+      margin-bottom: 1rem;
+      font-weight: 600;
+    }
+
+    .free-feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
+    .free-feature-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .free-feature-item i {
+      color: #28a745;
+    }
+  </style>
+</head>
+<body>
+  <div class="cancel-container">
+    <div class="cancel-icon">
+      <i class="fas fa-times"></i>
+    </div>
+
+    <h1 class="cancel-title">Payment Cancelled</h1>
+
+    <p class="cancel-message">
+      Your payment was cancelled. No charges have been made to your account.
+    </p>
+
+    <div class="features-reminder">
+      <h3>
+        <i class="fas fa-crown" style="color: #667eea;"></i>
+        You're missing out on these premium features:
+      </h3>
+      <ul class="feature-list">
+        <li>
+          <i class="fas fa-calendar-days"></i>
+          <span>Display multiple Google Calendars simultaneously</span>
+        </li>
+        <li>
+          <i class="fas fa-infinity"></i>
+          <span>Create unlimited local events</span>
+        </li>
+        <li>
+          <i class="fas fa-calendar-week"></i>
+          <span>Week and month view for better planning</span>
+        </li>
+        <li>
+          <i class="fas fa-palette"></i>
+          <span>Custom themes and dark mode</span>
+        </li>
+        <li>
+          <i class="fas fa-file-export"></i>
+          <span>Export events to CSV and iCal</span>
+        </li>
+        <li>
+          <i class="fas fa-chart-line"></i>
+          <span>Time analytics and productivity reports</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="action-buttons">
+      <a href="#" class="btn-primary-custom" id="retryBtn">
+        <i class="fas fa-redo"></i>
+        Try Again
+      </a>
+      <a href="#" class="btn-secondary-custom" id="continueBtn">
+        <i class="fas fa-arrow-left"></i>
+        Continue with Free
+      </a>
+    </div>
+
+    <div class="free-features">
+      <h4>You can still enjoy these features for free:</h4>
+      <div class="free-feature-grid">
+        <div class="free-feature-item">
+          <i class="fas fa-check-circle"></i>
+          <span>Daily timeline view</span>
+        </div>
+        <div class="free-feature-item">
+          <i class="fas fa-check-circle"></i>
+          <span>Google Calendar sync</span>
+        </div>
+        <div class="free-feature-item">
+          <i class="fas fa-check-circle"></i>
+          <span>Single calendar display</span>
+        </div>
+        <div class="free-feature-item">
+          <i class="fas fa-check-circle"></i>
+          <span>Basic local events (3/day)</span>
+        </div>
+        <div class="free-feature-item">
+          <i class="fas fa-check-circle"></i>
+          <span>Multi-language support</span>
+        </div>
+        <div class="free-feature-item">
+          <i class="fas fa-check-circle"></i>
+          <span>Keyboard shortcuts</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../lib/bootstrap.bundle.min.js"></script>
+  <script>
+    // Retry button - reopen upgrade modal
+    document.getElementById('retryBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+
+      if (chrome && chrome.runtime) {
+        // Send message to show upgrade modal again
+        chrome.runtime.sendMessage({
+          action: 'showUpgradeModal',
+          featureName: 'Premium Features',
+          featureDescription: 'Unlock all premium features and get the most out of SideTimeTable'
+        });
+
+        // Close this tab
+        setTimeout(() => {
+          window.close();
+        }, 500);
+      } else {
+        // Fallback: Open pricing page
+        window.location.href = 'https://your-website.com/pricing';
+      }
+    });
+
+    // Continue with free button
+    document.getElementById('continueBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+
+      if (chrome && chrome.runtime) {
+        // Open side panel
+        chrome.runtime.sendMessage({ action: 'openSidePanel' });
+
+        // Close this tab
+        setTimeout(() => {
+          window.close();
+        }, 500);
+      } else {
+        // Fallback: Go to homepage
+        window.location.href = 'https://your-website.com';
+      }
+    });
+
+    // Auto-close after 30 seconds if no action
+    setTimeout(() => {
+      if (chrome && chrome.runtime) {
+        chrome.runtime.sendMessage({ action: 'openSidePanel' });
+        window.close();
+      }
+    }, 30000);
+  </script>
+</body>
+</html>
