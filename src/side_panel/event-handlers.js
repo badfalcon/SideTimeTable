@@ -470,8 +470,11 @@ export class LocalEventManager {
 
         eventDiv.style.left = `${EVENT_STYLING.DEFAULT_VALUES.INITIAL_LEFT_OFFSET}px`;
 
+        // Check if this is a recurring event
+        const isRecurring = event.isRecurringInstance || (event.recurrence && event.recurrence.type !== 'none');
+
         // Set locale-aware time display asynchronously
-        await this._setLocalEventContentWithLocale(eventDiv, startTime, endTime, title);
+        await this._setLocalEventContentWithLocale(eventDiv, startTime, endTime, title, isRecurring);
 
         // Setup the edit functionality
         this._setupEventEdit(eventDiv, event);
@@ -495,9 +498,10 @@ export class LocalEventManager {
      * @param {string} startTime - The start time (HH:mm format)
      * @param {string} endTime - The end time (HH:mm format)
      * @param {string} title - The event title
+     * @param {boolean} isRecurring - Whether this is a recurring event
      * @private
      */
-    async _setLocalEventContentWithLocale(eventDiv, startTime, endTime, title) {
+    async _setLocalEventContentWithLocale(eventDiv, startTime, endTime, title, isRecurring = false) {
         // Resolve locale and time format in parallel
         const [locale, timeFormat] = await Promise.all([
             typeof window.getCurrentLocale === 'function' ? window.getCurrentLocale() : Promise.resolve('ja'),
@@ -519,7 +523,10 @@ export class LocalEventManager {
         const formattedEnd = formatOne(endTime);
         const sep = locale === 'en' ? ' - ' : '～';
         const formattedTimeRange = `${formattedStart}${sep}${formattedEnd}`;
-        eventDiv.textContent = `${formattedTimeRange}: ${title}`;
+
+        // Add recurrence indicator if this is a recurring event
+        const recurrenceIcon = isRecurring ? '🔄 ' : '';
+        eventDiv.textContent = `${recurrenceIcon}${formattedTimeRange}: ${title}`;
     }
 
     /**

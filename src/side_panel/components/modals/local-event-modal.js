@@ -18,6 +18,13 @@ export class LocalEventModal extends ModalComponent {
         this.deleteButton = null;
         this.cancelButton = null;
 
+        // Recurrence elements
+        this.recurrenceSelect = null;
+        this.recurrenceOptionsContainer = null;
+        this.weekdayCheckboxes = {};
+        this.endDateInput = null;
+        this.noEndDateCheckbox = null;
+
         // The event being edited
         this.currentEvent = null;
 
@@ -25,6 +32,7 @@ export class LocalEventModal extends ModalComponent {
         this.onSave = options.onSave || null;
         this.onDelete = options.onDelete || null;
         this.onCancel = options.onCancel || null;
+        this.onDeleteSeries = options.onDeleteSeries || null;
 
         // Edit mode (create/edit)
         this.mode = 'create';
@@ -101,6 +109,127 @@ export class LocalEventModal extends ModalComponent {
         reminderContainer.appendChild(reminderLabel);
         content.appendChild(reminderContainer);
 
+        // Recurrence section
+        const recurrenceSection = document.createElement('div');
+        recurrenceSection.className = 'recurrence-section';
+        recurrenceSection.style.cssText = 'margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 5px;';
+
+        // Recurrence label and select
+        const recurrenceLabel = document.createElement('label');
+        recurrenceLabel.htmlFor = 'recurrenceType';
+        recurrenceLabel.setAttribute('data-localize', '__MSG_recurrence__');
+        recurrenceLabel.textContent = chrome.i18n.getMessage('recurrence') || 'Recurrence:';
+        recurrenceSection.appendChild(recurrenceLabel);
+
+        this.recurrenceSelect = document.createElement('select');
+        this.recurrenceSelect.id = 'recurrenceType';
+        this.recurrenceSelect.style.cssText = 'width: 100%; padding: 6px; margin-top: 5px; border: 1px solid #ced4da; border-radius: 4px;';
+
+        const recurrenceOptions = [
+            { value: 'none', msgKey: 'recurrenceNone', default: 'Does not repeat' },
+            { value: 'daily', msgKey: 'recurrenceDaily', default: 'Daily' },
+            { value: 'weekdays', msgKey: 'recurrenceWeekdays', default: 'Every weekday (Mon-Fri)' },
+            { value: 'weekly', msgKey: 'recurrenceWeekly', default: 'Weekly' },
+            { value: 'monthly', msgKey: 'recurrenceMonthly', default: 'Monthly' }
+        ];
+
+        recurrenceOptions.forEach(opt => {
+            const option = document.createElement('option');
+            option.value = opt.value;
+            option.setAttribute('data-localize', `__MSG_${opt.msgKey}__`);
+            option.textContent = chrome.i18n.getMessage(opt.msgKey) || opt.default;
+            this.recurrenceSelect.appendChild(option);
+        });
+
+        recurrenceSection.appendChild(this.recurrenceSelect);
+
+        // Recurrence options container (for weekly day selection)
+        this.recurrenceOptionsContainer = document.createElement('div');
+        this.recurrenceOptionsContainer.className = 'recurrence-options';
+        this.recurrenceOptionsContainer.style.cssText = 'margin-top: 10px; display: none;';
+
+        // Weekly day selection
+        const weekdayContainer = document.createElement('div');
+        weekdayContainer.className = 'weekday-container';
+        weekdayContainer.style.cssText = 'display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px;';
+
+        const weekdays = [
+            { value: 0, msgKey: 'daySun', default: 'Sun' },
+            { value: 1, msgKey: 'dayMon', default: 'Mon' },
+            { value: 2, msgKey: 'dayTue', default: 'Tue' },
+            { value: 3, msgKey: 'dayWed', default: 'Wed' },
+            { value: 4, msgKey: 'dayThu', default: 'Thu' },
+            { value: 5, msgKey: 'dayFri', default: 'Fri' },
+            { value: 6, msgKey: 'daySat', default: 'Sat' }
+        ];
+
+        weekdays.forEach(day => {
+            const dayLabel = document.createElement('label');
+            dayLabel.style.cssText = 'display: flex; align-items: center; padding: 4px 8px; background: #e9ecef; border-radius: 3px; cursor: pointer; font-size: 0.85em;';
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.value = day.value;
+            checkbox.style.cssText = 'margin-right: 4px;';
+            this.weekdayCheckboxes[day.value] = checkbox;
+
+            const dayText = document.createElement('span');
+            dayText.setAttribute('data-localize', `__MSG_${day.msgKey}__`);
+            dayText.textContent = chrome.i18n.getMessage(day.msgKey) || day.default;
+
+            dayLabel.appendChild(checkbox);
+            dayLabel.appendChild(dayText);
+            weekdayContainer.appendChild(dayLabel);
+        });
+
+        this.recurrenceOptionsContainer.appendChild(weekdayContainer);
+        recurrenceSection.appendChild(this.recurrenceOptionsContainer);
+
+        // End date section
+        const endDateSection = document.createElement('div');
+        endDateSection.className = 'end-date-section';
+        endDateSection.style.cssText = 'margin-top: 10px; display: none;';
+
+        const endDateLabel = document.createElement('label');
+        endDateLabel.htmlFor = 'recurrenceEndDate';
+        endDateLabel.setAttribute('data-localize', '__MSG_recurrenceEndDate__');
+        endDateLabel.textContent = chrome.i18n.getMessage('recurrenceEndDate') || 'End date:';
+        endDateSection.appendChild(endDateLabel);
+
+        const endDateRow = document.createElement('div');
+        endDateRow.style.cssText = 'display: flex; align-items: center; gap: 10px; margin-top: 5px;';
+
+        this.endDateInput = document.createElement('input');
+        this.endDateInput.type = 'date';
+        this.endDateInput.id = 'recurrenceEndDate';
+        this.endDateInput.style.cssText = 'flex: 1; padding: 6px; border: 1px solid #ced4da; border-radius: 4px;';
+
+        const noEndDateContainer = document.createElement('label');
+        noEndDateContainer.style.cssText = 'display: flex; align-items: center; cursor: pointer; white-space: nowrap;';
+
+        this.noEndDateCheckbox = document.createElement('input');
+        this.noEndDateCheckbox.type = 'checkbox';
+        this.noEndDateCheckbox.id = 'noEndDate';
+        this.noEndDateCheckbox.checked = true;
+        this.noEndDateCheckbox.style.cssText = 'margin-right: 5px;';
+
+        const noEndDateLabel = document.createElement('span');
+        noEndDateLabel.setAttribute('data-localize', '__MSG_noEndDate__');
+        noEndDateLabel.textContent = chrome.i18n.getMessage('noEndDate') || 'No end date';
+        noEndDateLabel.style.cssText = 'font-size: 0.9em;';
+
+        noEndDateContainer.appendChild(this.noEndDateCheckbox);
+        noEndDateContainer.appendChild(noEndDateLabel);
+
+        endDateRow.appendChild(this.endDateInput);
+        endDateRow.appendChild(noEndDateContainer);
+        endDateSection.appendChild(endDateRow);
+
+        recurrenceSection.appendChild(endDateSection);
+        this.endDateSection = endDateSection;
+
+        content.appendChild(recurrenceSection);
+
         // Button group
         const buttonGroup = document.createElement('div');
         buttonGroup.className = 'modal-buttons';
@@ -173,6 +302,41 @@ export class LocalEventModal extends ModalComponent {
         this.addEventListener(this.endTimeInput, 'change', () => {
             this._validateTimes();
         });
+
+        // Recurrence select change
+        this.addEventListener(this.recurrenceSelect, 'change', () => {
+            this._updateRecurrenceOptions();
+        });
+
+        // No end date checkbox change
+        this.addEventListener(this.noEndDateCheckbox, 'change', () => {
+            this.endDateInput.disabled = this.noEndDateCheckbox.checked;
+            if (this.noEndDateCheckbox.checked) {
+                this.endDateInput.value = '';
+            }
+        });
+    }
+
+    /**
+     * Update recurrence options visibility based on selected type
+     * @private
+     */
+    _updateRecurrenceOptions() {
+        const recurrenceType = this.recurrenceSelect.value;
+
+        // Show/hide weekday selection for weekly recurrence
+        if (recurrenceType === 'weekly') {
+            this.recurrenceOptionsContainer.style.display = 'block';
+        } else {
+            this.recurrenceOptionsContainer.style.display = 'none';
+        }
+
+        // Show/hide end date section for any recurrence except 'none'
+        if (recurrenceType !== 'none') {
+            this.endDateSection.style.display = 'block';
+        } else {
+            this.endDateSection.style.display = 'none';
+        }
     }
 
     /**
@@ -184,12 +348,44 @@ export class LocalEventModal extends ModalComponent {
             return;
         }
 
+        const recurrenceType = this.recurrenceSelect.value;
+        let recurrence = null;
+
+        if (recurrenceType !== 'none') {
+            recurrence = {
+                type: recurrenceType,
+                interval: 1,
+                startDate: this._getStartDateForRecurrence(),
+                endDate: this.noEndDateCheckbox.checked ? null : (this.endDateInput.value || null),
+                exceptions: this.currentEvent?.recurrence?.exceptions || []
+            };
+
+            // Add days of week for weekly recurrence
+            if (recurrenceType === 'weekly') {
+                const selectedDays = [];
+                Object.entries(this.weekdayCheckboxes).forEach(([day, checkbox]) => {
+                    if (checkbox.checked) {
+                        selectedDays.push(parseInt(day));
+                    }
+                });
+                // If no days selected, default to the current day of week
+                if (selectedDays.length === 0) {
+                    const startDate = new Date(recurrence.startDate + 'T00:00:00');
+                    selectedDays.push(startDate.getDay());
+                }
+                recurrence.daysOfWeek = selectedDays;
+            }
+        }
+
         const eventData = {
             id: this.currentEvent?.id || null,
             title: this.titleInput.value.trim(),
             startTime: this.startTimeInput.value,
             endTime: this.endTimeInput.value,
-            reminder: this.reminderCheckbox.checked
+            reminder: this.reminderCheckbox.checked,
+            recurrence: recurrence,
+            isRecurringInstance: this.currentEvent?.isRecurringInstance || false,
+            originalId: this.currentEvent?.originalId || null
         };
 
         if (this.onSave) {
@@ -197,6 +393,29 @@ export class LocalEventModal extends ModalComponent {
         }
 
         this.hide();
+    }
+
+    /**
+     * Get the start date for recurrence
+     * @returns {string} The start date in YYYY-MM-DD format
+     * @private
+     */
+    _getStartDateForRecurrence() {
+        // Use the current display date from the side panel controller
+        const controller = window.sidePanelController;
+        if (controller && controller.currentDate) {
+            const date = controller.currentDate;
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        // Fallback to today
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
     }
 
     /**
@@ -208,11 +427,100 @@ export class LocalEventModal extends ModalComponent {
             return;
         }
 
-        if (this.onDelete) {
-            this.onDelete(this.currentEvent);
+        // Check if this is a recurring event instance
+        if (this.currentEvent.isRecurringInstance || this.currentEvent.recurrence) {
+            this._showDeleteRecurringDialog();
+        } else {
+            if (this.onDelete) {
+                this.onDelete(this.currentEvent);
+            }
+            this.hide();
         }
+    }
 
-        this.hide();
+    /**
+     * Show delete recurring event dialog
+     * @private
+     */
+    _showDeleteRecurringDialog() {
+        // Create dialog overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'delete-recurring-overlay';
+        overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 10001; display: flex; align-items: center; justify-content: center;';
+
+        const dialog = document.createElement('div');
+        dialog.className = 'delete-recurring-dialog';
+        dialog.style.cssText = 'background: white; padding: 20px; border-radius: 8px; max-width: 300px; text-align: center;';
+
+        const title = document.createElement('h3');
+        title.style.cssText = 'margin: 0 0 15px 0; font-size: 1.1em;';
+        title.setAttribute('data-localize', '__MSG_deleteRecurringTitle__');
+        title.textContent = chrome.i18n.getMessage('deleteRecurringTitle') || 'Delete recurring event?';
+        dialog.appendChild(title);
+
+        const message = document.createElement('p');
+        message.style.cssText = 'margin: 0 0 20px 0; font-size: 0.9em; color: #666;';
+        message.setAttribute('data-localize', '__MSG_deleteRecurringMessage__');
+        message.textContent = chrome.i18n.getMessage('deleteRecurringMessage') || 'Do you want to delete this occurrence only or all occurrences?';
+        dialog.appendChild(message);
+
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.cssText = 'display: flex; flex-direction: column; gap: 10px;';
+
+        // Delete this occurrence only
+        const deleteThisBtn = document.createElement('button');
+        deleteThisBtn.className = 'btn btn-outline-danger';
+        deleteThisBtn.style.cssText = 'width: 100%; padding: 8px;';
+        deleteThisBtn.setAttribute('data-localize', '__MSG_deleteThisOccurrence__');
+        deleteThisBtn.textContent = chrome.i18n.getMessage('deleteThisOccurrence') || 'Delete this occurrence';
+        deleteThisBtn.addEventListener('click', () => {
+            overlay.remove();
+            if (this.onDelete) {
+                this.onDelete(this.currentEvent, 'this');
+            }
+            this.hide();
+        });
+
+        // Delete all occurrences
+        const deleteAllBtn = document.createElement('button');
+        deleteAllBtn.className = 'btn btn-danger';
+        deleteAllBtn.style.cssText = 'width: 100%; padding: 8px;';
+        deleteAllBtn.setAttribute('data-localize', '__MSG_deleteAllOccurrences__');
+        deleteAllBtn.textContent = chrome.i18n.getMessage('deleteAllOccurrences') || 'Delete all occurrences';
+        deleteAllBtn.addEventListener('click', () => {
+            overlay.remove();
+            if (this.onDeleteSeries) {
+                this.onDeleteSeries(this.currentEvent);
+            } else if (this.onDelete) {
+                this.onDelete(this.currentEvent, 'all');
+            }
+            this.hide();
+        });
+
+        // Cancel
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'btn btn-secondary';
+        cancelBtn.style.cssText = 'width: 100%; padding: 8px;';
+        cancelBtn.setAttribute('data-localize', '__MSG_cancel__');
+        cancelBtn.textContent = chrome.i18n.getMessage('cancel') || 'Cancel';
+        cancelBtn.addEventListener('click', () => {
+            overlay.remove();
+        });
+
+        buttonContainer.appendChild(deleteThisBtn);
+        buttonContainer.appendChild(deleteAllBtn);
+        buttonContainer.appendChild(cancelBtn);
+        dialog.appendChild(buttonContainer);
+
+        overlay.appendChild(dialog);
+        document.body.appendChild(overlay);
+
+        // Close on overlay click
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.remove();
+            }
+        });
     }
 
     /**
@@ -324,6 +632,14 @@ export class LocalEventModal extends ModalComponent {
         this.endTimeInput.value = defaultEndTime;
         this.reminderCheckbox.checked = true;
 
+        // Reset recurrence
+        this.recurrenceSelect.value = 'none';
+        this._resetWeekdayCheckboxes();
+        this.noEndDateCheckbox.checked = true;
+        this.endDateInput.value = '';
+        this.endDateInput.disabled = true;
+        this._updateRecurrenceOptions();
+
         // Adjust the button display
         this.deleteButton.style.display = 'none';
 
@@ -335,6 +651,16 @@ export class LocalEventModal extends ModalComponent {
 
         // Apply the localization after showing the modal
         this._localizeModal();
+    }
+
+    /**
+     * Reset weekday checkboxes
+     * @private
+     */
+    _resetWeekdayCheckboxes() {
+        Object.values(this.weekdayCheckboxes).forEach(checkbox => {
+            checkbox.checked = false;
+        });
     }
 
     /**
@@ -350,6 +676,38 @@ export class LocalEventModal extends ModalComponent {
         this.startTimeInput.value = event.startTime || '';
         this.endTimeInput.value = event.endTime || '';
         this.reminderCheckbox.checked = event.reminder !== false;
+
+        // Set recurrence values
+        this._resetWeekdayCheckboxes();
+        if (event.recurrence) {
+            this.recurrenceSelect.value = event.recurrence.type || 'none';
+
+            // Set weekday checkboxes for weekly recurrence
+            if (event.recurrence.type === 'weekly' && event.recurrence.daysOfWeek) {
+                event.recurrence.daysOfWeek.forEach(day => {
+                    if (this.weekdayCheckboxes[day]) {
+                        this.weekdayCheckboxes[day].checked = true;
+                    }
+                });
+            }
+
+            // Set end date
+            if (event.recurrence.endDate) {
+                this.endDateInput.value = event.recurrence.endDate;
+                this.noEndDateCheckbox.checked = false;
+                this.endDateInput.disabled = false;
+            } else {
+                this.endDateInput.value = '';
+                this.noEndDateCheckbox.checked = true;
+                this.endDateInput.disabled = true;
+            }
+        } else {
+            this.recurrenceSelect.value = 'none';
+            this.noEndDateCheckbox.checked = true;
+            this.endDateInput.value = '';
+            this.endDateInput.disabled = true;
+        }
+        this._updateRecurrenceOptions();
 
         // Adjust the button display
         this.deleteButton.style.display = '';
@@ -369,11 +727,34 @@ export class LocalEventModal extends ModalComponent {
      * @returns {Object} The form data
      */
     getFormData() {
+        const recurrenceType = this.recurrenceSelect?.value || 'none';
+        let recurrence = null;
+
+        if (recurrenceType !== 'none') {
+            recurrence = {
+                type: recurrenceType,
+                interval: 1,
+                startDate: this._getStartDateForRecurrence(),
+                endDate: this.noEndDateCheckbox?.checked ? null : (this.endDateInput?.value || null)
+            };
+
+            if (recurrenceType === 'weekly') {
+                const selectedDays = [];
+                Object.entries(this.weekdayCheckboxes).forEach(([day, checkbox]) => {
+                    if (checkbox.checked) {
+                        selectedDays.push(parseInt(day));
+                    }
+                });
+                recurrence.daysOfWeek = selectedDays;
+            }
+        }
+
         return {
             title: this.titleInput?.value.trim() || '',
             startTime: this.startTimeInput?.value || '',
             endTime: this.endTimeInput?.value || '',
-            reminder: this.reminderCheckbox?.checked || false
+            reminder: this.reminderCheckbox?.checked || false,
+            recurrence: recurrence
         };
     }
 

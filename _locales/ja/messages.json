@@ -640,5 +640,81 @@
   "syncReminders": {
     "message": "予定を同期",
     "description": "リマインダー同期ボタンのツールチップ"
+  },
+  "recurrence": {
+    "message": "繰り返し:",
+    "description": "繰り返し設定のラベル"
+  },
+  "recurrenceNone": {
+    "message": "繰り返さない",
+    "description": "繰り返しなしオプション"
+  },
+  "recurrenceDaily": {
+    "message": "毎日",
+    "description": "毎日繰り返しオプション"
+  },
+  "recurrenceWeekdays": {
+    "message": "平日のみ（月〜金）",
+    "description": "平日繰り返しオプション"
+  },
+  "recurrenceWeekly": {
+    "message": "毎週",
+    "description": "毎週繰り返しオプション"
+  },
+  "recurrenceMonthly": {
+    "message": "毎月",
+    "description": "毎月繰り返しオプション"
+  },
+  "recurrenceEndDate": {
+    "message": "終了日:",
+    "description": "繰り返し終了日のラベル"
+  },
+  "noEndDate": {
+    "message": "終了日なし",
+    "description": "終了日なしチェックボックスのラベル"
+  },
+  "daySun": {
+    "message": "日",
+    "description": "日曜日の略称"
+  },
+  "dayMon": {
+    "message": "月",
+    "description": "月曜日の略称"
+  },
+  "dayTue": {
+    "message": "火",
+    "description": "火曜日の略称"
+  },
+  "dayWed": {
+    "message": "水",
+    "description": "水曜日の略称"
+  },
+  "dayThu": {
+    "message": "木",
+    "description": "木曜日の略称"
+  },
+  "dayFri": {
+    "message": "金",
+    "description": "金曜日の略称"
+  },
+  "daySat": {
+    "message": "土",
+    "description": "土曜日の略称"
+  },
+  "deleteRecurringTitle": {
+    "message": "繰り返しイベントを削除",
+    "description": "繰り返しイベント削除ダイアログのタイトル"
+  },
+  "deleteRecurringMessage": {
+    "message": "この予定のみ削除しますか、すべての予定を削除しますか？",
+    "description": "繰り返しイベント削除ダイアログのメッセージ"
+  },
+  "deleteThisOccurrence": {
+    "message": "この予定のみ削除",
+    "description": "この予定のみ削除ボタン"
+  },
+  "deleteAllOccurrences": {
+    "message": "すべての予定を削除",
+    "description": "すべての予定を削除ボタン"
   }
 }
