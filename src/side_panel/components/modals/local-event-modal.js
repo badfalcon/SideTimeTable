@@ -352,11 +352,20 @@ export class LocalEventModal extends ModalComponent {
         let recurrence = null;
 
         if (recurrenceType !== 'none') {
+            const startDate = this._getStartDateForRecurrence();
+            const endDate = this.noEndDateCheckbox.checked ? null : (this.endDateInput.value || null);
+
+            // Validate end date is not before start date
+            if (endDate && endDate < startDate) {
+                this._showError(chrome.i18n.getMessage('endDateMustBeLater') || 'End date must be on or after start date');
+                return;
+            }
+
             recurrence = {
                 type: recurrenceType,
                 interval: 1,
-                startDate: this._getStartDateForRecurrence(),
-                endDate: this.noEndDateCheckbox.checked ? null : (this.endDateInput.value || null),
+                startDate: startDate,
+                endDate: endDate,
                 exceptions: this.currentEvent?.recurrence?.exceptions || []
             };
 

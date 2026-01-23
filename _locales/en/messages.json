@@ -716,5 +716,9 @@
   "deleteAllOccurrences": {
     "message": "Delete all occurrences",
     "description": "Delete all occurrences button"
+  },
+  "endDateMustBeLater": {
+    "message": "End date must be on or after start date",
+    "description": "Error when recurrence end date is before start date"
   }
 }

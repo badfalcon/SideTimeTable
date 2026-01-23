@@ -716,5 +716,9 @@
   "deleteAllOccurrences": {
     "message": "すべての予定を削除",
     "description": "すべての予定を削除ボタン"
+  },
+  "endDateMustBeLater": {
+    "message": "終了日は開始日以降に設定してください",
+    "description": "繰り返し終了日が開始日より前の場合のエラー"
   }
 }
