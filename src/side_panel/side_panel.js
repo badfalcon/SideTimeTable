@@ -748,8 +748,6 @@ class SidePanelUIController {
             const response = await chrome.runtime.sendMessage({ action: 'forceSyncReminders' });
 
             if (response.success) {
-                console.log('Reminders synced successfully');
-
                 // Reload events to reflect any changes
                 await this._loadEventsForCurrentDate();
 
@@ -774,13 +772,7 @@ class SidePanelUIController {
             // Send message to background to auto-sync with throttle
             const response = await chrome.runtime.sendMessage({ action: 'autoSyncReminders' });
 
-            if (response.success) {
-                if (response.skipped) {
-                    console.log('[Auto Sync] Skipped (recently synced)');
-                } else {
-                    console.log('[Auto Sync] Reminders synced on side panel open');
-                }
-            } else {
+            if (!response.success) {
                 console.warn('[Auto Sync] Failed to auto-sync reminders:', response.error);
             }
         } catch (error) {

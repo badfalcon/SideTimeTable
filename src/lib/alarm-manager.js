@@ -31,7 +31,6 @@ export class AlarmManager {
 
             // Only set the alarm for the future times
             if (reminderTime <= Date.now()) {
-                console.log('Reminder time is in the past, skipping:', event.title);
                 return;
             }
 
@@ -42,8 +41,6 @@ export class AlarmManager {
             await chrome.alarms.create(alarmName, {
                 when: reminderTime
             });
-
-            console.log(`Reminder set for event: ${event.title} at`, new Date(reminderTime));
         } catch (error) {
             console.error('Failed to set reminder:', error);
         }
@@ -58,7 +55,6 @@ export class AlarmManager {
         try {
             const alarmName = `${this.ALARM_PREFIX}${dateStr}_${eventId}`;
             await chrome.alarms.clear(alarmName);
-            console.log('Reminder cleared for event ID:', eventId);
         } catch (error) {
             console.error('Failed to clear reminder:', error);
         }
@@ -78,8 +74,6 @@ export class AlarmManager {
             for (const alarm of dateAlarms) {
                 await chrome.alarms.clear(alarm.name);
             }
-
-            console.log(`Cleared ${dateAlarms.length} reminders for date:`, dateStr);
         } catch (error) {
             console.error('Failed to clear date reminders:', error);
         }
@@ -181,8 +175,6 @@ export class AlarmManager {
                 delete notificationOptions.iconUrl;
                 await chrome.notifications.create(notificationId, notificationOptions);
             }
-
-            console.log('Reminder notification shown for:', eventData.title);
         } catch (error) {
             console.error('Failed to show reminder notification:', error);
         }
@@ -246,18 +238,14 @@ export class AlarmManager {
             await this.clearDateReminders(dateStr);
 
             // Set the new reminders
-            let reminderCount = 0;
             for (const event of allEvents) {
                 if (event.reminder) {
                     // For recurring instances, use the original event's ID for the alarm
                     const eventId = event.originalId || event.id;
                     const reminderEvent = { ...event, id: eventId };
                     await this.setReminder(reminderEvent, dateStr);
-                    reminderCount++;
                 }
             }
-
-            console.log(`Set reminders for ${reminderCount} events on ${dateStr}`);
         } catch (error) {
             console.error('Failed to set date reminders:', error);
         }
@@ -286,7 +274,6 @@ export class AlarmManager {
 
             // Only set the alarm for the future times
             if (reminderTime <= Date.now()) {
-                console.log('Reminder time is in the past, skipping:', event.summary);
                 return;
             }
 
@@ -312,8 +299,6 @@ export class AlarmManager {
                     htmlLink: event.htmlLink || null
                 }
             });
-
-            console.log(`Google reminder set for event: ${event.summary} at`, new Date(reminderTime));
         } catch (error) {
             console.error('Failed to set Google event reminder:', error);
         }
@@ -364,15 +349,11 @@ export class AlarmManager {
             await this.clearGoogleEventReminders(dateStr);
 
             // Set new reminders
-            let count = 0;
             for (const event of events) {
                 if (event.start && event.start.dateTime) {
                     await this.setGoogleEventReminder(event, dateStr);
-                    count++;
                 }
             }
-
-            console.log(`Set ${count} Google event reminders for ${dateStr}`);
         } catch (error) {
             console.error('Failed to set Google event reminders:', error);
         }
@@ -395,8 +376,6 @@ export class AlarmManager {
                 const storageKey = `googleEventData_${alarm.name}`;
                 await chrome.storage.local.remove(storageKey);
             }
-
-            console.log(`Cleared ${googleAlarms.length} Google event reminders for date:`, dateStr);
         } catch (error) {
             console.error('Failed to clear Google event reminders:', error);
         }
