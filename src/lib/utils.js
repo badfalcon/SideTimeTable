@@ -17,6 +17,15 @@ export const TIME_CONSTANTS = {
     DEFAULT_BREAK_END: '13:00'
 };
 
+// Recurrence type constants
+export const RECURRENCE_TYPES = {
+    NONE: 'none',
+    DAILY: 'daily',
+    WEEKLY: 'weekly',
+    MONTHLY: 'monthly',
+    WEEKDAYS: 'weekdays'
+};
+
 // Default settings
 export const DEFAULT_SETTINGS = {
     googleIntegrated: false,
@@ -161,25 +170,33 @@ export async function getRecurringEventsForDate(targetDate) {
         let matches = false;
 
         switch (type) {
-            case 'daily': {
+            case RECURRENCE_TYPES.DAILY: {
                 // Calculate days difference and check if it matches the interval
                 const daysDiff = Math.floor((targetDateObj - eventStartDate) / (1000 * 60 * 60 * 24));
                 matches = daysDiff >= 0 && daysDiff % interval === 0;
                 break;
             }
-            case 'weekly': {
+            case RECURRENCE_TYPES.WEEKLY: {
                 // Check if the day of week matches
                 const targetDayOfWeek = targetDateObj.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
                 if (daysOfWeek.length > 0) {
                     // If specific days are set, check if target day matches
                     if (!daysOfWeek.includes(targetDayOfWeek)) break;
+                } else {
+                    // If no specific days, use the start date's day of week
+                    const startDayOfWeek = eventStartDate.getDay();
+                    if (targetDayOfWeek !== startDayOfWeek) break;
                 }
-                // Calculate weeks difference and check if it matches the interval
-                const weeksDiff = Math.floor((targetDateObj - eventStartDate) / (1000 * 60 * 60 * 24 * 7));
+                // Calculate weeks difference from the start of the week containing the start date
+                const startWeekStart = new Date(eventStartDate);
+                startWeekStart.setDate(startWeekStart.getDate() - startWeekStart.getDay());
+                const targetWeekStart = new Date(targetDateObj);
+                targetWeekStart.setDate(targetWeekStart.getDate() - targetWeekStart.getDay());
+                const weeksDiff = Math.round((targetWeekStart - startWeekStart) / (1000 * 60 * 60 * 24 * 7));
                 matches = weeksDiff >= 0 && weeksDiff % interval === 0;
                 break;
             }
-            case 'monthly': {
+            case RECURRENCE_TYPES.MONTHLY: {
                 // Check if the day of month matches
                 const eventDay = eventStartDate.getDate();
                 const targetDay = targetDateObj.getDate();
@@ -190,7 +207,7 @@ export async function getRecurringEventsForDate(targetDate) {
                 matches = monthsDiff >= 0 && monthsDiff % interval === 0;
                 break;
             }
-            case 'weekdays': {
+            case RECURRENCE_TYPES.WEEKDAYS: {
                 // Monday to Friday only
                 const targetDayOfWeek = targetDateObj.getDay();
                 matches = targetDayOfWeek >= 1 && targetDayOfWeek <= 5;

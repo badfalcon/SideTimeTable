@@ -524,9 +524,20 @@ export class LocalEventManager {
         const sep = locale === 'en' ? ' - ' : '～';
         const formattedTimeRange = `${formattedStart}${sep}${formattedEnd}`;
 
+        // Clear existing content
+        eventDiv.innerHTML = '';
+
         // Add recurrence indicator if this is a recurring event
-        const recurrenceIcon = isRecurring ? '🔄 ' : '';
-        eventDiv.textContent = `${recurrenceIcon}${formattedTimeRange}: ${title}`;
+        if (isRecurring) {
+            const icon = document.createElement('i');
+            icon.className = 'fa-solid fa-repeat';
+            icon.style.cssText = 'margin-right: 4px; font-size: 0.85em;';
+            eventDiv.appendChild(icon);
+        }
+
+        // Add text content
+        const textNode = document.createTextNode(`${formattedTimeRange}: ${title}`);
+        eventDiv.appendChild(textNode);
     }
 
     /**
