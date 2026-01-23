@@ -26,6 +26,12 @@ export const RECURRENCE_TYPES = {
     WEEKDAYS: 'weekdays'
 };
 
+// Storage key constants
+export const STORAGE_KEYS = {
+    RECURRING_EVENTS: 'recurringEvents',
+    LOCAL_EVENTS_PREFIX: 'localEvents_'
+};
+
 // Default settings
 export const DEFAULT_SETTINGS = {
     googleIntegrated: false,
@@ -111,7 +117,7 @@ export function loadLocalEvents() {
  */
 export async function loadLocalEventsForDate(targetDate) {
     const targetDateStr = getFormattedDateFromDate(targetDate);
-    const storageKey = `localEvents_${targetDateStr}`;
+    const storageKey = `${STORAGE_KEYS.LOCAL_EVENTS_PREFIX}${targetDateStr}`;
     const result = await StorageHelper.get([storageKey], { [storageKey]: [] });
     const dateSpecificEvents = result[storageKey] || [];
 
@@ -127,8 +133,9 @@ export async function loadLocalEventsForDate(targetDate) {
  * @returns {Promise<Array>} A promise that returns an array of recurring events
  */
 export async function loadRecurringEvents() {
-    const result = await StorageHelper.get(['recurringEvents'], { recurringEvents: [] });
-    return result.recurringEvents || [];
+    const key = STORAGE_KEYS.RECURRING_EVENTS;
+    const result = await StorageHelper.get([key], { [key]: [] });
+    return result[key] || [];
 }
 
 /**
@@ -137,7 +144,7 @@ export async function loadRecurringEvents() {
  * @returns {Promise} A promise for the save process
  */
 export async function saveRecurringEvents(events) {
-    return StorageHelper.set({ recurringEvents: events });
+    return StorageHelper.set({ [STORAGE_KEYS.RECURRING_EVENTS]: events });
 }
 
 /**
@@ -281,7 +288,7 @@ export async function deleteRecurringEvent(eventId) {
  */
 export async function saveLocalEventsForDate(events, targetDate) {
     const targetDateStr = getFormattedDateFromDate(targetDate);
-    const storageKey = `localEvents_${targetDateStr}`;
+    const storageKey = `${STORAGE_KEYS.LOCAL_EVENTS_PREFIX}${targetDateStr}`;
     return StorageHelper.set({ [storageKey]: events });
 }
 

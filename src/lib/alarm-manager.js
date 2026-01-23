@@ -1,7 +1,7 @@
 /**
  * AlarmManager - Manages event reminders using chrome.alarms API
  */
-import { getRecurringEventsForDate } from './utils.js';
+import { getRecurringEventsForDate, STORAGE_KEYS } from './utils.js';
 
 export class AlarmManager {
     static ALARM_PREFIX = 'event_reminder_';
@@ -197,7 +197,7 @@ export class AlarmManager {
     static async getEventData(eventId, dateStr) {
         try {
             // First, check date-specific events
-            const storageKey = `localEvents_${dateStr}`;
+            const storageKey = `${STORAGE_KEYS.LOCAL_EVENTS_PREFIX}${dateStr}`;
             const result = await chrome.storage.sync.get(storageKey);
             const events = result[storageKey] || [];
 
@@ -207,8 +207,9 @@ export class AlarmManager {
             }
 
             // If not found, check recurring events
-            const recurringResult = await chrome.storage.sync.get('recurringEvents');
-            const recurringEvents = recurringResult.recurringEvents || [];
+            const recurringKey = STORAGE_KEYS.RECURRING_EVENTS;
+            const recurringResult = await chrome.storage.sync.get(recurringKey);
+            const recurringEvents = recurringResult[recurringKey] || [];
 
             // Check if the eventId matches a recurring event (could be originalId for instances)
             event = recurringEvents.find(e => e.id === eventId);
@@ -230,7 +231,7 @@ export class AlarmManager {
     static async setDateReminders(dateStr) {
         try {
             // Get date-specific events
-            const storageKey = `localEvents_${dateStr}`;
+            const storageKey = `${STORAGE_KEYS.LOCAL_EVENTS_PREFIX}${dateStr}`;
             const result = await chrome.storage.sync.get(storageKey);
             const dateEvents = result[storageKey] || [];
 
