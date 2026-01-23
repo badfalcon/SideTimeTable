@@ -289,8 +289,6 @@ export class GoogleEventManager {
         // This will be overridden by EventLayoutManager, but prevents initial flash
         const initialWidth = this.eventLayoutManager ? this.eventLayoutManager.maxWidth : EVENT_STYLING.DEFAULT_VALUES.INITIAL_WIDTH;
         eventDiv.style.width = `${initialWidth}px`;
-        console.log(initialWidth);
-        console.log(EVENT_STYLING.DEFAULT_VALUES.INITIAL_LEFT_OFFSET);
         eventDiv.style.left = `${EVENT_STYLING.DEFAULT_VALUES.INITIAL_LEFT_OFFSET}px`;
 
         // Apply the Google colors directly
