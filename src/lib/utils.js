@@ -197,10 +197,21 @@ export async function getRecurringEventsForDate(targetDate) {
                 break;
             }
             case RECURRENCE_TYPES.MONTHLY: {
-                // Check if the day of month matches
+                // Check if the day of month matches (with month-end handling)
                 const eventDay = eventStartDate.getDate();
                 const targetDay = targetDateObj.getDate();
-                if (eventDay !== targetDay) break;
+                const targetYear = targetDateObj.getFullYear();
+                const targetMonth = targetDateObj.getMonth();
+
+                // Get the last day of the target month
+                const lastDayOfTargetMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+
+                // Check if this is the correct day
+                // If the event day is greater than the last day of the month,
+                // show on the last day of the month instead
+                const effectiveEventDay = Math.min(eventDay, lastDayOfTargetMonth);
+                if (effectiveEventDay !== targetDay) break;
+
                 // Calculate months difference
                 const monthsDiff = (targetDateObj.getFullYear() - eventStartDate.getFullYear()) * 12 +
                                    (targetDateObj.getMonth() - eventStartDate.getMonth());
