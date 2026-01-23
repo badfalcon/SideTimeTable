@@ -2,6 +2,7 @@
  * LocalEventModal - Local event editing modal
  */
 import { ModalComponent } from './modal-component.js';
+import { RECURRENCE_TYPES } from '../../../lib/utils.js';
 
 export class LocalEventModal extends ModalComponent {
     constructor(options = {}) {
@@ -126,11 +127,11 @@ export class LocalEventModal extends ModalComponent {
         this.recurrenceSelect.style.cssText = 'width: 100%; padding: 6px; margin-top: 5px; border: 1px solid #ced4da; border-radius: 4px;';
 
         const recurrenceOptions = [
-            { value: 'none', msgKey: 'recurrenceNone', default: 'Does not repeat' },
-            { value: 'daily', msgKey: 'recurrenceDaily', default: 'Daily' },
-            { value: 'weekdays', msgKey: 'recurrenceWeekdays', default: 'Every weekday (Mon-Fri)' },
-            { value: 'weekly', msgKey: 'recurrenceWeekly', default: 'Weekly' },
-            { value: 'monthly', msgKey: 'recurrenceMonthly', default: 'Monthly' }
+            { value: RECURRENCE_TYPES.NONE, msgKey: 'recurrenceNone', default: 'Does not repeat' },
+            { value: RECURRENCE_TYPES.DAILY, msgKey: 'recurrenceDaily', default: 'Daily' },
+            { value: RECURRENCE_TYPES.WEEKDAYS, msgKey: 'recurrenceWeekdays', default: 'Every weekday (Mon-Fri)' },
+            { value: RECURRENCE_TYPES.WEEKLY, msgKey: 'recurrenceWeekly', default: 'Weekly' },
+            { value: RECURRENCE_TYPES.MONTHLY, msgKey: 'recurrenceMonthly', default: 'Monthly' }
         ];
 
         recurrenceOptions.forEach(opt => {
@@ -325,14 +326,14 @@ export class LocalEventModal extends ModalComponent {
         const recurrenceType = this.recurrenceSelect.value;
 
         // Show/hide weekday selection for weekly recurrence
-        if (recurrenceType === 'weekly') {
+        if (recurrenceType === RECURRENCE_TYPES.WEEKLY) {
             this.recurrenceOptionsContainer.style.display = 'block';
         } else {
             this.recurrenceOptionsContainer.style.display = 'none';
         }
 
         // Show/hide end date section for any recurrence except 'none'
-        if (recurrenceType !== 'none') {
+        if (recurrenceType !== RECURRENCE_TYPES.NONE) {
             this.endDateSection.style.display = 'block';
         } else {
             this.endDateSection.style.display = 'none';
@@ -351,7 +352,7 @@ export class LocalEventModal extends ModalComponent {
         const recurrenceType = this.recurrenceSelect.value;
         let recurrence = null;
 
-        if (recurrenceType !== 'none') {
+        if (recurrenceType !== RECURRENCE_TYPES.NONE) {
             const startDate = this._getStartDateForRecurrence();
             const endDate = this.noEndDateCheckbox.checked ? null : (this.endDateInput.value || null);
 
@@ -370,7 +371,7 @@ export class LocalEventModal extends ModalComponent {
             };
 
             // Add days of week for weekly recurrence
-            if (recurrenceType === 'weekly') {
+            if (recurrenceType === RECURRENCE_TYPES.WEEKLY) {
                 const selectedDays = [];
                 Object.entries(this.weekdayCheckboxes).forEach(([day, checkbox]) => {
                     if (checkbox.checked) {
@@ -642,7 +643,7 @@ export class LocalEventModal extends ModalComponent {
         this.reminderCheckbox.checked = true;
 
         // Reset recurrence
-        this.recurrenceSelect.value = 'none';
+        this.recurrenceSelect.value = RECURRENCE_TYPES.NONE;
         this._resetWeekdayCheckboxes();
         this.noEndDateCheckbox.checked = true;
         this.endDateInput.value = '';
@@ -689,10 +690,10 @@ export class LocalEventModal extends ModalComponent {
         // Set recurrence values
         this._resetWeekdayCheckboxes();
         if (event.recurrence) {
-            this.recurrenceSelect.value = event.recurrence.type || 'none';
+            this.recurrenceSelect.value = event.recurrence.type || RECURRENCE_TYPES.NONE;
 
             // Set weekday checkboxes for weekly recurrence
-            if (event.recurrence.type === 'weekly' && event.recurrence.daysOfWeek) {
+            if (event.recurrence.type === RECURRENCE_TYPES.WEEKLY && event.recurrence.daysOfWeek) {
                 event.recurrence.daysOfWeek.forEach(day => {
                     if (this.weekdayCheckboxes[day]) {
                         this.weekdayCheckboxes[day].checked = true;
@@ -711,7 +712,7 @@ export class LocalEventModal extends ModalComponent {
                 this.endDateInput.disabled = true;
             }
         } else {
-            this.recurrenceSelect.value = 'none';
+            this.recurrenceSelect.value = RECURRENCE_TYPES.NONE;
             this.noEndDateCheckbox.checked = true;
             this.endDateInput.value = '';
             this.endDateInput.disabled = true;
@@ -736,10 +737,10 @@ export class LocalEventModal extends ModalComponent {
      * @returns {Object} The form data
      */
     getFormData() {
-        const recurrenceType = this.recurrenceSelect?.value || 'none';
+        const recurrenceType = this.recurrenceSelect?.value || RECURRENCE_TYPES.NONE;
         let recurrence = null;
 
-        if (recurrenceType !== 'none') {
+        if (recurrenceType !== RECURRENCE_TYPES.NONE) {
             recurrence = {
                 type: recurrenceType,
                 interval: 1,
@@ -747,7 +748,7 @@ export class LocalEventModal extends ModalComponent {
                 endDate: this.noEndDateCheckbox?.checked ? null : (this.endDateInput?.value || null)
             };
 
-            if (recurrenceType === 'weekly') {
+            if (recurrenceType === RECURRENCE_TYPES.WEEKLY) {
                 const selectedDays = [];
                 Object.entries(this.weekdayCheckboxes).forEach(([day, checkbox]) => {
                     if (checkbox.checked) {
