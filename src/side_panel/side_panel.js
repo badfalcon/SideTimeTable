@@ -13,7 +13,7 @@ import {
 
 import { EventLayoutManager } from './time-manager.js';
 import { GoogleEventManager, LocalEventManager } from './event-handlers.js';
-import { generateTimeList, loadSettings, logError } from '../lib/utils.js';
+import { generateTimeList, loadSettings, logError, RECURRENCE_TYPES } from '../lib/utils.js';
 import { isToday } from '../lib/time-utils.js';
 import { isDemoMode, setDemoMode } from '../lib/demo-data.js';
 import { AlarmManager } from '../lib/alarm-manager.js';
@@ -474,7 +474,7 @@ class SidePanelUIController {
                 saveRecurringEvents
             } = await import('../lib/utils.js');
 
-            const isRecurring = eventData.recurrence && eventData.recurrence.type !== 'none';
+            const isRecurring = eventData.recurrence && eventData.recurrence.type !== RECURRENCE_TYPES.NONE;
 
             if (mode === 'create') {
                 const newEvent = {

@@ -9,7 +9,8 @@ import {
     loadLocalEventsForDate,
     loadSettings,
     logError,
-    TIME_CONSTANTS
+    TIME_CONSTANTS,
+    RECURRENCE_TYPES
 } from '../lib/utils.js';
 import {createTimeOnDate} from '../lib/time-utils.js';
 import {getDemoEvents, getDemoLocalEvents, isDemoMode} from '../lib/demo-data.js';
@@ -471,7 +472,7 @@ export class LocalEventManager {
         eventDiv.style.left = `${EVENT_STYLING.DEFAULT_VALUES.INITIAL_LEFT_OFFSET}px`;
 
         // Check if this is a recurring event
-        const isRecurring = event.isRecurringInstance || (event.recurrence && event.recurrence.type !== 'none');
+        const isRecurring = event.isRecurringInstance || (event.recurrence && event.recurrence.type !== RECURRENCE_TYPES.NONE);
 
         // Set locale-aware time display asynchronously
         await this._setLocalEventContentWithLocale(eventDiv, startTime, endTime, title, isRecurring);
