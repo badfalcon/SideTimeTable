@@ -194,11 +194,27 @@ export class AlarmManager {
      */
     static async getEventData(eventId, dateStr) {
         try {
+            // First, check date-specific events
             const storageKey = `localEvents_${dateStr}`;
             const result = await chrome.storage.sync.get(storageKey);
             const events = result[storageKey] || [];
 
-            return events.find(event => event.id === eventId) || null;
+            let event = events.find(e => e.id === eventId);
+            if (event) {
+                return event;
+            }
+
+            // If not found, check recurring events
+            const recurringResult = await chrome.storage.sync.get('recurringEvents');
+            const recurringEvents = recurringResult.recurringEvents || [];
+
+            // Check if the eventId matches a recurring event (could be originalId for instances)
+            event = recurringEvents.find(e => e.id === eventId);
+            if (event) {
+                return event;
+            }
+
+            return null;
         } catch (error) {
             console.error('Failed to get event data:', error);
             return null;
@@ -211,23 +227,121 @@ export class AlarmManager {
      */
     static async setDateReminders(dateStr) {
         try {
+            // Get date-specific events
             const storageKey = `localEvents_${dateStr}`;
             const result = await chrome.storage.sync.get(storageKey);
-            const events = result[storageKey] || [];
+            const dateEvents = result[storageKey] || [];
+
+            // Get recurring events for this date
+            const recurringEvents = await this.getRecurringEventsForDate(dateStr);
+
+            // Combine all events
+            const allEvents = [...recurringEvents, ...dateEvents];
 
             // Clear the existing reminders for this date first
             await this.clearDateReminders(dateStr);
 
             // Set the new reminders
-            for (const event of events) {
+            let reminderCount = 0;
+            for (const event of allEvents) {
                 if (event.reminder) {
-                    await this.setReminder(event, dateStr);
+                    // For recurring instances, use the original event's ID for the alarm
+                    const eventId = event.originalId || event.id;
+                    const reminderEvent = { ...event, id: eventId };
+                    await this.setReminder(reminderEvent, dateStr);
+                    reminderCount++;
                 }
             }
 
-            console.log(`Set reminders for ${events.filter(e => e.reminder).length} events on ${dateStr}`);
+            console.log(`Set reminders for ${reminderCount} events on ${dateStr}`);
         } catch (error) {
             console.error('Failed to set date reminders:', error);
+        }
+    }
+
+    /**
+     * Get recurring events that apply to a specific date (for reminder purposes)
+     * @param {string} dateStr The date string (YYYY-MM-DD)
+     * @returns {Array} Array of recurring event instances
+     */
+    static async getRecurringEventsForDate(dateStr) {
+        try {
+            const result = await chrome.storage.sync.get('recurringEvents');
+            const recurringEvents = result.recurringEvents || [];
+            const matchingEvents = [];
+
+            const targetDateObj = new Date(dateStr + 'T00:00:00');
+
+            for (const event of recurringEvents) {
+                if (!event.recurrence) continue;
+
+                const { type, startDate, endDate, interval = 1, daysOfWeek = [] } = event.recurrence;
+
+                // Check if target date is within the recurrence range
+                if (startDate && dateStr < startDate) continue;
+                if (endDate && dateStr > endDate) continue;
+
+                // Check for exceptions
+                const exceptions = event.recurrence.exceptions || [];
+                if (exceptions.includes(dateStr)) continue;
+
+                const eventStartDate = new Date(startDate + 'T00:00:00');
+                let matches = false;
+
+                switch (type) {
+                    case 'daily': {
+                        const daysDiff = Math.floor((targetDateObj - eventStartDate) / (1000 * 60 * 60 * 24));
+                        matches = daysDiff >= 0 && daysDiff % interval === 0;
+                        break;
+                    }
+                    case 'weekly': {
+                        const targetDayOfWeek = targetDateObj.getDay();
+                        if (daysOfWeek.length > 0) {
+                            if (!daysOfWeek.includes(targetDayOfWeek)) break;
+                        } else {
+                            const startDayOfWeek = eventStartDate.getDay();
+                            if (targetDayOfWeek !== startDayOfWeek) break;
+                        }
+                        const startWeekStart = new Date(eventStartDate);
+                        startWeekStart.setDate(startWeekStart.getDate() - startWeekStart.getDay());
+                        const targetWeekStart = new Date(targetDateObj);
+                        targetWeekStart.setDate(targetWeekStart.getDate() - targetWeekStart.getDay());
+                        const weeksDiff = Math.round((targetWeekStart - startWeekStart) / (1000 * 60 * 60 * 24 * 7));
+                        matches = weeksDiff >= 0 && weeksDiff % interval === 0;
+                        break;
+                    }
+                    case 'monthly': {
+                        const eventDay = eventStartDate.getDate();
+                        const targetDay = targetDateObj.getDate();
+                        const lastDayOfTargetMonth = new Date(targetDateObj.getFullYear(), targetDateObj.getMonth() + 1, 0).getDate();
+                        const effectiveEventDay = Math.min(eventDay, lastDayOfTargetMonth);
+                        if (effectiveEventDay !== targetDay) break;
+                        const monthsDiff = (targetDateObj.getFullYear() - eventStartDate.getFullYear()) * 12 +
+                                           (targetDateObj.getMonth() - eventStartDate.getMonth());
+                        matches = monthsDiff >= 0 && monthsDiff % interval === 0;
+                        break;
+                    }
+                    case 'weekdays': {
+                        const targetDayOfWeek = targetDateObj.getDay();
+                        matches = targetDayOfWeek >= 1 && targetDayOfWeek <= 5;
+                        break;
+                    }
+                }
+
+                if (matches) {
+                    matchingEvents.push({
+                        ...event,
+                        isRecurringInstance: true,
+                        instanceDate: dateStr,
+                        originalId: event.id
+                    });
+                }
+            }
+
+            return matchingEvents;
+        } catch (error) {
+            console.error('Failed to get recurring events for date:', error);
+            return [];
         }
     }
 
