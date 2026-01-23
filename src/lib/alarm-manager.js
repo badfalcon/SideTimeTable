@@ -1,6 +1,8 @@
 /**
  * AlarmManager - Manages event reminders using chrome.alarms API
  */
+import { getRecurringEventsForDate } from './utils.js';
+
 export class AlarmManager {
     static ALARM_PREFIX = 'event_reminder_';
     static GOOGLE_ALARM_PREFIX = 'google_event_reminder_';
@@ -232,8 +234,9 @@ export class AlarmManager {
             const result = await chrome.storage.sync.get(storageKey);
             const dateEvents = result[storageKey] || [];
 
-            // Get recurring events for this date
-            const recurringEvents = await this.getRecurringEventsForDate(dateStr);
+            // Get recurring events for this date (convert string to Date)
+            const targetDate = new Date(dateStr + 'T00:00:00');
+            const recurringEvents = await getRecurringEventsForDate(targetDate);
 
             // Combine all events
             const allEvents = [...recurringEvents, ...dateEvents];
@@ -256,92 +259,6 @@ export class AlarmManager {
             console.log(`Set reminders for ${reminderCount} events on ${dateStr}`);
         } catch (error) {
             console.error('Failed to set date reminders:', error);
-        }
-    }
-
-    /**
-     * Get recurring events that apply to a specific date (for reminder purposes)
-     * @param {string} dateStr The date string (YYYY-MM-DD)
-     * @returns {Array} Array of recurring event instances
-     */
-    static async getRecurringEventsForDate(dateStr) {
-        try {
-            const result = await chrome.storage.sync.get('recurringEvents');
-            const recurringEvents = result.recurringEvents || [];
-            const matchingEvents = [];
-
-            const targetDateObj = new Date(dateStr + 'T00:00:00');
-
-            for (const event of recurringEvents) {
-                if (!event.recurrence) continue;
-
-                const { type, startDate, endDate, interval = 1, daysOfWeek = [] } = event.recurrence;
-
-                // Check if target date is within the recurrence range
-                if (startDate && dateStr < startDate) continue;
-                if (endDate && dateStr > endDate) continue;
-
-                // Check for exceptions
-                const exceptions = event.recurrence.exceptions || [];
-                if (exceptions.includes(dateStr)) continue;
-
-                const eventStartDate = new Date(startDate + 'T00:00:00');
-                let matches = false;
-
-                switch (type) {
-                    case 'daily': {
-                        const daysDiff = Math.floor((targetDateObj - eventStartDate) / (1000 * 60 * 60 * 24));
-                        matches = daysDiff >= 0 && daysDiff % interval === 0;
-                        break;
-                    }
-                    case 'weekly': {
-                        const targetDayOfWeek = targetDateObj.getDay();
-                        if (daysOfWeek.length > 0) {
-                            if (!daysOfWeek.includes(targetDayOfWeek)) break;
-                        } else {
-                            const startDayOfWeek = eventStartDate.getDay();
-                            if (targetDayOfWeek !== startDayOfWeek) break;
-                        }
-                        const startWeekStart = new Date(eventStartDate);
-                        startWeekStart.setDate(startWeekStart.getDate() - startWeekStart.getDay());
-                        const targetWeekStart = new Date(targetDateObj);
-                        targetWeekStart.setDate(targetWeekStart.getDate() - targetWeekStart.getDay());
-                        const weeksDiff = Math.round((targetWeekStart - startWeekStart) / (1000 * 60 * 60 * 24 * 7));
-                        matches = weeksDiff >= 0 && weeksDiff % interval === 0;
-                        break;
-                    }
-                    case 'monthly': {
-                        const eventDay = eventStartDate.getDate();
-                        const targetDay = targetDateObj.getDate();
-                        const lastDayOfTargetMonth = new Date(targetDateObj.getFullYear(), targetDateObj.getMonth() + 1, 0).getDate();
-                        const effectiveEventDay = Math.min(eventDay, lastDayOfTargetMonth);
-                        if (effectiveEventDay !== targetDay) break;
-                        const monthsDiff = (targetDateObj.getFullYear() - eventStartDate.getFullYear()) * 12 +
-                                           (targetDateObj.getMonth() - eventStartDate.getMonth());
-                        matches = monthsDiff >= 0 && monthsDiff % interval === 0;
-                        break;
-                    }
-                    case 'weekdays': {
-                        const targetDayOfWeek = targetDateObj.getDay();
-                        matches = targetDayOfWeek >= 1 && targetDayOfWeek <= 5;
-                        break;
-                    }
-                }
-
-                if (matches) {
-                    matchingEvents.push({
-                        ...event,
-                        isRecurringInstance: true,
-                        instanceDate: dateStr,
-                        originalId: event.id
-                    });
-                }
-            }
-
-            return matchingEvents;
-        } catch (error) {
-            console.error('Failed to get recurring events for date:', error);
-            return [];
         }
     }
 
