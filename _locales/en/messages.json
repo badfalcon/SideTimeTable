@@ -640,5 +640,85 @@
   "syncReminders": {
     "message": "Sync Reminders",
     "description": "Tooltip for sync reminders button"
+  },
+  "recurrence": {
+    "message": "Recurrence:",
+    "description": "Label for recurrence setting"
+  },
+  "recurrenceNone": {
+    "message": "Does not repeat",
+    "description": "No recurrence option"
+  },
+  "recurrenceDaily": {
+    "message": "Daily",
+    "description": "Daily recurrence option"
+  },
+  "recurrenceWeekdays": {
+    "message": "Every weekday (Mon-Fri)",
+    "description": "Weekdays recurrence option"
+  },
+  "recurrenceWeekly": {
+    "message": "Weekly",
+    "description": "Weekly recurrence option"
+  },
+  "recurrenceMonthly": {
+    "message": "Monthly",
+    "description": "Monthly recurrence option"
+  },
+  "recurrenceEndDate": {
+    "message": "End date:",
+    "description": "Label for recurrence end date"
+  },
+  "noEndDate": {
+    "message": "No end date",
+    "description": "No end date checkbox label"
+  },
+  "daySun": {
+    "message": "Sun",
+    "description": "Sunday abbreviation"
+  },
+  "dayMon": {
+    "message": "Mon",
+    "description": "Monday abbreviation"
+  },
+  "dayTue": {
+    "message": "Tue",
+    "description": "Tuesday abbreviation"
+  },
+  "dayWed": {
+    "message": "Wed",
+    "description": "Wednesday abbreviation"
+  },
+  "dayThu": {
+    "message": "Thu",
+    "description": "Thursday abbreviation"
+  },
+  "dayFri": {
+    "message": "Fri",
+    "description": "Friday abbreviation"
+  },
+  "daySat": {
+    "message": "Sat",
+    "description": "Saturday abbreviation"
+  },
+  "deleteRecurringTitle": {
+    "message": "Delete recurring event?",
+    "description": "Title for delete recurring event dialog"
+  },
+  "deleteRecurringMessage": {
+    "message": "Do you want to delete this occurrence only or all occurrences?",
+    "description": "Message for delete recurring event dialog"
+  },
+  "deleteThisOccurrence": {
+    "message": "Delete this occurrence",
+    "description": "Delete this occurrence button"
+  },
+  "deleteAllOccurrences": {
+    "message": "Delete all occurrences",
+    "description": "Delete all occurrences button"
+  },
+  "endDateMustBeLater": {
+    "message": "End date must be on or after start date",
+    "description": "Error when recurrence end date is before start date"
   }
 }
