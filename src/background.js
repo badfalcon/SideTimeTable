@@ -19,7 +19,13 @@ chrome.runtime.onInstalled.addListener(async () => {
     await setupDailyReminderSync();
 
     // Initial sync on install
-    await syncGoogleEventReminders();
+    await syncAllReminders();
+});
+
+// Handler for when the browser/profile starts
+chrome.runtime.onStartup.addListener(async () => {
+    // Sync reminders on startup
+    await syncAllReminders();
 });
 
 // Keyboard shortcut handler
@@ -458,7 +464,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
                 // After successful authentication, fetch calendar list to set up primary calendar
                 getCalendarList()
-                    .then(() => {
+                    .then(async () => {
+                        // After authentication and calendar list fetch, sync reminders
+                        await syncAllReminders();
                         sendResponse({ success: true, token: token });
                     })
                     .catch((error) => {
@@ -577,7 +585,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
         case "forceSyncReminders":
             // Force sync reminders immediately (for testing)
-            syncGoogleEventReminders()
+            syncAllReminders()
                 .then(() => {
                     sendResponse({ success: true, message: 'Reminder sync completed' });
                 })
@@ -601,7 +609,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                         sendResponse({ success: true, skipped: true, message: 'Skipped (recently synced)' });
                     } else {
                         console.log(`[Auto Sync] Starting sync (last sync was ${Math.round((now - lastSyncTime) / 1000)}s ago)`);
-                        await syncGoogleEventReminders();
+                        await syncAllReminders();
                         sendResponse({ success: true, skipped: false, message: 'Reminder sync completed' });
                     }
                 } catch (error) {
@@ -618,19 +626,21 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
 });
 
-// Alarm listener for event reminders
+// Alarm listener for event reminders and periodic sync
 chrome.alarms.onAlarm.addListener(async (alarm) => {
-    if (alarm.name.startsWith(AlarmManager.ALARM_PREFIX) || alarm.name.startsWith(AlarmManager.GOOGLE_ALARM_PREFIX)) {
+    if (alarm.name === 'daily_reminder_sync') {
+        console.log('[Alarm] Running daily reminder sync');
+        await syncAllReminders();
+    } else if (alarm.name.startsWith(AlarmManager.ALARM_PREFIX) || alarm.name.startsWith(AlarmManager.GOOGLE_ALARM_PREFIX)) {
         await AlarmManager.showReminderNotification(alarm.name);
     }
 });
 
 // Notification click handler
-// User preference: Clicking the notification body should open the Side Panel (never auto-open links)
+// User preference: Clicking the notification body should open the Side Panel
 chrome.notifications.onClicked.addListener(async (notificationId) => {
     if (notificationId.startsWith('reminder_')) {
         try {
-            // Always open the side panel on body click
             chrome.tabs.query({ active: true, currentWindow: true }, ([activeTab]) => {
                 if (activeTab) {
                     chrome.sidePanel.open({ tabId: activeTab.id });
@@ -639,7 +649,6 @@ chrome.notifications.onClicked.addListener(async (notificationId) => {
         } catch (e) {
             console.error('Failed to handle notification click:', e);
         } finally {
-            // Clear the notification
             chrome.notifications.clear(notificationId);
         }
     }
@@ -704,6 +713,35 @@ async function setupDailyReminderSync() {
         console.log('Daily reminder sync alarm set for:', tomorrow);
     } catch (error) {
         console.error('Failed to setup daily reminder sync:', error);
+    }
+}
+
+/**
+ * Sync all event reminders (local and Google)
+ */
+async function syncAllReminders() {
+    await Promise.all([
+        syncLocalEventReminders(),
+        syncGoogleEventReminders()
+    ]);
+}
+
+/**
+ * Sync local event reminders for today
+ */
+async function syncLocalEventReminders() {
+    try {
+        console.log('[Reminder Sync] Starting local event reminder sync...');
+
+        // Get today's date
+        const today = new Date();
+        const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+        // Set reminders for all local events today
+        await AlarmManager.setDateReminders(dateStr);
+        console.log(`[Reminder Sync] ✓ Synced local event reminders for ${dateStr}`);
+    } catch (error) {
+        console.error('[Reminder Sync] Failed to sync local event reminders:', error);
     }
 }
 
@@ -784,11 +822,3 @@ async function syncGoogleEventReminders() {
         console.error('[Reminder Sync] Stack trace:', error.stack);
     }
 }
-
-// Listen for daily sync alarm
-chrome.alarms.onAlarm.addListener(async (alarm) => {
-    if (alarm.name === 'daily_reminder_sync') {
-        console.log('Running daily Google event reminder sync');
-        await syncGoogleEventReminders();
-    }
-});
