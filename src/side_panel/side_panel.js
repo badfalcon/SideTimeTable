@@ -573,6 +573,8 @@ class SidePanelUIController {
             // Reload event display
             await this.localEventManager.loadLocalEvents(this.currentDate);
 
+            await this._syncRemindersIfNeeded();
+
             // Calculate layout after event save/update
             if (this.eventLayoutManager) {
                 this.eventLayoutManager.calculateLayout();
@@ -687,6 +689,8 @@ class SidePanelUIController {
             // Reload event display
             await this.localEventManager.loadLocalEvents(this.currentDate);
 
+            await this._syncRemindersIfNeeded();
+
             // Calculate layout after event save/update
             if (this.eventLayoutManager) {
                 this.eventLayoutManager.calculateLayout();
@@ -721,6 +725,22 @@ class SidePanelUIController {
         const day = String(targetDate.getDate()).padStart(2, '0');
 
         return `${year}-${month}-${day}`;
+    }
+
+    /**
+     * Sync reminders for the current date if it's today or in the future.
+     * @private
+     */
+    async _syncRemindersIfNeeded() {
+        try {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            if (this.currentDate >= today) {
+                await AlarmManager.setDateReminders(this.getCurrentDateString());
+            }
+        } catch (error) {
+            console.error('Failed to sync reminders:', error);
+        }
     }
 
     /**
