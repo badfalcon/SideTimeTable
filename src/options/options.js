@@ -85,7 +85,7 @@ class OptionsPageManager {
             const { enableDeveloperFeatures = false, enableReminderDebug = false } = await chrome.storage.local.get(['enableDeveloperFeatures', 'enableReminderDebug']);
             const devEnabled = !!(enableDeveloperFeatures || enableReminderDebug);
             if (devEnabled) {
-                this.developerSettingsCard = new DeveloperSettingsCard(this.handleDeveloperSettingsChange?.bind?.(this));
+                this.developerSettingsCard = new DeveloperSettingsCard(null);
                 this.componentManager.register('developerSettings', this.developerSettingsCard);
                 // Ensure visibility (card default is hidden:true)
                 try {
@@ -113,6 +113,10 @@ class OptionsPageManager {
                 console.warn('Post-component localization error:', error);
             }
         }
+
+        // Show the page after localization is complete
+        document.body.style.opacity = '1';
+        document.body.style.transition = 'opacity 0.1s';
 
     }
 
@@ -380,7 +384,7 @@ class OptionsPageManager {
                         We have removed the token from the extension, but to completely disconnect, please manually revoke permission in your Google account settings.
                     </small>
                     <div class="mt-2">
-                        <a href="${revokeUrl}" target="_blank" class="btn btn-sm btn-outline-primary">
+                        <a href="" target="_blank" class="btn btn-sm btn-outline-primary revoke-link">
                             <i class="fas fa-external-link-alt me-1"></i>
                             Open Google Account Settings
                         </a>
@@ -389,6 +393,10 @@ class OptionsPageManager {
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         `;
+        const link = notice.querySelector('.revoke-link');
+        if (link) {
+            link.href = revokeUrl;
+        }
 
         // Insert after the first card
         const firstCard = document.querySelector('.card');

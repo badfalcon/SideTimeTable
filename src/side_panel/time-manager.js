@@ -287,38 +287,46 @@ export class EventLayoutManager {
      * @private
      */
     _groupOverlappingEvents() {
-        const groups = [];
-        const processedEvents = new Set();
+        const n = this.events.length;
+        if (n === 0) return [];
 
-        for (const event of this.events) {
-            if (processedEvents.has(event.id)) continue;
+        // Union-Find for correct transitive overlap grouping
+        const parent = Array.from({ length: n }, (_, i) => i);
+        const rank = new Array(n).fill(0);
 
-            const group = [event];
-            processedEvents.add(event.id);
+        const find = (x) => {
+            while (parent[x] !== x) {
+                parent[x] = parent[parent[x]];
+                x = parent[x];
+            }
+            return x;
+        };
 
-            // Find the other events that overlap with this event
-            for (const otherEvent of this.events) {
-                if (processedEvents.has(otherEvent.id)) continue;
+        const union = (a, b) => {
+            const ra = find(a);
+            const rb = find(b);
+            if (ra === rb) return;
+            if (rank[ra] < rank[rb]) { parent[ra] = rb; }
+            else if (rank[ra] > rank[rb]) { parent[rb] = ra; }
+            else { parent[rb] = ra; rank[ra]++; }
+        };
 
-                // Check if it overlaps with any event in the group
-                let overlapsWithGroup = false;
-                for (const groupEvent of group) {
-                    if (this._areEventsOverlapping(groupEvent, otherEvent)) {
-                        overlapsWithGroup = true;
-                        break;
-                    }
-                }
-
-                if (overlapsWithGroup) {
-                    group.push(otherEvent);
-                    processedEvents.add(otherEvent.id);
+        for (let i = 0; i < n; i++) {
+            for (let j = i + 1; j < n; j++) {
+                if (this._areEventsOverlapping(this.events[i], this.events[j])) {
+                    union(i, j);
                 }
             }
-
-            groups.push(group);
         }
 
-        return groups;
+        const groupMap = new Map();
+        for (let i = 0; i < n; i++) {
+            const root = find(i);
+            if (!groupMap.has(root)) groupMap.set(root, []);
+            groupMap.get(root).push(this.events[i]);
+        }
+
+        return Array.from(groupMap.values());
     }
 
     /**
@@ -329,7 +337,7 @@ export class EventLayoutManager {
      */
     _assignLanesToGroup(group) {
         // Sort by the start time
-        const sortedEvents = group.sort((a, b) =>
+        const sortedEvents = [...group].sort((a, b) =>
             this._getCachedTimeValue(a.startTime) - this._getCachedTimeValue(b.startTime)
         );
 
@@ -465,7 +473,9 @@ export class EventLayoutManager {
 
                     event.element.style.left = `${leftPosition}px`;
                     event.element.style.width = `${laneWidth}px`;
-                    event.element.style.zIndex = LAYOUT_CONSTANTS.Z_INDEX;
+                    // Later-starting events appear on top
+                    const startValue = this._getCachedTimeValue(event.startTime);
+                    event.element.style.zIndex = LAYOUT_CONSTANTS.Z_INDEX + startValue;
 
                     // Adjust the padding based on the number of lanes
                     let padding;

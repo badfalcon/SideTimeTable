@@ -32,6 +32,54 @@ export const STORAGE_KEYS = {
     LOCAL_EVENTS_PREFIX: 'localEvents_'
 };
 
+// Migration flag key
+const MIGRATION_KEY = 'eventDataMigratedToLocal_v2';
+
+/**
+ * Migrate per-date event data from chrome.storage.sync to chrome.storage.local (one-time).
+ * Recurring events stay in sync for cross-device synchronization.
+ * Per-date events (localEvents_YYYY-MM-DD) move to local to avoid sync quota limits.
+ */
+export async function migrateEventDataToLocal() {
+    try {
+        const { [MIGRATION_KEY]: migrated } = await chrome.storage.local.get(MIGRATION_KEY);
+        if (migrated) return;
+
+        // If recurring events were accidentally moved to local, restore them to sync
+        const localData = await StorageHelper.getLocal([STORAGE_KEYS.RECURRING_EVENTS], {});
+        const localRecurring = localData[STORAGE_KEYS.RECURRING_EVENTS];
+        if (localRecurring && localRecurring.length > 0) {
+            // Only restore if sync doesn't already have data
+            const syncData = await StorageHelper.get([STORAGE_KEYS.RECURRING_EVENTS], {});
+            const syncRecurring = syncData[STORAGE_KEYS.RECURRING_EVENTS];
+            if (!syncRecurring || syncRecurring.length === 0) {
+                await StorageHelper.set({ [STORAGE_KEYS.RECURRING_EVENTS]: localRecurring });
+            }
+            await chrome.storage.local.remove(STORAGE_KEYS.RECURRING_EVENTS);
+        }
+
+        // Migrate per-date local events from sync to local
+        const allSyncData = await StorageHelper.get(null, {});
+        const localEventEntries = {};
+        const keysToRemove = [];
+        for (const [key, value] of Object.entries(allSyncData)) {
+            if (key.startsWith(STORAGE_KEYS.LOCAL_EVENTS_PREFIX)) {
+                localEventEntries[key] = value;
+                keysToRemove.push(key);
+            }
+        }
+        if (Object.keys(localEventEntries).length > 0) {
+            await StorageHelper.setLocal(localEventEntries);
+            await StorageHelper.remove(keysToRemove);
+        }
+
+        await chrome.storage.local.set({ [MIGRATION_KEY]: true });
+        console.log('[Migration] Per-date event data migrated to local storage');
+    } catch (error) {
+        console.error('[Migration] Failed to migrate event data:', error);
+    }
+}
+
 // Default settings
 export const DEFAULT_SETTINGS = {
     googleIntegrated: false,
@@ -118,7 +166,7 @@ export function loadLocalEvents() {
 export async function loadLocalEventsForDate(targetDate) {
     const targetDateStr = getFormattedDateFromDate(targetDate);
     const storageKey = `${STORAGE_KEYS.LOCAL_EVENTS_PREFIX}${targetDateStr}`;
-    const result = await StorageHelper.get([storageKey], { [storageKey]: [] });
+    const result = await StorageHelper.getLocal([storageKey], { [storageKey]: [] });
     const dateSpecificEvents = result[storageKey] || [];
 
     // Get recurring events that apply to this date
@@ -289,7 +337,7 @@ export async function deleteRecurringEvent(eventId) {
 export async function saveLocalEventsForDate(events, targetDate) {
     const targetDateStr = getFormattedDateFromDate(targetDate);
     const storageKey = `${STORAGE_KEYS.LOCAL_EVENTS_PREFIX}${targetDateStr}`;
-    return StorageHelper.set({ [storageKey]: events });
+    return StorageHelper.setLocal({ [storageKey]: events });
 }
 
 /**
