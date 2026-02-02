@@ -9,7 +9,8 @@ import {
     loadLocalEventsForDate,
     loadSettings,
     logError,
-    TIME_CONSTANTS
+    TIME_CONSTANTS,
+    RECURRENCE_TYPES
 } from '../lib/utils.js';
 import {createTimeOnDate} from '../lib/time-utils.js';
 import {getDemoEvents, getDemoLocalEvents, isDemoMode} from '../lib/demo-data.js';
@@ -288,8 +289,6 @@ export class GoogleEventManager {
         // This will be overridden by EventLayoutManager, but prevents initial flash
         const initialWidth = this.eventLayoutManager ? this.eventLayoutManager.maxWidth : EVENT_STYLING.DEFAULT_VALUES.INITIAL_WIDTH;
         eventDiv.style.width = `${initialWidth}px`;
-        console.log(initialWidth);
-        console.log(EVENT_STYLING.DEFAULT_VALUES.INITIAL_LEFT_OFFSET);
         eventDiv.style.left = `${EVENT_STYLING.DEFAULT_VALUES.INITIAL_LEFT_OFFSET}px`;
 
         // Apply the Google colors directly
@@ -470,8 +469,11 @@ export class LocalEventManager {
 
         eventDiv.style.left = `${EVENT_STYLING.DEFAULT_VALUES.INITIAL_LEFT_OFFSET}px`;
 
+        // Check if this is a recurring event
+        const isRecurring = event.isRecurringInstance || (event.recurrence && event.recurrence.type !== RECURRENCE_TYPES.NONE);
+
         // Set locale-aware time display asynchronously
-        await this._setLocalEventContentWithLocale(eventDiv, startTime, endTime, title);
+        await this._setLocalEventContentWithLocale(eventDiv, startTime, endTime, title, isRecurring);
 
         // Setup the edit functionality
         this._setupEventEdit(eventDiv, event);
@@ -495,9 +497,10 @@ export class LocalEventManager {
      * @param {string} startTime - The start time (HH:mm format)
      * @param {string} endTime - The end time (HH:mm format)
      * @param {string} title - The event title
+     * @param {boolean} isRecurring - Whether this is a recurring event
      * @private
      */
-    async _setLocalEventContentWithLocale(eventDiv, startTime, endTime, title) {
+    async _setLocalEventContentWithLocale(eventDiv, startTime, endTime, title, isRecurring = false) {
         // Resolve locale and time format in parallel
         const [locale, timeFormat] = await Promise.all([
             typeof window.getCurrentLocale === 'function' ? window.getCurrentLocale() : Promise.resolve('ja'),
@@ -519,7 +522,21 @@ export class LocalEventManager {
         const formattedEnd = formatOne(endTime);
         const sep = locale === 'en' ? ' - ' : '～';
         const formattedTimeRange = `${formattedStart}${sep}${formattedEnd}`;
-        eventDiv.textContent = `${formattedTimeRange}: ${title}`;
+
+        // Clear existing content
+        eventDiv.innerHTML = '';
+
+        // Add recurrence indicator if this is a recurring event
+        if (isRecurring) {
+            const icon = document.createElement('i');
+            icon.className = 'fa-solid fa-repeat';
+            icon.style.cssText = 'margin-right: 4px; font-size: 0.85em;';
+            eventDiv.appendChild(icon);
+        }
+
+        // Add text content
+        const textNode = document.createTextNode(`${formattedTimeRange}: ${title}`);
+        eventDiv.appendChild(textNode);
     }
 
     /**
