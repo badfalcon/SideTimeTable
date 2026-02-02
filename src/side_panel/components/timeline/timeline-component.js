@@ -32,8 +32,8 @@ export class TimelineComponent extends Component {
         // The target date for the display
         this.currentDate = new Date();
 
-        // Locale (default to Japanese until resolved)
-        this.locale = 'ja';
+        // Locale (default to English, matching manifest default_locale)
+        this.locale = 'en';
 
         // Time format preference (default 24h until resolved)
         this.timeFormat = '24h';

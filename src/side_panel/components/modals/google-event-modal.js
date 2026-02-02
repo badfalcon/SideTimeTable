@@ -191,18 +191,14 @@ export class GoogleEventModal extends ModalComponent {
                 return chrome.i18n.getMessage('allDay');
             }
 
-            // For the timed events
-            const startTime = startDate.toLocaleTimeString('ja-JP', {
-                hour: '2-digit',
-                minute: '2-digit'
-            });
+            // For the timed events - use browser locale
+            const locale = navigator.language || 'en';
+            const timeOptions = { hour: '2-digit', minute: '2-digit' };
+            const startTime = startDate.toLocaleTimeString(locale, timeOptions);
+            const endTime = endDate.toLocaleTimeString(locale, timeOptions);
+            const separator = locale.startsWith('ja') ? ' ～ ' : ' - ';
 
-            const endTime = endDate.toLocaleTimeString('ja-JP', {
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-
-            return `${startTime} ～ ${endTime}`;
+            return `${startTime}${separator}${endTime}`;
         } catch (error) {
             console.warn('Time format error:', error);
             return chrome.i18n.getMessage('timeInfoError');
@@ -440,9 +436,8 @@ export class GoogleEventModal extends ModalComponent {
      * @private
      */
     _stripHtml(html) {
-        const div = document.createElement('div');
-        div.innerHTML = html;
-        return div.textContent || div.innerText || '';
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        return doc.body.textContent || '';
     }
 
     /**

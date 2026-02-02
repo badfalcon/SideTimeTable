@@ -184,28 +184,24 @@ export class GoogleEventManager {
      * @private
      */
     async _processDemoEvents() {
-        return new Promise(async (resolve) => {
-            // Clear previous display
-            this.googleEventsDiv.innerHTML = '';
+        // Clear previous display
+        this.googleEventsDiv.innerHTML = '';
 
-            // Remove only Google events from layout manager
-            const events = [...this.eventLayoutManager.events];
-            events.forEach(event => {
-                if (event && event.type === 'google') {
-                    this.eventLayoutManager.removeEvent(event.id);
-                }
-            });
-
-            // Get the demo events
-            const demoEvents = await getDemoEvents();
-            
-            await this._processEvents(demoEvents);
-
-            // Calculate and apply event layout
-            this.eventLayoutManager.calculateLayout();
-            
-            resolve();
+        // Remove only Google events from layout manager
+        const events = [...this.eventLayoutManager.events];
+        events.forEach(event => {
+            if (event && event.type === 'google') {
+                this.eventLayoutManager.removeEvent(event.id);
+            }
         });
+
+        // Get the demo events
+        const demoEvents = await getDemoEvents();
+
+        await this._processEvents(demoEvents);
+
+        // Calculate and apply event layout
+        this.eventLayoutManager.calculateLayout();
     }
 
     /**
@@ -329,7 +325,7 @@ export class GoogleEventManager {
     async _setEventContentWithLocale(eventDiv, startDate, summary, event) {
         // Resolve locale and time format in parallel
         const [locale, timeFormat] = await Promise.all([
-            typeof window.getCurrentLocale === 'function' ? window.getCurrentLocale() : Promise.resolve('ja'),
+            typeof window.getCurrentLocale === 'function' ? window.getCurrentLocale() : Promise.resolve('en'),
             typeof window.getTimeFormatPreference === 'function' ? window.getTimeFormatPreference() : Promise.resolve('24h')
         ]);
 
@@ -409,27 +405,22 @@ export class LocalEventManager {
             return;
         }
 
-        const loadFunction = targetDate ? 
-            () => loadLocalEventsForDate(targetDate) : 
-            () => loadLocalEvents();
-            
-        loadFunction()
-            .then(async events => {
+        try {
+            const events = targetDate ?
+                await loadLocalEventsForDate(targetDate) :
+                await loadLocalEvents();
 
-                for (const event of events) {
-                    try {
-                        const eventDiv = await this._createEventDiv(event);
-                        this.localEventsDiv.appendChild(eventDiv);
-                    } catch (error) {
-                        logError('Event display', error);
-                    }
+            for (const event of events) {
+                try {
+                    const eventDiv = await this._createEventDiv(event);
+                    this.localEventsDiv.appendChild(eventDiv);
+                } catch (error) {
+                    logError('Event display', error);
                 }
-
-                // Note: Layout calculation is done in side_panel.js, so not done here
-            })
-            .catch(error => {
-                logError('Local event loading', error);
-            });
+            }
+        } catch (error) {
+            logError('Local event loading', error);
+        }
     }
 
     /**
@@ -503,7 +494,7 @@ export class LocalEventManager {
     async _setLocalEventContentWithLocale(eventDiv, startTime, endTime, title, isRecurring = false) {
         // Resolve locale and time format in parallel
         const [locale, timeFormat] = await Promise.all([
-            typeof window.getCurrentLocale === 'function' ? window.getCurrentLocale() : Promise.resolve('ja'),
+            typeof window.getCurrentLocale === 'function' ? window.getCurrentLocale() : Promise.resolve('en'),
             typeof window.getTimeFormatPreference === 'function' ? window.getTimeFormatPreference() : Promise.resolve('24h')
         ]);
 

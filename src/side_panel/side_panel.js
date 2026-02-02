@@ -13,7 +13,13 @@ import {
 
 import { EventLayoutManager } from './time-manager.js';
 import { GoogleEventManager, LocalEventManager } from './event-handlers.js';
-import { generateTimeList, loadSettings, logError, RECURRENCE_TYPES } from '../lib/utils.js';
+import {
+    generateTimeList, loadSettings, logError, RECURRENCE_TYPES,
+    loadLocalEventsForDate, saveLocalEventsForDate,
+    loadRecurringEvents, saveRecurringEvents,
+    addRecurringEventException, deleteRecurringEvent,
+    migrateEventDataToLocal
+} from '../lib/utils.js';
 import { isToday } from '../lib/time-utils.js';
 import { isDemoMode, setDemoMode } from '../lib/demo-data.js';
 import { AlarmManager } from '../lib/alarm-manager.js';
@@ -21,10 +27,9 @@ import { AlarmManager } from '../lib/alarm-manager.js';
 // The reload message listener
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "reloadSideTimeTable") {
-        location.reload();
         sendResponse({ success: true });
+        location.reload();
     }
-    return true;
 });
 
 /**
@@ -55,6 +60,9 @@ class SidePanelUIController {
      */
     async initialize() {
         try {
+            // Migrate event data from sync to local storage (one-time)
+            await migrateEventDataToLocal();
+
             // Check the demo mode via the URL parameter
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('demo') === 'true') {
@@ -198,7 +206,6 @@ class SidePanelUIController {
 
         if (timeTableBase) {
             // Recreate the EventLayoutManager
-            const { EventLayoutManager } = await import('./time-manager.js');
             this.eventLayoutManager = new EventLayoutManager(timeTableBase);
 
             // Update the eventLayoutManager of event managers
@@ -222,11 +229,8 @@ class SidePanelUIController {
      */
     async _initializeManagers() {
         // Generate the time list
-        generateTimeList();
-
-        // Initialize the event managers
-        const { GoogleEventManager, LocalEventManager } = await import('./event-handlers.js');
-        const { EventLayoutManager } = await import('./time-manager.js');
+        const timeListElement = document.getElementById('time-list');
+        generateTimeList(timeListElement);
 
         // Initialize the layout manager
         const timeTableBase = document.getElementById('sideTimeTableBase') || this.timelineComponent.element?.querySelector('.side-time-table-base');
@@ -296,15 +300,6 @@ class SidePanelUIController {
      * @private
      */
     _setupEventListeners() {
-        // Resize event
-        const resizeObserver = new ResizeObserver(() => {
-            this._handleResize();
-        });
-
-        if (this.timelineComponent.element) {
-            resizeObserver.observe(this.timelineComponent.element);
-        }
-
         // Localization
         this._setupLocalization();
     }
@@ -455,8 +450,9 @@ class SidePanelUIController {
         // Set the default time based on the current time
         const now = new Date();
         const startTime = `${String(now.getHours()).padStart(2, '0')}:${String(Math.floor(now.getMinutes() / 15) * 15).padStart(2, '0')}`;
-        const endHour = now.getHours() + 1;
-        const endTime = `${String(endHour).padStart(2, '0')}:${String(Math.floor(now.getMinutes() / 15) * 15).padStart(2, '0')}`;
+        const endHour = Math.min(now.getHours() + 1, 23);
+        const endMinutes = now.getHours() >= 23 ? 59 : Math.floor(now.getMinutes() / 15) * 15;
+        const endTime = `${String(endHour).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
 
         this.localEventModal.showCreate(startTime, endTime);
     }
@@ -467,13 +463,6 @@ class SidePanelUIController {
      */
     async _handleSaveLocalEvent(eventData, mode) {
         try {
-            const {
-                loadLocalEventsForDate,
-                saveLocalEventsForDate,
-                loadRecurringEvents,
-                saveRecurringEvents
-            } = await import('../lib/utils.js');
-
             const isRecurring = eventData.recurrence && eventData.recurrence.type !== RECURRENCE_TYPES.NONE;
 
             if (mode === 'create') {
@@ -516,11 +505,7 @@ class SidePanelUIController {
                     const localEvents = await loadLocalEventsForDate(this.currentDate);
                     // Filter out recurring instances
                     const nonRecurringEvents = localEvents.filter(e => !e.isRecurringInstance);
-                    const eventIndex = nonRecurringEvents.findIndex(e =>
-                        e.title === currentEvent.title &&
-                        e.startTime === currentEvent.startTime &&
-                        e.endTime === currentEvent.endTime
-                    );
+                    const eventIndex = nonRecurringEvents.findIndex(e => e.id === currentEvent.id);
 
                     if (eventIndex !== -1) {
                         const existingEvent = nonRecurringEvents[eventIndex];
@@ -591,8 +576,6 @@ class SidePanelUIController {
      * @private
      */
     async _handleEditRecurringEvent(eventData, currentEvent, isRecurring) {
-        const { loadRecurringEvents, saveRecurringEvents } = await import('../lib/utils.js');
-
         const recurringEvents = await loadRecurringEvents();
         const eventId = currentEvent.originalId || currentEvent.id;
         const eventIndex = recurringEvents.findIndex(e => e.id === eventId);
@@ -614,7 +597,6 @@ class SidePanelUIController {
                 await saveRecurringEvents(recurringEvents);
 
                 // Create a date-specific event instead
-                const { loadLocalEventsForDate, saveLocalEventsForDate } = await import('../lib/utils.js');
                 const localEvents = await loadLocalEventsForDate(this.currentDate);
                 const nonRecurringEvents = localEvents.filter(e => !e.isRecurringInstance);
                 nonRecurringEvents.push({
@@ -639,13 +621,6 @@ class SidePanelUIController {
      */
     async _handleDeleteLocalEvent(event, deleteType = null) {
         try {
-            const {
-                loadLocalEventsForDate,
-                saveLocalEventsForDate,
-                addRecurringEventException,
-                deleteRecurringEvent
-            } = await import('../lib/utils.js');
-
             // Check if this is a recurring event
             if (event.isRecurringInstance || event.recurrence) {
                 const eventId = event.originalId || event.id;
@@ -664,24 +639,13 @@ class SidePanelUIController {
                 // Filter out recurring instances
                 const nonRecurringEvents = localEvents.filter(e => !e.isRecurringInstance);
 
-                // Find event to delete for reminder cleanup
-                const eventToDelete = nonRecurringEvents.find(e =>
-                    e.title === event.title &&
-                    e.startTime === event.startTime &&
-                    e.endTime === event.endTime
-                );
-
                 // Clear reminder if exists
-                if (eventToDelete && eventToDelete.id) {
+                if (event.id) {
                     const dateStr = this.getCurrentDateString();
-                    await AlarmManager.clearReminder(eventToDelete.id, dateStr);
+                    await AlarmManager.clearReminder(event.id, dateStr);
                 }
 
-                const updatedEvents = nonRecurringEvents.filter(e =>
-                    !(e.title === event.title &&
-                      e.startTime === event.startTime &&
-                      e.endTime === event.endTime)
-                );
+                const updatedEvents = nonRecurringEvents.filter(e => e.id !== event.id);
 
                 await saveLocalEventsForDate(updatedEvents, this.currentDate);
             }
@@ -802,14 +766,6 @@ class SidePanelUIController {
     }
 
     /**
-     * Resize handler
-     * @private
-     */
-    _handleResize() {
-        // Layout adjustment (no special processing needed in component version)
-    }
-
-    /**
      * Debounce event loading
      * @private
      */
@@ -821,17 +777,6 @@ class SidePanelUIController {
         this.loadEventsDebounceTimeout = setTimeout(() => {
             this._loadEventsForCurrentDate();
         }, 300);
-    }
-
-    /**
-     * Debounce processing
-     * @private
-     */
-    _debounce(func, delay) {
-        if (this.debounceTimeout) {
-            clearTimeout(this.debounceTimeout);
-        }
-        this.debounceTimeout = setTimeout(func, delay);
     }
 
     /**

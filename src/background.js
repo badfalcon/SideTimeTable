@@ -147,50 +147,42 @@ function getCalendarEvents(targetDate = null) {
                     
                     const selectedCalendarIds = storageData.selectedCalendars || [];
 
-                    let calendarsPromise;
+                    // Fetch calendarList once and reuse for both calendar selection and color info
+                    const calendarListUrl = `https://www.googleapis.com/calendar/v3/users/me/calendarList`;
+                    let calendarListDataPromise = fetch(calendarListUrl, {
+                        headers: { Authorization: "Bearer " + token }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`CalendarList API error: ${response.status} ${response.statusText}`);
+                        }
+                        return response.json();
+                    });
+
+                    calendarListDataPromise
+                .then(listData => {
+                    let calendarsToFetch;
 
                     if (selectedCalendarIds.length === 0) {
-                        // If no calendars are selected, use the calendars set to display in Google Calendar
-                        const calendarListUrl = `https://www.googleapis.com/calendar/v3/users/me/calendarList`;
+                        const allCalendars = listData.items || [];
+                        const selectedCalendars = allCalendars.filter(cal => cal.selected);
+                        const accessibleCalendars = selectedCalendars.filter(cal => cal.accessRole && cal.accessRole !== 'none');
 
-                        calendarsPromise = fetch(calendarListUrl, {
-                            headers: {
-                                Authorization: "Bearer " + token
-                            }
-                        })
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error(`CalendarList API error: ${response.status} ${response.statusText}`);
-                            }
-                            return response.json();
-                        })
-                        .then(listData => {
-                            const allCalendars = listData.items || [];
-                            const selectedCalendars = allCalendars.filter(cal => cal.selected);
-                            const accessibleCalendars = selectedCalendars.filter(cal => cal.accessRole && cal.accessRole !== 'none');
+                        const calendarsToReturn = [...accessibleCalendars];
+                        const primaryCalendar = allCalendars.find(cal => cal.primary);
 
-                            // Always include the primary calendar
-                            const calendarsToReturn = [...accessibleCalendars];
-                            const primaryCalendar = allCalendars.find(cal => cal.primary);
+                        if (primaryCalendar && !calendarsToReturn.some(cal => cal.id === primaryCalendar.id)) {
+                            calendarsToReturn.unshift(primaryCalendar);
+                        }
 
-                            // Ensure the primary calendar is included regardless of the selected flag
-                            if (primaryCalendar && !calendarsToReturn.some(cal => cal.id === primaryCalendar.id)) {
-                                calendarsToReturn.unshift(primaryCalendar);
-                            }
-
-                            if (calendarsToReturn.length === 0) {
-                                return [ { id: 'primary' } ];
-                            }
-
-                            return calendarsToReturn.map(c => ({ id: c.id }));
-                        });
+                        if (calendarsToReturn.length === 0) {
+                            calendarsToFetch = [{ id: 'primary' }];
+                        } else {
+                            calendarsToFetch = calendarsToReturn.map(c => ({ id: c.id }));
+                        }
                     } else {
-                        // Use the selected calendars
-                        calendarsPromise = Promise.resolve(selectedCalendarIds.map(id => ({ id })));
+                        calendarsToFetch = selectedCalendarIds.map(id => ({ id }));
                     }
-
-                    calendarsPromise
-                .then(calendarsToFetch => {
 
                     // Set today's date range (use the previously calculated startOfDay/endOfDay)
                     const baseUrl = 'https://www.googleapis.com/calendar/v3/calendars';
@@ -222,28 +214,19 @@ function getCalendarEvents(targetDate = null) {
                         });
                     });
 
-
-                    return Promise.all(fetches);
+                    return Promise.all(fetches).then(results => ({ listData, results }));
                 })
-                .then(async (resultsPerCalendar) => {
-                    // Get the calendar information and add the color information to the events
+                .then(async ({ listData, results: resultsPerCalendar }) => {
+                    // Build color map from the already-fetched calendarList data
                     try {
-                        const calendarListUrl = `https://www.googleapis.com/calendar/v3/users/me/calendarList`;
-                        const calendarResponse = await fetch(calendarListUrl, {
-                            headers: { Authorization: "Bearer " + token }
-                        });
-                        
                         let calendarColors = {};
-                        if (calendarResponse.ok) {
-                            const calendarData = await calendarResponse.json();
-                            calendarData.items?.forEach(cal => {
-                                calendarColors[cal.id] = {
-                                    backgroundColor: cal.backgroundColor,
-                                    foregroundColor: cal.foregroundColor,
-                                    summary: cal.summary
-                                };
-                            });
-                        }
+                        listData.items?.forEach(cal => {
+                            calendarColors[cal.id] = {
+                                backgroundColor: cal.backgroundColor,
+                                foregroundColor: cal.foregroundColor,
+                                summary: cal.summary
+                            };
+                        });
                         
                         // Flatten the results and add the color information
                         const allEvents = [];
@@ -430,16 +413,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 });
             return true; // Indicates async response
             
-        case "checkAuth":
-            checkGoogleAuth()
-                .then(isAuthenticated => sendResponse({isAuthenticated}))
-                .catch(error => {
-                                    const detail = (error && (error.message || error.toString())) || "Authentication check error";
-                                    console.error("Authentication check error details:", error);
-                                    sendResponse({ error: detail, errorType: (error && error.name) || undefined });
-                                });
-            return true; // Indicates async response
-
         case "checkGoogleAuth":
             checkGoogleAuth()
                 .then(isAuthenticated => {
@@ -467,12 +440,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     .then(async () => {
                         // After authentication and calendar list fetch, sync reminders
                         await syncAllReminders();
-                        sendResponse({ success: true, token: token });
+                        sendResponse({ success: true });
                     })
                     .catch((error) => {
                         console.error("Calendar list initialization error:", error);
                         // Still return success as authentication worked
-                        sendResponse({ success: true, token: token });
+                        sendResponse({ success: true });
                     });
             });
             return true; // Indicates async response
