@@ -720,5 +720,13 @@
   "endDateMustBeLater": {
     "message": "End date must be on or after start date",
     "description": "Error when recurrence end date is before start date"
+  },
+  "whatsNewTitle": {
+    "message": "What's New",
+    "description": "Title of the What's New modal"
+  },
+  "whatsNewConfirm": {
+    "message": "Got it",
+    "description": "Confirm button in What's New modal"
   }
 }
