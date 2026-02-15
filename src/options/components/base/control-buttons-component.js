@@ -26,8 +26,6 @@ export class ControlButtonsComponent {
         whatsNewLink.href = '../whats-new/whats-new.html';
         whatsNewLink.target = '_blank';
         whatsNewLink.className = 'btn btn-outline-info';
-        whatsNewLink.setAttribute('data-localize', '__MSG_whatsNewTitle__');
-        whatsNewLink.textContent = "What's New";
         whatsNewLink.innerHTML = `<i class="fas fa-bullhorn me-1"></i><span data-localize="__MSG_whatsNewTitle__">What's New</span>`;
         container.appendChild(whatsNewLink);
 
