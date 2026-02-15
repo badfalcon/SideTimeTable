@@ -1,19 +1,7 @@
 /**
  * What's New - Standalone release notes page
  */
-import { RELEASE_NOTES } from '../lib/release-notes.js';
-
-function getCurrentLanguage() {
-    const storedLang = localStorage.getItem('sideTimeTableLang');
-    if (storedLang) {
-        return storedLang;
-    }
-    if (chrome.i18n && chrome.i18n.getUILanguage) {
-        const uiLang = chrome.i18n.getUILanguage().toLowerCase();
-        return uiLang.startsWith('ja') ? 'ja' : 'en';
-    }
-    return 'en';
-}
+import { RELEASE_NOTES, getCurrentLanguage } from '../lib/release-notes.js';
 
 function renderReleaseNotes() {
     const container = document.getElementById('release-notes-container');

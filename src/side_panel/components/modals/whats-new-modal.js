@@ -2,7 +2,7 @@
  * WhatsNewModal - Modal to display release notes and update highlights
  */
 import { ModalComponent } from './modal-component.js';
-import { RELEASE_NOTES, getUnseenReleaseNotes } from '../../../lib/release-notes.js';
+import { RELEASE_NOTES, getUnseenReleaseNotes, getCurrentLanguage } from '../../../lib/release-notes.js';
 import { StorageHelper } from '../../../lib/storage-helper.js';
 
 export class WhatsNewModal extends ModalComponent {
@@ -64,7 +64,7 @@ export class WhatsNewModal extends ModalComponent {
         }
 
         // Determine language
-        const lang = this._getCurrentLanguage();
+        const lang = getCurrentLanguage();
 
         // Build the release notes UI
         this._renderNotes(unseenNotes, lang);
@@ -131,26 +131,9 @@ export class WhatsNewModal extends ModalComponent {
      * Show the modal with all release notes (for browsing history)
      */
     showAll() {
-        const lang = this._getCurrentLanguage();
+        const lang = getCurrentLanguage();
         this._renderNotes(RELEASE_NOTES, lang);
         this.show();
-    }
-
-    /**
-     * Get the current UI language
-     * @returns {string} Language code ('en' or 'ja')
-     * @private
-     */
-    _getCurrentLanguage() {
-        const storedLang = localStorage.getItem('sideTimeTableLang');
-        if (storedLang) {
-            return storedLang;
-        }
-        if (chrome.i18n && chrome.i18n.getUILanguage) {
-            const uiLang = chrome.i18n.getUILanguage().toLowerCase();
-            return uiLang.startsWith('ja') ? 'ja' : 'en';
-        }
-        return 'en';
     }
 
     /**
