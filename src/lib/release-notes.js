@@ -10,12 +10,12 @@ export const RELEASE_NOTES = [
         date: '2026-02-13',
         highlights: {
             en: [
-                'Added "What\'s New" notification for update announcements',
+                'Added changelog and update notification system',
                 'Recurring events support (daily, weekly, monthly, weekdays)',
                 'Improved reminder sync with comprehensive support'
             ],
             ja: [
-                '更新通知（What\'s New）機能を追加',
+                '変更履歴と更新通知機能を追加',
                 '繰り返しイベント対応（毎日・毎週・毎月・平日）',
                 'リマインダー同期の改善と包括的サポート'
             ]

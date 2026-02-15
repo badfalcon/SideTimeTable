@@ -1,5 +1,5 @@
 /**
- * What's New - Standalone release notes page
+ * Changelog - Standalone release notes page
  */
 import { RELEASE_NOTES, getCurrentLanguage } from '../lib/release-notes.js';
 
