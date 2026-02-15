@@ -35,7 +35,8 @@ chrome.runtime.onInstalled.addListener(async () => {
 if (chrome.contextMenus) {
     chrome.contextMenus.onClicked.addListener((info) => {
         if (info.menuItemId === 'whatsNew') {
-            chrome.runtime.openOptionsPage();
+            const whatsNewUrl = chrome.runtime.getURL('src/whats-new/whats-new.html');
+            chrome.tabs.create({ url: whatsNewUrl });
         }
     });
 }

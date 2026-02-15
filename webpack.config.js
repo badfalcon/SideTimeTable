@@ -6,7 +6,8 @@ module.exports = {
   entry: {
     background: './src/background.js',
     side_panel: './src/side_panel/side_panel.js',
-    options: './src/options/options.js'
+    options: './src/options/options.js',
+    whats_new: './src/whats-new/whats-new.js'
   },
   output: {
     path: path.resolve(__dirname, 'dist'),

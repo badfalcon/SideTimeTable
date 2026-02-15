@@ -1,0 +1,34 @@
+.container {
+    max-width: 720px;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+}
+
+.version-section {
+    border-left: 3px solid #0d6efd;
+    padding-left: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.version-section:last-child {
+    margin-bottom: 0;
+}
+
+.version-section ul {
+    margin-bottom: 0;
+    padding-left: 1.2rem;
+}
+
+.version-section li {
+    margin-bottom: 0.25rem;
+    color: #555;
+}
+
+@media (max-width: 576px) {
+    body {
+        padding: 12px;
+    }
+}
