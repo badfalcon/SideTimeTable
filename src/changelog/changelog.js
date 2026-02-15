@@ -1,13 +1,11 @@
 /**
  * Changelog - Standalone release notes page
  */
-import { RELEASE_NOTES, getCurrentLanguage } from '../lib/release-notes.js';
+import { RELEASE_NOTES } from '../lib/release-notes.js';
 
-function renderReleaseNotes() {
+function renderReleaseNotes(lang) {
     const container = document.getElementById('release-notes-container');
     if (!container) return;
-
-    const lang = getCurrentLanguage();
 
     RELEASE_NOTES.forEach(entry => {
         const section = document.createElement('div');
@@ -46,7 +44,18 @@ function renderReleaseNotes() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // Localization
+    // Resolve language from chrome.storage.sync (same source as localize.js)
+    let lang = 'en';
+    if (window.getCurrentLanguageSetting && window.resolveLanguageCode) {
+        try {
+            const setting = await window.getCurrentLanguageSetting();
+            lang = window.resolveLanguageCode(setting);
+        } catch (error) {
+            console.warn('Language detection error:', error);
+        }
+    }
+
+    // Localize HTML elements (title, heading, description)
     if (window.localizeHtmlPageWithLang) {
         try {
             await window.localizeHtmlPageWithLang();
@@ -55,7 +64,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    renderReleaseNotes();
+    renderReleaseNotes(lang);
 
     // Show page
     document.body.style.opacity = '1';
