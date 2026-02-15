@@ -26,15 +26,6 @@ function resolveLanguageCode(languageSetting) {
     return languageSetting;
 }
 
-// Get the localized text according to the language settings
-function getMessageWithLang(key) {
-    const lang = localStorage.getItem('sideTimeTableLang') || (chrome.i18n && chrome.i18n.getUILanguage ? chrome.i18n.getUILanguage().slice(0,2) : 'ja');
-    // According to the manifest/_locales spec, chrome.i18n.getMessage switches automatically,
-    // but if the manifest's default_locale is ja, then en or en_US will use en
-    // Get only by the key here (chrome.i18n.getMessage switches automatically)
-    return chrome.i18n.getMessage(key) || '';
-}
-
 // Localize the HTML content (reflecting the language settings)
 async function localizeHtmlPageWithLang() {
     try {
@@ -107,6 +98,5 @@ async function localizeWithLanguage(targetLang) {
 // Export as the global functions (maintain the legacy format)
 window.getCurrentLanguageSetting = getCurrentLanguageSetting;
 window.resolveLanguageCode = resolveLanguageCode;
-window.getMessageWithLang = getMessageWithLang;
 window.localizeHtmlPageWithLang = localizeHtmlPageWithLang;
 window.localizeWithLanguage = localizeWithLanguage;

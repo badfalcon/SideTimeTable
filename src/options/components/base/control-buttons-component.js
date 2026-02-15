@@ -21,6 +21,14 @@ export class ControlButtonsComponent {
 
         container.appendChild(this.resetButton);
 
+        // Changelog link
+        const changelogLink = document.createElement('a');
+        changelogLink.href = '../changelog/changelog.html';
+        changelogLink.target = '_blank';
+        changelogLink.className = 'btn btn-outline-info';
+        changelogLink.innerHTML = `<i class="fas fa-list-ul me-1"></i><span data-localize="__MSG_changelogTitle__">Changelog</span>`;
+        container.appendChild(changelogLink);
+
         this.element = container;
         this._setupEventListeners();
 

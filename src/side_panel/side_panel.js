@@ -8,7 +8,8 @@ import {
     TimelineComponent,
     LocalEventModal,
     GoogleEventModal,
-    AlertModal
+    AlertModal,
+    WhatsNewModal
 } from './components/index.js';
 
 import { EventLayoutManager } from './time-manager.js';
@@ -23,6 +24,7 @@ import {
 import { isToday } from '../lib/time-utils.js';
 import { isDemoMode, setDemoMode } from '../lib/demo-data.js';
 import { AlarmManager } from '../lib/alarm-manager.js';
+import { StorageHelper } from '../lib/storage-helper.js';
 
 // The reload message listener
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -46,6 +48,7 @@ class SidePanelUIController {
         this.localEventModal = null;
         this.googleEventModal = null;
         this.alertModal = null;
+        this.whatsNewModal = null;
 
         // The state management
         this.currentDate = new Date();
@@ -115,7 +118,8 @@ class SidePanelUIController {
         const existingModals = [
             'localEventDialog',
             'googleEventDialog',
-            'alertModal'
+            'alertModal',
+            'whatsNewModal'
         ];
 
         existingModals.forEach(modalId => {
@@ -169,12 +173,15 @@ class SidePanelUIController {
 
         this.alertModal = new AlertModal();
 
+        this.whatsNewModal = new WhatsNewModal();
+
         // Register with the component manager
         this.componentManager.register('header', this.headerComponent);
         this.componentManager.register('timeline', this.timelineComponent);
         this.componentManager.register('localEventModal', this.localEventModal);
         this.componentManager.register('googleEventModal', this.googleEventModal);
         this.componentManager.register('alertModal', this.alertModal);
+        this.componentManager.register('whatsNewModal', this.whatsNewModal);
 
         // Add to the DOM
         const container = document.getElementById('side-panel-container') || document.body;
@@ -183,6 +190,7 @@ class SidePanelUIController {
         this.localEventModal.appendTo(container);
         this.googleEventModal.appendTo(container);
         this.alertModal.appendTo(container);
+        this.whatsNewModal.appendTo(container);
 
         // Initialize all the components
         this.componentManager.initializeAll();
@@ -331,6 +339,32 @@ class SidePanelUIController {
 
         await this._loadEventsForCurrentDate();
         this._scrollToAppropriateTime();
+
+        // Check for update notifications
+        await this._checkForUpdateNotification();
+    }
+
+    /**
+     * Check if there are unseen updates and show What's New modal
+     * @private
+     */
+    async _checkForUpdateNotification() {
+        try {
+            const currentVersion = chrome.runtime.getManifest().version;
+            const data = await StorageHelper.get(['lastSeenVersion'], {});
+
+            if (!data.lastSeenVersion) {
+                // First install - store current version without showing modal
+                await StorageHelper.set({ lastSeenVersion: currentVersion });
+                return;
+            }
+
+            if (data.lastSeenVersion !== currentVersion) {
+                this.whatsNewModal.showForVersion(data.lastSeenVersion);
+            }
+        } catch (error) {
+            console.warn('Failed to check for update notification:', error);
+        }
     }
 
     /**
