@@ -2,7 +2,7 @@
  * WhatsNewModal - Modal to display release notes and update highlights
  */
 import { ModalComponent } from './modal-component.js';
-import { RELEASE_NOTES, getUnseenReleaseNotes, getCurrentLanguage } from '../../../lib/release-notes.js';
+import { RELEASE_NOTES, getUnseenReleaseNotes } from '../../../lib/release-notes.js';
 import { StorageHelper } from '../../../lib/storage-helper.js';
 
 export class WhatsNewModal extends ModalComponent {
@@ -53,7 +53,7 @@ export class WhatsNewModal extends ModalComponent {
      * Show the modal with unseen release notes
      * @param {string|null} lastSeenVersion - The last version the user saw
      */
-    showForVersion(lastSeenVersion) {
+    async showForVersion(lastSeenVersion) {
         const currentVersion = chrome.runtime.getManifest().version;
         const unseenNotes = getUnseenReleaseNotes(lastSeenVersion, currentVersion);
 
@@ -63,12 +63,8 @@ export class WhatsNewModal extends ModalComponent {
             return;
         }
 
-        // Determine language
-        const lang = getCurrentLanguage();
-
-        // Build the release notes UI
+        const lang = await this._resolveLanguage();
         this._renderNotes(unseenNotes, lang);
-
         this.show();
     }
 
@@ -130,10 +126,25 @@ export class WhatsNewModal extends ModalComponent {
     /**
      * Show the modal with all release notes (for browsing history)
      */
-    showAll() {
-        const lang = getCurrentLanguage();
+    async showAll() {
+        const lang = await this._resolveLanguage();
         this._renderNotes(RELEASE_NOTES, lang);
         this.show();
+    }
+
+    /**
+     * Resolve language using chrome.storage.sync via localize.js globals
+     * @returns {Promise<string>} Language code ('en' or 'ja')
+     * @private
+     */
+    async _resolveLanguage() {
+        try {
+            const setting = await window.getCurrentLanguageSetting?.() || 'auto';
+            return window.resolveLanguageCode?.(setting) || 'en';
+        } catch (error) {
+            console.warn('Language detection error:', error);
+            return 'en';
+        }
     }
 
     /**
