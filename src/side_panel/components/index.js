@@ -16,6 +16,7 @@ export { ModalComponent } from './modals/modal-component.js';
 export { LocalEventModal } from './modals/local-event-modal.js';
 export { GoogleEventModal } from './modals/google-event-modal.js';
 export { AlertModal } from './modals/alert-modal.js';
+export { WhatsNewModal } from './modals/whats-new-modal.js';
 
 /**
  * ComponentManager - The side panel component management class

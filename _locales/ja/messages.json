@@ -720,5 +720,33 @@
   "endDateMustBeLater": {
     "message": "終了日は開始日以降に設定してください",
     "description": "繰り返し終了日が開始日より前の場合のエラー"
+  },
+  "whatsNewTitle": {
+    "message": "更新情報",
+    "description": "What's Newモーダルのタイトル"
+  },
+  "whatsNewConfirm": {
+    "message": "OK",
+    "description": "What's Newモーダルの確認ボタン"
+  },
+  "whatsNewDescription": {
+    "message": "最近のアップデートと新機能。",
+    "description": "オプションページのWhat's Newカードの説明"
+  },
+  "whatsNewContextMenu": {
+    "message": "更新情報",
+    "description": "右クリックメニューのWhat's New項目"
+  },
+  "changelogTitle": {
+    "message": "変更履歴",
+    "description": "変更履歴ページのタイトル"
+  },
+  "changelogDescription": {
+    "message": "バージョン履歴とリリースノート。",
+    "description": "変更履歴ページの説明"
+  },
+  "changelogContextMenu": {
+    "message": "変更履歴",
+    "description": "右クリックメニューの変更履歴項目"
   }
 }
