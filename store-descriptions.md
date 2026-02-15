@@ -16,6 +16,7 @@ SideTimeTableは、Chromeのサイドパネルで今日の予定を素早く確�
 • サイドパネル表示: ワンクリックで今日のスケジュールをサイドパネルに表示
 • Googleカレンダー連携: 複数のGoogleカレンダーを同期し、個人・チーム予定を一元管理
 • ローカルイベント管理: Google以外の予定も直接追加・編集可能
+• 繰り返しイベント: 毎日・毎週・毎月・平日の繰り返し予定を簡単作成
 • 高度なレイアウト: 重複する予定も見やすく自動配置
 • リマインダー通知: 予定の◯分前にデスクトップ通知でお知らせ（通知タイミングは1/3/5/10/15/30/60分から選択可能）
 • Google予定の自動リマインド: 連携中のGoogle予定からリマインダーを自動作成（オン/オフ切り替え可）
@@ -60,6 +61,7 @@ SideTimeTable is a Chrome extension that lets you quickly view and manage today'
 • Side Panel Display: View today's schedule in the side panel with one click
 • Google Calendar Integration: Sync multiple Google Calendars to manage personal and team schedules in one place
 • Local Event Management: Add and edit non-Google events directly
+• Recurring Events: Easily create daily, weekly, monthly, or weekday recurring events
 • Advanced Layout: Automatic smart positioning for overlapping events
 • Reminder Notifications: Get desktop alerts minutes before events (choose from 1/3/5/10/15/30/60 minutes)
 • Auto-reminders for Google Events: Automatically create reminders from your connected Google Calendars (toggle on/off)
