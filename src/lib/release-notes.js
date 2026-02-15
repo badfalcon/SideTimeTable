@@ -162,12 +162,48 @@ export const RELEASE_NOTES = [
             en: [
                 'Handle events with identical start and end times (extend to 15 min)',
                 'Keyboard shortcut support for opening side panel (Ctrl+Shift+Y)',
-                'Skip declined and cancelled events in calendar view'
+                'Skip declined and cancelled events in calendar view',
+                'Styled links in Google event details'
             ],
             ja: [
                 '開始・終了時刻が同じイベントの表示対応（15分に拡張）',
                 'サイドパネルを開くキーボードショートカット（Ctrl+Shift+Y）',
-                '辞退済み・キャンセル済みイベントの非表示化'
+                '辞退済み・キャンセル済みイベントの非表示化',
+                'Googleイベント詳細のリンクスタイル改善'
+            ]
+        }
+    },
+    {
+        version: '1.4.1',
+        date: '2025-08-18',
+        highlights: {
+            en: [
+                'Initial release',
+                'Side panel interface for daily event management',
+                'Google Calendar integration with OAuth2 authentication',
+                'Multi-calendar support with color preservation',
+                'Local event creation and management',
+                'Time-based event layout with overlap resolution',
+                'Business hours highlighting with break time support',
+                'Current time line indicator',
+                'Date navigation (previous/next day)',
+                'Options page for settings management',
+                'Internationalization support (English / Japanese)',
+                'Google Meet link integration'
+            ],
+            ja: [
+                '初回リリース',
+                'サイドパネルによるデイリーイベント管理',
+                'OAuth2認証によるGoogleカレンダー連携',
+                '複数カレンダー対応（カラー保持）',
+                'ローカルイベントの作成・管理',
+                '時間ベースのイベントレイアウト（重複解決）',
+                '勤務時間のハイライト表示（休憩時間対応）',
+                '現在時刻インジケーター',
+                '日付ナビゲーション（前日/翌日）',
+                '設定管理用オプションページ',
+                '多言語対応（英語/日本語）',
+                'Google Meetリンク連携'
             ]
         }
     }
