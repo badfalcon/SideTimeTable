@@ -16,7 +16,6 @@ export class HeaderComponent extends Component {
         this.onDateChange = options.onDateChange || null;
         this.onSettingsClick = options.onSettingsClick || null;
         this.onSyncClick = options.onSyncClick || null;
-        this.onWhatsNewClick = options.onWhatsNewClick || null;
 
         // UI elements
         this.addEventButton = null;
@@ -24,7 +23,6 @@ export class HeaderComponent extends Component {
         this.nextDateButton = null;
         this.dateInput = null;
         this.syncButton = null;
-        this.whatsNewButton = null;
         this.settingsButton = null;
 
         // Sync state
@@ -52,29 +50,16 @@ export class HeaderComponent extends Component {
         // Date navigation
         const dateNavigation = this._createDateNavigation();
 
-        // Right-side buttons group (what's new + settings)
-        const rightButtons = document.createElement('div');
-        rightButtons.className = 'right-buttons';
-
-        // What's New button
-        this.whatsNewButton = document.createElement('i');
-        this.whatsNewButton.className = 'fas fa-gift whats-new-icon';
-        this.whatsNewButton.id = 'whatsNewButton';
-        this.whatsNewButton.setAttribute('data-localize-title', '__MSG_whatsNewTooltip__');
-
         // Settings button
         this.settingsButton = document.createElement('i');
         this.settingsButton.className = 'fas fa-cog settings-icon';
         this.settingsButton.id = 'settingsIcon';
         this.settingsButton.setAttribute('data-localize-title', '__MSG_settings__');
 
-        rightButtons.appendChild(this.whatsNewButton);
-        rightButtons.appendChild(this.settingsButton);
-
         // Add the elements to the header
         header.appendChild(actionButtons);
         header.appendChild(dateNavigation);
-        header.appendChild(rightButtons);
+        header.appendChild(this.settingsButton);
 
         wrapper.appendChild(header);
 
@@ -175,13 +160,6 @@ export class HeaderComponent extends Component {
         // Sync button
         this.addEventListener(this.syncButton, 'click', () => {
             this._handleSyncClick();
-        });
-
-        // What's New button
-        this.addEventListener(this.whatsNewButton, 'click', () => {
-            if (this.onWhatsNewClick) {
-                this.onWhatsNewClick();
-            }
         });
 
         // Settings button

@@ -729,8 +729,12 @@
     "message": "Got it",
     "description": "Confirm button in What's New modal"
   },
-  "whatsNewTooltip": {
+  "whatsNewDescription": {
+    "message": "Recent updates and new features.",
+    "description": "Subtitle for What's New card in options page"
+  },
+  "whatsNewContextMenu": {
     "message": "What's New",
-    "description": "Tooltip for What's New button in header"
+    "description": "Context menu item for What's New"
   }
 }
