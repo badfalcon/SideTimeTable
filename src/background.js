@@ -22,19 +22,23 @@ chrome.runtime.onInstalled.addListener(async () => {
     await syncAllReminders();
 
     // Create context menu for "What's New"
-    chrome.contextMenus.create({
-        id: 'whatsNew',
-        title: chrome.i18n.getMessage('whatsNewContextMenu') || "What's New",
-        contexts: ['action']
-    });
+    if (chrome.contextMenus) {
+        chrome.contextMenus.create({
+            id: 'whatsNew',
+            title: chrome.i18n.getMessage('whatsNewContextMenu') || "What's New",
+            contexts: ['action']
+        });
+    }
 });
 
 // Context menu click handler
-chrome.contextMenus.onClicked.addListener((info) => {
-    if (info.menuItemId === 'whatsNew') {
-        chrome.runtime.openOptionsPage();
-    }
-});
+if (chrome.contextMenus) {
+    chrome.contextMenus.onClicked.addListener((info) => {
+        if (info.menuItemId === 'whatsNew') {
+            chrome.runtime.openOptionsPage();
+        }
+    });
+}
 
 // Handler for when the browser/profile starts
 chrome.runtime.onStartup.addListener(async () => {
