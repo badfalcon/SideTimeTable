@@ -14,12 +14,15 @@ import {
 import { EventLayoutManager } from './time-manager.js';
 import { GoogleEventManager, LocalEventManager } from './event-handlers.js';
 import {
-    generateTimeList, loadSettings, logError, RECURRENCE_TYPES,
+    generateTimeList, loadSettings, logError,
     loadLocalEventsForDate, saveLocalEventsForDate,
     loadRecurringEvents, saveRecurringEvents,
     addRecurringEventException, deleteRecurringEvent,
     migrateEventDataToLocal
 } from '../lib/utils.js';
+import { RECURRENCE_TYPES } from '../lib/constants.js';
+import { formatDateString } from '../lib/format-utils.js';
+import { eventBus, Events } from '../lib/event-bus.js';
 import { isToday } from '../lib/time-utils.js';
 import { isDemoMode, setDemoMode } from '../lib/demo-data.js';
 import { AlarmManager } from '../lib/alarm-manager.js';
@@ -161,11 +164,17 @@ class SidePanelUIController {
         // The modal components
         this.localEventModal = new LocalEventModal({
             onSave: (eventData, mode) => this._handleSaveLocalEvent(eventData, mode),
-            onDelete: (event) => this._handleDeleteLocalEvent(event),
-            onCancel: () => this._handleCancelLocalEvent()
+            onDelete: (event, deleteType) => this._handleDeleteLocalEvent(event, deleteType),
+            onCancel: () => this._handleCancelLocalEvent(),
+            onDeleteSeries: (event) => this._handleDeleteLocalEvent(event, 'all')
         });
 
         this.googleEventModal = new GoogleEventModal();
+
+        // Listen for EventBus events from event-handlers.js
+        eventBus.on(Events.SHOW_GOOGLE_EVENT, (event) => {
+            this.googleEventModal.showEvent(event);
+        });
 
         this.alertModal = new AlertModal();
 
@@ -238,14 +247,12 @@ class SidePanelUIController {
 
         // Initialize the Google event manager
         this.googleEventManager = new GoogleEventManager(
-            null, // timeTableManager not used so null
             this.timelineComponent.getGoogleEventsContainer(),
             this.eventLayoutManager
         );
 
         // Initialize the local event manager
         this.localEventManager = new LocalEventManager(
-            null, // timeTableManager not used so null
             this.timelineComponent.getLocalEventsContainer(),
             this.eventLayoutManager
         );
@@ -680,15 +687,8 @@ class SidePanelUIController {
      * @private
      */
     getCurrentDateString() {
-        // Use the currently displayed date from timeline, or today if not set
         const targetDate = this.currentDate || new Date();
-
-        // Use local timezone to avoid date shifting issues
-        const year = targetDate.getFullYear();
-        const month = String(targetDate.getMonth() + 1).padStart(2, '0');
-        const day = String(targetDate.getDate()).padStart(2, '0');
-
-        return `${year}-${month}-${day}`;
+        return formatDateString(targetDate);
     }
 
     /**

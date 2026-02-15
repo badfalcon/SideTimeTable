@@ -1,48 +1,21 @@
 /**
  * SideTimeTable - Event Management Module
  *
- * This file manages the Google Calendar events and the local events.
+ * Manages Google Calendar events and local events display.
  */
 
-import {
-    loadLocalEvents,
-    loadLocalEventsForDate,
-    loadSettings,
-    logError,
-    TIME_CONSTANTS,
-    RECURRENCE_TYPES
-} from '../lib/utils.js';
-import {createTimeOnDate} from '../lib/time-utils.js';
-import {getDemoEvents, getDemoLocalEvents, isDemoMode} from '../lib/demo-data.js';
-
-/**
- * Constants for event styling and layout
- */
-const EVENT_STYLING = {
-    DURATION_THRESHOLDS: {
-        MICRO: 15,     // 15 minutes or less
-        COMPACT: 30    // 30 minutes or less
-    },
-    HEIGHT: {
-        MIN_HEIGHT: 10,      // Minimum clickable height in pixels
-        PADDING_OFFSET: 10   // Padding to subtract from normal events
-    },
-    CSS_CLASSES: {
-        MICRO: 'micro',
-        COMPACT: 'compact'
-    },
-    DEFAULT_VALUES: {
-        ZERO_DURATION_MINUTES: 15,    // Default duration for zero-duration events
-        INITIAL_WIDTH: 200,           // Default width before layout calculation
-        INITIAL_LEFT_OFFSET: 40       // Default left position (30px time labels + 5px margin)
-    }
-};
+import { loadLocalEvents, loadLocalEventsForDate, loadSettings, logError } from '../lib/utils.js';
+import { TIME_CONSTANTS, EVENT_STYLING, RECURRENCE_TYPES } from '../lib/constants.js';
+import { createTimeOnDate } from '../lib/time-utils.js';
+import { getDemoEvents, getDemoLocalEvents, isDemoMode } from '../lib/demo-data.js';
+import { eventBus, Events } from '../lib/event-bus.js';
+import { getLocalePreferences, formatTimeForDisplay, formatTimeRange, formatTimeFromDate } from '../lib/format-utils.js';
 
 /**
  * Apply duration-based styling to event element
  * @param {HTMLElement} eventDiv - The event element
  * @param {number} duration - Duration in minutes
- * @param {string} baseClasses - Base CSS classes (e.g., 'event google-event')
+ * @param {string} baseClasses - Base CSS classes
  */
 function applyDurationBasedStyling(eventDiv, duration, baseClasses) {
     let sizeClass = '';
@@ -52,7 +25,7 @@ function applyDurationBasedStyling(eventDiv, duration, baseClasses) {
         eventDiv.style.height = `${Math.max(duration, EVENT_STYLING.HEIGHT.MIN_HEIGHT)}px`;
     } else if (duration <= EVENT_STYLING.DURATION_THRESHOLDS.COMPACT) {
         sizeClass = EVENT_STYLING.CSS_CLASSES.COMPACT;
-        eventDiv.style.height = `${duration}px`; // Don't subtract padding for short events
+        eventDiv.style.height = `${duration}px`;
     } else {
         eventDiv.style.height = `${duration - EVENT_STYLING.HEIGHT.PADDING_OFFSET}px`;
     }
@@ -61,63 +34,65 @@ function applyDurationBasedStyling(eventDiv, duration, baseClasses) {
 }
 
 /**
- * GoogleEventManager - The Google event management class
+ * Set initial width and position on an event element
+ * @param {HTMLElement} eventDiv - The event element
+ * @param {Object|null} eventLayoutManager - The layout manager
+ */
+function applyInitialLayout(eventDiv, eventLayoutManager) {
+    const initialWidth = eventLayoutManager ? eventLayoutManager.maxWidth : EVENT_STYLING.DEFAULT_VALUES.INITIAL_WIDTH;
+    eventDiv.style.width = `${initialWidth}px`;
+    eventDiv.style.left = `${EVENT_STYLING.DEFAULT_VALUES.INITIAL_LEFT_OFFSET}px`;
+}
+
+/**
+ * GoogleEventManager - Google event management class
  */
 export class GoogleEventManager {
     /**
-     * Constructor
-     * @param {Object} timeTableManager - An instance of the timetable manager
-     * @param {HTMLElement} googleEventsDiv - The DOM element for displaying the Google events
+     * @param {HTMLElement} googleEventsDiv - The DOM element for displaying Google events
      * @param {Object} eventLayoutManager - An instance of the event layout manager
      */
-    constructor(timeTableManager, googleEventsDiv, eventLayoutManager) {
+    constructor(googleEventsDiv, eventLayoutManager) {
         this.googleEventsDiv = googleEventsDiv;
         this.eventLayoutManager = eventLayoutManager;
-        this.lastFetchDate = null; // The last date when the API was called
-        this.currentFetchPromise = null; // The currently executing fetch Promise
+        this.lastFetchDate = null;
+        this.currentFetchPromise = null;
     }
 
     /**
      * Fetch the events from Google Calendar
-     * @param {Date} targetDate - The target date (today if omitted)
+     * @param {Date} targetDate - The target date
      */
     async fetchEvents(targetDate = null) {
-        // Dynamically check the current settings
         const settings = await loadSettings();
-        const isGoogleIntegrated = settings.googleIntegrated === true;
-
-        if (!isGoogleIntegrated) {
+        if (settings.googleIntegrated !== true) {
             return Promise.resolve();
         }
 
-        // Use mock data in demo mode
         if (isDemoMode()) {
             return this._processDemoEvents();
         }
 
-        // If there's a request in progress, return it (prevent duplicates)
         if (this.currentFetchPromise) {
             return this.currentFetchPromise;
         }
 
-        // Check for the duplicate call restriction on the same date
         const targetDay = targetDate || new Date();
-        const targetDateStr = targetDay.toDateString(); // Compare by the date string
+        const targetDateStr = targetDay.toDateString();
 
         if (this.lastFetchDate === targetDateStr && this.currentFetchPromise) {
-            return this.currentFetchPromise; // Return the existing Promise
+            return this.currentFetchPromise;
         }
 
         this.lastFetchDate = targetDateStr;
 
-        // Fetch the events (use the Google colors directly)
         this.currentFetchPromise = new Promise((resolve, reject) => {
-            const requestId = `req-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+            const requestId = `req-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
             const message = { action: "getEvents", requestId };
             if (targetDate) {
                 message.targetDate = targetDate.toISOString();
             }
-            
+
             chrome.runtime.sendMessage(message, (response) => {
                 if (chrome.runtime.lastError) {
                     reject(chrome.runtime.lastError);
@@ -127,18 +102,8 @@ export class GoogleEventManager {
             });
         })
             .then(async response => {
-                // Clear the previous display
                 this.googleEventsDiv.innerHTML = '';
-
-                // Remove only the Google events from the layout manager
-                if (this.eventLayoutManager && this.eventLayoutManager.events) {
-                    const events = [...this.eventLayoutManager.events];
-                    events.forEach(event => {
-                        if (event && event.type === 'google') {
-                            this.eventLayoutManager.removeEvent(event.id);
-                        }
-                    });
-                }
+                this._removeGoogleEventsFromLayout();
 
                 if (!response) {
                     logError('Google event fetch', 'No response');
@@ -156,14 +121,12 @@ export class GoogleEventManager {
                     return;
                 }
 
-                // Check the existence of the events property
                 if (!response.events || !Array.isArray(response.events) || response.events.length === 0) {
                     return;
                 }
 
                 await this._processEvents(response.events);
 
-                // Calculate and apply the event layout
                 if (this.eventLayoutManager && typeof this.eventLayoutManager.calculateLayout === 'function') {
                     this.eventLayoutManager.calculateLayout();
                 }
@@ -172,7 +135,6 @@ export class GoogleEventManager {
                 logError('Google event fetch exception', error);
             })
             .finally(() => {
-                // Clear the Promise when the request completes
                 this.currentFetchPromise = null;
             });
 
@@ -180,27 +142,31 @@ export class GoogleEventManager {
     }
 
     /**
+     * Remove Google events from the layout manager
+     * @private
+     */
+    _removeGoogleEventsFromLayout() {
+        if (this.eventLayoutManager && this.eventLayoutManager.events) {
+            const events = [...this.eventLayoutManager.events];
+            events.forEach(event => {
+                if (event && event.type === 'google') {
+                    this.eventLayoutManager.removeEvent(event.id);
+                }
+            });
+        }
+    }
+
+    /**
      * Process and display demo events
      * @private
      */
     async _processDemoEvents() {
-        // Clear previous display
         this.googleEventsDiv.innerHTML = '';
+        this._removeGoogleEventsFromLayout();
 
-        // Remove only Google events from layout manager
-        const events = [...this.eventLayoutManager.events];
-        events.forEach(event => {
-            if (event && event.type === 'google') {
-                this.eventLayoutManager.removeEvent(event.id);
-            }
-        });
-
-        // Get the demo events
         const demoEvents = await getDemoEvents();
-
         await this._processEvents(demoEvents);
 
-        // Calculate and apply event layout
         this.eventLayoutManager.calculateLayout();
     }
 
@@ -220,8 +186,7 @@ export class GoogleEventManager {
                     case 'outOfOffice':
                         continue;
                     case 'default':
-                        const uniqueEvent = { ...event, uniqueId };
-                        await this._createGoogleEventElement(uniqueEvent);
+                        await this._createGoogleEventElement({ ...event, uniqueId });
                         break;
                     default:
                 }
@@ -231,13 +196,11 @@ export class GoogleEventManager {
         }
     }
 
-
     /**
      * Create a Google event element
      * @private
      */
     async _createGoogleEventElement(event) {
-        // Skip all-day events
         if (event.start.date || event.end.date) {
             return;
         }
@@ -249,56 +212,37 @@ export class GoogleEventManager {
         const startDate = new Date(event.start.dateTime || event.start.date);
         let endDate = new Date(event.end.dateTime || event.end.date);
 
-        // If the start and end times are the same, treat as a default duration appointment
         if (startDate.getTime() >= endDate.getTime()) {
             endDate = new Date(startDate.getTime() + EVENT_STYLING.DEFAULT_VALUES.ZERO_DURATION_MINUTES * 60 * 1000);
         }
 
-        // Add time information to data attributes
         eventDiv.dataset.startTime = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         eventDiv.dataset.endTime = endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-        // Save the event detail data
         eventDiv.dataset.description = event.description || '';
         eventDiv.dataset.location = event.location || '';
         eventDiv.dataset.hangoutLink = event.hangoutLink || '';
 
-        // Add the click event (using the new modal component)
+        // Use EventBus instead of window.sidePanelController
         eventDiv.addEventListener('click', () => {
-            // Get googleEventModal from parent SidePanelUIController
-            const sidePanelController = window.sidePanelController;
-            if (sidePanelController && sidePanelController.googleEventModal) {
-                sidePanelController.googleEventModal.showEvent(event);
-            }
+            eventBus.emit(Events.SHOW_GOOGLE_EVENT, event);
         });
 
-        // Calculate position in the 24-hour coordinate system (convert minutes from 0:00 to pixels)
-        const startOffset = (startDate.getHours() * 60 + startDate.getMinutes());
+        const startOffset = startDate.getHours() * 60 + startDate.getMinutes();
         const duration = (endDate - startDate) / TIME_CONSTANTS.MINUTE_MILLIS;
 
-        // Apply duration-based styling
         applyDurationBasedStyling(eventDiv, duration, 'event google-event');
-
         eventDiv.style.top = `${startOffset}px`;
+        applyInitialLayout(eventDiv, this.eventLayoutManager);
 
-        // Set the initial width and position to prevent visible resize during layout calculation
-        // This will be overridden by EventLayoutManager, but prevents initial flash
-        const initialWidth = this.eventLayoutManager ? this.eventLayoutManager.maxWidth : EVENT_STYLING.DEFAULT_VALUES.INITIAL_WIDTH;
-        eventDiv.style.width = `${initialWidth}px`;
-        eventDiv.style.left = `${EVENT_STYLING.DEFAULT_VALUES.INITIAL_LEFT_OFFSET}px`;
-
-        // Apply the Google colors directly
         if (event.calendarBackgroundColor) {
             eventDiv.style.backgroundColor = event.calendarBackgroundColor;
             eventDiv.style.color = event.calendarForegroundColor;
         }
-        
-        // Set the locale-aware time display asynchronously (with attendee information)
-        await this._setEventContentWithLocale(eventDiv, startDate, event.summary, event);
+
+        await this._setEventContentWithLocale(eventDiv, startDate, event.summary);
 
         this.googleEventsDiv.appendChild(eventDiv);
 
-        // Register with the event layout manager
         const eventId = event.uniqueId || event.id || `google-${Date.now()}-${Math.random()}`;
         if (this.eventLayoutManager && typeof this.eventLayoutManager.registerEvent === 'function') {
             this.eventLayoutManager.registerEvent({
@@ -313,44 +257,16 @@ export class GoogleEventManager {
         }
     }
 
-
     /**
      * Set event content with locale-aware time display
-     * @param {HTMLElement} eventDiv - The event element
-     * @param {Date} startDate - The start time
-     * @param {string} summary - The event title
-     * @param {Object} event - The full event information
      * @private
      */
-    async _setEventContentWithLocale(eventDiv, startDate, summary, event) {
-        // Resolve locale and time format in parallel
-        const [locale, timeFormat] = await Promise.all([
-            typeof window.getCurrentLocale === 'function' ? window.getCurrentLocale() : Promise.resolve('en'),
-            typeof window.getTimeFormatPreference === 'function' ? window.getTimeFormatPreference() : Promise.resolve('24h')
-        ]);
-
-        // Build HH:mm
-        const startHours = String(startDate.getHours()).padStart(2, '0');
-        const startMinutes = String(startDate.getMinutes()).padStart(2, '0');
-        const timeString = `${startHours}:${startMinutes}`;
-
-        // Format using minimal API (with safe fallbacks)
-        let formattedTime;
-        if (typeof window.formatTime === 'function') {
-            formattedTime = window.formatTime(timeString, { format: timeFormat, locale });
-        } else if (typeof window.formatTimeByFormat === 'function') {
-            formattedTime = window.formatTimeByFormat(timeString, timeFormat, locale);
-        } else {
-            formattedTime = window.formatTimeForLocale(timeString, locale);
-        }
-
-        // Display time and title without attendance status
-        const displayText = `${formattedTime} - ${summary}`;
-
-        eventDiv.textContent = displayText;
+    async _setEventContentWithLocale(eventDiv, startDate, summary) {
+        const { locale, timeFormat } = await getLocalePreferences();
+        const timeString = formatTimeFromDate(startDate);
+        const formattedTime = formatTimeForDisplay(timeString, { locale, format: timeFormat });
+        eventDiv.textContent = `${formattedTime} - ${summary}`;
     }
-
-
 }
 
 /**
@@ -358,23 +274,19 @@ export class GoogleEventManager {
  */
 export class LocalEventManager {
     /**
-     * Constructor
-     * @param {Object} timeTableManager - An instance of the timetable manager
      * @param {HTMLElement} localEventsDiv - The DOM element for displaying local events
      * @param {Object} eventLayoutManager - An instance of the event layout manager
      */
-    constructor(timeTableManager, localEventsDiv, eventLayoutManager) {
-        this.timeTableManager = timeTableManager;
+    constructor(localEventsDiv, eventLayoutManager) {
         this.localEventsDiv = localEventsDiv;
         this.eventLayoutManager = eventLayoutManager;
-        this.currentTargetDate = new Date(); // The currently displayed date
-        this.onEventClick = null; // The callback for event clicks
+        this.currentTargetDate = new Date();
+        this.onEventClick = null;
     }
-
 
     /**
      * Set event click callback
-     * @param {Function} callback - The callback function for event clicks
+     * @param {Function} callback
      */
     setEventClickCallback(callback) {
         this.onEventClick = callback;
@@ -382,18 +294,14 @@ export class LocalEventManager {
 
     /**
      * Load local events
-     * @param {Date} targetDate - The target date (today if omitted)
+     * @param {Date} targetDate
      */
     async loadLocalEvents(targetDate = null) {
-        // Update the target date
         this.currentTargetDate = targetDate || new Date();
-        
-        this.localEventsDiv.innerHTML = ''; // Clear the previous display
+        this.localEventsDiv.innerHTML = '';
 
-        // Use mock data in demo mode
         if (isDemoMode()) {
             const demoEvents = await getDemoLocalEvents();
-
             for (const event of demoEvents) {
                 try {
                     const eventDiv = await this._createEventDiv(event);
@@ -406,9 +314,9 @@ export class LocalEventManager {
         }
 
         try {
-            const events = targetDate ?
-                await loadLocalEventsForDate(targetDate) :
-                await loadLocalEvents();
+            const events = targetDate
+                ? await loadLocalEventsForDate(targetDate)
+                : await loadLocalEvents();
 
             for (const event of events) {
                 try {
@@ -433,43 +341,28 @@ export class LocalEventManager {
         eventDiv.className = 'event local-event';
         eventDiv.title = title;
 
-        // Set the time on the target date
         const [startHours, startMinutes] = startTime.split(':');
         const [endHours, endMinutes] = endTime.split(':');
-        
+
         const startDate = createTimeOnDate(this.currentTargetDate, parseInt(startHours), parseInt(startMinutes));
         const endDate = createTimeOnDate(this.currentTargetDate, parseInt(endHours), parseInt(endMinutes));
 
-        // Add time information to data attributes
         eventDiv.dataset.startTime = startTime;
         eventDiv.dataset.endTime = endTime;
 
-        // Calculate position in 24-hour coordinate system (convert minutes from 0:00 to pixels)
-        const startOffset = (startDate.getHours() * 60 + startDate.getMinutes());
+        const startOffset = startDate.getHours() * 60 + startDate.getMinutes();
         const duration = (endDate.getTime() - startDate.getTime()) / TIME_CONSTANTS.MINUTE_MILLIS;
 
-        // Apply duration-based styling
         applyDurationBasedStyling(eventDiv, duration, 'event local-event');
-
         eventDiv.style.top = `${startOffset}px`;
+        applyInitialLayout(eventDiv, this.eventLayoutManager);
 
-        // Set the initial width and position to prevent visible resize during layout calculation
-        // This will be overridden by EventLayoutManager, but prevents initial flash
-        const initialWidth = this.eventLayoutManager ? this.eventLayoutManager.maxWidth : EVENT_STYLING.DEFAULT_VALUES.INITIAL_WIDTH;
-        eventDiv.style.width = `${initialWidth}px`;
-
-        eventDiv.style.left = `${EVENT_STYLING.DEFAULT_VALUES.INITIAL_LEFT_OFFSET}px`;
-
-        // Check if this is a recurring event
         const isRecurring = event.isRecurringInstance || (event.recurrence && event.recurrence.type !== RECURRENCE_TYPES.NONE);
 
-        // Set locale-aware time display asynchronously
         await this._setLocalEventContentWithLocale(eventDiv, startTime, endTime, title, isRecurring);
 
-        // Setup the edit functionality
         this._setupEventEdit(eventDiv, event);
 
-        // Register with the event layout manager
         this.eventLayoutManager.registerEvent({
             startTime: startDate,
             endTime: endDate,
@@ -484,40 +377,14 @@ export class LocalEventManager {
 
     /**
      * Set local event content with locale-aware time display
-     * @param {HTMLElement} eventDiv - The event element
-     * @param {string} startTime - The start time (HH:mm format)
-     * @param {string} endTime - The end time (HH:mm format)
-     * @param {string} title - The event title
-     * @param {boolean} isRecurring - Whether this is a recurring event
      * @private
      */
     async _setLocalEventContentWithLocale(eventDiv, startTime, endTime, title, isRecurring = false) {
-        // Resolve locale and time format in parallel
-        const [locale, timeFormat] = await Promise.all([
-            typeof window.getCurrentLocale === 'function' ? window.getCurrentLocale() : Promise.resolve('en'),
-            typeof window.getTimeFormatPreference === 'function' ? window.getTimeFormatPreference() : Promise.resolve('24h')
-        ]);
+        const { locale, timeFormat } = await getLocalePreferences();
+        const formattedTimeRange = formatTimeRange(startTime, endTime, { locale, format: timeFormat });
 
-        // Format both ends using minimal API (with safe fallbacks)
-        const formatOne = (t) => {
-            if (typeof window.formatTime === 'function') {
-                return window.formatTime(t, { format: timeFormat, locale });
-            } else if (typeof window.formatTimeByFormat === 'function') {
-                return window.formatTimeByFormat(t, timeFormat, locale);
-            } else {
-                return window.formatTimeForLocale(t, locale);
-            }
-        };
-
-        const formattedStart = formatOne(startTime);
-        const formattedEnd = formatOne(endTime);
-        const sep = locale === 'en' ? ' - ' : '～';
-        const formattedTimeRange = `${formattedStart}${sep}${formattedEnd}`;
-
-        // Clear existing content
         eventDiv.innerHTML = '';
 
-        // Add recurrence indicator if this is a recurring event
         if (isRecurring) {
             const icon = document.createElement('i');
             icon.className = 'fa-solid fa-repeat';
@@ -525,7 +392,6 @@ export class LocalEventManager {
             eventDiv.appendChild(icon);
         }
 
-        // Add text content
         const textNode = document.createTextNode(`${formattedTimeRange}: ${title}`);
         eventDiv.appendChild(textNode);
     }
@@ -536,12 +402,9 @@ export class LocalEventManager {
      */
     _setupEventEdit(eventDiv, event) {
         eventDiv.addEventListener('click', () => {
-            // Use the callback to notify the parent component
             if (this.onEventClick) {
                 this.onEventClick(event);
             }
         });
     }
-
-
 }

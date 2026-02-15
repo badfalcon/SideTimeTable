@@ -1,7 +1,8 @@
 /**
  * AlarmManager - Manages event reminders using chrome.alarms API
  */
-import { getRecurringEventsForDate, STORAGE_KEYS } from './utils.js';
+import { getRecurringEventsForDate } from './recurrence-engine.js';
+import { STORAGE_KEYS } from './constants.js';
 
 export class AlarmManager {
     static ALARM_PREFIX = 'event_reminder_';

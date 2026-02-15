@@ -1,5 +1,8 @@
 /**
  * ModalComponent - Base modal component
+ *
+ * Provides shared modal functionality including show/hide, backdrop click,
+ * escape key handling, focus management, localization, and error display.
  */
 import { Component } from '../base/component.js';
 
@@ -7,21 +10,17 @@ export class ModalComponent extends Component {
     constructor(options = {}) {
         super({
             className: 'modal',
-            hidden: true, // Initially hidden
+            hidden: true,
             ...options
         });
 
         this.modalContent = null;
         this.closeButton = null;
 
-        // Callbacks
         this.onClose = options.onClose || null;
         this.onShow = options.onShow || null;
 
-        // Whether to close on the backdrop click
         this.closeOnBackdropClick = options.closeOnBackdropClick !== false;
-
-        // Whether to close on the Escape key
         this.closeOnEscape = options.closeOnEscape !== false;
     }
 
@@ -29,23 +28,19 @@ export class ModalComponent extends Component {
         const modal = super.createElement();
         modal.setAttribute('hidden', '');
 
-        // Skip if the content is already created
         if (modal.children.length > 0) {
             return modal;
         }
 
-        // Modal content
         this.modalContent = document.createElement('div');
         this.modalContent.className = 'modal-content';
 
-        // Close button
         this.closeButton = document.createElement('span');
         this.closeButton.className = 'close';
         this.closeButton.innerHTML = '&times;';
 
         this.modalContent.appendChild(this.closeButton);
 
-        // Create the custom content
         const customContent = this.createContent();
         if (customContent) {
             this.modalContent.appendChild(customContent);
@@ -53,7 +48,6 @@ export class ModalComponent extends Component {
 
         modal.appendChild(this.modalContent);
 
-        // Setup the event listeners
         this._setupEventListeners();
 
         return modal;
@@ -61,7 +55,7 @@ export class ModalComponent extends Component {
 
     /**
      * Create custom content (override in subclasses)
-     * @returns {HTMLElement|null} The content element
+     * @returns {HTMLElement|null}
      */
     createContent() {
         return null;
@@ -72,12 +66,10 @@ export class ModalComponent extends Component {
      * @private
      */
     _setupEventListeners() {
-        // Close button
         this.addEventListener(this.closeButton, 'click', () => {
             this.hide();
         });
 
-        // Backdrop click
         if (this.closeOnBackdropClick) {
             this.addEventListener(this.element, 'click', (e) => {
                 if (e.target === this.element) {
@@ -86,7 +78,6 @@ export class ModalComponent extends Component {
             });
         }
 
-        // ESCキー
         if (this.closeOnEscape) {
             this.addEventListener(document, 'keydown', (e) => {
                 if (e.key === 'Escape' && this.isVisible()) {
@@ -104,12 +95,10 @@ export class ModalComponent extends Component {
             this.element.removeAttribute('hidden');
             this.element.style.display = 'block';
 
-            // Execute callback
             if (this.onShow) {
                 this.onShow();
             }
 
-            // Focus management
             this._focusFirstInput();
         }
     }
@@ -122,7 +111,6 @@ export class ModalComponent extends Component {
             this.element.setAttribute('hidden', '');
             this.element.style.display = 'none';
 
-            // Execute callback
             if (this.onClose) {
                 this.onClose();
             }
@@ -131,7 +119,7 @@ export class ModalComponent extends Component {
 
     /**
      * Check if modal is visible
-     * @returns {boolean} The visibility state
+     * @returns {boolean}
      */
     isVisible() {
         return this.element && !this.element.hasAttribute('hidden');
@@ -152,7 +140,7 @@ export class ModalComponent extends Component {
 
     /**
      * Set modal title
-     * @param {string} title Title
+     * @param {string} title
      */
     setTitle(title) {
         let titleElement = this.modalContent?.querySelector('h2, .modal-title');
@@ -166,7 +154,7 @@ export class ModalComponent extends Component {
 
     /**
      * Set localize attribute for modal content
-     * @param {string} key Localization key
+     * @param {string} key
      */
     setTitleLocalize(key) {
         let titleElement = this.modalContent?.querySelector('h2, .modal-title');
@@ -176,5 +164,56 @@ export class ModalComponent extends Component {
             this.modalContent?.insertBefore(titleElement, this.modalContent.children[1]);
         }
         titleElement.setAttribute('data-localize', key);
+    }
+
+    /**
+     * Apply localization to modal elements.
+     * Shared implementation - subclasses no longer need to duplicate this.
+     * @protected
+     */
+    async _localizeModal() {
+        if (window.localizeWithLanguage && this.element) {
+            const userLanguageSetting = await window.getCurrentLanguageSetting?.() || 'auto';
+            const targetLanguage = window.resolveLanguageCode?.(userLanguageSetting) || 'en';
+            await window.localizeWithLanguage(targetLanguage);
+        } else if (this.element) {
+            const elementsToLocalize = this.element.querySelectorAll('[data-localize]');
+            elementsToLocalize.forEach(element => {
+                const key = element.getAttribute('data-localize');
+                if (key && chrome.i18n && chrome.i18n.getMessage) {
+                    const message = chrome.i18n.getMessage(key.replace('__MSG_', '').replace('__', ''));
+                    if (message) {
+                        element.textContent = message;
+                    }
+                }
+            });
+        }
+    }
+
+    /**
+     * Display an inline error message within the modal
+     * @param {string} message
+     * @protected
+     */
+    _showError(message) {
+        this._clearError();
+
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-message';
+        errorDiv.style.cssText = 'color: red; font-size: 0.9em; margin-top: 5px;';
+        errorDiv.textContent = message;
+
+        this.modalContent.appendChild(errorDiv);
+    }
+
+    /**
+     * Clear inline error messages within the modal
+     * @protected
+     */
+    _clearError() {
+        const errorElement = this.modalContent?.querySelector('.error-message');
+        if (errorElement) {
+            errorElement.remove();
+        }
     }
 }

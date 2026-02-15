@@ -456,28 +456,5 @@ export class GoogleEventModal extends ModalComponent {
         this.currentEvent = null;
     }
 
-    /**
-     * Apply localization to modal elements
-     * @private
-     */
-    async _localizeModal() {
-        if (window.localizeWithLanguage && this.element) {
-            // Use the project's language-aware localization
-            const userLanguageSetting = await window.getCurrentLanguageSetting?.() || 'auto';
-            const targetLanguage = window.resolveLanguageCode?.(userLanguageSetting) || 'en';
-            await window.localizeWithLanguage(targetLanguage);
-        } else if (this.element) {
-            // Fallback: manual localization for key elements
-            const elementsToLocalize = this.element.querySelectorAll('[data-localize]');
-            elementsToLocalize.forEach(element => {
-                const key = element.getAttribute('data-localize');
-                if (key && chrome.i18n && chrome.i18n.getMessage) {
-                    const message = chrome.i18n.getMessage(key.replace('__MSG_', '').replace('__', ''));
-                    if (message) {
-                        element.textContent = message;
-                    }
-                }
-            });
-        }
-    }
+    // _localizeModal is inherited from ModalComponent
 }
