@@ -722,7 +722,7 @@
     "description": "繰り返し終了日が開始日より前の場合のエラー"
   },
   "whatsNewTitle": {
-    "message": "最新情報",
+    "message": "更新情報",
     "description": "What's Newモーダルのタイトル"
   },
   "whatsNewConfirm": {
@@ -734,7 +734,7 @@
     "description": "オプションページのWhat's Newカードの説明"
   },
   "whatsNewContextMenu": {
-    "message": "最新情報",
+    "message": "更新情報",
     "description": "右クリックメニューのWhat's New項目"
   }
 }
