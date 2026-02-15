@@ -154,6 +154,22 @@ export const RELEASE_NOTES = [
                 'Google Meet連携をボタンベースUIに更新'
             ]
         }
+    },
+    {
+        version: '1.4.2',
+        date: '2025-08-28',
+        highlights: {
+            en: [
+                'Handle events with identical start and end times (extend to 15 min)',
+                'Keyboard shortcut support for opening side panel (Ctrl+Shift+Y)',
+                'Skip declined and cancelled events in calendar view'
+            ],
+            ja: [
+                '開始・終了時刻が同じイベントの表示対応（15分に拡張）',
+                'サイドパネルを開くキーボードショートカット（Ctrl+Shift+Y）',
+                '辞退済み・キャンセル済みイベントの非表示化'
+            ]
+        }
     }
 ];
 
