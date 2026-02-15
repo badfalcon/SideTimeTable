@@ -736,5 +736,17 @@
   "whatsNewContextMenu": {
     "message": "What's New",
     "description": "Context menu item for What's New"
+  },
+  "changelogTitle": {
+    "message": "Changelog",
+    "description": "Title of the Changelog page"
+  },
+  "changelogDescription": {
+    "message": "Version history and release notes.",
+    "description": "Subtitle for Changelog page"
+  },
+  "changelogContextMenu": {
+    "message": "Changelog",
+    "description": "Context menu item for Changelog"
   }
 }

@@ -21,11 +21,11 @@ chrome.runtime.onInstalled.addListener(async () => {
     // Initial sync on install
     await syncAllReminders();
 
-    // Create context menu for "What's New"
+    // Create context menu for "Changelog"
     if (chrome.contextMenus) {
         chrome.contextMenus.create({
-            id: 'whatsNew',
-            title: chrome.i18n.getMessage('whatsNewContextMenu') || "What's New",
+            id: 'changelog',
+            title: chrome.i18n.getMessage('changelogContextMenu') || 'Changelog',
             contexts: ['action']
         });
     }
@@ -34,9 +34,9 @@ chrome.runtime.onInstalled.addListener(async () => {
 // Context menu click handler
 if (chrome.contextMenus) {
     chrome.contextMenus.onClicked.addListener((info) => {
-        if (info.menuItemId === 'whatsNew') {
-            const whatsNewUrl = chrome.runtime.getURL('src/whats-new/whats-new.html');
-            chrome.tabs.create({ url: whatsNewUrl });
+        if (info.menuItemId === 'changelog') {
+            const changelogUrl = chrome.runtime.getURL('src/changelog/changelog.html');
+            chrome.tabs.create({ url: changelogUrl });
         }
     });
 }

@@ -21,13 +21,13 @@ export class ControlButtonsComponent {
 
         container.appendChild(this.resetButton);
 
-        // What's New link
-        const whatsNewLink = document.createElement('a');
-        whatsNewLink.href = '../whats-new/whats-new.html';
-        whatsNewLink.target = '_blank';
-        whatsNewLink.className = 'btn btn-outline-info';
-        whatsNewLink.innerHTML = `<i class="fas fa-bullhorn me-1"></i><span data-localize="__MSG_whatsNewTitle__">What's New</span>`;
-        container.appendChild(whatsNewLink);
+        // Changelog link
+        const changelogLink = document.createElement('a');
+        changelogLink.href = '../changelog/changelog.html';
+        changelogLink.target = '_blank';
+        changelogLink.className = 'btn btn-outline-info';
+        changelogLink.innerHTML = `<i class="fas fa-list-ul me-1"></i><span data-localize="__MSG_changelogTitle__">Changelog</span>`;
+        container.appendChild(changelogLink);
 
         this.element = container;
         this._setupEventListeners();
