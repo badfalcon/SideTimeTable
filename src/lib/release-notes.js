@@ -232,6 +232,23 @@ export function getUnseenReleaseNotes(lastSeenVersion, currentVersion) {
 }
 
 /**
+ * Get the current UI language synchronously.
+ * Checks localStorage first, then falls back to Chrome i18n API.
+ * @returns {string} Language code ('en' or 'ja')
+ */
+export function getCurrentLanguage() {
+    const storedLang = localStorage.getItem('sideTimeTableLang');
+    if (storedLang) {
+        return storedLang;
+    }
+    if (chrome.i18n && chrome.i18n.getUILanguage) {
+        const uiLang = chrome.i18n.getUILanguage().toLowerCase();
+        return uiLang.startsWith('ja') ? 'ja' : 'en';
+    }
+    return 'en';
+}
+
+/**
  * Compare two semver version strings.
  * @param {string} a - Version string (e.g. '1.7.0')
  * @param {string} b - Version string (e.g. '1.6.1')
