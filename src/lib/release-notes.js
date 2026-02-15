@@ -7,17 +7,23 @@
 export const RELEASE_NOTES = [
     {
         version: '1.7.0',
-        date: '2026-02-13',
+        date: '2026-02-15',
         highlights: {
             en: [
-                'Added changelog and update notification system',
                 'Recurring events support (daily, weekly, monthly, weekdays)',
-                'Improved reminder sync with comprehensive support'
+                'Improved reminder sync with comprehensive support',
+                'Update notification system with "What\'s New" modal',
+                'Standalone changelog page with version history',
+                'Changelog link in options page and context menu',
+                'Unified language detection via chrome.storage.sync'
             ],
             ja: [
-                '変更履歴と更新通知機能を追加',
                 '繰り返しイベント対応（毎日・毎週・毎月・平日）',
-                'リマインダー同期の改善と包括的サポート'
+                'リマインダー同期の改善と包括的サポート',
+                '更新通知システム（「更新情報」モーダル）',
+                'バージョン履歴付きスタンドアロン変更履歴ページ',
+                'オプションページとコンテキストメニューに変更履歴リンク',
+                '言語検出をchrome.storage.syncに統一'
             ]
         }
     },
