@@ -736,5 +736,17 @@
   "whatsNewContextMenu": {
     "message": "更新情報",
     "description": "右クリックメニューのWhat's New項目"
+  },
+  "changelogTitle": {
+    "message": "変更履歴",
+    "description": "変更履歴ページのタイトル"
+  },
+  "changelogDescription": {
+    "message": "バージョン履歴とリリースノート。",
+    "description": "変更履歴ページの説明"
+  },
+  "changelogContextMenu": {
+    "message": "変更履歴",
+    "description": "右クリックメニューの変更履歴項目"
   }
 }
