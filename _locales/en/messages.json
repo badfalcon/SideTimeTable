@@ -728,5 +728,9 @@
   "whatsNewConfirm": {
     "message": "Got it",
     "description": "Confirm button in What's New modal"
+  },
+  "whatsNewTooltip": {
+    "message": "What's New",
+    "description": "Tooltip for What's New button in header"
   }
 }

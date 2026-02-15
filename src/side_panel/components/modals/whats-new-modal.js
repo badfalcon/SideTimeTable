@@ -2,7 +2,7 @@
  * WhatsNewModal - Modal to display release notes and update highlights
  */
 import { ModalComponent } from './modal-component.js';
-import { getUnseenReleaseNotes } from '../../../lib/release-notes.js';
+import { RELEASE_NOTES, getUnseenReleaseNotes } from '../../../lib/release-notes.js';
 import { StorageHelper } from '../../../lib/storage-helper.js';
 
 export class WhatsNewModal extends ModalComponent {
@@ -125,6 +125,15 @@ export class WhatsNewModal extends ModalComponent {
 
             this.contentContainer.appendChild(section);
         });
+    }
+
+    /**
+     * Show the modal with all release notes (for browsing history)
+     */
+    showAll() {
+        const lang = this._getCurrentLanguage();
+        this._renderNotes(RELEASE_NOTES, lang);
+        this.show();
     }
 
     /**

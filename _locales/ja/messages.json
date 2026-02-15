@@ -728,5 +728,9 @@
   "whatsNewConfirm": {
     "message": "OK",
     "description": "What's Newモーダルの確認ボタン"
+  },
+  "whatsNewTooltip": {
+    "message": "最新情報",
+    "description": "ヘッダーのWhat's Newボタンのツールチップ"
   }
 }

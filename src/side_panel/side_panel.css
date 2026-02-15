@@ -133,6 +133,23 @@ h1 {
     color: #007bff;
 }
 
+.right-buttons {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.whats-new-icon {
+    font-size: 20px;
+    color: #333;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.whats-new-icon:hover {
+    color: #007bff;
+}
+
 .settings-icon {
     font-size: 24px;
     color: #333;
