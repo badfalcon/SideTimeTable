@@ -4,7 +4,7 @@
   "name": "SideTimeTable",
   "version": "1.6.1",
   "description": "__MSG_appDesc__",
-  "permissions": ["sidePanel", "identity", "storage", "notifications", "alarms"],
+  "permissions": ["sidePanel", "identity", "storage", "notifications", "alarms", "contextMenus"],
   "oauth2": {
     "client_id": "FILL_OUT_YOUR_CLIENT_ID",
     "scopes": ["https://www.googleapis.com/auth/calendar.readonly"]

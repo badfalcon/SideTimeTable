@@ -729,8 +729,12 @@
     "message": "OK",
     "description": "What's Newモーダルの確認ボタン"
   },
-  "whatsNewTooltip": {
+  "whatsNewDescription": {
+    "message": "最近のアップデートと新機能。",
+    "description": "オプションページのWhat's Newカードの説明"
+  },
+  "whatsNewContextMenu": {
     "message": "最新情報",
-    "description": "ヘッダーのWhat's Newボタンのツールチップ"
+    "description": "右クリックメニューのWhat's New項目"
   }
 }

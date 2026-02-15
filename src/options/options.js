@@ -24,6 +24,7 @@ import {
     ShortcutSettingsCard,
     ReminderSettingsCard,
     DeveloperSettingsCard,
+    WhatsNewCard,
     ControlButtonsComponent
 } from './components/index.js';
 
@@ -75,6 +76,10 @@ class OptionsPageManager {
         // Create the reminder settings card
         this.reminderSettingsCard = new ReminderSettingsCard(this.handleReminderSettingsChange.bind(this));
         this.componentManager.register('reminderSettings', this.reminderSettingsCard);
+
+        // Create What's New card
+        this.whatsNewCard = new WhatsNewCard();
+        this.componentManager.register('whatsNew', this.whatsNewCard);
 
         // Create control buttons
         this.controlButtons = new ControlButtonsComponent(this.handleResetSettings.bind(this));

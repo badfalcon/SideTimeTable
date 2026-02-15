@@ -154,8 +154,7 @@ class SidePanelUIController {
             onAddEvent: () => this._handleAddLocalEvent(),
             onDateChange: (date) => this._handleDateChange(date),
             onSettingsClick: () => this._openSettings(),
-            onSyncClick: () => this._handleSyncReminders(),
-            onWhatsNewClick: () => this.whatsNewModal.showAll()
+            onSyncClick: () => this._handleSyncReminders()
         });
 
         // The timeline component
