@@ -9,7 +9,8 @@ import {
     LocalEventModal,
     GoogleEventModal,
     AlertModal,
-    WhatsNewModal
+    WhatsNewModal,
+    TutorialComponent
 } from './components/index.js';
 
 import { EventLayoutManager } from './time-manager.js';
@@ -49,6 +50,7 @@ class SidePanelUIController {
         this.googleEventModal = null;
         this.alertModal = null;
         this.whatsNewModal = null;
+        this.tutorialComponent = null;
 
         // The state management
         this.currentDate = new Date();
@@ -119,7 +121,8 @@ class SidePanelUIController {
             'localEventDialog',
             'googleEventDialog',
             'alertModal',
-            'whatsNewModal'
+            'whatsNewModal',
+            'tutorialOverlay'
         ];
 
         existingModals.forEach(modalId => {
@@ -154,7 +157,8 @@ class SidePanelUIController {
             onAddEvent: () => this._handleAddLocalEvent(),
             onDateChange: (date) => this._handleDateChange(date),
             onSettingsClick: () => this._openSettings(),
-            onSyncClick: () => this._handleSyncReminders()
+            onSyncClick: () => this._handleSyncReminders(),
+            onHelpClick: () => this._startTutorial()
         });
 
         // The timeline component
@@ -175,6 +179,8 @@ class SidePanelUIController {
 
         this.whatsNewModal = new WhatsNewModal();
 
+        this.tutorialComponent = new TutorialComponent();
+
         // Register with the component manager
         this.componentManager.register('header', this.headerComponent);
         this.componentManager.register('timeline', this.timelineComponent);
@@ -182,6 +188,7 @@ class SidePanelUIController {
         this.componentManager.register('googleEventModal', this.googleEventModal);
         this.componentManager.register('alertModal', this.alertModal);
         this.componentManager.register('whatsNewModal', this.whatsNewModal);
+        this.componentManager.register('tutorial', this.tutorialComponent);
 
         // Add to the DOM
         const container = document.getElementById('side-panel-container') || document.body;
@@ -191,6 +198,7 @@ class SidePanelUIController {
         this.googleEventModal.appendTo(container);
         this.alertModal.appendTo(container);
         this.whatsNewModal.appendTo(container);
+        this.tutorialComponent.appendTo(container);
 
         // Initialize all the components
         this.componentManager.initializeAll();
@@ -342,6 +350,9 @@ class SidePanelUIController {
 
         // Check for update notifications
         await this._checkForUpdateNotification();
+
+        // Show tutorial on first launch
+        await this._checkTutorial();
     }
 
     /**
@@ -738,6 +749,34 @@ class SidePanelUIController {
             }
         } catch (error) {
             console.error('Failed to sync reminders:', error);
+        }
+    }
+
+    /**
+     * Check if tutorial should be shown on first launch
+     * @private
+     */
+    async _checkTutorial() {
+        try {
+            const shouldShow = await this.tutorialComponent.shouldShow();
+            if (shouldShow) {
+                // Small delay to let the UI settle
+                setTimeout(() => {
+                    this.tutorialComponent.start();
+                }, 500);
+            }
+        } catch (error) {
+            console.warn('Failed to check tutorial state:', error);
+        }
+    }
+
+    /**
+     * Start the tutorial (manual trigger from help button)
+     * @private
+     */
+    _startTutorial() {
+        if (this.tutorialComponent) {
+            this.tutorialComponent.start();
         }
     }
 

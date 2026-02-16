@@ -480,3 +480,128 @@ button {
     display: block;
     width: 100%;
 }
+
+/* Tutorial overlay styles */
+.tutorial-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 200;
+    pointer-events: none;
+}
+
+.tutorial-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.55);
+    pointer-events: auto;
+}
+
+.tutorial-highlight {
+    position: fixed;
+    border-radius: 6px;
+    box-shadow: 0 0 0 4000px rgba(0, 0, 0, 0.55);
+    z-index: 201;
+    pointer-events: none;
+    transition: all 0.3s ease;
+    background: transparent;
+}
+
+.tutorial-tooltip {
+    position: fixed;
+    background: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    max-width: 320px;
+    width: 90%;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    z-index: 202;
+    pointer-events: auto;
+    animation: tutorialFadeIn 0.3s ease;
+}
+
+@keyframes tutorialFadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.tutorial-step-counter {
+    font-size: 0.8em;
+    color: #888;
+    margin-bottom: 6px;
+}
+
+.tutorial-tooltip-title {
+    margin: 0 0 8px 0;
+    font-size: 1.1em;
+    color: #333;
+}
+
+.tutorial-tooltip-desc {
+    margin: 0 0 16px 0;
+    font-size: 0.9em;
+    color: #555;
+    line-height: 1.5;
+}
+
+.tutorial-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.tutorial-btn {
+    padding: 6px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.85em;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin-top: 0;
+}
+
+.tutorial-btn-primary {
+    background-color: #007bff;
+    color: #fff;
+}
+
+.tutorial-btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.tutorial-btn-secondary {
+    background-color: #e9ecef;
+    color: #333;
+}
+
+.tutorial-btn-secondary:hover {
+    background-color: #dee2e6;
+}
+
+.tutorial-btn-skip {
+    background-color: transparent;
+    color: #888;
+}
+
+.tutorial-btn-skip:hover {
+    color: #333;
+    background-color: #f0f0f0;
+}
+
+/* Help button in header */
+.help-icon {
+    font-size: 20px;
+    color: #333;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.help-icon:hover {
+    color: #007bff;
+}

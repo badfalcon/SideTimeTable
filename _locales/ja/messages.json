@@ -748,5 +748,81 @@
   "changelogContextMenu": {
     "message": "変更履歴",
     "description": "右クリックメニューの変更履歴項目"
+  },
+  "tutorialWelcomeTitle": {
+    "message": "SideTimeTableへようこそ！",
+    "description": "チュートリアル：ウェルカムステップのタイトル"
+  },
+  "tutorialWelcomeDesc": {
+    "message": "SideTimeTableの使い方をご紹介します。主な機能を順番に見ていきましょう。",
+    "description": "チュートリアル：ウェルカムステップの説明"
+  },
+  "tutorialAddEventTitle": {
+    "message": "予定を追加",
+    "description": "チュートリアル：予定追加ステップのタイトル"
+  },
+  "tutorialAddEventDesc": {
+    "message": "このボタンで新しいローカル予定を作成できます。タイトル・時間・繰り返し設定などを入力して保存しましょう。",
+    "description": "チュートリアル：予定追加ステップの説明"
+  },
+  "tutorialDateNavTitle": {
+    "message": "日付ナビゲーション",
+    "description": "チュートリアル：日付ナビステップのタイトル"
+  },
+  "tutorialDateNavDesc": {
+    "message": "矢印ボタンで前日・翌日に移動できます。日付をクリックするとカレンダーから直接選択もできます。",
+    "description": "チュートリアル：日付ナビステップの説明"
+  },
+  "tutorialSyncTitle": {
+    "message": "予定を同期",
+    "description": "チュートリアル：同期ステップのタイトル"
+  },
+  "tutorialSyncDesc": {
+    "message": "このボタンでGoogleカレンダーの予定を同期し、リマインダーを更新できます。",
+    "description": "チュートリアル：同期ステップの説明"
+  },
+  "tutorialSettingsTitle": {
+    "message": "設定",
+    "description": "チュートリアル：設定ステップのタイトル"
+  },
+  "tutorialSettingsDesc": {
+    "message": "設定画面では、就業時間・色・言語・Googleカレンダー連携などをカスタマイズできます。",
+    "description": "チュートリアル：設定ステップの説明"
+  },
+  "tutorialTimelineTitle": {
+    "message": "タイムライン",
+    "description": "チュートリアル：タイムラインステップのタイトル"
+  },
+  "tutorialTimelineDesc": {
+    "message": "ここに1日の予定が時間軸で表示されます。Googleカレンダーとローカルの予定が並んで見えます。赤い線が現在時刻です。",
+    "description": "チュートリアル：タイムラインステップの説明"
+  },
+  "tutorialFinishTitle": {
+    "message": "準備完了！",
+    "description": "チュートリアル：完了ステップのタイトル"
+  },
+  "tutorialFinishDesc": {
+    "message": "基本的な使い方は以上です。ヘッダーの「?」ボタンからいつでもこのチュートリアルを再表示できます。",
+    "description": "チュートリアル：完了ステップの説明"
+  },
+  "tutorialNext": {
+    "message": "次へ",
+    "description": "チュートリアル：次へボタン"
+  },
+  "tutorialPrev": {
+    "message": "戻る",
+    "description": "チュートリアル：戻るボタン"
+  },
+  "tutorialSkip": {
+    "message": "スキップ",
+    "description": "チュートリアル：スキップボタン"
+  },
+  "tutorialDone": {
+    "message": "完了",
+    "description": "チュートリアル：完了ボタン"
+  },
+  "helpTutorial": {
+    "message": "チュートリアル",
+    "description": "ヘルプボタンのツールチップ"
   }
 }

@@ -748,5 +748,81 @@
   "changelogContextMenu": {
     "message": "Changelog",
     "description": "Context menu item for Changelog"
+  },
+  "tutorialWelcomeTitle": {
+    "message": "Welcome to SideTimeTable!",
+    "description": "Tutorial: welcome step title"
+  },
+  "tutorialWelcomeDesc": {
+    "message": "Let us show you around. We'll walk through the main features step by step.",
+    "description": "Tutorial: welcome step description"
+  },
+  "tutorialAddEventTitle": {
+    "message": "Add an Event",
+    "description": "Tutorial: add event step title"
+  },
+  "tutorialAddEventDesc": {
+    "message": "Tap this button to create a new local event. You can set a title, time, and recurrence options.",
+    "description": "Tutorial: add event step description"
+  },
+  "tutorialDateNavTitle": {
+    "message": "Date Navigation",
+    "description": "Tutorial: date navigation step title"
+  },
+  "tutorialDateNavDesc": {
+    "message": "Use the arrows to move between days. Click the date to open a calendar picker for quick navigation.",
+    "description": "Tutorial: date navigation step description"
+  },
+  "tutorialSyncTitle": {
+    "message": "Sync Events",
+    "description": "Tutorial: sync step title"
+  },
+  "tutorialSyncDesc": {
+    "message": "Tap this button to sync your Google Calendar events and update reminders.",
+    "description": "Tutorial: sync step description"
+  },
+  "tutorialSettingsTitle": {
+    "message": "Settings",
+    "description": "Tutorial: settings step title"
+  },
+  "tutorialSettingsDesc": {
+    "message": "Customize work hours, colors, language, and Google Calendar integration in the settings page.",
+    "description": "Tutorial: settings step description"
+  },
+  "tutorialTimelineTitle": {
+    "message": "Timeline",
+    "description": "Tutorial: timeline step title"
+  },
+  "tutorialTimelineDesc": {
+    "message": "Your daily schedule is shown here on a 24-hour timeline. Google and local events appear side by side. The red line marks the current time.",
+    "description": "Tutorial: timeline step description"
+  },
+  "tutorialFinishTitle": {
+    "message": "You're All Set!",
+    "description": "Tutorial: finish step title"
+  },
+  "tutorialFinishDesc": {
+    "message": "That covers the basics. You can replay this tutorial anytime by clicking the \"?\" button in the header.",
+    "description": "Tutorial: finish step description"
+  },
+  "tutorialNext": {
+    "message": "Next",
+    "description": "Tutorial: next button"
+  },
+  "tutorialPrev": {
+    "message": "Back",
+    "description": "Tutorial: back button"
+  },
+  "tutorialSkip": {
+    "message": "Skip",
+    "description": "Tutorial: skip button"
+  },
+  "tutorialDone": {
+    "message": "Done",
+    "description": "Tutorial: done button"
+  },
+  "helpTutorial": {
+    "message": "Tutorial",
+    "description": "Help button tooltip"
   }
 }

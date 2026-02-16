@@ -16,6 +16,7 @@ export class HeaderComponent extends Component {
         this.onDateChange = options.onDateChange || null;
         this.onSettingsClick = options.onSettingsClick || null;
         this.onSyncClick = options.onSyncClick || null;
+        this.onHelpClick = options.onHelpClick || null;
 
         // UI elements
         this.addEventButton = null;
@@ -23,6 +24,7 @@ export class HeaderComponent extends Component {
         this.nextDateButton = null;
         this.dateInput = null;
         this.syncButton = null;
+        this.helpButton = null;
         this.settingsButton = null;
 
         // Sync state
@@ -50,16 +52,29 @@ export class HeaderComponent extends Component {
         // Date navigation
         const dateNavigation = this._createDateNavigation();
 
+        // Right-side buttons container (help + settings)
+        const rightButtons = document.createElement('div');
+        rightButtons.className = 'action-buttons';
+
+        // Help button
+        this.helpButton = document.createElement('i');
+        this.helpButton.className = 'fas fa-question-circle help-icon';
+        this.helpButton.id = 'helpButton';
+        this.helpButton.setAttribute('data-localize-title', '__MSG_helpTutorial__');
+
         // Settings button
         this.settingsButton = document.createElement('i');
         this.settingsButton.className = 'fas fa-cog settings-icon';
         this.settingsButton.id = 'settingsIcon';
         this.settingsButton.setAttribute('data-localize-title', '__MSG_settings__');
 
+        rightButtons.appendChild(this.helpButton);
+        rightButtons.appendChild(this.settingsButton);
+
         // Add the elements to the header
         header.appendChild(actionButtons);
         header.appendChild(dateNavigation);
-        header.appendChild(this.settingsButton);
+        header.appendChild(rightButtons);
 
         wrapper.appendChild(header);
 
@@ -160,6 +175,13 @@ export class HeaderComponent extends Component {
         // Sync button
         this.addEventListener(this.syncButton, 'click', () => {
             this._handleSyncClick();
+        });
+
+        // Help button
+        this.addEventListener(this.helpButton, 'click', () => {
+            if (this.onHelpClick) {
+                this.onHelpClick();
+            }
         });
 
         // Settings button
