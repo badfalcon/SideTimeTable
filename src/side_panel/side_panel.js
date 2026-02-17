@@ -763,15 +763,14 @@ class SidePanelUIController {
     }
 
     /**
-     * Check if tutorial should be shown on first launch
-     * Tutorial runs first, then initial setup follows via _onTutorialComplete
+     * Check if tutorial should be shown on first launch.
+     * Tutorial runs first, then initial setup follows via _onTutorialComplete.
      * @private
      */
     async _checkTutorial() {
         try {
             const shouldShow = await this.tutorialComponent.shouldShow();
             if (shouldShow) {
-                // Small delay to let the UI settle
                 setTimeout(() => {
                     this.tutorialComponent.start();
                 }, 500);
@@ -787,24 +786,15 @@ class SidePanelUIController {
     }
 
     /**
-     * Called when tutorial is completed; show initial setup next
+     * Called when tutorial is completed; show initial setup next.
      * @private
      */
-    async _onTutorialComplete() {
-        try {
-            const shouldShowSetup = await this.initialSetupComponent.shouldShow();
-            if (shouldShowSetup) {
-                setTimeout(() => {
-                    this.initialSetupComponent.start();
-                }, 300);
-            }
-        } catch {
-            // Ignore - user can configure later in settings
-        }
+    _onTutorialComplete() {
+        this._checkInitialSetup();
     }
 
     /**
-     * Check if initial setup should be shown
+     * Check if initial setup should be shown and start it if needed.
      * @private
      */
     async _checkInitialSetup() {
@@ -813,7 +803,7 @@ class SidePanelUIController {
             if (shouldShowSetup) {
                 setTimeout(() => {
                     this.initialSetupComponent.start();
-                }, 500);
+                }, 300);
             }
         } catch (error) {
             console.warn('Failed to check initial setup state:', error);
@@ -821,15 +811,13 @@ class SidePanelUIController {
     }
 
     /**
-     * Called when initial setup is completed
+     * Called when initial setup is completed.
      * @private
      */
     _onSetupComplete() {
         // Reload to apply settings (language, work hours, etc.)
         location.reload();
     }
-
-
 
     /**
      * Open settings screen

@@ -1,6 +1,8 @@
 /**
  * ControlButtonsComponent - The reset button component
  */
+import { StorageHelper } from '../../../lib/storage-helper.js';
+
 export class ControlButtonsComponent {
     constructor(onReset) {
         this.onReset = onReset;
@@ -79,9 +81,7 @@ export class ControlButtonsComponent {
     async _handleReplayTutorial() {
         try {
             // Reset tutorial and initial setup flags
-            await new Promise((resolve) => {
-                chrome.storage.sync.remove(['tutorialCompleted', 'initialSetupCompleted'], resolve);
-            });
+            await StorageHelper.remove(['tutorialCompleted', 'initialSetupCompleted']);
 
             this._showSuccess(chrome.i18n.getMessage('replayTutorialSuccess') || 'Tutorial will show on next open.');
 
@@ -167,6 +167,7 @@ export class ControlButtonsComponent {
         }
         this.element = null;
         this.resetButton = null;
+        this.replayTutorialButton = null;
     }
 
     /**

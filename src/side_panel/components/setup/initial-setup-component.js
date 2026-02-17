@@ -30,12 +30,12 @@ export class InitialSetupComponent extends Component {
 
         // Collected settings
         this.setupData = {
-            language: 'auto',
+            language: DEFAULT_SETTINGS.language,
             openTime: DEFAULT_SETTINGS.openTime,
             closeTime: DEFAULT_SETTINGS.closeTime,
-            googleIntegrated: false,
-            googleEventReminder: false,
-            reminderMinutes: 5
+            googleIntegrated: DEFAULT_SETTINGS.googleIntegrated,
+            googleEventReminder: DEFAULT_SETTINGS.googleEventReminder,
+            reminderMinutes: DEFAULT_SETTINGS.reminderMinutes
         };
     }
 
@@ -104,20 +104,11 @@ export class InitialSetupComponent extends Component {
             const settings = await loadSettings();
             this.setupData.openTime = settings.openTime || DEFAULT_SETTINGS.openTime;
             this.setupData.closeTime = settings.closeTime || DEFAULT_SETTINGS.closeTime;
-            this.setupData.googleEventReminder = settings.googleEventReminder || false;
-            this.setupData.reminderMinutes = settings.reminderMinutes || 5;
+            this.setupData.language = settings.language || DEFAULT_SETTINGS.language;
+            this.setupData.googleEventReminder = settings.googleEventReminder || DEFAULT_SETTINGS.googleEventReminder;
+            this.setupData.reminderMinutes = settings.reminderMinutes || DEFAULT_SETTINGS.reminderMinutes;
         } catch {
             // Use defaults
-        }
-
-        // Load language setting
-        try {
-            const langData = await new Promise((resolve) => {
-                chrome.storage.sync.get(['language'], resolve);
-            });
-            this.setupData.language = langData.language || 'auto';
-        } catch {
-            // Use default
         }
 
         if (!this.element) {
@@ -198,22 +189,35 @@ export class InitialSetupComponent extends Component {
     // --- Step renderers ---
 
     /**
-     * Language selection step
+     * Create a step container with title and description
+     * @param {string} titleKey - Localization key for the title
+     * @param {string} descKey - Localization key for the description
+     * @returns {HTMLElement} The container element
      * @private
      */
-    _renderLanguageStep() {
+    _createStepContainer(titleKey, descKey) {
         const container = document.createElement('div');
         container.className = 'setup-step-content';
 
         const title = document.createElement('h3');
         title.className = 'setup-step-title';
-        title.textContent = this._getMessage('setupLanguageTitle');
+        title.textContent = this._getMessage(titleKey);
         container.appendChild(title);
 
         const desc = document.createElement('p');
         desc.className = 'setup-step-desc';
-        desc.textContent = this._getMessage('setupLanguageDesc');
+        desc.textContent = this._getMessage(descKey);
         container.appendChild(desc);
+
+        return container;
+    }
+
+    /**
+     * Language selection step
+     * @private
+     */
+    _renderLanguageStep() {
+        const container = this._createStepContainer('setupLanguageTitle', 'setupLanguageDesc');
 
         const options = [
             { value: 'auto', labelKey: 'setupLanguageAuto' },
@@ -257,18 +261,7 @@ export class InitialSetupComponent extends Component {
      * @private
      */
     _renderWorkHoursStep() {
-        const container = document.createElement('div');
-        container.className = 'setup-step-content';
-
-        const title = document.createElement('h3');
-        title.className = 'setup-step-title';
-        title.textContent = this._getMessage('setupWorkHoursTitle');
-        container.appendChild(title);
-
-        const desc = document.createElement('p');
-        desc.className = 'setup-step-desc';
-        desc.textContent = this._getMessage('setupWorkHoursDesc');
-        container.appendChild(desc);
+        const container = this._createStepContainer('setupWorkHoursTitle', 'setupWorkHoursDesc');
 
         const formGroup = document.createElement('div');
         formGroup.className = 'setup-form-group';
@@ -320,18 +313,7 @@ export class InitialSetupComponent extends Component {
      * @private
      */
     _renderGoogleStep() {
-        const container = document.createElement('div');
-        container.className = 'setup-step-content';
-
-        const title = document.createElement('h3');
-        title.className = 'setup-step-title';
-        title.textContent = this._getMessage('setupGoogleTitle');
-        container.appendChild(title);
-
-        const desc = document.createElement('p');
-        desc.className = 'setup-step-desc';
-        desc.textContent = this._getMessage('setupGoogleDesc');
-        container.appendChild(desc);
+        const container = this._createStepContainer('setupGoogleTitle', 'setupGoogleDesc');
 
         const toggleGroup = document.createElement('div');
         toggleGroup.className = 'setup-toggle-group';
@@ -373,18 +355,7 @@ export class InitialSetupComponent extends Component {
      * @private
      */
     _renderReminderStep() {
-        const container = document.createElement('div');
-        container.className = 'setup-step-content';
-
-        const title = document.createElement('h3');
-        title.className = 'setup-step-title';
-        title.textContent = this._getMessage('setupReminderTitle');
-        container.appendChild(title);
-
-        const desc = document.createElement('p');
-        desc.className = 'setup-step-desc';
-        desc.textContent = this._getMessage('setupReminderDesc');
-        container.appendChild(desc);
+        const container = this._createStepContainer('setupReminderTitle', 'setupReminderDesc');
 
         // Toggle
         const toggleGroup = document.createElement('div');
@@ -487,10 +458,8 @@ export class InitialSetupComponent extends Component {
             };
             await saveSettings(updatedSettings);
 
-            // Save language separately (matches existing pattern)
-            await new Promise((resolve) => {
-                chrome.storage.sync.set({ language: this.setupData.language }, resolve);
-            });
+            // Save language separately (matches existing pattern in options page)
+            await StorageHelper.set({ language: this.setupData.language });
 
             // Mark setup as completed
             await StorageHelper.set({ [SETUP_STORAGE_KEY]: true });
