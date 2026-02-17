@@ -908,5 +908,17 @@
   "setupComplete": {
     "message": "完了",
     "description": "初期設定：完了ボタン"
+  },
+  "replayTutorial": {
+    "message": "チュートリアルを再表示",
+    "description": "チュートリアルを再表示するボタン"
+  },
+  "replayTutorialSuccess": {
+    "message": "次回起動時にチュートリアルが表示されます。",
+    "description": "チュートリアルリセット成功メッセージ"
+  },
+  "replayTutorialFailed": {
+    "message": "チュートリアルのリセットに失敗しました。",
+    "description": "チュートリアルリセット失敗メッセージ"
   }
 }

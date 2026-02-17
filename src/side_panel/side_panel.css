@@ -594,18 +594,6 @@ button {
     background-color: #f0f0f0;
 }
 
-/* Help button in header */
-.help-icon {
-    font-size: 20px;
-    color: #333;
-    cursor: pointer;
-    transition: color 0.2s ease;
-}
-
-.help-icon:hover {
-    color: #007bff;
-}
-
 /* Initial Setup Wizard styles */
 .setup-overlay {
     position: fixed;
