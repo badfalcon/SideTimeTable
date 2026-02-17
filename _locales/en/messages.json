@@ -824,5 +824,89 @@
   "helpTutorial": {
     "message": "Tutorial",
     "description": "Help button tooltip"
+  },
+  "setupLanguageTitle": {
+    "message": "Choose Your Language",
+    "description": "Initial setup: language step title"
+  },
+  "setupLanguageDesc": {
+    "message": "Select the language for the extension interface.",
+    "description": "Initial setup: language step description"
+  },
+  "setupLanguageAuto": {
+    "message": "Auto-detect (Browser language)",
+    "description": "Initial setup: auto language option"
+  },
+  "setupLanguageEn": {
+    "message": "English",
+    "description": "Initial setup: English option"
+  },
+  "setupLanguageJa": {
+    "message": "Japanese (日本語)",
+    "description": "Initial setup: Japanese option"
+  },
+  "setupWorkHoursTitle": {
+    "message": "Set Work Hours",
+    "description": "Initial setup: work hours step title"
+  },
+  "setupWorkHoursDesc": {
+    "message": "Define your working hours. These will be highlighted on the timeline.",
+    "description": "Initial setup: work hours step description"
+  },
+  "setupWorkStart": {
+    "message": "Start",
+    "description": "Initial setup: work start time label"
+  },
+  "setupWorkEnd": {
+    "message": "End",
+    "description": "Initial setup: work end time label"
+  },
+  "setupGoogleTitle": {
+    "message": "Google Calendar",
+    "description": "Initial setup: Google integration step title"
+  },
+  "setupGoogleDesc": {
+    "message": "Connect Google Calendar to display your events alongside local events.",
+    "description": "Initial setup: Google integration step description"
+  },
+  "setupGoogleToggle": {
+    "message": "Enable Google Calendar",
+    "description": "Initial setup: Google integration toggle label"
+  },
+  "setupGoogleNote": {
+    "message": "You can connect later from Settings. Read-only access is used.",
+    "description": "Initial setup: Google integration note"
+  },
+  "setupReminderTitle": {
+    "message": "Notifications",
+    "description": "Initial setup: reminder step title"
+  },
+  "setupReminderDesc": {
+    "message": "Get notified before events start so you never miss a meeting.",
+    "description": "Initial setup: reminder step description"
+  },
+  "setupReminderToggle": {
+    "message": "Enable event reminders",
+    "description": "Initial setup: reminder toggle label"
+  },
+  "setupReminderMinutes": {
+    "message": "Remind before",
+    "description": "Initial setup: reminder minutes label"
+  },
+  "setupNext": {
+    "message": "Next",
+    "description": "Initial setup: next button"
+  },
+  "setupBack": {
+    "message": "Back",
+    "description": "Initial setup: back button"
+  },
+  "setupSkipAll": {
+    "message": "Skip",
+    "description": "Initial setup: skip all button"
+  },
+  "setupComplete": {
+    "message": "Done",
+    "description": "Initial setup: complete button"
   }
 }

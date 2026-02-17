@@ -10,7 +10,8 @@ import {
     GoogleEventModal,
     AlertModal,
     WhatsNewModal,
-    TutorialComponent
+    TutorialComponent,
+    InitialSetupComponent
 } from './components/index.js';
 
 import { EventLayoutManager } from './time-manager.js';
@@ -51,6 +52,7 @@ class SidePanelUIController {
         this.alertModal = null;
         this.whatsNewModal = null;
         this.tutorialComponent = null;
+        this.initialSetupComponent = null;
 
         // The state management
         this.currentDate = new Date();
@@ -122,7 +124,8 @@ class SidePanelUIController {
             'googleEventDialog',
             'alertModal',
             'whatsNewModal',
-            'tutorialOverlay'
+            'tutorialOverlay',
+            'initialSetupOverlay'
         ];
 
         existingModals.forEach(modalId => {
@@ -181,6 +184,10 @@ class SidePanelUIController {
 
         this.tutorialComponent = new TutorialComponent();
 
+        this.initialSetupComponent = new InitialSetupComponent({
+            onComplete: () => this._onSetupComplete()
+        });
+
         // Register with the component manager
         this.componentManager.register('header', this.headerComponent);
         this.componentManager.register('timeline', this.timelineComponent);
@@ -189,6 +196,7 @@ class SidePanelUIController {
         this.componentManager.register('alertModal', this.alertModal);
         this.componentManager.register('whatsNewModal', this.whatsNewModal);
         this.componentManager.register('tutorial', this.tutorialComponent);
+        this.componentManager.register('initialSetup', this.initialSetupComponent);
 
         // Add to the DOM
         const container = document.getElementById('side-panel-container') || document.body;
@@ -199,6 +207,7 @@ class SidePanelUIController {
         this.alertModal.appendTo(container);
         this.whatsNewModal.appendTo(container);
         this.tutorialComponent.appendTo(container);
+        this.initialSetupComponent.appendTo(container);
 
         // Initialize all the components
         this.componentManager.initializeAll();
@@ -351,8 +360,8 @@ class SidePanelUIController {
         // Check for update notifications
         await this._checkForUpdateNotification();
 
-        // Show tutorial on first launch
-        await this._checkTutorial();
+        // Show initial setup on first launch, then tutorial
+        await this._checkInitialSetup();
     }
 
     /**
@@ -749,6 +758,53 @@ class SidePanelUIController {
             }
         } catch (error) {
             console.error('Failed to sync reminders:', error);
+        }
+    }
+
+    /**
+     * Check if initial setup should be shown on first launch
+     * @private
+     */
+    async _checkInitialSetup() {
+        try {
+            const shouldShowSetup = await this.initialSetupComponent.shouldShow();
+            if (shouldShowSetup) {
+                // Show setup wizard first; tutorial will follow via _onSetupComplete
+                setTimeout(() => {
+                    this.initialSetupComponent.start();
+                }, 500);
+                return;
+            }
+
+            // Setup already done, check tutorial
+            await this._checkTutorial();
+        } catch (error) {
+            console.warn('Failed to check initial setup state:', error);
+            // Fallback to tutorial check
+            await this._checkTutorial();
+        }
+    }
+
+    /**
+     * Called when initial setup is completed
+     * @private
+     */
+    async _onSetupComplete() {
+        // Reload to apply settings (language change, work hours, etc.)
+        // But first check if tutorial should show
+        try {
+            const shouldShowTutorial = await this.tutorialComponent.shouldShow();
+            if (shouldShowTutorial) {
+                // Show tutorial after a brief delay
+                setTimeout(() => {
+                    this.tutorialComponent.start();
+                }, 300);
+            } else {
+                // No tutorial needed, reload to apply settings
+                location.reload();
+            }
+        } catch {
+            location.reload();
         }
     }
 
