@@ -877,6 +877,22 @@
     "message": "You can connect later from Settings. Read-only access is used.",
     "description": "Initial setup: Google integration note"
   },
+  "setupGoogleConnect": {
+    "message": "Sign in with Google",
+    "description": "Initial setup: Google connect button"
+  },
+  "setupGoogleDisconnect": {
+    "message": "Disconnect Google",
+    "description": "Initial setup: Google disconnect button"
+  },
+  "setupGoogleConnected": {
+    "message": "✓ Connected",
+    "description": "Initial setup: Google integration status (connected)"
+  },
+  "setupGoogleNotConnected": {
+    "message": "Not connected",
+    "description": "Initial setup: Google integration status (not connected)"
+  },
   "setupReminderTitle": {
     "message": "Notifications",
     "description": "Initial setup: reminder step title"

@@ -877,6 +877,22 @@
     "message": "設定画面からいつでも接続できます。読み取り専用でアクセスします。",
     "description": "初期設定：Google連携の注記"
   },
+  "setupGoogleConnect": {
+    "message": "Googleでログイン",
+    "description": "初期設定：Google接続ボタン"
+  },
+  "setupGoogleDisconnect": {
+    "message": "Google連携を解除",
+    "description": "初期設定：Google切断ボタン"
+  },
+  "setupGoogleConnected": {
+    "message": "✓ 連携済み",
+    "description": "初期設定：Google連携状態（接続済み）"
+  },
+  "setupGoogleNotConnected": {
+    "message": "未連携",
+    "description": "初期設定：Google連携状態（未接続）"
+  },
   "setupReminderTitle": {
     "message": "通知設定",
     "description": "初期設定：通知ステップのタイトル"
