@@ -663,6 +663,7 @@ button {
 /* Step content */
 .setup-step-content {
     margin-bottom: 20px;
+    min-height: 200px;
 }
 
 .setup-step-icon {
