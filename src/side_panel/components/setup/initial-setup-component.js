@@ -189,15 +189,23 @@ export class InitialSetupComponent extends Component {
     // --- Step renderers ---
 
     /**
-     * Create a step container with title and description
+     * Create a step container with icon, title and description
      * @param {string} titleKey - Localization key for the title
      * @param {string} descKey - Localization key for the description
+     * @param {string} icon - Icon character/emoji for the step header
      * @returns {HTMLElement} The container element
      * @private
      */
-    _createStepContainer(titleKey, descKey) {
+    _createStepContainer(titleKey, descKey, icon = '') {
         const container = document.createElement('div');
         container.className = 'setup-step-content';
+
+        if (icon) {
+            const iconEl = document.createElement('div');
+            iconEl.className = 'setup-step-icon';
+            iconEl.textContent = icon;
+            container.appendChild(iconEl);
+        }
 
         const title = document.createElement('h3');
         title.className = 'setup-step-title';
@@ -217,7 +225,7 @@ export class InitialSetupComponent extends Component {
      * @private
      */
     _renderLanguageStep() {
-        const container = this._createStepContainer('setupLanguageTitle', 'setupLanguageDesc');
+        const container = this._createStepContainer('setupLanguageTitle', 'setupLanguageDesc', '\uD83C\uDF10');
 
         const options = [
             { value: 'auto', labelKey: 'setupLanguageAuto' },
@@ -261,7 +269,10 @@ export class InitialSetupComponent extends Component {
      * @private
      */
     _renderWorkHoursStep() {
-        const container = this._createStepContainer('setupWorkHoursTitle', 'setupWorkHoursDesc');
+        const container = this._createStepContainer('setupWorkHoursTitle', 'setupWorkHoursDesc', '\u23F0');
+
+        const formCard = document.createElement('div');
+        formCard.className = 'setup-form-card';
 
         const formGroup = document.createElement('div');
         formGroup.className = 'setup-form-group';
@@ -304,7 +315,8 @@ export class InitialSetupComponent extends Component {
         endRow.appendChild(endInput);
         formGroup.appendChild(endRow);
 
-        container.appendChild(formGroup);
+        formCard.appendChild(formGroup);
+        container.appendChild(formCard);
         return container;
     }
 
@@ -313,7 +325,7 @@ export class InitialSetupComponent extends Component {
      * @private
      */
     _renderGoogleStep() {
-        const container = this._createStepContainer('setupGoogleTitle', 'setupGoogleDesc');
+        const container = this._createStepContainer('setupGoogleTitle', 'setupGoogleDesc', '\uD83D\uDCC5');
 
         // Google Sign-in button (following Google branding guidelines)
         const buttonContainer = document.createElement('div');
@@ -405,7 +417,10 @@ export class InitialSetupComponent extends Component {
      * @private
      */
     _renderReminderStep() {
-        const container = this._createStepContainer('setupReminderTitle', 'setupReminderDesc');
+        const container = this._createStepContainer('setupReminderTitle', 'setupReminderDesc', '\uD83D\uDD14');
+
+        const formCard = document.createElement('div');
+        formCard.className = 'setup-form-card';
 
         // Toggle
         const toggleGroup = document.createElement('div');
@@ -464,7 +479,8 @@ export class InitialSetupComponent extends Component {
             minutesRow.style.display = toggle.checked ? 'flex' : 'none';
         });
 
-        container.appendChild(toggleGroup);
+        formCard.appendChild(toggleGroup);
+        container.appendChild(formCard);
         return container;
     }
 
