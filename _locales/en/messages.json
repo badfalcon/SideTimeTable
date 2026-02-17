@@ -908,5 +908,17 @@
   "setupComplete": {
     "message": "Done",
     "description": "Initial setup: complete button"
+  },
+  "replayTutorial": {
+    "message": "Replay Tutorial",
+    "description": "Button to replay the onboarding tutorial"
+  },
+  "replayTutorialSuccess": {
+    "message": "Tutorial will show on next open.",
+    "description": "Success message after resetting tutorial"
+  },
+  "replayTutorialFailed": {
+    "message": "Failed to reset tutorial.",
+    "description": "Error message when tutorial reset fails"
   }
 }
