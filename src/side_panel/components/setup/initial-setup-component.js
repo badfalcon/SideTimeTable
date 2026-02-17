@@ -315,39 +315,89 @@ export class InitialSetupComponent extends Component {
     _renderGoogleStep() {
         const container = this._createStepContainer('setupGoogleTitle', 'setupGoogleDesc');
 
-        const toggleGroup = document.createElement('div');
-        toggleGroup.className = 'setup-toggle-group';
+        // Google Sign-in button (following Google branding guidelines)
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.marginBottom = '12px';
 
-        const toggleLabel = document.createElement('label');
-        toggleLabel.className = 'setup-toggle-label';
+        const googleButton = this._createGoogleButton();
+        buttonContainer.appendChild(googleButton);
 
-        const toggle = document.createElement('input');
-        toggle.type = 'checkbox';
-        toggle.className = 'setup-toggle-input';
-        toggle.checked = this.setupData.googleIntegrated;
-        toggle.addEventListener('change', () => {
-            this.setupData.googleIntegrated = toggle.checked;
-        });
+        // Status text
+        const statusText = document.createElement('div');
+        statusText.className = 'setup-google-status';
+        statusText.textContent = this.setupData.googleIntegrated
+            ? this._getMessage('setupGoogleConnected')
+            : this._getMessage('setupGoogleNotConnected');
+        buttonContainer.appendChild(statusText);
 
-        const slider = document.createElement('span');
-        slider.className = 'setup-toggle-slider';
-
-        const text = document.createElement('span');
-        text.className = 'setup-toggle-text';
-        text.textContent = this._getMessage('setupGoogleToggle');
-
-        toggleLabel.appendChild(toggle);
-        toggleLabel.appendChild(slider);
-        toggleLabel.appendChild(text);
-        toggleGroup.appendChild(toggleLabel);
-
+        // Note
         const note = document.createElement('p');
         note.className = 'setup-note';
         note.textContent = this._getMessage('setupGoogleNote');
-        toggleGroup.appendChild(note);
+        note.style.textAlign = 'center';
+        note.style.paddingLeft = '0';
 
-        container.appendChild(toggleGroup);
+        container.appendChild(buttonContainer);
+        container.appendChild(note);
         return container;
+    }
+
+    /**
+     * Create Google Sign-in button
+     * @private
+     */
+    _createGoogleButton() {
+        const button = document.createElement('button');
+        button.className = 'gsi-material-button';
+        button.type = 'button';
+
+        const state = document.createElement('div');
+        state.className = 'gsi-material-button-state';
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'gsi-material-button-content-wrapper';
+
+        // Google icon (SVG)
+        const iconDiv = document.createElement('div');
+        iconDiv.className = 'gsi-material-button-icon';
+        iconDiv.innerHTML = `
+            <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" style="display: block;">
+                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
+                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
+                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
+                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
+                <path fill="none" d="M0 0h48v48H0z"></path>
+            </svg>
+        `;
+
+        // Button text
+        const textSpan = document.createElement('span');
+        textSpan.className = 'gsi-material-button-contents';
+        textSpan.textContent = this.setupData.googleIntegrated
+            ? this._getMessage('setupGoogleDisconnect')
+            : this._getMessage('setupGoogleConnect');
+
+        wrapper.appendChild(iconDiv);
+        wrapper.appendChild(textSpan);
+
+        button.appendChild(state);
+        button.appendChild(wrapper);
+
+        // Toggle integration state on click
+        button.addEventListener('click', () => {
+            this.setupData.googleIntegrated = !this.setupData.googleIntegrated;
+            textSpan.textContent = this.setupData.googleIntegrated
+                ? this._getMessage('setupGoogleDisconnect')
+                : this._getMessage('setupGoogleConnect');
+            const statusText = button.parentElement.querySelector('.setup-google-status');
+            if (statusText) {
+                statusText.textContent = this.setupData.googleIntegrated
+                    ? this._getMessage('setupGoogleConnected')
+                    : this._getMessage('setupGoogleNotConnected');
+            }
+        });
+
+        return button;
     }
 
     /**
