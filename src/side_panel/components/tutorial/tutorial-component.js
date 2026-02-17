@@ -152,17 +152,25 @@ export class TutorialComponent extends Component {
         const title = this._getMessage(step.titleKey);
         const desc = this._getMessage(step.descKey);
 
-        // Position highlight
+        // Position highlight (clamp to viewport for large elements)
         if (step.target) {
             const targetEl = document.querySelector(step.target);
             if (targetEl) {
                 const rect = targetEl.getBoundingClientRect();
                 const padding = 6;
+                const viewportH = window.innerHeight;
+                const viewportW = window.innerWidth;
+
+                const clampedTop = Math.max(0, rect.top) - padding;
+                const clampedLeft = Math.max(0, rect.left) - padding;
+                const clampedBottom = Math.min(rect.bottom, viewportH) + padding;
+                const clampedRight = Math.min(rect.right, viewportW) + padding;
+
                 this.highlightElement.style.display = 'block';
-                this.highlightElement.style.top = `${rect.top - padding}px`;
-                this.highlightElement.style.left = `${rect.left - padding}px`;
-                this.highlightElement.style.width = `${rect.width + padding * 2}px`;
-                this.highlightElement.style.height = `${rect.height + padding * 2}px`;
+                this.highlightElement.style.top = `${clampedTop}px`;
+                this.highlightElement.style.left = `${clampedLeft}px`;
+                this.highlightElement.style.width = `${clampedRight - clampedLeft}px`;
+                this.highlightElement.style.height = `${clampedBottom - clampedTop}px`;
             } else {
                 this.highlightElement.style.display = 'none';
             }
@@ -259,25 +267,38 @@ export class TutorialComponent extends Component {
         const tooltipRect = this.tooltipElement.getBoundingClientRect();
         const viewportHeight = window.innerHeight;
         const viewportWidth = window.innerWidth;
+        const margin = 12;
+        const edgePadding = 10;
 
         this.tooltipElement.style.position = 'fixed';
         this.tooltipElement.style.transform = '';
 
-        // Determine best position: below or above
+        // Calculate available space above and below the target
         const spaceBelow = viewportHeight - rect.bottom;
         const spaceAbove = rect.top;
 
-        if (spaceBelow >= tooltipRect.height + 20 || spaceBelow >= spaceAbove) {
-            // Place below
-            this.tooltipElement.style.top = `${rect.bottom + 12}px`;
+        let top;
+        if (spaceBelow >= tooltipRect.height + margin + edgePadding) {
+            // Enough space below
+            top = rect.bottom + margin;
+        } else if (spaceAbove >= tooltipRect.height + margin + edgePadding) {
+            // Enough space above
+            top = rect.top - tooltipRect.height - margin;
         } else {
-            // Place above
-            this.tooltipElement.style.top = `${rect.top - tooltipRect.height - 12}px`;
+            // Not enough space above or below (large target like timeline).
+            // Place inside the visible area of the target, vertically centered.
+            const visibleTop = Math.max(rect.top, 0);
+            const visibleBottom = Math.min(rect.bottom, viewportHeight);
+            top = visibleTop + (visibleBottom - visibleTop) / 2 - tooltipRect.height / 2;
         }
+
+        // Clamp to viewport bounds
+        top = Math.max(edgePadding, Math.min(top, viewportHeight - tooltipRect.height - edgePadding));
+        this.tooltipElement.style.top = `${top}px`;
 
         // Horizontal centering with boundary check
         let left = rect.left + rect.width / 2 - tooltipRect.width / 2;
-        left = Math.max(10, Math.min(left, viewportWidth - tooltipRect.width - 10));
+        left = Math.max(edgePadding, Math.min(left, viewportWidth - tooltipRect.width - edgePadding));
         this.tooltipElement.style.left = `${left}px`;
     }
 
