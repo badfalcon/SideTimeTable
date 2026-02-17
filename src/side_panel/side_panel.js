@@ -358,10 +358,7 @@ class SidePanelUIController {
         await this._loadEventsForCurrentDate();
         this._scrollToAppropriateTime();
 
-        // Check for update notifications
-        await this._checkForUpdateNotification();
-
-        // Show tutorial on first launch, then initial setup
+        // Show tutorial on first launch, then initial setup, then changelog
         await this._checkTutorial();
     }
 
@@ -795,6 +792,7 @@ class SidePanelUIController {
 
     /**
      * Check if initial setup should be shown and start it if needed.
+     * After setup completes or is skipped, show changelog if applicable.
      * @private
      */
     async _checkInitialSetup() {
@@ -804,7 +802,12 @@ class SidePanelUIController {
                 setTimeout(() => {
                     this.initialSetupComponent.start();
                 }, 300);
+                // Don't show changelog yet - it will show after page reload
+                return;
             }
+
+            // Setup not needed (already completed), show changelog if applicable
+            await this._checkForUpdateNotification();
         } catch (error) {
             console.warn('Failed to check initial setup state:', error);
         }
