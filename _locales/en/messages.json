@@ -778,7 +778,7 @@
     "description": "Tutorial: sync step title"
   },
   "tutorialSyncDesc": {
-    "message": "Fetch and update your Google Calendar events. Available when Google Calendar is connected.",
+    "message": "Tap this button to sync your Google Calendar events and update reminders. Available when Google Calendar is connected.",
     "description": "Tutorial: sync step description"
   },
   "tutorialSettingsTitle": {
@@ -794,7 +794,7 @@
     "description": "Tutorial: timeline step title"
   },
   "tutorialTimelineDesc": {
-    "message": "Your daily schedule is displayed on a 24-hour timeline. The red line marks the current time.",
+    "message": "Your daily schedule is shown here on a 24-hour timeline. Google and local events appear side by side. The red line marks the current time.",
     "description": "Tutorial: timeline step description"
   },
   "tutorialFinishTitle": {
@@ -802,7 +802,7 @@
     "description": "Tutorial: finish step title"
   },
   "tutorialFinishDesc": {
-    "message": "That covers the basics. Enjoy using SideTimeTable!",
+    "message": "That covers the basics. You can replay this tutorial anytime by clicking the \"?\" button in the header.",
     "description": "Tutorial: finish step description"
   },
   "tutorialNext": {
