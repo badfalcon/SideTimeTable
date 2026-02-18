@@ -10,6 +10,7 @@ import {
     GoogleEventModal,
     AlertModal,
     WhatsNewModal,
+    ReviewModal,
     TutorialComponent,
     InitialSetupComponent
 } from './components/index.js';
@@ -51,6 +52,7 @@ class SidePanelUIController {
         this.googleEventModal = null;
         this.alertModal = null;
         this.whatsNewModal = null;
+        this.reviewModal = null;
         this.tutorialComponent = null;
         this.initialSetupComponent = null;
 
@@ -124,6 +126,7 @@ class SidePanelUIController {
             'googleEventDialog',
             'alertModal',
             'whatsNewModal',
+            'reviewModal',
             'tutorialOverlay',
             'initialSetupOverlay'
         ];
@@ -181,6 +184,8 @@ class SidePanelUIController {
 
         this.whatsNewModal = new WhatsNewModal();
 
+        this.reviewModal = new ReviewModal();
+
         this.tutorialComponent = new TutorialComponent({
             onComplete: () => this._onTutorialComplete()
         });
@@ -196,6 +201,7 @@ class SidePanelUIController {
         this.componentManager.register('googleEventModal', this.googleEventModal);
         this.componentManager.register('alertModal', this.alertModal);
         this.componentManager.register('whatsNewModal', this.whatsNewModal);
+        this.componentManager.register('reviewModal', this.reviewModal);
         this.componentManager.register('tutorial', this.tutorialComponent);
         this.componentManager.register('initialSetup', this.initialSetupComponent);
 
@@ -207,6 +213,7 @@ class SidePanelUIController {
         this.googleEventModal.appendTo(container);
         this.alertModal.appendTo(container);
         this.whatsNewModal.appendTo(container);
+        this.reviewModal.appendTo(container);
         this.tutorialComponent.appendTo(container);
         this.initialSetupComponent.appendTo(container);
 
@@ -360,6 +367,9 @@ class SidePanelUIController {
 
         // Show tutorial on first launch, then initial setup, then changelog
         await this._checkTutorial();
+
+        // Track panel open and show review popup when conditions are met
+        await this.reviewModal.trackOpenAndMaybeShow();
     }
 
     /**
