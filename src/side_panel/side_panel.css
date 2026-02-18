@@ -666,19 +666,11 @@ button {
     min-height: 200px;
 }
 
-.setup-step-icon {
-    text-align: center;
-    font-size: 2em;
-    margin-bottom: 8px;
-    line-height: 1;
-}
-
 .setup-step-title {
     margin: 0 0 8px 0;
     font-size: 1.15em;
     color: #222;
     font-weight: 600;
-    text-align: center;
 }
 
 .setup-step-desc {
@@ -686,15 +678,6 @@ button {
     font-size: 0.88em;
     color: #666;
     line-height: 1.5;
-    text-align: center;
-}
-
-/* Styled container for form elements */
-.setup-form-card {
-    background: #f8f9fb;
-    border: 1px solid #e9ecef;
-    border-radius: 10px;
-    padding: 16px;
 }
 
 /* Radio option group */
