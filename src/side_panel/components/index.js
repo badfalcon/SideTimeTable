@@ -18,6 +18,12 @@ export { GoogleEventModal } from './modals/google-event-modal.js';
 export { AlertModal } from './modals/alert-modal.js';
 export { WhatsNewModal } from './modals/whats-new-modal.js';
 
+// The tutorial Component
+export { TutorialComponent } from './tutorial/tutorial-component.js';
+
+// The initial setup Component
+export { InitialSetupComponent } from './setup/initial-setup-component.js';
+
 /**
  * ComponentManager - The side panel component management class
  */

@@ -748,5 +748,197 @@
   "changelogContextMenu": {
     "message": "変更履歴",
     "description": "右クリックメニューの変更履歴項目"
+  },
+  "tutorialWelcomeTitle": {
+    "message": "SideTimeTableへようこそ！",
+    "description": "チュートリアル：ウェルカムステップのタイトル"
+  },
+  "tutorialWelcomeDesc": {
+    "message": "SideTimeTableの使い方をご紹介します。主な機能を順番に見ていきましょう。",
+    "description": "チュートリアル：ウェルカムステップの説明"
+  },
+  "tutorialAddEventTitle": {
+    "message": "予定を追加",
+    "description": "チュートリアル：予定追加ステップのタイトル"
+  },
+  "tutorialAddEventDesc": {
+    "message": "このボタンで新しいローカル予定を作成できます。タイトル・時間・繰り返し設定などを入力して保存しましょう。",
+    "description": "チュートリアル：予定追加ステップの説明"
+  },
+  "tutorialDateNavTitle": {
+    "message": "日付ナビゲーション",
+    "description": "チュートリアル：日付ナビステップのタイトル"
+  },
+  "tutorialDateNavDesc": {
+    "message": "矢印ボタンで前日・翌日に移動できます。日付をクリックするとカレンダーから直接選択もできます。",
+    "description": "チュートリアル：日付ナビステップの説明"
+  },
+  "tutorialSyncTitle": {
+    "message": "予定を同期",
+    "description": "チュートリアル：同期ステップのタイトル"
+  },
+  "tutorialSyncDesc": {
+    "message": "Googleカレンダーの予定を取得・更新します。Googleカレンダー連携時に利用できます。",
+    "description": "チュートリアル：同期ステップの説明"
+  },
+  "tutorialSettingsTitle": {
+    "message": "設定",
+    "description": "チュートリアル：設定ステップのタイトル"
+  },
+  "tutorialSettingsDesc": {
+    "message": "設定画面では、就業時間・色・言語・Googleカレンダー連携などをカスタマイズできます。",
+    "description": "チュートリアル：設定ステップの説明"
+  },
+  "tutorialTimelineTitle": {
+    "message": "タイムライン",
+    "description": "チュートリアル：タイムラインステップのタイトル"
+  },
+  "tutorialTimelineDesc": {
+    "message": "1日の予定が24時間の時間軸で表示されます。赤い線が現在時刻を示しています。",
+    "description": "チュートリアル：タイムラインステップの説明"
+  },
+  "tutorialFinishTitle": {
+    "message": "準備完了！",
+    "description": "チュートリアル：完了ステップのタイトル"
+  },
+  "tutorialFinishDesc": {
+    "message": "基本的な使い方は以上です。さっそく使ってみましょう！",
+    "description": "チュートリアル：完了ステップの説明"
+  },
+  "tutorialNext": {
+    "message": "次へ",
+    "description": "チュートリアル：次へボタン"
+  },
+  "tutorialPrev": {
+    "message": "戻る",
+    "description": "チュートリアル：戻るボタン"
+  },
+  "tutorialSkip": {
+    "message": "スキップ",
+    "description": "チュートリアル：スキップボタン"
+  },
+  "tutorialDone": {
+    "message": "完了",
+    "description": "チュートリアル：完了ボタン"
+  },
+  "helpTutorial": {
+    "message": "チュートリアル",
+    "description": "ヘルプボタンのツールチップ"
+  },
+  "setupLanguageTitle": {
+    "message": "言語を選択",
+    "description": "初期設定：言語ステップのタイトル"
+  },
+  "setupLanguageDesc": {
+    "message": "拡張機能の表示言語を選んでください。",
+    "description": "初期設定：言語ステップの説明"
+  },
+  "setupLanguageAuto": {
+    "message": "自動検出（ブラウザの言語）",
+    "description": "初期設定：自動言語オプション"
+  },
+  "setupLanguageEn": {
+    "message": "English（英語）",
+    "description": "初期設定：英語オプション"
+  },
+  "setupLanguageJa": {
+    "message": "日本語",
+    "description": "初期設定：日本語オプション"
+  },
+  "setupWorkHoursTitle": {
+    "message": "勤務時間の設定",
+    "description": "初期設定：勤務時間ステップのタイトル"
+  },
+  "setupWorkHoursDesc": {
+    "message": "勤務時間を設定すると、タイムライン上でハイライト表示されます。",
+    "description": "初期設定：勤務時間ステップの説明"
+  },
+  "setupWorkStart": {
+    "message": "開始",
+    "description": "初期設定：勤務開始時間ラベル"
+  },
+  "setupWorkEnd": {
+    "message": "終了",
+    "description": "初期設定：勤務終了時間ラベル"
+  },
+  "setupGoogleTitle": {
+    "message": "Googleカレンダー",
+    "description": "初期設定：Google連携ステップのタイトル"
+  },
+  "setupGoogleDesc": {
+    "message": "Googleカレンダーを連携すると、予定をローカル予定と並べて表示できます。",
+    "description": "初期設定：Google連携ステップの説明"
+  },
+  "setupGoogleToggle": {
+    "message": "Googleカレンダーを有効にする",
+    "description": "初期設定：Google連携トグルラベル"
+  },
+  "setupGoogleNote": {
+    "message": "設定画面からいつでも接続できます。読み取り専用でアクセスします。",
+    "description": "初期設定：Google連携の注記"
+  },
+  "setupGoogleConnect": {
+    "message": "Googleでログイン",
+    "description": "初期設定：Google接続ボタン"
+  },
+  "setupGoogleDisconnect": {
+    "message": "Google連携を解除",
+    "description": "初期設定：Google切断ボタン"
+  },
+  "setupGoogleConnected": {
+    "message": "✓ 連携済み",
+    "description": "初期設定：Google連携状態（接続済み）"
+  },
+  "setupGoogleNotConnected": {
+    "message": "未連携",
+    "description": "初期設定：Google連携状態（未接続）"
+  },
+  "setupGoogleConnecting": {
+    "message": "接続中...",
+    "description": "初期設定：Google連携状態（接続中）"
+  },
+  "setupReminderTitle": {
+    "message": "通知設定",
+    "description": "初期設定：通知ステップのタイトル"
+  },
+  "setupReminderDesc": {
+    "message": "予定の開始前に通知を受け取ることで、ミーティングの見逃しを防げます。",
+    "description": "初期設定：通知ステップの説明"
+  },
+  "setupReminderToggle": {
+    "message": "イベントリマインダーを有効にする",
+    "description": "初期設定：リマインダートグルラベル"
+  },
+  "setupReminderMinutes": {
+    "message": "通知タイミング",
+    "description": "初期設定：リマインダー分数ラベル"
+  },
+  "setupNext": {
+    "message": "次へ",
+    "description": "初期設定：次へボタン"
+  },
+  "setupBack": {
+    "message": "戻る",
+    "description": "初期設定：戻るボタン"
+  },
+  "setupSkipAll": {
+    "message": "スキップ",
+    "description": "初期設定：スキップボタン"
+  },
+  "setupComplete": {
+    "message": "完了",
+    "description": "初期設定：完了ボタン"
+  },
+  "replayTutorial": {
+    "message": "チュートリアルを再表示",
+    "description": "チュートリアルを再表示するボタン"
+  },
+  "replayTutorialSuccess": {
+    "message": "次回起動時にチュートリアルが表示されます。",
+    "description": "チュートリアルリセット成功メッセージ"
+  },
+  "replayTutorialFailed": {
+    "message": "チュートリアルのリセットに失敗しました。",
+    "description": "チュートリアルリセット失敗メッセージ"
   }
 }
