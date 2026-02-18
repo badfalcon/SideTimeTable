@@ -9,6 +9,11 @@
 - **Side Panel Interface**: Access your daily events on a handy side panel with auto-width adjustment.
 - **Google Calendar Integration**: Sync with multiple Google Calendars and manage calendar visibility with search functionality.
 - **Local Event Management**: Add and configure local events directly from the side panel with automatic midnight reset.
+- **Recurring Events**: Create daily, weekly, monthly, or weekday recurring events with ease.
+- **Reminder Notifications**: Get desktop alerts minutes before events (1/3/5/10/15/30/60 minutes).
+- **Auto-reminders for Google Events**: Automatically create reminders from your connected Google Calendars (toggle on/off).
+- **First-time Setup Wizard**: Easy-to-follow guide helps new users get started quickly.
+- **Step-by-Step Tutorial**: Interactive tutorial to learn key features at your own pace.
 - **Multi-language Support**: Full internationalization support (English/Japanese) with auto-detection.
 - **Advanced Event Layout**: Sophisticated overlap resolution algorithm for overlapping events with lane-based positioning.
 - **Demo Mode**: Developer mode with mock data for testing without API access.
@@ -93,6 +98,11 @@ This plugin is released under the [Apache License 2.0]. See the `LICENSE` file f
 - **サイドパネルインターフェース**: デイリーイベントを便利なサイドパネルで確認（自動幅調整機能付き）。
 - **Googleカレンダー連携**: 複数のGoogleカレンダーと同期し、検索機能でカレンダー管理が可能。
 - **ローカルイベント管理**: サイドパネルから直接ローカルイベントを追加・設定（自動午前0時リセット）。
+- **繰り返しイベント**: 毎日・毎週・毎月・平日の繰り返し予定を簡単作成。
+- **リマインダー通知**: 予定の◯分前にデスクトップ通知でお知らせ（1/3/5/10/15/30/60分から選択可能）。
+- **Google予定の自動リマインド**: 連携中のGoogle予定からリマインダーを自動作成（オン/オフ切り替え可）。
+- **初回セットアップウィザード**: 初めての方でも簡単に使い始められる親切なガイド。
+- **ステップバイステップチュートリアル**: 主要機能を段階的に学べる対話型チュートリアル。
 - **多言語対応**: 日本語/英語の完全国際化対応（自動言語検出）。
 - **高度なイベントレイアウト**: 重複するイベントに対する高度な重複解決アルゴリズム（レーンベース配置）。
 - **デモモード**: APIアクセスなしでモックデータを使用したテスト用開発者モード。
