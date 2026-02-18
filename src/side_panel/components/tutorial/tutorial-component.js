@@ -171,11 +171,15 @@ export class TutorialComponent extends Component {
                 this.highlightElement.style.left = `${clampedLeft}px`;
                 this.highlightElement.style.width = `${clampedRight - clampedLeft}px`;
                 this.highlightElement.style.height = `${clampedBottom - clampedTop}px`;
+                // highlight's box-shadow covers the whole screen, so backdrop is redundant
+                this.overlayBackdrop.style.display = 'none';
             } else {
                 this.highlightElement.style.display = 'none';
+                this.overlayBackdrop.style.display = '';
             }
         } else {
             this.highlightElement.style.display = 'none';
+            this.overlayBackdrop.style.display = '';
         }
 
         // Build tooltip content
