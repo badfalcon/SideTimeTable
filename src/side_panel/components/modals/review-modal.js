@@ -1,5 +1,13 @@
 /**
  * ReviewModal - Modal to request a Chrome Web Store review after sufficient usage
+ *
+ * Show conditions (initial):
+ *   - User has opened the panel on 3 or more consecutive days
+ *   - Google Calendar integration is enabled
+ *
+ * Show conditions (after "Later"):
+ *   - 7 days have passed since "Later" was clicked
+ *   - Google Calendar integration is still enabled
  */
 import { ModalComponent } from './modal-component.js';
 import { StorageHelper } from '../../../lib/storage-helper.js';
@@ -7,17 +15,11 @@ import { StorageHelper } from '../../../lib/storage-helper.js';
 // Storage key for review tracking data
 const REVIEW_STATS_KEY = 'reviewStats';
 
-// Show review popup after this many panel opens
-const MIN_OPEN_COUNT = 5;
-
-// Show review popup after this many days since first open
-const MIN_DAYS_SINCE_FIRST_OPEN = 3;
+// Number of consecutive days required before showing the popup
+const MIN_CONSECUTIVE_DAYS = 3;
 
 // After clicking "Later", wait this many days before showing again
 const LATER_WAIT_DAYS = 7;
-
-// After clicking "Later", require this many additional opens before showing again
-const LATER_ADDITIONAL_OPENS = 3;
 
 export class ReviewModal extends ModalComponent {
     constructor(options = {}) {
@@ -109,7 +111,7 @@ export class ReviewModal extends ModalComponent {
     }
 
     /**
-     * Dismiss for now – show again later
+     * Dismiss for now – show again after LATER_WAIT_DAYS days
      * @private
      */
     async _handleLater() {
@@ -117,8 +119,7 @@ export class ReviewModal extends ModalComponent {
         await this._saveStats({
             ...stats,
             state: 'later',
-            lastLaterDate: Date.now(),
-            openCountAtLater: stats.openCount
+            lastLaterDate: Date.now()
         });
         this.hide();
     }
@@ -164,6 +165,77 @@ export class ReviewModal extends ModalComponent {
     }
 
     /**
+     * Returns today's date as a YYYY-MM-DD string (local time)
+     * @returns {string}
+     * @private
+     */
+    _todayStr() {
+        const d = new Date();
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+    }
+
+    /**
+     * Returns the date string for N days before today
+     * @param {number} n
+     * @returns {string}
+     * @private
+     */
+    _dateStrDaysAgo(n) {
+        const d = new Date();
+        d.setDate(d.getDate() - n);
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+    }
+
+    /**
+     * Update consecutive day counter based on today's date.
+     * - Same day as last open: no change (already counted today)
+     * - Next calendar day: increment
+     * - Gap of 2+ days: reset to 1
+     * @param {object} stats
+     * @returns {object} Updated stats
+     * @private
+     */
+    _updateConsecutiveDays(stats) {
+        const today = this._todayStr();
+
+        if (stats.lastOpenDateStr === today) {
+            // Already counted today
+            return stats;
+        }
+
+        const yesterday = this._dateStrDaysAgo(1);
+        if (stats.lastOpenDateStr === yesterday) {
+            stats.consecutiveDays = (stats.consecutiveDays || 1) + 1;
+        } else {
+            // Streak broken (or first open)
+            stats.consecutiveDays = 1;
+        }
+
+        stats.lastOpenDateStr = today;
+        return stats;
+    }
+
+    /**
+     * Check if Google Calendar integration is currently enabled.
+     * @returns {Promise<boolean>}
+     * @private
+     */
+    async _isGoogleIntegrated() {
+        try {
+            const data = await StorageHelper.get(['googleIntegrated'], { googleIntegrated: false });
+            return data.googleIntegrated === true;
+        } catch {
+            return false;
+        }
+    }
+
+    /**
      * Record a panel open and check whether the review popup should be shown.
      * Call this once each time the side panel is opened.
      */
@@ -171,17 +243,9 @@ export class ReviewModal extends ModalComponent {
         try {
             let stats = await this._loadStats();
 
-            // Initialize on first open
-            if (!stats.firstOpenDate) {
-                stats.firstOpenDate = Date.now();
-                stats.openCount = 1;
-                stats.state = stats.state || 'none';
-                await this._saveStats(stats);
-                return;
-            }
-
-            // Increment open count
-            stats.openCount = (stats.openCount || 0) + 1;
+            // Update consecutive day streak
+            stats = this._updateConsecutiveDays(stats);
+            if (!stats.state) stats.state = 'none';
             await this._saveStats(stats);
 
             // Don't show if already reviewed or set to never
@@ -189,19 +253,19 @@ export class ReviewModal extends ModalComponent {
                 return;
             }
 
-            const now = Date.now();
-            const daysSinceFirst = (now - stats.firstOpenDate) / (1000 * 60 * 60 * 24);
+            // Both conditions must be met: streak + Google Calendar connected
+            const gcalEnabled = await this._isGoogleIntegrated();
+            if (!gcalEnabled) {
+                return;
+            }
 
-            if (stats.state === 'none' || !stats.state) {
-                // Show after MIN_OPEN_COUNT opens AND MIN_DAYS_SINCE_FIRST_OPEN days
-                if (stats.openCount >= MIN_OPEN_COUNT && daysSinceFirst >= MIN_DAYS_SINCE_FIRST_OPEN) {
+            if (stats.state === 'none') {
+                if (stats.consecutiveDays >= MIN_CONSECUTIVE_DAYS) {
                     this.show();
                 }
             } else if (stats.state === 'later') {
-                // Show again after LATER_WAIT_DAYS days AND LATER_ADDITIONAL_OPENS more opens
-                const daysSinceLater = (now - (stats.lastLaterDate || 0)) / (1000 * 60 * 60 * 24);
-                const additionalOpens = stats.openCount - (stats.openCountAtLater || 0);
-                if (daysSinceLater >= LATER_WAIT_DAYS && additionalOpens >= LATER_ADDITIONAL_OPENS) {
+                const daysSinceLater = (Date.now() - (stats.lastLaterDate || 0)) / (1000 * 60 * 60 * 24);
+                if (daysSinceLater >= LATER_WAIT_DAYS) {
                     this.show();
                 }
             }
