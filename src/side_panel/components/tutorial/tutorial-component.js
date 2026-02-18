@@ -149,8 +149,8 @@ export class TutorialComponent extends Component {
             return;
         }
 
-        const title = this._getMessage(step.titleKey);
-        const desc = this._getMessage(step.descKey);
+        const title = this.getMessage(step.titleKey);
+        const desc = this.getMessage(step.descKey);
 
         // Position highlight (clamp to viewport for large elements)
         if (step.target) {
@@ -213,27 +213,27 @@ export class TutorialComponent extends Component {
         if (!isFirst) {
             const prevBtn = document.createElement('button');
             prevBtn.className = 'tutorial-btn tutorial-btn-secondary';
-            prevBtn.textContent = this._getMessage('tutorialPrev');
+            prevBtn.textContent = this.getMessage('tutorialPrev');
             prevBtn.addEventListener('click', () => this._prevStep());
             btnContainer.appendChild(prevBtn);
         }
 
         const skipBtn = document.createElement('button');
         skipBtn.className = 'tutorial-btn tutorial-btn-skip';
-        skipBtn.textContent = this._getMessage('tutorialSkip');
+        skipBtn.textContent = this.getMessage('tutorialSkip');
         skipBtn.addEventListener('click', () => this._finish());
         btnContainer.appendChild(skipBtn);
 
         if (isLast) {
             const doneBtn = document.createElement('button');
             doneBtn.className = 'tutorial-btn tutorial-btn-primary';
-            doneBtn.textContent = this._getMessage('tutorialDone');
+            doneBtn.textContent = this.getMessage('tutorialDone');
             doneBtn.addEventListener('click', () => this._finish());
             btnContainer.appendChild(doneBtn);
         } else {
             const nextBtn = document.createElement('button');
             nextBtn.className = 'tutorial-btn tutorial-btn-primary';
-            nextBtn.textContent = this._getMessage('tutorialNext');
+            nextBtn.textContent = this.getMessage('tutorialNext');
             nextBtn.addEventListener('click', () => this._nextStep());
             btnContainer.appendChild(nextBtn);
         }
@@ -353,19 +353,6 @@ export class TutorialComponent extends Component {
      */
     _isActive() {
         return this.element && !this.element.hasAttribute('hidden');
-    }
-
-    /**
-     * Get localized message with fallback
-     * @private
-     */
-    _getMessage(key) {
-        try {
-            const msg = chrome.i18n.getMessage(key);
-            return msg || key;
-        } catch {
-            return key;
-        }
     }
 
     /**

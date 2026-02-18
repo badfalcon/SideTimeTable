@@ -893,6 +893,10 @@
     "message": "Not connected",
     "description": "Initial setup: Google integration status (not connected)"
   },
+  "setupGoogleConnecting": {
+    "message": "Connecting...",
+    "description": "Initial setup: Google integration status (connecting)"
+  },
   "setupReminderTitle": {
     "message": "Notifications",
     "description": "Initial setup: reminder step title"

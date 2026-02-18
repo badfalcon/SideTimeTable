@@ -171,6 +171,20 @@ export class Component {
     }
 
     /**
+     * Get localized message with fallback to key
+     * @param {string} key - i18n message key
+     * @returns {string} Localized message or the key itself
+     */
+    getMessage(key) {
+        try {
+            const msg = chrome.i18n.getMessage(key);
+            return msg || key;
+        } catch {
+            return key;
+        }
+    }
+
+    /**
      * Localize strings within element
      */
     localize() {

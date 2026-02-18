@@ -893,6 +893,10 @@
     "message": "未連携",
     "description": "初期設定：Google連携状態（未接続）"
   },
+  "setupGoogleConnecting": {
+    "message": "接続中...",
+    "description": "初期設定：Google連携状態（接続中）"
+  },
   "setupReminderTitle": {
     "message": "通知設定",
     "description": "初期設定：通知ステップのタイトル"
