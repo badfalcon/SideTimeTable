@@ -940,5 +940,25 @@
   "replayTutorialFailed": {
     "message": "Failed to reset tutorial.",
     "description": "Error message when tutorial reset fails"
+  },
+  "reviewTitle": {
+    "message": "Enjoying SideTimeTable?",
+    "description": "Title of the review request modal"
+  },
+  "reviewMessage": {
+    "message": "Thank you for using SideTimeTable!\nWe would love to hear your feedback.",
+    "description": "Message body of the review request modal"
+  },
+  "reviewRateNow": {
+    "message": "Rate Now",
+    "description": "Button to open the Chrome Web Store review page"
+  },
+  "reviewLater": {
+    "message": "Later",
+    "description": "Button to dismiss the review popup and show it again later"
+  },
+  "reviewNever": {
+    "message": "Don't ask again",
+    "description": "Button to permanently dismiss the review popup"
   }
 }

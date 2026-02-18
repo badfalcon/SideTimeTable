@@ -940,5 +940,25 @@
   "replayTutorialFailed": {
     "message": "チュートリアルのリセットに失敗しました。",
     "description": "チュートリアルリセット失敗メッセージ"
+  },
+  "reviewTitle": {
+    "message": "SideTimeTableはいかがですか？",
+    "description": "レビュー依頼モーダルのタイトル"
+  },
+  "reviewMessage": {
+    "message": "SideTimeTableをご利用いただきありがとうございます！\nよろしければ、ぜひレビューをお願いします。",
+    "description": "レビュー依頼モーダルのメッセージ"
+  },
+  "reviewRateNow": {
+    "message": "今すぐレビュー",
+    "description": "レビューページを開くボタン"
+  },
+  "reviewLater": {
+    "message": "後で",
+    "description": "後でレビューするボタン"
+  },
+  "reviewNever": {
+    "message": "表示しない",
+    "description": "レビュー依頼を二度と表示しないボタン"
   }
 }

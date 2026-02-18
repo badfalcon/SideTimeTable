@@ -884,6 +884,59 @@ button {
     display: block;
 }
 
+/* ===== Review Request Modal ===== */
+#reviewModal .modal-content {
+    text-align: center;
+    max-width: 340px;
+}
+
+.review-modal-icon {
+    font-size: 2.5em;
+    color: #f5a623;
+    margin-bottom: 10px;
+}
+
+.review-modal-title {
+    font-size: 1.1em;
+    margin-bottom: 8px;
+}
+
+.review-modal-message {
+    font-size: 0.9em;
+    color: #555;
+    white-space: pre-line;
+    margin-bottom: 16px;
+    line-height: 1.5;
+}
+
+.review-modal-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 8px;
+}
+
+.review-btn-rate {
+    min-width: 110px;
+}
+
+.review-btn-later {
+    min-width: 80px;
+}
+
+.review-btn-never {
+    display: block;
+    margin: 0 auto;
+    font-size: 0.8em;
+    color: #999;
+    text-decoration: none;
+    padding: 2px 0;
+}
+
+.review-btn-never:hover {
+    color: #666;
+}
+
 .setup-google-status {
     text-align: center;
     margin-top: 12px;

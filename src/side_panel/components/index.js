@@ -17,6 +17,7 @@ export { LocalEventModal } from './modals/local-event-modal.js';
 export { GoogleEventModal } from './modals/google-event-modal.js';
 export { AlertModal } from './modals/alert-modal.js';
 export { WhatsNewModal } from './modals/whats-new-modal.js';
+export { ReviewModal } from './modals/review-modal.js';
 
 // The tutorial Component
 export { TutorialComponent } from './tutorial/tutorial-component.js';
