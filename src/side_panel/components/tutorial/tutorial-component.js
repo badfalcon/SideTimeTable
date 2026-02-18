@@ -75,14 +75,19 @@ export class TutorialComponent extends Component {
                 target: null
             },
             {
-                titleKey: 'tutorialAddEventTitle',
-                descKey: 'tutorialAddEventDesc',
-                target: '#addLocalEventButton'
+                titleKey: 'tutorialTimelineTitle',
+                descKey: 'tutorialTimelineDesc',
+                target: '.side-time-table'
             },
             {
                 titleKey: 'tutorialDateNavTitle',
                 descKey: 'tutorialDateNavDesc',
                 target: '#dateNavigation'
+            },
+            {
+                titleKey: 'tutorialAddEventTitle',
+                descKey: 'tutorialAddEventDesc',
+                target: '#addLocalEventButton'
             },
             {
                 titleKey: 'tutorialSyncTitle',
@@ -93,11 +98,6 @@ export class TutorialComponent extends Component {
                 titleKey: 'tutorialSettingsTitle',
                 descKey: 'tutorialSettingsDesc',
                 target: '#settingsIcon'
-            },
-            {
-                titleKey: 'tutorialTimelineTitle',
-                descKey: 'tutorialTimelineDesc',
-                target: '.side-time-table'
             },
             {
                 type: 'finish',
