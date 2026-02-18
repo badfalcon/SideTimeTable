@@ -6,6 +6,20 @@
  */
 export const RELEASE_NOTES = [
     {
+        version: '1.7.1',
+        date: '2026-02-18',
+        highlights: {
+            en: [
+                'Added tutorial to learn how to use the app',
+                'Added setup wizard for new users'
+            ],
+            ja: [
+                '使い方を学べるチュートリアルを追加',
+                '初めての方向けのセットアップ案内を追加'
+            ]
+        }
+    },
+    {
         version: '1.7.0',
         date: '2026-02-15',
         highlights: {
