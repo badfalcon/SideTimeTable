@@ -359,6 +359,9 @@ export class InitialSetupComponent extends Component {
             if (response && response.authenticated) {
                 this.setupData.googleIntegrated = true;
                 this._updateGoogleUI(button, statusText, true);
+                // Already connected - disable button so user doesn't accidentally disconnect
+                button.disabled = true;
+                button.classList.add('gsi-material-button-connected');
             }
         } catch (error) {
             console.warn('Google auth status check error:', error);
@@ -377,7 +380,7 @@ export class InitialSetupComponent extends Component {
         const textSpan = button.querySelector('.gsi-material-button-contents');
         if (textSpan) {
             textSpan.textContent = integrated
-                ? this._getMessage('setupGoogleDisconnect')
+                ? this._getMessage('setupGoogleConnected')
                 : this._getMessage('setupGoogleConnect');
         }
         if (statusText) {
@@ -447,6 +450,10 @@ export class InitialSetupComponent extends Component {
                     if (response && response.success) {
                         this.setupData.googleIntegrated = true;
                         this._updateGoogleUI(button, statusText, true);
+                        // Connected - disable button so user doesn't accidentally disconnect
+                        button.disabled = true;
+                        button.classList.add('gsi-material-button-connected');
+                        return;
                     } else {
                         const errorMsg = (response && response.error) || 'Authentication failed';
                         throw new Error(errorMsg);

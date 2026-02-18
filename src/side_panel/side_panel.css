@@ -969,6 +969,23 @@ button {
     opacity: 8%;
 }
 
+/* Connected state - show as success instead of disabled grey */
+.gsi-material-button-connected:disabled {
+    background-color: #e8f5e9;
+    border-color: #4caf50;
+    cursor: default;
+}
+
+.gsi-material-button-connected:disabled .gsi-material-button-contents {
+    opacity: 1;
+    color: #2e7d32;
+    font-weight: 600;
+}
+
+.gsi-material-button-connected:disabled .gsi-material-button-icon {
+    opacity: 0.7;
+}
+
 /* Adjustments for setup wizard context */
 .setup-step-content .gsi-material-button {
     margin: 0 auto;
