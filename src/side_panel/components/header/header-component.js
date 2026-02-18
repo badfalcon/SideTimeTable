@@ -50,16 +50,22 @@ export class HeaderComponent extends Component {
         // Date navigation
         const dateNavigation = this._createDateNavigation();
 
+        // Right-side buttons container (settings)
+        const rightButtons = document.createElement('div');
+        rightButtons.className = 'action-buttons';
+
         // Settings button
         this.settingsButton = document.createElement('i');
         this.settingsButton.className = 'fas fa-cog settings-icon';
         this.settingsButton.id = 'settingsIcon';
         this.settingsButton.setAttribute('data-localize-title', '__MSG_settings__');
 
+        rightButtons.appendChild(this.settingsButton);
+
         // Add the elements to the header
         header.appendChild(actionButtons);
         header.appendChild(dateNavigation);
-        header.appendChild(this.settingsButton);
+        header.appendChild(rightButtons);
 
         wrapper.appendChild(header);
 

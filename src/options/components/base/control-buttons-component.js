@@ -1,16 +1,19 @@
 /**
  * ControlButtonsComponent - The reset button component
  */
+import { StorageHelper } from '../../../lib/storage-helper.js';
+
 export class ControlButtonsComponent {
     constructor(onReset) {
         this.onReset = onReset;
         this.element = null;
         this.resetButton = null;
+        this.replayTutorialButton = null;
     }
 
     createElement() {
         const container = document.createElement('div');
-        container.className = 'd-flex gap-2 mt-4';
+        container.className = 'd-flex gap-2 mt-4 flex-wrap';
 
         // The reset button
         this.resetButton = document.createElement('button');
@@ -20,6 +23,13 @@ export class ControlButtonsComponent {
         this.resetButton.textContent = 'Reset to Default';
 
         container.appendChild(this.resetButton);
+
+        // Replay Tutorial button
+        this.replayTutorialButton = document.createElement('button');
+        this.replayTutorialButton.id = 'replayTutorialButton';
+        this.replayTutorialButton.className = 'btn btn-outline-primary';
+        this.replayTutorialButton.innerHTML = `<i class="fas fa-graduation-cap me-1"></i><span data-localize="__MSG_replayTutorial__">Replay Tutorial</span>`;
+        container.appendChild(this.replayTutorialButton);
 
         // Changelog link
         const changelogLink = document.createElement('a');
@@ -38,6 +48,10 @@ export class ControlButtonsComponent {
     _setupEventListeners() {
         this.resetButton?.addEventListener('click', async () => {
             await this._handleReset();
+        });
+
+        this.replayTutorialButton?.addEventListener('click', async () => {
+            await this._handleReplayTutorial();
         });
     }
 
@@ -63,6 +77,25 @@ export class ControlButtonsComponent {
         }
     }
 
+
+    async _handleReplayTutorial() {
+        try {
+            // Reset tutorial and initial setup flags
+            await StorageHelper.remove(['tutorialCompleted', 'initialSetupCompleted']);
+
+            this._showSuccess(chrome.i18n.getMessage('replayTutorialSuccess') || 'Tutorial will show on next open.');
+
+            // Reload side panel so it picks up the reset state
+            try {
+                chrome.runtime.sendMessage({ action: 'reloadSideTimeTable' });
+            } catch {
+                // Non-blocking
+            }
+        } catch (error) {
+            console.error('Replay tutorial error:', error);
+            this._showError(chrome.i18n.getMessage('replayTutorialFailed') || 'Failed to reset tutorial.');
+        }
+    }
 
     setResetState(state) {
         if (!this.resetButton) return;
@@ -134,6 +167,7 @@ export class ControlButtonsComponent {
         }
         this.element = null;
         this.resetButton = null;
+        this.replayTutorialButton = null;
     }
 
     /**

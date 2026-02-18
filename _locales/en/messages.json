@@ -748,5 +748,197 @@
   "changelogContextMenu": {
     "message": "Changelog",
     "description": "Context menu item for Changelog"
+  },
+  "tutorialWelcomeTitle": {
+    "message": "Welcome to SideTimeTable!",
+    "description": "Tutorial: welcome step title"
+  },
+  "tutorialWelcomeDesc": {
+    "message": "Let us show you around. We'll walk through the main features step by step.",
+    "description": "Tutorial: welcome step description"
+  },
+  "tutorialAddEventTitle": {
+    "message": "Add an Event",
+    "description": "Tutorial: add event step title"
+  },
+  "tutorialAddEventDesc": {
+    "message": "Tap this button to create a new local event. You can set a title, time, and recurrence options.",
+    "description": "Tutorial: add event step description"
+  },
+  "tutorialDateNavTitle": {
+    "message": "Date Navigation",
+    "description": "Tutorial: date navigation step title"
+  },
+  "tutorialDateNavDesc": {
+    "message": "Use the arrows to move between days. Click the date to open a calendar picker for quick navigation.",
+    "description": "Tutorial: date navigation step description"
+  },
+  "tutorialSyncTitle": {
+    "message": "Sync Events",
+    "description": "Tutorial: sync step title"
+  },
+  "tutorialSyncDesc": {
+    "message": "Fetch and update your Google Calendar events. Available when Google Calendar is connected.",
+    "description": "Tutorial: sync step description"
+  },
+  "tutorialSettingsTitle": {
+    "message": "Settings",
+    "description": "Tutorial: settings step title"
+  },
+  "tutorialSettingsDesc": {
+    "message": "Customize work hours, colors, language, and Google Calendar integration in the settings page.",
+    "description": "Tutorial: settings step description"
+  },
+  "tutorialTimelineTitle": {
+    "message": "Timeline",
+    "description": "Tutorial: timeline step title"
+  },
+  "tutorialTimelineDesc": {
+    "message": "Your daily schedule is displayed on a 24-hour timeline. The red line marks the current time.",
+    "description": "Tutorial: timeline step description"
+  },
+  "tutorialFinishTitle": {
+    "message": "You're All Set!",
+    "description": "Tutorial: finish step title"
+  },
+  "tutorialFinishDesc": {
+    "message": "That covers the basics. Enjoy using SideTimeTable!",
+    "description": "Tutorial: finish step description"
+  },
+  "tutorialNext": {
+    "message": "Next",
+    "description": "Tutorial: next button"
+  },
+  "tutorialPrev": {
+    "message": "Back",
+    "description": "Tutorial: back button"
+  },
+  "tutorialSkip": {
+    "message": "Skip",
+    "description": "Tutorial: skip button"
+  },
+  "tutorialDone": {
+    "message": "Done",
+    "description": "Tutorial: done button"
+  },
+  "helpTutorial": {
+    "message": "Tutorial",
+    "description": "Help button tooltip"
+  },
+  "setupLanguageTitle": {
+    "message": "Choose Your Language",
+    "description": "Initial setup: language step title"
+  },
+  "setupLanguageDesc": {
+    "message": "Select the language for the extension interface.",
+    "description": "Initial setup: language step description"
+  },
+  "setupLanguageAuto": {
+    "message": "Auto-detect (Browser language)",
+    "description": "Initial setup: auto language option"
+  },
+  "setupLanguageEn": {
+    "message": "English",
+    "description": "Initial setup: English option"
+  },
+  "setupLanguageJa": {
+    "message": "Japanese (日本語)",
+    "description": "Initial setup: Japanese option"
+  },
+  "setupWorkHoursTitle": {
+    "message": "Set Work Hours",
+    "description": "Initial setup: work hours step title"
+  },
+  "setupWorkHoursDesc": {
+    "message": "Define your working hours. These will be highlighted on the timeline.",
+    "description": "Initial setup: work hours step description"
+  },
+  "setupWorkStart": {
+    "message": "Start",
+    "description": "Initial setup: work start time label"
+  },
+  "setupWorkEnd": {
+    "message": "End",
+    "description": "Initial setup: work end time label"
+  },
+  "setupGoogleTitle": {
+    "message": "Google Calendar",
+    "description": "Initial setup: Google integration step title"
+  },
+  "setupGoogleDesc": {
+    "message": "Connect Google Calendar to display your events alongside local events.",
+    "description": "Initial setup: Google integration step description"
+  },
+  "setupGoogleToggle": {
+    "message": "Enable Google Calendar",
+    "description": "Initial setup: Google integration toggle label"
+  },
+  "setupGoogleNote": {
+    "message": "You can connect later from Settings. Read-only access is used.",
+    "description": "Initial setup: Google integration note"
+  },
+  "setupGoogleConnect": {
+    "message": "Sign in with Google",
+    "description": "Initial setup: Google connect button"
+  },
+  "setupGoogleDisconnect": {
+    "message": "Disconnect Google",
+    "description": "Initial setup: Google disconnect button"
+  },
+  "setupGoogleConnected": {
+    "message": "✓ Connected",
+    "description": "Initial setup: Google integration status (connected)"
+  },
+  "setupGoogleNotConnected": {
+    "message": "Not connected",
+    "description": "Initial setup: Google integration status (not connected)"
+  },
+  "setupGoogleConnecting": {
+    "message": "Connecting...",
+    "description": "Initial setup: Google integration status (connecting)"
+  },
+  "setupReminderTitle": {
+    "message": "Notifications",
+    "description": "Initial setup: reminder step title"
+  },
+  "setupReminderDesc": {
+    "message": "Get notified before events start so you never miss a meeting.",
+    "description": "Initial setup: reminder step description"
+  },
+  "setupReminderToggle": {
+    "message": "Enable event reminders",
+    "description": "Initial setup: reminder toggle label"
+  },
+  "setupReminderMinutes": {
+    "message": "Remind before",
+    "description": "Initial setup: reminder minutes label"
+  },
+  "setupNext": {
+    "message": "Next",
+    "description": "Initial setup: next button"
+  },
+  "setupBack": {
+    "message": "Back",
+    "description": "Initial setup: back button"
+  },
+  "setupSkipAll": {
+    "message": "Skip",
+    "description": "Initial setup: skip all button"
+  },
+  "setupComplete": {
+    "message": "Done",
+    "description": "Initial setup: complete button"
+  },
+  "replayTutorial": {
+    "message": "Replay Tutorial",
+    "description": "Button to replay the onboarding tutorial"
+  },
+  "replayTutorialSuccess": {
+    "message": "Tutorial will show on next open.",
+    "description": "Success message after resetting tutorial"
+  },
+  "replayTutorialFailed": {
+    "message": "Failed to reset tutorial.",
+    "description": "Error message when tutorial reset fails"
   }
 }

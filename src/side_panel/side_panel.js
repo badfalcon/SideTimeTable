@@ -9,7 +9,9 @@ import {
     LocalEventModal,
     GoogleEventModal,
     AlertModal,
-    WhatsNewModal
+    WhatsNewModal,
+    TutorialComponent,
+    InitialSetupComponent
 } from './components/index.js';
 
 import { EventLayoutManager } from './time-manager.js';
@@ -49,6 +51,8 @@ class SidePanelUIController {
         this.googleEventModal = null;
         this.alertModal = null;
         this.whatsNewModal = null;
+        this.tutorialComponent = null;
+        this.initialSetupComponent = null;
 
         // The state management
         this.currentDate = new Date();
@@ -119,7 +123,9 @@ class SidePanelUIController {
             'localEventDialog',
             'googleEventDialog',
             'alertModal',
-            'whatsNewModal'
+            'whatsNewModal',
+            'tutorialOverlay',
+            'initialSetupOverlay'
         ];
 
         existingModals.forEach(modalId => {
@@ -175,6 +181,14 @@ class SidePanelUIController {
 
         this.whatsNewModal = new WhatsNewModal();
 
+        this.tutorialComponent = new TutorialComponent({
+            onComplete: () => this._onTutorialComplete()
+        });
+
+        this.initialSetupComponent = new InitialSetupComponent({
+            onComplete: () => this._onSetupComplete()
+        });
+
         // Register with the component manager
         this.componentManager.register('header', this.headerComponent);
         this.componentManager.register('timeline', this.timelineComponent);
@@ -182,6 +196,8 @@ class SidePanelUIController {
         this.componentManager.register('googleEventModal', this.googleEventModal);
         this.componentManager.register('alertModal', this.alertModal);
         this.componentManager.register('whatsNewModal', this.whatsNewModal);
+        this.componentManager.register('tutorial', this.tutorialComponent);
+        this.componentManager.register('initialSetup', this.initialSetupComponent);
 
         // Add to the DOM
         const container = document.getElementById('side-panel-container') || document.body;
@@ -191,6 +207,8 @@ class SidePanelUIController {
         this.googleEventModal.appendTo(container);
         this.alertModal.appendTo(container);
         this.whatsNewModal.appendTo(container);
+        this.tutorialComponent.appendTo(container);
+        this.initialSetupComponent.appendTo(container);
 
         // Initialize all the components
         this.componentManager.initializeAll();
@@ -340,8 +358,8 @@ class SidePanelUIController {
         await this._loadEventsForCurrentDate();
         this._scrollToAppropriateTime();
 
-        // Check for update notifications
-        await this._checkForUpdateNotification();
+        // Show tutorial on first launch, then initial setup, then changelog
+        await this._checkTutorial();
     }
 
     /**
@@ -739,6 +757,69 @@ class SidePanelUIController {
         } catch (error) {
             console.error('Failed to sync reminders:', error);
         }
+    }
+
+    /**
+     * Check if tutorial should be shown on first launch.
+     * Tutorial runs first, then initial setup follows via _onTutorialComplete.
+     * @private
+     */
+    async _checkTutorial() {
+        try {
+            const shouldShow = await this.tutorialComponent.shouldShow();
+            if (shouldShow) {
+                setTimeout(() => {
+                    this.tutorialComponent.start();
+                }, 500);
+                return;
+            }
+
+            // Tutorial already done, check initial setup
+            await this._checkInitialSetup();
+        } catch (error) {
+            console.warn('Failed to check tutorial state:', error);
+            await this._checkInitialSetup();
+        }
+    }
+
+    /**
+     * Called when tutorial is completed; show initial setup next.
+     * @private
+     */
+    _onTutorialComplete() {
+        this._checkInitialSetup();
+    }
+
+    /**
+     * Check if initial setup should be shown and start it if needed.
+     * After setup completes or is skipped, show changelog if applicable.
+     * @private
+     */
+    async _checkInitialSetup() {
+        try {
+            const shouldShowSetup = await this.initialSetupComponent.shouldShow();
+            if (shouldShowSetup) {
+                setTimeout(() => {
+                    this.initialSetupComponent.start();
+                }, 300);
+                // Don't show changelog yet - it will show after page reload
+                return;
+            }
+
+            // Setup not needed (already completed), show changelog if applicable
+            await this._checkForUpdateNotification();
+        } catch (error) {
+            console.warn('Failed to check initial setup state:', error);
+        }
+    }
+
+    /**
+     * Called when initial setup is completed.
+     * @private
+     */
+    _onSetupComplete() {
+        // Reload to apply settings (language, work hours, etc.)
+        location.reload();
     }
 
     /**
