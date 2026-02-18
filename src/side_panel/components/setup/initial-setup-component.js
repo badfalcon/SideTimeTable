@@ -319,15 +319,13 @@ export class InitialSetupComponent extends Component {
         const buttonContainer = document.createElement('div');
         buttonContainer.style.marginBottom = '12px';
 
-        const googleButton = this._createGoogleButton();
+        const googleButton = this._createGoogleButton(buttonContainer);
         buttonContainer.appendChild(googleButton);
 
         // Status text
         const statusText = document.createElement('div');
         statusText.className = 'setup-google-status';
-        statusText.textContent = this.setupData.googleIntegrated
-            ? this._getMessage('setupGoogleConnected')
-            : this._getMessage('setupGoogleNotConnected');
+        statusText.textContent = this._getMessage('setupGoogleNotConnected');
         buttonContainer.appendChild(statusText);
 
         // Note
@@ -339,14 +337,63 @@ export class InitialSetupComponent extends Component {
 
         container.appendChild(buttonContainer);
         container.appendChild(note);
+
+        // Check actual Google auth status
+        this._checkGoogleAuthStatus(googleButton, statusText);
+
         return container;
     }
 
     /**
-     * Create Google Sign-in button
+     * Check Google auth status from background script and update UI
+     * @param {HTMLElement} button - The Google button element
+     * @param {HTMLElement} statusText - The status text element
      * @private
      */
-    _createGoogleButton() {
+    async _checkGoogleAuthStatus(button, statusText) {
+        try {
+            const response = await new Promise((resolve) => {
+                chrome.runtime.sendMessage({action: 'checkGoogleAuth'}, resolve);
+            });
+
+            if (response && response.authenticated) {
+                this.setupData.googleIntegrated = true;
+                this._updateGoogleUI(button, statusText, true);
+            }
+        } catch (error) {
+            console.warn('Google auth status check error:', error);
+        }
+    }
+
+    /**
+     * Update Google step UI based on integration state
+     * @param {HTMLElement} button - The Google button element
+     * @param {HTMLElement} statusText - The status text element
+     * @param {boolean} integrated - Whether Google is connected
+     * @param {string} [customStatus] - Custom status text (e.g. "Connecting...")
+     * @private
+     */
+    _updateGoogleUI(button, statusText, integrated, customStatus = null) {
+        const textSpan = button.querySelector('.gsi-material-button-contents');
+        if (textSpan) {
+            textSpan.textContent = integrated
+                ? this._getMessage('setupGoogleDisconnect')
+                : this._getMessage('setupGoogleConnect');
+        }
+        if (statusText) {
+            statusText.textContent = customStatus
+                || (integrated
+                    ? this._getMessage('setupGoogleConnected')
+                    : this._getMessage('setupGoogleNotConnected'));
+        }
+    }
+
+    /**
+     * Create Google Sign-in button
+     * @param {HTMLElement} buttonContainer - Parent container for finding status text
+     * @private
+     */
+    _createGoogleButton(buttonContainer) {
         const button = document.createElement('button');
         button.className = 'gsi-material-button';
         button.type = 'button';
@@ -373,9 +420,7 @@ export class InitialSetupComponent extends Component {
         // Button text
         const textSpan = document.createElement('span');
         textSpan.className = 'gsi-material-button-contents';
-        textSpan.textContent = this.setupData.googleIntegrated
-            ? this._getMessage('setupGoogleDisconnect')
-            : this._getMessage('setupGoogleConnect');
+        textSpan.textContent = this._getMessage('setupGoogleConnect');
 
         wrapper.appendChild(iconDiv);
         wrapper.appendChild(textSpan);
@@ -383,17 +428,50 @@ export class InitialSetupComponent extends Component {
         button.appendChild(state);
         button.appendChild(wrapper);
 
-        // Toggle integration state on click
-        button.addEventListener('click', () => {
-            this.setupData.googleIntegrated = !this.setupData.googleIntegrated;
-            textSpan.textContent = this.setupData.googleIntegrated
-                ? this._getMessage('setupGoogleDisconnect')
-                : this._getMessage('setupGoogleConnect');
-            const statusText = button.parentElement.querySelector('.setup-google-status');
-            if (statusText) {
-                statusText.textContent = this.setupData.googleIntegrated
-                    ? this._getMessage('setupGoogleConnected')
-                    : this._getMessage('setupGoogleNotConnected');
+        // Actual Google authentication on click
+        button.addEventListener('click', async () => {
+            const statusText = buttonContainer.querySelector('.setup-google-status');
+            const shouldIntegrate = !this.setupData.googleIntegrated;
+
+            button.disabled = true;
+
+            try {
+                if (shouldIntegrate) {
+                    // Connect
+                    this._updateGoogleUI(button, statusText, false, 'Connecting...');
+
+                    const response = await new Promise((resolve) => {
+                        chrome.runtime.sendMessage({action: 'authenticateGoogle'}, resolve);
+                    });
+
+                    if (response && response.success) {
+                        this.setupData.googleIntegrated = true;
+                        this._updateGoogleUI(button, statusText, true);
+                    } else {
+                        const errorMsg = (response && response.error) || 'Authentication failed';
+                        throw new Error(errorMsg);
+                    }
+                } else {
+                    // Disconnect
+                    this._updateGoogleUI(button, statusText, true, 'Disconnecting...');
+
+                    const response = await new Promise((resolve) => {
+                        chrome.runtime.sendMessage({action: 'disconnectGoogle'}, resolve);
+                    });
+
+                    if (response && response.success) {
+                        this.setupData.googleIntegrated = false;
+                        this._updateGoogleUI(button, statusText, false);
+                    } else {
+                        const errorMsg = (response && response.error) || 'Disconnection failed';
+                        throw new Error(errorMsg);
+                    }
+                }
+            } catch (error) {
+                console.warn('Google integration error in setup:', error);
+                this._updateGoogleUI(button, statusText, this.setupData.googleIntegrated);
+            } finally {
+                button.disabled = false;
             }
         });
 
@@ -514,14 +592,8 @@ export class InitialSetupComponent extends Component {
             // Mark setup as completed
             await StorageHelper.set({ [SETUP_STORAGE_KEY]: true });
 
-            // Trigger Google auth if enabled
-            if (this.setupData.googleIntegrated) {
-                try {
-                    chrome.runtime.sendMessage({ action: 'authenticateGoogle' });
-                } catch {
-                    // Non-blocking - user can configure later in settings
-                }
-            }
+            // Google auth is already handled in the Google step button click,
+            // so we only save the setting here without triggering auth again.
 
             // Notify background about reminder settings
             if (this.setupData.googleEventReminder) {
