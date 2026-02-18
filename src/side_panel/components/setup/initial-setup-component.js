@@ -10,6 +10,7 @@
 import { Component } from '../base/component.js';
 import { StorageHelper } from '../../../lib/storage-helper.js';
 import { DEFAULT_SETTINGS, saveSettings, loadSettings } from '../../../lib/utils.js';
+import { createGoogleSignInButton } from '../../../lib/google-button-helper.js';
 
 const SETUP_STORAGE_KEY = 'initialSetupCompleted';
 
@@ -159,21 +160,21 @@ export class InitialSetupComponent extends Component {
         if (this.currentStep > 0) {
             const backBtn = document.createElement('button');
             backBtn.className = 'setup-btn setup-btn-secondary';
-            backBtn.textContent = this._getMessage('setupBack');
+            backBtn.textContent = this.getMessage('setupBack');
             backBtn.addEventListener('click', () => this._prevStep());
             nav.appendChild(backBtn);
         }
 
         const skipBtn = document.createElement('button');
         skipBtn.className = 'setup-btn setup-btn-skip';
-        skipBtn.textContent = this._getMessage('setupSkipAll');
+        skipBtn.textContent = this.getMessage('setupSkipAll');
         skipBtn.addEventListener('click', () => this._finish());
         nav.appendChild(skipBtn);
 
         const isLast = this.currentStep === this.steps.length - 1;
         const nextBtn = document.createElement('button');
         nextBtn.className = 'setup-btn setup-btn-primary';
-        nextBtn.textContent = isLast ? this._getMessage('setupComplete') : this._getMessage('setupNext');
+        nextBtn.textContent = isLast ? this.getMessage('setupComplete') : this.getMessage('setupNext');
         nextBtn.addEventListener('click', () => {
             if (isLast) {
                 this._finish();
@@ -201,12 +202,12 @@ export class InitialSetupComponent extends Component {
 
         const title = document.createElement('h3');
         title.className = 'setup-step-title';
-        title.textContent = this._getMessage(titleKey);
+        title.textContent = this.getMessage(titleKey);
         container.appendChild(title);
 
         const desc = document.createElement('p');
         desc.className = 'setup-step-desc';
-        desc.textContent = this._getMessage(descKey);
+        desc.textContent = this.getMessage(descKey);
         container.appendChild(desc);
 
         return container;
@@ -245,7 +246,7 @@ export class InitialSetupComponent extends Component {
             });
 
             const text = document.createElement('span');
-            text.textContent = this._getMessage(opt.labelKey);
+            text.textContent = this.getMessage(opt.labelKey);
 
             label.appendChild(radio);
             label.appendChild(text);
@@ -269,7 +270,7 @@ export class InitialSetupComponent extends Component {
         // Start time
         const startLabel = document.createElement('label');
         startLabel.className = 'setup-time-label';
-        startLabel.textContent = this._getMessage('setupWorkStart');
+        startLabel.textContent = this.getMessage('setupWorkStart');
 
         const startInput = document.createElement('input');
         startInput.type = 'time';
@@ -288,7 +289,7 @@ export class InitialSetupComponent extends Component {
         // End time
         const endLabel = document.createElement('label');
         endLabel.className = 'setup-time-label';
-        endLabel.textContent = this._getMessage('setupWorkEnd');
+        endLabel.textContent = this.getMessage('setupWorkEnd');
 
         const endInput = document.createElement('input');
         endInput.type = 'time';
@@ -326,19 +327,19 @@ export class InitialSetupComponent extends Component {
         const connectedBadge = document.createElement('div');
         connectedBadge.className = 'setup-google-connected-badge';
         connectedBadge.style.display = 'none';
-        connectedBadge.textContent = this._getMessage('setupGoogleConnected');
+        connectedBadge.textContent = this.getMessage('setupGoogleConnected');
         buttonContainer.appendChild(connectedBadge);
 
         // Status text (shown below button when not connected)
         const statusText = document.createElement('div');
         statusText.className = 'setup-google-status';
-        statusText.textContent = this._getMessage('setupGoogleNotConnected');
+        statusText.textContent = this.getMessage('setupGoogleNotConnected');
         buttonContainer.appendChild(statusText);
 
         // Note
         const note = document.createElement('p');
         note.className = 'setup-note';
-        note.textContent = this._getMessage('setupGoogleNote');
+        note.textContent = this.getMessage('setupGoogleNote');
         note.style.textAlign = 'center';
         note.style.paddingLeft = '0';
 
@@ -403,7 +404,7 @@ export class InitialSetupComponent extends Component {
         if (badge) badge.style.display = 'none';
         if (status) {
             status.style.display = '';
-            status.textContent = this._getMessage('setupGoogleNotConnected');
+            status.textContent = this.getMessage('setupGoogleNotConnected');
         }
     }
 
@@ -413,45 +414,15 @@ export class InitialSetupComponent extends Component {
      * @private
      */
     _createGoogleButton(buttonContainer) {
-        const button = document.createElement('button');
-        button.className = 'gsi-material-button';
-        button.type = 'button';
-
-        const state = document.createElement('div');
-        state.className = 'gsi-material-button-state';
-
-        const wrapper = document.createElement('div');
-        wrapper.className = 'gsi-material-button-content-wrapper';
-
-        // Google icon (SVG)
-        const iconDiv = document.createElement('div');
-        iconDiv.className = 'gsi-material-button-icon';
-        iconDiv.innerHTML = `
-            <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" style="display: block;">
-                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
-                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
-                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
-                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
-                <path fill="none" d="M0 0h48v48H0z"></path>
-            </svg>
-        `;
-
-        // Button text (always "Sign in with Google" per branding guidelines)
-        const textSpan = document.createElement('span');
-        textSpan.className = 'gsi-material-button-contents';
-        textSpan.textContent = this._getMessage('setupGoogleConnect');
-
-        wrapper.appendChild(iconDiv);
-        wrapper.appendChild(textSpan);
-
-        button.appendChild(state);
-        button.appendChild(wrapper);
+        const button = createGoogleSignInButton({
+            text: this.getMessage('setupGoogleConnect')
+        });
 
         // Authenticate on click
         button.addEventListener('click', async () => {
             const statusText = buttonContainer.querySelector('.setup-google-status');
             button.disabled = true;
-            if (statusText) statusText.textContent = 'Connecting...';
+            if (statusText) statusText.textContent = this.getMessage('setupGoogleConnecting');
 
             try {
                 const response = await new Promise((resolve) => {
@@ -469,7 +440,7 @@ export class InitialSetupComponent extends Component {
                 console.warn('Google integration error in setup:', error);
                 button.disabled = false;
                 if (statusText) {
-                    statusText.textContent = this._getMessage('setupGoogleNotConnected');
+                    statusText.textContent = this.getMessage('setupGoogleNotConnected');
                 }
             }
         });
@@ -501,7 +472,7 @@ export class InitialSetupComponent extends Component {
 
         const text = document.createElement('span');
         text.className = 'setup-toggle-text';
-        text.textContent = this._getMessage('setupReminderToggle');
+        text.textContent = this.getMessage('setupReminderToggle');
 
         toggleLabel.appendChild(toggle);
         toggleLabel.appendChild(slider);
@@ -515,7 +486,7 @@ export class InitialSetupComponent extends Component {
 
         const minutesLabel = document.createElement('label');
         minutesLabel.className = 'setup-time-label';
-        minutesLabel.textContent = this._getMessage('setupReminderMinutes');
+        minutesLabel.textContent = this.getMessage('setupReminderMinutes');
 
         const minutesSelect = document.createElement('select');
         minutesSelect.className = 'setup-select';
@@ -625,16 +596,4 @@ export class InitialSetupComponent extends Component {
         return this.element && !this.element.hasAttribute('hidden');
     }
 
-    /**
-     * Get localized message with fallback
-     * @private
-     */
-    _getMessage(key) {
-        try {
-            const msg = chrome.i18n.getMessage(key);
-            return msg || key;
-        } catch {
-            return key;
-        }
-    }
 }
