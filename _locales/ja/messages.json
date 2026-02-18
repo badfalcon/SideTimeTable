@@ -778,7 +778,7 @@
     "description": "チュートリアル：同期ステップのタイトル"
   },
   "tutorialSyncDesc": {
-    "message": "このボタンでGoogleカレンダーの予定を同期し、リマインダーを更新できます。Googleカレンダー連携時に利用できます。",
+    "message": "Googleカレンダーの予定を取得・更新します。Googleカレンダー連携時に利用できます。",
     "description": "チュートリアル：同期ステップの説明"
   },
   "tutorialSettingsTitle": {
@@ -794,7 +794,7 @@
     "description": "チュートリアル：タイムラインステップのタイトル"
   },
   "tutorialTimelineDesc": {
-    "message": "ここに1日の予定が時間軸で表示されます。Googleカレンダーとローカルの予定が並んで見えます。赤い線が現在時刻です。",
+    "message": "1日の予定が24時間の時間軸で表示されます。赤い線が現在時刻を示しています。",
     "description": "チュートリアル：タイムラインステップの説明"
   },
   "tutorialFinishTitle": {
@@ -802,7 +802,7 @@
     "description": "チュートリアル：完了ステップのタイトル"
   },
   "tutorialFinishDesc": {
-    "message": "基本的な使い方は以上です。ヘッダーの「?」ボタンからいつでもこのチュートリアルを再表示できます。",
+    "message": "基本的な使い方は以上です。さっそく使ってみましょう！",
     "description": "チュートリアル：完了ステップの説明"
   },
   "tutorialNext": {
