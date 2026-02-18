@@ -778,7 +778,7 @@
     "description": "Tutorial: sync step title"
   },
   "tutorialSyncDesc": {
-    "message": "Tap this button to sync your Google Calendar events and update reminders.",
+    "message": "Tap this button to sync your Google Calendar events and update reminders. Available when Google Calendar is connected.",
     "description": "Tutorial: sync step description"
   },
   "tutorialSettingsTitle": {
