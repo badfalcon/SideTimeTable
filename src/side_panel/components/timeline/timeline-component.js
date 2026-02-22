@@ -157,14 +157,7 @@ export class TimelineComponent extends Component {
 
             let localized = null;
             try {
-                if (window && typeof window.formatTime === 'function') {
-                    localized = window.formatTime(timeStr, { format: this.timeFormat, locale: this.locale });
-                } else if (window && typeof window.formatTimeByFormat === 'function') {
-                    localized = window.formatTimeByFormat(timeStr, this.timeFormat, this.locale);
-                } else if (window && typeof window.formatTimeForLocale === 'function') {
-                    // Backward compatibility
-                    localized = window.formatTimeForLocale(timeStr, this.locale);
-                }
+                localized = window.formatTime(timeStr, { format: this.timeFormat, locale: this.locale });
             } catch (_) {
                 // ignore
             }

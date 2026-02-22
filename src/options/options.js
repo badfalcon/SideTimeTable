@@ -141,11 +141,7 @@ class OptionsPageManager {
             });
 
             // Load the language settings
-            const languageSettings = await new Promise((resolve) => {
-                chrome.storage.sync.get(['language'], (result) => {
-                    resolve({ language: result.language || 'auto' });
-                });
-            });
+            const languageSettings = await StorageHelper.get(['language'], { language: 'auto' });
 
             this.languageSettingsCard.updateSettings(languageSettings);
 
@@ -278,9 +274,7 @@ class OptionsPageManager {
     async handleLanguageSettingsChange(languageSettings) {
         try {
             // Save the language settings (using the same keys as the existing localize.js)
-            await new Promise((resolve) => {
-                chrome.storage.sync.set({ 'language': languageSettings.language }, resolve);
-            });
+            await StorageHelper.set({ language: languageSettings.language });
 
 
             // Reload the side panel
