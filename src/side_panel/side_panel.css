@@ -405,17 +405,30 @@ button {
     font-size: clamp(0.75rem, 1vw, 1rem);
 }
 
-/* Dynamic style adjustments based on lane count */
+/* Lane-density-based: horizontal space optimization (managed by EventLayoutManager) */
 .event.compact {
-    padding: 0 8px;
+    padding-left: 8px;
+    padding-right: 8px;
     font-size: 0.85em;
     line-height: 1.2;
 }
 
 .event.micro {
-    padding: 0 6px;
+    padding-left: 6px;
+    padding-right: 6px;
     font-size: 0.75em;
     line-height: 1.1;
+}
+
+/* Duration-based: vertical space optimization (managed by applyDurationBasedStyling) */
+.event.event-compact {
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+.event.event-micro {
+    padding-top: 0;
+    padding-bottom: 0;
 }
 
 /* Title-only display for very narrow lanes */
