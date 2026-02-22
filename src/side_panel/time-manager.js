@@ -464,38 +464,36 @@ export class EventLayoutManager {
             const availableWidth = this.maxWidth - totalGap;
             const laneWidth = Math.max(availableWidth / laneCount, LAYOUT_CONSTANTS.MIN_CONTENT_WIDTH);
 
-            // Apply layout
-            requestAnimationFrame(() => {
-                events.forEach((event) => {
-                    if (!event.element) return;
+            // Apply layout synchronously so that no-transition suppression in calculateLayout works correctly
+            events.forEach((event) => {
+                if (!event.element) return;
 
-                    const leftPosition = LAYOUT_CONSTANTS.BASE_LEFT + (event.lane * (laneWidth + LAYOUT_CONSTANTS.GAP));
+                const leftPosition = LAYOUT_CONSTANTS.BASE_LEFT + (event.lane * (laneWidth + LAYOUT_CONSTANTS.GAP));
 
-                    event.element.style.left = `${leftPosition}px`;
-                    event.element.style.width = `${laneWidth}px`;
-                    // Later-starting events appear on top
-                    const startValue = this._getCachedTimeValue(event.startTime);
-                    event.element.style.zIndex = LAYOUT_CONSTANTS.Z_INDEX + startValue;
+                event.element.style.left = `${leftPosition}px`;
+                event.element.style.width = `${laneWidth}px`;
+                // Later-starting events appear on top
+                const startValue = this._getCachedTimeValue(event.startTime);
+                event.element.style.zIndex = LAYOUT_CONSTANTS.Z_INDEX + startValue;
 
-                    // Adjust the padding based on the number of lanes
-                    let padding;
-                    if (laneCount <= LAYOUT_CONSTANTS.LANE_THRESHOLDS.COMPACT) {
-                        padding = LAYOUT_CONSTANTS.PADDING.BASIC;
-                    } else if (laneCount <= LAYOUT_CONSTANTS.LANE_THRESHOLDS.MICRO) {
-                        padding = LAYOUT_CONSTANTS.PADDING.COMPACT;
-                    } else {
-                        padding = LAYOUT_CONSTANTS.PADDING.MICRO;
-                    }
+                // Adjust the padding based on the number of lanes
+                let padding;
+                if (laneCount <= LAYOUT_CONSTANTS.LANE_THRESHOLDS.COMPACT) {
+                    padding = LAYOUT_CONSTANTS.PADDING.BASIC;
+                } else if (laneCount <= LAYOUT_CONSTANTS.LANE_THRESHOLDS.MICRO) {
+                    padding = LAYOUT_CONSTANTS.PADDING.COMPACT;
+                } else {
+                    padding = LAYOUT_CONSTANTS.PADDING.MICRO;
+                }
 
-                    event.element.style.padding = `${padding}px`;
+                event.element.style.padding = `${padding}px`;
 
-                    // Show the title only if too narrow
-                    if (laneWidth < LAYOUT_CONSTANTS.MIN_DISPLAY_WIDTH) {
-                        event.element.classList.add('narrow-display');
-                    } else {
-                        event.element.classList.remove('narrow-display');
-                    }
-                });
+                // Show the title only if too narrow
+                if (laneWidth < LAYOUT_CONSTANTS.MIN_DISPLAY_WIDTH) {
+                    event.element.classList.add('narrow-display');
+                } else {
+                    event.element.classList.remove('narrow-display');
+                }
             });
         } catch (error) {
             console.error('Error occurred while applying event layout:', error);
