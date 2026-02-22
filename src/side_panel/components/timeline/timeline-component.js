@@ -253,16 +253,9 @@ export class TimelineComponent extends Component {
 
             const background = document.createElement('div');
             background.className = 'work-time-background';
-            background.style.cssText = `
-                position: absolute;
-                left: 0;
-                right: 0;
-                top: ${startMinutes}px;
-                height: ${endMinutes - startMinutes}px;
-                background-color: ${color};
-                z-index: 1;
-                pointer-events: none;
-            `;
+            background.style.top = `${startMinutes}px`;
+            background.style.height = `${endMinutes - startMinutes}px`;
+            background.style.backgroundColor = color;
 
             this.baseLayer?.appendChild(background);
         } catch (error) {
