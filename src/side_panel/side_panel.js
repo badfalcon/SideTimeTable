@@ -264,14 +264,12 @@ class SidePanelUIController {
 
         // Initialize the Google event manager
         this.googleEventManager = new GoogleEventManager(
-            null, // timeTableManager not used so null
             this.timelineComponent.getGoogleEventsContainer(),
             this.eventLayoutManager
         );
 
         // Initialize the local event manager
         this.localEventManager = new LocalEventManager(
-            null, // timeTableManager not used so null
             this.timelineComponent.getLocalEventsContainer(),
             this.eventLayoutManager
         );
