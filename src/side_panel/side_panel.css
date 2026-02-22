@@ -196,10 +196,9 @@ h1 {
 
 .current-time-line {
     position: absolute;
-    width: calc(100% - 40px);
+    width: 100%;
     height: 2px;
     background-color: var(--side-calendar-current-time-line-color);
-    left: 40px;
     z-index: 32;
     border-left: none;
 }
