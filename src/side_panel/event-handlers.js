@@ -332,15 +332,7 @@ export class GoogleEventManager {
         const startMinutes = String(startDate.getMinutes()).padStart(2, '0');
         const timeString = `${startHours}:${startMinutes}`;
 
-        // Format using minimal API (with safe fallbacks)
-        let formattedTime;
-        if (typeof window.formatTime === 'function') {
-            formattedTime = window.formatTime(timeString, { format: timeFormat, locale });
-        } else if (typeof window.formatTimeByFormat === 'function') {
-            formattedTime = window.formatTimeByFormat(timeString, timeFormat, locale);
-        } else {
-            formattedTime = window.formatTimeForLocale(timeString, locale);
-        }
+        const formattedTime = window.formatTime(timeString, { format: timeFormat, locale });
 
         // Display time and title without attendance status
         eventDiv.innerHTML = '';
@@ -500,16 +492,7 @@ export class LocalEventManager {
             typeof window.getTimeFormatPreference === 'function' ? window.getTimeFormatPreference() : Promise.resolve('24h')
         ]);
 
-        // Format both ends using minimal API (with safe fallbacks)
-        const formatOne = (t) => {
-            if (typeof window.formatTime === 'function') {
-                return window.formatTime(t, { format: timeFormat, locale });
-            } else if (typeof window.formatTimeByFormat === 'function') {
-                return window.formatTimeByFormat(t, timeFormat, locale);
-            } else {
-                return window.formatTimeForLocale(t, locale);
-            }
-        };
+        const formatOne = (t) => window.formatTime(t, { format: timeFormat, locale });
 
         const formattedStart = formatOne(startTime);
         const formattedEnd = formatOne(endTime);
