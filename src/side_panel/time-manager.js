@@ -19,13 +19,6 @@ const LAYOUT_CONSTANTS = {
     MIN_DISPLAY_WIDTH: 40,   // The threshold for the title-only display (px)
     Z_INDEX: 5,              // The Z-index for the flex containers
 
-    // Padding settings
-    PADDING: {
-        BASIC: 10,           // The basic padding (2 lanes or less)
-        COMPACT: 8,          // The compact padding (3-4 lanes)
-        MICRO: 6             // The micro padding (5+ lanes)
-    },
-
     // The thresholds by the number of lanes
     LANE_THRESHOLDS: {
         COMPACT: 2,          // The number of lanes for the compact mode
@@ -447,6 +440,8 @@ export class EventLayoutManager {
         event.element.style.left = `${LAYOUT_CONSTANTS.BASE_LEFT}px`;
         event.element.style.width = `${this.maxWidth}px`;
         event.element.style.zIndex = LAYOUT_CONSTANTS.Z_INDEX;
+        event.element.style.padding = '';
+        event.element.classList.remove('compact', 'micro');
     }
 
     /**
@@ -476,17 +471,17 @@ export class EventLayoutManager {
                 const startValue = this._getCachedTimeValue(event.startTime);
                 event.element.style.zIndex = LAYOUT_CONSTANTS.Z_INDEX + startValue;
 
-                // Adjust the padding based on the number of lanes
-                let padding;
+                // Adjust the padding class based on the number of lanes
+                event.element.style.padding = '';
                 if (laneCount <= LAYOUT_CONSTANTS.LANE_THRESHOLDS.COMPACT) {
-                    padding = LAYOUT_CONSTANTS.PADDING.BASIC;
+                    event.element.classList.remove('compact', 'micro');
                 } else if (laneCount <= LAYOUT_CONSTANTS.LANE_THRESHOLDS.MICRO) {
-                    padding = LAYOUT_CONSTANTS.PADDING.COMPACT;
+                    event.element.classList.add('compact');
+                    event.element.classList.remove('micro');
                 } else {
-                    padding = LAYOUT_CONSTANTS.PADDING.MICRO;
+                    event.element.classList.add('micro');
+                    event.element.classList.remove('compact');
                 }
-
-                event.element.style.padding = `${padding}px`;
 
                 // Show the title only if too narrow
                 if (laneWidth < LAYOUT_CONSTANTS.MIN_DISPLAY_WIDTH) {
