@@ -15,7 +15,6 @@ const LAYOUT_CONSTANTS = {
     MIN_WIDTH: 100,          // The minimum guaranteed width (px)
     DEFAULT_WIDTH: 200,      // The default maximum width (px)
     MIN_CONTENT_WIDTH: 20,   // The minimum content width (px)
-    MIN_GAP: 2,              // Minimum gap (px)
     MIN_DISPLAY_WIDTH: 40,   // The threshold for the title-only display (px)
     Z_INDEX: 5,              // The Z-index for the flex containers
 
