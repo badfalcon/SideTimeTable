@@ -345,9 +345,15 @@ export class GoogleEventManager {
         }
 
         // Display time and title without attendance status
-        const displayText = `${formattedTime} - ${summary}`;
-
-        eventDiv.textContent = displayText;
+        eventDiv.innerHTML = '';
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'event-time';
+        timeSpan.textContent = `${formattedTime} - `;
+        eventDiv.appendChild(timeSpan);
+        const titleSpan = document.createElement('span');
+        titleSpan.className = 'event-title';
+        titleSpan.textContent = summary;
+        eventDiv.appendChild(titleSpan);
     }
 
 
@@ -526,8 +532,14 @@ export class LocalEventManager {
         }
 
         // Add text content
-        const textNode = document.createTextNode(`${formattedTimeRange}: ${title}`);
-        eventDiv.appendChild(textNode);
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'event-time';
+        timeSpan.textContent = `${formattedTimeRange}: `;
+        eventDiv.appendChild(timeSpan);
+        const titleSpan = document.createElement('span');
+        titleSpan.className = 'event-title';
+        titleSpan.textContent = title;
+        eventDiv.appendChild(titleSpan);
     }
 
     /**
