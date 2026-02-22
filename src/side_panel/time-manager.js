@@ -15,16 +15,8 @@ const LAYOUT_CONSTANTS = {
     MIN_WIDTH: 100,          // The minimum guaranteed width (px)
     DEFAULT_WIDTH: 200,      // The default maximum width (px)
     MIN_CONTENT_WIDTH: 20,   // The minimum content width (px)
-    MIN_GAP: 2,              // Minimum gap (px)
     MIN_DISPLAY_WIDTH: 40,   // The threshold for the title-only display (px)
     Z_INDEX: 5,              // The Z-index for the flex containers
-
-    // Padding settings
-    PADDING: {
-        BASIC: 10,           // The basic padding (2 lanes or less)
-        COMPACT: 8,          // The compact padding (3-4 lanes)
-        MICRO: 6             // The micro padding (5+ lanes)
-    },
 
     // The thresholds by the number of lanes
     LANE_THRESHOLDS: {
@@ -447,6 +439,8 @@ export class EventLayoutManager {
         event.element.style.left = `${LAYOUT_CONSTANTS.BASE_LEFT}px`;
         event.element.style.width = `${this.maxWidth}px`;
         event.element.style.zIndex = LAYOUT_CONSTANTS.Z_INDEX;
+        event.element.style.padding = '';
+        event.element.classList.remove('compact', 'micro');
     }
 
     /**
@@ -464,38 +458,36 @@ export class EventLayoutManager {
             const availableWidth = this.maxWidth - totalGap;
             const laneWidth = Math.max(availableWidth / laneCount, LAYOUT_CONSTANTS.MIN_CONTENT_WIDTH);
 
-            // Apply layout
-            requestAnimationFrame(() => {
-                events.forEach((event) => {
-                    if (!event.element) return;
+            // Apply layout synchronously so that no-transition suppression in calculateLayout works correctly
+            events.forEach((event) => {
+                if (!event.element) return;
 
-                    const leftPosition = LAYOUT_CONSTANTS.BASE_LEFT + (event.lane * (laneWidth + LAYOUT_CONSTANTS.GAP));
+                const leftPosition = LAYOUT_CONSTANTS.BASE_LEFT + (event.lane * (laneWidth + LAYOUT_CONSTANTS.GAP));
 
-                    event.element.style.left = `${leftPosition}px`;
-                    event.element.style.width = `${laneWidth}px`;
-                    // Later-starting events appear on top
-                    const startValue = this._getCachedTimeValue(event.startTime);
-                    event.element.style.zIndex = LAYOUT_CONSTANTS.Z_INDEX + startValue;
+                event.element.style.left = `${leftPosition}px`;
+                event.element.style.width = `${laneWidth}px`;
+                // Later-starting events appear on top
+                const startValue = this._getCachedTimeValue(event.startTime);
+                event.element.style.zIndex = LAYOUT_CONSTANTS.Z_INDEX + startValue;
 
-                    // Adjust the padding based on the number of lanes
-                    let padding;
-                    if (laneCount <= LAYOUT_CONSTANTS.LANE_THRESHOLDS.COMPACT) {
-                        padding = LAYOUT_CONSTANTS.PADDING.BASIC;
-                    } else if (laneCount <= LAYOUT_CONSTANTS.LANE_THRESHOLDS.MICRO) {
-                        padding = LAYOUT_CONSTANTS.PADDING.COMPACT;
-                    } else {
-                        padding = LAYOUT_CONSTANTS.PADDING.MICRO;
-                    }
+                // Adjust the padding class based on the number of lanes
+                event.element.style.padding = '';
+                if (laneCount <= LAYOUT_CONSTANTS.LANE_THRESHOLDS.COMPACT) {
+                    event.element.classList.remove('compact', 'micro');
+                } else if (laneCount <= LAYOUT_CONSTANTS.LANE_THRESHOLDS.MICRO) {
+                    event.element.classList.add('compact');
+                    event.element.classList.remove('micro');
+                } else {
+                    event.element.classList.add('micro');
+                    event.element.classList.remove('compact');
+                }
 
-                    event.element.style.padding = `${padding}px`;
-
-                    // Show the title only if too narrow
-                    if (laneWidth < LAYOUT_CONSTANTS.MIN_DISPLAY_WIDTH) {
-                        event.element.classList.add('narrow-display');
-                    } else {
-                        event.element.classList.remove('narrow-display');
-                    }
-                });
+                // Show the title only if too narrow
+                if (laneWidth < LAYOUT_CONSTANTS.MIN_DISPLAY_WIDTH) {
+                    event.element.classList.add('narrow-display');
+                } else {
+                    event.element.classList.remove('narrow-display');
+                }
             });
         } catch (error) {
             console.error('Error occurred while applying event layout:', error);

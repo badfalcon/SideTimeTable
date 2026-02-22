@@ -157,14 +157,7 @@ export class TimelineComponent extends Component {
 
             let localized = null;
             try {
-                if (window && typeof window.formatTime === 'function') {
-                    localized = window.formatTime(timeStr, { format: this.timeFormat, locale: this.locale });
-                } else if (window && typeof window.formatTimeByFormat === 'function') {
-                    localized = window.formatTimeByFormat(timeStr, this.timeFormat, this.locale);
-                } else if (window && typeof window.formatTimeForLocale === 'function') {
-                    // Backward compatibility
-                    localized = window.formatTimeForLocale(timeStr, this.locale);
-                }
+                localized = window.formatTime(timeStr, { format: this.timeFormat, locale: this.locale });
             } catch (_) {
                 // ignore
             }
@@ -253,16 +246,9 @@ export class TimelineComponent extends Component {
 
             const background = document.createElement('div');
             background.className = 'work-time-background';
-            background.style.cssText = `
-                position: absolute;
-                left: 0;
-                right: 0;
-                top: ${startMinutes}px;
-                height: ${endMinutes - startMinutes}px;
-                background-color: ${color};
-                z-index: 1;
-                pointer-events: none;
-            `;
+            background.style.top = `${startMinutes}px`;
+            background.style.height = `${endMinutes - startMinutes}px`;
+            background.style.backgroundColor = color;
 
             this.baseLayer?.appendChild(background);
         } catch (error) {
@@ -402,6 +388,9 @@ export class TimelineComponent extends Component {
             this.currentTimeLineManager.destroy();
             this.currentTimeLineManager = null;
         }
+
+        // Release DOM references held in the hour label cache
+        this.hourLabels = [];
 
         super.destroy();
     }

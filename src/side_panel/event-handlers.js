@@ -20,41 +20,40 @@ import {getDemoEvents, getDemoLocalEvents, isDemoMode} from '../lib/demo-data.js
  */
 const EVENT_STYLING = {
     DURATION_THRESHOLDS: {
-        MICRO: 15,     // 15 minutes or less
-        COMPACT: 30    // 30 minutes or less
+        MICRO: 15,     // 15 minutes or less → no vertical padding
+        COMPACT: 30    // 30 minutes or less → reduced vertical padding
     },
     HEIGHT: {
-        MIN_HEIGHT: 10,      // Minimum clickable height in pixels
-        PADDING_OFFSET: 10   // Padding to subtract from normal events
+        MIN_HEIGHT: 15,      // Minimum clickable height in pixels
     },
     CSS_CLASSES: {
-        MICRO: 'micro',
-        COMPACT: 'compact'
+        MICRO: 'event-micro',       // Duration-based: controls vertical padding only
+        COMPACT: 'event-compact'    // Duration-based: controls vertical padding only
     },
     DEFAULT_VALUES: {
         ZERO_DURATION_MINUTES: 15,    // Default duration for zero-duration events
-        INITIAL_WIDTH: 200,           // Default width before layout calculation
         INITIAL_LEFT_OFFSET: 40       // Default left position (30px time labels + 5px margin)
     }
 };
 
 /**
- * Apply duration-based styling to event element
+ * Apply duration-based styling to event element.
+ * - height: set to raw duration px (box-sizing:border-box keeps rendered size = duration)
+ * - class: event-micro / event-compact added for vertical padding control only
+ *   (horizontal padding / font-size are managed separately by EventLayoutManager
+ *    via compact / micro classes based on lane density)
  * @param {HTMLElement} eventDiv - The event element
  * @param {number} duration - Duration in minutes
  * @param {string} baseClasses - Base CSS classes (e.g., 'event google-event')
  */
 function applyDurationBasedStyling(eventDiv, duration, baseClasses) {
-    let sizeClass = '';
+    eventDiv.style.height = `${Math.max(duration, EVENT_STYLING.HEIGHT.MIN_HEIGHT)}px`;
 
+    let sizeClass = '';
     if (duration <= EVENT_STYLING.DURATION_THRESHOLDS.MICRO) {
         sizeClass = EVENT_STYLING.CSS_CLASSES.MICRO;
-        eventDiv.style.height = `${Math.max(duration, EVENT_STYLING.HEIGHT.MIN_HEIGHT)}px`;
     } else if (duration <= EVENT_STYLING.DURATION_THRESHOLDS.COMPACT) {
         sizeClass = EVENT_STYLING.CSS_CLASSES.COMPACT;
-        eventDiv.style.height = `${duration}px`; // Don't subtract padding for short events
-    } else {
-        eventDiv.style.height = `${duration - EVENT_STYLING.HEIGHT.PADDING_OFFSET}px`;
     }
 
     eventDiv.className = `${baseClasses} ${sizeClass}`.trim();
@@ -66,11 +65,10 @@ function applyDurationBasedStyling(eventDiv, duration, baseClasses) {
 export class GoogleEventManager {
     /**
      * Constructor
-     * @param {Object} timeTableManager - An instance of the timetable manager
      * @param {HTMLElement} googleEventsDiv - The DOM element for displaying the Google events
      * @param {Object} eventLayoutManager - An instance of the event layout manager
      */
-    constructor(timeTableManager, googleEventsDiv, eventLayoutManager) {
+    constructor(googleEventsDiv, eventLayoutManager) {
         this.googleEventsDiv = googleEventsDiv;
         this.eventLayoutManager = eventLayoutManager;
         this.lastFetchDate = null; // The last date when the API was called
@@ -283,7 +281,7 @@ export class GoogleEventManager {
 
         // Set the initial width and position to prevent visible resize during layout calculation
         // This will be overridden by EventLayoutManager, but prevents initial flash
-        const initialWidth = this.eventLayoutManager ? this.eventLayoutManager.maxWidth : EVENT_STYLING.DEFAULT_VALUES.INITIAL_WIDTH;
+        const initialWidth = this.eventLayoutManager.maxWidth;
         eventDiv.style.width = `${initialWidth}px`;
         eventDiv.style.left = `${EVENT_STYLING.DEFAULT_VALUES.INITIAL_LEFT_OFFSET}px`;
 
@@ -334,20 +332,18 @@ export class GoogleEventManager {
         const startMinutes = String(startDate.getMinutes()).padStart(2, '0');
         const timeString = `${startHours}:${startMinutes}`;
 
-        // Format using minimal API (with safe fallbacks)
-        let formattedTime;
-        if (typeof window.formatTime === 'function') {
-            formattedTime = window.formatTime(timeString, { format: timeFormat, locale });
-        } else if (typeof window.formatTimeByFormat === 'function') {
-            formattedTime = window.formatTimeByFormat(timeString, timeFormat, locale);
-        } else {
-            formattedTime = window.formatTimeForLocale(timeString, locale);
-        }
+        const formattedTime = window.formatTime(timeString, { format: timeFormat, locale });
 
         // Display time and title without attendance status
-        const displayText = `${formattedTime} - ${summary}`;
-
-        eventDiv.textContent = displayText;
+        eventDiv.innerHTML = '';
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'event-time';
+        timeSpan.textContent = `${formattedTime} - `;
+        eventDiv.appendChild(timeSpan);
+        const titleSpan = document.createElement('span');
+        titleSpan.className = 'event-title';
+        titleSpan.textContent = summary;
+        eventDiv.appendChild(titleSpan);
     }
 
 
@@ -359,12 +355,10 @@ export class GoogleEventManager {
 export class LocalEventManager {
     /**
      * Constructor
-     * @param {Object} timeTableManager - An instance of the timetable manager
      * @param {HTMLElement} localEventsDiv - The DOM element for displaying local events
      * @param {Object} eventLayoutManager - An instance of the event layout manager
      */
-    constructor(timeTableManager, localEventsDiv, eventLayoutManager) {
-        this.timeTableManager = timeTableManager;
+    constructor(localEventsDiv, eventLayoutManager) {
         this.localEventsDiv = localEventsDiv;
         this.eventLayoutManager = eventLayoutManager;
         this.currentTargetDate = new Date(); // The currently displayed date
@@ -455,7 +449,7 @@ export class LocalEventManager {
 
         // Set the initial width and position to prevent visible resize during layout calculation
         // This will be overridden by EventLayoutManager, but prevents initial flash
-        const initialWidth = this.eventLayoutManager ? this.eventLayoutManager.maxWidth : EVENT_STYLING.DEFAULT_VALUES.INITIAL_WIDTH;
+        const initialWidth = this.eventLayoutManager.maxWidth;
         eventDiv.style.width = `${initialWidth}px`;
 
         eventDiv.style.left = `${EVENT_STYLING.DEFAULT_VALUES.INITIAL_LEFT_OFFSET}px`;
@@ -498,16 +492,7 @@ export class LocalEventManager {
             typeof window.getTimeFormatPreference === 'function' ? window.getTimeFormatPreference() : Promise.resolve('24h')
         ]);
 
-        // Format both ends using minimal API (with safe fallbacks)
-        const formatOne = (t) => {
-            if (typeof window.formatTime === 'function') {
-                return window.formatTime(t, { format: timeFormat, locale });
-            } else if (typeof window.formatTimeByFormat === 'function') {
-                return window.formatTimeByFormat(t, timeFormat, locale);
-            } else {
-                return window.formatTimeForLocale(t, locale);
-            }
-        };
+        const formatOne = (t) => window.formatTime(t, { format: timeFormat, locale });
 
         const formattedStart = formatOne(startTime);
         const formattedEnd = formatOne(endTime);
@@ -526,8 +511,14 @@ export class LocalEventManager {
         }
 
         // Add text content
-        const textNode = document.createTextNode(`${formattedTimeRange}: ${title}`);
-        eventDiv.appendChild(textNode);
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'event-time';
+        timeSpan.textContent = `${formattedTimeRange}: `;
+        eventDiv.appendChild(timeSpan);
+        const titleSpan = document.createElement('span');
+        titleSpan.className = 'event-title';
+        titleSpan.textContent = title;
+        eventDiv.appendChild(titleSpan);
     }
 
     /**
