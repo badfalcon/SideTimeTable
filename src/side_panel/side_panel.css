@@ -165,7 +165,7 @@ h1 {
 
 .event {
     position: absolute;
-    left: 35px;
+    left: 40px; /* Matches LAYOUT_CONSTANTS.BASE_LEFT */
     /* width: 200px; - Removed fixed width, dynamic width is set by EventLayoutManager */
     padding: 5px 10px;
     background: lightgray;
