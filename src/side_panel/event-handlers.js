@@ -19,8 +19,16 @@ import {getDemoEvents, getDemoLocalEvents, isDemoMode} from '../lib/demo-data.js
  * Constants for event styling and layout
  */
 const EVENT_STYLING = {
+    DURATION_THRESHOLDS: {
+        MICRO: 15,     // 15 minutes or less → no vertical padding
+        COMPACT: 30    // 30 minutes or less → reduced vertical padding
+    },
     HEIGHT: {
         MIN_HEIGHT: 10,      // Minimum clickable height in pixels
+    },
+    CSS_CLASSES: {
+        MICRO: 'event-micro',       // Duration-based: controls vertical padding only
+        COMPACT: 'event-compact'    // Duration-based: controls vertical padding only
     },
     DEFAULT_VALUES: {
         ZERO_DURATION_MINUTES: 15,    // Default duration for zero-duration events
@@ -30,16 +38,25 @@ const EVENT_STYLING = {
 
 /**
  * Apply duration-based styling to event element.
- * Height is set as the raw duration (box-sizing: border-box ensures padding is
- * included within that height). compact/micro class assignment is handled
- * exclusively by EventLayoutManager based on lane density.
+ * - height: set to raw duration px (box-sizing:border-box keeps rendered size = duration)
+ * - class: event-micro / event-compact added for vertical padding control only
+ *   (horizontal padding / font-size are managed separately by EventLayoutManager
+ *    via compact / micro classes based on lane density)
  * @param {HTMLElement} eventDiv - The event element
  * @param {number} duration - Duration in minutes
  * @param {string} baseClasses - Base CSS classes (e.g., 'event google-event')
  */
 function applyDurationBasedStyling(eventDiv, duration, baseClasses) {
     eventDiv.style.height = `${Math.max(duration, EVENT_STYLING.HEIGHT.MIN_HEIGHT)}px`;
-    eventDiv.className = baseClasses;
+
+    let sizeClass = '';
+    if (duration <= EVENT_STYLING.DURATION_THRESHOLDS.MICRO) {
+        sizeClass = EVENT_STYLING.CSS_CLASSES.MICRO;
+    } else if (duration <= EVENT_STYLING.DURATION_THRESHOLDS.COMPACT) {
+        sizeClass = EVENT_STYLING.CSS_CLASSES.COMPACT;
+    }
+
+    eventDiv.className = `${baseClasses} ${sizeClass}`.trim();
 }
 
 /**
