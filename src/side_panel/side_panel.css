@@ -429,7 +429,7 @@ button {
 .event.event-micro {
     padding-top: 0;
     padding-bottom: 0;
-    min-height: 10px;
+    min-height: 15px;
 }
 
 /* Title-only display for very narrow lanes */

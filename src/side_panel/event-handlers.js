@@ -24,7 +24,7 @@ const EVENT_STYLING = {
         COMPACT: 30    // 30 minutes or less → reduced vertical padding
     },
     HEIGHT: {
-        MIN_HEIGHT: 10,      // Minimum clickable height in pixels
+        MIN_HEIGHT: 15,      // Minimum clickable height in pixels
     },
     CSS_CLASSES: {
         MICRO: 'event-micro',       // Duration-based: controls vertical padding only
