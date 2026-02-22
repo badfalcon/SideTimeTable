@@ -396,6 +396,9 @@ export class TimelineComponent extends Component {
             this.currentTimeLineManager = null;
         }
 
+        // Release DOM references held in the hour label cache
+        this.hourLabels = [];
+
         super.destroy();
     }
 }

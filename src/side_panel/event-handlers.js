@@ -33,7 +33,6 @@ const EVENT_STYLING = {
     },
     DEFAULT_VALUES: {
         ZERO_DURATION_MINUTES: 15,    // Default duration for zero-duration events
-        INITIAL_WIDTH: 200,           // Default width before layout calculation
         INITIAL_LEFT_OFFSET: 40       // Default left position (30px time labels + 5px margin)
     }
 };
@@ -66,11 +65,10 @@ function applyDurationBasedStyling(eventDiv, duration, baseClasses) {
 export class GoogleEventManager {
     /**
      * Constructor
-     * @param {Object} timeTableManager - An instance of the timetable manager
      * @param {HTMLElement} googleEventsDiv - The DOM element for displaying the Google events
      * @param {Object} eventLayoutManager - An instance of the event layout manager
      */
-    constructor(timeTableManager, googleEventsDiv, eventLayoutManager) {
+    constructor(googleEventsDiv, eventLayoutManager) {
         this.googleEventsDiv = googleEventsDiv;
         this.eventLayoutManager = eventLayoutManager;
         this.lastFetchDate = null; // The last date when the API was called
@@ -283,7 +281,7 @@ export class GoogleEventManager {
 
         // Set the initial width and position to prevent visible resize during layout calculation
         // This will be overridden by EventLayoutManager, but prevents initial flash
-        const initialWidth = this.eventLayoutManager ? this.eventLayoutManager.maxWidth : EVENT_STYLING.DEFAULT_VALUES.INITIAL_WIDTH;
+        const initialWidth = this.eventLayoutManager.maxWidth;
         eventDiv.style.width = `${initialWidth}px`;
         eventDiv.style.left = `${EVENT_STYLING.DEFAULT_VALUES.INITIAL_LEFT_OFFSET}px`;
 
@@ -365,12 +363,10 @@ export class GoogleEventManager {
 export class LocalEventManager {
     /**
      * Constructor
-     * @param {Object} timeTableManager - An instance of the timetable manager
      * @param {HTMLElement} localEventsDiv - The DOM element for displaying local events
      * @param {Object} eventLayoutManager - An instance of the event layout manager
      */
-    constructor(timeTableManager, localEventsDiv, eventLayoutManager) {
-        this.timeTableManager = timeTableManager;
+    constructor(localEventsDiv, eventLayoutManager) {
         this.localEventsDiv = localEventsDiv;
         this.eventLayoutManager = eventLayoutManager;
         this.currentTargetDate = new Date(); // The currently displayed date
@@ -461,7 +457,7 @@ export class LocalEventManager {
 
         // Set the initial width and position to prevent visible resize during layout calculation
         // This will be overridden by EventLayoutManager, but prevents initial flash
-        const initialWidth = this.eventLayoutManager ? this.eventLayoutManager.maxWidth : EVENT_STYLING.DEFAULT_VALUES.INITIAL_WIDTH;
+        const initialWidth = this.eventLayoutManager.maxWidth;
         eventDiv.style.width = `${initialWidth}px`;
 
         eventDiv.style.left = `${EVENT_STYLING.DEFAULT_VALUES.INITIAL_LEFT_OFFSET}px`;
