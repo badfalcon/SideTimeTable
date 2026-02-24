@@ -4,63 +4,307 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="google-site-verification" content="rgiL3Ol-PjR-hGIsGjED3tzl9cmJ_rhJG6g6RhFOzOc" />
-    <title>SideTimeTable - 今日の予定管理ツール</title>
+    <meta name="description" content="SideTimeTable - ChromeのサイドパネルにGoogleカレンダーとローカルイベントをタイムライン表示するChrome拡張機能">
+    <title>SideTimeTable - サイドパネルで今日を管理する</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="img/icon128.png" type="image/png">
-    <script src="index.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
-<header>
-    <h1>SideTimeTable</h1>
-    <img src="img/icon128.png" alt="SideTimeTableのアイコン" class="icon">
-    <p>今日の予定管理ツール</p>
-</header>
-<nav>
-    <a href="#overview">概要</a>
-    <a href="#features">機能</a>
-    <a href="#installation">インストール方法</a>
-    <a href="#screenshots">スクリーンショット</a>
-    <a href="#developer">開発者情報</a>
-    <a href="privacy.html">プライバシーポリシー</a>
+
+<!-- ========== NAVBAR ========== -->
+<nav class="navbar" id="navbar">
+    <div class="nav-inner">
+        <a href="#" class="nav-brand">
+            <img src="img/icon128.png" alt="SideTimeTable icon" class="nav-icon">
+            <span>SideTimeTable</span>
+        </a>
+        <div class="nav-links">
+            <a href="#features">機能</a>
+            <a href="#screenshots">スクショ</a>
+            <a href="#install">インストール</a>
+            <a href="privacy.html">プライバシー</a>
+        </div>
+        <a href="https://chrome.google.com/webstore/detail/sidetimetable/pnknjjpncnciijkpdfgfiikmhlmamaid"
+           target="_blank" rel="noopener" class="nav-cta">
+            無料で追加
+        </a>
+    </div>
 </nav>
-<section id="overview">
-    <h2>概要</h2>
-    <p>SideTimeTableは、日々のスケジュールをしっかり管理するためのChrome拡張機能です。Googleカレンダーと同期し、日々の予定をサイドパネルに表示します。これにより、大事な瞬間を見逃すことなく、個人的なイベントも管理できます。</p>
+
+<!-- ========== HERO ========== -->
+<section class="hero">
+    <div class="hero-bg">
+        <div class="glow glow-1"></div>
+        <div class="glow glow-2"></div>
+        <div class="grid-lines"></div>
+    </div>
+
+    <div class="hero-body">
+        <div class="hero-content">
+            <span class="hero-badge">Chrome拡張機能 · 完全無料</span>
+            <h1 class="hero-title">
+                今日の流れを<br>
+                <span class="text-gradient">サイドパネルで</span><br>
+                ひと目で把握
+            </h1>
+            <p class="hero-desc">
+                Googleカレンダーと連携し、作業しながら<br>
+                今日のスケジュールをタイムライン表示。<br>
+                大事な予定を見逃さない、新しい働き方へ。
+            </p>
+            <div class="hero-actions">
+                <a href="https://chrome.google.com/webstore/detail/sidetimetable/pnknjjpncnciijkpdfgfiikmhlmamaid"
+                   target="_blank" rel="noopener" class="btn-primary">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Chrome ウェブストアから追加
+                </a>
+                <a href="#features" class="btn-ghost">機能を見る →</a>
+            </div>
+            <div class="hero-meta">
+                <div class="meta-item">
+                    <span class="meta-val">無料</span>
+                    <span class="meta-lbl">で利用可能</span>
+                </div>
+                <div class="meta-sep"></div>
+                <div class="meta-item">
+                    <span class="meta-val">Google</span>
+                    <span class="meta-lbl">カレンダー連携</span>
+                </div>
+                <div class="meta-sep"></div>
+                <div class="meta-item">
+                    <span class="meta-val">MV3</span>
+                    <span class="meta-lbl">最新仕様対応</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="hero-visual">
+            <div class="panel-wrap">
+                <!-- Floating side panel mockup -->
+                <div class="panel-mockup">
+                    <div class="pm-header">
+                        <div class="pm-date">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                            2025年1月15日 (水)
+                        </div>
+                        <div class="pm-nav">
+                            <button class="pm-btn">‹</button>
+                            <button class="pm-btn">›</button>
+                        </div>
+                    </div>
+                    <div class="pm-body">
+                        <div class="pm-timeline">
+                            <div class="tl-row">
+                                <span class="tl-time">9:00</span>
+                                <div class="tl-event ev-indigo">
+                                    <span class="ev-name">チームミーティング</span>
+                                    <span class="ev-dur">09:00〜10:00</span>
+                                </div>
+                            </div>
+                            <div class="tl-row tl-row--sm">
+                                <span class="tl-time">10:00</span>
+                                <div class="tl-event ev-emerald">
+                                    <span class="ev-name">コードレビュー</span>
+                                    <span class="ev-dur">10:30〜11:00</span>
+                                </div>
+                            </div>
+                            <div class="tl-row tl-row--now">
+                                <span class="tl-time tl-time--now">13:20</span>
+                                <div class="now-line">
+                                    <span class="now-dot"></span>
+                                </div>
+                            </div>
+                            <div class="tl-row">
+                                <span class="tl-time">14:00</span>
+                                <div class="tl-event ev-violet">
+                                    <span class="ev-name">1on1ミーティング</span>
+                                    <span class="ev-dur">14:00〜14:45</span>
+                                </div>
+                            </div>
+                            <div class="tl-row tl-row--sm">
+                                <span class="tl-time">16:00</span>
+                                <div class="tl-event ev-amber">
+                                    <span class="ev-name">週次振り返り</span>
+                                    <span class="ev-dur">16:00〜17:00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-glow-ring"></div>
+            </div>
+        </div>
+    </div>
 </section>
-<section id="features">
-    <h2>機能</h2>
-    <ul>
-        <li>クリック一つでサイドパネルから日々のイベントにアクセス。</li>
-        <li>Googleカレンダーとシームレスに同期してイベントを表示・管理。</li>
-        <li>ローカルイベントを簡単に追加・管理（繰り返しイベント対応）。</li>
-        <li>リマインダー通知機能で大事な予定を見逃さない。</li>
-        <li>初回セットアップウィザードとチュートリアルで簡単スタート。</li>
-        <li>カスタマイズ可能な表示設定とカラースキーム。</li>
-    </ul>
+
+<!-- ========== FEATURES ========== -->
+<section class="section features" id="features">
+    <div class="container">
+        <div class="section-head">
+            <span class="section-tag">機能</span>
+            <h2 class="section-title">シンプルに、でも強力に</h2>
+            <p class="section-sub">必要なものをすべて、サイドパネルひとつに</p>
+        </div>
+        <div class="features-grid">
+            <div class="feat-card anim-up">
+                <div class="feat-icon fi-indigo">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                </div>
+                <h3>Google カレンダー連携</h3>
+                <p>複数のカレンダーをシームレスに同期。Googleの予定がリアルタイムでサイドパネルに表示されます。</p>
+            </div>
+            <div class="feat-card anim-up" style="animation-delay:.08s">
+                <div class="feat-icon fi-cyan">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>
+                </div>
+                <h3>タイムライン表示</h3>
+                <p>時刻軸に沿って予定を視覚化。重複するイベントも自動で整列し、ひと目で把握できます。</p>
+            </div>
+            <div class="feat-card anim-up" style="animation-delay:.16s">
+                <div class="feat-icon fi-red">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
+                <h3>現在時刻ライン</h3>
+                <p>今の時刻が赤いラインで常時表示。スケジュールの進捗を直感的に把握できます。</p>
+            </div>
+            <div class="feat-card anim-up" style="animation-delay:.24s">
+                <div class="feat-icon fi-emerald">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </div>
+                <h3>ローカルイベント</h3>
+                <p>Googleカレンダー不要で使える独自のイベント管理。繰り返しイベントにも対応しています。</p>
+            </div>
+            <div class="feat-card anim-up" style="animation-delay:.32s">
+                <div class="feat-icon fi-amber">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                </div>
+                <h3>リマインダー通知</h3>
+                <p>大事な予定の前に通知。設定した時間に確実にお知らせするので、うっかり忘れを防ぎます。</p>
+            </div>
+            <div class="feat-card anim-up" style="animation-delay:.40s">
+                <div class="feat-icon fi-violet">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 0 0 4.93 19.07M4.93 4.93a10 10 0 0 1 14.14 14.14"/></svg>
+                </div>
+                <h3>カスタマイズ対応</h3>
+                <p>表示設定、カラースキーム、業務時間など自分好みに設定可能。日英2言語に対応しています。</p>
+            </div>
+        </div>
+    </div>
 </section>
-<section id="installation">
-    <h2>インストール方法</h2>
-    <a href="https://chrome.google.com/webstore/detail/sidetimetable/pnknjjpncnciijkpdfgfiikmhlmamaid" target="_blank" class="button"><img src="img/web_store.png" alt="Chrome ウェブストアでインストール" /></a>
-    <ol>
-        <li>Chrome ウェブストアでインストール</li>
-        <li>「Chromeに追加」ボタンをクリックします。</li>
-        <li>表示されるダイアログで、拡張機能の追加を確認します。</li>
-        <li>インストール後、ツールバーのアイコンをクリックしてサイドパネルを開きます。</li>
-    </ol>
+
+<!-- ========== SCREENSHOTS ========== -->
+<section class="section screenshots" id="screenshots">
+    <div class="container">
+        <div class="section-head">
+            <span class="section-tag">スクリーンショット</span>
+            <h2 class="section-title">実際の画面を見てみる</h2>
+        </div>
+        <div class="shots-grid">
+            <div class="shot-wrap anim-up">
+                <img src="img/image_1.png" alt="SideTimeTableの画面1" class="shot-img" loading="lazy">
+            </div>
+            <div class="shot-wrap anim-up" style="animation-delay:.1s">
+                <img src="img/image_2.png" alt="SideTimeTableの画面2" class="shot-img" loading="lazy">
+            </div>
+            <div class="shot-wrap anim-up" style="animation-delay:.2s">
+                <img src="img/image_3.png" alt="SideTimeTableの画面3" class="shot-img" loading="lazy">
+            </div>
+        </div>
+    </div>
 </section>
-<section id="screenshots">
-    <h2>スクリーンショット</h2>
-    <img src="img/image_1.png" alt="SideTimeTableのスクリーンショット1" class="screenshot">
-    <img src="img/image_2.png" alt="SideTimeTableのスクリーンショット2" class="screenshot">
-    <img src="img/image_3.png" alt="SideTimeTableのスクリーンショット3" class="screenshot">
+
+<!-- ========== INSTALL ========== -->
+<section class="section install" id="install">
+    <div class="container">
+        <div class="section-head">
+            <span class="section-tag">インストール</span>
+            <h2 class="section-title">1分で始められる</h2>
+            <p class="section-sub">3ステップでサイドパネルが使えるようになります</p>
+        </div>
+        <div class="steps">
+            <div class="step anim-up">
+                <div class="step-num">1</div>
+                <h3>ウェブストアを開く</h3>
+                <p>下のボタンからChrome ウェブストアのページへアクセスします。</p>
+            </div>
+            <div class="step-arrow">→</div>
+            <div class="step anim-up" style="animation-delay:.1s">
+                <div class="step-num">2</div>
+                <h3>「Chromeに追加」</h3>
+                <p>ページ右上の「Chromeに追加」ボタンをクリックします。</p>
+            </div>
+            <div class="step-arrow">→</div>
+            <div class="step anim-up" style="animation-delay:.2s">
+                <div class="step-num">3</div>
+                <h3>サイドパネルを開く</h3>
+                <p>ツールバーのアイコンをクリックしてすぐに使い始めることができます。</p>
+            </div>
+        </div>
+        <div class="install-cta">
+            <a href="https://chrome.google.com/webstore/detail/sidetimetable/pnknjjpncnciijkpdfgfiikmhlmamaid"
+               target="_blank" rel="noopener" class="btn-primary btn-lg">
+                <img src="img/web_store.png" alt="" class="webstore-badge">
+                Chrome ウェブストアからインストール
+            </a>
+        </div>
+    </div>
 </section>
-<section id="developer">
-    <h2>開発者情報</h2>
-    <p>開発者: badfalcon</p>
-    <p>メール: <a href="mailto:badfalcon610@gmail.com">badfalcon610@gmail.com</a></p>
+
+<!-- ========== DEVELOPER ========== -->
+<section class="section developer" id="developer">
+    <div class="container">
+        <div class="dev-card anim-up">
+            <div class="dev-avatar">👨‍💻</div>
+            <div class="dev-info">
+                <p class="dev-role">Developer</p>
+                <h3 class="dev-name">badfalcon</h3>
+                <a href="mailto:badfalcon610@gmail.com" class="dev-mail">badfalcon610@gmail.com</a>
+            </div>
+        </div>
+    </div>
 </section>
-<footer>
-    <p>&copy; 2024 badfalcon. All rights reserved.</p>
+
+<!-- ========== FOOTER ========== -->
+<footer class="footer">
+    <div class="container">
+        <div class="footer-top">
+            <div class="footer-brand">
+                <img src="img/icon128.png" alt="icon" class="footer-icon">
+                <span>SideTimeTable</span>
+            </div>
+            <nav class="footer-nav">
+                <a href="#features">機能</a>
+                <a href="#screenshots">スクリーンショット</a>
+                <a href="#install">インストール</a>
+                <a href="privacy.html">プライバシーポリシー</a>
+            </nav>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 badfalcon. All rights reserved.</p>
+        </div>
+    </div>
 </footer>
+
+<script>
+// Scroll-based navbar effect
+const navbar = document.getElementById('navbar');
+window.addEventListener('scroll', () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 60);
+}, { passive: true });
+
+// Animate on scroll
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+        if (e.isIntersecting) {
+            e.target.classList.add('in-view');
+            observer.unobserve(e.target);
+        }
+    });
+}, { threshold: 0.12 });
+
+document.querySelectorAll('.anim-up').forEach(el => observer.observe(el));
+</script>
 </body>
 </html>
