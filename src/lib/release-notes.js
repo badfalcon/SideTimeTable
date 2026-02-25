@@ -11,11 +11,13 @@ export const RELEASE_NOTES = [
         highlights: {
             en: [
                 'Improved event layout',
-                'Improved Google event modal'
+                'Improved Google event modal',
+                'Bug fixes and performance improvements'
             ],
             ja: [
                 'イベントレイアウトの改善',
-                'Googleイベントモーダルの改善'
+                'Googleイベントモーダルの改善',
+                'バグ修正とパフォーマンス改善'
             ]
         }
     },
