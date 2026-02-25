@@ -4,9 +4,6 @@
  * This file manages the basic structure of the timetable and the time-related functions.
  */
 
-import {TIME_CONSTANTS} from '../lib/utils.js';
-import {calculateWorkHours, isSameDay} from '../lib/time-utils.js';
-
 // Constants for EventLayoutManager
 const LAYOUT_CONSTANTS = {
     BASE_LEFT: 40,           // The basic left position for the events (px)
@@ -117,7 +114,7 @@ export class EventLayoutManager {
      */
     _initializeResizeObserver() {
         if (this.baseElement && window.ResizeObserver) {
-            this.resizeObserver = new ResizeObserver((entries) => {
+            this.resizeObserver = new ResizeObserver((_) => {
                 // Debounce processing
                 if (this.resizeTimeout) {
                     clearTimeout(this.resizeTimeout);
@@ -450,8 +447,7 @@ export class EventLayoutManager {
      */
     _applyMultiEventLayout(events) {
         try {
-            const totalLanes = Math.max(...events.map(e => e.totalLanes));
-            const laneCount = totalLanes;
+            const laneCount = Math.max(...events.map(e => e.totalLanes));
 
             // Calculate the available width (considering gaps)
             const totalGap = LAYOUT_CONSTANTS.GAP * (laneCount - 1);
