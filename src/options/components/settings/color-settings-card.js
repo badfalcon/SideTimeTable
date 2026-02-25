@@ -199,6 +199,30 @@ export class ColorSettingsCard extends CardComponent {
                     localEventColor: '#c8e6c9',
                     currentTimeLineColor: '#ff0000'
                 }
+            },
+            {
+                nameKey: 'presetProtanopia',
+                colors: {
+                    workTimeColor: '#cce5ff',
+                    localEventColor: '#fff3cd',
+                    currentTimeLineColor: '#0072b2'
+                }
+            },
+            {
+                nameKey: 'presetDeuteranopia',
+                colors: {
+                    workTimeColor: '#fff3cd',
+                    localEventColor: '#cce5ff',
+                    currentTimeLineColor: '#d55e00'
+                }
+            },
+            {
+                nameKey: 'presetTritanopia',
+                colors: {
+                    workTimeColor: '#f8e8f8',
+                    localEventColor: '#d4f0d4',
+                    currentTimeLineColor: '#cc0000'
+                }
             }
         ];
 
