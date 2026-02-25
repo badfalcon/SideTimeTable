@@ -8,7 +8,7 @@
 const LAYOUT_CONSTANTS = {
     BASE_LEFT: 40,           // The basic left position for the events (px)
     GAP: 5,                  // The basic gap between the events (px)
-    RESERVED_SPACE_MARGIN: 25,    // The reserved space margin other than the baseLeft (px)
+    RESERVED_SPACE_MARGIN: 5,     // The reserved space margin other than the baseLeft (px)
     MIN_WIDTH: 100,          // The minimum guaranteed width (px)
     DEFAULT_WIDTH: 200,      // The default maximum width (px)
     MIN_CONTENT_WIDTH: 20,   // The minimum content width (px)

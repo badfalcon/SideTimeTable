@@ -141,12 +141,12 @@ for (let hour = 0; hour < 24; hour++) {
 const LAYOUT_CONSTANTS = {
     BASE_LEFT: 40,           // イベント左端の基準位置 (px) = 時刻ラベル幅
     GAP: 5,                  // レーン間のギャップ (px)
-    RESERVED_SPACE_MARGIN: 25, // 右端の余白 (px)
-    MIN_WIDTH: 100,          // 最小保証幅 (px)
+    RESERVED_SPACE_MARGIN: 5,  // 右端の余白 (px)
+    MIN_WIDTH: 60,           // 最小保証幅 (px)
     DEFAULT_WIDTH: 200,      // baseElement なし時のデフォルト幅 (px)
     MIN_CONTENT_WIDTH: 20,   // 最小コンテンツ幅 (px)
     MIN_GAP: 2,              // 最小ギャップ (px)
-    MIN_DISPLAY_WIDTH: 40,   // タイトルのみ表示に切り替える閾値 (px)
+    MIN_DISPLAY_WIDTH: 50,   // タイトルのみ表示に切り替える閾値 (px)
     Z_INDEX: 5,
 
     PADDING: {
@@ -166,10 +166,10 @@ const LAYOUT_CONSTANTS = {
 
 ```
 maxWidth = panel幅 - BASE_LEFT - RESERVED_SPACE_MARGIN
-         = panel幅 - 40 - 25
-         = panel幅 - 65px
+         = panel幅 - 40 - 5
+         = panel幅 - 45px
 
-下限: MAX(maxWidth, MIN_WIDTH=100)
+下限: MAX(maxWidth, MIN_WIDTH=60)
 ```
 
 `ResizeObserver` でパネル幅変化を監視し、5px 以上の変化があった場合に再計算。
@@ -598,9 +598,10 @@ ResizeObserver → baseElement の幅変化を検知
 
 | パネル幅 | BASE_LEFT | RESERVED_SPACE_MARGIN | maxWidth |
 |----------|-----------|----------------------|----------|
-| 320px    | 40px      | 25px                 | 255px    |
-| 200px    | 40px      | 25px                 | 135px    |
-| 150px    | 40px      | 25px                 | 100px (MIN_WIDTH) |
+| 320px    | 40px      | 5px                  | 275px    |
+| 200px    | 40px      | 5px                  | 155px    |
+| 150px    | 40px      | 5px                  | 105px    |
+| 100px    | 40px      | 5px                  | 60px (MIN_WIDTH) |
 
 ### フォントの自動調整
 
