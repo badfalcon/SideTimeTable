@@ -280,6 +280,12 @@ button {
     margin-top: 0;
 }
 
+.google-event-title {
+    display: flex;
+    align-items: baseline;
+    line-height: 1.2;
+}
+
 .close {
     color: #333;
     float: right;
@@ -353,6 +359,48 @@ button {
     font-size: 0.9em;
     color: #6c757d;
     font-style: italic;
+}
+
+.google-event-title-color {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    margin-right: 8px;
+    align-self: center;
+}
+
+/* Google event detail rows (icon + text alignment) */
+.google-event-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.google-event-row i {
+    width: 16px;
+    flex: 0 0 16px;
+    text-align: center;
+    margin-top: 2px;
+    color: #6c757d;
+}
+
+.google-event-detail-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.google-event-attendee-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 3px;
+    line-height: 1.2;
+}
+
+.google-event-attendee-name {
+    line-height: 1.2;
 }
 
 /* Links within Google event details */
