@@ -7,7 +7,7 @@
 export const RELEASE_NOTES = [
     {
         version: '1.7.2',
-        date: '2026-02-25',
+        date: '2026-02-26',
         highlights: {
             en: [
                 'Improved event layout',
