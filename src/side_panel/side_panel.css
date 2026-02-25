@@ -408,27 +408,27 @@ button {
 .event.compact {
     padding-left: 8px;
     padding-right: 8px;
-    font-size: 0.85em;
-    line-height: 1.2;
 }
 
 .event.micro {
     padding-left: 6px;
     padding-right: 6px;
-    font-size: 0.75em;
-    line-height: 1.1;
 }
 
 /* Duration-based: vertical space optimization (managed by applyDurationBasedStyling) */
 .event.event-compact {
     padding-top: 2px;
     padding-bottom: 2px;
+    font-size: 0.85em;
+    line-height: 1.2;
 }
 
 .event.event-micro {
     padding-top: 0;
     padding-bottom: 0;
     min-height: 15px;
+    font-size: 0.75em;
+    line-height: 1.1;
 }
 
 /* Title-only display for very narrow lanes */
