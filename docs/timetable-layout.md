@@ -74,8 +74,10 @@ height (px) = (endHour × 60 + endMinute) - (startHour × 60 + startMinute)
 │   │   position: absolute, height: 1440px, z-index: 10
 │   │
 │   ├── .work-time-background        ← 業務時間の背景色帯 (動的生成)
-│   ├── .hour-label × 24             ← 0:00 〜 23:00 の時刻ラベル
-│   └── .hour-line × 24             ← 時刻の区切り線 (水平破線)
+│   ├── .hour-line × 24             ← 時刻の区切り線 (水平破線)
+│   ├── #currentTimeLine            ← 現在時刻ライン (動的生成)
+│   │       .current-time-line
+│   └── .hour-label × 24             ← 0:00 〜 23:00 の時刻ラベル
 │
 └── .side-time-table-events          ← イベントレイヤー
     │   position: absolute, height: 1440px, z-index: 20
@@ -83,11 +85,8 @@ height (px) = (endHour × 60 + endMinute) - (startHour × 60 + startMinute)
     ├── .side-time-table-events-local   ← ローカルイベントコンテナ
     │   └── .event.local-event × N      ← 各ローカルイベント
     │
-    ├── .side-time-table-events-google  ← Google イベントコンテナ
-    │   └── .event.google-event × N     ← 各 Google イベント
-    │
-    └── #currentTimeLine                ← 現在時刻ライン (動的生成)
-            .current-time-line
+    └── .side-time-table-events-google  ← Google イベントコンテナ
+        └── .event.google-event × N     ← 各 Google イベント
 ```
 
 ---
