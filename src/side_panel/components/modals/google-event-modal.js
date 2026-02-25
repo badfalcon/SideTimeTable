@@ -32,27 +32,27 @@ export class GoogleEventModal extends ModalComponent {
 
         // Calendar name
         this.calendarElement = document.createElement('div');
-        this.calendarElement.className = 'google-event-calendar mb-2';
+        this.calendarElement.className = 'google-event-row google-event-calendar mb-2';
         content.appendChild(this.calendarElement);
 
         // Event time
         this.timeElement = document.createElement('div');
-        this.timeElement.className = 'google-event-time mb-2';
+        this.timeElement.className = 'google-event-row google-event-time mb-2';
         content.appendChild(this.timeElement);
 
         // Description
         this.descriptionElement = document.createElement('div');
-        this.descriptionElement.className = 'google-event-description mb-2';
+        this.descriptionElement.className = 'google-event-row google-event-description mb-2';
         content.appendChild(this.descriptionElement);
 
         // Location
         this.locationElement = document.createElement('div');
-        this.locationElement.className = 'google-event-location mb-2';
+        this.locationElement.className = 'google-event-row google-event-location mb-2';
         content.appendChild(this.locationElement);
 
         // Meet information
         this.meetElement = document.createElement('div');
-        this.meetElement.className = 'google-event-meet';
+        this.meetElement.className = 'google-event-row google-event-meet';
         content.appendChild(this.meetElement);
 
         // Save the reference to the modalBody
@@ -76,6 +76,12 @@ export class GoogleEventModal extends ModalComponent {
         // Title
         this.titleElement.innerHTML = '';
         if (event.htmlLink) {
+            if (event.calendarBackgroundColor) {
+                const colorIndicator = document.createElement('span');
+                colorIndicator.className = 'google-event-title-color';
+                colorIndicator.style.backgroundColor = event.calendarBackgroundColor;
+                this.titleElement.appendChild(colorIndicator);
+            }
             const titleLink = document.createElement('a');
             titleLink.href = event.htmlLink;
             titleLink.target = '_blank';
@@ -89,7 +95,15 @@ export class GoogleEventModal extends ModalComponent {
             });
             this.titleElement.appendChild(titleLink);
         } else {
-            this.titleElement.textContent = event.summary || chrome.i18n.getMessage('noTitle');
+            if (event.calendarBackgroundColor) {
+                const colorIndicator = document.createElement('span');
+                colorIndicator.className = 'google-event-title-color';
+                colorIndicator.style.backgroundColor = event.calendarBackgroundColor;
+                this.titleElement.appendChild(colorIndicator);
+            }
+            const titleText = document.createElement('span');
+            titleText.textContent = event.summary || chrome.i18n.getMessage('noTitle');
+            this.titleElement.appendChild(titleText);
         }
 
         // Calendar name
@@ -130,22 +144,8 @@ export class GoogleEventModal extends ModalComponent {
             const text = document.createElement('span');
             text.textContent = event.calendarName;
 
-            // Set the background color if the calendar color is available
-            if (event.calendarBackgroundColor) {
-                const colorIndicator = document.createElement('span');
-                colorIndicator.style.cssText = `
-                    display: inline-block;
-                    width: 12px;
-                    height: 12px;
-                    background-color: ${event.calendarBackgroundColor};
-                    border-radius: 2px;
-                    margin-right: 8px;
-                    vertical-align: middle;
-                `;
-                this.calendarElement.appendChild(colorIndicator);
-            }
-
             this.calendarElement.appendChild(icon);
+
             this.calendarElement.appendChild(text);
         }
     }
@@ -217,7 +217,7 @@ export class GoogleEventModal extends ModalComponent {
             icon.className = 'fas fa-align-left me-1';
 
             const text = document.createElement('div');
-            text.style.cssText = 'margin-left: 20px; white-space: pre-wrap; word-break: break-word;';
+            text.className = 'google-event-detail-text';
 
             // Remove the HTML tags and display text only
             text.textContent = this._stripHtml(event.description);
@@ -297,26 +297,28 @@ export class GoogleEventModal extends ModalComponent {
         // Create the attendees element if it doesn't exist
         if (!this.attendeesElement) {
             this.attendeesElement = document.createElement('div');
-            this.attendeesElement.className = 'mb-3';
-            this.attendeesElement.style.cssText = 'display: flex; align-items: flex-start; font-size: 14px;';
+            this.attendeesElement.className = 'google-event-row google-event-attendees mb-3';
             this.modalBody.appendChild(this.attendeesElement);
         }
 
         this.attendeesElement.innerHTML = '';
 
-        if (event.attendees && event.attendees.length > 0) {
+        // Filter out conference rooms and other resources
+        const realAttendees = (event.attendees || []).filter(attendee => !attendee.resource);
+
+        if (realAttendees.length > 0) {
             const icon = document.createElement('i');
             icon.className = 'fas fa-users me-1';
             icon.style.cssText = 'margin-top: 2px; color: #6c757d;';
 
             const container = document.createElement('div');
-            container.style.cssText = 'margin-left: 20px;';
+            container.className = 'google-event-detail-text';
 
             const title = document.createElement('div');
-            title.style.cssText = 'font-weight: bold; margin-bottom: 5px;';
+            title.style.cssText = 'margin-bottom: 5px;';
 
             // Store attendee count for later use
-            title.dataset.attendeeCount = event.attendees.length;
+            title.dataset.attendeeCount = realAttendees.length;
 
             // Create a span for the localized text
             const titleText = document.createElement('span');
@@ -324,16 +326,16 @@ export class GoogleEventModal extends ModalComponent {
             titleText.textContent = chrome.i18n.getMessage('attendees');
 
             // Create a span for the count
-            const countText = document.createTextNode(` (${event.attendees.length})`);
+            const countText = document.createTextNode(` (${realAttendees.length})`);
 
             title.appendChild(titleText);
             title.appendChild(countText);
 
             const attendeesList = document.createElement('div');
 
-            event.attendees.forEach(attendee => {
+            realAttendees.forEach(attendee => {
                 const attendeeDiv = document.createElement('div');
-                attendeeDiv.style.cssText = 'margin-bottom: 3px; display: flex; align-items: center;';
+                attendeeDiv.className = 'google-event-attendee-row';
 
                 // The participation status icon
                 const statusIcon = document.createElement('i');
@@ -362,6 +364,7 @@ export class GoogleEventModal extends ModalComponent {
 
                 // The attendee name and email
                 const nameSpan = document.createElement('span');
+                nameSpan.className = 'google-event-attendee-name';
                 nameSpan.textContent = attendee.displayName || attendee.email;
                 if (attendee.organizer) {
                     nameSpan.textContent += ` (${chrome.i18n.getMessage('organizer')})`;
@@ -370,7 +373,11 @@ export class GoogleEventModal extends ModalComponent {
 
                 attendeeDiv.appendChild(statusIcon);
                 attendeeDiv.appendChild(nameSpan);
-                attendeesList.appendChild(attendeeDiv);
+                if (attendee.organizer) {
+                    attendeesList.prepend(attendeeDiv);
+                } else {
+                    attendeesList.appendChild(attendeeDiv);
+                }
             });
 
             container.appendChild(title);

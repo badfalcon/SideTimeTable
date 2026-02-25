@@ -4,19 +4,16 @@
  * This file manages the basic structure of the timetable and the time-related functions.
  */
 
-import {TIME_CONSTANTS} from '../lib/utils.js';
-import {calculateWorkHours, isSameDay} from '../lib/time-utils.js';
-
 // Constants for EventLayoutManager
 const LAYOUT_CONSTANTS = {
     BASE_LEFT: 40,           // The basic left position for the events (px)
     GAP: 5,                  // The basic gap between the events (px)
-    RESERVED_SPACE_MARGIN: 25,    // The reserved space margin other than the baseLeft (px)
+    RESERVED_SPACE_MARGIN: 5,     // The reserved space margin other than the baseLeft (px)
     MIN_WIDTH: 100,          // The minimum guaranteed width (px)
     DEFAULT_WIDTH: 200,      // The default maximum width (px)
     MIN_CONTENT_WIDTH: 20,   // The minimum content width (px)
-    MIN_DISPLAY_WIDTH: 40,   // The threshold for the title-only display (px)
-    Z_INDEX: 5,              // The Z-index for the flex containers
+    MIN_DISPLAY_WIDTH: 100,   // The threshold for the title-only display (px)
+    Z_INDEX: 21,             // The Z-index for the events
 
     // The thresholds by the number of lanes
     LANE_THRESHOLDS: {
@@ -117,7 +114,7 @@ export class EventLayoutManager {
      */
     _initializeResizeObserver() {
         if (this.baseElement && window.ResizeObserver) {
-            this.resizeObserver = new ResizeObserver((entries) => {
+            this.resizeObserver = new ResizeObserver((_) => {
                 // Debounce processing
                 if (this.resizeTimeout) {
                     clearTimeout(this.resizeTimeout);
@@ -440,7 +437,7 @@ export class EventLayoutManager {
         event.element.style.width = `${this.maxWidth}px`;
         event.element.style.zIndex = LAYOUT_CONSTANTS.Z_INDEX;
         event.element.style.padding = '';
-        event.element.classList.remove('compact', 'micro');
+        event.element.classList.remove('compact', 'micro', 'narrow-display');
     }
 
     /**
@@ -450,8 +447,7 @@ export class EventLayoutManager {
      */
     _applyMultiEventLayout(events) {
         try {
-            const totalLanes = Math.max(...events.map(e => e.totalLanes));
-            const laneCount = totalLanes;
+            const laneCount = Math.max(...events.map(e => e.totalLanes));
 
             // Calculate the available width (considering gaps)
             const totalGap = LAYOUT_CONSTANTS.GAP * (laneCount - 1);

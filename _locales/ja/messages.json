@@ -497,6 +497,18 @@
     "message": "ビビッド",
     "description": "ビビッドカラープリセット名"
   },
+  "presetProtanopia": {
+    "message": "第一色覚 (赤色弱)",
+    "description": "第一色覚異常（赤色弱）向けカラープリセット名"
+  },
+  "presetDeuteranopia": {
+    "message": "第二色覚 (緑色弱)",
+    "description": "第二色覚異常（緑色弱）向けカラープリセット名"
+  },
+  "presetTritanopia": {
+    "message": "第三色覚 (青色弱)",
+    "description": "第三色覚異常（青色弱）向けカラープリセット名"
+  },
   "signInWithGoogle": {
     "message": "Googleでログイン",
     "description": "Googleログインボタンテキスト"

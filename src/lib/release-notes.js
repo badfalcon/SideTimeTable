@@ -6,6 +6,22 @@
  */
 export const RELEASE_NOTES = [
     {
+        version: '1.7.2',
+        date: '2026-02-26',
+        highlights: {
+            en: [
+                'Improved event layout',
+                'Improved Google event modal',
+                'Bug fixes and performance improvements'
+            ],
+            ja: [
+                'イベントレイアウトの改善',
+                'Googleイベントモーダルの改善',
+                'バグ修正とパフォーマンス改善'
+            ]
+        }
+    },
+    {
         version: '1.7.1',
         date: '2026-02-18',
         highlights: {
