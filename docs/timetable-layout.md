@@ -146,7 +146,7 @@ const LAYOUT_CONSTANTS = {
     DEFAULT_WIDTH: 200,      // baseElement なし時のデフォルト幅 (px)
     MIN_CONTENT_WIDTH: 20,   // 最小コンテンツ幅 (px)
     MIN_DISPLAY_WIDTH: 100,  // タイトルのみ表示に切り替える閾値 (px)
-    Z_INDEX: 5,
+    Z_INDEX: 21,
 
     LANE_THRESHOLDS: {
         COMPACT: 2,  // このレーン数以下でコンパクト
@@ -220,7 +220,7 @@ event.totalLanes = lanes.length
 ```javascript
 element.style.left  = `${BASE_LEFT}px`;          // 40px
 element.style.width = `${maxWidth}px`;
-element.style.zIndex = Z_INDEX;                   // 5
+element.style.zIndex = Z_INDEX;                   // 21
 ```
 
 ### 4.7 位置・幅の計算 (複数重複イベント)
@@ -251,7 +251,7 @@ lane 2: left = 40 + 2 × (63+5) = 176px
 後から始まるイベントが手前に表示されるよう、開始時刻の分数を加算：
 
 ```javascript
-zIndex = Z_INDEX + startValue  // 5 + (時刻の分数)
+zIndex = Z_INDEX + startValue  // 21 + (時刻の分数)
 ```
 
 ### 4.9 パディング調整
@@ -611,14 +611,13 @@ font-size: clamp(0.75rem, 1vw, 1rem);
 | 要素 | z-index | 説明 |
 |------|---------|------|
 | `.work-time-background` | 1 | 業務時間背景 |
-| `.event-flex-container` | 5 | Flexコンテナ (レガシー) |
+| `.hour-line` | 5 | 区切り線 |
+| `.current-time-line` | 10 | 現在時刻ライン (イベントの下) |
 | `.side-time-table-base` | 10 | 時刻軸ベース |
+| `.hour-label` | 15 | 時刻ラベル |
 | `.side-time-table-events` | 20 | イベントレイヤー |
-| `.event` (単独) | 21 | 重複なしイベント |
-| `.event` (重複) | 5 + startMinutes | 開始が遅いほど前面 |
-| `.hour-label` | 30 | 時刻ラベル |
-| `.hour-line` | 31 | 区切り線 |
-| `.current-time-line` | 32 | 現在時刻ライン (最前面) |
+| `.event` (単独) | 21 | 重複なしイベント (CSS・JS 一致) |
+| `.event` (重複) | 21 + startMinutes | 開始が遅いほど前面 |
 | `#sideTimeTableHeaderWrapper` | 100 | ヘッダー (sticky) |
 | `.modal` | 100 | モーダルダイアログ |
 
