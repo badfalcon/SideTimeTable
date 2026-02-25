@@ -197,7 +197,7 @@ export class TimelineComponent extends Component {
      */
     _setupCurrentTimeLine() {
         if (!this.currentTimeLineManager) {
-            this.currentTimeLineManager = new CurrentTimeLineManager(this.eventsLayer, this.currentDate);
+            this.currentTimeLineManager = new CurrentTimeLineManager(this.baseLayer, this.currentDate);
         }
         this.currentTimeLineManager.update();
     }
