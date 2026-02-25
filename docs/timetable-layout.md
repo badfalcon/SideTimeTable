@@ -142,22 +142,15 @@ const LAYOUT_CONSTANTS = {
     BASE_LEFT: 40,           // イベント左端の基準位置 (px) = 時刻ラベル幅
     GAP: 5,                  // レーン間のギャップ (px)
     RESERVED_SPACE_MARGIN: 5,  // 右端の余白 (px)
-    MIN_WIDTH: 60,           // 最小保証幅 (px)
+    MIN_WIDTH: 100,          // 最小保証幅 (px)
     DEFAULT_WIDTH: 200,      // baseElement なし時のデフォルト幅 (px)
     MIN_CONTENT_WIDTH: 20,   // 最小コンテンツ幅 (px)
-    MIN_GAP: 2,              // 最小ギャップ (px)
-    MIN_DISPLAY_WIDTH: 50,   // タイトルのみ表示に切り替える閾値 (px)
+    MIN_DISPLAY_WIDTH: 100,  // タイトルのみ表示に切り替える閾値 (px)
     Z_INDEX: 5,
 
-    PADDING: {
-        BASIC: 10,   // 2レーン以下
-        COMPACT: 8,  // 3〜4レーン
-        MICRO: 6     // 5レーン以上
-    },
-
     LANE_THRESHOLDS: {
-        COMPACT: 2,  // このレーン数以上でコンパクト
-        MICRO: 4     // このレーン数以上でマイクロ
+        COMPACT: 2,  // このレーン数以下でコンパクト
+        MICRO: 4     // このレーン数以下でマイクロ
     }
 };
 ```
@@ -263,18 +256,20 @@ zIndex = Z_INDEX + startValue  // 5 + (時刻の分数)
 
 ### 4.9 パディング調整
 
-レーン数によって自動的に padding を調整：
+レーン数によって自動的に CSS クラスで padding を調整：
 
-| レーン数 | モード | padding |
-|----------|--------|---------|
-| 1〜2     | BASIC  | 10px    |
-| 3〜4     | COMPACT | 8px   |
-| 5以上    | MICRO  | 6px     |
+| レーン数 | モード | CSS クラス | padding (CSS定義) |
+|----------|--------|-----------|-------------------|
+| 1〜2     | BASIC  | なし      | 5px 10px (デフォルト) |
+| 3〜4     | COMPACT | `.compact` | 8px (左右のみ)   |
+| 5以上    | MICRO  | `.micro`   | 6px (左右のみ)   |
+
+**注**: パディング値はCSSで定義されており、JavaScriptの定数には含まれていません。
 
 ### 4.10 幅が狭い場合の表示最適化
 
 ```javascript
-if (laneWidth < MIN_DISPLAY_WIDTH) {  // 40px未満
+if (laneWidth < MIN_DISPLAY_WIDTH) {  // 100px未満
     element.classList.add('narrow-display');   // タイトルのみ表示
 } else {
     element.classList.remove('narrow-display');
