@@ -15,7 +15,7 @@ const LAYOUT_CONSTANTS = {
     MIN_WIDTH: 100,          // The minimum guaranteed width (px)
     DEFAULT_WIDTH: 200,      // The default maximum width (px)
     MIN_CONTENT_WIDTH: 20,   // The minimum content width (px)
-    MIN_DISPLAY_WIDTH: 40,   // The threshold for the title-only display (px)
+    MIN_DISPLAY_WIDTH: 80,   // The threshold for the title-only display (px)
     Z_INDEX: 5,              // The Z-index for the flex containers
 
     // The thresholds by the number of lanes
@@ -440,7 +440,7 @@ export class EventLayoutManager {
         event.element.style.width = `${this.maxWidth}px`;
         event.element.style.zIndex = LAYOUT_CONSTANTS.Z_INDEX;
         event.element.style.padding = '';
-        event.element.classList.remove('compact', 'micro');
+        event.element.classList.remove('compact', 'micro', 'narrow-display');
     }
 
     /**
