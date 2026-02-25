@@ -303,7 +303,10 @@ export class GoogleEventModal extends ModalComponent {
 
         this.attendeesElement.innerHTML = '';
 
-        if (event.attendees && event.attendees.length > 0) {
+        // Filter out conference rooms and other resources
+        const realAttendees = (event.attendees || []).filter(attendee => !attendee.resource);
+
+        if (realAttendees.length > 0) {
             const icon = document.createElement('i');
             icon.className = 'fas fa-users me-1';
             icon.style.cssText = 'margin-top: 2px; color: #6c757d;';
@@ -315,7 +318,7 @@ export class GoogleEventModal extends ModalComponent {
             title.style.cssText = 'margin-bottom: 5px;';
 
             // Store attendee count for later use
-            title.dataset.attendeeCount = event.attendees.length;
+            title.dataset.attendeeCount = realAttendees.length;
 
             // Create a span for the localized text
             const titleText = document.createElement('span');
@@ -323,14 +326,14 @@ export class GoogleEventModal extends ModalComponent {
             titleText.textContent = chrome.i18n.getMessage('attendees');
 
             // Create a span for the count
-            const countText = document.createTextNode(` (${event.attendees.length})`);
+            const countText = document.createTextNode(` (${realAttendees.length})`);
 
             title.appendChild(titleText);
             title.appendChild(countText);
 
             const attendeesList = document.createElement('div');
 
-            event.attendees.forEach(attendee => {
+            realAttendees.forEach(attendee => {
                 const attendeeDiv = document.createElement('div');
                 attendeeDiv.className = 'google-event-attendee-row';
 
@@ -370,7 +373,11 @@ export class GoogleEventModal extends ModalComponent {
 
                 attendeeDiv.appendChild(statusIcon);
                 attendeeDiv.appendChild(nameSpan);
-                attendeesList.appendChild(attendeeDiv);
+                if (attendee.organizer) {
+                    attendeesList.prepend(attendeeDiv);
+                } else {
+                    attendeesList.appendChild(attendeeDiv);
+                }
             });
 
             container.appendChild(title);
