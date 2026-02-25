@@ -74,8 +74,10 @@ height (px) = (endHour × 60 + endMinute) - (startHour × 60 + startMinute)
 │   │   position: absolute, height: 1440px, z-index: 10
 │   │
 │   ├── .work-time-background        ← 業務時間の背景色帯 (動的生成)
-│   ├── .hour-label × 24             ← 0:00 〜 23:00 の時刻ラベル
-│   └── .hour-line × 24             ← 時刻の区切り線 (水平破線)
+│   ├── .hour-line × 24             ← 時刻の区切り線 (水平破線)
+│   ├── #currentTimeLine            ← 現在時刻ライン (動的生成)
+│   │       .current-time-line
+│   └── .hour-label × 24             ← 0:00 〜 23:00 の時刻ラベル
 │
 └── .side-time-table-events          ← イベントレイヤー
     │   position: absolute, height: 1440px, z-index: 20
@@ -83,11 +85,8 @@ height (px) = (endHour × 60 + endMinute) - (startHour × 60 + startMinute)
     ├── .side-time-table-events-local   ← ローカルイベントコンテナ
     │   └── .event.local-event × N      ← 各ローカルイベント
     │
-    ├── .side-time-table-events-google  ← Google イベントコンテナ
-    │   └── .event.google-event × N     ← 各 Google イベント
-    │
-    └── #currentTimeLine                ← 現在時刻ライン (動的生成)
-            .current-time-line
+    └── .side-time-table-events-google  ← Google イベントコンテナ
+        └── .event.google-event × N     ← 各 Google イベント
 ```
 
 ---
@@ -141,23 +140,16 @@ for (let hour = 0; hour < 24; hour++) {
 const LAYOUT_CONSTANTS = {
     BASE_LEFT: 40,           // イベント左端の基準位置 (px) = 時刻ラベル幅
     GAP: 5,                  // レーン間のギャップ (px)
-    RESERVED_SPACE_MARGIN: 25, // 右端の余白 (px)
+    RESERVED_SPACE_MARGIN: 5,  // 右端の余白 (px)
     MIN_WIDTH: 100,          // 最小保証幅 (px)
     DEFAULT_WIDTH: 200,      // baseElement なし時のデフォルト幅 (px)
     MIN_CONTENT_WIDTH: 20,   // 最小コンテンツ幅 (px)
-    MIN_GAP: 2,              // 最小ギャップ (px)
-    MIN_DISPLAY_WIDTH: 40,   // タイトルのみ表示に切り替える閾値 (px)
-    Z_INDEX: 5,
-
-    PADDING: {
-        BASIC: 10,   // 2レーン以下
-        COMPACT: 8,  // 3〜4レーン
-        MICRO: 6     // 5レーン以上
-    },
+    MIN_DISPLAY_WIDTH: 100,  // タイトルのみ表示に切り替える閾値 (px)
+    Z_INDEX: 21,
 
     LANE_THRESHOLDS: {
-        COMPACT: 2,  // このレーン数以上でコンパクト
-        MICRO: 4     // このレーン数以上でマイクロ
+        COMPACT: 2,  // このレーン数以下でコンパクト
+        MICRO: 4     // このレーン数以下でマイクロ
     }
 };
 ```
@@ -166,10 +158,10 @@ const LAYOUT_CONSTANTS = {
 
 ```
 maxWidth = panel幅 - BASE_LEFT - RESERVED_SPACE_MARGIN
-         = panel幅 - 40 - 25
-         = panel幅 - 65px
+         = panel幅 - 40 - 5
+         = panel幅 - 45px
 
-下限: MAX(maxWidth, MIN_WIDTH=100)
+下限: MAX(maxWidth, MIN_WIDTH=60)
 ```
 
 `ResizeObserver` でパネル幅変化を監視し、5px 以上の変化があった場合に再計算。
@@ -227,7 +219,7 @@ event.totalLanes = lanes.length
 ```javascript
 element.style.left  = `${BASE_LEFT}px`;          // 40px
 element.style.width = `${maxWidth}px`;
-element.style.zIndex = Z_INDEX;                   // 5
+element.style.zIndex = Z_INDEX;                   // 21
 ```
 
 ### 4.7 位置・幅の計算 (複数重複イベント)
@@ -258,23 +250,25 @@ lane 2: left = 40 + 2 × (63+5) = 176px
 後から始まるイベントが手前に表示されるよう、開始時刻の分数を加算：
 
 ```javascript
-zIndex = Z_INDEX + startValue  // 5 + (時刻の分数)
+zIndex = Z_INDEX + startValue  // 21 + (時刻の分数)
 ```
 
 ### 4.9 パディング調整
 
-レーン数によって自動的に padding を調整：
+レーン数によって自動的に CSS クラスで padding を調整：
 
-| レーン数 | モード | padding |
-|----------|--------|---------|
-| 1〜2     | BASIC  | 10px    |
-| 3〜4     | COMPACT | 8px   |
-| 5以上    | MICRO  | 6px     |
+| レーン数 | モード | CSS クラス | padding (CSS定義) |
+|----------|--------|-----------|-------------------|
+| 1〜2     | BASIC  | なし      | 5px 10px (デフォルト) |
+| 3〜4     | COMPACT | `.compact` | 8px (左右のみ)   |
+| 5以上    | MICRO  | `.micro`   | 6px (左右のみ)   |
+
+**注**: パディング値はCSSで定義されており、JavaScriptの定数には含まれていません。
 
 ### 4.10 幅が狭い場合の表示最適化
 
 ```javascript
-if (laneWidth < MIN_DISPLAY_WIDTH) {  // 40px未満
+if (laneWidth < MIN_DISPLAY_WIDTH) {  // 100px未満
     element.classList.add('narrow-display');   // タイトルのみ表示
 } else {
     element.classList.remove('narrow-display');
@@ -598,9 +592,10 @@ ResizeObserver → baseElement の幅変化を検知
 
 | パネル幅 | BASE_LEFT | RESERVED_SPACE_MARGIN | maxWidth |
 |----------|-----------|----------------------|----------|
-| 320px    | 40px      | 25px                 | 255px    |
-| 200px    | 40px      | 25px                 | 135px    |
-| 150px    | 40px      | 25px                 | 100px (MIN_WIDTH) |
+| 320px    | 40px      | 5px                  | 275px    |
+| 200px    | 40px      | 5px                  | 155px    |
+| 150px    | 40px      | 5px                  | 105px    |
+| 100px    | 40px      | 5px                  | 60px (MIN_WIDTH) |
 
 ### フォントの自動調整
 
@@ -615,14 +610,13 @@ font-size: clamp(0.75rem, 1vw, 1rem);
 | 要素 | z-index | 説明 |
 |------|---------|------|
 | `.work-time-background` | 1 | 業務時間背景 |
-| `.event-flex-container` | 5 | Flexコンテナ (レガシー) |
+| `.hour-line` | 5 | 区切り線 |
+| `.current-time-line` | 10 | 現在時刻ライン (イベントの下) |
 | `.side-time-table-base` | 10 | 時刻軸ベース |
+| `.hour-label` | 15 | 時刻ラベル |
 | `.side-time-table-events` | 20 | イベントレイヤー |
-| `.event` (単独) | 21 | 重複なしイベント |
-| `.event` (重複) | 5 + startMinutes | 開始が遅いほど前面 |
-| `.hour-label` | 30 | 時刻ラベル |
-| `.hour-line` | 31 | 区切り線 |
-| `.current-time-line` | 32 | 現在時刻ライン (最前面) |
+| `.event` (単独) | 21 | 重複なしイベント (CSS・JS 一致) |
+| `.event` (重複) | 21 + startMinutes | 開始が遅いほど前面 |
 | `#sideTimeTableHeaderWrapper` | 100 | ヘッダー (sticky) |
 | `.modal` | 100 | モーダルダイアログ |
 

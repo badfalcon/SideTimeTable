@@ -318,8 +318,13 @@ class OptionsPageManager {
 
     async handleResetSettings() {
         try {
-            // Reset to the default settings
-            await saveSettings(DEFAULT_SETTINGS);
+            // Reset to the default settings while preserving Google auth state and calendar selections
+            const currentSettings = await loadSettings();
+            await saveSettings({
+                ...DEFAULT_SETTINGS,
+                googleIntegrated: currentSettings.googleIntegrated,
+                selectedCalendars: currentSettings.selectedCalendars
+            });
 
             // Update each component with the default settings
             this.timeSettingsCard.resetToDefaults();
