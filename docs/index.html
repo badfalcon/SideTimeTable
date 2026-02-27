@@ -305,6 +305,38 @@ const observer = new IntersectionObserver((entries) => {
 }, { threshold: 0.12 });
 
 document.querySelectorAll('.anim-up').forEach(el => observer.observe(el));
+
+// アンカーリンクのスクロール：lazy画像のロード完了を待ってから移動
+document.querySelectorAll('a[href^="#"]').forEach(link => {
+    link.addEventListener('click', e => {
+        const target = document.querySelector(link.getAttribute('href'));
+        if (!target) return;
+        e.preventDefault();
+
+        // lazy → eager に切り替えてレイアウトを確定させる
+        document.querySelectorAll('img[loading="lazy"]').forEach(img => {
+            img.loading = 'eager';
+        });
+
+        const pending = [...document.querySelectorAll('img')].filter(img => !img.complete);
+
+        const scrollToTarget = () => target.scrollIntoView({ behavior: 'smooth' });
+
+        if (pending.length === 0) {
+            scrollToTarget();
+            return;
+        }
+
+        // 未ロード画像がある場合は完了を待つ（タイムアウト 600ms）
+        let settled = 0;
+        const onSettle = () => { if (++settled >= pending.length) scrollToTarget(); };
+        pending.forEach(img => {
+            img.addEventListener('load',  onSettle, { once: true });
+            img.addEventListener('error', onSettle, { once: true });
+        });
+        setTimeout(scrollToTarget, 600);
+    });
+});
 </script>
 </body>
 </html>

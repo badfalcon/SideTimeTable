@@ -644,6 +644,9 @@ button { cursor: pointer; background: none; border: none; font: inherit; }
     width: 100%;
     height: auto;
     object-fit: cover;
+    /* Chrome Web Store screenshot標準比率でスペース予約しレイアウトシフトを防ぐ */
+    aspect-ratio: 16 / 10;
+    background-color: var(--clr-surface);
 }
 
 /* =====================================================
