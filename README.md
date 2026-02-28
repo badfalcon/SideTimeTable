@@ -186,3 +186,4 @@ chrome.storage.local.set({ enableDeveloperFeatures: false, enableReminderDebug: 
 
 ### ライセンス
 このプラグインは[Apache License 2.0]の下で公開されています。詳細は`LICENSE`ファイルを参照してください。
+
