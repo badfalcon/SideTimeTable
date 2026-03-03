@@ -103,11 +103,12 @@ export class InitialSetupComponent extends Component {
         // Load current settings as defaults
         try {
             const settings = await loadSettings();
-            this.setupData.openTime = settings.openTime || DEFAULT_SETTINGS.openTime;
-            this.setupData.closeTime = settings.closeTime || DEFAULT_SETTINGS.closeTime;
-            this.setupData.language = settings.language || DEFAULT_SETTINGS.language;
-            this.setupData.googleEventReminder = settings.googleEventReminder || DEFAULT_SETTINGS.googleEventReminder;
-            this.setupData.reminderMinutes = settings.reminderMinutes || DEFAULT_SETTINGS.reminderMinutes;
+            this.setupData.openTime = settings.openTime ?? DEFAULT_SETTINGS.openTime;
+            this.setupData.closeTime = settings.closeTime ?? DEFAULT_SETTINGS.closeTime;
+            this.setupData.language = settings.language ?? DEFAULT_SETTINGS.language;
+            this.setupData.googleEventReminder = settings.googleEventReminder ?? DEFAULT_SETTINGS.googleEventReminder;
+            this.setupData.reminderMinutes = settings.reminderMinutes ?? DEFAULT_SETTINGS.reminderMinutes;
+            this.setupData.googleIntegrated = settings.googleIntegrated ?? DEFAULT_SETTINGS.googleIntegrated;
         } catch {
             // Use defaults
         }

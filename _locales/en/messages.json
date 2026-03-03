@@ -497,6 +497,18 @@
     "message": "Vivid",
     "description": "Vivid color preset name"
   },
+  "presetProtanopia": {
+    "message": "Protanopia",
+    "description": "Protanopia (red-blind) color preset name"
+  },
+  "presetDeuteranopia": {
+    "message": "Deuteranopia",
+    "description": "Deuteranopia (green-blind) color preset name"
+  },
+  "presetTritanopia": {
+    "message": "Tritanopia",
+    "description": "Tritanopia (blue-blind) color preset name"
+  },
   "signInWithGoogle": {
     "message": "Sign in with Google",
     "description": "Google sign in button text"
