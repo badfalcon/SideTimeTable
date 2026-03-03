@@ -141,11 +141,7 @@ class OptionsPageManager {
             });
 
             // Load the language settings
-            const languageSettings = await new Promise((resolve) => {
-                chrome.storage.sync.get(['language'], (result) => {
-                    resolve({ language: result.language || 'auto' });
-                });
-            });
+            const languageSettings = await StorageHelper.get(['language'], { language: 'auto' });
 
             this.languageSettingsCard.updateSettings(languageSettings);
 
@@ -278,9 +274,7 @@ class OptionsPageManager {
     async handleLanguageSettingsChange(languageSettings) {
         try {
             // Save the language settings (using the same keys as the existing localize.js)
-            await new Promise((resolve) => {
-                chrome.storage.sync.set({ 'language': languageSettings.language }, resolve);
-            });
+            await StorageHelper.set({ language: languageSettings.language });
 
 
             // Reload the side panel
@@ -324,8 +318,13 @@ class OptionsPageManager {
 
     async handleResetSettings() {
         try {
-            // Reset to the default settings
-            await saveSettings(DEFAULT_SETTINGS);
+            // Reset to the default settings while preserving Google auth state and calendar selections
+            const currentSettings = await loadSettings();
+            await saveSettings({
+                ...DEFAULT_SETTINGS,
+                googleIntegrated: currentSettings.googleIntegrated,
+                selectedCalendars: currentSettings.selectedCalendars
+            });
 
             // Update each component with the default settings
             this.timeSettingsCard.resetToDefaults();

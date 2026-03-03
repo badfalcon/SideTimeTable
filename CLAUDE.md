@@ -16,8 +16,9 @@ This project follows a modular ES6 class-based architecture with clear separatio
   - Handles Google Calendar API integration and OAuth2 authentication
   - Manages Chrome Identity API for token management
   - Provides message-based communication with side panel
-  - Implements keyboard shortcut handling (Ctrl+Shift+Y / Cmd+Shift+Y)
+  - Implements keyboard shortcut handling (Ctrl+Shift+S / Cmd+Shift+S)
   - Functions: `getCalendarList()`, `getCalendarEvents()`, `checkGoogleAuth()`
+  - Manages alarm-based event reminders and notifications
 
 - **Side Panel** (`src/side_panel/`): Main UI displayed in Chrome's side panel
   - `side_panel.js`: Main controller with `SidePanelUIController` class managing initialization and coordination
@@ -28,22 +29,31 @@ This project follows a modular ES6 class-based architecture with clear separatio
   - `components/`: Modular component-based UI architecture
     - `timeline/timeline-component.js`: Main timeline display with integrated event layout
     - `header/header-component.js`: Date navigation and settings controls
-    - `modals/`: Modal dialog components for event management
+    - `modals/`: Modal dialog components (Google events, local events, alerts, What's New)
+    - `setup/initial-setup-component.js`: First-time user setup wizard
+    - `tutorial/tutorial-component.js`: Interactive tutorial for new users
     - `base/component.js`: Base component class with lifecycle management
 
 - **Options Page** (`src/options/`): Extension settings and calendar management
-  - `options.js`: Settings management with `CalendarManager` class for calendar search and selection
+  - `options.js`: Settings management with component-based architecture
   - `options.html`: Comprehensive settings interface with Google integration toggle
   - `options.css`: Styling for settings page with Google-style buttons
+  - `components/`: Component-based settings architecture
+    - `calendar/`: Google integration and calendar management components
+    - `settings/`: Time, color, language, shortcut, reminder, and developer settings components
+    - `base/`: Base card and control button components
 
 - **Utilities** (`src/lib/`): Shared functions and framework components
-  - `utils.js`: Core utilities (`generateTimeList`, `loadSettings`, `logError`, event storage)
+  - `utils.js`: Core utilities (`generateTimeList`, `loadSettings`, `logError`, event storage, recurring events)
   - `time-utils.js`: Pure functions for time calculations (`calculateWorkHours`, `isToday`)
   - `localize.js`: i18n helper functions with Chrome extension API integration
   - `locale-utils.js`: Locale-aware date/time formatting (12h/24h format support)
   - `demo-data.js`: Mock data system for development and screenshots
   - `current-time-line-manager.js`: Dedicated current time indicator management with date-aware visibility
   - `storage-helper.js`: Chrome storage API wrapper with async/await support
+  - `alarm-manager.js`: Event reminder system using Chrome alarms API
+  - `release-notes.js`: Version history and update highlights for What's New modal
+  - `google-button-helper.js`: Helper utilities for Google-style buttons
 
 ### Specialized Systems
 
@@ -73,6 +83,19 @@ This project follows a modular ES6 class-based architecture with clear separatio
 - Language detection with auto/manual selection
 - Locale-aware time formatting (12h for English, 24h for Japanese)
 - Demo data localization for consistent experience across languages
+
+**Recurring Events System**: Sophisticated recurring event management:
+- Supports daily, weekly, monthly, and weekdays recurrence patterns
+- Exception handling for modified/deleted instances
+- Seamless integration with local and Google events
+- Stored separately with efficient date-based retrieval
+
+**Reminder and Notification System**: Chrome alarm-based reminders:
+- `AlarmManager` class for centralized alarm management
+- Configurable reminder timing (default: 5 minutes before)
+- Chrome notifications for upcoming events
+- Automatic cleanup of past alarms
+- Integration with both local and recurring events
 
 ## Development Commands
 
@@ -150,11 +173,13 @@ npm run package       # Create release zip file (builds + packages)
 ### Event Storage and Management
 - **Google Events**: Fetched via Calendar API with multi-calendar support and color preservation
 - **Local Events**: Stored in Chrome storage with date-scoped keys (`localEvents_YYYY-MM-DD`)
+- **Recurring Events**: Separate storage with pattern definitions and exception handling
 - **Automatic cleanup**: Local events auto-reset at midnight for daily scope
 - **Event filtering**: Skips cancelled events and declined invitations
 - **Overlap detection**: Time intersection algorithm for layout management
 - **Duplicate handling**: Displays duplicate events separately (e.g., same meeting with multiple participants)
 - **Event modals**: Dedicated modal components for Google and local event details
+- **Reminders**: Optional per-event reminders with Chrome alarm integration
 
 ### Responsive Design Features
 - **Auto-width adjustment**: ResizeObserver monitors side panel width changes
@@ -210,11 +235,14 @@ npm run package       # Create release zip file (builds + packages)
 - **Font Awesome 6.7.1**: Comprehensive icon library (loaded via CDN)
 
 ### Chrome Extension APIs
-- **Storage API**: Settings and local event persistence with sync storage
+- **Storage API**: Settings and local event persistence with sync and local storage
 - **Identity API**: OAuth2 authentication and token management
 - **Side Panel API**: Chrome's native side panel integration
 - **i18n API**: Built-in internationalization support
 - **Runtime API**: Message passing between background and content scripts
+- **Alarms API**: Scheduled event reminders and periodic tasks
+- **Notifications API**: Desktop notifications for event reminders
+- **Context Menus API**: Right-click menu integration for quick access
 
 ### External APIs
 - **Google Calendar API v3**: Read-only calendar access with multi-calendar support
@@ -259,11 +287,14 @@ npm run package       # Create release zip file (builds + packages)
 - **Auto-discovery**: Automatically detects and suggests available calendars
 
 ### Accessibility and UX
-- **Keyboard shortcuts**: Configurable hotkeys for side panel access
+- **Keyboard shortcuts**: Configurable hotkeys for side panel access (Ctrl+Shift+S / Cmd+Shift+S)
 - **Screen reader support**: Semantic HTML and ARIA labels
 - **Responsive design**: Adapts to various side panel widths
 - **Error handling**: Graceful degradation with user-friendly error messages
 - **Loading states**: Visual feedback for async operations
+- **First-run experience**: Interactive tutorial and setup wizard for new users
+- **Update notifications**: What's New modal showing version highlights
+- **Context menu**: Quick access to changelog and settings
 
 ## Development Best Practices
 
@@ -309,6 +340,13 @@ npm run package       # Create release zip file (builds + packages)
   - `timeline/`: Timeline display components
   - `header/`: Header and navigation components
   - `modals/`: Modal dialog components
+  - `setup/`: Initial setup wizard
+  - `tutorial/`: Interactive tutorial
+- **`src/options/components/`**: Options page component architecture (active)
+  - `base/`: Base card and control components
+  - `calendar/`: Calendar management components
+  - `settings/`: Various settings card components
+- **`src/changelog/`**: Standalone changelog page with version history
 - **`.idea/`**: IntelliJ IDEA project configuration
 - **`.git/`**: Git version control (excluded from distribution)
 
@@ -330,6 +368,19 @@ npm run package       # Create release zip file (builds + packages)
 
 ## Recent Improvements (Latest Updates)
 
+### Version 1.7.1 (2026-02-18)
+- **Tutorial system**: Interactive step-by-step guide for new users
+- **Setup wizard**: First-time configuration assistant for smooth onboarding
+- **Improved UX**: Better guidance for users unfamiliar with the extension
+
+### Version 1.7.0 (2026-02-15)
+- **Recurring events**: Support for daily, weekly, monthly, and weekdays patterns
+- **Reminder system**: Chrome alarm-based notifications with configurable timing
+- **Update notifications**: What's New modal displaying version highlights
+- **Changelog page**: Standalone page with comprehensive version history
+- **Context menu integration**: Quick access to changelog and settings
+- **Component architecture expansion**: Options page fully componentized
+
 ### Build System Integration (2025)
 - **Webpack + Babel introduction**: Full build system for ES6 → CommonJS transformation
 - **Automated bundling**: All JavaScript files bundled for consistent module handling
@@ -341,6 +392,7 @@ npm run package       # Create release zip file (builds + packages)
 ### UI/UX Improvements
 - **Removed attendance status icons**: Event cards now display only time and title (no ✅❌❓ icons)
 - **Cleaner event display**: Simplified event card design for better readability
+- **First-run experience**: Tutorial and setup wizard for new users
 
 ### Current Time Line Management
 - **Resolved duplicate time line issue**: Replaced duplicate implementations with unified `CurrentTimeLineManager`

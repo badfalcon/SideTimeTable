@@ -155,19 +155,19 @@ h1 {
     z-index: 20;
 }
 
-.work-time {
+.work-time-background {
     position: absolute;
-    left: 60px;
-    width: calc(100% - 60px);
-    height: 60px;
+    left: 0;
+    right: 0;
     z-index: 1;
-    background-color: var(--side-calendar-work-time-color);
+    pointer-events: none;
 }
 
 .event {
     position: absolute;
-    left: 35px;
+    left: 40px; /* Matches LAYOUT_CONSTANTS.BASE_LEFT */
     /* width: 200px; - Removed fixed width, dynamic width is set by EventLayoutManager */
+    box-sizing: border-box;
     padding: 5px 10px;
     background: lightgray;
     border-radius: 5px;
@@ -196,11 +196,10 @@ h1 {
 
 .current-time-line {
     position: absolute;
-    width: calc(100% - 40px);
+    width: 100%;
     height: 2px;
     background-color: var(--side-calendar-current-time-line-color);
-    left: 40px;
-    z-index: 32;
+    z-index: 10;
     border-left: none;
 }
 
@@ -212,7 +211,7 @@ h1 {
     padding-right: 5px;
     font-size: 12px;
     transform: translateY(-50%);
-    z-index: 30;
+    z-index: 15;
 }
 
 .hour-line {
@@ -220,7 +219,7 @@ h1 {
     left: 40px;
     width: calc(100% - 40px);
     border-top: 1px dashed #ccc;
-    z-index: 31;
+    z-index: 5;
 }
 
 button {
@@ -279,6 +278,12 @@ button {
 
 .modal-content h2 {
     margin-top: 0;
+}
+
+.google-event-title {
+    display: flex;
+    align-items: baseline;
+    line-height: 1.2;
 }
 
 .close {
@@ -356,6 +361,48 @@ button {
     font-style: italic;
 }
 
+.google-event-title-color {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    margin-right: 8px;
+    align-self: center;
+}
+
+/* Google event detail rows (icon + text alignment) */
+.google-event-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.google-event-row i {
+    width: 16px;
+    flex: 0 0 16px;
+    text-align: center;
+    margin-top: 2px;
+    color: #6c757d;
+}
+
+.google-event-detail-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.google-event-attendee-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 3px;
+    line-height: 1.2;
+}
+
+.google-event-attendee-name {
+    line-height: 1.2;
+}
+
 /* Links within Google event details */
 .google-event-description a,
 .google-event-location a {
@@ -405,17 +452,34 @@ button {
     font-size: clamp(0.75rem, 1vw, 1rem);
 }
 
-/* Dynamic style adjustments based on lane count */
+/* Lane-density-based: horizontal space optimization (managed by EventLayoutManager) */
 .event.compact {
-    padding: 3px 8px;
-    font-size: 0.85em;
-    line-height: 1.2;
+    padding-left: 8px;
+    padding-right: 8px;
 }
 
 .event.micro {
-    padding: 2px 6px;
+    padding-left: 6px;
+    padding-right: 6px;
+}
+
+/* Duration-based: vertical space optimization (managed by applyDurationBasedStyling) */
+.event.event-compact {
+    padding-top: 2px;
+    padding-bottom: 2px;
+    font-size: 0.85em;
+}
+
+.event.event-micro {
+    padding-top: 0;
+    padding-bottom: 0;
+    min-height: 15px;
     font-size: 0.75em;
-    line-height: 1.1;
+}
+
+/* Title-only display for very narrow lanes */
+.event.narrow-display .event-time {
+    display: none;
 }
 
 /* What's New modal styles */
