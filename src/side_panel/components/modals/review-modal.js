@@ -39,52 +39,55 @@ export class ReviewModal extends ModalComponent {
         const content = document.createElement('div');
         content.className = 'review-modal-content';
 
-        // Star icon
-        const iconWrap = document.createElement('div');
-        iconWrap.className = 'review-modal-icon';
-        iconWrap.innerHTML = '<i class="fas fa-star"></i>';
-        content.appendChild(iconWrap);
+        // Header section (gradient background)
+        const header = document.createElement('div');
+        header.className = 'review-modal-header';
 
-        // Title
+        const stars = document.createElement('div');
+        stars.className = 'review-modal-stars';
+        stars.textContent = '★★★★★';
+        header.appendChild(stars);
+
         const title = document.createElement('h2');
         title.className = 'modal-title review-modal-title';
         title.setAttribute('data-localize', '__MSG_reviewTitle__');
         title.textContent = 'Enjoying SideTimeTable?';
-        content.appendChild(title);
+        header.appendChild(title);
 
-        // Message
+        content.appendChild(header);
+
+        // Body section
+        const body = document.createElement('div');
+        body.className = 'review-modal-body';
+
         const message = document.createElement('p');
         message.className = 'review-modal-message';
         message.setAttribute('data-localize', '__MSG_reviewMessage__');
         message.textContent = 'Thank you for using SideTimeTable!\nWe would love to hear your feedback.';
-        content.appendChild(message);
-
-        // Button container
-        const buttonContainer = document.createElement('div');
-        buttonContainer.className = 'review-modal-buttons';
+        body.appendChild(message);
 
         // Rate Now button
         this.rateButton = document.createElement('button');
-        this.rateButton.className = 'btn btn-warning review-btn-rate';
+        this.rateButton.className = 'review-btn-rate';
         this.rateButton.setAttribute('data-localize', '__MSG_reviewRateNow__');
-        this.rateButton.textContent = 'Rate Now';
-        buttonContainer.appendChild(this.rateButton);
+        this.rateButton.innerHTML = '<i class="fas fa-star"></i> Rate Now';
+        body.appendChild(this.rateButton);
 
         // Later button
         this.laterButton = document.createElement('button');
-        this.laterButton.className = 'btn btn-secondary review-btn-later';
+        this.laterButton.className = 'review-btn-later';
         this.laterButton.setAttribute('data-localize', '__MSG_reviewLater__');
-        this.laterButton.textContent = 'Later';
-        buttonContainer.appendChild(this.laterButton);
+        this.laterButton.textContent = 'Maybe Later';
+        body.appendChild(this.laterButton);
 
-        content.appendChild(buttonContainer);
-
-        // Never button (smaller, text-style)
+        // Never button
         this.neverButton = document.createElement('button');
-        this.neverButton.className = 'btn btn-link review-btn-never';
+        this.neverButton.className = 'review-btn-never';
         this.neverButton.setAttribute('data-localize', '__MSG_reviewNever__');
         this.neverButton.textContent = "Don't ask again";
-        content.appendChild(this.neverButton);
+        body.appendChild(this.neverButton);
+
+        content.appendChild(body);
 
         // Event listeners
         this.addEventListener(this.rateButton, 'click', () => this._handleRate());
