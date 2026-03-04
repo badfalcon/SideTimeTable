@@ -950,55 +950,117 @@ button {
 
 /* ===== Review Request Modal ===== */
 #reviewModal .modal-content {
-    text-align: center;
-    max-width: 340px;
+    padding: 0;
+    overflow: hidden;
+    max-width: 300px;
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
-.review-modal-icon {
-    font-size: 2.5em;
-    color: #f5a623;
+#reviewModal .close {
+    position: absolute;
+    top: 10px;
+    right: 14px;
+    float: none;
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 26px;
+    z-index: 1;
+    line-height: 1;
+}
+
+#reviewModal .close:hover {
+    color: #fff;
+}
+
+.review-modal-header {
+    background: linear-gradient(145deg, #ff9500 0%, #ffc200 100%);
+    padding: 32px 24px 24px;
+    text-align: center;
+}
+
+.review-modal-stars {
+    font-size: 1.8rem;
+    letter-spacing: 3px;
+    color: #fff;
     margin-bottom: 10px;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 .review-modal-title {
-    font-size: 1.1em;
-    margin-bottom: 8px;
+    color: #fff;
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin: 0;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.review-modal-body {
+    padding: 20px 20px 18px;
+    text-align: center;
 }
 
 .review-modal-message {
-    font-size: 0.9em;
+    font-size: 0.85rem;
     color: #555;
     white-space: pre-line;
-    margin-bottom: 16px;
-    line-height: 1.5;
-}
-
-.review-modal-buttons {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    margin-bottom: 8px;
+    margin-bottom: 18px;
+    line-height: 1.6;
 }
 
 .review-btn-rate {
-    min-width: 110px;
+    display: block;
+    width: 100%;
+    padding: 11px;
+    background: linear-gradient(135deg, #ff9500 0%, #ffc200 100%);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.9rem;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-bottom: 10px;
+    box-shadow: 0 3px 10px rgba(255, 149, 0, 0.4);
+    transition: opacity 0.15s;
+}
+
+.review-btn-rate:hover {
+    opacity: 0.88;
 }
 
 .review-btn-later {
-    min-width: 80px;
+    display: block;
+    width: 100%;
+    padding: 10px;
+    background: transparent;
+    color: #666;
+    font-size: 0.85rem;
+    border: 1.5px solid #ddd;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-bottom: 12px;
+    transition: border-color 0.15s, color 0.15s;
+}
+
+.review-btn-later:hover {
+    border-color: #bbb;
+    color: #444;
 }
 
 .review-btn-never {
     display: block;
-    margin: 0 auto;
-    font-size: 0.8em;
-    color: #999;
-    text-decoration: none;
+    width: 100%;
+    font-size: 0.75rem;
+    color: #bbb;
+    background: none;
+    border: none;
+    cursor: pointer;
     padding: 2px 0;
+    transition: color 0.15s;
 }
 
 .review-btn-never:hover {
-    color: #666;
+    color: #888;
 }
 
 .setup-google-status {
