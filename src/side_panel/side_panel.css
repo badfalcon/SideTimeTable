@@ -952,7 +952,7 @@ button {
 #reviewModal .modal-content {
     padding: 0;
     overflow: hidden;
-    max-width: 300px;
+    max-width: 400px;
     border: none;
     border-radius: 16px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
