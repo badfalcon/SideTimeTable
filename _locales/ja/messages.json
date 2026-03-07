@@ -141,6 +141,18 @@
     "message": "連携済み",
     "description": "Googleカレンダー連携済み時のラベル"
   },
+  "displaySettings": {
+    "message": "表示設定",
+    "description": "表示設定タブのナビゲーションラベル（時間・色）"
+  },
+  "generalSettings": {
+    "message": "一般設定",
+    "description": "一般設定タブのナビゲーションラベル（言語・ショートカット）"
+  },
+  "developerSettingsTab": {
+    "message": "開発者設定",
+    "description": "開発者設定タブのナビゲーションラベル"
+  },
   "timeSettings": {
     "message": "時間設定",
     "description": "時間設定セクションのタイトル"

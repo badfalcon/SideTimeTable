@@ -45,52 +45,69 @@ class OptionsPageManager {
     }
 
     async initialize() {
-        const container = document.querySelector('.container');
-        this.componentManager.setContainer(container);
+        // タブパネルとコントロールコンテナを取得
+        const tabGoogle = document.getElementById('tab-google');
+        const tabDisplay = document.getElementById('tab-display');
+        const tabGeneral = document.getElementById('tab-general');
+        const tabDeveloper = document.getElementById('tab-developer');
+        const controlContainer = document.getElementById('control-buttons-container');
 
-        // Create the Google integration card
+        // --- Google Calendar タブ ---
         this.googleIntegrationCard = new GoogleIntegrationCard(this.handleGoogleIntegrationChange.bind(this));
-        this.componentManager.register('googleIntegration', this.googleIntegrationCard);
+        this.googleIntegrationCard.createElement();
+        this.googleIntegrationCard.appendTo(tabGoogle);
+        this.componentManager.components.set('googleIntegration', this.googleIntegrationCard);
 
-        // Create the calendar management card
         this.calendarManagementCard = new CalendarManagementCard(this.handleCalendarSelectionChange.bind(this));
-        this.componentManager.register('calendarManagement', this.calendarManagementCard);
+        this.calendarManagementCard.createElement();
+        this.calendarManagementCard.appendTo(tabGoogle);
+        this.componentManager.components.set('calendarManagement', this.calendarManagementCard);
 
-        // Create the time settings card
-        this.timeSettingsCard = new TimeSettingsCard(this.handleTimeSettingsChange.bind(this));
-        this.componentManager.register('timeSettings', this.timeSettingsCard);
-
-        // Create the color settings card
-        this.colorSettingsCard = new ColorSettingsCard(this.handleColorSettingsChange.bind(this));
-        this.componentManager.register('colorSettings', this.colorSettingsCard);
-
-        // Create the language settings card
-        this.languageSettingsCard = new LanguageSettingsCard(this.handleLanguageSettingsChange.bind(this));
-        this.componentManager.register('languageSettings', this.languageSettingsCard);
-
-        // Create the shortcut settings card
-        this.shortcutSettingsCard = new ShortcutSettingsCard();
-        this.componentManager.register('shortcutSettings', this.shortcutSettingsCard);
-
-        // Create the reminder settings card
         this.reminderSettingsCard = new ReminderSettingsCard(this.handleReminderSettingsChange.bind(this));
-        this.componentManager.register('reminderSettings', this.reminderSettingsCard);
+        this.reminderSettingsCard.createElement();
+        this.reminderSettingsCard.appendTo(tabGoogle);
+        this.componentManager.components.set('reminderSettings', this.reminderSettingsCard);
 
-        // Create control buttons
+        // --- Display タブ ---
+        this.timeSettingsCard = new TimeSettingsCard(this.handleTimeSettingsChange.bind(this));
+        this.timeSettingsCard.createElement();
+        this.timeSettingsCard.appendTo(tabDisplay);
+        this.componentManager.components.set('timeSettings', this.timeSettingsCard);
+
+        this.colorSettingsCard = new ColorSettingsCard(this.handleColorSettingsChange.bind(this));
+        this.colorSettingsCard.createElement();
+        this.colorSettingsCard.appendTo(tabDisplay);
+        this.componentManager.components.set('colorSettings', this.colorSettingsCard);
+
+        // --- General タブ ---
+        this.languageSettingsCard = new LanguageSettingsCard(this.handleLanguageSettingsChange.bind(this));
+        this.languageSettingsCard.createElement();
+        this.languageSettingsCard.appendTo(tabGeneral);
+        this.componentManager.components.set('languageSettings', this.languageSettingsCard);
+
+        this.shortcutSettingsCard = new ShortcutSettingsCard();
+        this.shortcutSettingsCard.createElement();
+        this.shortcutSettingsCard.appendTo(tabGeneral);
+        this.componentManager.components.set('shortcutSettings', this.shortcutSettingsCard);
+
+        // --- コントロールボタン (タブ外) ---
         this.controlButtons = new ControlButtonsComponent(this.handleResetSettings.bind(this));
-        this.componentManager.register('controlButtons', this.controlButtons);
+        this.controlButtons.createElement();
+        this.controlButtons.appendTo(controlContainer);
 
-        // Conditionally add Developer Settings (Demo Mode) when developer features are enabled
+        // --- Developer タブ (条件付き) ---
         try {
             const { enableDeveloperFeatures = false, enableReminderDebug = false } = await chrome.storage.local.get(['enableDeveloperFeatures', 'enableReminderDebug']);
             const devEnabled = !!(enableDeveloperFeatures || enableReminderDebug);
             if (devEnabled) {
                 this.developerSettingsCard = new DeveloperSettingsCard(null);
-                this.componentManager.register('developerSettings', this.developerSettingsCard);
-                // Ensure visibility (card default is hidden:true)
-                try {
-                    this.developerSettingsCard.setVisible(true);
-                } catch (_) { /* noop */ }
+                this.developerSettingsCard.createElement();
+                this.developerSettingsCard.setVisible(true);
+                this.developerSettingsCard.appendTo(tabDeveloper);
+                this.componentManager.components.set('developerSettings', this.developerSettingsCard);
+                // nav-pills の Developer ボタンを表示
+                const devBtn = document.getElementById('tab-developer-btn');
+                if (devBtn) devBtn.classList.remove('d-none');
             }
         } catch (e) {
             console.warn('Failed to read developer features flags:', e);
@@ -117,7 +134,6 @@ class OptionsPageManager {
         // Show the page after localization is complete
         document.body.style.opacity = '1';
         document.body.style.transition = 'opacity 0.1s';
-
     }
 
     async _loadAndApplySettings() {
