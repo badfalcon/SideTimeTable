@@ -2,7 +2,8 @@
  * ReviewModal - Modal to request a Chrome Web Store review after sufficient usage
  *
  * Show conditions (initial):
- *   - User has opened the panel on 3 or more consecutive days
+ *   - User has opened the panel on 10 or more total days
+ *   - User has opened the panel on 2 or more consecutive days
  *   - Google Calendar integration is enabled
  *
  * Show conditions (after "Later"):
@@ -15,8 +16,11 @@ import { StorageHelper } from '../../../lib/storage-helper.js';
 // Storage key for review tracking data
 const REVIEW_STATS_KEY = 'reviewStats';
 
+// Number of total days required before showing the popup
+const MIN_TOTAL_DAYS = 10;
+
 // Number of consecutive days required before showing the popup
-const MIN_CONSECUTIVE_DAYS = 3;
+const MIN_CONSECUTIVE_DAYS = 2;
 
 // After clicking "Later", wait this many days before showing again
 const LATER_WAIT_DAYS = 7;
@@ -220,6 +224,7 @@ export class ReviewModal extends ModalComponent {
             stats.consecutiveDays = 1;
         }
 
+        stats.totalDays = (stats.totalDays || 0) + 1;
         stats.lastOpenDateStr = today;
         return stats;
     }
@@ -251,7 +256,7 @@ export class ReviewModal extends ModalComponent {
             if (!stats.state) stats.state = 'none';
             await this._saveStats(stats);
 
-            console.log(`[ReviewModal] 連続起動: ${stats.consecutiveDays}日目 (state: ${stats.state})`);
+            console.log(`[ReviewModal] 合計: ${stats.totalDays}日, 連続起動: ${stats.consecutiveDays}日目 (state: ${stats.state})`);
 
             // Don't show if already reviewed or set to never
             if (stats.state === 'reviewed' || stats.state === 'never') {
@@ -265,7 +270,7 @@ export class ReviewModal extends ModalComponent {
             }
 
             if (stats.state === 'none') {
-                if (stats.consecutiveDays >= MIN_CONSECUTIVE_DAYS) {
+                if (stats.totalDays >= MIN_TOTAL_DAYS && stats.consecutiveDays >= MIN_CONSECUTIVE_DAYS) {
                     this.show();
                 }
             } else if (stats.state === 'later') {
