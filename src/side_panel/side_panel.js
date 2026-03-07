@@ -13,19 +13,19 @@ import {
     ReviewModal,
     TutorialComponent,
     InitialSetupComponent
-} from './components/index.js';
+} from './components';
 
 import { EventLayoutManager } from './time-manager.js';
 import { GoogleEventManager, LocalEventManager } from './event-handlers.js';
 import {
-    generateTimeList, loadSettings, logError, RECURRENCE_TYPES,
+    generateTimeList, loadSettings, RECURRENCE_TYPES,
     loadLocalEventsForDate, saveLocalEventsForDate,
     loadRecurringEvents, saveRecurringEvents,
     addRecurringEventException, deleteRecurringEvent,
     migrateEventDataToLocal
 } from '../lib/utils.js';
 import { isToday } from '../lib/time-utils.js';
-import { isDemoMode, setDemoMode } from '../lib/demo-data.js';
+import { setDemoMode } from '../lib/demo-data.js';
 import { AlarmManager } from '../lib/alarm-manager.js';
 import { StorageHelper } from '../lib/storage-helper.js';
 
@@ -410,12 +410,6 @@ class SidePanelUIController {
                 this.eventLayoutManager.clearAllEvents();
             }
 
-            // Load Google events and local events via Manager classes
-            const [localResult, googleResult] = await Promise.allSettled([
-                this.localEventManager.loadLocalEvents(targetDate),
-                this.googleEventManager.fetchEvents(targetDate)
-            ]);
-
             // Discard results if a newer request has started
             if (requestId !== this.loadRequestId) {
                 return;
@@ -459,7 +453,6 @@ class SidePanelUIController {
         // Current time lines are auto-updated by each component,
         // so here we only monitor date changes
         this.updateInterval = setInterval(() => {
-            const now = new Date();
             const today = new Date();
             today.setHours(0, 0, 0, 0);
 

@@ -10,8 +10,8 @@
  *   - 7 days have passed since "Later" was clicked
  *   - Google Calendar integration is still enabled
  */
-import { ModalComponent } from './modal-component.js';
-import { StorageHelper } from '../../../lib/storage-helper.js';
+import {ModalComponent} from './modal-component.js';
+import {StorageHelper} from '../../../lib/storage-helper.js';
 
 // Storage key for review tracking data
 const REVIEW_STATS_KEY = 'reviewStats';
@@ -107,8 +107,7 @@ export class ReviewModal extends ModalComponent {
      */
     async _handleRate() {
         try {
-            const extensionId = chrome.runtime.id;
-            const storeUrl = `https://chromewebstore.google.com/detail/sidetimetable/${extensionId}`;
+            const storeUrl = `https://chromewebstore.google.com/detail/sidetimetable/${(chrome.runtime.id)}`;
             await chrome.tabs.create({ url: storeUrl });
         } catch (e) {
             // Ignore errors opening the tab (e.g. in side panel context)
