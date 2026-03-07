@@ -948,6 +948,125 @@ button {
     display: block;
 }
 
+/* ===== Review Request Modal ===== */
+#reviewModal .modal-content {
+    padding: 0;
+    overflow: hidden;
+    max-width: 400px;
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+#reviewModal .close {
+    position: absolute;
+    top: 10px;
+    right: 14px;
+    float: none;
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 26px;
+    z-index: 1;
+    line-height: 1;
+}
+
+#reviewModal .close:hover {
+    color: #fff;
+}
+
+.review-modal-header {
+    background: linear-gradient(135deg, #6366f1, #06b6d4);
+    padding: 32px 24px 24px;
+    text-align: center;
+}
+
+.review-modal-stars {
+    font-size: 1.8rem;
+    letter-spacing: 3px;
+    color: #fff;
+    margin-bottom: 10px;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.review-modal-title {
+    color: #fff;
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin: 0;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.review-modal-body {
+    padding: 20px 20px 18px;
+    text-align: center;
+}
+
+.review-modal-message {
+    font-size: 0.85rem;
+    color: #555;
+    white-space: pre-line;
+    margin-bottom: 18px;
+    line-height: 1.6;
+}
+
+.review-btn-rate {
+    display: block;
+    width: 100%;
+    padding: 11px;
+    background: linear-gradient(135deg, #6366f1, #06b6d4);
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.38);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.review-btn-rate:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(99, 102, 241, 0.52);
+}
+
+.review-btn-later {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    background: transparent;
+    color: #666;
+    font-size: 0.85rem;
+    border: 1.5px solid #ddd;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-bottom: 12px;
+    transition: border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.review-btn-later:hover {
+    border-color: #bbb;
+    color: #444;
+}
+
+.review-btn-never {
+    display: block;
+    width: 100%;
+    font-size: 0.75rem;
+    color: #bbb;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px 0;
+    transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.review-btn-never:hover {
+    color: #888;
+}
+
 .setup-google-status {
     text-align: center;
     margin-top: 12px;
