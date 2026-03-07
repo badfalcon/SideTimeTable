@@ -256,8 +256,6 @@ export class ReviewModal extends ModalComponent {
             if (!stats.state) stats.state = 'none';
             await this._saveStats(stats);
 
-            console.log(`[ReviewModal] 合計: ${stats.totalDays}日, 連続起動: ${stats.consecutiveDays}日目 (state: ${stats.state})`);
-
             // Don't show if already reviewed or set to never
             if (stats.state === 'reviewed' || stats.state === 'never') {
                 return;
