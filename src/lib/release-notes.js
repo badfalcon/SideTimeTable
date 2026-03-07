@@ -7,14 +7,16 @@
 export const RELEASE_NOTES = [
     {
         version: '1.7.2',
-        date: '2026-02-26',
+        date: '2026-03-08',
         highlights: {
             en: [
+                'App rating prompt after extended use',
                 'Improved event layout',
                 'Improved Google event modal',
                 'Bug fixes and performance improvements'
             ],
             ja: [
+                '一定期間ご利用後にアプリの評価をお願いする機能を追加',
                 'イベントレイアウトの改善',
                 'Googleイベントモーダルの改善',
                 'バグ修正とパフォーマンス改善'

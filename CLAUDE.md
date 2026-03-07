@@ -368,6 +368,12 @@ npm run package       # Create release zip file (builds + packages)
 
 ## Recent Improvements (Latest Updates)
 
+### Version 1.7.2 (2026-03-08)
+- **Review request popup**: Chrome Web Store review modal triggered after consecutive days of usage with Google Calendar sync
+- **Improved event layout**: Enhanced overlap resolution and rendering
+- **Improved Google event modal**: Cleaner design and better UX
+- **Bug fixes and performance improvements**
+
 ### Version 1.7.1 (2026-02-18)
 - **Tutorial system**: Interactive step-by-step guide for new users
 - **Setup wizard**: First-time configuration assistant for smooth onboarding
