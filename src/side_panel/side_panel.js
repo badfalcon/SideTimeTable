@@ -62,6 +62,7 @@ class SidePanelUIController {
         this.updateInterval = null;
         this.loadEventsDebounceTimeout = null;
         this.wasViewingToday = true; // Track if the user was viewing today
+        this.loadRequestId = 0; // Tracks the latest load request to prevent stale results
     }
 
     /**
@@ -398,6 +399,10 @@ class SidePanelUIController {
      * @private
      */
     async _loadEventsForCurrentDate() {
+        // Increment request ID and capture it; stale responses from older requests will be discarded
+        const requestId = ++this.loadRequestId;
+        const targetDate = new Date(this.currentDate);
+
         try {
             // Clear existing events (prevent duplicates)
             this.timelineComponent.clearAllEvents();
@@ -407,18 +412,19 @@ class SidePanelUIController {
 
             // Load Google events and local events via Manager classes
             const [localResult, googleResult] = await Promise.allSettled([
-                this.localEventManager.loadLocalEvents(this.currentDate),
-                this.googleEventManager.fetchEvents(this.currentDate)
+                this.localEventManager.loadLocalEvents(targetDate),
+                this.googleEventManager.fetchEvents(targetDate)
             ]);
+
+            // Discard results if a newer request has started
+            if (requestId !== this.loadRequestId) {
+                return;
+            }
 
             // Calculate layout after all events are loaded
             // Disable transitions during initial load to prevent visible resize animation
             if (this.eventLayoutManager) {
                 this.eventLayoutManager.calculateLayout(true);
-            }
-
-            // Log results
-            if (localResult.status === 'fulfilled') {
             }
 
         } catch (error) {
