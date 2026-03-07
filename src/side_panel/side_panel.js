@@ -401,7 +401,6 @@ class SidePanelUIController {
     async _loadEventsForCurrentDate() {
         // Increment request ID and capture it; stale responses from older requests will be discarded
         const requestId = ++this.loadRequestId;
-        const targetDate = new Date(this.currentDate);
 
         try {
             // Clear existing events (prevent duplicates)
