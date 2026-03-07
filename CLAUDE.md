@@ -29,18 +29,19 @@ This project follows a modular ES6 class-based architecture with clear separatio
   - `components/`: Modular component-based UI architecture
     - `timeline/timeline-component.js`: Main timeline display with integrated event layout
     - `header/header-component.js`: Date navigation and settings controls
-    - `modals/`: Modal dialog components (Google events, local events, alerts, What's New)
+    - `modals/`: Modal dialog components (Google events, local events, alerts, What's New, review)
+    - `memo/memo-component.js`: Collapsible memo panel at the bottom of the side panel with persistent storage and resizable height
     - `setup/initial-setup-component.js`: First-time user setup wizard
     - `tutorial/tutorial-component.js`: Interactive tutorial for new users
     - `base/component.js`: Base component class with lifecycle management
 
 - **Options Page** (`src/options/`): Extension settings and calendar management
   - `options.js`: Settings management with component-based architecture
-  - `options.html`: Comprehensive settings interface with Google integration toggle
-  - `options.css`: Styling for settings page with Google-style buttons
+  - `options.html`: Settings interface with nav-pills sidebar navigation layout
+  - `options.css`: Styling for settings page with Google-style buttons and sidebar nav
   - `components/`: Component-based settings architecture
     - `calendar/`: Google integration and calendar management components
-    - `settings/`: Time, color, language, shortcut, reminder, and developer settings components
+    - `settings/`: Time, color (with color blindness presets), language, shortcut, reminder, and developer settings components
     - `base/`: Base card and control button components
 
 - **Utilities** (`src/lib/`): Shared functions and framework components
@@ -368,8 +369,13 @@ npm run package       # Create release zip file (builds + packages)
 
 ## Recent Improvements (Latest Updates)
 
+### Version 1.7.3 (2026-03-08)
+- **Collapsible memo panel**: Persistent text memo area at the bottom of the side panel with collapsible toggle and resizable height (drag handle)
+- **Options page redesign**: Restructured with nav-pills sidebar navigation for easier access to settings sections
+
 ### Version 1.7.2 (2026-03-08)
 - **Review request popup**: Chrome Web Store review modal triggered after consecutive days of usage with Google Calendar sync
+- **Color blindness presets**: Added color presets for Protanopia, Deuteranopia, and Tritanopia in color settings
 - **Improved event layout**: Enhanced overlap resolution and rendering
 - **Improved Google event modal**: Cleaner design and better UX
 - **Bug fixes and performance improvements**

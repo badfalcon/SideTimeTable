@@ -17,6 +17,8 @@
 - **Multi-language Support**: Full internationalization support (English/Japanese) with auto-detection.
 - **Advanced Event Layout**: Sophisticated overlap resolution algorithm for overlapping events with lane-based positioning.
 - **Demo Mode**: Developer mode with mock data for testing without API access.
+- **Memo Panel**: Collapsible persistent memo area at the bottom of the side panel with adjustable height.
+- **Color Blindness Presets**: Built-in color themes for Protanopia, Deuteranopia, and Tritanopia.
 - **Custom Time and Color Settings**: Set your work hours, break times, and adjust color schemes for different event types.
 - **Keyboard Shortcuts**: Configurable keyboard shortcuts for quick side panel access.
 
@@ -106,6 +108,8 @@ This plugin is released under the [Apache License 2.0]. See the `LICENSE` file f
 - **多言語対応**: 日本語/英語の完全国際化対応（自動言語検出）。
 - **高度なイベントレイアウト**: 重複するイベントに対する高度な重複解決アルゴリズム（レーンベース配置）。
 - **デモモード**: APIアクセスなしでモックデータを使用したテスト用開発者モード。
+- **メモパネル**: サイドパネル下部に折りたたみ可能な永続メモ欄（高さ調整対応）。
+- **色覚対応カラープリセット**: 第1色覚・第2色覚・第3色覚向けのカラーテーマを内蔵。
 - **カスタム時間・カラー設定**: 作業時間、休憩時間を設定し、イベントタイプ別カラースキームを調整。
 - **キーボードショートカット**: サイドパネル高速アクセス用の設定可能なキーボードショートカット。
 
