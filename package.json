@@ -31,7 +31,7 @@
     "archiver": "^7.0.1",
     "babel-loader": "^10.0.0",
     "baseline-browser-mapping": "^2.10.0",
-    "webpack": "^5.102.0",
+    "webpack": "5.104.1",
     "webpack-cli": "^6.0.1"
   }
 }
