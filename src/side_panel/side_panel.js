@@ -401,6 +401,7 @@ class SidePanelUIController {
     async _loadEventsForCurrentDate() {
         // Increment request ID and capture it; stale responses from older requests will be discarded
         const requestId = ++this.loadRequestId;
+        const targetDate = new Date(this.currentDate);
 
         try {
             // Clear existing events (prevent duplicates)
@@ -408,6 +409,12 @@ class SidePanelUIController {
             if (this.eventLayoutManager) {
                 this.eventLayoutManager.clearAllEvents();
             }
+
+            // Load Google events and local events via Manager classes
+            await Promise.allSettled([
+                this.localEventManager.loadLocalEvents(targetDate),
+                this.googleEventManager.fetchEvents(targetDate)
+            ]);
 
             // Discard results if a newer request has started
             if (requestId !== this.loadRequestId) {
