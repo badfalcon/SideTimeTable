@@ -6,17 +6,33 @@
  */
 export const RELEASE_NOTES = [
     {
+        version: '1.7.3',
+        date: '2026-03-08',
+        highlights: {
+            en: [
+                'Collapsible memo panel at the bottom of the side panel',
+                'Options page redesigned with sidebar navigation (nav-pills)'
+            ],
+            ja: [
+                'サイドパネル下部に折りたたみ可能なメモパネルを追加',
+                'オプションページをサイドバーナビゲーション（nav-pills）にリニューアル'
+            ]
+        }
+    },
+    {
         version: '1.7.2',
         date: '2026-03-08',
         highlights: {
             en: [
                 'App rating prompt after extended use',
+                'Color blindness color presets (Protanopia, Deuteranopia, Tritanopia)',
                 'Improved event layout',
                 'Improved Google event modal',
                 'Bug fixes and performance improvements'
             ],
             ja: [
                 '一定期間ご利用後にアプリの評価をお願いする機能を追加',
+                '色覚対応カラープリセットを追加（第1色覚、第2色覚、第3色覚）',
                 'イベントレイアウトの改善',
                 'Googleイベントモーダルの改善',
                 'バグ修正とパフォーマンス改善'
