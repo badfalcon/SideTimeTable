@@ -25,6 +25,9 @@ export { TutorialComponent } from './tutorial/tutorial-component.js';
 // The initial setup Component
 export { InitialSetupComponent } from './setup/initial-setup-component.js';
 
+// The memo Component
+export { MemoComponent } from './memo/memo-component.js';
+
 /**
  * ComponentManager - The side panel component management class
  */

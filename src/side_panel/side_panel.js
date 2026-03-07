@@ -12,7 +12,8 @@ import {
     WhatsNewModal,
     ReviewModal,
     TutorialComponent,
-    InitialSetupComponent
+    InitialSetupComponent,
+    MemoComponent
 } from './components';
 
 import { EventLayoutManager } from './time-manager.js';
@@ -55,6 +56,7 @@ class SidePanelUIController {
         this.reviewModal = null;
         this.tutorialComponent = null;
         this.initialSetupComponent = null;
+        this.memoComponent = null;
 
         // The state management
         this.currentDate = new Date();
@@ -119,6 +121,12 @@ class SidePanelUIController {
         const existingTimeTable = document.getElementById('sideTimeTable');
         if (existingTimeTable) {
             existingTimeTable.remove();
+        }
+
+        // Remove the existing memo element
+        const existingMemo = document.getElementById('memoPanelWrapper');
+        if (existingMemo) {
+            existingMemo.remove();
         }
 
         // Remove the existing modal elements
@@ -206,10 +214,14 @@ class SidePanelUIController {
         this.componentManager.register('tutorial', this.tutorialComponent);
         this.componentManager.register('initialSetup', this.initialSetupComponent);
 
+        this.memoComponent = new MemoComponent();
+        this.componentManager.register('memo', this.memoComponent);
+
         // Add to the DOM
         const container = document.getElementById('side-panel-container') || document.body;
         this.headerComponent.appendTo(container);
         this.timelineComponent.appendTo(container);
+        this.memoComponent.appendTo(container);
         this.localEventModal.appendTo(container);
         this.googleEventModal.appendTo(container);
         this.alertModal.appendTo(container);
