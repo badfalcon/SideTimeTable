@@ -141,6 +141,18 @@
     "message": "Integrated",
     "description": "Label when Google Calendar is integrated"
   },
+  "displaySettings": {
+    "message": "Display",
+    "description": "Nav tab label for display settings (time & color)"
+  },
+  "generalSettings": {
+    "message": "General",
+    "description": "Nav tab label for general settings (language & shortcut)"
+  },
+  "developerSettingsTab": {
+    "message": "Developer",
+    "description": "Nav tab label for developer settings"
+  },
   "timeSettings": {
     "message": "Time Settings",
     "description": "Section title for time settings"
