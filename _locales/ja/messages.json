@@ -984,5 +984,13 @@
   "reviewNever": {
     "message": "表示しない",
     "description": "レビュー依頼を二度と表示しないボタン"
+  },
+  "memoSectionTitle": {
+    "message": "メモ",
+    "description": "サイドパネル下部のメモセクションのタイトル"
+  },
+  "memoPlaceholder": {
+    "message": "メモを入力...",
+    "description": "メモテキストエリアのプレースホルダー"
   }
 }

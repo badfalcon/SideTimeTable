@@ -984,5 +984,13 @@
   "reviewNever": {
     "message": "Don't ask again",
     "description": "Button to permanently dismiss the review popup"
+  },
+  "memoSectionTitle": {
+    "message": "Notes",
+    "description": "Title for the memo section at the bottom of the side panel"
+  },
+  "memoPlaceholder": {
+    "message": "Add your notes here...",
+    "description": "Placeholder text for the memo textarea"
   }
 }

@@ -5,11 +5,24 @@
     --side-calendar-current-time-line-color: #ff0000;
 }
 
+html {
+    height: 100%;
+}
+
 body {
     font-family: Arial, sans-serif;
     background-color: #f0f0f0;
     position: relative;
-    overflow-y: auto;
+    overflow: hidden;
+    height: 100%;
+    margin: 0;
+}
+
+#side-panel-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
 }
 
 h1 {
@@ -20,17 +33,17 @@ h1 {
 .side-time-table {
     position: relative;
     border: 1px solid #ccc;
-    height: calc(100vh - 120px); /* Viewport height - header, padding, margin etc. for full use */
-    overflow-y: auto; /* Enable vertical scrolling */
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
 }
 
 #sideTimeTableHeaderWrapper{
-/* Fixed to top (sticky) */
-    position: sticky;
-    top: 0;
+    flex: 0 0 auto;
     z-index: 100;
     background-color: #f0f0f0;
     padding-bottom: 10px;
+    margin: 8px 8px 0;
 }
 
 #sideTimeTableHeader{
@@ -1072,4 +1085,94 @@ button {
     margin-top: 12px;
     font-size: 0.85em;
     color: #666;
+}
+
+/* Memo Panel */
+#memoPanelWrapper {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: height 0.15s ease;
+    background-color: #f9f9f9;
+    border-top: 1px solid #ccc;
+}
+
+.memo-drag-handle {
+    flex: 0 0 6px;
+    cursor: ns-resize;
+    background: transparent;
+    position: relative;
+}
+
+.memo-drag-handle::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 28px;
+    height: 3px;
+    border-radius: 2px;
+    background: #ccc;
+}
+
+.memo-drag-handle:hover::after {
+    background: #999;
+}
+
+.memo-toggle-btn {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin: 0;
+    padding: 4px 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.85em;
+    font-weight: bold;
+    color: #555;
+    text-align: left;
+    box-sizing: border-box;
+}
+
+.memo-toggle-btn:hover {
+    background-color: #ececec;
+}
+
+.memo-toggle-icon {
+    font-size: 0.75em;
+    color: #888;
+}
+
+.memo-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0 8px 8px;
+}
+
+#memoTextarea {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    box-sizing: border-box;
+    resize: none;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 6px 8px;
+    font-size: 0.82em;
+    font-family: Arial, sans-serif;
+    background-color: #fff;
+    color: #333;
+    outline: none;
+}
+
+#memoTextarea:focus {
+    border-color: #4a90e2;
 }
