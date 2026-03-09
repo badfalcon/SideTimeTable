@@ -11,11 +11,11 @@ export const RELEASE_NOTES = [
         highlights: {
             en: [
                 'Collapsible memo panel at the bottom of the side panel',
-                'Options page redesigned with sidebar navigation (nav-pills)'
+                'Renew the options page layout'
             ],
             ja: [
                 'サイドパネル下部に折りたたみ可能なメモパネルを追加',
-                'オプションページをサイドバーナビゲーション（nav-pills）にリニューアル'
+                'オプションページのレイアウトをリニューアル'
             ]
         }
     },
