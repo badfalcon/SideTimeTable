@@ -23,6 +23,7 @@ body {
     flex-direction: column;
     height: 100vh;
     overflow: hidden;
+    position: relative;
 }
 
 h1 {
@@ -1088,14 +1089,43 @@ button {
 }
 
 /* Memo Panel */
-#memoPanelWrapper {
+#memoPanelSpacer {
     flex: 0 0 auto;
+    height: 0;
+    transition: height 0.4s cubic-bezier(0.34, 1.15, 0.64, 1);
+}
+
+#memoPanelWrapper {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    transition: height 0.15s ease;
+    clip-path: inset(0 0 0 0 round 0px);
+    transition: height 0.4s cubic-bezier(0.34, 1.15, 0.64, 1),
+                clip-path 0.4s cubic-bezier(0.34, 1.15, 0.64, 1),
+                filter 0.3s ease;
     background-color: #f9f9f9;
     border-top: 1px solid #ccc;
+    filter: drop-shadow(0 -1px 4px rgba(0, 0, 0, 0.08));
+    z-index: 100;
+}
+
+#memoPanelWrapper.memo-collapsed {
+    align-items: flex-end;
+    filter: drop-shadow(-2px -3px 8px rgba(0, 0, 0, 0.14));
+}
+
+#memoPanelWrapper.memo-collapsed .memo-toggle-btn {
+    width: auto;
+    border-radius: 0;
+    padding: 4px 16px;
+    margin-right: 20px;
+    background: none;
+    border: none;
+    box-shadow: none;
 }
 
 .memo-drag-handle {
@@ -1135,6 +1165,7 @@ button {
     font-size: 0.85em;
     font-weight: bold;
     color: #555;
+    transition: padding 0.3s ease;
     text-align: left;
     box-sizing: border-box;
 }
@@ -1155,6 +1186,17 @@ button {
     flex-direction: column;
     overflow: hidden;
     padding: 0 8px 8px;
+    transform: translateY(0);
+    transition: transform 0.35s cubic-bezier(0, 0, 0.2, 1);
+}
+
+#memoPanelWrapper.memo-collapsed .memo-body {
+    transform: translateY(120%);
+    transition: transform 0.22s cubic-bezier(0.4, 0, 1, 1);
+}
+
+#memoPanelWrapper.memo-animating #memoTextarea {
+    overflow: hidden;
 }
 
 #memoTextarea {

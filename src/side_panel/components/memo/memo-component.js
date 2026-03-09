@@ -10,6 +10,9 @@ const MAX_HEIGHT_RATIO = 0.8;
 const AUTO_EXPAND_THRESHOLD = 10;
 const COLLAPSED_HEIGHT_FALLBACK = 34;
 const SAVE_DEBOUNCE_DELAY = 300;
+const ANIM_DURATION = 420;
+const ICON_CLASS_DOWN = 'fas fa-chevron-down memo-toggle-icon';
+const ICON_CLASS_UP = 'fas fa-chevron-up memo-toggle-icon';
 
 export class MemoComponent extends Component {
     constructor(options = {}) {
@@ -22,7 +25,12 @@ export class MemoComponent extends Component {
         this.toggleIcon = null;
         this._dragHandle = null;
         this._toggleBtn = null;
+        this._memoBody = null;
+        this._spacer = document.createElement('div');
+        this._spacer.id = 'memoPanelSpacer';
         this._collapsedHeight = null; // cached to avoid reflow on every mousemove
+        this._collapsedClipPath = null; // cached when valid DOM measurement available
+        this._timeline = null; // cached reference to .side-time-table
         this._saveDebounceTimer = null;
         this._collapsed = false;
         this._panelHeight = DEFAULT_HEIGHT;
@@ -51,13 +59,14 @@ export class MemoComponent extends Component {
         labelSpan.textContent = this.getMessage('memoSectionTitle');
 
         this.toggleIcon = document.createElement('i');
-        this.toggleIcon.className = 'fas fa-chevron-down memo-toggle-icon';
+        this.toggleIcon.className = ICON_CLASS_DOWN;
 
         this._toggleBtn.appendChild(labelSpan);
         this._toggleBtn.appendChild(this.toggleIcon);
 
         const body = document.createElement('div');
         body.className = 'memo-body';
+        this._memoBody = body;
 
         this.textarea = document.createElement('textarea');
         this.textarea.id = 'memoTextarea';
@@ -97,9 +106,41 @@ export class MemoComponent extends Component {
         }
     }
 
+    _getTimeline() {
+        if (!this._timeline || !this._timeline.isConnected) {
+            this._timeline = document.querySelector('.side-time-table');
+        }
+        return this._timeline;
+    }
+
+    _setTransitions(enabled) {
+        const v = enabled ? '' : 'none';
+        this.element.style.transition = v;
+        this._memoBody.style.transition = v;
+        this._spacer.style.transition = v;
+    }
+
     _toggleCollapse() {
         this._collapsed = !this._collapsed;
+        this.element.classList.add('memo-animating');
+
+        // When expanding, lock timeline scroll position during animation
+        if (!this._collapsed) {
+            const timeline = this._getTimeline();
+            if (timeline) {
+                const savedScrollTop = timeline.scrollTop;
+                const ro = new ResizeObserver(() => {
+                    timeline.scrollTop = savedScrollTop;
+                });
+                ro.observe(timeline);
+                setTimeout(() => ro.disconnect(), ANIM_DURATION);
+            }
+        }
+
         this._applyHeight(true);
+        setTimeout(() => {
+            this.element.classList.remove('memo-animating');
+        }, ANIM_DURATION);
         StorageHelper.setLocal({ memoCollapsed: this._collapsed }).catch(() => {});
     }
 
@@ -107,24 +148,49 @@ export class MemoComponent extends Component {
         if (!this.element || !this.toggleIcon) return;
 
         if (!animate) {
-            this.element.style.transition = 'none';
+            this._setTransitions(false);
             void this.element.offsetHeight;
         }
 
         if (this._collapsed) {
+            const clipPath = this._getCollapsedClipPath(); // measure BEFORE state changes
             this.element.style.height = this._getCollapsedHeight() + 'px';
-            this.toggleIcon.className = 'fas fa-chevron-up memo-toggle-icon';
+            this.element.classList.add('memo-collapsed');
+            this.element.style.clipPath = clipPath;
+            this.toggleIcon.className = ICON_CLASS_UP;
             if (this._dragHandle) this._dragHandle.style.display = 'none';
+            this._spacer.style.height = '0px';
         } else {
             this.element.style.height = this._panelHeight + 'px';
-            this.toggleIcon.className = 'fas fa-chevron-down memo-toggle-icon';
+            this.element.classList.remove('memo-collapsed');
+            this.element.style.clipPath = '';
+            this.toggleIcon.className = ICON_CLASS_DOWN;
             if (this._dragHandle) this._dragHandle.style.display = '';
+            this._spacer.style.height = this._panelHeight + 'px';
         }
 
         if (!animate) {
             void this.element.offsetHeight;
-            this.element.style.transition = '';
+            this._setTransitions(true);
         }
+    }
+
+    _getCollapsedClipPath() {
+        if (this._collapsedClipPath) return this._collapsedClipPath;
+
+        const RIGHT_MARGIN = 20;
+        const COLLAPSED_PADDING = 32; // 2 * 16px horizontal padding in collapsed state
+        const labelSpan = this._toggleBtn ? this._toggleBtn.querySelector('span') : null;
+        const labelWidth = labelSpan ? labelSpan.offsetWidth : 0;
+        const iconWidth = this.toggleIcon ? this.toggleIcon.offsetWidth : 0;
+        // No gap: width:auto flex container with space-between packs items directly
+        const btnWidth = Math.max(labelWidth + iconWidth + COLLAPSED_PADDING, 40);
+        const result = `inset(0 ${RIGHT_MARGIN}px 0 calc(100% - ${btnWidth + RIGHT_MARGIN}px) round 8px 8px 0 0)`;
+        // Cache only when we have a real DOM measurement (avoid caching zero-width pre-render)
+        if (labelWidth > 0 || iconWidth > 0) {
+            this._collapsedClipPath = result;
+        }
+        return result;
     }
 
     _getCollapsedHeight() {
@@ -145,11 +211,12 @@ export class MemoComponent extends Component {
             ));
             this._panelHeight = Math.round(newHeight);
             this.element.style.height = this._panelHeight + 'px';
+            this._spacer.style.height = this._panelHeight + 'px';
 
             // Auto-expand if dragging up while collapsed (fire storage write only once per drag)
             if (this._collapsed && this._panelHeight > this._getCollapsedHeight() + AUTO_EXPAND_THRESHOLD) {
                 this._collapsed = false;
-                if (this.toggleIcon) this.toggleIcon.className = 'fas fa-chevron-down memo-toggle-icon';
+                if (this.toggleIcon) this.toggleIcon.className = ICON_CLASS_DOWN;
                 if (this._dragHandle) this._dragHandle.style.display = '';
                 if (!this._expandedDuringDrag) {
                     this._expandedDuringDrag = true;
@@ -186,14 +253,22 @@ export class MemoComponent extends Component {
         }, SAVE_DEBOUNCE_DELAY);
     }
 
+    appendTo(parent) {
+        if (parent && typeof parent.appendChild === 'function') {
+            parent.appendChild(this._spacer);
+        }
+        return super.appendTo(parent);
+    }
+
     destroy() {
         if (this._saveDebounceTimer) {
             clearTimeout(this._saveDebounceTimer);
             this._saveDebounceTimer = null;
         }
-        // Always clean up document-level drag listeners (handles mid-drag destroy)
         document.removeEventListener('mousemove', this._onDragMove);
         document.removeEventListener('mouseup', this._onDragEnd);
+        this._spacer.remove();
+        this._spacer = null;
         super.destroy();
     }
 }
