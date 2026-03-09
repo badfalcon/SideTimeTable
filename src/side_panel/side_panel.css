@@ -1,117 +1,180 @@
+/* =============================================
+   SideTimeTable — Side Panel Styles (Revamped)
+   Design system: Indigo/Slate palette
+   ============================================= */
+
 :root {
-    --side-calendar-work-time-color: #d4d4d4;
-    --side-calendar-break-time-color: #fda9ca;
-    --side-calendar-local-event-color: #bbf2b1;
-    --side-calendar-current-time-line-color: #ff0000;
+    /* Brand colors */
+    --color-primary:        #6366f1;
+    --color-primary-dark:   #4f46e5;
+    --color-primary-light:  #e0e7ff;
+    --color-accent:         #06b6d4;
+
+    /* Semantic colors */
+    --color-success:        #10b981;
+    --color-success-dark:   #059669;
+    --color-success-light:  #d1fae5;
+    --color-danger:         #ef4444;
+    --color-danger-dark:    #dc2626;
+    --color-warning:        #f59e0b;
+
+    /* Surface & background */
+    --color-bg:             #f1f5f9;
+    --color-surface:        #ffffff;
+    --color-surface-alt:    #f8fafc;
+
+    /* Borders */
+    --color-border:         #e2e8f0;
+    --color-border-light:   #f1f5f9;
+
+    /* Text */
+    --color-text:           #1e293b;
+    --color-text-secondary: #64748b;
+    --color-text-muted:     #94a3b8;
+
+    /* Shadows */
+    --shadow-xs:  0 1px 2px rgba(0,0,0,0.06);
+    --shadow-sm:  0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06);
+    --shadow-md:  0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+    --shadow-lg:  0 10px 15px rgba(0,0,0,0.10), 0 4px 6px rgba(0,0,0,0.05);
+    --shadow-xl:  0 20px 25px rgba(0,0,0,0.10), 0 10px 10px rgba(0,0,0,0.04);
+
+    /* Radius */
+    --radius-sm:  4px;
+    --radius-md:  8px;
+    --radius-lg:  12px;
+    --radius-xl:  16px;
+    --radius-full: 9999px;
+
+    /* Transitions */
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Calendar-specific */
+    --side-calendar-work-time-color:         rgba(99, 102, 241, 0.08);
+    --side-calendar-break-time-color:        rgba(251, 113, 133, 0.15);
+    --side-calendar-local-event-color:       #bbf7d0;
+    --side-calendar-current-time-line-color: #ef4444;
+
+    /* Font */
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Roboto', sans-serif;
 }
 
+/* =============================================
+   Base
+   ============================================= */
 html {
     height: 100%;
 }
 
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f0f0f0;
+    font-family: var(--font-sans);
+    background-color: var(--color-bg);
+    color: var(--color-text);
     position: relative;
     overflow: hidden;
     height: 100%;
     margin: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
+h1 {
+    font-size: 18px;
+    font-weight: 600;
+    text-align: center;
+    letter-spacing: -0.02em;
+    color: var(--color-text);
+}
+
+/* =============================================
+   Panel container
+   ============================================= */
 #side-panel-container {
     display: flex;
     flex-direction: column;
     height: 100vh;
     overflow: hidden;
     position: relative;
+    background-color: var(--color-bg);
 }
 
-h1 {
-    font-size: 20px;
-    text-align: center;
-}
-
-.side-time-table {
-    position: relative;
-    border: 1px solid #ccc;
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow-y: auto;
-}
-
-#sideTimeTableHeaderWrapper{
+/* =============================================
+   Header
+   ============================================= */
+#sideTimeTableHeaderWrapper {
     flex: 0 0 auto;
     z-index: 100;
-    background-color: #f0f0f0;
-    padding-bottom: 10px;
-    margin: 8px 8px 0;
+    background-color: var(--color-surface);
+    padding: 10px 12px 10px;
+    margin: 0;
+    border-bottom: 1px solid var(--color-border);
+    box-shadow: var(--shadow-xs);
 }
 
-#sideTimeTableHeader{
+#sideTimeTableHeader {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #f0f0f0;
     width: 100%;
-    position: relative; /* For absolute positioning of date navigation */
+    position: relative;
 }
 
-.action-buttons {
-    display: flex;
-    align-items: center;
-    gap: 10px; /* Gap between add and sync buttons */
-}
-
+/* Date navigation – absolutely centred */
 #dateNavigation {
     display: flex;
     align-items: center;
-    gap: 10px;
-    position: absolute; /* Absolute positioning for centering */
+    gap: 8px;
+    position: absolute;
     left: 50%;
-    transform: translateX(-50%); /* Center horizontally */
+    transform: translateX(-50%);
 }
 
 .nav-arrow {
-    font-size: 16px;
+    font-size: 14px;
     cursor: pointer;
-    color: #666;
-    transition: color 0.2s ease;
+    color: var(--color-text-secondary);
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-full);
+    transition: background-color var(--transition-fast), color var(--transition-fast);
 }
 
 .nav-arrow:hover {
-    color: #007bff;
+    background-color: var(--color-primary-light);
+    color: var(--color-primary);
 }
 
 #currentDateDisplay {
-    font-size: 18px;
+    font-size: 15px;
+    font-weight: 600;
     margin: 0;
     text-align: center;
     cursor: pointer;
-    transition: color 0.2s ease;
-    
-    /* Disable default input styles */
+    transition: color var(--transition-base);
     border: none;
     background: none;
     outline: none;
-    
-    /* Text styles */
     font-family: inherit;
-    font-weight: normal;
-    color: inherit;
+    color: var(--color-text);
+    letter-spacing: -0.01em;
 }
 
 #currentDateDisplay:hover {
-    color: #007bff;
+    color: var(--color-primary);
 }
 
 #currentDateDisplay.today {
-    color: #007bff;
-    font-weight: bold;
+    color: var(--color-primary);
 }
 
-/* Make date picker calendar icon transparent while keeping functionality */
 #currentDateDisplay::-webkit-calendar-picker-indicator {
     cursor: pointer;
+    opacity: 0.5;
 }
 
 #currentDateDisplay::-webkit-inner-spin-button,
@@ -119,9 +182,69 @@ h1 {
     display: none;
 }
 
+/* Action buttons (right side of header) */
+.action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
 .add-local-event-icon {
-    font-size: 24px;
-    cursor: pointer;     /* Change cursor to pointer */
+    font-size: 20px;
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-full);
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.add-local-event-icon:hover {
+    background-color: var(--color-success-light);
+    color: var(--color-success);
+}
+
+.sync-icon {
+    font-size: 17px;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-full);
+    transition: background-color var(--transition-fast), color var(--transition-fast), transform var(--transition-slow);
+}
+
+.sync-icon:hover {
+    background-color: var(--color-primary-light);
+    color: var(--color-primary);
+}
+
+.sync-icon.fa-spin {
+    color: var(--color-primary);
+}
+
+.settings-icon {
+    font-size: 18px;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-full);
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.settings-icon:hover {
+    background-color: var(--color-bg);
+    color: var(--color-text);
 }
 
 #sideTimeTableHeader > h1 {
@@ -129,35 +252,42 @@ h1 {
     vertical-align: middle;
 }
 
-.add-local-event-icon:hover {
+/* =============================================
+   Timeline area
+   ============================================= */
+.side-time-table {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    background-color: var(--color-surface);
+    /* Subtle custom scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border) transparent;
 }
 
-.sync-icon {
-    font-size: 20px;
-    color: #333;
-    cursor: pointer;
-    transition: transform 0.3s ease, color 0.2s ease;
+.side-time-table::-webkit-scrollbar {
+    width: 4px;
 }
 
-.sync-icon:hover {
-    color: #007bff;
+.side-time-table::-webkit-scrollbar-track {
+    background: transparent;
 }
 
-.sync-icon.fa-spin {
-    color: #007bff;
+.side-time-table::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: var(--radius-full);
 }
 
-.settings-icon {
-    font-size: 24px;
-    color: #333;
-    cursor: pointer;
+.side-time-table::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-muted);
 }
 
 .side-time-table-base {
     position: absolute;
     left: 0;
     right: 0;
-    height: 1500px; /* Height for 24h + 30min top zone + 30min bottom zone */
+    height: 1500px;
     z-index: 10;
 }
 
@@ -165,7 +295,7 @@ h1 {
     position: absolute;
     left: 0;
     width: 100%;
-    height: 1500px; /* Height for 24h + 30min top zone + 30min bottom zone */
+    height: 1500px;
     z-index: 20;
 }
 
@@ -173,7 +303,7 @@ h1 {
     position: absolute;
     left: 0;
     right: 0;
-    background-color: rgba(0, 0, 0, 0.04);
+    background-color: rgba(241, 245, 249, 0.6);
     pointer-events: none;
 }
 
@@ -185,53 +315,17 @@ h1 {
     pointer-events: none;
 }
 
-.event {
-    position: absolute;
-    left: 40px; /* Matches LAYOUT_CONSTANTS.BASE_LEFT */
-    /* width: 200px; - Removed fixed width, dynamic width is set by EventLayoutManager */
-    box-sizing: border-box;
-    padding: 5px 10px;
-    background: lightgray;
-    border-radius: 5px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-    z-index: 21;
-    transition: left 0.3s, width 0.3s; /* Smooth transition for movement */
-    overflow: hidden; /* Prevent text from overflowing */
-    text-overflow: ellipsis; /* Show overflowed text with ellipsis */
-}
-
-.event.no-transition {
-    transition: none !important;
-}
-
-.short {
-    padding: 0 10px;
-}
-
-.google-event {
-    /* Background color is set dynamically from Google Calendar API */
-}
-
-.local-event {
-    background-color: var(--side-calendar-local-event-color);
-}
-
-.current-time-line {
-    position: absolute;
-    width: 100%;
-    height: 2px;
-    background-color: var(--side-calendar-current-time-line-color);
-    z-index: 10;
-    border-left: none;
-}
-
+/* Hour labels and lines */
 .hour-label {
     position: absolute;
     left: 0;
-    width: 35px;
+    width: 38px;
     text-align: right;
-    padding-right: 5px;
-    font-size: 12px;
+    padding-right: 6px;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: var(--color-text-muted);
     transform: translateY(-50%);
     z-index: 15;
 }
@@ -240,205 +334,109 @@ h1 {
     position: absolute;
     left: 40px;
     width: calc(100% - 40px);
-    border-top: 1px dashed #ccc;
+    border-top: 1px solid var(--color-border-light);
     z-index: 5;
 }
 
-button {
-    margin-top: 10px;
-}
-
-/* Google event action row (Meet and Map buttons side by side) */
-.google-event-meet {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-.btn-primary {
-    background-color: #007bff;
-    color: white;
-}
-
-.btn-primary:hover,
-.btn-primary:focus {
-    background-color: #0056b3;
-}
-
-/* Local event creation dialog styles */
-.modal {
-    display: none; /* Hide in initial state */
-    position: fixed;
-    z-index: 100;
-    left: 0;
-    top: 0;
+/* Current time indicator */
+.current-time-line {
+    position: absolute;
     width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background slightly darker */
-    align-items: center;
-    justify-content: center;
+    height: 2px;
+    background-color: var(--color-danger);
+    z-index: 10;
+    border-left: none;
+    box-shadow: 0 0 4px rgba(239, 68, 68, 0.4);
 }
 
-.modal[style*="display: block"] {
-    display: flex !important;
+.current-time-line::before {
+    content: '';
+    position: absolute;
+    left: 40px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--color-danger);
 }
 
-.modal-content {
-    background-color: #fff; /* Pure white background */
-    padding: 30px; /* Wide inner padding */
-    border: 1px solid #ccc; /* Gray border */
-    width: 90%; /* Easy to use even on small screens */
-    max-width: 500px; /* Set maximum width */
-    max-height: 90vh; /* Height restriction */
-    border-radius: 10px; /* Slightly larger rounded corners */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add shadow */
-    position: relative;
-    overflow-y: auto; /* Scroll when content is long */
-}
-
-.modal-content h2 {
-    margin-top: 0;
-}
-
-.google-event-title {
-    display: flex;
-    align-items: baseline;
-    line-height: 1.2;
-}
-
-.close {
-    color: #333;
-    float: right;
-    font-size: 32px; /* Make text slightly larger */
-    font-weight: bold;
-}
-
-.close:hover,
-.close:focus {
-    color: #000;
-    text-decoration: none;
+/* =============================================
+   Events
+   ============================================= */
+.event {
+    position: absolute;
+    left: 40px;
+    box-sizing: border-box;
+    padding: 4px 8px;
+    background: var(--color-surface);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--color-primary);
+    box-shadow: var(--shadow-sm);
+    z-index: 21;
+    transition: left var(--transition-base), width var(--transition-base), box-shadow var(--transition-fast);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 60px;
+    font-size: clamp(0.72rem, 1vw, 0.875rem);
     cursor: pointer;
 }
 
-/* Form label and input field styles */
-label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
+.event:hover {
+    box-shadow: var(--shadow-md);
+    z-index: 25;
 }
 
-input[type="text"],
-input[type="time"] {
-    width: calc(100% - 20px); /* Adjust width */
-    padding: 10px;
-    margin-bottom: 15px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
+.event.no-transition {
+    transition: none !important;
 }
 
-button {
-    margin-top: 10px;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+.short {
+    padding: 0 8px;
 }
 
-#saveEventButton {
-    background-color: #28a745; /* Green color */
-    color: #fff; /* White text */
+.google-event {
+    /* Border-left color is set dynamically from Google Calendar API */
+    /* We override background slightly for Google events */
+    background: var(--color-surface);
 }
 
-#saveEventButton:hover,
-#saveEventButton:focus {
-    background-color: #218838; /* Darker green */
+.local-event {
+    background-color: #f0fdf4;
+    border-left-color: var(--color-success);
 }
 
-#deleteEventButton {
-    background-color: #dc3545; /* Red color */
-    color: #fff; /* White text */
+/* Lane-density adjustments */
+.event.compact {
+    padding-left: 6px;
+    padding-right: 6px;
 }
 
-#deleteEventButton:hover,
-#deleteEventButton:focus {
-    background-color: #c82333; /* Darker red */
+.event.micro {
+    padding-left: 4px;
+    padding-right: 4px;
 }
 
-#cancelEventButton {
-    background-color: #6c757d; /* Gray color */
-    color: #fff; /* White text */
+/* Duration-based adjustments */
+.event.event-compact {
+    padding-top: 1px;
+    padding-bottom: 1px;
+    font-size: 0.82em;
 }
 
-#cancelEventButton:hover,
-#cancelEventButton:focus {
-    background-color: #5a6268; /* Darker grey */
+.event.event-micro {
+    padding-top: 0;
+    padding-bottom: 0;
+    min-height: 15px;
+    font-size: 0.75em;
 }
 
-/* Google event details calendar name */
-.google-event-calendar {
-    font-size: 0.9em;
-    color: #6c757d;
-    font-style: italic;
+.event.narrow-display .event-time {
+    display: none;
 }
 
-.google-event-title-color {
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    border-radius: 4px;
-    margin-right: 8px;
-    align-self: center;
-}
-
-/* Google event detail rows (icon + text alignment) */
-.google-event-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-}
-
-.google-event-row i {
-    width: 16px;
-    flex: 0 0 16px;
-    text-align: center;
-    margin-top: 2px;
-    color: #6c757d;
-}
-
-.google-event-detail-text {
-    flex: 1 1 auto;
-    min-width: 0;
-    white-space: pre-wrap;
-    word-break: break-word;
-}
-
-.google-event-attendee-row {
-    display: flex;
-    align-items: center;
-    margin-bottom: 3px;
-    line-height: 1.2;
-}
-
-.google-event-attendee-name {
-    line-height: 1.2;
-}
-
-/* Links within Google event details */
-.google-event-description a,
-.google-event-location a {
-    color: #007bff;
-    text-decoration: underline;
-}
-
-.google-event-description a:hover,
-.google-event-location a:hover {
-    color: #0056b3;
-    text-decoration: none;
-}
-
-/* Flexbox layout styles */
+/* Flex lane layout */
 #event-flex-container {
     position: absolute;
     top: 0;
@@ -453,76 +451,278 @@ button {
     flex-direction: column;
     min-height: 100%;
     pointer-events: none;
-    /* Debug border - can be removed in production */
-    /* border: 1px dashed rgba(0, 0, 255, 0.2); */
 }
 
-/* Event element flexbox adjustments */
-.event {
-    /* Smooth transition for flex positioning */
-    transition: left 0.2s ease-out, width 0.2s ease-out;
-    
-    /* Enhanced text ellipsis settings */
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    
-    /* Ensure minimum width */
-    min-width: 60px;
-    
-    /* Responsive font size */
-    font-size: clamp(0.75rem, 1vw, 1rem);
+/* =============================================
+   Buttons (base reset)
+   ============================================= */
+button {
+    margin-top: 10px;
+    padding: 8px 16px;
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: background-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
 }
 
-/* Lane-density-based: horizontal space optimization (managed by EventLayoutManager) */
-.event.compact {
-    padding-left: 8px;
-    padding-right: 8px;
+button:active {
+    transform: scale(0.98);
 }
 
-.event.micro {
-    padding-left: 6px;
-    padding-right: 6px;
+.btn-primary {
+    background-color: var(--color-primary);
+    color: white;
+    box-shadow: 0 1px 3px rgba(99, 102, 241, 0.3);
 }
 
-/* Duration-based: vertical space optimization (managed by applyDurationBasedStyling) */
-.event.event-compact {
-    padding-top: 2px;
-    padding-bottom: 2px;
-    font-size: 0.85em;
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: var(--color-primary-dark);
+    box-shadow: 0 4px 8px rgba(99, 102, 241, 0.35);
 }
 
-.event.event-micro {
-    padding-top: 0;
-    padding-bottom: 0;
-    min-height: 15px;
-    font-size: 0.75em;
+#saveEventButton {
+    background-color: var(--color-success);
+    color: #fff;
+    box-shadow: 0 1px 3px rgba(16, 185, 129, 0.3);
 }
 
-/* Title-only display for very narrow lanes */
-.event.narrow-display .event-time {
+#saveEventButton:hover,
+#saveEventButton:focus {
+    background-color: var(--color-success-dark);
+    box-shadow: 0 4px 8px rgba(16, 185, 129, 0.35);
+}
+
+#deleteEventButton {
+    background-color: var(--color-danger);
+    color: #fff;
+    box-shadow: 0 1px 3px rgba(239, 68, 68, 0.3);
+}
+
+#deleteEventButton:hover,
+#deleteEventButton:focus {
+    background-color: var(--color-danger-dark);
+    box-shadow: 0 4px 8px rgba(239, 68, 68, 0.35);
+}
+
+#cancelEventButton {
+    background-color: var(--color-surface-alt);
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border);
+}
+
+#cancelEventButton:hover,
+#cancelEventButton:focus {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+}
+
+/* =============================================
+   Modals
+   ============================================= */
+.modal {
     display: none;
+    position: fixed;
+    z-index: 100;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(2px);
+    align-items: center;
+    justify-content: center;
 }
 
-/* What's New modal styles */
+.modal[style*="display: block"] {
+    display: flex !important;
+}
+
+.modal-content {
+    background-color: var(--color-surface);
+    padding: 28px;
+    border: 1px solid var(--color-border);
+    width: 90%;
+    max-width: 480px;
+    max-height: 90vh;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-xl);
+    position: relative;
+    overflow-y: auto;
+    animation: modalFadeIn 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: scale(0.96) translateY(8px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-content h2 {
+    margin-top: 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--color-text);
+    letter-spacing: -0.02em;
+}
+
+.close {
+    color: var(--color-text-muted);
+    float: right;
+    font-size: 26px;
+    font-weight: 400;
+    line-height: 1;
+    transition: color var(--transition-fast);
+}
+
+.close:hover,
+.close:focus {
+    color: var(--color-text);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* Form elements inside modals */
+label {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    color: var(--color-text-secondary);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+input[type="text"],
+input[type="time"] {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 9px 12px;
+    margin-bottom: 14px;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    color: var(--color-text);
+    background: var(--color-surface);
+    outline: none;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+input[type="text"]:focus,
+input[type="time"]:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+
+/* Google event modal specifics */
+.google-event-title {
+    display: flex;
+    align-items: baseline;
+    line-height: 1.3;
+    gap: 8px;
+}
+
+.google-event-title-color {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+    align-self: center;
+}
+
+.google-event-calendar {
+    font-size: 0.85em;
+    color: var(--color-text-secondary);
+    font-style: italic;
+}
+
+.google-event-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 6px;
+}
+
+.google-event-row i {
+    width: 16px;
+    flex: 0 0 16px;
+    text-align: center;
+    margin-top: 3px;
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+}
+
+.google-event-detail-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 0.9rem;
+    color: var(--color-text);
+    line-height: 1.5;
+}
+
+.google-event-attendee-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 3px;
+    line-height: 1.3;
+}
+
+.google-event-attendee-name {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+}
+
+.google-event-meet {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.google-event-description a,
+.google-event-location a {
+    color: var(--color-primary);
+    text-decoration: underline;
+}
+
+.google-event-description a:hover,
+.google-event-location a:hover {
+    color: var(--color-primary-dark);
+    text-decoration: none;
+}
+
+/* =============================================
+   What's New modal
+   ============================================= */
 .whats-new-content {
     text-align: left;
 }
 
 .whats-new-content .modal-title {
     margin-bottom: 16px;
-    font-size: 1.3em;
-    color: #333;
+    font-size: 1.2em;
+    font-weight: 700;
+    color: var(--color-text);
+    letter-spacing: -0.02em;
 }
 
 .whats-new-notes {
     max-height: 50vh;
     overflow-y: auto;
     margin-bottom: 16px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border) transparent;
 }
 
 .whats-new-version-section {
-    margin-bottom: 12px;
+    margin-bottom: 14px;
 }
 
 .whats-new-version-header {
@@ -533,41 +733,59 @@ button {
 }
 
 .whats-new-version-label {
-    font-weight: bold;
-    font-size: 1.05em;
-    color: #007bff;
+    font-weight: 700;
+    font-size: 0.95em;
+    color: var(--color-primary);
+    background: var(--color-primary-light);
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
 }
 
 .whats-new-version-date {
-    font-size: 0.85em;
-    color: #888;
+    font-size: 0.82em;
+    color: var(--color-text-muted);
 }
 
 .whats-new-highlights {
     margin: 0;
-    padding-left: 20px;
+    padding-left: 18px;
     list-style-type: disc;
 }
 
 .whats-new-highlights li {
     margin-bottom: 4px;
-    font-size: 0.93em;
-    line-height: 1.5;
-    color: #444;
+    font-size: 0.9em;
+    line-height: 1.55;
+    color: var(--color-text-secondary);
 }
 
 .whats-new-separator {
     border: none;
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--color-border-light);
     margin: 12px 0;
 }
 
 .whats-new-confirm-btn {
     display: block;
     width: 100%;
+    background: var(--color-primary);
+    color: #fff;
+    padding: 10px;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 0.875rem;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+    transition: background-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
-/* Tutorial overlay styles */
+.whats-new-confirm-btn:hover {
+    background: var(--color-primary-dark);
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+}
+
+/* =============================================
+   Tutorial overlay
+   ============================================= */
 .tutorial-overlay {
     position: fixed;
     top: 0;
@@ -584,55 +802,61 @@ button {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.55);
+    background-color: rgba(15, 23, 42, 0.6);
     pointer-events: auto;
 }
 
 .tutorial-highlight {
     position: fixed;
-    border-radius: 6px;
-    box-shadow: 0 0 0 4000px rgba(0, 0, 0, 0.55);
+    border-radius: var(--radius-md);
+    box-shadow: 0 0 0 4000px rgba(15, 23, 42, 0.6), 0 0 0 2px var(--color-primary);
     z-index: 201;
     pointer-events: none;
-    transition: all 0.3s ease;
+    transition: all var(--transition-slow);
     background: transparent;
 }
 
 .tutorial-tooltip {
     position: fixed;
-    background: #fff;
-    border-radius: 10px;
-    padding: 20px;
-    max-width: 320px;
+    background: var(--color-surface);
+    border-radius: var(--radius-xl);
+    padding: 20px 22px;
+    max-width: 300px;
     width: 90%;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    box-shadow: var(--shadow-xl);
+    border: 1px solid var(--color-border);
     z-index: 202;
     pointer-events: auto;
-    animation: tutorialFadeIn 0.3s ease;
+    animation: tutorialFadeIn 0.25s ease;
 }
 
 @keyframes tutorialFadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
 .tutorial-step-counter {
-    font-size: 0.8em;
-    color: #888;
+    font-size: 0.75em;
+    font-weight: 600;
+    color: var(--color-primary);
     margin-bottom: 6px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
 }
 
 .tutorial-tooltip-title {
     margin: 0 0 8px 0;
-    font-size: 1.1em;
-    color: #333;
+    font-size: 1em;
+    font-weight: 700;
+    color: var(--color-text);
+    letter-spacing: -0.01em;
 }
 
 .tutorial-tooltip-desc {
     margin: 0 0 16px 0;
-    font-size: 0.9em;
-    color: #555;
-    line-height: 1.5;
+    font-size: 0.875em;
+    color: var(--color-text-secondary);
+    line-height: 1.6;
 }
 
 .tutorial-buttons {
@@ -643,44 +867,52 @@ button {
 }
 
 .tutorial-btn {
-    padding: 6px 16px;
+    padding: 6px 14px;
     border: none;
-    border-radius: 6px;
-    font-size: 0.85em;
+    border-radius: var(--radius-md);
+    font-size: 0.8em;
+    font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: background-color var(--transition-fast), box-shadow var(--transition-fast);
     margin-top: 0;
 }
 
 .tutorial-btn-primary {
-    background-color: #007bff;
+    background-color: var(--color-primary);
     color: #fff;
+    box-shadow: 0 1px 4px rgba(99, 102, 241, 0.3);
 }
 
 .tutorial-btn-primary:hover {
-    background-color: #0056b3;
+    background-color: var(--color-primary-dark);
+    box-shadow: 0 3px 8px rgba(99, 102, 241, 0.4);
 }
 
 .tutorial-btn-secondary {
-    background-color: #e9ecef;
-    color: #333;
+    background-color: var(--color-bg);
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border);
 }
 
 .tutorial-btn-secondary:hover {
-    background-color: #dee2e6;
+    background-color: var(--color-border);
+    color: var(--color-text);
 }
 
 .tutorial-btn-skip {
     background-color: transparent;
-    color: #888;
+    color: var(--color-text-muted);
+    font-weight: 400;
 }
 
 .tutorial-btn-skip:hover {
-    color: #333;
-    background-color: #f0f0f0;
+    color: var(--color-text-secondary);
+    background-color: var(--color-bg);
 }
 
-/* Initial Setup Wizard styles */
+/* =============================================
+   Initial Setup Wizard
+   ============================================= */
 .setup-overlay {
     position: fixed;
     top: 0;
@@ -699,51 +931,54 @@ button {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
+    background-color: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(3px);
 }
 
 .setup-card {
     position: relative;
-    background: #fff;
-    border-radius: 12px;
-    padding: 24px 20px 20px;
+    background: var(--color-surface);
+    border-radius: var(--radius-xl);
+    padding: 26px 22px 22px;
     max-width: 340px;
     width: 92%;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-xl);
+    border: 1px solid var(--color-border);
     z-index: 211;
-    animation: setupFadeIn 0.3s ease;
+    animation: setupFadeIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     max-height: 90vh;
     overflow-y: auto;
 }
 
 @keyframes setupFadeIn {
-    from { opacity: 0; transform: translateY(12px) scale(0.97); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
+    from { opacity: 0; transform: translateY(14px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 /* Progress dots */
 .setup-progress {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     justify-content: center;
-    margin-bottom: 18px;
+    margin-bottom: 20px;
 }
 
 .setup-progress-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background-color: #ddd;
-    transition: all 0.3s ease;
+    width: 6px;
+    height: 6px;
+    border-radius: var(--radius-full);
+    background-color: var(--color-border);
+    transition: all var(--transition-slow);
 }
 
 .setup-progress-dot.active {
-    background-color: #007bff;
-    transform: scale(1.3);
+    background-color: var(--color-primary);
+    width: 18px;
+    border-radius: var(--radius-full);
 }
 
 .setup-progress-dot.completed {
-    background-color: #28a745;
+    background-color: var(--color-success);
 }
 
 /* Step content */
@@ -754,16 +989,17 @@ button {
 
 .setup-step-title {
     margin: 0 0 8px 0;
-    font-size: 1.15em;
-    color: #222;
-    font-weight: 600;
+    font-size: 1.1em;
+    font-weight: 700;
+    color: var(--color-text);
+    letter-spacing: -0.02em;
 }
 
 .setup-step-desc {
     margin: 0 0 16px 0;
-    font-size: 0.88em;
-    color: #666;
-    line-height: 1.5;
+    font-size: 0.875em;
+    color: var(--color-text-secondary);
+    line-height: 1.6;
 }
 
 /* Radio option group */
@@ -778,24 +1014,26 @@ button {
     align-items: center;
     gap: 10px;
     padding: 10px 14px;
-    border: 2px solid #e9ecef;
-    border-radius: 8px;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-md);
     cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 0.92em;
+    transition: border-color var(--transition-fast), background-color var(--transition-fast);
+    font-size: 0.9em;
+    color: var(--color-text);
 }
 
 .setup-radio-label:hover {
-    border-color: #adb5bd;
+    border-color: var(--color-primary);
+    background-color: var(--color-primary-light);
 }
 
 .setup-radio-label.selected {
-    border-color: #007bff;
-    background-color: #f0f7ff;
+    border-color: var(--color-primary);
+    background-color: var(--color-primary-light);
 }
 
 .setup-radio-label input[type="radio"] {
-    accent-color: #007bff;
+    accent-color: var(--color-primary);
     margin: 0;
 }
 
@@ -815,26 +1053,28 @@ button {
 }
 
 .setup-time-label {
-    font-size: 0.9em;
-    color: #444;
+    font-size: 0.875em;
+    color: var(--color-text-secondary);
     font-weight: 500;
 }
 
 .setup-time-input,
 .setup-select {
-    padding: 6px 10px;
-    border: 1px solid #ced4da;
-    border-radius: 6px;
-    font-size: 0.9em;
-    background: #fff;
+    padding: 7px 10px;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: 0.875em;
+    font-family: var(--font-sans);
+    background: var(--color-surface);
+    color: var(--color-text);
     outline: none;
-    transition: border-color 0.2s;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .setup-time-input:focus,
 .setup-select:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.15);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
 }
 
 /* Toggle switch */
@@ -849,7 +1089,7 @@ button {
     align-items: center;
     gap: 12px;
     cursor: pointer;
-    font-size: 0.92em;
+    font-size: 0.9em;
 }
 
 .setup-toggle-input {
@@ -858,11 +1098,11 @@ button {
 
 .setup-toggle-slider {
     position: relative;
-    width: 44px;
+    width: 42px;
     height: 24px;
-    background-color: #ccc;
-    border-radius: 12px;
-    transition: background-color 0.3s;
+    background-color: var(--color-border);
+    border-radius: var(--radius-full);
+    transition: background-color var(--transition-base);
     flex-shrink: 0;
 }
 
@@ -875,29 +1115,29 @@ button {
     height: 20px;
     background-color: #fff;
     border-radius: 50%;
-    transition: transform 0.3s;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    transition: transform var(--transition-base);
+    box-shadow: var(--shadow-sm);
 }
 
 .setup-toggle-input:checked + .setup-toggle-slider {
-    background-color: #007bff;
+    background-color: var(--color-primary);
 }
 
 .setup-toggle-input:checked + .setup-toggle-slider::after {
-    transform: translateX(20px);
+    transform: translateX(18px);
 }
 
 .setup-toggle-text {
-    color: #333;
+    color: var(--color-text);
     font-weight: 500;
 }
 
 .setup-note {
-    font-size: 0.8em;
-    color: #888;
+    font-size: 0.78em;
+    color: var(--color-text-muted);
     margin: 0;
     line-height: 1.4;
-    padding-left: 56px;
+    padding-left: 54px;
 }
 
 /* Navigation buttons */
@@ -906,88 +1146,103 @@ button {
     gap: 8px;
     justify-content: flex-end;
     flex-wrap: wrap;
-    padding-top: 4px;
-    border-top: 1px solid #f0f0f0;
+    padding-top: 14px;
+    border-top: 1px solid var(--color-border-light);
     margin-top: 4px;
 }
 
 .setup-btn {
     padding: 8px 18px;
     border: none;
-    border-radius: 6px;
-    font-size: 0.88em;
+    border-radius: var(--radius-md);
+    font-size: 0.875em;
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s;
-    font-weight: 500;
+    transition: background-color var(--transition-fast), box-shadow var(--transition-fast);
+    margin-top: 0;
 }
 
 .setup-btn-primary {
-    background-color: #007bff;
+    background-color: var(--color-primary);
     color: #fff;
+    box-shadow: 0 1px 4px rgba(99, 102, 241, 0.3);
 }
 
 .setup-btn-primary:hover {
-    background-color: #0056b3;
+    background-color: var(--color-primary-dark);
+    box-shadow: 0 4px 10px rgba(99, 102, 241, 0.4);
 }
 
 .setup-btn-secondary {
-    background-color: #e9ecef;
-    color: #333;
+    background-color: var(--color-bg);
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border);
 }
 
 .setup-btn-secondary:hover {
-    background-color: #dee2e6;
+    background-color: var(--color-border);
+    color: var(--color-text);
 }
 
 .setup-btn-skip {
     background-color: transparent;
-    color: #888;
+    color: var(--color-text-muted);
+    font-weight: 400;
     margin-right: auto;
 }
 
 .setup-btn-skip:hover {
-    color: #333;
-    background-color: #f0f0f0;
+    color: var(--color-text-secondary);
+    background-color: var(--color-bg);
 }
 
-/* Connected badge shown instead of Google button when authenticated */
+/* Connected badge */
 .setup-google-connected-badge {
     text-align: center;
     padding: 10px 16px;
-    background: #e8f5e9;
-    border: 1px solid #a5d6a7;
-    border-radius: 8px;
-    color: #2e7d32;
+    background: var(--color-success-light);
+    border: 1.5px solid #6ee7b7;
+    border-radius: var(--radius-md);
+    color: #065f46;
     font-weight: 600;
-    font-size: 0.95em;
+    font-size: 0.9em;
     max-width: 260px;
     margin: 0 auto;
 }
 
-/* Adjustments for setup wizard context */
 .setup-step-content .gsi-material-button {
     margin: 0 auto;
     display: block;
 }
 
-/* ===== Review Request Modal ===== */
+.setup-google-status {
+    text-align: center;
+    margin-top: 12px;
+    font-size: 0.82em;
+    color: var(--color-text-muted);
+}
+
+/* =============================================
+   Review Request Modal
+   ============================================= */
 #reviewModal .modal-content {
     padding: 0;
     overflow: hidden;
-    max-width: 400px;
+    max-width: 380px;
     border: none;
-    border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-xl);
+    font-family: var(--font-sans);
 }
 
 #reviewModal .close {
     position: absolute;
-    top: 10px;
-    right: 14px;
+    top: 12px;
+    right: 16px;
     float: none;
-    color: rgba(255, 255, 255, 0.75);
-    font-size: 26px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 24px;
+    font-weight: 300;
     z-index: 1;
     line-height: 1;
 }
@@ -997,60 +1252,59 @@ button {
 }
 
 .review-modal-header {
-    background: linear-gradient(135deg, #6366f1, #06b6d4);
-    padding: 32px 24px 24px;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+    padding: 30px 24px 22px;
     text-align: center;
 }
 
 .review-modal-stars {
-    font-size: 1.8rem;
-    letter-spacing: 3px;
-    color: #fff;
+    font-size: 1.7rem;
+    letter-spacing: 4px;
+    color: #fde68a;
     margin-bottom: 10px;
-    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
 .review-modal-title {
     color: #fff;
-    font-size: 1.05rem;
+    font-size: 1rem;
     font-weight: 700;
     margin: 0;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+    letter-spacing: -0.01em;
 }
 
 .review-modal-body {
-    padding: 20px 20px 18px;
+    padding: 22px 20px 20px;
     text-align: center;
 }
 
 .review-modal-message {
     font-size: 0.85rem;
-    color: #555;
+    color: var(--color-text-secondary);
     white-space: pre-line;
     margin-bottom: 18px;
-    line-height: 1.6;
+    line-height: 1.65;
 }
 
 .review-btn-rate {
     display: block;
     width: 100%;
     padding: 11px;
-    background: linear-gradient(135deg, #6366f1, #06b6d4);
+    background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
     color: #fff;
     font-weight: 600;
     font-size: 0.9rem;
     border: none;
-    border-radius: 10px;
+    border-radius: var(--radius-md);
     cursor: pointer;
     margin-bottom: 10px;
-    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.38);
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
+    transition: transform var(--transition-base), box-shadow var(--transition-base);
 }
 
 .review-btn-rate:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 28px rgba(99, 102, 241, 0.52);
+    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.5);
 }
 
 .review-btn-later {
@@ -1058,45 +1312,39 @@ button {
     width: 100%;
     padding: 10px;
     background: transparent;
-    color: #666;
+    color: var(--color-text-secondary);
     font-size: 0.85rem;
-    border: 1.5px solid #ddd;
-    border-radius: 10px;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-md);
     cursor: pointer;
-    margin-bottom: 12px;
-    transition: border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-bottom: 10px;
+    transition: border-color var(--transition-base), color var(--transition-base);
 }
 
 .review-btn-later:hover {
-    border-color: #bbb;
-    color: #444;
+    border-color: var(--color-text-muted);
+    color: var(--color-text);
 }
 
 .review-btn-never {
     display: block;
     width: 100%;
     font-size: 0.75rem;
-    color: #bbb;
+    color: var(--color-text-muted);
     background: none;
     border: none;
     cursor: pointer;
     padding: 2px 0;
-    transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: color var(--transition-base);
 }
 
 .review-btn-never:hover {
-    color: #888;
+    color: var(--color-text-secondary);
 }
 
-.setup-google-status {
-    text-align: center;
-    margin-top: 12px;
-    font-size: 0.85em;
-    color: #666;
-}
-
-/* Memo Panel */
+/* =============================================
+   Memo Panel
+   ============================================= */
 #memoPanelSpacer {
     flex: 0 0 auto;
     height: 0;
@@ -1115,22 +1363,22 @@ button {
     transition: height 0.4s cubic-bezier(0.34, 1.15, 0.64, 1),
                 clip-path 0.4s cubic-bezier(0.34, 1.15, 0.64, 1),
                 filter 0.3s ease;
-    background-color: #f9f9f9;
-    border-top: 1px solid #ccc;
-    filter: drop-shadow(0 -1px 4px rgba(0, 0, 0, 0.08));
+    background-color: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.06);
     z-index: 100;
 }
 
 #memoPanelWrapper.memo-collapsed {
     align-items: flex-end;
-    filter: drop-shadow(-2px -3px 8px rgba(0, 0, 0, 0.14));
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
 }
 
 #memoPanelWrapper.memo-collapsed .memo-toggle-btn {
     width: auto;
     border-radius: 0;
     padding: 4px 16px;
-    margin-right: 20px;
+    margin-right: 16px;
     background: none;
     border: none;
     box-shadow: none;
@@ -1149,14 +1397,16 @@ button {
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    width: 28px;
+    width: 32px;
     height: 3px;
-    border-radius: 2px;
-    background: #ccc;
+    border-radius: var(--radius-full);
+    background: var(--color-border);
+    transition: background-color var(--transition-fast), width var(--transition-fast);
 }
 
 .memo-drag-handle:hover::after {
-    background: #999;
+    background: var(--color-text-muted);
+    width: 40px;
 }
 
 .memo-toggle-btn {
@@ -1166,25 +1416,27 @@ button {
     justify-content: space-between;
     width: 100%;
     margin: 0;
-    padding: 4px 10px;
+    padding: 5px 12px;
     background: none;
     border: none;
     cursor: pointer;
-    font-size: 0.85em;
-    font-weight: bold;
-    color: #555;
-    transition: padding 0.3s ease;
+    font-size: 0.8em;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    transition: background-color var(--transition-fast), color var(--transition-fast);
     text-align: left;
     box-sizing: border-box;
+    letter-spacing: 0.02em;
 }
 
 .memo-toggle-btn:hover {
-    background-color: #ececec;
+    background-color: var(--color-bg);
+    color: var(--color-text);
 }
 
 .memo-toggle-icon {
     font-size: 0.75em;
-    color: #888;
+    color: var(--color-text-muted);
 }
 
 .memo-body {
@@ -1193,7 +1445,7 @@ button {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    padding: 0 8px 8px;
+    padding: 0 10px 10px;
     transform: translateY(0);
     transition: transform 0.35s cubic-bezier(0, 0, 0.2, 1);
 }
@@ -1213,16 +1465,20 @@ button {
     width: 100%;
     box-sizing: border-box;
     resize: none;
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    padding: 6px 8px;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 8px 10px;
     font-size: 0.82em;
-    font-family: Arial, sans-serif;
-    background-color: #fff;
-    color: #333;
+    font-family: var(--font-sans);
+    background-color: var(--color-surface-alt);
+    color: var(--color-text);
     outline: none;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    line-height: 1.55;
 }
 
 #memoTextarea:focus {
-    border-color: #4a90e2;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+    background-color: var(--color-surface);
 }

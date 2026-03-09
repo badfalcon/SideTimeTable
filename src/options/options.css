@@ -1,51 +1,218 @@
-.container {
-    max-width: 960px;
+/* =============================================
+   SideTimeTable — Options Page Styles (Revamped)
+   Design system: Indigo/Slate palette (matches side panel)
+   ============================================= */
+
+:root {
+    --color-primary:        #6366f1;
+    --color-primary-dark:   #4f46e5;
+    --color-primary-light:  #e0e7ff;
+    --color-accent:         #06b6d4;
+
+    --color-success:        #10b981;
+    --color-success-light:  #d1fae5;
+    --color-danger:         #ef4444;
+
+    --color-bg:             #f1f5f9;
+    --color-surface:        #ffffff;
+    --color-surface-alt:    #f8fafc;
+
+    --color-border:         #e2e8f0;
+    --color-border-light:   #f1f5f9;
+
+    --color-text:           #1e293b;
+    --color-text-secondary: #64748b;
+    --color-text-muted:     #94a3b8;
+
+    --shadow-sm:  0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06);
+    --shadow-md:  0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+
+    --radius-sm:  4px;
+    --radius-md:  8px;
+    --radius-lg:  12px;
+    --radius-full: 9999px;
+
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Roboto', sans-serif;
 }
 
+/* =============================================
+   Base
+   ============================================= */
 body {
-    font-family: Arial, sans-serif;
-    padding: 20px;
+    font-family: var(--font-sans);
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    padding: 24px 20px;
     overflow-y: scroll;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
-/* Calendar management card adjustments */
+.container {
+    max-width: 980px;
+}
+
+/* Page title */
+.container > h1,
+.container > .h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--color-text);
+    letter-spacing: -0.02em;
+    margin-bottom: 1.5rem;
+}
+
+/* =============================================
+   Cards (override Bootstrap)
+   ============================================= */
+.card {
+    max-width: 100%;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg) !important;
+    box-shadow: var(--shadow-sm);
+    background: var(--color-surface);
+    transition: box-shadow var(--transition-fast);
+}
+
+.card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.card-header {
+    background: var(--color-surface-alt);
+    border-bottom: 1px solid var(--color-border);
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    padding: 0.75rem 1.25rem;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
+}
+
+.card-body {
+    padding: 1.25rem;
+}
+
+/* Remove bottom margin from last card in tab */
+.tab-pane .card:last-child {
+    margin-bottom: 0;
+}
+
+/* =============================================
+   Sidebar
+   ============================================= */
+.settings-sidebar {
+    position: sticky;
+    top: 1rem;
+}
+
+/* Nav pills */
+.settings-nav .nav-link {
+    text-align: left;
+    color: var(--color-text-secondary);
+    border-radius: var(--radius-md) !important;
+    padding: 0.55rem 1rem;
+    margin-bottom: 3px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+    border: 1px solid transparent;
+}
+
+.settings-nav .nav-link:hover {
+    background-color: var(--color-primary-light);
+    color: var(--color-primary);
+    border-color: transparent;
+}
+
+.settings-nav .nav-link.active {
+    background-color: var(--color-primary);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+/* Sidebar action buttons */
+.settings-sidebar-actions {
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--color-border);
+}
+
+.settings-sidebar-actions > div {
+    flex-direction: column !important;
+    gap: 4px !important;
+    margin-top: 0 !important;
+}
+
+.settings-sidebar-actions .btn,
+.settings-sidebar-actions a.btn {
+    text-align: left;
+    font-size: 0.8125rem;
+    padding: 0.45rem 0.75rem;
+    width: 100%;
+    border-radius: var(--radius-md) !important;
+    font-weight: 500;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.settings-sidebar-actions .btn-outline-secondary,
+.settings-sidebar-actions a.btn-outline-secondary {
+    color: var(--color-text-secondary);
+    border-color: var(--color-border);
+    background: transparent;
+}
+
+.settings-sidebar-actions .btn-outline-secondary:hover,
+.settings-sidebar-actions a.btn-outline-secondary:hover {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    border-color: var(--color-text-muted);
+}
+
+/* =============================================
+   Calendar list
+   ============================================= */
 #calendar-management-card {
     width: 100%;
     box-sizing: border-box;
 }
 
-/* Calendar list scroll settings */
 #calendar-list {
     max-height: 300px;
     overflow-y: auto;
     scrollbar-width: thin;
-    scrollbar-color: #ccc #f8f9fa;
+    scrollbar-color: var(--color-border) transparent;
     width: 100%;
     box-sizing: border-box;
     margin: 0 0 1rem 0;
     padding: 0;
-    border-radius: 0.375rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
 }
 
 #calendar-list::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
 }
 
 #calendar-list::-webkit-scrollbar-track {
-    background: #f8f9fa;
-    border-radius: 4px;
+    background: transparent;
 }
 
 #calendar-list::-webkit-scrollbar-thumb {
-    background: #ccc;
-    border-radius: 4px;
+    background: var(--color-border);
+    border-radius: var(--radius-full);
 }
 
 #calendar-list::-webkit-scrollbar-thumb:hover {
-    background: #999;
+    background: var(--color-text-muted);
 }
 
-/* Calendar list item hover effects */
 #calendar-list .form-check {
     width: 100%;
     margin: 0;
@@ -56,31 +223,34 @@ body {
 }
 
 #calendar-list .form-check:hover {
-    background-color: #f8f9fa;
+    background-color: var(--color-surface-alt);
 }
 
 #calendar-list .form-check:last-child {
     border-bottom: none;
 }
 
-/* Form check element position adjustments */
 #calendar-list .form-check-input {
     position: static;
     margin-top: 0;
     margin-left: 0;
+    accent-color: var(--color-primary);
 }
 
 #calendar-list .form-check-label {
     margin-bottom: 0;
     width: 100%;
+    font-size: 0.875rem;
+    color: var(--color-text);
 }
 
-/* Improved calendar item styles */
 #calendar-list .list-group-item {
     border-left: none;
     border-right: none;
-    padding: 0.75rem 1rem;
-    transition: background-color 0.15s ease-in-out;
+    border-color: var(--color-border-light);
+    padding: 0.65rem 1rem;
+    transition: background-color var(--transition-fast);
+    background: transparent;
 }
 
 #calendar-list .list-group-item:first-child {
@@ -93,35 +263,166 @@ body {
     border-radius: 0;
 }
 
-/* Color picker style improvements */
+/* =============================================
+   Color picker
+   ============================================= */
 .form-control-color {
     width: 2.5rem;
     height: 2.5rem;
-    padding: 0.25rem;
-    border-radius: 0.375rem;
+    padding: 0.2rem;
+    border-radius: var(--radius-md);
+    border: 1.5px solid var(--color-border);
+    cursor: pointer;
+    transition: border-color var(--transition-fast);
 }
 
-/* 色設定: カラーピッカー横ラベルの折り返し防止 */
+.form-control-color:hover {
+    border-color: var(--color-primary);
+}
+
 .form-control-color + .flex-grow-1 .form-label {
     font-size: 0.8125rem;
     line-height: 1.3;
+    color: var(--color-text-secondary);
 }
 
-/* Responsive adjustments */
+/* =============================================
+   Form controls (override Bootstrap)
+   ============================================= */
+.form-control,
+.form-select {
+    border-color: var(--color-border);
+    border-radius: var(--radius-md) !important;
+    color: var(--color-text);
+    font-size: 0.875rem;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+
+.form-label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    letter-spacing: 0.02em;
+    margin-bottom: 4px;
+}
+
+.form-check-input:checked {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.form-check-input:focus {
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+/* =============================================
+   Buttons (override Bootstrap)
+   ============================================= */
+.btn-primary {
+    background-color: var(--color-primary) !important;
+    border-color: var(--color-primary) !important;
+    font-weight: 600;
+    font-size: 0.875rem;
+    border-radius: var(--radius-md) !important;
+    box-shadow: 0 1px 4px rgba(99, 102, 241, 0.25);
+    transition: background-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: var(--color-primary-dark) !important;
+    border-color: var(--color-primary-dark) !important;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+}
+
+.btn-success {
+    background-color: var(--color-success) !important;
+    border-color: var(--color-success) !important;
+    font-weight: 600;
+    border-radius: var(--radius-md) !important;
+}
+
+.btn-danger {
+    background-color: var(--color-danger) !important;
+    border-color: var(--color-danger) !important;
+    font-weight: 600;
+    border-radius: var(--radius-md) !important;
+}
+
+.btn-outline-primary {
+    color: var(--color-primary) !important;
+    border-color: var(--color-primary) !important;
+    font-weight: 600;
+    font-size: 0.875rem;
+    border-radius: var(--radius-md) !important;
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--color-primary) !important;
+    color: #fff !important;
+}
+
+/* =============================================
+   Badges
+   ============================================= */
+.badge {
+    font-weight: 600;
+    font-size: 0.72em;
+    border-radius: var(--radius-full) !important;
+    padding: 3px 8px;
+    letter-spacing: 0.02em;
+}
+
+.badge.bg-primary {
+    background-color: var(--color-primary) !important;
+}
+
+.badge.bg-success {
+    background-color: var(--color-success) !important;
+}
+
+/* =============================================
+   Alerts
+   ============================================= */
+.alert {
+    border-radius: var(--radius-md) !important;
+    border: none;
+    font-size: 0.875rem;
+}
+
+.alert-info {
+    background-color: var(--color-primary-light);
+    color: var(--color-primary-dark);
+}
+
+.alert-success {
+    background-color: var(--color-success-light);
+    color: #065f46;
+}
+
+/* =============================================
+   Responsive
+   ============================================= */
 @media (max-width: 768px) {
     body {
-        padding: 15px;
+        padding: 16px 12px;
     }
-    
+
     .container {
         padding-left: 0;
         padding-right: 0;
     }
-    
+
     #calendar-list {
         max-height: 200px;
     }
-    
+
     .card-body {
         padding: 1rem;
     }
@@ -131,74 +432,14 @@ body {
     #calendar-list {
         max-height: 150px;
     }
-    
+
     .form-control-color {
         width: 2rem;
         height: 2rem;
     }
 }
 
-/* Card width restrictions */
-.card {
-    max-width: 100%;
-    overflow: hidden;
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-}
-
-/* サイドバー全体: sticky で固定 */
-.settings-sidebar {
-    position: sticky;
-    top: 1rem;
-}
-
-/* nav-pills ボタン */
-.settings-nav .nav-link {
-    text-align: left;
-    color: #495057;
-    border-radius: 0.375rem;
-    padding: 0.6rem 1rem;
-    margin-bottom: 0.25rem;
-    font-weight: 500;
-    transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
-}
-
-.settings-nav .nav-link:hover {
-    background-color: #e8f0fe;
-    color: #0d6efd;
-}
-
-.settings-nav .nav-link.active {
-    background-color: #0d6efd;
-    color: #fff;
-}
-
-/* コントロールボタン: サイドバー下部の縦積みレイアウト */
-.settings-sidebar-actions {
-    margin-top: 1rem;
-    padding-top: 0.75rem;
-    border-top: 1px solid #dee2e6;
-}
-
-.settings-sidebar-actions > div {
-    flex-direction: column !important;
-    gap: 0.375rem !important;
-    margin-top: 0 !important;
-}
-
-.settings-sidebar-actions .btn,
-.settings-sidebar-actions a.btn {
-    text-align: left;
-    font-size: 0.875rem;
-    padding: 0.45rem 0.75rem;
-    width: 100%;
-}
-
-/* タブコンテンツ: 最後のカードの下余白を除去 */
-.tab-pane .card:last-child {
-    margin-bottom: 0;
-}
-
-/* レスポンシブ: lg未満は水平スクロールナビ */
+/* Responsive sidebar: lg未満は水平スクロールナビ */
 @media (max-width: 991.98px) {
     .settings-sidebar {
         position: static;
@@ -208,9 +449,9 @@ body {
         flex-direction: row !important;
         flex-wrap: nowrap;
         overflow-x: auto;
-        gap: 0.25rem;
+        gap: 4px;
         margin-bottom: 0;
-        padding-bottom: 0.25rem;
+        padding-bottom: 4px;
         scrollbar-width: none;
     }
 
@@ -224,7 +465,7 @@ body {
         margin-bottom: 0;
     }
 
-    /* lg未満ではコントロールボタンを水平並びに戻す */
+    /* Restore horizontal layout for action buttons on smaller screens */
     .settings-sidebar-actions {
         margin-top: 0.5rem;
         padding-top: 0.5rem;
