@@ -164,7 +164,7 @@ npm run package       # Create release zip file (builds + packages)
 ## Technical Implementation Details
 
 ### Time Management System
-- **24-hour coordinate system**: Events positioned using `top: ${minutes_since_midnight}px`
+- **24-hour coordinate system**: Events positioned using `top: ${minutes_since_midnight + 30}px` (30px offset for top extension zone)
 - **Responsive width calculation**: Auto-adjusts to side panel width changes via ResizeObserver
 - **Business hours visualization**: Configurable work time highlighting with break time support
 - **Current time indicator**: Managed by `CurrentTimeLineManager` with date-aware visibility
@@ -369,29 +369,7 @@ npm run package       # Create release zip file (builds + packages)
 
 ## Recent Improvements (Latest Updates)
 
-### Version 1.7.3 (2026-03-08)
-- **Collapsible memo panel**: Persistent text memo area at the bottom of the side panel with collapsible toggle and resizable height (drag handle)
-- **Options page redesign**: Restructured with nav-pills sidebar navigation for easier access to settings sections
-
-### Version 1.7.2 (2026-03-08)
-- **Review request popup**: Chrome Web Store review modal triggered after consecutive days of usage with Google Calendar sync
-- **Color blindness presets**: Added color presets for Protanopia, Deuteranopia, and Tritanopia in color settings
-- **Improved event layout**: Enhanced overlap resolution and rendering
-- **Improved Google event modal**: Cleaner design and better UX
-- **Bug fixes and performance improvements**
-
-### Version 1.7.1 (2026-02-18)
-- **Tutorial system**: Interactive step-by-step guide for new users
-- **Setup wizard**: First-time configuration assistant for smooth onboarding
-- **Improved UX**: Better guidance for users unfamiliar with the extension
-
-### Version 1.7.0 (2026-02-15)
-- **Recurring events**: Support for daily, weekly, monthly, and weekdays patterns
-- **Reminder system**: Chrome alarm-based notifications with configurable timing
-- **Update notifications**: What's New modal displaying version highlights
-- **Changelog page**: Standalone page with comprehensive version history
-- **Context menu integration**: Quick access to changelog and settings
-- **Component architecture expansion**: Options page fully componentized
+For version-by-version highlights, see `src/lib/release-notes.js`.
 
 ### Build System Integration (2025)
 - **Webpack + Babel introduction**: Full build system for ES6 → CommonJS transformation

@@ -11,11 +11,13 @@ export const RELEASE_NOTES = [
         highlights: {
             en: [
                 'Collapsible memo panel at the bottom of the side panel',
-                'Renew the options page layout'
+                'Renew the options page layout',
+                'Added 30-minute margins before and after the daily timeline'
             ],
             ja: [
                 'サイドパネル下部に折りたたみ可能なメモパネルを追加',
-                'オプションページのレイアウトをリニューアル'
+                'オプションページのレイアウトをリニューアル',
+                'タイムラインの1日の前後に30分の余白を追加'
             ]
         }
     },
