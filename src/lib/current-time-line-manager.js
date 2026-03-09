@@ -160,8 +160,9 @@ export class CurrentTimeLineManager {
         const minutes = now.getMinutes();
         const totalMinutes = hours * 60 + minutes;
 
-        // Calculate as 1 minute = 1px
-        const topPosition = totalMinutes;
+        // Calculate as 1 minute = 1px, with offset for the 30-min top extension zone
+        const TIMELINE_OFFSET = 30;
+        const topPosition = totalMinutes + TIMELINE_OFFSET;
 
         this.timeLineElement.style.top = `${topPosition}px`;
     }

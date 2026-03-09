@@ -12,8 +12,9 @@ export class TimelineComponent extends Component {
             ...options
         });
 
-        // 24-hour pixel height (60px per hour)
-        this.TOTAL_HEIGHT = 24 * 60;
+        // 24-hour pixel height plus extension zones above and below (TIMELINE_OFFSET each)
+        this.TIMELINE_OFFSET = 30; // 30-min offset for the top extension zone (-0:30 to 0:00)
+        this.TOTAL_HEIGHT = 24 * 60 + this.TIMELINE_OFFSET * 2;
         this.HOUR_HEIGHT = 60;
 
         // UI elements
@@ -75,10 +76,17 @@ export class TimelineComponent extends Component {
         baseDiv.className = 'side-time-table-base';
         baseDiv.id = 'sideTimeTableBase';
 
-        // Create the time labels and the guide lines for 24 hours
+        // Top extension zone (-0:30 to 0:00)
+        const topZone = document.createElement('div');
+        topZone.className = 'timeline-extended-zone';
+        topZone.style.top = '0px';
+        topZone.style.height = `${this.TIMELINE_OFFSET}px`;
+        baseDiv.appendChild(topZone);
+
+        // Create the time labels and the guide lines for 0:00 to 24:00
         this.hourLabels = [];
-        for (let hour = 0; hour < 24; hour++) {
-            const topPosition = hour * this.HOUR_HEIGHT;
+        for (let hour = 0; hour <= 24; hour++) {
+            const topPosition = hour * this.HOUR_HEIGHT + this.TIMELINE_OFFSET;
 
             // The time label
             const label = document.createElement('div');
@@ -96,6 +104,14 @@ export class TimelineComponent extends Component {
             baseDiv.appendChild(label);
             baseDiv.appendChild(line);
         }
+
+        // Bottom extension zone (24:00 to 24:30)
+        const bottomZoneTop = 24 * this.HOUR_HEIGHT + this.TIMELINE_OFFSET;
+        const bottomZone = document.createElement('div');
+        bottomZone.className = 'timeline-extended-zone';
+        bottomZone.style.top = `${bottomZoneTop}px`;
+        bottomZone.style.height = `${this.TIMELINE_OFFSET}px`;
+        baseDiv.appendChild(bottomZone);
 
         return baseDiv;
     }
@@ -149,9 +165,9 @@ export class TimelineComponent extends Component {
      * @private
      */
     _updateHourLabels() {
-        if (!this.hourLabels || this.hourLabels.length !== 24) return;
+        if (!this.hourLabels || this.hourLabels.length !== 25) return;
 
-        for (let hour = 0; hour < 24; hour++) {
+        for (let hour = 0; hour <= 24; hour++) {
             const hh = hour.toString().padStart(2, '0');
             const timeStr = `${hh}:00`;
 
@@ -237,8 +253,8 @@ export class TimelineComponent extends Component {
             const [startHour, startMinute] = startTime.split(':').map(Number);
             const [endHour, endMinute] = endTime.split(':').map(Number);
 
-            const startMinutes = startHour * 60 + startMinute;
-            const endMinutes = endHour * 60 + endMinute;
+            const startMinutes = startHour * 60 + startMinute + this.TIMELINE_OFFSET;
+            const endMinutes = endHour * 60 + endMinute + this.TIMELINE_OFFSET;
 
             if (startMinutes >= endMinutes) {
                 return; // Invalid time range
@@ -289,7 +305,7 @@ export class TimelineComponent extends Component {
 
         try {
             const [hour, minute] = time.split(':').map(Number);
-            const totalMinutes = hour * 60 + minute;
+            const totalMinutes = hour * 60 + minute + this.TIMELINE_OFFSET;
             const scrollTop = Math.max(0, totalMinutes - 200); // 200px margin above
 
             this.element.scrollTop = scrollTop;
