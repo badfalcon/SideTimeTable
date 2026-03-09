@@ -16,6 +16,11 @@ import {createTimeOnDate} from '../lib/time-utils.js';
 import {getDemoEvents, getDemoLocalEvents, isDemoMode} from '../lib/demo-data.js';
 
 /**
+ * Offset in pixels for the 30-min top extension zone (-0:30 to 0:00)
+ */
+const TIMELINE_OFFSET = 30;
+
+/**
  * Constants for event styling and layout
  */
 const EVENT_STYLING = {
@@ -271,7 +276,7 @@ export class GoogleEventManager {
         });
 
         // Calculate position in the 24-hour coordinate system (convert minutes from 0:00 to pixels)
-        const startOffset = (startDate.getHours() * 60 + startDate.getMinutes());
+        const startOffset = (startDate.getHours() * 60 + startDate.getMinutes()) + TIMELINE_OFFSET;
         const duration = (endDate - startDate) / TIME_CONSTANTS.MINUTE_MILLIS;
 
         // Apply duration-based styling
@@ -439,7 +444,7 @@ export class LocalEventManager {
         eventDiv.dataset.endTime = endTime;
 
         // Calculate position in 24-hour coordinate system (convert minutes from 0:00 to pixels)
-        const startOffset = (startDate.getHours() * 60 + startDate.getMinutes());
+        const startOffset = (startDate.getHours() * 60 + startDate.getMinutes()) + TIMELINE_OFFSET;
         const duration = (endDate.getTime() - startDate.getTime()) / TIME_CONSTANTS.MINUTE_MILLIS;
 
         // Apply duration-based styling
