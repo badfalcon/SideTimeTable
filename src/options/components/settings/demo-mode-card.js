@@ -98,17 +98,17 @@ export class DemoModeCard extends CardComponent {
             const enabled = e.target.checked;
             setDemoMode(enabled);
             this._updateUI();
-            if (this.onSettingsChange) this.onSettingsChange({ demoMode: enabled });
             this._showAlert(
                 `<i class="fas fa-${enabled ? 'flask' : 'globe'} me-1"></i>` +
-                `<strong>Demo mode ${enabled ? 'enabled' : 'disabled'}</strong><br>` +
-                `<small>Please reload the side panel to apply the changes.</small>`,
-                'info', 5000
+                `<strong>Demo mode ${enabled ? 'enabled' : 'disabled'}</strong>`,
+                'info', 3000
             );
+            if (this.onSettingsChange) this.onSettingsChange({ demoMode: enabled });
         });
 
         this.timeInput?.addEventListener('change', (e) => {
             setDemoCurrentTime(e.target.value);
+            if (this.onSettingsChange) this.onSettingsChange({ demoCurrentTime: e.target.value });
         });
     }
 
