@@ -25,6 +25,19 @@
 <div class="container mt-4">
     <h1 class="mb-4" data-localize="__MSG_optionsTitle__">SideTimeTable 設定</h1>
 
+    <!-- Demo mode banner: shown only when demo mode is active -->
+    <div id="demo-mode-banner" class="d-none alert mb-3 d-flex align-items-center justify-content-between"
+         role="alert" style="background:#fff3cd;border:1px solid #ffc107;">
+        <div>
+            <i class="fas fa-flask me-2 text-warning"></i>
+            <strong>Demo mode is active.</strong>
+            <span class="ms-1 text-muted small">Demo data is being displayed.</span>
+        </div>
+        <button type="button" id="demo-disable-btn" class="btn btn-sm btn-outline-warning ms-3">
+            <i class="fas fa-power-off me-1"></i>Disable Demo Mode
+        </button>
+    </div>
+
     <div class="row g-4">
         <!-- 左: nav-pills サイドバー -->
         <div class="col-lg-3 col-md-12">
