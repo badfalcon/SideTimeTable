@@ -355,7 +355,7 @@ export function setDemoMode(enabled) {
 }
 
 const DEMO_TIME_KEY = 'sideTimeTableDemoTime';
-const DEMO_TIME_DEFAULT = '10:00';
+const DEMO_TIME_DEFAULT = '12:00';
 
 /**
  * Get the demo current time as a Date object
