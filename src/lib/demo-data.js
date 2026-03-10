@@ -16,10 +16,21 @@ function L(locale, en, ja) {
 }
 
 async function getLocale() {
+    // window.getCurrentLocale() is only available in the side panel context
+    // (locale-utils.js is not loaded in the options page).
+    // Fall back to chrome.storage + chrome.i18n for the options page.
     try {
-        return await window.getCurrentLocale();
+        if (typeof window.getCurrentLocale === 'function') {
+            return await window.getCurrentLocale();
+        }
+        const result = await chrome.storage.sync.get(['language']);
+        const lang = result.language || 'auto';
+        if (lang !== 'auto') return lang;
+        const uiLang = chrome.i18n.getUILanguage?.() || 'en';
+        return uiLang.startsWith('ja') ? 'ja' : 'en';
     } catch (_) {
-        return 'en';
+        const uiLang = chrome.i18n.getUILanguage?.() || 'en';
+        return uiLang.startsWith('ja') ? 'ja' : 'en';
     }
 }
 

@@ -125,18 +125,23 @@ export class DemoModeCard extends CardComponent {
     }
 
     async _loadScenarioOptions() {
-        const scenarios = await getDemoScenarioList();
-        const current = getDemoScenario();
-        this.scenarioSelect.innerHTML = '';
-        scenarios.forEach(s => {
-            const opt = document.createElement('option');
-            opt.value = s.id;
-            opt.textContent = s.name;
-            if (s.id === current) opt.selected = true;
-            this.scenarioSelect.appendChild(opt);
-        });
-        this._updateScenarioDesc(scenarios, current);
-        this._scenarioOptions = scenarios;
+        try {
+            const scenarios = await getDemoScenarioList();
+            const current = getDemoScenario();
+            if (!this.scenarioSelect) return;
+            this.scenarioSelect.innerHTML = '';
+            scenarios.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.id;
+                opt.textContent = s.name;
+                if (s.id === current) opt.selected = true;
+                this.scenarioSelect.appendChild(opt);
+            });
+            this._updateScenarioDesc(scenarios, current);
+            this._scenarioOptions = scenarios;
+        } catch (e) {
+            console.warn('Failed to load scenario options:', e);
+        }
     }
 
     _updateScenarioDesc(scenarios, selectedId) {
