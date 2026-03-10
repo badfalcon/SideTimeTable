@@ -18,7 +18,6 @@ export class StorageCard extends CardComponent {
             subtitle: 'Inspect and manage Chrome storage data.',
             icon: 'fas fa-database',
             iconColor: 'text-info',
-            classes: '',
             hidden: true
         });
     }

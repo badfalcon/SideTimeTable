@@ -12,33 +12,24 @@ export class DemoModeCard extends CardComponent {
             subtitle: 'Display sample data (no API access will be made).',
             icon: 'fas fa-flask',
             iconColor: 'text-warning',
-            classes: '',
             hidden: true
         });
 
         this.onSettingsChange = onSettingsChange;
         this.demoModeToggle = null;
-        this.dynamicElements = [];
     }
 
     createElement() {
         const card = super.createElement();
-        this.addContent(this._createForm());
+        this.addContent(this._createDemoModeSection());
         this._updateUI();
         this._setupEventListeners();
         return card;
     }
 
-    _createForm() {
-        const form = document.createElement('form');
-        form.appendChild(this._createDemoModeSection());
-        form.appendChild(this._createInfoSection());
-        return form;
-    }
-
     _createDemoModeSection() {
         const section = document.createElement('div');
-        section.className = 'form-check mb-3';
+        section.className = 'form-check';
 
         this.demoModeToggle = document.createElement('input');
         this.demoModeToggle.type = 'checkbox';
@@ -63,76 +54,10 @@ export class DemoModeCard extends CardComponent {
         return section;
     }
 
-    _createInfoSection() {
-        const section = document.createElement('div');
-        section.className = 'mt-4 p-3 bg-light rounded';
-
-        const title = document.createElement('h6');
-        title.className = 'mb-3';
-        title.innerHTML = '<i class="fas fa-info-circle me-1"></i>Developer Information';
-
-        const infoList = document.createElement('div');
-        infoList.className = 'small';
-
-        const infoItems = [
-            { label: 'Extension ID', value: chrome.runtime?.id || 'Cannot retrieve', copyable: true },
-            { label: 'Manifest Version', value: chrome.runtime?.getManifest?.()?.manifest_version || 'Unknown', copyable: false },
-            { label: 'Version', value: chrome.runtime?.getManifest?.()?.version || 'Unknown', copyable: false },
-            { label: 'Demo Mode Status', value: () => isDemoMode() ? 'Enabled' : 'Disabled', copyable: false, dynamic: true }
-        ];
-
-        infoItems.forEach(item => infoList.appendChild(this._createInfoRow(item)));
-        section.appendChild(title);
-        section.appendChild(infoList);
-        return section;
-    }
-
-    _createInfoRow(item) {
-        const row = document.createElement('div');
-        row.className = 'd-flex justify-content-between align-items-center py-1 border-bottom';
-
-        const label = document.createElement('span');
-        label.className = 'fw-semibold';
-        label.textContent = item.label + ':';
-
-        const valueContainer = document.createElement('div');
-        valueContainer.className = 'd-flex align-items-center gap-2';
-
-        const value = document.createElement('code');
-        value.className = 'small';
-        if (item.dynamic) {
-            value.textContent = item.value();
-            this.dynamicElements.push({ element: value, getValue: item.value });
-        } else {
-            value.textContent = item.value;
-        }
-        valueContainer.appendChild(value);
-
-        if (item.copyable) {
-            const copyBtn = document.createElement('button');
-            copyBtn.type = 'button';
-            copyBtn.className = 'btn btn-outline-secondary btn-sm';
-            copyBtn.innerHTML = '<i class="fas fa-copy"></i>';
-            copyBtn.title = 'Copy to clipboard';
-            copyBtn.addEventListener('click', () => {
-                this._copyToClipboard(item.value);
-                this._showCopyNotification(copyBtn);
-            });
-            valueContainer.appendChild(copyBtn);
-        }
-
-        row.appendChild(label);
-        row.appendChild(valueContainer);
-        return row;
-    }
-
     _updateUI() {
         if (this.demoModeToggle) {
             this.demoModeToggle.checked = isDemoMode();
         }
-        this.dynamicElements.forEach(({ element, getValue }) => {
-            element.textContent = getValue();
-        });
     }
 
     _setupEventListeners() {
