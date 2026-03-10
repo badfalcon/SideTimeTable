@@ -102,7 +102,8 @@ class OptionsPageManager {
         // --- Developer タブ (条件付き) ---
         try {
             const { enableDeveloperFeatures = false, enableReminderDebug = false } = await chrome.storage.local.get(['enableDeveloperFeatures', 'enableReminderDebug']);
-            const devEnabled = !!(enableDeveloperFeatures || enableReminderDebug) && !isDemoMode();
+            const demoViaUrl = new URLSearchParams(window.location.search).get('demo') === 'true';
+            const devEnabled = !!(enableDeveloperFeatures || enableReminderDebug) && !demoViaUrl;
             if (devEnabled) {
                 this.extensionInfoCard = new ExtensionInfoCard();
                 this.extensionInfoCard.createElement();
