@@ -17,8 +17,8 @@ function L(locale, en, ja) {
 
 async function getLocale() {
     // Demo language override takes priority when in demo mode.
-    const demoLang = localStorage.getItem(DEMO_LANG_KEY);
-    if (demoLang && demoLang !== 'auto') return demoLang;
+    const demoLang = getDemoLang();
+    if (demoLang !== 'auto') return demoLang;
 
     // window.getCurrentLocale() is only available in the side panel context
     // (locale-utils.js is not loaded in the options page).
