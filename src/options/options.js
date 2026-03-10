@@ -13,7 +13,7 @@ import {
     logError
 } from '../lib/utils.js';
 import { StorageHelper } from '../lib/storage-helper.js';
-import { isDemoMode, setDemoMode } from '../lib/demo-data.js';
+import { isDemoMode, setDemoMode, getDemoOptionsSettings, getDemoCalendars } from '../lib/demo-data.js';
 import {
     ComponentManager,
     GoogleIntegrationCard,
@@ -155,8 +155,8 @@ class OptionsPageManager {
 
     async _loadAndApplySettings() {
         try {
-            // Load the existing settings
-            const settings = await loadSettings();
+            // Load settings (use demo settings in demo mode)
+            const settings = isDemoMode() ? getDemoOptionsSettings() : await loadSettings();
 
             // Apply the settings to each component
             this.timeSettingsCard.updateSettings({
@@ -174,7 +174,9 @@ class OptionsPageManager {
             });
 
             // Load the language settings
-            const languageSettings = await StorageHelper.get(['language'], { language: 'auto' });
+            const languageSettings = isDemoMode()
+                ? { language: settings.language }
+                : await StorageHelper.get(['language'], { language: 'auto' });
 
             this.languageSettingsCard.updateSettings(languageSettings);
 
@@ -190,6 +192,13 @@ class OptionsPageManager {
     }
 
     async _checkGoogleAuthStatus() {
+        // Show demo Google integration state in demo mode
+        if (isDemoMode()) {
+            this.googleIntegrationCard.updateIntegrationStatus(true);
+            await this._loadDemoCalendars();
+            return;
+        }
+
         try {
             // Check the Google integration status
             const response = await new Promise((resolve) => {
@@ -203,6 +212,20 @@ class OptionsPageManager {
         } catch (error) {
             console.error('Google auth status check error:', error);
         }
+    }
+
+    /**
+     * Load demo calendars into the calendar management card
+     * @private
+     */
+    async _loadDemoCalendars() {
+        const demoCalendars = await getDemoCalendars();
+        const demoSettings = getDemoOptionsSettings();
+        this.calendarManagementCard.allCalendars = demoCalendars;
+        this.calendarManagementCard.selectedCalendarIds = demoSettings.selectedCalendars;
+        this.calendarManagementCard.hasAutoFetched = true;
+        this.calendarManagementCard.show();
+        this.calendarManagementCard.render();
     }
 
     async handleGoogleIntegrationChange(shouldIntegrate) {
