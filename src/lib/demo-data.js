@@ -3,6 +3,7 @@
  *
  * Mock event data for the sample images
  */
+import { parseTimeString } from './time-utils.js';
 
 /**
  * Get a locale-compatible message
@@ -351,4 +352,47 @@ export function setDemoMode(enabled) {
     } else {
         localStorage.removeItem('sideTimeTableDemo');
     }
+}
+
+const DEMO_TIME_KEY = 'sideTimeTableDemoTime';
+const DEMO_TIME_DEFAULT = '10:00';
+
+/**
+ * Get the demo current time as a Date object
+ * @returns {Date} Today's date with the demo time applied
+ */
+export function getDemoCurrentTime() {
+    const stored = localStorage.getItem(DEMO_TIME_KEY) || DEMO_TIME_DEFAULT;
+    const { hour, minute } = parseTimeString(stored);
+    const now = new Date();
+    now.setHours(hour, minute, 0, 0);
+    return now;
+}
+
+/**
+ * Set the demo current time
+ * @param {string|null} timeString - Time in HH:MM format, or null to reset to default
+ */
+export function setDemoCurrentTime(timeString) {
+    if (timeString) {
+        localStorage.setItem(DEMO_TIME_KEY, timeString);
+    } else {
+        localStorage.removeItem(DEMO_TIME_KEY);
+    }
+}
+
+/**
+ * Get the stored demo time string (HH:MM), or the default
+ * @returns {string}
+ */
+export function getDemoCurrentTimeString() {
+    return localStorage.getItem(DEMO_TIME_KEY) || DEMO_TIME_DEFAULT;
+}
+
+/**
+ * Get current time: demo time when in demo mode, real time otherwise
+ * @returns {Date}
+ */
+export function getCurrentTime() {
+    return isDemoMode() ? getDemoCurrentTime() : new Date();
 }

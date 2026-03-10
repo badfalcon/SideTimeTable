@@ -2,7 +2,7 @@
  * DemoModeCard - Demo mode settings card component
  */
 import { CardComponent } from '../base/card-component.js';
-import { isDemoMode, setDemoMode } from '../../../lib/demo-data.js';
+import { isDemoMode, setDemoMode, getDemoCurrentTimeString, setDemoCurrentTime } from '../../../lib/demo-data.js';
 
 export class DemoModeCard extends CardComponent {
     constructor(onSettingsChange) {
@@ -17,11 +17,13 @@ export class DemoModeCard extends CardComponent {
 
         this.onSettingsChange = onSettingsChange;
         this.demoModeToggle = null;
+        this.timeInput = null;
     }
 
     createElement() {
         const card = super.createElement();
         this.addContent(this._createDemoModeSection());
+        this.addContent(this._createTimeSection());
         this._updateUI();
         this._setupEventListeners();
         return card;
@@ -29,7 +31,7 @@ export class DemoModeCard extends CardComponent {
 
     _createDemoModeSection() {
         const section = document.createElement('div');
-        section.className = 'form-check';
+        section.className = 'form-check mb-3';
 
         this.demoModeToggle = document.createElement('input');
         this.demoModeToggle.type = 'checkbox';
@@ -54,9 +56,40 @@ export class DemoModeCard extends CardComponent {
         return section;
     }
 
+    _createTimeSection() {
+        const section = document.createElement('div');
+        section.className = 'mb-1';
+
+        const label = document.createElement('label');
+        label.className = 'form-label small mb-1';
+        label.htmlFor = 'demo-time-input';
+        label.textContent = 'Current time line position';
+
+        this.timeInput = document.createElement('input');
+        this.timeInput.type = 'time';
+        this.timeInput.className = 'form-control form-control-sm';
+        this.timeInput.id = 'demo-time-input';
+        this.timeInput.style.width = '130px';
+        this.timeInput.disabled = true;
+
+        const helpText = document.createElement('small');
+        helpText.className = 'text-muted d-block mt-1';
+        helpText.textContent = 'Time shown by the current time line in demo mode';
+
+        section.appendChild(label);
+        section.appendChild(this.timeInput);
+        section.appendChild(helpText);
+        return section;
+    }
+
     _updateUI() {
+        const isDemo = isDemoMode();
         if (this.demoModeToggle) {
-            this.demoModeToggle.checked = isDemoMode();
+            this.demoModeToggle.checked = isDemo;
+        }
+        if (this.timeInput) {
+            this.timeInput.disabled = !isDemo;
+            this.timeInput.value = getDemoCurrentTimeString();
         }
     }
 
@@ -72,6 +105,10 @@ export class DemoModeCard extends CardComponent {
                 `<small>Please reload the side panel to apply the changes.</small>`,
                 'info', 5000
             );
+        });
+
+        this.timeInput?.addEventListener('change', (e) => {
+            setDemoCurrentTime(e.target.value);
         });
     }
 
