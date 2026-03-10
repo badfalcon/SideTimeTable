@@ -110,7 +110,7 @@ class OptionsPageManager {
                 this.extensionInfoCard.appendTo(tabDeveloper);
                 this.componentManager.components.set('extensionInfo', this.extensionInfoCard);
 
-                this.demoModeCard = new DemoModeCard(null);
+                this.demoModeCard = new DemoModeCard(this._reloadSidePanel.bind(this));
                 this.demoModeCard.createElement();
                 this.demoModeCard.setVisible(true);
                 this.demoModeCard.appendTo(tabDeveloper);
