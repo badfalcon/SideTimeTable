@@ -18,12 +18,15 @@ export class DemoModeCard extends CardComponent {
         this.onSettingsChange = onSettingsChange;
         this.demoModeToggle = null;
         this.timeInput = null;
+        this.demoLinkSection = null;
     }
 
     createElement() {
         const card = super.createElement();
         this.addContent(this._createDemoModeSection());
         this.addContent(this._createTimeSection());
+        this.demoLinkSection = this._createDemoLinkSection();
+        this.addContent(this.demoLinkSection);
         this._updateUI();
         this._setupEventListeners();
         return card;
@@ -82,6 +85,29 @@ export class DemoModeCard extends CardComponent {
         return section;
     }
 
+    _createDemoLinkSection() {
+        const section = document.createElement('div');
+        section.className = 'mt-3 p-2 bg-light rounded d-none';
+        section.id = 'demo-link-section';
+
+        const demoUrl = window.location.pathname + '?demo=true';
+
+        section.innerHTML = `
+            <small class="text-muted d-block mb-2">
+                <i class="fas fa-info-circle me-1"></i>
+                Open with <code>?demo=true</code> to preview demo settings:
+            </small>
+            <div class="d-flex align-items-center gap-2">
+                <code class="flex-grow-1 text-truncate small border rounded px-2 py-1 bg-white">${demoUrl}</code>
+                <a href="${demoUrl}" target="_blank" class="btn btn-sm btn-outline-warning text-nowrap">
+                    <i class="fas fa-external-link-alt me-1"></i>Open
+                </a>
+            </div>
+        `;
+
+        return section;
+    }
+
     _updateUI() {
         const isDemo = isDemoMode();
         if (this.demoModeToggle) {
@@ -90,6 +116,9 @@ export class DemoModeCard extends CardComponent {
         if (this.timeInput) {
             this.timeInput.disabled = !isDemo;
             this.timeInput.value = getDemoCurrentTimeString();
+        }
+        if (this.demoLinkSection) {
+            this.demoLinkSection.classList.toggle('d-none', !isDemo);
         }
     }
 
@@ -104,7 +133,6 @@ export class DemoModeCard extends CardComponent {
                 'info', 3000
             );
             if (this.onSettingsChange) this.onSettingsChange({ demoMode: enabled });
-            setTimeout(() => location.reload(), 800);
         });
 
         this.timeInput?.addEventListener('change', (e) => {
