@@ -7,7 +7,7 @@
 export const RELEASE_NOTES = [
     {
         version: '1.7.3',
-        date: '2026-03-08',
+        date: '2026-03-11',
         highlights: {
             en: [
                 'Drag on the timeline to create local events instantly',
