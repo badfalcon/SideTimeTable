@@ -966,15 +966,15 @@
     "description": "Error message when tutorial reset fails"
   },
   "reviewTitle": {
-    "message": "Enjoying SideTimeTable?",
+    "message": "How are you finding SideTimeTable?",
     "description": "Title of the review request modal"
   },
   "reviewMessage": {
-    "message": "Thank you for using SideTimeTable!\nWe would love to hear your feedback.",
+    "message": "Thank you for using SideTimeTable!\nWe'd love to hear about your experience.",
     "description": "Message body of the review request modal"
   },
   "reviewRateNow": {
-    "message": "Rate Now",
+    "message": "Write a Review",
     "description": "Button to open the Chrome Web Store review page"
   },
   "reviewLater": {

@@ -55,7 +55,7 @@ export class ReviewModal extends ModalComponent {
         const title = document.createElement('h2');
         title.className = 'modal-title review-modal-title';
         title.setAttribute('data-localize', '__MSG_reviewTitle__');
-        title.textContent = 'Enjoying SideTimeTable?';
+        title.textContent = 'How are you finding SideTimeTable?';
         header.appendChild(title);
 
         content.appendChild(header);
@@ -67,14 +67,14 @@ export class ReviewModal extends ModalComponent {
         const message = document.createElement('p');
         message.className = 'review-modal-message';
         message.setAttribute('data-localize', '__MSG_reviewMessage__');
-        message.textContent = 'Thank you for using SideTimeTable!\nWe would love to hear your feedback.';
+        message.textContent = "Thank you for using SideTimeTable!\nWe'd love to hear about your experience.";
         body.appendChild(message);
 
         // Rate Now button
         this.rateButton = document.createElement('button');
         this.rateButton.className = 'review-btn-rate';
         this.rateButton.setAttribute('data-localize', '__MSG_reviewRateNow__');
-        this.rateButton.innerHTML = '<i class="fas fa-star"></i> Rate Now';
+        this.rateButton.innerHTML = '<i class="fas fa-star"></i> Write a Review';
         body.appendChild(this.rateButton);
 
         // Later button

@@ -966,15 +966,15 @@
     "description": "チュートリアルリセット失敗メッセージ"
   },
   "reviewTitle": {
-    "message": "SideTimeTableはいかがですか？",
+    "message": "使い心地をお聞かせください",
     "description": "レビュー依頼モーダルのタイトル"
   },
   "reviewMessage": {
-    "message": "SideTimeTableをご利用いただきありがとうございます！\nよろしければ、ぜひレビューをお願いします。",
+    "message": "SideTimeTableをご利用いただきありがとうございます！\nご使用感をレビューでお聞かせいただけると嬉しいです。",
     "description": "レビュー依頼モーダルのメッセージ"
   },
   "reviewRateNow": {
-    "message": "今すぐレビュー",
+    "message": "レビューを書く",
     "description": "レビューページを開くボタン"
   },
   "reviewLater": {
