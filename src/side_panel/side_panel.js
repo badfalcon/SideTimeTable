@@ -177,7 +177,8 @@ class SidePanelUIController {
 
         // The timeline component
         this.timelineComponent = new TimelineComponent({
-            showCurrentTimeLine: true
+            showCurrentTimeLine: true,
+            onDragCreate: (startTime, endTime) => this._handleAddLocalEvent(startTime, endTime)
         });
 
         // The modal components
@@ -523,13 +524,15 @@ class SidePanelUIController {
      * Local event addition handler
      * @private
      */
-    _handleAddLocalEvent() {
-        // Set the default time based on the current time
-        const now = new Date();
-        const startTime = `${String(now.getHours()).padStart(2, '0')}:${String(Math.floor(now.getMinutes() / 15) * 15).padStart(2, '0')}`;
-        const endHour = Math.min(now.getHours() + 1, 23);
-        const endMinutes = now.getHours() >= 23 ? 59 : Math.floor(now.getMinutes() / 15) * 15;
-        const endTime = `${String(endHour).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
+    _handleAddLocalEvent(startTime, endTime) {
+        if (!startTime) {
+            // Default to current time when called without drag times
+            const now = new Date();
+            startTime = `${String(now.getHours()).padStart(2, '0')}:${String(Math.floor(now.getMinutes() / 15) * 15).padStart(2, '0')}`;
+            const endHour = Math.min(now.getHours() + 1, 23);
+            const endMinutes = now.getHours() >= 23 ? 59 : Math.floor(now.getMinutes() / 15) * 15;
+            endTime = `${String(endHour).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
+        }
 
         this.localEventModal.showCreate(startTime, endTime);
     }
