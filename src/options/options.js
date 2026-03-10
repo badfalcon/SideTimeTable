@@ -130,19 +130,6 @@ class OptionsPageManager {
             console.warn('Failed to read developer features flags:', e);
         }
 
-        // Show demo mode banner and wire up disable button
-        if (isDemoMode()) {
-            const banner = document.getElementById('demo-mode-banner');
-            if (banner) banner.classList.remove('d-none');
-            const disableBtn = document.getElementById('demo-disable-btn');
-            if (disableBtn) {
-                disableBtn.addEventListener('click', () => {
-                    setDemoMode(false);
-                    location.reload();
-                });
-            }
-        }
-
         // Load the existing settings and apply them to the components
         await this._loadAndApplySettings();
 
