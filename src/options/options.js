@@ -102,7 +102,7 @@ class OptionsPageManager {
         // --- Developer タブ (条件付き) ---
         try {
             const { enableDeveloperFeatures = false, enableReminderDebug = false } = await chrome.storage.local.get(['enableDeveloperFeatures', 'enableReminderDebug']);
-            const devEnabled = !!(enableDeveloperFeatures || enableReminderDebug);
+            const devEnabled = !!(enableDeveloperFeatures || enableReminderDebug) && !isDemoMode();
             if (devEnabled) {
                 this.extensionInfoCard = new ExtensionInfoCard();
                 this.extensionInfoCard.createElement();
@@ -128,6 +128,19 @@ class OptionsPageManager {
             }
         } catch (e) {
             console.warn('Failed to read developer features flags:', e);
+        }
+
+        // Show demo mode banner and wire up disable button
+        if (isDemoMode()) {
+            const banner = document.getElementById('demo-mode-banner');
+            if (banner) banner.classList.remove('d-none');
+            const disableBtn = document.getElementById('demo-disable-btn');
+            if (disableBtn) {
+                disableBtn.addEventListener('click', () => {
+                    setDemoMode(false);
+                    location.reload();
+                });
+            }
         }
 
         // Load the existing settings and apply them to the components
