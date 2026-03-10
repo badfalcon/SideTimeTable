@@ -453,7 +453,7 @@ export class TimelineComponent extends Component {
      */
     _calcDragRange(currentMinutes) {
         const { anchorStart, anchorEnd } = this._drag;
-        const MAX_END = 23 * 60 + 45; // keep endMin within valid time input range
+        const MAX_END = 23 * 60 + 59; // keep endMin within valid time input range (max: 23:59)
         if (currentMinutes >= anchorStart) {
             // 下方向: anchorStart 固定、現在ブロックの末尾まで伸ばす
             return [anchorStart, Math.min(MAX_END, Math.max(anchorEnd, currentMinutes + 15))];
