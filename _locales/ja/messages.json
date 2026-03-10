@@ -485,6 +485,10 @@
     "message": "読書タイム",
     "description": "デモローカルイベント: 読書タイム"
   },
+  "demo_memo_content": {
+    "message": "📋 本日のTODO\n・企画書レビュー完了\n・チームに共有\n・夕方のミーティング資料を準備\n\n💡 メモ\n・新機能のアイデアをまとめる\n・来週の予定を確認する",
+    "description": "デモメモ: サンプルメモ内容"
+  },
   "preview": {
     "message": "プレビュー",
     "description": "カラー設定のプレビューラベル"

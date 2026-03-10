@@ -324,6 +324,14 @@ export async function getDemoLocalEvents() {
 }
 
 /**
+ * The demo memo content
+ * @returns {Promise<string>} A promise that returns demo memo text
+ */
+export async function getDemoMemoContent() {
+    return await getLocalizedMessage('demo_memo_content');
+}
+
+/**
  * Determine if in the demo mode
  * @returns {boolean} true if in the demo mode
  */
