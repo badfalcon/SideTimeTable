@@ -396,3 +396,58 @@ export function getDemoCurrentTimeString() {
 export function getCurrentTime() {
     return isDemoMode() ? getDemoCurrentTime() : new Date();
 }
+
+/**
+ * Get demo settings for the options page
+ * @returns {Object} Demo settings object
+ */
+export function getDemoOptionsSettings() {
+    return {
+        openTime: '09:00',
+        closeTime: '18:00',
+        breakTimeFixed: true,
+        breakTimeStart: '12:00',
+        breakTimeEnd: '13:00',
+        workTimeColor: '#d4d4d4',
+        localEventColor: '#bbf2b1',
+        currentTimeLineColor: '#ff0000',
+        language: 'auto',
+        googleEventReminder: true,
+        reminderMinutes: 10,
+        googleIntegrated: true,
+        selectedCalendars: ['primary', 'work-calendar', 'personal']
+    };
+}
+
+/**
+ * Get demo calendar list for the options page
+ * @returns {Array} Demo calendar list
+ */
+export async function getDemoCalendars() {
+    return [
+        {
+            id: 'primary',
+            summary: await getLocalizedMessage('demo_event_calendar_main'),
+            primary: true,
+            backgroundColor: '#039be5'
+        },
+        {
+            id: 'work-calendar',
+            summary: await getLocalizedMessage('demo_event_calendar_work'),
+            primary: false,
+            backgroundColor: '#0b8043'
+        },
+        {
+            id: 'business',
+            summary: await getLocalizedMessage('demo_event_calendar_business'),
+            primary: false,
+            backgroundColor: '#e67c73'
+        },
+        {
+            id: 'personal',
+            summary: await getLocalizedMessage('demo_event_calendar_private'),
+            primary: false,
+            backgroundColor: '#8e24aa'
+        }
+    ];
+}
