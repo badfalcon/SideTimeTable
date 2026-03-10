@@ -16,6 +16,10 @@ function L(locale, en, ja) {
 }
 
 async function getLocale() {
+    // Demo language override takes priority when in demo mode.
+    const demoLang = localStorage.getItem(DEMO_LANG_KEY);
+    if (demoLang && demoLang !== 'auto') return demoLang;
+
     // window.getCurrentLocale() is only available in the side panel context
     // (locale-utils.js is not loaded in the options page).
     // Fall back to chrome.storage + chrome.i18n for the options page.
@@ -62,6 +66,19 @@ const SCENARIO_INFO = [
 
 const DEMO_SCENARIO_KEY = 'sideTimeTableDemoScenario';
 const DEMO_SCENARIO_DEFAULT = 'dev_team';
+const DEMO_LANG_KEY = 'sideTimeTableDemoLang';
+
+export function getDemoLang() {
+    return localStorage.getItem(DEMO_LANG_KEY) || 'auto';
+}
+
+export function setDemoLang(lang) {
+    if (lang && lang !== 'auto') {
+        localStorage.setItem(DEMO_LANG_KEY, lang);
+    } else {
+        localStorage.removeItem(DEMO_LANG_KEY);
+    }
+}
 
 export function getDemoScenario() {
     return localStorage.getItem(DEMO_SCENARIO_KEY) || DEMO_SCENARIO_DEFAULT;

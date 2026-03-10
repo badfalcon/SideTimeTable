@@ -5,7 +5,8 @@ import { CardComponent } from '../base/card-component.js';
 import {
     isDemoMode, setDemoMode,
     getDemoCurrentTimeString, setDemoCurrentTime,
-    getDemoScenario, setDemoScenario, getDemoScenarioList
+    getDemoScenario, setDemoScenario, getDemoScenarioList,
+    getDemoLang, setDemoLang
 } from '../../../lib/demo-data.js';
 
 export class DemoModeCard extends CardComponent {
@@ -24,6 +25,7 @@ export class DemoModeCard extends CardComponent {
         this.timeInput = null;
         this.scenarioSelect = null;
         this.scenarioSection = null;
+        this.langSelect = null;
         this.demoLinkSection = null;
     }
 
@@ -33,6 +35,7 @@ export class DemoModeCard extends CardComponent {
         this.addContent(this._createTimeSection());
         this.scenarioSection = this._createScenarioSection();
         this.addContent(this.scenarioSection);
+        this.addContent(this._createLanguageSection());
         this.demoLinkSection = this._createDemoLinkSection();
         this.addContent(this.demoLinkSection);
         this._updateUI();
@@ -149,6 +152,44 @@ export class DemoModeCard extends CardComponent {
         this._scenarioDescEl.textContent = found ? found.desc : '';
     }
 
+    _createLanguageSection() {
+        const section = document.createElement('div');
+        section.className = 'mb-3';
+        section.id = 'demo-language-section';
+
+        const label = document.createElement('label');
+        label.className = 'form-label small mb-1';
+        label.htmlFor = 'demo-lang-select';
+        label.textContent = 'Demo language';
+
+        this.langSelect = document.createElement('select');
+        this.langSelect.className = 'form-select form-select-sm';
+        this.langSelect.id = 'demo-lang-select';
+        this.langSelect.style.maxWidth = '180px';
+        this.langSelect.disabled = true;
+
+        [
+            { value: 'auto', label: 'Auto (follow extension setting)' },
+            { value: 'en', label: 'English' },
+            { value: 'ja', label: '日本語' }
+        ].forEach(({ value, label: text }) => {
+            const opt = document.createElement('option');
+            opt.value = value;
+            opt.textContent = text;
+            this.langSelect.appendChild(opt);
+        });
+        this.langSelect.value = getDemoLang();
+
+        const helpText = document.createElement('small');
+        helpText.className = 'text-muted d-block mt-1';
+        helpText.textContent = 'Override language used in demo data (for screenshots etc.)';
+
+        section.appendChild(label);
+        section.appendChild(this.langSelect);
+        section.appendChild(helpText);
+        return section;
+    }
+
     _createDemoLinkSection() {
         const section = document.createElement('div');
         section.className = 'mt-3 p-2 bg-light rounded d-none';
@@ -184,6 +225,9 @@ export class DemoModeCard extends CardComponent {
         if (this.scenarioSelect) {
             this.scenarioSelect.disabled = !isDemo;
         }
+        if (this.langSelect) {
+            this.langSelect.disabled = !isDemo;
+        }
         if (this.demoLinkSection) {
             this.demoLinkSection.classList.toggle('d-none', !isDemo);
         }
@@ -205,6 +249,15 @@ export class DemoModeCard extends CardComponent {
         this.timeInput?.addEventListener('change', (e) => {
             setDemoCurrentTime(e.target.value);
             if (this.onSettingsChange) this.onSettingsChange({ demoCurrentTime: e.target.value });
+        });
+
+        this.langSelect?.addEventListener('change', (e) => {
+            setDemoLang(e.target.value);
+            this._loadScenarioOptions();
+            this._showAlert(
+                `<i class="fas fa-language me-1"></i>Demo language changed — reload the side panel to apply.`,
+                'info', 4000
+            );
         });
 
         this.scenarioSelect?.addEventListener('change', (e) => {
