@@ -1,351 +1,852 @@
 /**
  * SideTimeTable - Demo Data
  *
- * Mock event data for the sample images
+ * Mock event data for sample images.
+ * Three scenarios, each representing a different role viewing their team's calendars
+ * (one calendar per team member).
  */
 import { parseTimeString } from './time-utils.js';
 
-/**
- * Get a locale-compatible message
- * @param {string} key - The message key
- * @returns {Promise<string>} The localized message
- */
-async function getLocalizedMessage(key) {
-    try {
-        // Get the current locale setting
-        const locale = await window.getCurrentLocale();
-        
-        // Determine the message file path
-        const messageFiles = {
-            'en': '_locales/en/messages.json',
-            'ja': '_locales/ja/messages.json'
-        };
-        
-        if (messageFiles[locale]) {
-            const messagesUrl = chrome.runtime.getURL(messageFiles[locale]);
-            const response = await fetch(messagesUrl);
-            const messages = await response.json();
-            
-            return messages[key]?.message || key;
-        }
-    } catch (error) {
-        console.warn('Localized message acquisition error:', error);
-    }
-    
-    // The fallback
-    return await getLocalizedMessage(key) || key;
+// ---------------------------------------------------------------------------
+// Locale helper
+// ---------------------------------------------------------------------------
+
+function L(locale, en, ja) {
+    return locale === 'ja' ? ja : en;
 }
 
-/**
- * The demo Google Calendar event data
- * @returns {Promise<Array>} A promise that returns an array of demo events
- */
-export async function getDemoEvents() {
-    const today = new Date();
-    // Generate the events with today's date
-    const events = [
+async function getLocale() {
+    try {
+        return await window.getCurrentLocale();
+    } catch (_) {
+        return 'en';
+    }
+}
+
+function _d(today, h, m) {
+    return new Date(today.getFullYear(), today.getMonth(), today.getDate(), h, m).toISOString();
+}
+
+// ---------------------------------------------------------------------------
+// Scenario registry
+// ---------------------------------------------------------------------------
+
+const SCENARIO_INFO = [
+    {
+        id: 'dev_team',
+        name: { en: 'Dev Team', ja: '開発チーム' },
+        desc: { en: 'Engineer/PM viewing team calendars', ja: 'エンジニア・PMがチームを把握する1日' }
+    },
+    {
+        id: 'sales_team',
+        name: { en: 'Sales Team', ja: '営業チーム' },
+        desc: { en: 'Account executive with client meetings', ja: '営業が商談・クライアント管理をする1日' }
+    },
+    {
+        id: 'manager',
+        name: { en: 'Manager', ja: 'マネージャー' },
+        desc: { en: 'Engineering manager with 1:1s and planning', ja: '1on1・採用・評価が重なるマネージャーの1日' }
+    }
+];
+
+const DEMO_SCENARIO_KEY = 'sideTimeTableDemoScenario';
+const DEMO_SCENARIO_DEFAULT = 'dev_team';
+
+export function getDemoScenario() {
+    return localStorage.getItem(DEMO_SCENARIO_KEY) || DEMO_SCENARIO_DEFAULT;
+}
+
+export function setDemoScenario(id) {
+    if (id && id !== DEMO_SCENARIO_DEFAULT) {
+        localStorage.setItem(DEMO_SCENARIO_KEY, id);
+    } else {
+        localStorage.removeItem(DEMO_SCENARIO_KEY);
+    }
+}
+
+export async function getDemoScenarioList() {
+    const locale = await getLocale();
+    return SCENARIO_INFO.map(s => ({
+        id: s.id,
+        name: L(locale, s.name.en, s.name.ja),
+        desc: L(locale, s.desc.en, s.desc.ja)
+    }));
+}
+
+// ---------------------------------------------------------------------------
+// SCENARIO 1: dev_team
+// Alex Rivera (PM) / 田中 健太 (Engineer) — viewing team calendars
+// ---------------------------------------------------------------------------
+
+function _devTeamEvents(today, locale) {
+    const T = (en, ja) => L(locale, en, ja);
+    return [
+        // 9:00–10:00  Weekly team kickoff
         {
             id: 'demo-1',
-            summary: await getLocalizedMessage('demo_event_summary_morning_meeting'),
-            description: await getLocalizedMessage('demo_event_description_morning_meeting'),
-            location: await getLocalizedMessage('demo_event_location_meeting_room_a'),
-            start: {
-                dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 9, 0).toISOString()
-            },
-            end: {
-                dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 10, 0).toISOString()
-            },
+            summary:  T('Weekly Team Meeting', 'チーム定例MTG'),
+            description: T('Roadmap updates, sprint goals, and blockers.', '進捗確認・今週の優先度・懸案事項の共有。'),
+            location: T('Conf Room A', '第1会議室'),
+            start: { dateTime: _d(today, 9, 0) },
+            end:   { dateTime: _d(today, 10, 0) },
             eventType: 'default',
             calendarId: 'primary',
-            calendarName: await getLocalizedMessage('demo_event_calendar_main'),
+            calendarName: T('My Calendar', 'マイカレンダー'),
             calendarBackgroundColor: '#3F51B5',
             calendarForegroundColor: '#FFFFFF',
             hangoutLink: 'https://meet.google.com/demo-meeting-1',
             htmlLink: 'https://calendar.google.com/calendar/event?eid=demo1'
         },
+        // 10:30–12:00  Deep work
         {
             id: 'demo-2',
-            summary: await getLocalizedMessage('demo_event_summary_project_work'),
-            description: await getLocalizedMessage('demo_event_description_project_work'),
+            summary:  T('Roadmap Planning', '機能実装'),
+            description: T('Deep work: Q3 feature prioritization.', '通知機能のバックエンド実装に集中。'),
             location: '',
-            start: {
-                dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 10, 30).toISOString()
-            },
-            end: {
-                dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 12, 0).toISOString()
-            },
+            start: { dateTime: _d(today, 10, 30) },
+            end:   { dateTime: _d(today, 12, 0) },
             eventType: 'default',
-            calendarId: 'work@example.com',
-            calendarName: await getLocalizedMessage('demo_event_calendar_work'),
+            calendarId: 'jordan@team.com',
+            calendarName: T('Jordan Lee', '山田 翔'),
             calendarBackgroundColor: '#4CAF50',
             calendarForegroundColor: '#FFFFFF',
             htmlLink: 'https://calendar.google.com/calendar/event?eid=demo2'
         },
+        // 12:30–13:30  Client lunch
         {
             id: 'demo-3',
-            summary: await getLocalizedMessage('demo_event_summary_lunch_meeting'),
-            description: await getLocalizedMessage('demo_event_description_lunch_meeting'),
-            location: await getLocalizedMessage('demo_event_location_restaurant_xyz'),
-            start: {
-                dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 12, 30).toISOString()
-            },
-            end: {
-                dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 13, 30).toISOString()
-            },
+            summary:  T('Client Lunch', '取引先ランチ商談'),
+            description: T('Lunch with Acme Corp — discuss renewal.', 'A社と来期の保守契約更新について。'),
+            location: T('The Trident', '丸の内 ビストロ'),
+            start: { dateTime: _d(today, 12, 30) },
+            end:   { dateTime: _d(today, 13, 30) },
             eventType: 'default',
-            calendarId: 'business@example.com',
-            calendarName: await getLocalizedMessage('demo_event_calendar_business'),
+            calendarId: 'sam@team.com',
+            calendarName: T('Sam Chen', '佐藤 誠'),
             calendarBackgroundColor: '#FF9800',
             calendarForegroundColor: '#FFFFFF',
             htmlLink: 'https://calendar.google.com/calendar/event?eid=demo3'
         },
+        // 14:00–14:15  Quick check-in
         {
             id: 'demo-4',
-            summary: await getLocalizedMessage('demo_event_summary_short_call'),
-            description: await getLocalizedMessage('demo_event_description_short_call'),
+            summary:  T('Design Check-in', '上長への進捗報告'),
+            description: T('Quick sync with Jamie on landing page copy.', '午後タスクの確認と差し戻し対応の承認依頼。'),
             location: '',
-            start: {
-                dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 14, 0).toISOString()
-            },
-            end: {
-                dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 14, 15).toISOString()
-            },
+            start: { dateTime: _d(today, 14, 0) },
+            end:   { dateTime: _d(today, 14, 15) },
             eventType: 'default',
             calendarId: 'primary',
-            calendarName: await getLocalizedMessage('demo_event_calendar_main'),
+            calendarName: T('My Calendar', 'マイカレンダー'),
             calendarBackgroundColor: '#3F51B5',
             calendarForegroundColor: '#FFFFFF',
             hangoutLink: 'https://meet.google.com/demo-meeting-2',
             htmlLink: 'https://calendar.google.com/calendar/event?eid=demo4'
         },
+        // 15:00–16:30  Design review (overlap group)
         {
             id: 'demo-5',
-            summary: await getLocalizedMessage('demo_event_summary_design_review'),
-            description: await getLocalizedMessage('demo_event_description_design_review'),
-            location: await getLocalizedMessage('demo_event_location_online'),
-            start: {
-                dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 15, 0).toISOString()
-            },
-            end: {
-                dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 16, 30).toISOString()
-            },
+            summary:  T('Design Review', 'UI仕様レビュー'),
+            description: T('Sprint 14 — review onboarding flow Figma.', 'v2.4 リリース向けの画面仕様を確認。'),
+            location: T('Zoom', 'オンライン'),
+            start: { dateTime: _d(today, 15, 0) },
+            end:   { dateTime: _d(today, 16, 30) },
             eventType: 'default',
-            calendarId: 'work@example.com',
-            calendarName: await getLocalizedMessage('demo_event_calendar_work'),
+            calendarId: 'jamie@team.com',
+            calendarName: T('Jamie Kim', '鈴木 花'),
             calendarBackgroundColor: '#4CAF50',
             calendarForegroundColor: '#FFFFFF',
             hangoutLink: 'https://meet.google.com/demo-meeting-3',
             htmlLink: 'https://calendar.google.com/calendar/event?eid=demo5'
         },
+        // 14:30–15:30  overlap A
         {
             id: 'demo-6',
-            summary: await getLocalizedMessage('demo_event_summary_overlap_a'),
-            description: await getLocalizedMessage('demo_event_description_overlap_a'),
-            location: await getLocalizedMessage('demo_event_location_meeting_room_b'),
-            start: {
-                dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 14, 30).toISOString()
-            },
-            end: {
-                dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 15, 30).toISOString()
-            },
+            summary:  T('1:1 with Jordan', 'マーケとの企画すり合わせ'),
+            description: T('Biweekly 1:1 with lead engineer.', '来期キャンペーンの機能要件を調整。'),
+            location: T('Conf Room B', '第2会議室'),
+            start: { dateTime: _d(today, 14, 30) },
+            end:   { dateTime: _d(today, 15, 30) },
             eventType: 'default',
-            calendarId: 'test@example.com',
-            calendarName: await getLocalizedMessage('demo_event_calendar_test'),
+            calendarId: 'jordan@team.com',
+            calendarName: T('Jordan Lee', '山田 翔'),
             calendarBackgroundColor: '#E91E63',
             calendarForegroundColor: '#FFFFFF',
             htmlLink: 'https://calendar.google.com/calendar/event?eid=demo6'
         },
+        // 14:45–15:45  overlap B
         {
             id: 'demo-7',
-            summary: await getLocalizedMessage('demo_event_summary_overlap_b'),
-            description: await getLocalizedMessage('demo_event_description_overlap_b'),
-            location: await getLocalizedMessage('demo_event_location_online'),
-            start: {
-                dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 14, 45).toISOString()
-            },
-            end: {
-                dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 15, 45).toISOString()
-            },
+            summary:  T('Vendor Demo', 'ベンダーMTG'),
+            description: T('Amplitude analytics platform demo.', 'クラウドサービスの年間契約更新について。'),
+            location: T('Zoom', 'オンライン'),
+            start: { dateTime: _d(today, 14, 45) },
+            end:   { dateTime: _d(today, 15, 45) },
             eventType: 'default',
-            calendarId: 'personal@example.com',
-            calendarName: await getLocalizedMessage('demo_event_calendar_private'),
+            calendarId: 'primary',
+            calendarName: T('My Calendar', 'マイカレンダー'),
             calendarBackgroundColor: '#9C27B0',
             calendarForegroundColor: '#FFFFFF',
             hangoutLink: 'https://meet.google.com/demo-meeting-4',
             htmlLink: 'https://calendar.google.com/calendar/event?eid=demo7'
         },
+        // 18:30–19:00  Evening
+        {
+            id: 'demo-8',
+            summary:  T('Sprint Wrap-up Drinks', '夕会'),
+            description: T('End-of-sprint celebration at the bar!', '本日の成果報告・明日の作業確認・残業調整。'),
+            location: '',
+            start: { dateTime: _d(today, 18, 30) },
+            end:   { dateTime: _d(today, 19, 0) },
+            eventType: 'default',
+            calendarId: 'primary',
+            calendarName: T('My Calendar', 'マイカレンダー'),
+            calendarBackgroundColor: '#3F51B5',
+            calendarForegroundColor: '#FFFFFF',
+            htmlLink: 'https://calendar.google.com/calendar/event?eid=demo8'
+        },
+        // 15:00–16:00  overlap C
         {
             id: 'demo-9',
-            summary: await getLocalizedMessage('demo_event_summary_overlap_c'),
-            description: await getLocalizedMessage('demo_event_description_overlap_c'),
+            summary:  T('Sprint Retrospective', 'コードレビュー'),
+            description: T('What went well? What to improve?', '認証モジュールのPR #247 をレビュー。'),
             location: '',
-            start: {
-                dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 15, 0).toISOString()
-            },
-            end: {
-                dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 16, 0).toISOString()
-            },
+            start: { dateTime: _d(today, 15, 0) },
+            end:   { dateTime: _d(today, 16, 0) },
             eventType: 'default',
-            calendarId: 'overlap1@example.com',
-            calendarName: await getLocalizedMessage('demo_event_calendar_overlap1'),
+            calendarId: 'eng-team@team.com',
+            calendarName: T('Engineering', '開発チーム'),
             calendarBackgroundColor: '#FF5722',
             calendarForegroundColor: '#FFFFFF',
             htmlLink: 'https://calendar.google.com/calendar/event?eid=demo9'
         },
+        // 14:15–16:15  overlap D (wide)
         {
             id: 'demo-10',
-            summary: await getLocalizedMessage('demo_event_summary_overlap_d'),
-            description: await getLocalizedMessage('demo_event_description_overlap_d'),
-            location: await getLocalizedMessage('demo_event_location_cafe'),
-            start: {
-                dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 14, 15).toISOString()
-            },
-            end: {
-                dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 16, 15).toISOString()
-            },
+            summary:  T('Customer Interview', '社外研修'),
+            description: T('User research: onboarding flow feedback.', 'アジャイル開発実践講座（渋谷研修センター）。'),
+            location: T('Blue Bottle Coffee', 'スタバ 渋谷店'),
+            start: { dateTime: _d(today, 14, 15) },
+            end:   { dateTime: _d(today, 16, 15) },
             eventType: 'default',
-            calendarId: 'overlap2@example.com',
-            calendarName: await getLocalizedMessage('demo_event_calendar_overlap2'),
+            calendarId: 'research@team.com',
+            calendarName: T('Research', '研修'),
             calendarBackgroundColor: '#607D8B',
             calendarForegroundColor: '#FFFFFF',
             htmlLink: 'https://calendar.google.com/calendar/event?eid=demo10'
         },
+        // 10:45–11:30  morning overlap A
         {
             id: 'demo-11',
-            summary: await getLocalizedMessage('demo_event_summary_morning_overlap_a'),
-            description: await getLocalizedMessage('demo_event_description_morning_overlap_a'),
-            location: await getLocalizedMessage('demo_event_location_online'),
-            start: {
-                dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 10, 45).toISOString()
-            },
-            end: {
-                dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 11, 30).toISOString()
-            },
+            summary:  T('Candidate Screen', '採用面接'),
+            description: T('30-min phone screen — senior iOS role.', 'バックエンドエンジニア 中途採用 一次面接。'),
+            location: T('Zoom', 'オンライン'),
+            start: { dateTime: _d(today, 10, 45) },
+            end:   { dateTime: _d(today, 11, 30) },
             eventType: 'default',
-            calendarId: 'morning1@example.com',
-            calendarName: await getLocalizedMessage('demo_event_calendar_morning1'),
+            calendarId: 'casey@team.com',
+            calendarName: T('Casey Morgan', '中村 真由美'),
             calendarBackgroundColor: '#00BCD4',
             calendarForegroundColor: '#FFFFFF',
             hangoutLink: 'https://meet.google.com/demo-meeting-5',
             htmlLink: 'https://calendar.google.com/calendar/event?eid=demo11'
         },
+        // 11:00–11:45  morning overlap B
         {
             id: 'demo-12',
-            summary: await getLocalizedMessage('demo_event_summary_morning_overlap_b'),
-            description: await getLocalizedMessage('demo_event_description_morning_overlap_b'),
-            location: await getLocalizedMessage('demo_event_location_meeting_room_c'),
-            start: {
-                dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 11, 0).toISOString()
-            },
-            end: {
-                dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 11, 45).toISOString()
-            },
+            summary:  T('Backlog Grooming', 'PJ進捗MTG'),
+            description: T('Refine and estimate upcoming sprint tickets.', 'リリースまでのタスク整理とリスク確認。'),
+            location: T('Conf Room C', '第3会議室'),
+            start: { dateTime: _d(today, 11, 0) },
+            end:   { dateTime: _d(today, 11, 45) },
             eventType: 'default',
-            calendarId: 'morning2@example.com',
-            calendarName: await getLocalizedMessage('demo_event_calendar_morning2'),
+            calendarId: 'product@team.com',
+            calendarName: T('Product', 'プロジェクト'),
             calendarBackgroundColor: '#8BC34A',
             calendarForegroundColor: '#FFFFFF',
             htmlLink: 'https://calendar.google.com/calendar/event?eid=demo12'
         },
+        // 11:15–11:30  morning overlap C (very short)
         {
             id: 'demo-13',
-            summary: await getLocalizedMessage('demo_event_summary_morning_overlap_c'),
-            description: await getLocalizedMessage('demo_event_description_morning_overlap_c'),
+            summary:  T('Incident Check', '障害対応 緊急確認'),
+            description: T('Urgent: production outage status update.', '本番APIの504エラー 対応状況を確認。'),
             location: '',
-            start: {
-                dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 11, 15).toISOString()
-            },
-            end: {
-                dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 11, 30).toISOString()
-            },
+            start: { dateTime: _d(today, 11, 15) },
+            end:   { dateTime: _d(today, 11, 30) },
             eventType: 'default',
-            calendarId: 'morning3@example.com',
-            calendarName: await getLocalizedMessage('demo_event_calendar_morning3'),
+            calendarId: 'eng-team@team.com',
+            calendarName: T('Engineering', '開発チーム'),
             calendarBackgroundColor: '#FFC107',
             calendarForegroundColor: '#000000',
             htmlLink: 'https://calendar.google.com/calendar/event?eid=demo13'
-        },
+        }
+    ];
+}
+
+function _devTeamLocalEvents(locale) {
+    const T = (en, ja) => L(locale, en, ja);
+    return [
+        { id: 'demo_local_1', title: T('Morning Run', '朝のルーティン'),        startTime: '08:00', endTime: '08:30', reminder: true },
+        { id: 'demo_local_2', title: T('No-Meeting Block', '割り込み禁止タイム'), startTime: '13:45', endTime: '14:45', reminder: false },
+        { id: 'demo_local_3', title: T('Gym', 'ジム'),                           startTime: '16:45', endTime: '17:15', reminder: true },
+        { id: 'demo_local_4', title: T('Evening Reading', '技術書を読む'),        startTime: '20:00', endTime: '21:00', reminder: false }
+    ];
+}
+
+function _devTeamMemo(locale) {
+    return L(locale,
+        '📋 Today\'s TODO\n· Finish customer discovery notes\n· Update roadmap doc before design review\n· Follow up with Acme Corp after lunch\n\n💡 Notes\n· Figma comments need response by EOD\n· Check sprint capacity with Jordan',
+        '📋 本日のTODO\n・UI仕様レビューの資料を準備\n・A社との契約書を確認してから商談へ\n・コードレビューのフィードバックをまとめる\n\n💡 メモ\n・504エラーの再発防止策をwikiにまとめる\n・来週の採用面接スケジュールを確認'
+    );
+}
+
+function _devTeamCalendars(locale) {
+    const T = (en, ja) => L(locale, en, ja);
+    return [
+        { id: 'primary',           summary: T('My Calendar', 'マイカレンダー'),  primary: true,  backgroundColor: '#3F51B5' },
+        { id: 'jordan@team.com',   summary: T('Jordan Lee', '山田 翔'),           primary: false, backgroundColor: '#4CAF50' },
+        { id: 'sam@team.com',      summary: T('Sam Chen', '佐藤 誠'),             primary: false, backgroundColor: '#FF9800' },
+        { id: 'jamie@team.com',    summary: T('Jamie Kim', '鈴木 花'),            primary: false, backgroundColor: '#E91E63' },
+        { id: 'casey@team.com',    summary: T('Casey Morgan', '中村 真由美'),     primary: false, backgroundColor: '#9C27B0' },
+        { id: 'eng-team@team.com', summary: T('Engineering', '開発チーム'),       primary: false, backgroundColor: '#FF5722' },
+        { id: 'product@team.com',  summary: T('Product', 'プロジェクト'),         primary: false, backgroundColor: '#8BC34A' },
+        { id: 'research@team.com', summary: T('Research', '研修'),               primary: false, backgroundColor: '#607D8B' }
+    ];
+}
+
+// ---------------------------------------------------------------------------
+// SCENARIO 2: sales_team
+// Sarah Mitchell (AE) / 高橋 彩 (フィールドセールス) — sales & client day
+// ---------------------------------------------------------------------------
+
+function _salesTeamEvents(today, locale) {
+    const T = (en, ja) => L(locale, en, ja);
+    return [
+        // 9:00–10:00
         {
-            id: 'demo-8',
-            summary: await getLocalizedMessage('demo_event_summary_evening_review'),
-            description: await getLocalizedMessage('demo_event_description_evening_review'),
-            location: '',
-            start: {
-                dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 18, 30).toISOString()
-            },
-            end: {
-                dateTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 19, 0).toISOString()
-            },
+            id: 'demo-1',
+            summary:  T('Sales Morning Standup', '朝の営業MTG'),
+            description: T('Pipeline review, wins, and blockers.', 'パイプライン確認・本日の商談準備。'),
+            location: T('Conf Room A', '第1会議室'),
+            start: { dateTime: _d(today, 9, 0) },
+            end:   { dateTime: _d(today, 10, 0) },
             eventType: 'default',
             calendarId: 'primary',
-            calendarName: await getLocalizedMessage('demo_event_calendar_main'),
+            calendarName: T('My Calendar', 'マイカレンダー'),
+            calendarBackgroundColor: '#3F51B5',
+            calendarForegroundColor: '#FFFFFF',
+            htmlLink: 'https://calendar.google.com/calendar/event?eid=demo1'
+        },
+        // 10:30–12:00
+        {
+            id: 'demo-2',
+            summary:  T('Client Proposal Prep', '提案書作成'),
+            description: T('Craft renewal proposal for ProCo.', 'B社向け更新提案書の仕上げ。'),
+            location: '',
+            start: { dateTime: _d(today, 10, 30) },
+            end:   { dateTime: _d(today, 12, 0) },
+            eventType: 'default',
+            calendarId: 'primary',
+            calendarName: T('My Calendar', 'マイカレンダー'),
+            calendarBackgroundColor: '#3F51B5',
+            calendarForegroundColor: '#FFFFFF',
+            htmlLink: 'https://calendar.google.com/calendar/event?eid=demo2'
+        },
+        // 12:30–13:30
+        {
+            id: 'demo-3',
+            summary:  T('Product Demo with Prospect', '製品デモ（見込み客）'),
+            description: T('ProCo decision-makers — live demo.', 'B社のキーマンへのプレゼン・デモ。'),
+            location: T('The Trident', '丸の内 ビストロ'),
+            start: { dateTime: _d(today, 12, 30) },
+            end:   { dateTime: _d(today, 13, 30) },
+            eventType: 'default',
+            calendarId: 'tom@sales.com',
+            calendarName: T('Tom Chen', '前田 誠'),
+            calendarBackgroundColor: '#FF9800',
+            calendarForegroundColor: '#FFFFFF',
+            htmlLink: 'https://calendar.google.com/calendar/event?eid=demo3'
+        },
+        // 14:00–14:15
+        {
+            id: 'demo-4',
+            summary:  T('Follow-up: Acme Corp', 'A社フォローアップコール'),
+            description: T('Check renewal status with Acme Corp.', 'A社の更新意向を確認。'),
+            location: T('Zoom', 'オンライン'),
+            start: { dateTime: _d(today, 14, 0) },
+            end:   { dateTime: _d(today, 14, 15) },
+            eventType: 'default',
+            calendarId: 'primary',
+            calendarName: T('My Calendar', 'マイカレンダー'),
+            calendarBackgroundColor: '#3F51B5',
+            calendarForegroundColor: '#FFFFFF',
+            hangoutLink: 'https://meet.google.com/demo-meeting-2',
+            htmlLink: 'https://calendar.google.com/calendar/event?eid=demo4'
+        },
+        // 15:00–16:30
+        {
+            id: 'demo-5',
+            summary:  T('Product Demo Training', '新機能デモ研修'),
+            description: T('New feature release prep with SE team.', '新機能リリースに向けたSEチームとのデモ練習。'),
+            location: T('Zoom', 'オンライン'),
+            start: { dateTime: _d(today, 15, 0) },
+            end:   { dateTime: _d(today, 16, 30) },
+            eventType: 'default',
+            calendarId: 'tom@sales.com',
+            calendarName: T('Tom Chen', '前田 誠'),
+            calendarBackgroundColor: '#4CAF50',
+            calendarForegroundColor: '#FFFFFF',
+            hangoutLink: 'https://meet.google.com/demo-meeting-3',
+            htmlLink: 'https://calendar.google.com/calendar/event?eid=demo5'
+        },
+        // 14:30–15:30  overlap A
+        {
+            id: 'demo-6',
+            summary:  T('Onboarding Call', 'オンボーディングコール'),
+            description: T('Handoff newly closed deal to CS team.', '新規受注のカスタマーサクセスへの引継ぎ。'),
+            location: T('Zoom', 'オンライン'),
+            start: { dateTime: _d(today, 14, 30) },
+            end:   { dateTime: _d(today, 15, 30) },
+            eventType: 'default',
+            calendarId: 'emma@sales.com',
+            calendarName: T('Emma Davis', '大島 由香'),
+            calendarBackgroundColor: '#E91E63',
+            calendarForegroundColor: '#FFFFFF',
+            hangoutLink: 'https://meet.google.com/demo-meeting-4',
+            htmlLink: 'https://calendar.google.com/calendar/event?eid=demo6'
+        },
+        // 14:45–15:45  overlap B
+        {
+            id: 'demo-7',
+            summary:  T('Pipeline Review', 'パイプラインレビュー'),
+            description: T('Weekly pipeline review with sales manager.', '週次パイプラインの確認と優先度調整。'),
+            location: T('Conf Room B', '第2会議室'),
+            start: { dateTime: _d(today, 14, 45) },
+            end:   { dateTime: _d(today, 15, 45) },
+            eventType: 'default',
+            calendarId: 'mike@sales.com',
+            calendarName: T('Mike Torres', '木村 部長'),
+            calendarBackgroundColor: '#9C27B0',
+            calendarForegroundColor: '#FFFFFF',
+            htmlLink: 'https://calendar.google.com/calendar/event?eid=demo7'
+        },
+        // 18:30–19:00
+        {
+            id: 'demo-8',
+            summary:  T('Team Dinner', 'チーム夕食'),
+            description: T('Celebrate Q2 quota attainment!', 'Q2クォータ達成を祝うチーム夕食。'),
+            location: '',
+            start: { dateTime: _d(today, 18, 30) },
+            end:   { dateTime: _d(today, 19, 0) },
+            eventType: 'default',
+            calendarId: 'primary',
+            calendarName: T('My Calendar', 'マイカレンダー'),
             calendarBackgroundColor: '#3F51B5',
             calendarForegroundColor: '#FFFFFF',
             htmlLink: 'https://calendar.google.com/calendar/event?eid=demo8'
+        },
+        // 15:00–16:00  overlap C
+        {
+            id: 'demo-9',
+            summary:  T('Marketing Webinar Prep', 'マーケウェビナー準備'),
+            description: T('Coordinate with marketing on joint webinar.', 'マーケティングとの合同ウェビナー調整。'),
+            location: T('Zoom', 'オンライン'),
+            start: { dateTime: _d(today, 15, 0) },
+            end:   { dateTime: _d(today, 16, 0) },
+            eventType: 'default',
+            calendarId: 'mkt@sales.com',
+            calendarName: T('Marketing', 'マーケチーム'),
+            calendarBackgroundColor: '#FF5722',
+            calendarForegroundColor: '#FFFFFF',
+            htmlLink: 'https://calendar.google.com/calendar/event?eid=demo9'
+        },
+        // 14:15–16:15  overlap D (wide)
+        {
+            id: 'demo-10',
+            summary:  T('Quarterly Business Review', '四半期ビジネスレビュー'),
+            description: T('QBR with sales manager: targets & strategy.', '営業部長との四半期レビュー。目標・戦略確認。'),
+            location: T('Blue Bottle Coffee', 'スタバ 渋谷店'),
+            start: { dateTime: _d(today, 14, 15) },
+            end:   { dateTime: _d(today, 16, 15) },
+            eventType: 'default',
+            calendarId: 'mike@sales.com',
+            calendarName: T('Mike Torres', '木村 部長'),
+            calendarBackgroundColor: '#607D8B',
+            calendarForegroundColor: '#FFFFFF',
+            htmlLink: 'https://calendar.google.com/calendar/event?eid=demo10'
+        },
+        // 10:45–11:30  morning overlap A
+        {
+            id: 'demo-11',
+            summary:  T('Competitor Analysis Sync', '競合情報共有'),
+            description: T('Compare pricing with SE team.', 'SEチームと競合の価格・機能を比較確認。'),
+            location: T('Zoom', 'オンライン'),
+            start: { dateTime: _d(today, 10, 45) },
+            end:   { dateTime: _d(today, 11, 30) },
+            eventType: 'default',
+            calendarId: 'tom@sales.com',
+            calendarName: T('Tom Chen', '前田 誠'),
+            calendarBackgroundColor: '#00BCD4',
+            calendarForegroundColor: '#FFFFFF',
+            hangoutLink: 'https://meet.google.com/demo-meeting-5',
+            htmlLink: 'https://calendar.google.com/calendar/event?eid=demo11'
+        },
+        // 11:00–11:45  morning overlap B
+        {
+            id: 'demo-12',
+            summary:  T('New Leads Review', 'リード確認MTG'),
+            description: T('Review inbound leads with SDR team.', 'インバウンドリードをSDRチームと確認。'),
+            location: T('Conf Room C', '第3会議室'),
+            start: { dateTime: _d(today, 11, 0) },
+            end:   { dateTime: _d(today, 11, 45) },
+            eventType: 'default',
+            calendarId: 'lisa@sales.com',
+            calendarName: T('Lisa Park', '小林 誠'),
+            calendarBackgroundColor: '#8BC34A',
+            calendarForegroundColor: '#FFFFFF',
+            htmlLink: 'https://calendar.google.com/calendar/event?eid=demo12'
+        },
+        // 11:15–11:30  morning overlap C (very short)
+        {
+            id: 'demo-13',
+            summary:  T('Budget Approval', '値引き承認依頼'),
+            description: T('Urgent: approve deal discount for ProCo.', '緊急: B社向け特別値引きの承認依頼。'),
+            location: '',
+            start: { dateTime: _d(today, 11, 15) },
+            end:   { dateTime: _d(today, 11, 30) },
+            eventType: 'default',
+            calendarId: 'mike@sales.com',
+            calendarName: T('Mike Torres', '木村 部長'),
+            calendarBackgroundColor: '#FFC107',
+            calendarForegroundColor: '#000000',
+            htmlLink: 'https://calendar.google.com/calendar/event?eid=demo13'
         }
     ];
-    return events;
 }
 
-/**
- * The demo local event data
- * @returns {Promise<Array>} A promise that returns an array of demo local events
- */
-export async function getDemoLocalEvents() {
+function _salesTeamLocalEvents(locale) {
+    const T = (en, ja) => L(locale, en, ja);
     return [
+        { id: 'demo_local_1', title: T('Industry Podcast', '業界ニュースチェック'),    startTime: '08:00', endTime: '08:30', reminder: true },
+        { id: 'demo_local_2', title: T('CRM Update', 'CRM更新'),                       startTime: '13:45', endTime: '14:45', reminder: false },
+        { id: 'demo_local_3', title: T('Networking Event', '業界交流会'),               startTime: '16:45', endTime: '17:15', reminder: true },
+        { id: 'demo_local_4', title: T('Sales Course', '営業スキル勉強'),               startTime: '20:00', endTime: '21:00', reminder: false }
+    ];
+}
+
+function _salesTeamMemo(locale) {
+    return L(locale,
+        '📋 Today\'s TODO\n· Send ProCo proposal before demo\n· Follow up on Acme Corp renewal\n· Update CRM after all calls\n\n💡 Notes\n· Mike wants Q3 pipeline report by Friday\n· Get competitor pricing data from Tom',
+        '📋 本日のTODO\n・B社向け提案書を商談前に送付\n・A社の更新確認フォローアップ\n・商談後にCRMを更新\n\n💡 メモ\n・木村部長がQ3パイプラインレポートを金曜までに要求\n・前田さんから競合価格情報を確認'
+    );
+}
+
+function _salesTeamCalendars(locale) {
+    const T = (en, ja) => L(locale, en, ja);
+    return [
+        { id: 'primary',          summary: T('My Calendar', 'マイカレンダー'), primary: true,  backgroundColor: '#3F51B5' },
+        { id: 'mike@sales.com',   summary: T('Mike Torres', '木村 部長'),      primary: false, backgroundColor: '#9C27B0' },
+        { id: 'tom@sales.com',    summary: T('Tom Chen', '前田 誠'),           primary: false, backgroundColor: '#FF9800' },
+        { id: 'lisa@sales.com',   summary: T('Lisa Park', '小林 誠'),          primary: false, backgroundColor: '#8BC34A' },
+        { id: 'emma@sales.com',   summary: T('Emma Davis', '大島 由香'),       primary: false, backgroundColor: '#E91E63' },
+        { id: 'mkt@sales.com',    summary: T('Marketing', 'マーケチーム'),     primary: false, backgroundColor: '#FF5722' }
+    ];
+}
+
+// ---------------------------------------------------------------------------
+// SCENARIO 3: manager
+// Jordan Lee (Eng Manager) / 山田 翔 (エンジニアリングマネージャー)
+// 1:1s, hiring, performance reviews
+// ---------------------------------------------------------------------------
+
+function _managerEvents(today, locale) {
+    const T = (en, ja) => L(locale, en, ja);
+    return [
+        // 9:00–10:00
         {
-            id: 'demo_local_1',
-            title: await getLocalizedMessage('demo_local_event_title_morning_routine'),
-            startTime: '08:00',
-            endTime: '08:30',
-            reminder: true
+            id: 'demo-1',
+            summary:  T('Department Planning', '部門計画MTG'),
+            description: T('Q3 team goals and resource planning.', 'Q3チーム目標・リソース・採用計画の共有。'),
+            location: T('Conf Room A', '第1会議室'),
+            start: { dateTime: _d(today, 9, 0) },
+            end:   { dateTime: _d(today, 10, 0) },
+            eventType: 'default',
+            calendarId: 'primary',
+            calendarName: T('My Calendar', 'マイカレンダー'),
+            calendarBackgroundColor: '#3F51B5',
+            calendarForegroundColor: '#FFFFFF',
+            htmlLink: 'https://calendar.google.com/calendar/event?eid=demo1'
         },
+        // 10:30–12:00
         {
-            id: 'demo_local_2',
-            title: await getLocalizedMessage('demo_local_event_title_focus_time'),
-            startTime: '13:45',
-            endTime: '14:45',
-            reminder: false
+            id: 'demo-2',
+            summary:  T('Performance Reviews', '評価シート作成'),
+            description: T('Write midyear feedback docs for reports.', '中期評価のフィードバックを記入。'),
+            location: '',
+            start: { dateTime: _d(today, 10, 30) },
+            end:   { dateTime: _d(today, 12, 0) },
+            eventType: 'default',
+            calendarId: 'primary',
+            calendarName: T('My Calendar', 'マイカレンダー'),
+            calendarBackgroundColor: '#3F51B5',
+            calendarForegroundColor: '#FFFFFF',
+            htmlLink: 'https://calendar.google.com/calendar/event?eid=demo2'
         },
+        // 12:30–13:30
         {
-            id: 'demo_local_3',
-            title: await getLocalizedMessage('demo_local_event_title_exercise'),
-            startTime: '16:45',
-            endTime: '17:15',
-            reminder: true
+            id: 'demo-3',
+            summary:  T('Lunch with CTO', 'CTOとのランチ'),
+            description: T('OKR alignment and Q4 headcount.', 'OKRのすり合わせとQ4採用計画について。'),
+            location: T('The Trident', '丸の内 ビストロ'),
+            start: { dateTime: _d(today, 12, 30) },
+            end:   { dateTime: _d(today, 13, 30) },
+            eventType: 'default',
+            calendarId: 'primary',
+            calendarName: T('My Calendar', 'マイカレンダー'),
+            calendarBackgroundColor: '#3F51B5',
+            calendarForegroundColor: '#FFFFFF',
+            htmlLink: 'https://calendar.google.com/calendar/event?eid=demo3'
         },
+        // 14:00–14:15
         {
-            id: 'demo_local_4',
-            title: await getLocalizedMessage('demo_local_event_title_reading_time'),
-            startTime: '20:00',
-            endTime: '21:00',
-            reminder: false
+            id: 'demo-4',
+            summary:  T('1:1 with Morgan', '中村さんとの1on1'),
+            description: T('Check in after code review feedback.', 'コードレビューのフィードバック後のフォロー。'),
+            location: '',
+            start: { dateTime: _d(today, 14, 0) },
+            end:   { dateTime: _d(today, 14, 15) },
+            eventType: 'default',
+            calendarId: 'morgan@eng.com',
+            calendarName: T('Morgan Davis', '中村 直樹'),
+            calendarBackgroundColor: '#4CAF50',
+            calendarForegroundColor: '#FFFFFF',
+            htmlLink: 'https://calendar.google.com/calendar/event?eid=demo4'
+        },
+        // 15:00–16:30
+        {
+            id: 'demo-5',
+            summary:  T('Quarterly Roadmap Review', '四半期ロードマップレビュー'),
+            description: T('Align on Q3 roadmap with PM team.', 'PMチームとQ3ロードマップを最終確認。'),
+            location: T('Zoom', 'オンライン'),
+            start: { dateTime: _d(today, 15, 0) },
+            end:   { dateTime: _d(today, 16, 30) },
+            eventType: 'default',
+            calendarId: 'alex@eng.com',
+            calendarName: T('Alex Rivera', '田中 健太'),
+            calendarBackgroundColor: '#4CAF50',
+            calendarForegroundColor: '#FFFFFF',
+            hangoutLink: 'https://meet.google.com/demo-meeting-3',
+            htmlLink: 'https://calendar.google.com/calendar/event?eid=demo5'
+        },
+        // 14:30–15:30  overlap A
+        {
+            id: 'demo-6',
+            summary:  T('1:1 with Jamie', '鈴木さんとの1on1'),
+            description: T('Design system feedback and roadmap priorities.', 'デザインシステムのフィードバックと優先度確認。'),
+            location: T('Conf Room B', '第2会議室'),
+            start: { dateTime: _d(today, 14, 30) },
+            end:   { dateTime: _d(today, 15, 30) },
+            eventType: 'default',
+            calendarId: 'jamie@eng.com',
+            calendarName: T('Jamie Kim', '鈴木 花'),
+            calendarBackgroundColor: '#E91E63',
+            calendarForegroundColor: '#FFFFFF',
+            htmlLink: 'https://calendar.google.com/calendar/event?eid=demo6'
+        },
+        // 14:45–15:45  overlap B
+        {
+            id: 'demo-7',
+            summary:  T('Sprint Planning', 'スプリント計画'),
+            description: T('Next sprint scope and capacity with PM.', '次スプリントのスコープとキャパシティ確認。'),
+            location: T('Zoom', 'オンライン'),
+            start: { dateTime: _d(today, 14, 45) },
+            end:   { dateTime: _d(today, 15, 45) },
+            eventType: 'default',
+            calendarId: 'alex@eng.com',
+            calendarName: T('Alex Rivera', '田中 健太'),
+            calendarBackgroundColor: '#9C27B0',
+            calendarForegroundColor: '#FFFFFF',
+            hangoutLink: 'https://meet.google.com/demo-meeting-4',
+            htmlLink: 'https://calendar.google.com/calendar/event?eid=demo7'
+        },
+        // 18:30–19:00
+        {
+            id: 'demo-8',
+            summary:  T('Leadership Team Dinner', 'リーダーシップチーム夕食'),
+            description: T('Quarterly leadership dinner.', '四半期のリーダーシップチーム夕食。'),
+            location: '',
+            start: { dateTime: _d(today, 18, 30) },
+            end:   { dateTime: _d(today, 19, 0) },
+            eventType: 'default',
+            calendarId: 'company@eng.com',
+            calendarName: T('Company', '全社'),
+            calendarBackgroundColor: '#607D8B',
+            calendarForegroundColor: '#FFFFFF',
+            htmlLink: 'https://calendar.google.com/calendar/event?eid=demo8'
+        },
+        // 15:00–16:00  overlap C
+        {
+            id: 'demo-9',
+            summary:  T('Eng Team All-Hands', 'エンジニアチーム全体MTG'),
+            description: T('Weekly engineering team sync.', 'エンジニアチームの週次全体MTG。'),
+            location: T('Zoom', 'オンライン'),
+            start: { dateTime: _d(today, 15, 0) },
+            end:   { dateTime: _d(today, 16, 0) },
+            eventType: 'default',
+            calendarId: 'primary',
+            calendarName: T('My Calendar', 'マイカレンダー'),
+            calendarBackgroundColor: '#FF5722',
+            calendarForegroundColor: '#FFFFFF',
+            htmlLink: 'https://calendar.google.com/calendar/event?eid=demo9'
+        },
+        // 14:15–16:15  overlap D (wide)
+        {
+            id: 'demo-10',
+            summary:  T('Hiring Panel Interview', '採用パネル面接'),
+            description: T('Panel interview: senior engineer candidate.', 'シニアエンジニア候補のパネル面接。'),
+            location: T('Blue Bottle Coffee', 'スタバ 渋谷店'),
+            start: { dateTime: _d(today, 14, 15) },
+            end:   { dateTime: _d(today, 16, 15) },
+            eventType: 'default',
+            calendarId: 'hr@eng.com',
+            calendarName: T('HR Team', '人事部'),
+            calendarBackgroundColor: '#00BCD4',
+            calendarForegroundColor: '#FFFFFF',
+            htmlLink: 'https://calendar.google.com/calendar/event?eid=demo10'
+        },
+        // 10:45–11:30  morning overlap A
+        {
+            id: 'demo-11',
+            summary:  T('1:1 with Riley', '林さんとの1on1'),
+            description: T('Sprint blockers and career growth goals.', 'スプリントの課題とキャリア目標について。'),
+            location: T('Conf Room C', '第3会議室'),
+            start: { dateTime: _d(today, 10, 45) },
+            end:   { dateTime: _d(today, 11, 30) },
+            eventType: 'default',
+            calendarId: 'riley@eng.com',
+            calendarName: T('Riley Park', '林 拓也'),
+            calendarBackgroundColor: '#8BC34A',
+            calendarForegroundColor: '#FFFFFF',
+            htmlLink: 'https://calendar.google.com/calendar/event?eid=demo11'
+        },
+        // 11:00–11:45  morning overlap B
+        {
+            id: 'demo-12',
+            summary:  T('Architecture Review', 'アーキテクチャレビュー'),
+            description: T('Auth service redesign proposal.', '認証サービスの再設計案をレビュー。'),
+            location: T('Conf Room C', '第3会議室'),
+            start: { dateTime: _d(today, 11, 0) },
+            end:   { dateTime: _d(today, 11, 45) },
+            eventType: 'default',
+            calendarId: 'riley@eng.com',
+            calendarName: T('Riley Park', '林 拓也'),
+            calendarBackgroundColor: '#FFC107',
+            calendarForegroundColor: '#000000',
+            htmlLink: 'https://calendar.google.com/calendar/event?eid=demo12'
+        },
+        // 11:15–11:30  morning overlap C (very short)
+        {
+            id: 'demo-13',
+            summary:  T('Budget Sign-off', '予算承認'),
+            description: T('Urgent: approve contractor extension.', '緊急: 契約社員の延長承認依頼。'),
+            location: '',
+            start: { dateTime: _d(today, 11, 15) },
+            end:   { dateTime: _d(today, 11, 30) },
+            eventType: 'default',
+            calendarId: 'hr@eng.com',
+            calendarName: T('HR Team', '人事部'),
+            calendarBackgroundColor: '#FF5722',
+            calendarForegroundColor: '#FFFFFF',
+            htmlLink: 'https://calendar.google.com/calendar/event?eid=demo13'
         }
     ];
 }
 
-/**
- * The demo memo content
- * @returns {Promise<string>} A promise that returns demo memo text
- */
-export async function getDemoMemoContent() {
-    return await getLocalizedMessage('demo_memo_content');
+function _managerLocalEvents(locale) {
+    const T = (en, ja) => L(locale, en, ja);
+    return [
+        { id: 'demo_local_1', title: T('Morning Journaling', '朝の振り返り'),          startTime: '08:00', endTime: '08:30', reminder: true },
+        { id: 'demo_local_2', title: T('Slack & Email Catch-up', 'メール・Slack整理'),  startTime: '13:45', endTime: '14:45', reminder: false },
+        { id: 'demo_local_3', title: T('Team Retro Notes', 'レトロ振り返りメモ'),       startTime: '16:45', endTime: '17:15', reminder: true },
+        { id: 'demo_local_4', title: T('Book Club', '技術書輪読会'),                    startTime: '20:00', endTime: '21:00', reminder: false }
+    ];
 }
 
-/**
- * Determine if in the demo mode
- * @returns {boolean} true if in the demo mode
- */
+function _managerMemo(locale) {
+    return L(locale,
+        '📋 Today\'s TODO\n· Write midyear feedback for Riley & Morgan\n· Prep questions for hiring panel\n· Review sprint capacity before planning\n\n💡 Notes\n· Share architecture review notes with team\n· Ask CTO about Q4 headcount',
+        '📋 本日のTODO\n・林・中村の中期評価フィードバックを記入\n・採用パネル面接の質問を準備\n・スプリント計画前にキャパシティを確認\n\n💡 メモ\n・アーキテクチャレビューのメモをチームに共有\n・Q4の採用枠をCTOに確認'
+    );
+}
+
+function _managerCalendars(locale) {
+    const T = (en, ja) => L(locale, en, ja);
+    return [
+        { id: 'primary',          summary: T('My Calendar', 'マイカレンダー'), primary: true,  backgroundColor: '#3F51B5' },
+        { id: 'alex@eng.com',     summary: T('Alex Rivera', '田中 健太'),      primary: false, backgroundColor: '#4CAF50' },
+        { id: 'riley@eng.com',    summary: T('Riley Park', '林 拓也'),         primary: false, backgroundColor: '#FF9800' },
+        { id: 'morgan@eng.com',   summary: T('Morgan Davis', '中村 直樹'),     primary: false, backgroundColor: '#E91E63' },
+        { id: 'jamie@eng.com',    summary: T('Jamie Kim', '鈴木 花'),          primary: false, backgroundColor: '#9C27B0' },
+        { id: 'hr@eng.com',       summary: T('HR Team', '人事部'),             primary: false, backgroundColor: '#00BCD4' },
+        { id: 'company@eng.com',  summary: T('Company', '全社'),               primary: false, backgroundColor: '#607D8B' }
+    ];
+}
+
+// ---------------------------------------------------------------------------
+// Public API — events, local events, memo, calendars
+// ---------------------------------------------------------------------------
+
+export async function getDemoEvents() {
+    const locale = await getLocale();
+    const scenario = getDemoScenario();
+    const today = new Date();
+    switch (scenario) {
+        case 'sales_team': return _salesTeamEvents(today, locale);
+        case 'manager':    return _managerEvents(today, locale);
+        default:           return _devTeamEvents(today, locale);
+    }
+}
+
+export async function getDemoLocalEvents() {
+    const locale = await getLocale();
+    const scenario = getDemoScenario();
+    switch (scenario) {
+        case 'sales_team': return _salesTeamLocalEvents(locale);
+        case 'manager':    return _managerLocalEvents(locale);
+        default:           return _devTeamLocalEvents(locale);
+    }
+}
+
+export async function getDemoMemoContent() {
+    const locale = await getLocale();
+    const scenario = getDemoScenario();
+    switch (scenario) {
+        case 'sales_team': return _salesTeamMemo(locale);
+        case 'manager':    return _managerMemo(locale);
+        default:           return _devTeamMemo(locale);
+    }
+}
+
+export async function getDemoCalendars() {
+    const locale = await getLocale();
+    const scenario = getDemoScenario();
+    switch (scenario) {
+        case 'sales_team': return _salesTeamCalendars(locale);
+        case 'manager':    return _managerCalendars(locale);
+        default:           return _devTeamCalendars(locale);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Demo mode on/off
+// ---------------------------------------------------------------------------
+
 export function isDemoMode() {
-    // Determine the demo mode from the URL parameters or settings
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get('demo') === 'true' || localStorage.getItem('sideTimeTableDemo') === 'true';
 }
 
-/**
- * Enable/disable the demo mode
- * @param {boolean} enabled - Whether to enable the demo mode
- */
 export function setDemoMode(enabled) {
     if (enabled) {
         localStorage.setItem('sideTimeTableDemo', 'true');
@@ -354,13 +855,13 @@ export function setDemoMode(enabled) {
     }
 }
 
+// ---------------------------------------------------------------------------
+// Demo current time
+// ---------------------------------------------------------------------------
+
 const DEMO_TIME_KEY = 'sideTimeTableDemoTime';
 const DEMO_TIME_DEFAULT = '12:00';
 
-/**
- * Get the demo current time as a Date object
- * @returns {Date} Today's date with the demo time applied
- */
 export function getDemoCurrentTime() {
     const stored = localStorage.getItem(DEMO_TIME_KEY) || DEMO_TIME_DEFAULT;
     const { hour, minute } = parseTimeString(stored);
@@ -369,10 +870,6 @@ export function getDemoCurrentTime() {
     return now;
 }
 
-/**
- * Set the demo current time
- * @param {string|null} timeString - Time in HH:MM format, or null to reset to default
- */
 export function setDemoCurrentTime(timeString) {
     if (timeString) {
         localStorage.setItem(DEMO_TIME_KEY, timeString);
@@ -381,26 +878,18 @@ export function setDemoCurrentTime(timeString) {
     }
 }
 
-/**
- * Get the stored demo time string (HH:MM), or the default
- * @returns {string}
- */
 export function getDemoCurrentTimeString() {
     return localStorage.getItem(DEMO_TIME_KEY) || DEMO_TIME_DEFAULT;
 }
 
-/**
- * Get current time: demo time when in demo mode, real time otherwise
- * @returns {Date}
- */
 export function getCurrentTime() {
     return isDemoMode() ? getDemoCurrentTime() : new Date();
 }
 
-/**
- * Get demo settings for the options page
- * @returns {Object} Demo settings object
- */
+// ---------------------------------------------------------------------------
+// Demo options settings (options page preview)
+// ---------------------------------------------------------------------------
+
 export function getDemoOptionsSettings() {
     return {
         openTime: '09:00',
@@ -415,39 +904,6 @@ export function getDemoOptionsSettings() {
         googleEventReminder: true,
         reminderMinutes: 10,
         googleIntegrated: true,
-        selectedCalendars: ['primary', 'work-calendar', 'personal']
+        selectedCalendars: ['primary', 'jordan@team.com', 'sam@team.com', 'jamie@team.com']
     };
-}
-
-/**
- * Get demo calendar list for the options page
- * @returns {Array} Demo calendar list
- */
-export async function getDemoCalendars() {
-    return [
-        {
-            id: 'primary',
-            summary: await getLocalizedMessage('demo_event_calendar_main'),
-            primary: true,
-            backgroundColor: '#039be5'
-        },
-        {
-            id: 'work-calendar',
-            summary: await getLocalizedMessage('demo_event_calendar_work'),
-            primary: false,
-            backgroundColor: '#0b8043'
-        },
-        {
-            id: 'business',
-            summary: await getLocalizedMessage('demo_event_calendar_business'),
-            primary: false,
-            backgroundColor: '#e67c73'
-        },
-        {
-            id: 'personal',
-            summary: await getLocalizedMessage('demo_event_calendar_private'),
-            primary: false,
-            backgroundColor: '#8e24aa'
-        }
-    ];
 }
