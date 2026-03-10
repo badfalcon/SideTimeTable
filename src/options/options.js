@@ -102,7 +102,9 @@ class OptionsPageManager {
         // --- Developer タブ (条件付き) ---
         try {
             const { enableDeveloperFeatures = false, enableReminderDebug = false } = await chrome.storage.local.get(['enableDeveloperFeatures', 'enableReminderDebug']);
-            const devEnabled = !!(enableDeveloperFeatures || enableReminderDebug);
+            const demoViaUrl = new URLSearchParams(window.location.search).get('demo') === 'true';
+            const demoViaLocalStorage = localStorage.getItem('sideTimeTableDemo') === 'true';
+            const devEnabled = !demoViaUrl && (!!(enableDeveloperFeatures || enableReminderDebug) || demoViaLocalStorage);
             if (devEnabled) {
                 this.extensionInfoCard = new ExtensionInfoCard();
                 this.extensionInfoCard.createElement();
