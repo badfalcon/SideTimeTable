@@ -97,16 +97,16 @@ export class GoogleEventManager {
      */
     async fetchEvents(targetDate = null) {
         // Dynamically check the current settings
+        // Use mock data in demo mode
+        if (isDemoMode()) {
+            return this._processDemoEvents();
+        }
+
         const settings = await loadSettings();
         const isGoogleIntegrated = settings.googleIntegrated === true;
 
         if (!isGoogleIntegrated) {
             return Promise.resolve();
-        }
-
-        // Use mock data in demo mode
-        if (isDemoMode()) {
-            return this._processDemoEvents();
         }
 
         // If there's a request in progress, return it (prevent duplicates)

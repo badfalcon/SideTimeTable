@@ -3,6 +3,7 @@
  */
 import { Component } from '../base/component.js';
 import { StorageHelper } from '../../../lib/storage-helper.js';
+import { isDemoMode, getDemoMemoContent } from '../../../lib/demo-data.js';
 
 const DEFAULT_HEIGHT = 150;
 const MIN_HEIGHT = 80;
@@ -92,6 +93,13 @@ export class MemoComponent extends Component {
 
     async _loadState() {
         try {
+            if (isDemoMode()) {
+                if (this.textarea) {
+                    this.textarea.value = await getDemoMemoContent();
+                }
+                this._applyHeight(false);
+                return;
+            }
             const result = await StorageHelper.getLocal(['memoContent', 'memoCollapsed', 'memoHeight']);
             if (this.textarea && result.memoContent !== undefined) {
                 this.textarea.value = result.memoContent;

@@ -485,6 +485,10 @@
     "message": "Reading Time",
     "description": "Demo local event: reading time"
   },
+  "demo_memo_content": {
+    "message": "📋 Today's TODO\n· Review proposal\n· Share with team\n· Prepare slides for evening meeting\n\n💡 Notes\n· Summarize new feature ideas\n· Check next week's schedule",
+    "description": "Demo memo: sample memo content"
+  },
   "preview": {
     "message": "Preview",
     "description": "Preview label for color settings"
