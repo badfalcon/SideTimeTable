@@ -3,6 +3,7 @@
  */
 import { Component } from '../base/component.js';
 import { CurrentTimeLineManager } from '../../../lib/current-time-line-manager.js';
+import { getCurrentTime } from '../../../lib/demo-data.js';
 
 export class TimelineComponent extends Component {
     constructor(options = {}) {
@@ -334,7 +335,7 @@ export class TimelineComponent extends Component {
             return;
         }
 
-        const now = new Date();
+        const now = getCurrentTime();
         const timeString = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
         this.scrollToTime(timeString);
     }
