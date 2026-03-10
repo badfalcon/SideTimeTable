@@ -255,7 +255,7 @@ export class DemoModeCard extends CardComponent {
             setDemoLang(e.target.value);
             this._loadScenarioOptions();
             this._showAlert(
-                `<i class="fas fa-language me-1"></i>Demo language changed — reload the side panel to apply.`,
+                `<i class="fas fa-language me-1"></i>Language changed — reload the side panel to apply.`,
                 'info', 4000
             );
         });
