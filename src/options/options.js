@@ -23,7 +23,8 @@ import {
     LanguageSettingsCard,
     ShortcutSettingsCard,
     ReminderSettingsCard,
-    DeveloperSettingsCard,
+    DemoModeCard,
+    StorageCard,
     ControlButtonsComponent
 } from './components/index.js';
 
@@ -40,7 +41,8 @@ class OptionsPageManager {
         this.languageSettingsCard = null;
         this.shortcutSettingsCard = null;
         this.reminderSettingsCard = null;
-        this.developerSettingsCard = null;
+        this.demoModeCard = null;
+        this.storageCard = null;
         this.controlButtons = null;
     }
 
@@ -100,11 +102,18 @@ class OptionsPageManager {
             const { enableDeveloperFeatures = false, enableReminderDebug = false } = await chrome.storage.local.get(['enableDeveloperFeatures', 'enableReminderDebug']);
             const devEnabled = !!(enableDeveloperFeatures || enableReminderDebug);
             if (devEnabled) {
-                this.developerSettingsCard = new DeveloperSettingsCard(null);
-                this.developerSettingsCard.createElement();
-                this.developerSettingsCard.setVisible(true);
-                this.developerSettingsCard.appendTo(tabDeveloper);
-                this.componentManager.components.set('developerSettings', this.developerSettingsCard);
+                this.demoModeCard = new DemoModeCard(null);
+                this.demoModeCard.createElement();
+                this.demoModeCard.setVisible(true);
+                this.demoModeCard.appendTo(tabDeveloper);
+                this.componentManager.components.set('demoMode', this.demoModeCard);
+
+                this.storageCard = new StorageCard();
+                this.storageCard.createElement();
+                this.storageCard.setVisible(true);
+                this.storageCard.appendTo(tabDeveloper);
+                this.componentManager.components.set('storage', this.storageCard);
+
                 // nav-pills の Developer ボタンを表示
                 const devBtn = document.getElementById('tab-developer-btn');
                 if (devBtn) devBtn.classList.remove('d-none');

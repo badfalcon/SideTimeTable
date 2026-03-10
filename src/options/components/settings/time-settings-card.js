@@ -290,28 +290,12 @@ export class TimeSettingsCard extends CardComponent {
      * @private
      */
     _showValidationError(message) {
-        // Remove existing error message
-        const existingError = this.element.querySelector('.time-validation-error');
-        if (existingError) {
-            existingError.remove();
-        }
-
-        // Create error message
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'alert alert-warning alert-dismissible fade show time-validation-error mt-2';
-        errorDiv.innerHTML = `
-            <small><strong>Warning:</strong> ${message}</small>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
-
-        this.bodyElement.appendChild(errorDiv);
-
-        // Auto-remove after 3 seconds
-        setTimeout(() => {
-            if (errorDiv.parentNode) {
-                errorDiv.remove();
-            }
-        }, 3000);
+        this.bodyElement?.querySelector('.time-validation-error')?.remove();
+        const el = document.createElement('div');
+        el.className = 'alert alert-warning alert-dismissible fade show time-validation-error mt-2';
+        el.innerHTML = `<small><strong>Warning:</strong> ${message}</small><button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+        this.bodyElement.appendChild(el);
+        setTimeout(() => { if (el.parentNode) el.remove(); }, 3000);
     }
 
     /**

@@ -167,6 +167,58 @@ export class CardComponent {
     }
 
     /**
+     * Copy text to clipboard with textarea fallback
+     * @param {string} text
+     */
+    async _copyToClipboard(text) {
+        try {
+            if (navigator.clipboard?.writeText) {
+                await navigator.clipboard.writeText(text);
+            } else {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+            }
+        } catch (error) {
+            console.error('Clipboard copy error:', error);
+        }
+    }
+
+    /**
+     * Show an alert notification in the card body
+     * @param {string} html - Inner HTML content
+     * @param {string} type - Bootstrap alert variant (info, success, warning, danger)
+     * @param {number} duration - Auto-dismiss delay in ms (0 = no auto-dismiss)
+     */
+    _showAlert(html, type = 'info', duration = 4000) {
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type} alert-dismissible fade show mt-3`;
+        notification.innerHTML = `${html}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+        this.bodyElement.appendChild(notification);
+        if (duration > 0) {
+            const timer = setTimeout(() => { if (notification.parentNode) notification.remove(); }, duration);
+            notification.addEventListener('closed.bs.alert', () => clearTimeout(timer), { once: true });
+        }
+    }
+
+    /**
+     * Show copy success feedback on a button
+     * @param {HTMLElement} button
+     */
+    _showCopyNotification(button) {
+        const originalHTML = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check text-success"></i>';
+        button.disabled = true;
+        setTimeout(() => {
+            button.innerHTML = originalHTML;
+            button.disabled = false;
+        }, 1000);
+    }
+
+    /**
      * Destroy the card
      */
     destroy() {
