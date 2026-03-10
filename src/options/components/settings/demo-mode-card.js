@@ -104,6 +104,7 @@ export class DemoModeCard extends CardComponent {
                 'info', 3000
             );
             if (this.onSettingsChange) this.onSettingsChange({ demoMode: enabled });
+            setTimeout(() => location.reload(), 800);
         });
 
         this.timeInput?.addEventListener('change', (e) => {
