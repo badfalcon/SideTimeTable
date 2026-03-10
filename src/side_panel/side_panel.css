@@ -407,6 +407,25 @@ h1 {
     border-left-color: var(--color-success);
 }
 
+.drag-preview.event {
+    position: absolute;
+    left: 40px;
+    right: 4px;
+    background: rgba(99, 102, 241, 0.1);
+    border: 2px dashed var(--color-primary);
+    border-radius: var(--radius-sm);
+    pointer-events: none;
+    z-index: 30;
+    font-size: 11px;
+    padding: 2px 6px;
+    color: var(--color-primary);
+    box-sizing: border-box;
+    overflow: hidden;
+    white-space: nowrap;
+    box-shadow: none;
+    transition: none;
+}
+
 /* Lane-density adjustments */
 .event.compact {
     padding-left: 6px;

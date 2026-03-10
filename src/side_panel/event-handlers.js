@@ -21,6 +21,17 @@ import {getDemoEvents, getDemoLocalEvents, isDemoMode} from '../lib/demo-data.js
 const TIMELINE_OFFSET = 30;
 
 /**
+ * Add a click listener that fires only when the mouse hasn't moved significantly (i.e. not a drag).
+ */
+function onClickOnly(el, handler, threshold = 5) {
+    let sx, sy;
+    el.addEventListener('mousedown', (e) => { sx = e.clientX; sy = e.clientY; });
+    el.addEventListener('click', (e) => {
+        if ((e.clientX - sx) ** 2 + (e.clientY - sy) ** 2 <= threshold ** 2) handler(e);
+    });
+}
+
+/**
  * Constants for event styling and layout
  */
 const EVENT_STYLING = {
@@ -86,16 +97,16 @@ export class GoogleEventManager {
      */
     async fetchEvents(targetDate = null) {
         // Dynamically check the current settings
+        // Use mock data in demo mode
+        if (isDemoMode()) {
+            return this._processDemoEvents();
+        }
+
         const settings = await loadSettings();
         const isGoogleIntegrated = settings.googleIntegrated === true;
 
         if (!isGoogleIntegrated) {
             return Promise.resolve();
-        }
-
-        // Use mock data in demo mode
-        if (isDemoMode()) {
-            return this._processDemoEvents();
         }
 
         // If there's a request in progress, return it (prevent duplicates)
@@ -267,8 +278,7 @@ export class GoogleEventManager {
         eventDiv.dataset.hangoutLink = event.hangoutLink || '';
 
         // Add the click event (using the new modal component)
-        eventDiv.addEventListener('click', () => {
-            // Get googleEventModal from parent SidePanelUIController
+        onClickOnly(eventDiv, () => {
             const sidePanelController = window.sidePanelController;
             if (sidePanelController && sidePanelController.googleEventModal) {
                 sidePanelController.googleEventModal.showEvent(event);
@@ -531,11 +541,8 @@ export class LocalEventManager {
      * @private
      */
     _setupEventEdit(eventDiv, event) {
-        eventDiv.addEventListener('click', () => {
-            // Use the callback to notify the parent component
-            if (this.onEventClick) {
-                this.onEventClick(event);
-            }
+        onClickOnly(eventDiv, () => {
+            if (this.onEventClick) this.onEventClick(event);
         });
     }
 

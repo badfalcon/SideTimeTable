@@ -172,53 +172,19 @@ export class ShortcutSettingsCard extends CardComponent {
         } catch (error) {
             // Final fallback: copy to clipboard
             this._copyToClipboard(shortcutsUrl);
-            this._showCopyNotification();
+            this._showUrlCopiedNotification();
         }
     }
 
     /**
-     * Copy to clipboard
+     * Show URL copied notification
      * @private
      */
-    async _copyToClipboard(text) {
-        try {
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                await navigator.clipboard.writeText(text);
-            } else {
-                // Fallback
-                const textArea = document.createElement('textarea');
-                textArea.value = text;
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-            }
-        } catch (error) {
-            console.error('Clipboard copy error:', error);
-        }
-    }
-
-    /**
-     * Show copy notification
-     * @private
-     */
-    _showCopyNotification() {
-        const notification = document.createElement('div');
-        notification.className = 'alert alert-info alert-dismissible fade show mt-3';
-        notification.innerHTML = `
-            <i class="fas fa-copy me-1"></i>
-            URL has been copied to clipboard. Please paste it into your browser's address bar to navigate.
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
-
-        this.bodyElement.appendChild(notification);
-
-        // Auto-remove after 5 seconds
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.remove();
-            }
-        }, 5000);
+    _showUrlCopiedNotification() {
+        this._showAlert(
+            '<i class="fas fa-copy me-1"></i>URL has been copied to clipboard. Please paste it into your browser\'s address bar to navigate.',
+            'info', 5000
+        );
     }
 
     /**

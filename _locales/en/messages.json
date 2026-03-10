@@ -485,6 +485,10 @@
     "message": "Reading Time",
     "description": "Demo local event: reading time"
   },
+  "demo_memo_content": {
+    "message": "📋 Today's TODO\n· Review proposal\n· Share with team\n· Prepare slides for evening meeting\n\n💡 Notes\n· Summarize new feature ideas\n· Check next week's schedule",
+    "description": "Demo memo: sample memo content"
+  },
   "preview": {
     "message": "Preview",
     "description": "Preview label for color settings"
@@ -966,15 +970,15 @@
     "description": "Error message when tutorial reset fails"
   },
   "reviewTitle": {
-    "message": "Enjoying SideTimeTable?",
+    "message": "How are you finding SideTimeTable?",
     "description": "Title of the review request modal"
   },
   "reviewMessage": {
-    "message": "Thank you for using SideTimeTable!\nWe would love to hear your feedback.",
+    "message": "Thank you for using SideTimeTable!\nWe'd love to hear about your experience.",
     "description": "Message body of the review request modal"
   },
   "reviewRateNow": {
-    "message": "Rate Now",
+    "message": "Write a Review",
     "description": "Button to open the Chrome Web Store review page"
   },
   "reviewLater": {

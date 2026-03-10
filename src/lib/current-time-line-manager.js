@@ -5,6 +5,8 @@
  * It is a dedicated class for visually displaying the current time on the timeline.
  */
 
+import { getCurrentTime } from './demo-data.js';
+
 /**
  * The class for managing the current time line
  */
@@ -112,7 +114,7 @@ export class CurrentTimeLineManager {
      */
     _shouldShowTimeLine() {
         try {
-            const today = new Date();
+            const today = getCurrentTime();
             return today.toDateString() === this.targetDate.toDateString();
         } catch (error) {
             console.warn('An error occurred in the current time line display determination:', error);
@@ -155,7 +157,7 @@ export class CurrentTimeLineManager {
     _updatePosition() {
         if (!this.timeLineElement) return;
 
-        const now = new Date();
+        const now = getCurrentTime();
         const hours = now.getHours();
         const minutes = now.getMinutes();
         const totalMinutes = hours * 60 + minutes;

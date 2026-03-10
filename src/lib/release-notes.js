@@ -7,14 +7,16 @@
 export const RELEASE_NOTES = [
     {
         version: '1.7.3',
-        date: '2026-03-08',
+        date: '2026-03-11',
         highlights: {
             en: [
+                'Drag on the timeline to create local events instantly',
                 'Collapsible memo panel at the bottom of the side panel',
                 'Renew the options page layout',
                 'Added 30-minute margins before and after the daily timeline'
             ],
             ja: [
+                'タイムラインをドラッグしてローカルイベントを即座に作成',
                 'サイドパネル下部に折りたたみ可能なメモパネルを追加',
                 'オプションページのレイアウトをリニューアル',
                 'タイムラインの1日の前後に30分の余白を追加'

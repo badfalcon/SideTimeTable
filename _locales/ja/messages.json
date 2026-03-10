@@ -485,6 +485,10 @@
     "message": "読書タイム",
     "description": "デモローカルイベント: 読書タイム"
   },
+  "demo_memo_content": {
+    "message": "📋 本日のTODO\n・企画書レビュー完了\n・チームに共有\n・夕方のミーティング資料を準備\n\n💡 メモ\n・新機能のアイデアをまとめる\n・来週の予定を確認する",
+    "description": "デモメモ: サンプルメモ内容"
+  },
   "preview": {
     "message": "プレビュー",
     "description": "カラー設定のプレビューラベル"
@@ -966,15 +970,15 @@
     "description": "チュートリアルリセット失敗メッセージ"
   },
   "reviewTitle": {
-    "message": "SideTimeTableはいかがですか？",
+    "message": "使い心地をお聞かせください",
     "description": "レビュー依頼モーダルのタイトル"
   },
   "reviewMessage": {
-    "message": "SideTimeTableをご利用いただきありがとうございます！\nよろしければ、ぜひレビューをお願いします。",
+    "message": "SideTimeTableをご利用いただきありがとうございます！\nご使用感をレビューでお聞かせいただけると嬉しいです。",
     "description": "レビュー依頼モーダルのメッセージ"
   },
   "reviewRateNow": {
-    "message": "今すぐレビュー",
+    "message": "レビューを書く",
     "description": "レビューページを開くボタン"
   },
   "reviewLater": {
