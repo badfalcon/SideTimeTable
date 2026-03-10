@@ -25,6 +25,7 @@ import {
     ReminderSettingsCard,
     DemoModeCard,
     StorageCard,
+    ExtensionInfoCard,
     ControlButtonsComponent
 } from './components/index.js';
 
@@ -43,6 +44,7 @@ class OptionsPageManager {
         this.reminderSettingsCard = null;
         this.demoModeCard = null;
         this.storageCard = null;
+        this.extensionInfoCard = null;
         this.controlButtons = null;
     }
 
@@ -102,6 +104,12 @@ class OptionsPageManager {
             const { enableDeveloperFeatures = false, enableReminderDebug = false } = await chrome.storage.local.get(['enableDeveloperFeatures', 'enableReminderDebug']);
             const devEnabled = !!(enableDeveloperFeatures || enableReminderDebug);
             if (devEnabled) {
+                this.extensionInfoCard = new ExtensionInfoCard();
+                this.extensionInfoCard.createElement();
+                this.extensionInfoCard.setVisible(true);
+                this.extensionInfoCard.appendTo(tabDeveloper);
+                this.componentManager.components.set('extensionInfo', this.extensionInfoCard);
+
                 this.demoModeCard = new DemoModeCard(null);
                 this.demoModeCard.createElement();
                 this.demoModeCard.setVisible(true);
