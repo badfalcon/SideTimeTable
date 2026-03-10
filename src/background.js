@@ -597,10 +597,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     const now = Date.now();
 
                     if (now - lastSyncTime < SYNC_THROTTLE_MS) {
-                        console.log(`[Auto Sync] Skipping sync (last sync was ${Math.round((now - lastSyncTime) / 1000)}s ago)`);
                         sendResponse({ success: true, skipped: true, message: 'Skipped (recently synced)' });
                     } else {
-                        console.log(`[Auto Sync] Starting sync (last sync was ${Math.round((now - lastSyncTime) / 1000)}s ago)`);
                         await syncAllReminders();
                         sendResponse({ success: true, skipped: false, message: 'Reminder sync completed' });
                     }
@@ -621,7 +619,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 // Alarm listener for event reminders and periodic sync
 chrome.alarms.onAlarm.addListener(async (alarm) => {
     if (alarm.name === 'daily_reminder_sync') {
-        console.log('[Alarm] Running daily reminder sync');
         await syncAllReminders();
     } else if (alarm.name.startsWith(AlarmManager.ALARM_PREFIX) || alarm.name.startsWith(AlarmManager.GOOGLE_ALARM_PREFIX)) {
         await AlarmManager.showReminderNotification(alarm.name);
@@ -702,7 +699,6 @@ async function setupDailyReminderSync() {
             periodInMinutes: 24 * 60 // Repeat every 24 hours
         });
 
-        console.log('Daily reminder sync alarm set for:', tomorrow);
     } catch (error) {
         console.error('Failed to setup daily reminder sync:', error);
     }
@@ -723,15 +719,9 @@ async function syncAllReminders() {
  */
 async function syncLocalEventReminders() {
     try {
-        console.log('[Reminder Sync] Starting local event reminder sync...');
-
-        // Get today's date
         const today = new Date();
         const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-
-        // Set reminders for all local events today
         await AlarmManager.setDateReminders(dateStr);
-        console.log(`[Reminder Sync] ✓ Synced local event reminders for ${dateStr}`);
     } catch (error) {
         console.error('[Reminder Sync] Failed to sync local event reminders:', error);
     }
@@ -742,34 +732,19 @@ async function syncLocalEventReminders() {
  */
 async function syncGoogleEventReminders() {
     try {
-        console.log('[Reminder Sync] Starting Google event reminder sync...');
-
-        // Check if Google event reminders are enabled
         const settings = await StorageHelper.get(['googleEventReminder', 'googleIntegrated', 'reminderMinutes'], {
             googleEventReminder: false,
             googleIntegrated: false,
             reminderMinutes: 5
         });
 
-        console.log('[Reminder Sync] Settings:', settings);
+        if (!settings.googleEventReminder) return;
+        if (!settings.googleIntegrated) return;
 
-        if (!settings.googleEventReminder) {
-            console.log('[Reminder Sync] Google event reminders are DISABLED in settings');
-            return;
-        }
-
-        if (!settings.googleIntegrated) {
-            console.log('[Reminder Sync] Google is NOT INTEGRATED');
-            return;
-        }
-
-        // Get today's date
         const today = new Date();
         const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-        console.log('[Reminder Sync] Target date:', dateStr);
 
         // Clear old reminders from previous dates
-        console.log('[Reminder Sync] Clearing old reminders from previous dates...');
         const allAlarms = await chrome.alarms.getAll();
         const oldReminders = allAlarms.filter(alarm =>
             alarm.name.startsWith(AlarmManager.GOOGLE_ALARM_PREFIX) &&
@@ -783,28 +758,9 @@ async function syncGoogleEventReminders() {
             await chrome.storage.local.remove(storageKey);
         }
 
-        if (oldReminders.length > 0) {
-            console.log(`[Reminder Sync] Cleared ${oldReminders.length} old reminders from previous dates`);
-        }
-
-        // Fetch today's Google events from PRIMARY calendar only
-        console.log('[Reminder Sync] Fetching Google events from PRIMARY calendar only...');
         const events = await getPrimaryCalendarEvents(today);
-        console.log('[Reminder Sync] Fetched events:', events ? events.length : 0);
-
         if (events && events.length > 0) {
-            console.log('[Reminder Sync] Event list:', events.map(e => ({
-                id: e.id,
-                summary: e.summary,
-                start: e.start?.dateTime || e.start?.date,
-                hasDateTime: !!e.start?.dateTime
-            })));
-
-            // Set reminders for all events
             await AlarmManager.setGoogleEventReminders(events, dateStr);
-            console.log(`[Reminder Sync] ✓ Synced ${events.length} Google event reminders for ${dateStr}`);
-        } else {
-            console.log('[Reminder Sync] No Google events found for today');
         }
 
         // Record sync timestamp
