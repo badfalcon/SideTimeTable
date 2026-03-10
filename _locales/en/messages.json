@@ -302,11 +302,11 @@
     "description": "Description for open side panel shortcut command"
   },
   "demo_event_summary_morning_meeting": {
-    "message": "Daily Stand-up",
+    "message": "Weekly Team Meeting",
     "description": "Demo event: morning meeting title"
   },
   "demo_event_description_morning_meeting": {
-    "message": "What did you do yesterday? Any blockers?",
+    "message": "Roadmap updates, sprint goals, and blockers.",
     "description": "Demo event: morning meeting description"
   },
   "demo_event_location_meeting_room_a": {
@@ -318,11 +318,11 @@
     "description": "Demo event: main calendar name"
   },
   "demo_event_summary_project_work": {
-    "message": "Feature Development",
+    "message": "Roadmap Planning",
     "description": "Demo event: project work title"
   },
   "demo_event_description_project_work": {
-    "message": "Focus time for sprint tasks.",
+    "message": "Deep work: Q3 feature prioritization.",
     "description": "Demo event: project work description"
   },
   "demo_event_calendar_work": {
@@ -330,27 +330,27 @@
     "description": "Demo event: work calendar name"
   },
   "demo_event_summary_lunch_meeting": {
-    "message": "Team Lunch",
+    "message": "Client Lunch",
     "description": "Demo event: lunch meeting title"
   },
   "demo_event_description_lunch_meeting": {
-    "message": "Lunch with the product team.",
+    "message": "Lunch with Acme Corp — discuss renewal.",
     "description": "Demo event: lunch meeting description"
   },
   "demo_event_location_restaurant_xyz": {
-    "message": "The Corner Bistro",
+    "message": "The Trident",
     "description": "Demo event: Restaurant name"
   },
   "demo_event_calendar_business": {
-    "message": "Client",
+    "message": "Clients",
     "description": "Demo event: business calendar name"
   },
   "demo_event_summary_short_call": {
-    "message": "Quick Sync",
+    "message": "Design Check-in",
     "description": "Demo event: short call title"
   },
   "demo_event_description_short_call": {
-    "message": "15-min check-in with manager.",
+    "message": "Quick sync with Jamie on landing page copy.",
     "description": "Demo event: short call description"
   },
   "demo_event_summary_design_review": {
@@ -358,7 +358,7 @@
     "description": "Demo event: design review title"
   },
   "demo_event_description_design_review": {
-    "message": "Review Figma mockups with design team.",
+    "message": "Sprint 14 — review onboarding flow Figma.",
     "description": "Demo event: design review description"
   },
   "demo_event_location_online": {
@@ -366,11 +366,11 @@
     "description": "Demo event: online"
   },
   "demo_event_summary_overlap_a": {
-    "message": "1:1 with Manager",
+    "message": "1:1 with Jordan",
     "description": "Demo event: overlap event A title"
   },
   "demo_event_description_overlap_a": {
-    "message": "Weekly 1:1 catch-up.",
+    "message": "Biweekly 1:1 with lead engineer.",
     "description": "Demo event: overlap event A description"
   },
   "demo_event_location_meeting_room_b": {
@@ -382,11 +382,11 @@
     "description": "Demo event: test calendar name"
   },
   "demo_event_summary_overlap_b": {
-    "message": "Vendor Call",
+    "message": "Vendor Demo",
     "description": "Demo event: overlap event B title"
   },
   "demo_event_description_overlap_b": {
-    "message": "Quarterly review with vendor.",
+    "message": "Amplitude analytics platform demo.",
     "description": "Demo event: overlap event B description"
   },
   "demo_event_calendar_private": {
@@ -394,11 +394,11 @@
     "description": "Demo event: private calendar name"
   },
   "demo_event_summary_overlap_c": {
-    "message": "Code Review",
+    "message": "Sprint Retrospective",
     "description": "Demo event: overlap event C title"
   },
   "demo_event_description_overlap_c": {
-    "message": "PR review for auth module.",
+    "message": "What went well? What to improve?",
     "description": "Demo event: overlap event C description"
   },
   "demo_event_calendar_overlap1": {
@@ -406,11 +406,11 @@
     "description": "Demo event: overlap calendar 1 name"
   },
   "demo_event_summary_overlap_d": {
-    "message": "UX Research Workshop",
+    "message": "Customer Interview",
     "description": "Demo event: overlap event D title"
   },
   "demo_event_description_overlap_d": {
-    "message": "Offsite workshop with UX team.",
+    "message": "User research: onboarding flow feedback.",
     "description": "Demo event: overlap event D description"
   },
   "demo_event_location_cafe": {
@@ -418,15 +418,15 @@
     "description": "Demo event: cafe"
   },
   "demo_event_calendar_overlap2": {
-    "message": "Training",
+    "message": "Research",
     "description": "Demo event: overlap calendar 2 name"
   },
   "demo_event_summary_morning_overlap_a": {
-    "message": "Candidate Interview",
+    "message": "Candidate Screen",
     "description": "Demo event: morning overlap A title"
   },
   "demo_event_description_morning_overlap_a": {
-    "message": "Technical interview — backend role.",
+    "message": "30-min phone screen — senior iOS role.",
     "description": "Demo event: morning overlap A description"
   },
   "demo_event_calendar_morning1": {
@@ -434,11 +434,11 @@
     "description": "Demo event: morning calendar 1 name"
   },
   "demo_event_summary_morning_overlap_b": {
-    "message": "Product Sync",
+    "message": "Backlog Grooming",
     "description": "Demo event: morning overlap B title"
   },
   "demo_event_description_morning_overlap_b": {
-    "message": "Weekly product team alignment.",
+    "message": "Refine and estimate upcoming sprint tickets.",
     "description": "Demo event: morning overlap B description"
   },
   "demo_event_location_meeting_room_c": {
@@ -450,11 +450,11 @@
     "description": "Demo event: morning calendar 2 name"
   },
   "demo_event_summary_morning_overlap_c": {
-    "message": "Quick Approval",
+    "message": "Incident Check",
     "description": "Demo event: morning overlap C title"
   },
   "demo_event_description_morning_overlap_c": {
-    "message": "Approve budget request.",
+    "message": "Urgent: production outage status update.",
     "description": "Demo event: morning overlap C description"
   },
   "demo_event_calendar_morning3": {
@@ -462,11 +462,11 @@
     "description": "Demo event: morning calendar 3 name"
   },
   "demo_event_summary_evening_review": {
-    "message": "Team Happy Hour",
+    "message": "Sprint Wrap-up Drinks",
     "description": "Demo event: evening review title"
   },
   "demo_event_description_evening_review": {
-    "message": "End-of-sprint celebration!",
+    "message": "End-of-sprint celebration at the bar!",
     "description": "Demo event: evening review description"
   },
   "demo_local_event_title_morning_routine": {
@@ -474,11 +474,11 @@
     "description": "Demo local event: morning routine"
   },
   "demo_local_event_title_focus_time": {
-    "message": "Deep Work",
+    "message": "No-Meeting Block",
     "description": "Demo local event: focus time"
   },
   "demo_local_event_title_exercise": {
-    "message": "Gym Session",
+    "message": "Gym",
     "description": "Demo local event: exercise time"
   },
   "demo_local_event_title_reading_time": {
@@ -486,7 +486,7 @@
     "description": "Demo local event: reading time"
   },
   "demo_memo_content": {
-    "message": "📋 Today's TODO\n· Finish PR review for auth module\n· Prep slides for design review\n· Schedule 1:1 for next week\n\n💡 Notes\n· Check Figma comments from design team\n· Review sprint velocity after planning",
+    "message": "📋 Today's TODO\n· Finish customer discovery notes\n· Update roadmap doc before design review\n· Follow up with Acme Corp after lunch\n\n💡 Notes\n· Figma comments need response by EOD\n· Check sprint capacity with Jordan",
     "description": "Demo memo: sample memo content"
   },
   "preview": {
