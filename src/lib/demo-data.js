@@ -918,7 +918,14 @@ export function getCurrentTime() {
 // Demo options settings (options page preview)
 // ---------------------------------------------------------------------------
 
+const _DEMO_SELECTED_CALENDARS = {
+    dev_team:   ['primary', 'jordan@team.com', 'sam@team.com', 'jamie@team.com', 'casey@team.com', 'eng-team@team.com', 'product@team.com', 'research@team.com'],
+    sales_team: ['primary', 'mike@sales.com', 'tom@sales.com', 'lisa@sales.com', 'emma@sales.com', 'mkt@sales.com'],
+    manager:    ['primary', 'alex@eng.com', 'riley@eng.com', 'morgan@eng.com', 'jamie@eng.com', 'hr@eng.com', 'company@eng.com']
+};
+
 export function getDemoOptionsSettings() {
+    const scenario = getDemoScenario();
     return {
         openTime: '09:00',
         closeTime: '18:00',
@@ -932,6 +939,6 @@ export function getDemoOptionsSettings() {
         googleEventReminder: true,
         reminderMinutes: 10,
         googleIntegrated: true,
-        selectedCalendars: ['primary', 'jordan@team.com', 'sam@team.com', 'jamie@team.com']
+        selectedCalendars: _DEMO_SELECTED_CALENDARS[scenario] || _DEMO_SELECTED_CALENDARS.dev_team
     };
 }
