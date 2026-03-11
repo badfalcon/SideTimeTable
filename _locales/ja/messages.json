@@ -173,6 +173,14 @@
     "message": "色設定",
     "description": "色設定セクションのタイトル"
   },
+  "panelBackgroundColor": {
+    "message": "パネル背景",
+    "description": "パネル背景色入力のラベル"
+  },
+  "googleEventDefaultColor": {
+    "message": "Googleイベントのデフォルト",
+    "description": "Googleイベントのデフォルト色入力のラベル"
+  },
   "workTimeColor": {
     "message": "業務時間",
     "description": "業務時間色入力のラベル"

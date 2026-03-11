@@ -84,6 +84,8 @@ export const DEFAULT_SETTINGS = {
     googleIntegrated: false,
     openTime: TIME_CONSTANTS.DEFAULT_OPEN_HOUR,
     closeTime: TIME_CONSTANTS.DEFAULT_CLOSE_HOUR,
+    panelBackgroundColor: '#f0f0f0', // Panel background color
+    googleEventDefaultColor: '#d3d3d3', // Default Google event color (lightgray)
     workTimeColor: '#d4d4d4',
     breakTimeFixed: false,
     breakTimeStart: TIME_CONSTANTS.DEFAULT_BREAK_START,

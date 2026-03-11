@@ -934,6 +934,8 @@ export function getDemoOptionsSettings() {
         breakTimeFixed: true,
         breakTimeStart: '12:00',
         breakTimeEnd: '13:00',
+        panelBackgroundColor: '#f0f0f0',
+        googleEventDefaultColor: '#d3d3d3',
         workTimeColor: '#d4d4d4',
         breakTimeColor: '#fda9ca',
         localEventColor: '#bbf2b1',

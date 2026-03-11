@@ -15,6 +15,8 @@ export class ColorSettingsCard extends CardComponent {
         this.onSettingsChange = onSettingsChange;
 
         // The color picker elements
+        this.panelBackgroundColorInput = null;
+        this.googleEventDefaultColorInput = null;
         this.workTimeColorInput = null;
         this.breakTimeColorInput = null;
         this.localEventColorInput = null;
@@ -22,6 +24,8 @@ export class ColorSettingsCard extends CardComponent {
 
         // The current setting values
         this.settings = {
+            panelBackgroundColor: '#f0f0f0',
+            googleEventDefaultColor: '#d3d3d3',
             workTimeColor: '#d4d4d4',
             breakTimeColor: '#fda9ca',
             localEventColor: '#bbf2b1',
@@ -49,9 +53,29 @@ export class ColorSettingsCard extends CardComponent {
     _createForm() {
         const form = document.createElement('form');
 
-        // The grid layout - all 4 color settings in one row
+        // The grid layout - all 6 color settings
         const row = document.createElement('div');
         row.className = 'row';
+
+        // The panel background color
+        const panelBgCol = this._createColorInputColumn(
+            'panel-background-color',
+            '__MSG_panelBackgroundColor__',
+            'Panel Background Color',
+            this.settings.panelBackgroundColor,
+            (input) => this.panelBackgroundColorInput = input
+        );
+        row.appendChild(panelBgCol);
+
+        // The Google event default color
+        const googleEventDefaultCol = this._createColorInputColumn(
+            'google-event-default-color',
+            '__MSG_googleEventDefaultColor__',
+            'Google Event Default Color',
+            this.settings.googleEventDefaultColor,
+            (input) => this.googleEventDefaultColorInput = input
+        );
+        row.appendChild(googleEventDefaultCol);
 
         // The work time color
         const workTimeCol = this._createColorInputColumn(
@@ -183,6 +207,8 @@ export class ColorSettingsCard extends CardComponent {
             {
                 nameKey: 'presetDefault',
                 colors: {
+                    panelBackgroundColor: '#f0f0f0',
+                    googleEventDefaultColor: '#d3d3d3',
                     workTimeColor: '#d4d4d4',
                     breakTimeColor: '#fda9ca',
                     localEventColor: '#bbf2b1',
@@ -192,6 +218,8 @@ export class ColorSettingsCard extends CardComponent {
             {
                 nameKey: 'presetMonochrome',
                 colors: {
+                    panelBackgroundColor: '#f5f5f5',
+                    googleEventDefaultColor: '#c0c0c0',
                     workTimeColor: '#f0f0f0',
                     breakTimeColor: '#c8c8c8',
                     localEventColor: '#e0e0e0',
@@ -201,6 +229,8 @@ export class ColorSettingsCard extends CardComponent {
             {
                 nameKey: 'presetPastel',
                 colors: {
+                    panelBackgroundColor: '#faf8f5',
+                    googleEventDefaultColor: '#e8e0d8',
                     workTimeColor: '#fdf2e9',
                     breakTimeColor: '#fde8f0',
                     localEventColor: '#e8f5e8',
@@ -210,6 +240,8 @@ export class ColorSettingsCard extends CardComponent {
             {
                 nameKey: 'presetVivid',
                 colors: {
+                    panelBackgroundColor: '#f5f5f0',
+                    googleEventDefaultColor: '#b8d4f0',
                     workTimeColor: '#ffecb3',
                     breakTimeColor: '#ffb3d9',
                     localEventColor: '#c8e6c9',
@@ -219,6 +251,8 @@ export class ColorSettingsCard extends CardComponent {
             {
                 nameKey: 'presetProtanopia',
                 colors: {
+                    panelBackgroundColor: '#f0f4f8',
+                    googleEventDefaultColor: '#b8d4f0',
                     workTimeColor: '#cce5ff',
                     breakTimeColor: '#ffe0b2',
                     localEventColor: '#fff3cd',
@@ -228,6 +262,8 @@ export class ColorSettingsCard extends CardComponent {
             {
                 nameKey: 'presetDeuteranopia',
                 colors: {
+                    panelBackgroundColor: '#f8f6f0',
+                    googleEventDefaultColor: '#d0c8b0',
                     workTimeColor: '#fff3cd',
                     breakTimeColor: '#f8d7e3',
                     localEventColor: '#cce5ff',
@@ -237,6 +273,8 @@ export class ColorSettingsCard extends CardComponent {
             {
                 nameKey: 'presetTritanopia',
                 colors: {
+                    panelBackgroundColor: '#f8f0f8',
+                    googleEventDefaultColor: '#d8c8d8',
                     workTimeColor: '#f8e8f8',
                     breakTimeColor: '#ffe8e8',
                     localEventColor: '#d4f0d4',
@@ -327,6 +365,18 @@ export class ColorSettingsCard extends CardComponent {
      */
     _setupEventListeners() {
         // The change events for each color picker
+        this.panelBackgroundColorInput?.addEventListener('input', (e) => {
+            this._updatePreview(e.target, e.target.value);
+        });
+
+        this.panelBackgroundColorInput?.addEventListener('change', () => this._handleColorChange());
+
+        this.googleEventDefaultColorInput?.addEventListener('input', (e) => {
+            this._updatePreview(e.target, e.target.value);
+        });
+
+        this.googleEventDefaultColorInput?.addEventListener('change', () => this._handleColorChange());
+
         this.workTimeColorInput?.addEventListener('input', (e) => {
             this._updatePreview(e.target, e.target.value);
         });
@@ -371,6 +421,8 @@ export class ColorSettingsCard extends CardComponent {
      */
     getSettings() {
         return {
+            panelBackgroundColor: this.panelBackgroundColorInput?.value || this.settings.panelBackgroundColor,
+            googleEventDefaultColor: this.googleEventDefaultColorInput?.value || this.settings.googleEventDefaultColor,
             workTimeColor: this.workTimeColorInput?.value || this.settings.workTimeColor,
             breakTimeColor: this.breakTimeColorInput?.value || this.settings.breakTimeColor,
             localEventColor: this.localEventColorInput?.value || this.settings.localEventColor,
@@ -383,6 +435,16 @@ export class ColorSettingsCard extends CardComponent {
      */
     updateSettings(settings) {
         this.settings = { ...this.settings, ...settings };
+
+        if (this.panelBackgroundColorInput) {
+            this.panelBackgroundColorInput.value = this.settings.panelBackgroundColor;
+            this._updatePreview(this.panelBackgroundColorInput, this.settings.panelBackgroundColor);
+        }
+
+        if (this.googleEventDefaultColorInput) {
+            this.googleEventDefaultColorInput.value = this.settings.googleEventDefaultColor;
+            this._updatePreview(this.googleEventDefaultColorInput, this.settings.googleEventDefaultColor);
+        }
 
         if (this.workTimeColorInput) {
             this.workTimeColorInput.value = this.settings.workTimeColor;
@@ -410,6 +472,8 @@ export class ColorSettingsCard extends CardComponent {
      */
     resetToDefaults() {
         const defaultSettings = {
+            panelBackgroundColor: '#f0f0f0',
+            googleEventDefaultColor: '#d3d3d3',
             workTimeColor: '#d4d4d4',
             breakTimeColor: '#fda9ca',
             localEventColor: '#bbf2b1',
@@ -427,7 +491,7 @@ export class ColorSettingsCard extends CardComponent {
         const eventType = enabled ? 'input' : 'change';
 
         // Remove the existing listeners and reset
-        [this.workTimeColorInput, this.breakTimeColorInput, this.localEventColorInput, this.currentTimeLineColorInput]
+        [this.panelBackgroundColorInput, this.googleEventDefaultColorInput, this.workTimeColorInput, this.breakTimeColorInput, this.localEventColorInput, this.currentTimeLineColorInput]
             .filter(input => input)
             .forEach(input => {
                 const newInput = input.cloneNode(true);

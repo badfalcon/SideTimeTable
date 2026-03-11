@@ -1,7 +1,9 @@
 :root {
+    --side-calendar-panel-background-color: #f0f0f0;
     --side-calendar-work-time-color: #d4d4d4;
     --side-calendar-break-time-color: #fda9ca;
     --side-calendar-local-event-color: #bbf2b1;
+    --side-calendar-google-event-default-color: #d3d3d3;
     --side-calendar-current-time-line-color: #ff0000;
 }
 
@@ -11,7 +13,7 @@ html {
 
 body {
     font-family: Arial, sans-serif;
-    background-color: #f0f0f0;
+    background-color: var(--side-calendar-panel-background-color);
     position: relative;
     overflow: hidden;
     height: 100%;
@@ -42,7 +44,7 @@ h1 {
 #sideTimeTableHeaderWrapper{
     flex: 0 0 auto;
     z-index: 100;
-    background-color: #f0f0f0;
+    background-color: var(--side-calendar-panel-background-color);
     padding-bottom: 10px;
     margin: 8px 8px 0;
 }
@@ -51,7 +53,7 @@ h1 {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #f0f0f0;
+    background-color: var(--side-calendar-panel-background-color);
     width: 100%;
     position: relative; /* For absolute positioning of date navigation */
 }
@@ -191,7 +193,7 @@ h1 {
     /* width: 200px; - Removed fixed width, dynamic width is set by EventLayoutManager */
     box-sizing: border-box;
     padding: 5px 10px;
-    background: lightgray;
+    background: var(--side-calendar-google-event-default-color);
     border-radius: 5px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
     z-index: 21;

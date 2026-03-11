@@ -180,6 +180,8 @@ class OptionsPageManager {
             });
 
             this.colorSettingsCard.updateSettings({
+                panelBackgroundColor: settings.panelBackgroundColor,
+                googleEventDefaultColor: settings.googleEventDefaultColor,
                 workTimeColor: settings.workTimeColor,
                 breakTimeColor: settings.breakTimeColor,
                 localEventColor: settings.localEventColor,
@@ -321,6 +323,8 @@ class OptionsPageManager {
             const currentSettings = await loadSettings();
             const updatedSettings = {
                 ...currentSettings,
+                panelBackgroundColor: colorSettings.panelBackgroundColor,
+                googleEventDefaultColor: colorSettings.googleEventDefaultColor,
                 workTimeColor: colorSettings.workTimeColor,
                 breakTimeColor: colorSettings.breakTimeColor,
                 localEventColor: colorSettings.localEventColor,
@@ -330,6 +334,8 @@ class OptionsPageManager {
             await saveSettings(updatedSettings);
 
             // Update the CSS variables immediately
+            document.documentElement.style.setProperty('--side-calendar-panel-background-color', colorSettings.panelBackgroundColor);
+            document.documentElement.style.setProperty('--side-calendar-google-event-default-color', colorSettings.googleEventDefaultColor);
             document.documentElement.style.setProperty('--side-calendar-work-time-color', colorSettings.workTimeColor);
             document.documentElement.style.setProperty('--side-calendar-break-time-color', colorSettings.breakTimeColor);
             document.documentElement.style.setProperty('--side-calendar-local-event-color', colorSettings.localEventColor);
@@ -404,6 +410,8 @@ class OptionsPageManager {
             this.reminderSettingsCard.resetToDefaults();
 
             // Reset the CSS variables too
+            document.documentElement.style.setProperty('--side-calendar-panel-background-color', DEFAULT_SETTINGS.panelBackgroundColor);
+            document.documentElement.style.setProperty('--side-calendar-google-event-default-color', DEFAULT_SETTINGS.googleEventDefaultColor);
             document.documentElement.style.setProperty('--side-calendar-work-time-color', DEFAULT_SETTINGS.workTimeColor);
             document.documentElement.style.setProperty('--side-calendar-break-time-color', DEFAULT_SETTINGS.breakTimeColor);
             document.documentElement.style.setProperty('--side-calendar-local-event-color', DEFAULT_SETTINGS.localEventColor);
