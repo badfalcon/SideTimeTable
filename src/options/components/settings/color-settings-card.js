@@ -58,7 +58,7 @@ export class ColorSettingsCard extends CardComponent {
         const row = document.createElement('div');
         row.className = 'row';
 
-        // The timeline background color
+        // --- Timeline area ---
         const timelineBgCol = this._createColorInputColumn(
             'timeline-background-color',
             '__MSG_timelineBackgroundColor__',
@@ -68,27 +68,6 @@ export class ColorSettingsCard extends CardComponent {
         );
         row.appendChild(timelineBgCol);
 
-        // The panel (header/memo) background color
-        const panelBgCol = this._createColorInputColumn(
-            'panel-background-color',
-            '__MSG_panelBackgroundColor__',
-            'Header/Memo Background Color',
-            this.settings.panelBackgroundColor,
-            (input) => this.panelBackgroundColorInput = input
-        );
-        row.appendChild(panelBgCol);
-
-        // The Google event default color
-        const googleEventDefaultCol = this._createColorInputColumn(
-            'google-event-default-color',
-            '__MSG_googleEventDefaultColor__',
-            'Google Event Default Color',
-            this.settings.googleEventDefaultColor,
-            (input) => this.googleEventDefaultColorInput = input
-        );
-        row.appendChild(googleEventDefaultCol);
-
-        // The work time color
         const workTimeCol = this._createColorInputColumn(
             'work-time-color',
             '__MSG_workTimeColor__',
@@ -98,7 +77,6 @@ export class ColorSettingsCard extends CardComponent {
         );
         row.appendChild(workTimeCol);
 
-        // The break time color
         const breakTimeCol = this._createColorInputColumn(
             'break-time-color',
             '__MSG_breakTimeColor__',
@@ -108,7 +86,26 @@ export class ColorSettingsCard extends CardComponent {
         );
         row.appendChild(breakTimeCol);
 
-        // The local event color
+        // --- Header / memo area ---
+        const panelBgCol = this._createColorInputColumn(
+            'panel-background-color',
+            '__MSG_panelBackgroundColor__',
+            'Header/Memo Background Color',
+            this.settings.panelBackgroundColor,
+            (input) => this.panelBackgroundColorInput = input
+        );
+        row.appendChild(panelBgCol);
+
+        // --- Event colors ---
+        const googleEventDefaultCol = this._createColorInputColumn(
+            'google-event-default-color',
+            '__MSG_googleEventDefaultColor__',
+            'Google Event Default Color',
+            this.settings.googleEventDefaultColor,
+            (input) => this.googleEventDefaultColorInput = input
+        );
+        row.appendChild(googleEventDefaultCol);
+
         const localEventCol = this._createColorInputColumn(
             'local-event-color',
             '__MSG_localEventColor__',
@@ -118,7 +115,7 @@ export class ColorSettingsCard extends CardComponent {
         );
         row.appendChild(localEventCol);
 
-        // The current time line color
+        // --- Indicator ---
         const currentTimeLineCol = this._createColorInputColumn(
             'current-time-line-color',
             '__MSG_currentTimeLineColor__',
