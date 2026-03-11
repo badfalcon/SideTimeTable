@@ -6,6 +6,8 @@
  * isDemoMode() always returns false, so no demo code path is reachable.
  */
 
+export const DEMO_BUILD = false;
+
 export function isDemoMode()              { return false; }
 export function setDemoMode()             {}
 
