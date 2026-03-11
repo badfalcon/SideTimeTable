@@ -173,9 +173,13 @@
     "message": "Color Settings",
     "description": "Section title for color settings"
   },
+  "timelineBackgroundColor": {
+    "message": "Timeline Background",
+    "description": "Label for timeline (body) background color input"
+  },
   "panelBackgroundColor": {
-    "message": "Panel Background",
-    "description": "Label for panel background color input"
+    "message": "Header/Memo Background",
+    "description": "Label for header and memo panel background color input"
   },
   "googleEventDefaultColor": {
     "message": "Google Event Default",

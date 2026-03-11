@@ -24,6 +24,7 @@ export class ColorSettingsCard extends CardComponent {
         // The color picker elements
         this.panelBackgroundColorInput = null;
         this.googleEventDefaultColorInput = null;
+        this.timelineBackgroundColorInput = null;
         this.workTimeColorInput = null;
         this.breakTimeColorInput = null;
         this.localEventColorInput = null;
@@ -53,15 +54,25 @@ export class ColorSettingsCard extends CardComponent {
     _createForm() {
         const form = document.createElement('form');
 
-        // The grid layout - all 6 color settings
+        // The grid layout - all 7 color settings
         const row = document.createElement('div');
         row.className = 'row';
 
-        // The panel background color
+        // The timeline background color
+        const timelineBgCol = this._createColorInputColumn(
+            'timeline-background-color',
+            '__MSG_timelineBackgroundColor__',
+            'Timeline Background Color',
+            this.settings.timelineBackgroundColor,
+            (input) => this.timelineBackgroundColorInput = input
+        );
+        row.appendChild(timelineBgCol);
+
+        // The panel (header/memo) background color
         const panelBgCol = this._createColorInputColumn(
             'panel-background-color',
             '__MSG_panelBackgroundColor__',
-            'Panel Background Color',
+            'Header/Memo Background Color',
             this.settings.panelBackgroundColor,
             (input) => this.panelBackgroundColorInput = input
         );
@@ -207,6 +218,7 @@ export class ColorSettingsCard extends CardComponent {
             {
                 nameKey: 'presetDefault',
                 colors: {
+                    timelineBackgroundColor: '#f0f0f0',
                     panelBackgroundColor: '#f0f0f0',
                     googleEventDefaultColor: '#d3d3d3',
                     workTimeColor: '#d4d4d4',
@@ -218,7 +230,8 @@ export class ColorSettingsCard extends CardComponent {
             {
                 nameKey: 'presetMonochrome',
                 colors: {
-                    panelBackgroundColor: '#f5f5f5',
+                    timelineBackgroundColor: '#f5f5f5',
+                    panelBackgroundColor: '#ebebeb',
                     googleEventDefaultColor: '#c0c0c0',
                     workTimeColor: '#f0f0f0',
                     breakTimeColor: '#c8c8c8',
@@ -229,7 +242,8 @@ export class ColorSettingsCard extends CardComponent {
             {
                 nameKey: 'presetPastel',
                 colors: {
-                    panelBackgroundColor: '#faf8f5',
+                    timelineBackgroundColor: '#faf8f5',
+                    panelBackgroundColor: '#f5f0ea',
                     googleEventDefaultColor: '#e8e0d8',
                     workTimeColor: '#fdf2e9',
                     breakTimeColor: '#fde8f0',
@@ -240,7 +254,8 @@ export class ColorSettingsCard extends CardComponent {
             {
                 nameKey: 'presetVivid',
                 colors: {
-                    panelBackgroundColor: '#f5f5f0',
+                    timelineBackgroundColor: '#f5f5f0',
+                    panelBackgroundColor: '#eeeeea',
                     googleEventDefaultColor: '#b8d4f0',
                     workTimeColor: '#ffecb3',
                     breakTimeColor: '#ffb3d9',
@@ -251,7 +266,8 @@ export class ColorSettingsCard extends CardComponent {
             {
                 nameKey: 'presetProtanopia',
                 colors: {
-                    panelBackgroundColor: '#f0f4f8',
+                    timelineBackgroundColor: '#f0f4f8',
+                    panelBackgroundColor: '#e8eef4',
                     googleEventDefaultColor: '#b8d4f0',
                     workTimeColor: '#cce5ff',
                     breakTimeColor: '#ffe0b2',
@@ -262,7 +278,8 @@ export class ColorSettingsCard extends CardComponent {
             {
                 nameKey: 'presetDeuteranopia',
                 colors: {
-                    panelBackgroundColor: '#f8f6f0',
+                    timelineBackgroundColor: '#f8f6f0',
+                    panelBackgroundColor: '#f0ede5',
                     googleEventDefaultColor: '#d0c8b0',
                     workTimeColor: '#fff3cd',
                     breakTimeColor: '#f8d7e3',
@@ -273,7 +290,8 @@ export class ColorSettingsCard extends CardComponent {
             {
                 nameKey: 'presetTritanopia',
                 colors: {
-                    panelBackgroundColor: '#f8f0f8',
+                    timelineBackgroundColor: '#f8f0f8',
+                    panelBackgroundColor: '#f0e8f0',
                     googleEventDefaultColor: '#d8c8d8',
                     workTimeColor: '#f8e8f8',
                     breakTimeColor: '#ffe8e8',

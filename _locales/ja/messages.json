@@ -173,9 +173,13 @@
     "message": "色設定",
     "description": "色設定セクションのタイトル"
   },
+  "timelineBackgroundColor": {
+    "message": "タイムライン背景",
+    "description": "タイムライン（ボディ）背景色入力のラベル"
+  },
   "panelBackgroundColor": {
-    "message": "パネル背景",
-    "description": "パネル背景色入力のラベル"
+    "message": "ヘッダ/メモ背景",
+    "description": "ヘッダおよびメモパネルの背景色入力のラベル"
   },
   "googleEventDefaultColor": {
     "message": "Googleイベントのデフォルト",
