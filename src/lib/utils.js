@@ -84,14 +84,14 @@ export const DEFAULT_SETTINGS = {
     googleIntegrated: false,
     openTime: TIME_CONSTANTS.DEFAULT_OPEN_HOUR,
     closeTime: TIME_CONSTANTS.DEFAULT_CLOSE_HOUR,
-    timelineBackgroundColor: '#f0f0f0', // Timeline (body) background color
-    panelBackgroundColor: '#f0f0f0', // Header and memo panel background color
-    googleEventDefaultColor: '#d3d3d3', // Default Google event color (lightgray)
-    workTimeColor: '#d4d4d4',
+    timelineBackgroundColor: '#ffffff', // Timeline (body) background color
+    panelBackgroundColor: '#ffffff', // Header and memo panel background color
+    googleEventDefaultColor: '#fff0b8', // Default Google event color
+    workTimeColor: '#e3e3e3',
     breakTimeFixed: false,
     breakTimeStart: TIME_CONSTANTS.DEFAULT_BREAK_START,
     breakTimeEnd: TIME_CONSTANTS.DEFAULT_BREAK_END,
-    breakTimeColor: '#fda9ca', // Break time background color
+    breakTimeColor: '#bcdcfb', // Break time background color
     localEventColor: '#bbf2b1',
     currentTimeLineColor: '#ff0000', // Current time line color
     selectedCalendars: [], // An array of the selected calendar IDs

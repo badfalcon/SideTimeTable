@@ -1,10 +1,10 @@
 :root {
-    --side-calendar-timeline-background-color: #f0f0f0;
-    --side-calendar-panel-background-color: #f0f0f0;
-    --side-calendar-work-time-color: #d4d4d4;
-    --side-calendar-break-time-color: #fda9ca;
+    --side-calendar-timeline-background-color: #ffffff;
+    --side-calendar-panel-background-color: #ffffff;
+    --side-calendar-work-time-color: #e3e3e3;
+    --side-calendar-break-time-color: #bcdcfb;
     --side-calendar-local-event-color: #bbf2b1;
-    --side-calendar-google-event-default-color: #d3d3d3;
+    --side-calendar-google-event-default-color: #fff0b8;
     --side-calendar-current-time-line-color: #ff0000;
 }
 
