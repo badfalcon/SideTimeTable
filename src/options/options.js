@@ -23,6 +23,7 @@ import {
     LanguageSettingsCard,
     ShortcutSettingsCard,
     ReminderSettingsCard,
+    ReminderDebugCard,
     DemoModeCard,
     StorageCard,
     ExtensionInfoCard,
@@ -42,6 +43,7 @@ class OptionsPageManager {
         this.languageSettingsCard = null;
         this.shortcutSettingsCard = null;
         this.reminderSettingsCard = null;
+        this.reminderDebugCard = null;
         this.demoModeCard = null;
         this.storageCard = null;
         this.extensionInfoCard = null;
@@ -119,6 +121,12 @@ class OptionsPageManager {
                     this.demoModeCard.appendTo(tabDeveloper);
                     this.componentManager.components.set('demoMode', this.demoModeCard);
                 }
+
+                this.reminderDebugCard = new ReminderDebugCard();
+                this.reminderDebugCard.createElement();
+                this.reminderDebugCard.setVisible(true);
+                this.reminderDebugCard.appendTo(tabDeveloper);
+                this.componentManager.components.set('reminderDebug', this.reminderDebugCard);
 
                 this.storageCard = new StorageCard();
                 this.storageCard.createElement();
