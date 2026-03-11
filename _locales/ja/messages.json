@@ -302,191 +302,191 @@
     "description": "サイドパネル開閉ショートカットコマンドの説明"
   },
   "demo_event_summary_morning_meeting": {
-    "message": "朝会",
-    "description": "デモイベント: 朝会のタイトル"
+    "message": "チーム定例MTG",
+    "description": "デモイベント: チーム定例MTGのタイトル"
   },
   "demo_event_description_morning_meeting": {
-    "message": "チームの朝会です。",
-    "description": "デモイベント: 朝会の説明"
+    "message": "進捗確認・今週の優先度・懸案事項の共有。",
+    "description": "デモイベント: チーム定例MTGの説明"
   },
   "demo_event_location_meeting_room_a": {
-    "message": "会議室A",
-    "description": "デモイベント: 会議室A"
+    "message": "第1会議室",
+    "description": "デモイベント: 第1会議室"
   },
   "demo_event_calendar_main": {
-    "message": "メインカレンダー",
-    "description": "デモイベント: メインカレンダー名"
+    "message": "マイカレンダー",
+    "description": "デモイベント: マイカレンダー名"
   },
   "demo_event_summary_project_work": {
-    "message": "プロジェクト作業",
-    "description": "デモイベント: プロジェクト作業のタイトル"
+    "message": "機能実装",
+    "description": "デモイベント: 機能実装のタイトル"
   },
   "demo_event_description_project_work": {
-    "message": "プロジェクトの進捗作業。",
-    "description": "デモイベント: プロジェクト作業の説明"
+    "message": "通知機能のバックエンド実装に集中。",
+    "description": "デモイベント: 機能実装の説明"
   },
   "demo_event_calendar_work": {
-    "message": "仕事用カレンダー",
-    "description": "デモイベント: 仕事用カレンダー名"
+    "message": "仕事",
+    "description": "デモイベント: 仕事カレンダー名"
   },
   "demo_event_summary_lunch_meeting": {
-    "message": "ランチミーティング",
-    "description": "デモイベント: ランチミーティングのタイトル"
+    "message": "取引先ランチ商談",
+    "description": "デモイベント: ランチ商談のタイトル"
   },
   "demo_event_description_lunch_meeting": {
-    "message": "レストランでの打ち合わせ。",
-    "description": "デモイベント: ランチミーティングの説明"
+    "message": "A社と来期の保守契約更新について。",
+    "description": "デモイベント: ランチ商談の説明"
   },
   "demo_event_location_restaurant_xyz": {
-    "message": "レストランXYZ",
-    "description": "デモイベント: レストランXYZ"
+    "message": "丸の内 ビストロ",
+    "description": "デモイベント: レストラン名"
   },
   "demo_event_calendar_business": {
-    "message": "ビジネスカレンダー",
-    "description": "デモイベント: ビジネスカレンダー名"
+    "message": "商談・外部",
+    "description": "デモイベント: 商談カレンダー名"
   },
   "demo_event_summary_short_call": {
-    "message": "短い電話会議",
-    "description": "デモイベント: 短い電話会議のタイトル"
+    "message": "上長への進捗報告",
+    "description": "デモイベント: 進捗報告のタイトル"
   },
   "demo_event_description_short_call": {
-    "message": "15分の電話会議。",
-    "description": "デモイベント: 短い電話会議の説明"
+    "message": "午後タスクの確認と差し戻し対応の承認依頼。",
+    "description": "デモイベント: 進捗報告の説明"
   },
   "demo_event_summary_design_review": {
-    "message": "デザインレビュー",
-    "description": "デモイベント: デザインレビューのタイトル"
+    "message": "UI仕様レビュー",
+    "description": "デモイベント: UI仕様レビューのタイトル"
   },
   "demo_event_description_design_review": {
-    "message": "オンラインでデザインレビュー。",
-    "description": "デモイベント: デザインレビューの説明"
+    "message": "v2.4 リリース向けの画面仕様を確認。",
+    "description": "デモイベント: UI仕様レビューの説明"
   },
   "demo_event_location_online": {
     "message": "オンライン",
     "description": "デモイベント: オンライン"
   },
   "demo_event_summary_overlap_a": {
-    "message": "重複イベントA",
-    "description": "デモイベント: 重複イベントAのタイトル"
+    "message": "マーケとの企画すり合わせ",
+    "description": "デモイベント: 企画すり合わせのタイトル"
   },
   "demo_event_description_overlap_a": {
-    "message": "会議室Bでの打ち合わせ。",
-    "description": "デモイベント: 重複イベントAの説明"
+    "message": "来期キャンペーンの機能要件を調整。",
+    "description": "デモイベント: 企画すり合わせの説明"
   },
   "demo_event_location_meeting_room_b": {
-    "message": "会議室B",
-    "description": "デモイベント: 会議室B"
+    "message": "第2会議室",
+    "description": "デモイベント: 第2会議室"
   },
   "demo_event_calendar_test": {
-    "message": "テストカレンダー",
-    "description": "デモイベント: テストカレンダー名"
+    "message": "チーム",
+    "description": "デモイベント: チームカレンダー名"
   },
   "demo_event_summary_overlap_b": {
-    "message": "重複イベントB",
-    "description": "デモイベント: 重複イベントBのタイトル"
+    "message": "ベンダーMTG",
+    "description": "デモイベント: ベンダーMTGのタイトル"
   },
   "demo_event_description_overlap_b": {
-    "message": "オンライン会議。",
-    "description": "デモイベント: 重複イベントBの説明"
+    "message": "クラウドサービスの年間契約更新について。",
+    "description": "デモイベント: ベンダーMTGの説明"
   },
   "demo_event_calendar_private": {
-    "message": "プライベートカレンダー",
+    "message": "プライベート",
     "description": "デモイベント: プライベートカレンダー名"
   },
   "demo_event_summary_overlap_c": {
-    "message": "重複イベントC",
-    "description": "デモイベント: 重複イベントCのタイトル"
+    "message": "コードレビュー",
+    "description": "デモイベント: コードレビューのタイトル"
   },
   "demo_event_description_overlap_c": {
-    "message": "重複イベントCの説明。",
-    "description": "デモイベント: 重複イベントCの説明"
+    "message": "認証モジュールのPR #247 をレビュー。",
+    "description": "デモイベント: コードレビューの説明"
   },
   "demo_event_calendar_overlap1": {
-    "message": "重複カレンダー1",
-    "description": "デモイベント: 重複カレンダー1名"
+    "message": "開発",
+    "description": "デモイベント: 開発カレンダー名"
   },
   "demo_event_summary_overlap_d": {
-    "message": "重複イベントD",
-    "description": "デモイベント: 重複イベントDのタイトル"
+    "message": "社外研修",
+    "description": "デモイベント: 社外研修のタイトル"
   },
   "demo_event_description_overlap_d": {
-    "message": "カフェでの打ち合わせ。",
-    "description": "デモイベント: 重複イベントDの説明"
+    "message": "アジャイル開発実践講座（渋谷研修センター）。",
+    "description": "デモイベント: 社外研修の説明"
   },
   "demo_event_location_cafe": {
-    "message": "カフェ",
+    "message": "スタバ 渋谷店",
     "description": "デモイベント: カフェ"
   },
   "demo_event_calendar_overlap2": {
-    "message": "重複カレンダー2",
-    "description": "デモイベント: 重複カレンダー2名"
+    "message": "研修",
+    "description": "デモイベント: 研修カレンダー名"
   },
   "demo_event_summary_morning_overlap_a": {
-    "message": "朝重複イベントA",
-    "description": "デモイベント: 朝重複イベントAのタイトル"
+    "message": "採用面接",
+    "description": "デモイベント: 採用面接のタイトル"
   },
   "demo_event_description_morning_overlap_a": {
-    "message": "オンライン朝会。",
-    "description": "デモイベント: 朝重複イベントAの説明"
+    "message": "バックエンドエンジニア 中途採用 一次面接。",
+    "description": "デモイベント: 採用面接の説明"
   },
   "demo_event_calendar_morning1": {
-    "message": "朝カレンダー1",
-    "description": "デモイベント: 朝カレンダー1名"
+    "message": "採用",
+    "description": "デモイベント: 採用カレンダー名"
   },
   "demo_event_summary_morning_overlap_b": {
-    "message": "朝重複イベントB",
-    "description": "デモイベント: 朝重複イベントBのタイトル"
+    "message": "PJ進捗MTG",
+    "description": "デモイベント: PJ進捗MTGのタイトル"
   },
   "demo_event_description_morning_overlap_b": {
-    "message": "会議室Cでの朝会。",
-    "description": "デモイベント: 朝重複イベントBの説明"
+    "message": "リリースまでのタスク整理とリスク確認。",
+    "description": "デモイベント: PJ進捗MTGの説明"
   },
   "demo_event_location_meeting_room_c": {
-    "message": "会議室C",
-    "description": "デモイベント: 会議室C"
+    "message": "第3会議室",
+    "description": "デモイベント: 第3会議室"
   },
   "demo_event_calendar_morning2": {
-    "message": "朝カレンダー2",
-    "description": "デモイベント: 朝カレンダー2名"
+    "message": "プロジェクト",
+    "description": "デモイベント: プロジェクトカレンダー名"
   },
   "demo_event_summary_morning_overlap_c": {
-    "message": "朝重複イベントC",
-    "description": "デモイベント: 朝重複イベントCのタイトル"
+    "message": "障害対応 緊急確認",
+    "description": "デモイベント: 緊急確認のタイトル"
   },
   "demo_event_description_morning_overlap_c": {
-    "message": "朝重複イベントCの説明。",
-    "description": "デモイベント: 朝重複イベントCの説明"
+    "message": "本番APIの504エラー 対応状況を確認。",
+    "description": "デモイベント: 緊急確認の説明"
   },
   "demo_event_calendar_morning3": {
-    "message": "朝カレンダー3",
-    "description": "デモイベント: 朝カレンダー3名"
+    "message": "全社",
+    "description": "デモイベント: 全社カレンダー名"
   },
   "demo_event_summary_evening_review": {
-    "message": "夕方レビュー",
-    "description": "デモイベント: 夕方レビューのタイトル"
+    "message": "夕会",
+    "description": "デモイベント: 夕会のタイトル"
   },
   "demo_event_description_evening_review": {
-    "message": "夕方の振り返り。",
-    "description": "デモイベント: 夕方レビューの説明"
+    "message": "本日の成果報告・明日の作業確認・残業調整。",
+    "description": "デモイベント: 夕会の説明"
   },
   "demo_local_event_title_morning_routine": {
     "message": "朝のルーティン",
     "description": "デモローカルイベント: 朝のルーティン"
   },
   "demo_local_event_title_focus_time": {
-    "message": "集中タイム",
-    "description": "デモローカルイベント: 集中タイム"
+    "message": "割り込み禁止タイム",
+    "description": "デモローカルイベント: 割り込み禁止タイム"
   },
   "demo_local_event_title_exercise": {
-    "message": "運動タイム",
-    "description": "デモローカルイベント: 運動タイム"
+    "message": "ジム",
+    "description": "デモローカルイベント: ジム"
   },
   "demo_local_event_title_reading_time": {
-    "message": "読書タイム",
-    "description": "デモローカルイベント: 読書タイム"
+    "message": "技術書を読む",
+    "description": "デモローカルイベント: 読書"
   },
   "demo_memo_content": {
-    "message": "📋 本日のTODO\n・企画書レビュー完了\n・チームに共有\n・夕方のミーティング資料を準備\n\n💡 メモ\n・新機能のアイデアをまとめる\n・来週の予定を確認する",
+    "message": "📋 本日のTODO\n・UI仕様レビューの資料を準備\n・A社との契約書を確認してから商談へ\n・コードレビューのフィードバックをまとめる\n\n💡 メモ\n・504エラーの再発防止策をwikiにまとめる\n・来週の採用面接スケジュールを確認",
     "description": "デモメモ: サンプルメモ内容"
   },
   "preview": {
