@@ -84,7 +84,8 @@ export const DEFAULT_SETTINGS = {
     googleIntegrated: false,
     openTime: TIME_CONSTANTS.DEFAULT_OPEN_HOUR,
     closeTime: TIME_CONSTANTS.DEFAULT_CLOSE_HOUR,
-    panelBackgroundColor: '#f0f0f0', // Panel background color
+    timelineBackgroundColor: '#f0f0f0', // Timeline (body) background color
+    panelBackgroundColor: '#f0f0f0', // Header and memo panel background color
     googleEventDefaultColor: '#d3d3d3', // Default Google event color (lightgray)
     workTimeColor: '#d4d4d4',
     breakTimeFixed: false,
@@ -101,6 +102,7 @@ export const DEFAULT_SETTINGS = {
 
 // Mapping from color setting keys to CSS variable names
 export const COLOR_CSS_VARS = {
+    timelineBackgroundColor: '--side-calendar-timeline-background-color',
     panelBackgroundColor: '--side-calendar-panel-background-color',
     googleEventDefaultColor: '--side-calendar-google-event-default-color',
     workTimeColor: '--side-calendar-work-time-color',
