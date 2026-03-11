@@ -322,15 +322,7 @@ class OptionsPageManager {
         try {
             // Load the existing settings and update only the color settings
             const currentSettings = await loadSettings();
-            const updatedSettings = {
-                ...currentSettings,
-                panelBackgroundColor: colorSettings.panelBackgroundColor,
-                googleEventDefaultColor: colorSettings.googleEventDefaultColor,
-                workTimeColor: colorSettings.workTimeColor,
-                breakTimeColor: colorSettings.breakTimeColor,
-                localEventColor: colorSettings.localEventColor,
-                currentTimeLineColor: colorSettings.currentTimeLineColor
-            };
+            const updatedSettings = { ...currentSettings, ...colorSettings };
 
             await saveSettings(updatedSettings);
 
