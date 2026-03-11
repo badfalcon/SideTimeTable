@@ -13,7 +13,7 @@ import {
     logError
 } from '../lib/utils.js';
 import { StorageHelper } from '../lib/storage-helper.js';
-import { isDemoMode, setDemoMode, getDemoOptionsSettings, getDemoCalendars } from '../lib/demo-data.js';
+import { isDemoMode, setDemoMode, getDemoOptionsSettings, getDemoCalendars, DEMO_BUILD } from '../lib/demo-data.js';
 import {
     ComponentManager,
     GoogleIntegrationCard,
@@ -112,11 +112,13 @@ class OptionsPageManager {
                 this.extensionInfoCard.appendTo(tabDeveloper);
                 this.componentManager.components.set('extensionInfo', this.extensionInfoCard);
 
-                this.demoModeCard = new DemoModeCard(this._reloadSidePanel.bind(this));
-                this.demoModeCard.createElement();
-                this.demoModeCard.setVisible(true);
-                this.demoModeCard.appendTo(tabDeveloper);
-                this.componentManager.components.set('demoMode', this.demoModeCard);
+                if (DEMO_BUILD) {
+                    this.demoModeCard = new DemoModeCard(this._reloadSidePanel.bind(this));
+                    this.demoModeCard.createElement();
+                    this.demoModeCard.setVisible(true);
+                    this.demoModeCard.appendTo(tabDeveloper);
+                    this.componentManager.components.set('demoMode', this.demoModeCard);
+                }
 
                 this.storageCard = new StorageCard();
                 this.storageCard.createElement();

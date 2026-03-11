@@ -870,6 +870,8 @@ export async function getDemoCalendars() {
 // Demo mode on/off
 // ---------------------------------------------------------------------------
 
+export const DEMO_BUILD = true;
+
 export function isDemoMode() {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get('demo') === 'true' || localStorage.getItem('sideTimeTableDemo') === 'true';
