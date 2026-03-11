@@ -7,6 +7,9 @@ import { DEFAULT_SETTINGS, COLOR_CSS_VARS } from '../../../lib/utils.js';
 // Derived from COLOR_CSS_VARS to stay in sync with the single source of truth
 const COLOR_KEYS = Object.keys(COLOR_CSS_VARS);
 
+// Default color values, computed once at module load
+const DEFAULT_COLOR_SETTINGS = Object.fromEntries(COLOR_KEYS.map(key => [key, DEFAULT_SETTINGS[key]]));
+
 export class ColorSettingsCard extends CardComponent {
     constructor(onSettingsChange) {
         super({
@@ -27,9 +30,7 @@ export class ColorSettingsCard extends CardComponent {
         this.currentTimeLineColorInput = null;
 
         // The current setting values (fallback before loaded from storage)
-        this.settings = Object.fromEntries(
-            COLOR_KEYS.map(key => [key, DEFAULT_SETTINGS[key]])
-        );
+        this.settings = { ...DEFAULT_COLOR_SETTINGS };
     }
 
     createElement() {
@@ -421,7 +422,7 @@ export class ColorSettingsCard extends CardComponent {
      * Reset to default settings
      */
     resetToDefaults() {
-        this.updateSettings(Object.fromEntries(COLOR_KEYS.map(key => [key, DEFAULT_SETTINGS[key]])));
+        this.updateSettings(DEFAULT_COLOR_SETTINGS);
         this._handleColorChange();
     }
 
