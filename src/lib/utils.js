@@ -74,7 +74,6 @@ export async function migrateEventDataToLocal() {
         }
 
         await chrome.storage.local.set({ [MIGRATION_KEY]: true });
-        console.log('[Migration] Per-date event data migrated to local storage');
     } catch (error) {
         console.error('[Migration] Failed to migrate event data:', error);
     }
