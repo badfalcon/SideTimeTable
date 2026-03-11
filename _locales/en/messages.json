@@ -173,6 +173,14 @@
     "message": "Color Settings",
     "description": "Section title for color settings"
   },
+  "panelBackgroundColor": {
+    "message": "Panel Background",
+    "description": "Label for panel background color input"
+  },
+  "googleEventDefaultColor": {
+    "message": "Google Event Default",
+    "description": "Label for default Google event color input"
+  },
   "workTimeColor": {
     "message": "Work Time Color",
     "description": "Label for work time color input"

@@ -322,6 +322,12 @@ class SidePanelUIController {
             }
 
             // Set the CSS variables
+            if (settings.panelBackgroundColor) {
+                document.documentElement.style.setProperty('--side-calendar-panel-background-color', settings.panelBackgroundColor);
+            }
+            if (settings.googleEventDefaultColor) {
+                document.documentElement.style.setProperty('--side-calendar-google-event-default-color', settings.googleEventDefaultColor);
+            }
             if (settings.workTimeColor) {
                 document.documentElement.style.setProperty('--side-calendar-work-time-color', settings.workTimeColor);
             }
