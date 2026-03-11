@@ -101,13 +101,18 @@ export const DEFAULT_SETTINGS = {
 };
 
 // Mapping from color setting keys to CSS variable names
+// Order determines the display order in the settings UI
 export const COLOR_CSS_VARS = {
+    // Timeline area
     timelineBackgroundColor: '--side-calendar-timeline-background-color',
-    panelBackgroundColor: '--side-calendar-panel-background-color',
-    googleEventDefaultColor: '--side-calendar-google-event-default-color',
     workTimeColor: '--side-calendar-work-time-color',
     breakTimeColor: '--side-calendar-break-time-color',
+    // Header / memo area
+    panelBackgroundColor: '--side-calendar-panel-background-color',
+    // Event colors
+    googleEventDefaultColor: '--side-calendar-google-event-default-color',
     localEventColor: '--side-calendar-local-event-color',
+    // Indicator
     currentTimeLineColor: '--side-calendar-current-time-line-color'
 };
 
