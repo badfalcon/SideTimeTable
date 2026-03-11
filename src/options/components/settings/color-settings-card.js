@@ -2,6 +2,17 @@
  * ColorSettingsCard - Color settings card component
  */
 import { CardComponent } from '../base/card-component.js';
+import { DEFAULT_SETTINGS } from '../../../lib/utils.js';
+
+// Keys for all configurable color settings (determines iteration order)
+const COLOR_KEYS = [
+    'panelBackgroundColor',
+    'googleEventDefaultColor',
+    'workTimeColor',
+    'breakTimeColor',
+    'localEventColor',
+    'currentTimeLineColor'
+];
 
 export class ColorSettingsCard extends CardComponent {
     constructor(onSettingsChange) {
@@ -22,15 +33,10 @@ export class ColorSettingsCard extends CardComponent {
         this.localEventColorInput = null;
         this.currentTimeLineColorInput = null;
 
-        // The current setting values
-        this.settings = {
-            panelBackgroundColor: '#f0f0f0',
-            googleEventDefaultColor: '#d3d3d3',
-            workTimeColor: '#d4d4d4',
-            breakTimeColor: '#fda9ca',
-            localEventColor: '#bbf2b1',
-            currentTimeLineColor: '#ff0000'
-        };
+        // The current setting values (fallback before loaded from storage)
+        this.settings = Object.fromEntries(
+            COLOR_KEYS.map(key => [key, DEFAULT_SETTINGS[key]])
+        );
     }
 
     createElement() {
@@ -360,46 +366,32 @@ export class ColorSettingsCard extends CardComponent {
     }
 
     /**
+     * Get the stored input element for a color key
+     * @private
+     */
+    _inputForKey(key) {
+        return this[`${key}Input`];
+    }
+
+    /**
+     * Update the stored input element reference for a color key
+     * @private
+     */
+    _setInputForKey(key, input) {
+        this[`${key}Input`] = input;
+    }
+
+    /**
      * Set up event listeners
      * @private
      */
     _setupEventListeners() {
-        // The change events for each color picker
-        this.panelBackgroundColorInput?.addEventListener('input', (e) => {
-            this._updatePreview(e.target, e.target.value);
-        });
-
-        this.panelBackgroundColorInput?.addEventListener('change', () => this._handleColorChange());
-
-        this.googleEventDefaultColorInput?.addEventListener('input', (e) => {
-            this._updatePreview(e.target, e.target.value);
-        });
-
-        this.googleEventDefaultColorInput?.addEventListener('change', () => this._handleColorChange());
-
-        this.workTimeColorInput?.addEventListener('input', (e) => {
-            this._updatePreview(e.target, e.target.value);
-        });
-
-        this.workTimeColorInput?.addEventListener('change', () => this._handleColorChange());
-
-        this.breakTimeColorInput?.addEventListener('input', (e) => {
-            this._updatePreview(e.target, e.target.value);
-        });
-
-        this.breakTimeColorInput?.addEventListener('change', () => this._handleColorChange());
-
-        this.localEventColorInput?.addEventListener('input', (e) => {
-            this._updatePreview(e.target, e.target.value);
-        });
-
-        this.localEventColorInput?.addEventListener('change', () => this._handleColorChange());
-
-        this.currentTimeLineColorInput?.addEventListener('input', (e) => {
-            this._updatePreview(e.target, e.target.value);
-        });
-
-        this.currentTimeLineColorInput?.addEventListener('change', () => this._handleColorChange());
+        for (const key of COLOR_KEYS) {
+            const input = this._inputForKey(key);
+            if (!input) continue;
+            input.addEventListener('input', (e) => this._updatePreview(e.target, e.target.value));
+            input.addEventListener('change', () => this._handleColorChange());
+        }
     }
 
     /**
@@ -420,14 +412,9 @@ export class ColorSettingsCard extends CardComponent {
      * Get current settings
      */
     getSettings() {
-        return {
-            panelBackgroundColor: this.panelBackgroundColorInput?.value || this.settings.panelBackgroundColor,
-            googleEventDefaultColor: this.googleEventDefaultColorInput?.value || this.settings.googleEventDefaultColor,
-            workTimeColor: this.workTimeColorInput?.value || this.settings.workTimeColor,
-            breakTimeColor: this.breakTimeColorInput?.value || this.settings.breakTimeColor,
-            localEventColor: this.localEventColorInput?.value || this.settings.localEventColor,
-            currentTimeLineColor: this.currentTimeLineColorInput?.value || this.settings.currentTimeLineColor
-        };
+        return Object.fromEntries(
+            COLOR_KEYS.map(key => [key, this._inputForKey(key)?.value || this.settings[key]])
+        );
     }
 
     /**
@@ -436,34 +423,12 @@ export class ColorSettingsCard extends CardComponent {
     updateSettings(settings) {
         this.settings = { ...this.settings, ...settings };
 
-        if (this.panelBackgroundColorInput) {
-            this.panelBackgroundColorInput.value = this.settings.panelBackgroundColor;
-            this._updatePreview(this.panelBackgroundColorInput, this.settings.panelBackgroundColor);
-        }
-
-        if (this.googleEventDefaultColorInput) {
-            this.googleEventDefaultColorInput.value = this.settings.googleEventDefaultColor;
-            this._updatePreview(this.googleEventDefaultColorInput, this.settings.googleEventDefaultColor);
-        }
-
-        if (this.workTimeColorInput) {
-            this.workTimeColorInput.value = this.settings.workTimeColor;
-            this._updatePreview(this.workTimeColorInput, this.settings.workTimeColor);
-        }
-
-        if (this.breakTimeColorInput) {
-            this.breakTimeColorInput.value = this.settings.breakTimeColor;
-            this._updatePreview(this.breakTimeColorInput, this.settings.breakTimeColor);
-        }
-
-        if (this.localEventColorInput) {
-            this.localEventColorInput.value = this.settings.localEventColor;
-            this._updatePreview(this.localEventColorInput, this.settings.localEventColor);
-        }
-
-        if (this.currentTimeLineColorInput) {
-            this.currentTimeLineColorInput.value = this.settings.currentTimeLineColor;
-            this._updatePreview(this.currentTimeLineColorInput, this.settings.currentTimeLineColor);
+        for (const key of COLOR_KEYS) {
+            const input = this._inputForKey(key);
+            if (input) {
+                input.value = this.settings[key];
+                this._updatePreview(input, this.settings[key]);
+            }
         }
     }
 
@@ -471,16 +436,7 @@ export class ColorSettingsCard extends CardComponent {
      * Reset to default settings
      */
     resetToDefaults() {
-        const defaultSettings = {
-            panelBackgroundColor: '#f0f0f0',
-            googleEventDefaultColor: '#d3d3d3',
-            workTimeColor: '#d4d4d4',
-            breakTimeColor: '#fda9ca',
-            localEventColor: '#bbf2b1',
-            currentTimeLineColor: '#ff0000'
-        };
-
-        this.updateSettings(defaultSettings);
+        this.updateSettings(Object.fromEntries(COLOR_KEYS.map(key => [key, DEFAULT_SETTINGS[key]])));
         this._handleColorChange();
     }
 
@@ -490,17 +446,16 @@ export class ColorSettingsCard extends CardComponent {
     setLivePreview(enabled) {
         const eventType = enabled ? 'input' : 'change';
 
-        // Remove the existing listeners and reset
-        [this.panelBackgroundColorInput, this.googleEventDefaultColorInput, this.workTimeColorInput, this.breakTimeColorInput, this.localEventColorInput, this.currentTimeLineColorInput]
-            .filter(input => input)
-            .forEach(input => {
-                const newInput = input.cloneNode(true);
-                input.parentNode.replaceChild(newInput, input);
+        for (const key of COLOR_KEYS) {
+            const input = this._inputForKey(key);
+            if (!input) continue;
+            const newInput = input.cloneNode(true);
+            newInput._preview = input._preview; // Transfer preview reference
+            input.parentNode.replaceChild(newInput, input);
+            this._setInputForKey(key, newInput); // Update stored reference
 
-                newInput.addEventListener(eventType, () => this._handleColorChange());
-                newInput.addEventListener('input', (e) => {
-                    this._updatePreview(e.target, e.target.value);
-                });
-            });
+            newInput.addEventListener(eventType, () => this._handleColorChange());
+            newInput.addEventListener('input', (e) => this._updatePreview(e.target, e.target.value));
+        }
     }
 }

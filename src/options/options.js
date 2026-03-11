@@ -6,6 +6,7 @@
 
 import {
     DEFAULT_SETTINGS,
+    COLOR_CSS_VARS,
     generateTimeList,
     loadSettings,
     saveSettings,
@@ -334,12 +335,9 @@ class OptionsPageManager {
             await saveSettings(updatedSettings);
 
             // Update the CSS variables immediately
-            document.documentElement.style.setProperty('--side-calendar-panel-background-color', colorSettings.panelBackgroundColor);
-            document.documentElement.style.setProperty('--side-calendar-google-event-default-color', colorSettings.googleEventDefaultColor);
-            document.documentElement.style.setProperty('--side-calendar-work-time-color', colorSettings.workTimeColor);
-            document.documentElement.style.setProperty('--side-calendar-break-time-color', colorSettings.breakTimeColor);
-            document.documentElement.style.setProperty('--side-calendar-local-event-color', colorSettings.localEventColor);
-            document.documentElement.style.setProperty('--side-calendar-current-time-line-color', colorSettings.currentTimeLineColor);
+            for (const [key, varName] of Object.entries(COLOR_CSS_VARS)) {
+                document.documentElement.style.setProperty(varName, colorSettings[key]);
+            }
 
             // Reload the side panel
             this._reloadSidePanel();
@@ -410,12 +408,9 @@ class OptionsPageManager {
             this.reminderSettingsCard.resetToDefaults();
 
             // Reset the CSS variables too
-            document.documentElement.style.setProperty('--side-calendar-panel-background-color', DEFAULT_SETTINGS.panelBackgroundColor);
-            document.documentElement.style.setProperty('--side-calendar-google-event-default-color', DEFAULT_SETTINGS.googleEventDefaultColor);
-            document.documentElement.style.setProperty('--side-calendar-work-time-color', DEFAULT_SETTINGS.workTimeColor);
-            document.documentElement.style.setProperty('--side-calendar-break-time-color', DEFAULT_SETTINGS.breakTimeColor);
-            document.documentElement.style.setProperty('--side-calendar-local-event-color', DEFAULT_SETTINGS.localEventColor);
-            document.documentElement.style.setProperty('--side-calendar-current-time-line-color', DEFAULT_SETTINGS.currentTimeLineColor);
+            for (const [key, varName] of Object.entries(COLOR_CSS_VARS)) {
+                document.documentElement.style.setProperty(varName, DEFAULT_SETTINGS[key]);
+            }
 
             // Reload the side panel
             this._reloadSidePanel();
