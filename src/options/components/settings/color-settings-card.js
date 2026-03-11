@@ -2,17 +2,10 @@
  * ColorSettingsCard - Color settings card component
  */
 import { CardComponent } from '../base/card-component.js';
-import { DEFAULT_SETTINGS } from '../../../lib/utils.js';
+import { DEFAULT_SETTINGS, COLOR_CSS_VARS } from '../../../lib/utils.js';
 
-// Keys for all configurable color settings (determines iteration order)
-const COLOR_KEYS = [
-    'panelBackgroundColor',
-    'googleEventDefaultColor',
-    'workTimeColor',
-    'breakTimeColor',
-    'localEventColor',
-    'currentTimeLineColor'
-];
+// Derived from COLOR_CSS_VARS to stay in sync with the single source of truth
+const COLOR_KEYS = Object.keys(COLOR_CSS_VARS);
 
 export class ColorSettingsCard extends CardComponent {
     constructor(onSettingsChange) {
@@ -374,14 +367,6 @@ export class ColorSettingsCard extends CardComponent {
     }
 
     /**
-     * Update the stored input element reference for a color key
-     * @private
-     */
-    _setInputForKey(key, input) {
-        this[`${key}Input`] = input;
-    }
-
-    /**
      * Set up event listeners
      * @private
      */
@@ -440,22 +425,5 @@ export class ColorSettingsCard extends CardComponent {
         this._handleColorChange();
     }
 
-    /**
-     * Toggle enable/disable live preview
-     */
-    setLivePreview(enabled) {
-        const eventType = enabled ? 'input' : 'change';
-
-        for (const key of COLOR_KEYS) {
-            const input = this._inputForKey(key);
-            if (!input) continue;
-            const newInput = input.cloneNode(true);
-            newInput._preview = input._preview; // Transfer preview reference
-            input.parentNode.replaceChild(newInput, input);
-            this._setInputForKey(key, newInput); // Update stored reference
-
-            newInput.addEventListener(eventType, () => this._handleColorChange());
-            newInput.addEventListener('input', (e) => this._updatePreview(e.target, e.target.value));
-        }
-    }
 }
+
