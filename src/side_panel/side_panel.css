@@ -6,6 +6,11 @@
     --side-calendar-local-event-color: #bbf2b1;
     --side-calendar-google-event-default-color: #fff0b8;
     --side-calendar-current-time-line-color: #ff0000;
+    /* Computed text colors (auto-set by JS based on background luminance) */
+    --side-calendar-timeline-text-color: #000000;
+    --side-calendar-panel-text-color: #000000;
+    --side-calendar-google-event-default-text-color: #000000;
+    --side-calendar-local-event-text-color: #000000;
 }
 
 html {
@@ -15,6 +20,7 @@ html {
 body {
     font-family: Arial, sans-serif;
     background-color: var(--side-calendar-timeline-background-color);
+    color: var(--side-calendar-timeline-text-color);
     position: relative;
     overflow: hidden;
     height: 100%;
@@ -46,6 +52,7 @@ h1 {
     flex: 0 0 auto;
     z-index: 100;
     background-color: var(--side-calendar-panel-background-color);
+    color: var(--side-calendar-panel-text-color);
     padding: 8px 8px 10px;
 }
 
@@ -194,6 +201,7 @@ h1 {
     box-sizing: border-box;
     padding: 5px 10px;
     background: var(--side-calendar-google-event-default-color);
+    color: var(--side-calendar-google-event-default-text-color);
     border-radius: 5px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
     z-index: 21;
@@ -216,6 +224,7 @@ h1 {
 
 .local-event {
     background-color: var(--side-calendar-local-event-color);
+    color: var(--side-calendar-local-event-text-color);
 }
 
 .drag-preview.event {
