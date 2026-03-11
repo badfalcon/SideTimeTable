@@ -16,12 +16,14 @@ export class ColorSettingsCard extends CardComponent {
 
         // The color picker elements
         this.workTimeColorInput = null;
+        this.breakTimeColorInput = null;
         this.localEventColorInput = null;
         this.currentTimeLineColorInput = null;
 
         // The current setting values
         this.settings = {
             workTimeColor: '#d4d4d4',
+            breakTimeColor: '#fda9ca',
             localEventColor: '#bbf2b1',
             currentTimeLineColor: '#ff0000'
         };
@@ -47,7 +49,7 @@ export class ColorSettingsCard extends CardComponent {
     _createForm() {
         const form = document.createElement('form');
 
-        // The grid layout - all 3 color settings in one row
+        // The grid layout - all 4 color settings in one row
         const row = document.createElement('div');
         row.className = 'row';
 
@@ -60,6 +62,16 @@ export class ColorSettingsCard extends CardComponent {
             (input) => this.workTimeColorInput = input
         );
         row.appendChild(workTimeCol);
+
+        // The break time color
+        const breakTimeCol = this._createColorInputColumn(
+            'break-time-color',
+            '__MSG_breakTimeColor__',
+            'Break Time Color',
+            this.settings.breakTimeColor,
+            (input) => this.breakTimeColorInput = input
+        );
+        row.appendChild(breakTimeCol);
 
         // The local event color
         const localEventCol = this._createColorInputColumn(
@@ -96,7 +108,7 @@ export class ColorSettingsCard extends CardComponent {
      */
     _createColorInputColumn(id, localizeKey, labelText, defaultValue, inputSetter) {
         const col = document.createElement('div');
-        col.className = 'col-md-4 mb-3';
+        col.className = 'col-md-3 mb-3';
 
         // Container that combines all elements
         const container = document.createElement('div');
@@ -172,6 +184,7 @@ export class ColorSettingsCard extends CardComponent {
                 nameKey: 'presetDefault',
                 colors: {
                     workTimeColor: '#d4d4d4',
+                    breakTimeColor: '#fda9ca',
                     localEventColor: '#bbf2b1',
                     currentTimeLineColor: '#ff0000'
                 }
@@ -180,6 +193,7 @@ export class ColorSettingsCard extends CardComponent {
                 nameKey: 'presetMonochrome',
                 colors: {
                     workTimeColor: '#f0f0f0',
+                    breakTimeColor: '#c8c8c8',
                     localEventColor: '#e0e0e0',
                     currentTimeLineColor: '#808080'
                 }
@@ -188,6 +202,7 @@ export class ColorSettingsCard extends CardComponent {
                 nameKey: 'presetPastel',
                 colors: {
                     workTimeColor: '#fdf2e9',
+                    breakTimeColor: '#fde8f0',
                     localEventColor: '#e8f5e8',
                     currentTimeLineColor: '#ff9999'
                 }
@@ -196,6 +211,7 @@ export class ColorSettingsCard extends CardComponent {
                 nameKey: 'presetVivid',
                 colors: {
                     workTimeColor: '#ffecb3',
+                    breakTimeColor: '#ffb3d9',
                     localEventColor: '#c8e6c9',
                     currentTimeLineColor: '#ff0000'
                 }
@@ -204,6 +220,7 @@ export class ColorSettingsCard extends CardComponent {
                 nameKey: 'presetProtanopia',
                 colors: {
                     workTimeColor: '#cce5ff',
+                    breakTimeColor: '#ffe0b2',
                     localEventColor: '#fff3cd',
                     currentTimeLineColor: '#0072b2'
                 }
@@ -212,6 +229,7 @@ export class ColorSettingsCard extends CardComponent {
                 nameKey: 'presetDeuteranopia',
                 colors: {
                     workTimeColor: '#fff3cd',
+                    breakTimeColor: '#f8d7e3',
                     localEventColor: '#cce5ff',
                     currentTimeLineColor: '#d55e00'
                 }
@@ -220,6 +238,7 @@ export class ColorSettingsCard extends CardComponent {
                 nameKey: 'presetTritanopia',
                 colors: {
                     workTimeColor: '#f8e8f8',
+                    breakTimeColor: '#ffe8e8',
                     localEventColor: '#d4f0d4',
                     currentTimeLineColor: '#cc0000'
                 }
@@ -314,6 +333,12 @@ export class ColorSettingsCard extends CardComponent {
 
         this.workTimeColorInput?.addEventListener('change', () => this._handleColorChange());
 
+        this.breakTimeColorInput?.addEventListener('input', (e) => {
+            this._updatePreview(e.target, e.target.value);
+        });
+
+        this.breakTimeColorInput?.addEventListener('change', () => this._handleColorChange());
+
         this.localEventColorInput?.addEventListener('input', (e) => {
             this._updatePreview(e.target, e.target.value);
         });
@@ -347,6 +372,7 @@ export class ColorSettingsCard extends CardComponent {
     getSettings() {
         return {
             workTimeColor: this.workTimeColorInput?.value || this.settings.workTimeColor,
+            breakTimeColor: this.breakTimeColorInput?.value || this.settings.breakTimeColor,
             localEventColor: this.localEventColorInput?.value || this.settings.localEventColor,
             currentTimeLineColor: this.currentTimeLineColorInput?.value || this.settings.currentTimeLineColor
         };
@@ -361,6 +387,11 @@ export class ColorSettingsCard extends CardComponent {
         if (this.workTimeColorInput) {
             this.workTimeColorInput.value = this.settings.workTimeColor;
             this._updatePreview(this.workTimeColorInput, this.settings.workTimeColor);
+        }
+
+        if (this.breakTimeColorInput) {
+            this.breakTimeColorInput.value = this.settings.breakTimeColor;
+            this._updatePreview(this.breakTimeColorInput, this.settings.breakTimeColor);
         }
 
         if (this.localEventColorInput) {
@@ -380,6 +411,7 @@ export class ColorSettingsCard extends CardComponent {
     resetToDefaults() {
         const defaultSettings = {
             workTimeColor: '#d4d4d4',
+            breakTimeColor: '#fda9ca',
             localEventColor: '#bbf2b1',
             currentTimeLineColor: '#ff0000'
         };
@@ -395,7 +427,7 @@ export class ColorSettingsCard extends CardComponent {
         const eventType = enabled ? 'input' : 'change';
 
         // Remove the existing listeners and reset
-        [this.workTimeColorInput, this.localEventColorInput, this.currentTimeLineColorInput]
+        [this.workTimeColorInput, this.breakTimeColorInput, this.localEventColorInput, this.currentTimeLineColorInput]
             .filter(input => input)
             .forEach(input => {
                 const newInput = input.cloneNode(true);

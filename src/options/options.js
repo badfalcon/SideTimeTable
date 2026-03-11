@@ -181,6 +181,7 @@ class OptionsPageManager {
 
             this.colorSettingsCard.updateSettings({
                 workTimeColor: settings.workTimeColor,
+                breakTimeColor: settings.breakTimeColor,
                 localEventColor: settings.localEventColor,
                 currentTimeLineColor: settings.currentTimeLineColor
             });
@@ -321,6 +322,7 @@ class OptionsPageManager {
             const updatedSettings = {
                 ...currentSettings,
                 workTimeColor: colorSettings.workTimeColor,
+                breakTimeColor: colorSettings.breakTimeColor,
                 localEventColor: colorSettings.localEventColor,
                 currentTimeLineColor: colorSettings.currentTimeLineColor
             };
@@ -329,6 +331,7 @@ class OptionsPageManager {
 
             // Update the CSS variables immediately
             document.documentElement.style.setProperty('--side-calendar-work-time-color', colorSettings.workTimeColor);
+            document.documentElement.style.setProperty('--side-calendar-break-time-color', colorSettings.breakTimeColor);
             document.documentElement.style.setProperty('--side-calendar-local-event-color', colorSettings.localEventColor);
             document.documentElement.style.setProperty('--side-calendar-current-time-line-color', colorSettings.currentTimeLineColor);
 
@@ -402,6 +405,7 @@ class OptionsPageManager {
 
             // Reset the CSS variables too
             document.documentElement.style.setProperty('--side-calendar-work-time-color', DEFAULT_SETTINGS.workTimeColor);
+            document.documentElement.style.setProperty('--side-calendar-break-time-color', DEFAULT_SETTINGS.breakTimeColor);
             document.documentElement.style.setProperty('--side-calendar-local-event-color', DEFAULT_SETTINGS.localEventColor);
             document.documentElement.style.setProperty('--side-calendar-current-time-line-color', DEFAULT_SETTINGS.currentTimeLineColor);
 

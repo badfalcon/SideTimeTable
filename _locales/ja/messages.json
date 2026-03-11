@@ -181,6 +181,10 @@
     "message": "ローカルイベント",
     "description": "ローカルイベント色入力のラベル"
   },
+  "breakTimeColor": {
+    "message": "休憩時間",
+    "description": "休憩時間の色入力のラベル"
+  },
   "currentTimeLineColor": {
     "message": "現在時刻の線",
     "description": "現在時刻の線の色入力のラベル"

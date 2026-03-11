@@ -88,6 +88,7 @@ export const DEFAULT_SETTINGS = {
     breakTimeFixed: false,
     breakTimeStart: TIME_CONSTANTS.DEFAULT_BREAK_START,
     breakTimeEnd: TIME_CONSTANTS.DEFAULT_BREAK_END,
+    breakTimeColor: '#fda9ca', // Break time background color
     localEventColor: '#bbf2b1',
     currentTimeLineColor: '#ff0000', // Current time line color
     selectedCalendars: [], // An array of the selected calendar IDs

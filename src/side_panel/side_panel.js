@@ -325,6 +325,9 @@ class SidePanelUIController {
             if (settings.workTimeColor) {
                 document.documentElement.style.setProperty('--side-calendar-work-time-color', settings.workTimeColor);
             }
+            if (settings.breakTimeColor) {
+                document.documentElement.style.setProperty('--side-calendar-break-time-color', settings.breakTimeColor);
+            }
             if (settings.localEventColor) {
                 document.documentElement.style.setProperty('--side-calendar-local-event-color', settings.localEventColor);
             }
