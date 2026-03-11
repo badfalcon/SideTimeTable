@@ -19,7 +19,7 @@ import {
 import { EventLayoutManager } from './time-manager.js';
 import { GoogleEventManager, LocalEventManager } from './event-handlers.js';
 import {
-    generateTimeList, loadSettings, RECURRENCE_TYPES,
+    generateTimeList, loadSettings, RECURRENCE_TYPES, COLOR_CSS_VARS,
     loadLocalEventsForDate, saveLocalEventsForDate,
     loadRecurringEvents, saveRecurringEvents,
     addRecurringEventException, deleteRecurringEvent,
@@ -322,23 +322,10 @@ class SidePanelUIController {
             }
 
             // Set the CSS variables
-            if (settings.panelBackgroundColor) {
-                document.documentElement.style.setProperty('--side-calendar-panel-background-color', settings.panelBackgroundColor);
-            }
-            if (settings.googleEventDefaultColor) {
-                document.documentElement.style.setProperty('--side-calendar-google-event-default-color', settings.googleEventDefaultColor);
-            }
-            if (settings.workTimeColor) {
-                document.documentElement.style.setProperty('--side-calendar-work-time-color', settings.workTimeColor);
-            }
-            if (settings.breakTimeColor) {
-                document.documentElement.style.setProperty('--side-calendar-break-time-color', settings.breakTimeColor);
-            }
-            if (settings.localEventColor) {
-                document.documentElement.style.setProperty('--side-calendar-local-event-color', settings.localEventColor);
-            }
-            if (settings.currentTimeLineColor) {
-                document.documentElement.style.setProperty('--side-calendar-current-time-line-color', settings.currentTimeLineColor);
+            for (const [key, varName] of Object.entries(COLOR_CSS_VARS)) {
+                if (settings[key]) {
+                    document.documentElement.style.setProperty(varName, settings[key]);
+                }
             }
 
             // Set the current date

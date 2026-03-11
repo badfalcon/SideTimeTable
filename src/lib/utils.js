@@ -99,6 +99,16 @@ export const DEFAULT_SETTINGS = {
     reminderMinutes: 5 // Reminder time in minutes before event starts
 };
 
+// Mapping from color setting keys to CSS variable names
+export const COLOR_CSS_VARS = {
+    panelBackgroundColor: '--side-calendar-panel-background-color',
+    googleEventDefaultColor: '--side-calendar-google-event-default-color',
+    workTimeColor: '--side-calendar-work-time-color',
+    breakTimeColor: '--side-calendar-break-time-color',
+    localEventColor: '--side-calendar-local-event-color',
+    currentTimeLineColor: '--side-calendar-current-time-line-color'
+};
+
 /**
  * Generate the time selection list
  * @param {HTMLElement} timeListElement - The datalist DOM element
