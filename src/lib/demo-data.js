@@ -935,6 +935,7 @@ export function getDemoOptionsSettings() {
         breakTimeStart: '12:00',
         breakTimeEnd: '13:00',
         workTimeColor: '#d4d4d4',
+        breakTimeColor: '#fda9ca',
         localEventColor: '#bbf2b1',
         currentTimeLineColor: '#ff0000',
         language: 'auto',

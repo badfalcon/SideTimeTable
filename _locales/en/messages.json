@@ -181,6 +181,10 @@
     "message": "Local Event Color",
     "description": "Label for local event color input"
   },
+  "breakTimeColor": {
+    "message": "Break Time Color",
+    "description": "Label for break time color input"
+  },
   "currentTimeLineColor": {
     "message": "Current Time Line Color",
     "description": "Label for current time line color input"
