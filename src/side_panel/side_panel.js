@@ -19,7 +19,7 @@ import {
 import { EventLayoutManager } from './time-manager.js';
 import { GoogleEventManager, LocalEventManager } from './event-handlers.js';
 import {
-    generateTimeList, loadSettings, RECURRENCE_TYPES, COLOR_CSS_VARS,
+    generateTimeList, loadSettings, RECURRENCE_TYPES, COLOR_CSS_VARS, TEXT_COLOR_CSS_VARS, getContrastColor,
     loadLocalEventsForDate, saveLocalEventsForDate,
     loadRecurringEvents, saveRecurringEvents,
     addRecurringEventException, deleteRecurringEvent,
@@ -325,6 +325,13 @@ class SidePanelUIController {
             for (const [key, varName] of Object.entries(COLOR_CSS_VARS)) {
                 if (settings[key]) {
                     document.documentElement.style.setProperty(varName, settings[key]);
+                }
+            }
+
+            // Set computed text color CSS variables (contrast color for each background)
+            for (const [key, varName] of Object.entries(TEXT_COLOR_CSS_VARS)) {
+                if (settings[key]) {
+                    document.documentElement.style.setProperty(varName, getContrastColor(settings[key]));
                 }
             }
 

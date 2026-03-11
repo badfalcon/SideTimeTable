@@ -117,6 +117,27 @@ export const COLOR_CSS_VARS = {
 };
 
 /**
+ * Return black or white depending on which provides better contrast against the given hex color.
+ * @param {string} hexColor - e.g. '#1e1e2e'
+ * @returns {string} '#000000' or '#ffffff'
+ */
+export function getContrastColor(hexColor) {
+    const r = parseInt(hexColor.slice(1, 3), 16);
+    const g = parseInt(hexColor.slice(3, 5), 16);
+    const b = parseInt(hexColor.slice(5, 7), 16);
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.5 ? '#000000' : '#ffffff';
+}
+
+// Background color keys that need a corresponding computed text color CSS variable
+export const TEXT_COLOR_CSS_VARS = {
+    timelineBackgroundColor: '--side-calendar-timeline-text-color',
+    panelBackgroundColor: '--side-calendar-panel-text-color',
+    googleEventDefaultColor: '--side-calendar-google-event-default-text-color',
+    localEventColor: '--side-calendar-local-event-text-color'
+};
+
+/**
  * Generate the time selection list
  * @param {HTMLElement} timeListElement - The datalist DOM element
  */
