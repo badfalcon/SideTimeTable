@@ -323,14 +323,14 @@ class SidePanelUIController {
 
             // Set the CSS variables
             for (const [key, varName] of Object.entries(COLOR_CSS_VARS)) {
-                if (settings[key]) {
+                if (settings[key] != null) {
                     document.documentElement.style.setProperty(varName, settings[key]);
                 }
             }
 
             // Set computed text color CSS variables (contrast color for each background)
             for (const [key, varName] of Object.entries(TEXT_COLOR_CSS_VARS)) {
-                if (settings[key]) {
+                if (settings[key] != null) {
                     document.documentElement.style.setProperty(varName, getContrastColor(settings[key]));
                 }
             }
