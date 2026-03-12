@@ -398,7 +398,7 @@ export class ColorSettingsCard extends CardComponent {
      */
     getSettings() {
         return Object.fromEntries(
-            COLOR_KEYS.map(key => [key, this._inputForKey(key)?.value || this.settings[key]])
+            COLOR_KEYS.map(key => [key, this._inputForKey(key)?.value ?? this.settings[key]])
         );
     }
 
