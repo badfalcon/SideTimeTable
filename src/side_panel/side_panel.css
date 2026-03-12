@@ -28,6 +28,23 @@
     --side-calendar-memo-toggle-hover-bg: #ececec;
     --side-calendar-textarea-bg: #fff;
     --side-calendar-textarea-border: #ccc;
+    /* Link and accent colors */
+    --side-calendar-link-color: #4285f4;
+    --side-calendar-link-hover-color: #0056b3;
+    /* Subtle background for sections/cards */
+    --side-calendar-subtle-bg: #f8f9fa;
+    --side-calendar-subtle-bg-hover: #e9ecef;
+    /* Button secondary styles */
+    --side-calendar-btn-secondary-bg: #e9ecef;
+    --side-calendar-btn-secondary-text: #333;
+    --side-calendar-btn-secondary-hover-bg: #dee2e6;
+    /* Close hover */
+    --side-calendar-close-hover-color: #000;
+    /* Review modal */
+    --side-calendar-review-message-color: #555;
+    --side-calendar-review-later-text: #666;
+    --side-calendar-review-later-border: #ddd;
+    --side-calendar-review-never-text: #bbb;
 }
 
 /* Dark mode overrides for UI chrome */
@@ -48,6 +65,18 @@
     --side-calendar-memo-toggle-hover-bg: #3a3a4a;
     --side-calendar-textarea-bg: #1e1e2e;
     --side-calendar-textarea-border: #555;
+    --side-calendar-link-color: #7aabff;
+    --side-calendar-link-hover-color: #5b9dff;
+    --side-calendar-subtle-bg: #333348;
+    --side-calendar-subtle-bg-hover: #3a3a52;
+    --side-calendar-btn-secondary-bg: #3a3a52;
+    --side-calendar-btn-secondary-text: #ccc;
+    --side-calendar-btn-secondary-hover-bg: #4a4a62;
+    --side-calendar-close-hover-color: #fff;
+    --side-calendar-review-message-color: #aaa;
+    --side-calendar-review-later-text: #aaa;
+    --side-calendar-review-later-border: #555;
+    --side-calendar-review-never-text: #777;
 }
 
 html {
@@ -384,7 +413,7 @@ button {
 
 .close:hover,
 .close:focus {
-    color: #000;
+    color: var(--side-calendar-close-hover-color);
     text-decoration: none;
     cursor: pointer;
 }
@@ -497,13 +526,13 @@ button {
 /* Links within Google event details */
 .google-event-description a,
 .google-event-location a {
-    color: #007bff;
+    color: var(--side-calendar-link-color);
     text-decoration: underline;
 }
 
 .google-event-description a:hover,
 .google-event-location a:hover {
-    color: #0056b3;
+    color: var(--side-calendar-link-hover-color);
     text-decoration: none;
 }
 
@@ -731,22 +760,22 @@ button {
 }
 
 .tutorial-btn-secondary {
-    background-color: #e9ecef;
-    color: #333;
+    background-color: var(--side-calendar-btn-secondary-bg);
+    color: var(--side-calendar-btn-secondary-text);
 }
 
 .tutorial-btn-secondary:hover {
-    background-color: #dee2e6;
+    background-color: var(--side-calendar-btn-secondary-hover-bg);
 }
 
 .tutorial-btn-skip {
     background-color: transparent;
-    color: #888;
+    color: var(--side-calendar-muted-text-color);
 }
 
 .tutorial-btn-skip:hover {
-    color: #333;
-    background-color: #f0f0f0;
+    color: var(--side-calendar-icon-color);
+    background-color: var(--side-calendar-subtle-bg);
 }
 
 /* Initial Setup Wizard styles */
@@ -847,7 +876,7 @@ button {
     align-items: center;
     gap: 10px;
     padding: 10px 14px;
-    border: 2px solid #e9ecef;
+    border: 2px solid var(--side-calendar-btn-secondary-bg);
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -855,12 +884,12 @@ button {
 }
 
 .setup-radio-label:hover {
-    border-color: #adb5bd;
+    border-color: var(--side-calendar-border-color);
 }
 
 .setup-radio-label.selected {
-    border-color: #007bff;
-    background-color: #f0f7ff;
+    border-color: var(--side-calendar-hover-color);
+    background-color: var(--side-calendar-subtle-bg);
 }
 
 .setup-radio-label input[type="radio"] {
@@ -885,7 +914,7 @@ button {
 
 .setup-time-label {
     font-size: 0.9em;
-    color: #444;
+    color: var(--side-calendar-secondary-text-color);
     font-weight: 500;
 }
 
@@ -1001,23 +1030,23 @@ button {
 }
 
 .setup-btn-secondary {
-    background-color: #e9ecef;
-    color: #333;
+    background-color: var(--side-calendar-btn-secondary-bg);
+    color: var(--side-calendar-btn-secondary-text);
 }
 
 .setup-btn-secondary:hover {
-    background-color: #dee2e6;
+    background-color: var(--side-calendar-btn-secondary-hover-bg);
 }
 
 .setup-btn-skip {
     background-color: transparent;
-    color: #888;
+    color: var(--side-calendar-muted-text-color);
     margin-right: auto;
 }
 
 .setup-btn-skip:hover {
-    color: #333;
-    background-color: #f0f0f0;
+    color: var(--side-calendar-icon-color);
+    background-color: var(--side-calendar-subtle-bg);
 }
 
 /* Connected badge shown instead of Google button when authenticated */
@@ -1095,7 +1124,7 @@ button {
 
 .review-modal-message {
     font-size: 0.85rem;
-    color: #555;
+    color: var(--side-calendar-review-message-color);
     white-space: pre-line;
     margin-bottom: 18px;
     line-height: 1.6;
@@ -1128,9 +1157,9 @@ button {
     width: 100%;
     padding: 10px;
     background: transparent;
-    color: #666;
+    color: var(--side-calendar-review-later-text);
     font-size: 0.85rem;
-    border: 1.5px solid #ddd;
+    border: 1.5px solid var(--side-calendar-review-later-border);
     border-radius: 10px;
     cursor: pointer;
     margin-bottom: 12px;
@@ -1139,15 +1168,15 @@ button {
 }
 
 .review-btn-later:hover {
-    border-color: #bbb;
-    color: #444;
+    border-color: var(--side-calendar-border-color);
+    color: var(--side-calendar-secondary-text-color);
 }
 
 .review-btn-never {
     display: block;
     width: 100%;
     font-size: 0.75rem;
-    color: #bbb;
+    color: var(--side-calendar-review-never-text);
     background: none;
     border: none;
     cursor: pointer;
@@ -1156,14 +1185,14 @@ button {
 }
 
 .review-btn-never:hover {
-    color: #888;
+    color: var(--side-calendar-muted-text-color);
 }
 
 .setup-google-status {
     text-align: center;
     margin-top: 12px;
     font-size: 0.85em;
-    color: #666;
+    color: var(--side-calendar-secondary-text-color);
 }
 
 /* Memo Panel */
