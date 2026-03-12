@@ -97,7 +97,8 @@ export const DEFAULT_SETTINGS = {
     selectedCalendars: [], // An array of the selected calendar IDs
     language: 'auto', // Language setting (auto/en/ja)
     googleEventReminder: false, // Automatic reminder for Google events
-    reminderMinutes: 5 // Reminder time in minutes before event starts
+    reminderMinutes: 5, // Reminder time in minutes before event starts
+    darkMode: false // Dark mode theme
 };
 
 // Mapping from color setting keys to CSS variable names
