@@ -11,6 +11,43 @@
     --side-calendar-panel-text-color: #000000;
     --side-calendar-google-event-default-text-color: #000000;
     --side-calendar-local-event-text-color: #000000;
+    /* UI chrome colors (borders, shadows, secondary text) */
+    --side-calendar-border-color: #ccc;
+    --side-calendar-border-color-light: #ddd;
+    --side-calendar-border-color-lighter: #eee;
+    --side-calendar-shadow-color: rgba(0, 0, 0, 0.2);
+    --side-calendar-secondary-text-color: #666;
+    --side-calendar-muted-text-color: #888;
+    --side-calendar-hover-color: #007bff;
+    --side-calendar-icon-color: #333;
+    --side-calendar-modal-bg: #fff;
+    --side-calendar-input-bg: #fff;
+    --side-calendar-input-border: #ddd;
+    --side-calendar-extended-zone-bg: rgba(0, 0, 0, 0.04);
+    --side-calendar-hour-line-color: #ccc;
+    --side-calendar-memo-toggle-hover-bg: #ececec;
+    --side-calendar-textarea-bg: #fff;
+    --side-calendar-textarea-border: #ccc;
+}
+
+/* Dark mode overrides for UI chrome */
+[data-theme="dark"] {
+    --side-calendar-border-color: #444;
+    --side-calendar-border-color-light: #555;
+    --side-calendar-border-color-lighter: #3a3a3a;
+    --side-calendar-shadow-color: rgba(0, 0, 0, 0.5);
+    --side-calendar-secondary-text-color: #aaa;
+    --side-calendar-muted-text-color: #888;
+    --side-calendar-hover-color: #5b9dff;
+    --side-calendar-icon-color: #ccc;
+    --side-calendar-modal-bg: #2a2a3c;
+    --side-calendar-input-bg: #1e1e2e;
+    --side-calendar-input-border: #555;
+    --side-calendar-extended-zone-bg: rgba(255, 255, 255, 0.04);
+    --side-calendar-hour-line-color: #444;
+    --side-calendar-memo-toggle-hover-bg: #3a3a4a;
+    --side-calendar-textarea-bg: #1e1e2e;
+    --side-calendar-textarea-border: #555;
 }
 
 html {
@@ -42,7 +79,7 @@ h1 {
 
 .side-time-table {
     position: relative;
-    border: 1px solid #ccc;
+    border: 1px solid var(--side-calendar-border-color);
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
@@ -83,12 +120,12 @@ h1 {
 .nav-arrow {
     font-size: 16px;
     cursor: pointer;
-    color: #666;
+    color: var(--side-calendar-secondary-text-color);
     transition: color 0.2s ease;
 }
 
 .nav-arrow:hover {
-    color: #007bff;
+    color: var(--side-calendar-hover-color);
 }
 
 #currentDateDisplay {
@@ -110,11 +147,11 @@ h1 {
 }
 
 #currentDateDisplay:hover {
-    color: #007bff;
+    color: var(--side-calendar-hover-color);
 }
 
 #currentDateDisplay.today {
-    color: #007bff;
+    color: var(--side-calendar-hover-color);
     font-weight: bold;
 }
 
@@ -143,22 +180,22 @@ h1 {
 
 .sync-icon {
     font-size: 20px;
-    color: #333;
+    color: var(--side-calendar-icon-color);
     cursor: pointer;
     transition: transform 0.3s ease, color 0.2s ease;
 }
 
 .sync-icon:hover {
-    color: #007bff;
+    color: var(--side-calendar-hover-color);
 }
 
 .sync-icon.fa-spin {
-    color: #007bff;
+    color: var(--side-calendar-hover-color);
 }
 
 .settings-icon {
     font-size: 24px;
-    color: #333;
+    color: var(--side-calendar-icon-color);
     cursor: pointer;
 }
 
@@ -182,7 +219,7 @@ h1 {
     position: absolute;
     left: 0;
     right: 0;
-    background-color: rgba(0, 0, 0, 0.04);
+    background-color: var(--side-calendar-extended-zone-bg);
     pointer-events: none;
 }
 
@@ -203,7 +240,7 @@ h1 {
     background: var(--side-calendar-google-event-default-color);
     color: var(--side-calendar-google-event-default-text-color);
     border-radius: 5px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 1px 3px var(--side-calendar-shadow-color);
     z-index: 21;
     transition: left 0.3s, width 0.3s; /* Smooth transition for movement */
     overflow: hidden; /* Prevent text from overflowing */
@@ -270,7 +307,7 @@ h1 {
     position: absolute;
     left: 40px;
     width: calc(100% - 40px);
-    border-top: 1px dashed #ccc;
+    border-top: 1px dashed var(--side-calendar-hour-line-color);
     z-index: 5;
 }
 
@@ -316,9 +353,9 @@ button {
 }
 
 .modal-content {
-    background-color: #fff; /* Pure white background */
+    background-color: var(--side-calendar-modal-bg); /* Modal background */
     padding: 30px; /* Wide inner padding */
-    border: 1px solid #ccc; /* Gray border */
+    border: 1px solid var(--side-calendar-border-color); /* Border */
     width: 90%; /* Easy to use even on small screens */
     max-width: 500px; /* Set maximum width */
     max-height: 90vh; /* Height restriction */
@@ -339,7 +376,7 @@ button {
 }
 
 .close {
-    color: #333;
+    color: var(--side-calendar-icon-color);
     float: right;
     font-size: 32px; /* Make text slightly larger */
     font-weight: bold;
@@ -364,8 +401,10 @@ input[type="time"] {
     width: calc(100% - 20px); /* Adjust width */
     padding: 10px;
     margin-bottom: 15px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--side-calendar-input-border);
     border-radius: 5px;
+    background-color: var(--side-calendar-input-bg);
+    color: inherit;
 }
 
 button {
@@ -409,7 +448,7 @@ button {
 /* Google event details calendar name */
 .google-event-calendar {
     font-size: 0.9em;
-    color: #6c757d;
+    color: var(--side-calendar-secondary-text-color);
     font-style: italic;
 }
 
@@ -434,7 +473,7 @@ button {
     flex: 0 0 16px;
     text-align: center;
     margin-top: 2px;
-    color: #6c757d;
+    color: var(--side-calendar-secondary-text-color);
 }
 
 .google-event-detail-text {
@@ -542,7 +581,7 @@ button {
 .whats-new-content .modal-title {
     margin-bottom: 16px;
     font-size: 1.3em;
-    color: #333;
+    color: var(--side-calendar-icon-color);
 }
 
 .whats-new-notes {
@@ -565,12 +604,12 @@ button {
 .whats-new-version-label {
     font-weight: bold;
     font-size: 1.05em;
-    color: #007bff;
+    color: var(--side-calendar-hover-color);
 }
 
 .whats-new-version-date {
     font-size: 0.85em;
-    color: #888;
+    color: var(--side-calendar-muted-text-color);
 }
 
 .whats-new-highlights {
@@ -583,12 +622,12 @@ button {
     margin-bottom: 4px;
     font-size: 0.93em;
     line-height: 1.5;
-    color: #444;
+    color: var(--side-calendar-secondary-text-color);
 }
 
 .whats-new-separator {
     border: none;
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--side-calendar-border-color-lighter);
     margin: 12px 0;
 }
 
@@ -630,7 +669,7 @@ button {
 
 .tutorial-tooltip {
     position: fixed;
-    background: #fff;
+    background: var(--side-calendar-modal-bg);
     border-radius: 10px;
     padding: 20px;
     max-width: 320px;
@@ -648,20 +687,20 @@ button {
 
 .tutorial-step-counter {
     font-size: 0.8em;
-    color: #888;
+    color: var(--side-calendar-muted-text-color);
     margin-bottom: 6px;
 }
 
 .tutorial-tooltip-title {
     margin: 0 0 8px 0;
     font-size: 1.1em;
-    color: #333;
+    color: var(--side-calendar-icon-color);
 }
 
 .tutorial-tooltip-desc {
     margin: 0 0 16px 0;
     font-size: 0.9em;
-    color: #555;
+    color: var(--side-calendar-secondary-text-color);
     line-height: 1.5;
 }
 
@@ -734,7 +773,7 @@ button {
 
 .setup-card {
     position: relative;
-    background: #fff;
+    background: var(--side-calendar-modal-bg);
     border-radius: 12px;
     padding: 24px 20px 20px;
     max-width: 340px;
@@ -785,14 +824,14 @@ button {
 .setup-step-title {
     margin: 0 0 8px 0;
     font-size: 1.15em;
-    color: #222;
+    color: var(--side-calendar-icon-color);
     font-weight: 600;
 }
 
 .setup-step-desc {
     margin: 0 0 16px 0;
     font-size: 0.88em;
-    color: #666;
+    color: var(--side-calendar-secondary-text-color);
     line-height: 1.5;
 }
 
@@ -853,10 +892,11 @@ button {
 .setup-time-input,
 .setup-select {
     padding: 6px 10px;
-    border: 1px solid #ced4da;
+    border: 1px solid var(--side-calendar-input-border);
     border-radius: 6px;
     font-size: 0.9em;
-    background: #fff;
+    background: var(--side-calendar-input-bg);
+    color: inherit;
     outline: none;
     transition: border-color 0.2s;
 }
@@ -918,13 +958,13 @@ button {
 }
 
 .setup-toggle-text {
-    color: #333;
+    color: var(--side-calendar-icon-color);
     font-weight: 500;
 }
 
 .setup-note {
     font-size: 0.8em;
-    color: #888;
+    color: var(--side-calendar-muted-text-color);
     margin: 0;
     line-height: 1.4;
     padding-left: 56px;
@@ -937,7 +977,7 @@ button {
     justify-content: flex-end;
     flex-wrap: wrap;
     padding-top: 4px;
-    border-top: 1px solid #f0f0f0;
+    border-top: 1px solid var(--side-calendar-border-color-lighter);
     margin-top: 4px;
 }
 
@@ -1146,7 +1186,7 @@ button {
                 clip-path 0.4s cubic-bezier(0.34, 1.15, 0.64, 1),
                 filter 0.3s ease;
     background-color: var(--side-calendar-panel-background-color);
-    border-top: 1px solid #ccc;
+    border-top: 1px solid var(--side-calendar-border-color);
     filter: drop-shadow(0 -1px 4px rgba(0, 0, 0, 0.08));
     z-index: 100;
 }
@@ -1182,11 +1222,11 @@ button {
     width: 28px;
     height: 3px;
     border-radius: 2px;
-    background: #ccc;
+    background: var(--side-calendar-border-color);
 }
 
 .memo-drag-handle:hover::after {
-    background: #999;
+    background: var(--side-calendar-secondary-text-color);
 }
 
 .memo-toggle-btn {
@@ -1202,19 +1242,19 @@ button {
     cursor: pointer;
     font-size: 0.85em;
     font-weight: bold;
-    color: #555;
+    color: var(--side-calendar-secondary-text-color);
     transition: padding 0.3s ease;
     text-align: left;
     box-sizing: border-box;
 }
 
 .memo-toggle-btn:hover {
-    background-color: #ececec;
+    background-color: var(--side-calendar-memo-toggle-hover-bg);
 }
 
 .memo-toggle-icon {
     font-size: 0.75em;
-    color: #888;
+    color: var(--side-calendar-muted-text-color);
 }
 
 .memo-body {
@@ -1243,13 +1283,13 @@ button {
     width: 100%;
     box-sizing: border-box;
     resize: none;
-    border: 1px solid #ccc;
+    border: 1px solid var(--side-calendar-textarea-border);
     border-radius: 10px;
     padding: 6px 8px;
     font-size: 0.82em;
     font-family: Arial, sans-serif;
-    background-color: #fff;
-    color: #333;
+    background-color: var(--side-calendar-textarea-bg);
+    color: var(--side-calendar-panel-text-color);
     outline: none;
 }
 

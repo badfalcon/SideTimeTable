@@ -21,6 +21,7 @@ import {
     CalendarManagementCard,
     TimeSettingsCard,
     ColorSettingsCard,
+    DarkModeSettingsCard,
     LanguageSettingsCard,
     ShortcutSettingsCard,
     ReminderSettingsCard,
@@ -41,6 +42,7 @@ class OptionsPageManager {
         this.calendarManagementCard = null;
         this.timeSettingsCard = null;
         this.colorSettingsCard = null;
+        this.darkModeSettingsCard = null;
         this.languageSettingsCard = null;
         this.shortcutSettingsCard = null;
         this.reminderSettingsCard = null;
@@ -85,6 +87,11 @@ class OptionsPageManager {
         this.colorSettingsCard.createElement();
         this.colorSettingsCard.appendTo(tabDisplay);
         this.componentManager.components.set('colorSettings', this.colorSettingsCard);
+
+        this.darkModeSettingsCard = new DarkModeSettingsCard(this.handleDarkModeSettingsChange.bind(this));
+        this.darkModeSettingsCard.createElement();
+        this.darkModeSettingsCard.appendTo(tabDisplay);
+        this.componentManager.components.set('darkModeSettings', this.darkModeSettingsCard);
 
         // --- General タブ ---
         this.languageSettingsCard = new LanguageSettingsCard(this.handleLanguageSettingsChange.bind(this));
@@ -183,6 +190,11 @@ class OptionsPageManager {
             this.colorSettingsCard.updateSettings(
                 Object.fromEntries(Object.keys(COLOR_CSS_VARS).map(key => [key, settings[key]]))
             );
+
+            // Load the dark mode settings
+            this.darkModeSettingsCard.updateSettings({
+                darkMode: settings.darkMode || false
+            });
 
             // Load the language settings
             const languageSettings = isDemoMode()
@@ -313,6 +325,23 @@ class OptionsPageManager {
         }
     }
 
+    async handleDarkModeSettingsChange(darkModeSettings) {
+        try {
+            const currentSettings = await loadSettings();
+            const updatedSettings = {
+                ...currentSettings,
+                darkMode: darkModeSettings.darkMode
+            };
+
+            await saveSettings(updatedSettings);
+
+            // Reload the side panel
+            this._reloadSidePanel();
+        } catch (error) {
+            logError('Dark mode settings save', error);
+        }
+    }
+
     async handleColorSettingsChange(colorSettings) {
         try {
             // Load the existing settings and update only the color settings
@@ -391,6 +420,7 @@ class OptionsPageManager {
             // Update each component with the default settings
             this.timeSettingsCard.resetToDefaults();
             this.colorSettingsCard.resetToDefaults();
+            this.darkModeSettingsCard.resetToDefaults();
             this.languageSettingsCard.resetToDefaults();
             this.reminderSettingsCard.resetToDefaults();
 

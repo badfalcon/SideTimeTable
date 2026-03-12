@@ -537,9 +537,25 @@
     "message": "Deuteranopia",
     "description": "Deuteranopia (green-blind) color preset name"
   },
+  "presetDark": {
+    "message": "Dark",
+    "description": "Dark color preset name"
+  },
   "presetTritanopia": {
     "message": "Tritanopia",
     "description": "Tritanopia (blue-blind) color preset name"
+  },
+  "darkModeSettings": {
+    "message": "Dark Mode",
+    "description": "Dark mode settings card title"
+  },
+  "darkModeDescription": {
+    "message": "Toggle dark mode for the extension interface.",
+    "description": "Dark mode settings description"
+  },
+  "darkModeToggle": {
+    "message": "Enable Dark Mode",
+    "description": "Dark mode toggle label"
   },
   "signInWithGoogle": {
     "message": "Sign in with Google",

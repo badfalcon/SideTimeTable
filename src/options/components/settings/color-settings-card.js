@@ -225,6 +225,18 @@ export class ColorSettingsCard extends CardComponent {
                 }
             },
             {
+                nameKey: 'presetDark',
+                colors: {
+                    timelineBackgroundColor: '#1e1e2e',
+                    panelBackgroundColor: '#2a2a3c',
+                    googleEventDefaultColor: '#4a4a5e',
+                    workTimeColor: '#2e2e42',
+                    breakTimeColor: '#3a3a52',
+                    localEventColor: '#3a5a3a',
+                    currentTimeLineColor: '#ff4444'
+                }
+            },
+            {
                 nameKey: 'presetMonochrome',
                 colors: {
                     timelineBackgroundColor: '#f5f5f5',

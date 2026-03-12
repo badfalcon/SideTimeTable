@@ -335,6 +335,13 @@ class SidePanelUIController {
                 }
             }
 
+            // Apply dark mode theme attribute
+            if (settings.darkMode) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+            }
+
             // Set the current date
             this.headerComponent.setCurrentDate(this.currentDate);
 
