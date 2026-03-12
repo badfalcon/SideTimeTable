@@ -517,10 +517,6 @@
     "message": "デフォルト",
     "description": "デフォルトカラープリセット名"
   },
-  "presetDark": {
-    "message": "ダーク",
-    "description": "ダークモードカラープリセット名"
-  },
   "presetMonochrome": {
     "message": "モノクロ",
     "description": "モノクロカラープリセット名"
