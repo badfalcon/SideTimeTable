@@ -173,6 +173,18 @@
     "message": "Color Settings",
     "description": "Section title for color settings"
   },
+  "timelineBackgroundColor": {
+    "message": "Timeline Background",
+    "description": "Label for timeline (body) background color input"
+  },
+  "panelBackgroundColor": {
+    "message": "Header/Memo Background",
+    "description": "Label for header and memo panel background color input"
+  },
+  "googleEventDefaultColor": {
+    "message": "Google Event Default",
+    "description": "Label for default Google event color input"
+  },
   "workTimeColor": {
     "message": "Work Time Color",
     "description": "Label for work time color input"
@@ -180,6 +192,10 @@
   "localEventColor": {
     "message": "Local Event Color",
     "description": "Label for local event color input"
+  },
+  "breakTimeColor": {
+    "message": "Break Time Color",
+    "description": "Label for break time color input"
   },
   "currentTimeLineColor": {
     "message": "Current Time Line Color",

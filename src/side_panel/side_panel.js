@@ -19,7 +19,7 @@ import {
 import { EventLayoutManager } from './time-manager.js';
 import { GoogleEventManager, LocalEventManager } from './event-handlers.js';
 import {
-    generateTimeList, loadSettings, RECURRENCE_TYPES,
+    generateTimeList, loadSettings, RECURRENCE_TYPES, COLOR_CSS_VARS, TEXT_COLOR_CSS_VARS, getContrastColor,
     loadLocalEventsForDate, saveLocalEventsForDate,
     loadRecurringEvents, saveRecurringEvents,
     addRecurringEventException, deleteRecurringEvent,
@@ -322,14 +322,17 @@ class SidePanelUIController {
             }
 
             // Set the CSS variables
-            if (settings.workTimeColor) {
-                document.documentElement.style.setProperty('--side-calendar-work-time-color', settings.workTimeColor);
+            for (const [key, varName] of Object.entries(COLOR_CSS_VARS)) {
+                if (settings[key] != null) {
+                    document.documentElement.style.setProperty(varName, settings[key]);
+                }
             }
-            if (settings.localEventColor) {
-                document.documentElement.style.setProperty('--side-calendar-local-event-color', settings.localEventColor);
-            }
-            if (settings.currentTimeLineColor) {
-                document.documentElement.style.setProperty('--side-calendar-current-time-line-color', settings.currentTimeLineColor);
+
+            // Set computed text color CSS variables (contrast color for each background)
+            for (const [key, varName] of Object.entries(TEXT_COLOR_CSS_VARS)) {
+                if (settings[key] != null) {
+                    document.documentElement.style.setProperty(varName, getContrastColor(settings[key]));
+                }
             }
 
             // Set the current date
