@@ -180,14 +180,9 @@ class OptionsPageManager {
                 breakTimeEnd: settings.breakTimeEnd
             });
 
-            this.colorSettingsCard.updateSettings({
-                panelBackgroundColor: settings.panelBackgroundColor,
-                googleEventDefaultColor: settings.googleEventDefaultColor,
-                workTimeColor: settings.workTimeColor,
-                breakTimeColor: settings.breakTimeColor,
-                localEventColor: settings.localEventColor,
-                currentTimeLineColor: settings.currentTimeLineColor
-            });
+            this.colorSettingsCard.updateSettings(
+                Object.fromEntries(Object.keys(COLOR_CSS_VARS).map(key => [key, settings[key]]))
+            );
 
             // Load the language settings
             const languageSettings = isDemoMode()
