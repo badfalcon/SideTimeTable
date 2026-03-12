@@ -45,6 +45,19 @@
     --side-calendar-review-later-text: #666;
     --side-calendar-review-later-border: #ddd;
     --side-calendar-review-never-text: #bbb;
+    /* Accent / focus color */
+    --side-calendar-accent-color: #007bff;
+    --side-calendar-accent-hover-color: #0056b3;
+    --side-calendar-accent-shadow: rgba(0, 123, 255, 0.15);
+    /* Toggle switch */
+    --side-calendar-toggle-bg: #ccc;
+    --side-calendar-toggle-knob: #fff;
+    /* Progress dots */
+    --side-calendar-progress-dot-bg: #ddd;
+    /* Success badge */
+    --side-calendar-success-badge-bg: #e8f5e9;
+    --side-calendar-success-badge-border: #a5d6a7;
+    --side-calendar-success-badge-text: #2e7d32;
 }
 
 /* Dark mode overrides for UI chrome */
@@ -77,6 +90,15 @@
     --side-calendar-review-later-text: #aaa;
     --side-calendar-review-later-border: #555;
     --side-calendar-review-never-text: #777;
+    --side-calendar-accent-color: #5b9dff;
+    --side-calendar-accent-hover-color: #4a8af0;
+    --side-calendar-accent-shadow: rgba(91, 157, 255, 0.2);
+    --side-calendar-toggle-bg: #555;
+    --side-calendar-toggle-knob: #ddd;
+    --side-calendar-progress-dot-bg: #555;
+    --side-calendar-success-badge-bg: #1b3a2a;
+    --side-calendar-success-badge-border: #2e7d32;
+    --side-calendar-success-badge-text: #81c784;
 }
 
 html {
@@ -297,14 +319,14 @@ h1 {
     position: absolute;
     left: 40px; /* matches LAYOUT_CONSTANTS.BASE_LEFT in event-handlers.js */
     right: 4px;
-    background: rgba(13, 110, 253, 0.15);
-    border: 2px dashed #0d6efd;
+    background: var(--side-calendar-accent-shadow);
+    border: 2px dashed var(--side-calendar-accent-color);
     border-radius: 4px;
     pointer-events: none;
     z-index: 30;
     font-size: 11px;
     padding: 2px 4px;
-    color: #0d6efd;
+    color: var(--side-calendar-accent-color);
     box-sizing: border-box;
     overflow: hidden;
     white-space: nowrap;
@@ -353,13 +375,13 @@ button {
 }
 
 .btn-primary {
-    background-color: #007bff;
+    background-color: var(--side-calendar-accent-color);
     color: white;
 }
 
 .btn-primary:hover,
 .btn-primary:focus {
-    background-color: #0056b3;
+    background-color: var(--side-calendar-accent-hover-color);
 }
 
 /* Local event creation dialog styles */
@@ -751,12 +773,12 @@ button {
 }
 
 .tutorial-btn-primary {
-    background-color: #007bff;
+    background-color: var(--side-calendar-accent-color);
     color: #fff;
 }
 
 .tutorial-btn-primary:hover {
-    background-color: #0056b3;
+    background-color: var(--side-calendar-accent-hover-color);
 }
 
 .tutorial-btn-secondary {
@@ -831,12 +853,12 @@ button {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background-color: #ddd;
+    background-color: var(--side-calendar-progress-dot-bg);
     transition: all 0.3s ease;
 }
 
 .setup-progress-dot.active {
-    background-color: #007bff;
+    background-color: var(--side-calendar-accent-color);
     transform: scale(1.3);
 }
 
@@ -888,12 +910,12 @@ button {
 }
 
 .setup-radio-label.selected {
-    border-color: var(--side-calendar-hover-color);
+    border-color: var(--side-calendar-accent-color);
     background-color: var(--side-calendar-subtle-bg);
 }
 
 .setup-radio-label input[type="radio"] {
-    accent-color: #007bff;
+    accent-color: var(--side-calendar-accent-color);
     margin: 0;
 }
 
@@ -932,8 +954,8 @@ button {
 
 .setup-time-input:focus,
 .setup-select:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.15);
+    border-color: var(--side-calendar-accent-color);
+    box-shadow: 0 0 0 2px var(--side-calendar-accent-shadow);
 }
 
 /* Toggle switch */
@@ -959,7 +981,7 @@ button {
     position: relative;
     width: 44px;
     height: 24px;
-    background-color: #ccc;
+    background-color: var(--side-calendar-toggle-bg);
     border-radius: 12px;
     transition: background-color 0.3s;
     flex-shrink: 0;
@@ -972,14 +994,14 @@ button {
     left: 2px;
     width: 20px;
     height: 20px;
-    background-color: #fff;
+    background-color: var(--side-calendar-toggle-knob);
     border-radius: 50%;
     transition: transform 0.3s;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .setup-toggle-input:checked + .setup-toggle-slider {
-    background-color: #007bff;
+    background-color: var(--side-calendar-accent-color);
 }
 
 .setup-toggle-input:checked + .setup-toggle-slider::after {
@@ -1021,12 +1043,12 @@ button {
 }
 
 .setup-btn-primary {
-    background-color: #007bff;
+    background-color: var(--side-calendar-accent-color);
     color: #fff;
 }
 
 .setup-btn-primary:hover {
-    background-color: #0056b3;
+    background-color: var(--side-calendar-accent-hover-color);
 }
 
 .setup-btn-secondary {
@@ -1053,10 +1075,10 @@ button {
 .setup-google-connected-badge {
     text-align: center;
     padding: 10px 16px;
-    background: #e8f5e9;
-    border: 1px solid #a5d6a7;
+    background: var(--side-calendar-success-badge-bg);
+    border: 1px solid var(--side-calendar-success-badge-border);
     border-radius: 8px;
-    color: #2e7d32;
+    color: var(--side-calendar-success-badge-text);
     font-weight: 600;
     font-size: 0.95em;
     max-width: 260px;
@@ -1323,5 +1345,5 @@ button {
 }
 
 #memoTextarea:focus {
-    border-color: #4a90e2;
+    border-color: var(--side-calendar-accent-color);
 }
