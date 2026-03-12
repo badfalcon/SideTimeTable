@@ -265,7 +265,7 @@ export class GoogleEventModal extends ModalComponent {
             link.target = '_blank';
             link.setAttribute('data-localize', '__MSG_joinGoogleMeet__');
             link.textContent = chrome.i18n.getMessage('joinGoogleMeet');
-            link.style.cssText = 'color: #4285f4; text-decoration: none;';
+            link.style.cssText = 'color: var(--side-calendar-link-color); text-decoration: none;';
 
             this.meetElement.appendChild(icon);
             this.meetElement.appendChild(link);
@@ -282,7 +282,7 @@ export class GoogleEventModal extends ModalComponent {
             link.target = '_blank';
             link.setAttribute('data-localize', '__MSG_joinVideoConference__');
             link.textContent = chrome.i18n.getMessage('joinVideoConference');
-            link.style.cssText = 'color: #4285f4; text-decoration: none;';
+            link.style.cssText = 'color: var(--side-calendar-link-color); text-decoration: none;';
 
             this.meetElement.appendChild(icon);
             this.meetElement.appendChild(link);
@@ -309,7 +309,7 @@ export class GoogleEventModal extends ModalComponent {
         if (realAttendees.length > 0) {
             const icon = document.createElement('i');
             icon.className = 'fas fa-users me-1';
-            icon.style.cssText = 'margin-top: 2px; color: #6c757d;';
+            icon.style.cssText = 'margin-top: 2px; color: var(--side-calendar-secondary-text-color);';
 
             const container = document.createElement('div');
             container.className = 'google-event-detail-text';
