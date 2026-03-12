@@ -517,10 +517,6 @@
     "message": "Default",
     "description": "Default color preset name"
   },
-  "presetDark": {
-    "message": "Dark",
-    "description": "Dark mode color preset name"
-  },
   "presetMonochrome": {
     "message": "Monochrome",
     "description": "Monochrome color preset name"
