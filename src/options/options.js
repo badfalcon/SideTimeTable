@@ -6,6 +6,7 @@
 
 import {
     DEFAULT_SETTINGS,
+    COLOR_CSS_VARS,
     generateTimeList,
     loadSettings,
     saveSettings,
@@ -179,11 +180,9 @@ class OptionsPageManager {
                 breakTimeEnd: settings.breakTimeEnd
             });
 
-            this.colorSettingsCard.updateSettings({
-                workTimeColor: settings.workTimeColor,
-                localEventColor: settings.localEventColor,
-                currentTimeLineColor: settings.currentTimeLineColor
-            });
+            this.colorSettingsCard.updateSettings(
+                Object.fromEntries(Object.keys(COLOR_CSS_VARS).map(key => [key, settings[key]]))
+            );
 
             // Load the language settings
             const languageSettings = isDemoMode()
@@ -318,19 +317,14 @@ class OptionsPageManager {
         try {
             // Load the existing settings and update only the color settings
             const currentSettings = await loadSettings();
-            const updatedSettings = {
-                ...currentSettings,
-                workTimeColor: colorSettings.workTimeColor,
-                localEventColor: colorSettings.localEventColor,
-                currentTimeLineColor: colorSettings.currentTimeLineColor
-            };
+            const updatedSettings = { ...currentSettings, ...colorSettings };
 
             await saveSettings(updatedSettings);
 
             // Update the CSS variables immediately
-            document.documentElement.style.setProperty('--side-calendar-work-time-color', colorSettings.workTimeColor);
-            document.documentElement.style.setProperty('--side-calendar-local-event-color', colorSettings.localEventColor);
-            document.documentElement.style.setProperty('--side-calendar-current-time-line-color', colorSettings.currentTimeLineColor);
+            for (const [key, varName] of Object.entries(COLOR_CSS_VARS)) {
+                document.documentElement.style.setProperty(varName, colorSettings[key]);
+            }
 
             // Reload the side panel
             this._reloadSidePanel();
@@ -401,9 +395,9 @@ class OptionsPageManager {
             this.reminderSettingsCard.resetToDefaults();
 
             // Reset the CSS variables too
-            document.documentElement.style.setProperty('--side-calendar-work-time-color', DEFAULT_SETTINGS.workTimeColor);
-            document.documentElement.style.setProperty('--side-calendar-local-event-color', DEFAULT_SETTINGS.localEventColor);
-            document.documentElement.style.setProperty('--side-calendar-current-time-line-color', DEFAULT_SETTINGS.currentTimeLineColor);
+            for (const [key, varName] of Object.entries(COLOR_CSS_VARS)) {
+                document.documentElement.style.setProperty(varName, DEFAULT_SETTINGS[key]);
+            }
 
             // Reload the side panel
             this._reloadSidePanel();

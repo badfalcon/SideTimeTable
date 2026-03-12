@@ -2,6 +2,13 @@
  * ColorSettingsCard - Color settings card component
  */
 import { CardComponent } from '../base/card-component.js';
+import { DEFAULT_SETTINGS, COLOR_CSS_VARS } from '../../../lib/utils.js';
+
+// Derived from COLOR_CSS_VARS to stay in sync with the single source of truth
+const COLOR_KEYS = Object.keys(COLOR_CSS_VARS);
+
+// Default color values, computed once at module load
+const DEFAULT_COLOR_SETTINGS = Object.fromEntries(COLOR_KEYS.map(key => [key, DEFAULT_SETTINGS[key]]));
 
 export class ColorSettingsCard extends CardComponent {
     constructor(onSettingsChange) {
@@ -15,16 +22,16 @@ export class ColorSettingsCard extends CardComponent {
         this.onSettingsChange = onSettingsChange;
 
         // The color picker elements
+        this.panelBackgroundColorInput = null;
+        this.googleEventDefaultColorInput = null;
+        this.timelineBackgroundColorInput = null;
         this.workTimeColorInput = null;
+        this.breakTimeColorInput = null;
         this.localEventColorInput = null;
         this.currentTimeLineColorInput = null;
 
-        // The current setting values
-        this.settings = {
-            workTimeColor: '#d4d4d4',
-            localEventColor: '#bbf2b1',
-            currentTimeLineColor: '#ff0000'
-        };
+        // The current setting values (fallback before loaded from storage)
+        this.settings = { ...DEFAULT_COLOR_SETTINGS };
     }
 
     createElement() {
@@ -47,11 +54,20 @@ export class ColorSettingsCard extends CardComponent {
     _createForm() {
         const form = document.createElement('form');
 
-        // The grid layout - all 3 color settings in one row
+        // The grid layout - all 7 color settings
         const row = document.createElement('div');
         row.className = 'row';
 
-        // The work time color
+        // --- Timeline area ---
+        const timelineBgCol = this._createColorInputColumn(
+            'timeline-background-color',
+            '__MSG_timelineBackgroundColor__',
+            'Timeline Background Color',
+            this.settings.timelineBackgroundColor,
+            (input) => this.timelineBackgroundColorInput = input
+        );
+        row.appendChild(timelineBgCol);
+
         const workTimeCol = this._createColorInputColumn(
             'work-time-color',
             '__MSG_workTimeColor__',
@@ -61,7 +77,35 @@ export class ColorSettingsCard extends CardComponent {
         );
         row.appendChild(workTimeCol);
 
-        // The local event color
+        const breakTimeCol = this._createColorInputColumn(
+            'break-time-color',
+            '__MSG_breakTimeColor__',
+            'Break Time Color',
+            this.settings.breakTimeColor,
+            (input) => this.breakTimeColorInput = input
+        );
+        row.appendChild(breakTimeCol);
+
+        // --- Header / memo area ---
+        const panelBgCol = this._createColorInputColumn(
+            'panel-background-color',
+            '__MSG_panelBackgroundColor__',
+            'Header/Memo Background Color',
+            this.settings.panelBackgroundColor,
+            (input) => this.panelBackgroundColorInput = input
+        );
+        row.appendChild(panelBgCol);
+
+        // --- Event colors ---
+        const googleEventDefaultCol = this._createColorInputColumn(
+            'google-event-default-color',
+            '__MSG_googleEventDefaultColor__',
+            'Google Event Default Color',
+            this.settings.googleEventDefaultColor,
+            (input) => this.googleEventDefaultColorInput = input
+        );
+        row.appendChild(googleEventDefaultCol);
+
         const localEventCol = this._createColorInputColumn(
             'local-event-color',
             '__MSG_localEventColor__',
@@ -71,7 +115,7 @@ export class ColorSettingsCard extends CardComponent {
         );
         row.appendChild(localEventCol);
 
-        // The current time line color
+        // --- Indicator ---
         const currentTimeLineCol = this._createColorInputColumn(
             'current-time-line-color',
             '__MSG_currentTimeLineColor__',
@@ -96,7 +140,7 @@ export class ColorSettingsCard extends CardComponent {
      */
     _createColorInputColumn(id, localizeKey, labelText, defaultValue, inputSetter) {
         const col = document.createElement('div');
-        col.className = 'col-md-4 mb-3';
+        col.className = 'col-md-3 mb-3';
 
         // Container that combines all elements
         const container = document.createElement('div');
@@ -171,7 +215,11 @@ export class ColorSettingsCard extends CardComponent {
             {
                 nameKey: 'presetDefault',
                 colors: {
-                    workTimeColor: '#d4d4d4',
+                    timelineBackgroundColor: '#ffffff',
+                    panelBackgroundColor: '#ffffff',
+                    googleEventDefaultColor: '#fff0b8',
+                    workTimeColor: '#e3e3e3',
+                    breakTimeColor: '#bcdcfb',
                     localEventColor: '#bbf2b1',
                     currentTimeLineColor: '#ff0000'
                 }
@@ -179,7 +227,11 @@ export class ColorSettingsCard extends CardComponent {
             {
                 nameKey: 'presetMonochrome',
                 colors: {
+                    timelineBackgroundColor: '#f5f5f5',
+                    panelBackgroundColor: '#ebebeb',
+                    googleEventDefaultColor: '#c0c0c0',
                     workTimeColor: '#f0f0f0',
+                    breakTimeColor: '#c8c8c8',
                     localEventColor: '#e0e0e0',
                     currentTimeLineColor: '#808080'
                 }
@@ -187,7 +239,11 @@ export class ColorSettingsCard extends CardComponent {
             {
                 nameKey: 'presetPastel',
                 colors: {
+                    timelineBackgroundColor: '#faf8f5',
+                    panelBackgroundColor: '#f5f0ea',
+                    googleEventDefaultColor: '#e8e0d8',
                     workTimeColor: '#fdf2e9',
+                    breakTimeColor: '#fde8f0',
                     localEventColor: '#e8f5e8',
                     currentTimeLineColor: '#ff9999'
                 }
@@ -195,7 +251,11 @@ export class ColorSettingsCard extends CardComponent {
             {
                 nameKey: 'presetVivid',
                 colors: {
+                    timelineBackgroundColor: '#f5f5f0',
+                    panelBackgroundColor: '#eeeeea',
+                    googleEventDefaultColor: '#b8d4f0',
                     workTimeColor: '#ffecb3',
+                    breakTimeColor: '#ffb3d9',
                     localEventColor: '#c8e6c9',
                     currentTimeLineColor: '#ff0000'
                 }
@@ -203,7 +263,11 @@ export class ColorSettingsCard extends CardComponent {
             {
                 nameKey: 'presetProtanopia',
                 colors: {
+                    timelineBackgroundColor: '#f0f4f8',
+                    panelBackgroundColor: '#e8eef4',
+                    googleEventDefaultColor: '#b8d4f0',
                     workTimeColor: '#cce5ff',
+                    breakTimeColor: '#ffe0b2',
                     localEventColor: '#fff3cd',
                     currentTimeLineColor: '#0072b2'
                 }
@@ -211,7 +275,11 @@ export class ColorSettingsCard extends CardComponent {
             {
                 nameKey: 'presetDeuteranopia',
                 colors: {
+                    timelineBackgroundColor: '#f8f6f0',
+                    panelBackgroundColor: '#f0ede5',
+                    googleEventDefaultColor: '#d0c8b0',
                     workTimeColor: '#fff3cd',
+                    breakTimeColor: '#f8d7e3',
                     localEventColor: '#cce5ff',
                     currentTimeLineColor: '#d55e00'
                 }
@@ -219,7 +287,11 @@ export class ColorSettingsCard extends CardComponent {
             {
                 nameKey: 'presetTritanopia',
                 colors: {
+                    timelineBackgroundColor: '#f8f0f8',
+                    panelBackgroundColor: '#f0e8f0',
+                    googleEventDefaultColor: '#d8c8d8',
                     workTimeColor: '#f8e8f8',
+                    breakTimeColor: '#ffe8e8',
                     localEventColor: '#d4f0d4',
                     currentTimeLineColor: '#cc0000'
                 }
@@ -277,22 +349,6 @@ export class ColorSettingsCard extends CardComponent {
     }
 
     /**
-     * Get contrast color (for text display)
-     * @private
-     */
-    _getContrastColor(hexColor) {
-        // Convert HEX to RGB
-        const r = parseInt(hexColor.slice(1, 3), 16);
-        const g = parseInt(hexColor.slice(3, 5), 16);
-        const b = parseInt(hexColor.slice(5, 7), 16);
-
-        // Calculate the luminance
-        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-
-        return luminance > 0.5 ? '#000000' : '#ffffff';
-    }
-
-    /**
      * Update preview
      * @private
      */
@@ -303,28 +359,24 @@ export class ColorSettingsCard extends CardComponent {
     }
 
     /**
+     * Get the stored input element for a color key
+     * @private
+     */
+    _inputForKey(key) {
+        return this[`${key}Input`];
+    }
+
+    /**
      * Set up event listeners
      * @private
      */
     _setupEventListeners() {
-        // The change events for each color picker
-        this.workTimeColorInput?.addEventListener('input', (e) => {
-            this._updatePreview(e.target, e.target.value);
-        });
-
-        this.workTimeColorInput?.addEventListener('change', () => this._handleColorChange());
-
-        this.localEventColorInput?.addEventListener('input', (e) => {
-            this._updatePreview(e.target, e.target.value);
-        });
-
-        this.localEventColorInput?.addEventListener('change', () => this._handleColorChange());
-
-        this.currentTimeLineColorInput?.addEventListener('input', (e) => {
-            this._updatePreview(e.target, e.target.value);
-        });
-
-        this.currentTimeLineColorInput?.addEventListener('change', () => this._handleColorChange());
+        for (const key of COLOR_KEYS) {
+            const input = this._inputForKey(key);
+            if (!input) continue;
+            input.addEventListener('input', (e) => this._updatePreview(e.target, e.target.value));
+            input.addEventListener('change', () => this._handleColorChange());
+        }
     }
 
     /**
@@ -345,11 +397,9 @@ export class ColorSettingsCard extends CardComponent {
      * Get current settings
      */
     getSettings() {
-        return {
-            workTimeColor: this.workTimeColorInput?.value || this.settings.workTimeColor,
-            localEventColor: this.localEventColorInput?.value || this.settings.localEventColor,
-            currentTimeLineColor: this.currentTimeLineColorInput?.value || this.settings.currentTimeLineColor
-        };
+        return Object.fromEntries(
+            COLOR_KEYS.map(key => [key, this._inputForKey(key)?.value ?? this.settings[key]])
+        );
     }
 
     /**
@@ -358,19 +408,12 @@ export class ColorSettingsCard extends CardComponent {
     updateSettings(settings) {
         this.settings = { ...this.settings, ...settings };
 
-        if (this.workTimeColorInput) {
-            this.workTimeColorInput.value = this.settings.workTimeColor;
-            this._updatePreview(this.workTimeColorInput, this.settings.workTimeColor);
-        }
-
-        if (this.localEventColorInput) {
-            this.localEventColorInput.value = this.settings.localEventColor;
-            this._updatePreview(this.localEventColorInput, this.settings.localEventColor);
-        }
-
-        if (this.currentTimeLineColorInput) {
-            this.currentTimeLineColorInput.value = this.settings.currentTimeLineColor;
-            this._updatePreview(this.currentTimeLineColorInput, this.settings.currentTimeLineColor);
+        for (const key of COLOR_KEYS) {
+            const input = this._inputForKey(key);
+            if (input) {
+                input.value = this.settings[key];
+                this._updatePreview(input, this.settings[key]);
+            }
         }
     }
 
@@ -378,33 +421,9 @@ export class ColorSettingsCard extends CardComponent {
      * Reset to default settings
      */
     resetToDefaults() {
-        const defaultSettings = {
-            workTimeColor: '#d4d4d4',
-            localEventColor: '#bbf2b1',
-            currentTimeLineColor: '#ff0000'
-        };
-
-        this.updateSettings(defaultSettings);
+        this.updateSettings(DEFAULT_COLOR_SETTINGS);
         this._handleColorChange();
     }
 
-    /**
-     * Toggle enable/disable live preview
-     */
-    setLivePreview(enabled) {
-        const eventType = enabled ? 'input' : 'change';
-
-        // Remove the existing listeners and reset
-        [this.workTimeColorInput, this.localEventColorInput, this.currentTimeLineColorInput]
-            .filter(input => input)
-            .forEach(input => {
-                const newInput = input.cloneNode(true);
-                input.parentNode.replaceChild(newInput, input);
-
-                newInput.addEventListener(eventType, () => this._handleColorChange());
-                newInput.addEventListener('input', (e) => {
-                    this._updatePreview(e.target, e.target.value);
-                });
-            });
-    }
 }
+

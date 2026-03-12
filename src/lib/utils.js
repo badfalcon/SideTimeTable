@@ -84,16 +84,57 @@ export const DEFAULT_SETTINGS = {
     googleIntegrated: false,
     openTime: TIME_CONSTANTS.DEFAULT_OPEN_HOUR,
     closeTime: TIME_CONSTANTS.DEFAULT_CLOSE_HOUR,
-    workTimeColor: '#d4d4d4',
+    timelineBackgroundColor: '#ffffff', // Timeline (body) background color
+    panelBackgroundColor: '#ffffff', // Header and memo panel background color
+    googleEventDefaultColor: '#fff0b8', // Default Google event color
+    workTimeColor: '#e3e3e3',
     breakTimeFixed: false,
     breakTimeStart: TIME_CONSTANTS.DEFAULT_BREAK_START,
     breakTimeEnd: TIME_CONSTANTS.DEFAULT_BREAK_END,
+    breakTimeColor: '#bcdcfb', // Break time background color
     localEventColor: '#bbf2b1',
     currentTimeLineColor: '#ff0000', // Current time line color
     selectedCalendars: [], // An array of the selected calendar IDs
     language: 'auto', // Language setting (auto/en/ja)
     googleEventReminder: false, // Automatic reminder for Google events
     reminderMinutes: 5 // Reminder time in minutes before event starts
+};
+
+// Mapping from color setting keys to CSS variable names
+// Order determines the display order in the settings UI
+export const COLOR_CSS_VARS = {
+    // Timeline area
+    timelineBackgroundColor: '--side-calendar-timeline-background-color',
+    workTimeColor: '--side-calendar-work-time-color',
+    breakTimeColor: '--side-calendar-break-time-color',
+    // Header / memo area
+    panelBackgroundColor: '--side-calendar-panel-background-color',
+    // Event colors
+    googleEventDefaultColor: '--side-calendar-google-event-default-color',
+    localEventColor: '--side-calendar-local-event-color',
+    // Indicator
+    currentTimeLineColor: '--side-calendar-current-time-line-color'
+};
+
+/**
+ * Return black or white depending on which provides better contrast against the given hex color.
+ * @param {string} hexColor - e.g. '#1e1e2e'
+ * @returns {string} '#000000' or '#ffffff'
+ */
+export function getContrastColor(hexColor) {
+    const r = parseInt(hexColor.slice(1, 3), 16);
+    const g = parseInt(hexColor.slice(3, 5), 16);
+    const b = parseInt(hexColor.slice(5, 7), 16);
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.5 ? '#000000' : '#ffffff';
+}
+
+// Background color keys that need a corresponding computed text color CSS variable
+export const TEXT_COLOR_CSS_VARS = {
+    timelineBackgroundColor: '--side-calendar-timeline-text-color',
+    panelBackgroundColor: '--side-calendar-panel-text-color',
+    googleEventDefaultColor: '--side-calendar-google-event-default-text-color',
+    localEventColor: '--side-calendar-local-event-text-color'
 };
 
 /**
