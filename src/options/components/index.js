@@ -15,7 +15,6 @@ export { CalendarManagementCard } from './calendar/calendar-management-card.js';
 // The settings-related components
 export { TimeSettingsCard } from './settings/time-settings-card.js';
 export { ColorSettingsCard } from './settings/color-settings-card.js';
-export { DarkModeSettingsCard } from './settings/dark-mode-settings-card.js';
 export { LanguageSettingsCard } from './settings/language-settings-card.js';
 export { ShortcutSettingsCard } from './settings/shortcut-settings-card.js';
 export { ReminderSettingsCard } from './settings/reminder-settings-card.js';
