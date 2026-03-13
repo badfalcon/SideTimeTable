@@ -173,6 +173,14 @@
     "message": "Color Settings",
     "description": "Section title for color settings"
   },
+  "colorThemeSettings": {
+    "message": "Color Theme",
+    "description": "Title for colour theme selection card"
+  },
+  "colorThemeDescription": {
+    "message": "Choose a colour set for the extension.",
+    "description": "Subtitle for colour theme selection card"
+  },
   "timelineBackgroundColor": {
     "message": "Timeline Background",
     "description": "Label for timeline (body) background color input"

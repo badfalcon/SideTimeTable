@@ -19,13 +19,14 @@ import {
 import { EventLayoutManager } from './time-manager.js';
 import { GoogleEventManager, LocalEventManager } from './event-handlers.js';
 import {
-    generateTimeList, loadSettings, RECURRENCE_TYPES, COLOR_CSS_VARS, TEXT_COLOR_CSS_VARS, getContrastColor,
+    generateTimeList, loadSettings, RECURRENCE_TYPES,
     loadLocalEventsForDate, saveLocalEventsForDate,
     loadRecurringEvents, saveRecurringEvents,
     addRecurringEventException, deleteRecurringEvent,
     migrateEventDataToLocal
 } from '../lib/utils.js';
 import { isToday } from '../lib/time-utils.js';
+import { getThemeById, resolveThemeColors } from '../lib/color-themes.js';
 import { setDemoMode } from '../lib/demo-data.js';
 import { AlarmManager } from '../lib/alarm-manager.js';
 import { StorageHelper } from '../lib/storage-helper.js';
@@ -321,22 +322,17 @@ class SidePanelUIController {
                 );
             }
 
-            // Set the CSS variables
-            for (const [key, varName] of Object.entries(COLOR_CSS_VARS)) {
-                if (settings[key] != null) {
-                    document.documentElement.style.setProperty(varName, settings[key]);
-                }
+            // Resolve the active colour theme and apply all CSS variables
+            const themeId = settings.colorTheme || (settings.darkMode ? 'dark' : 'default');
+            const theme = getThemeById(themeId);
+            const { cssVars } = resolveThemeColors(theme);
+
+            for (const [varName, value] of Object.entries(cssVars)) {
+                document.documentElement.style.setProperty(varName, value);
             }
 
-            // Set computed text color CSS variables (contrast color for each background)
-            for (const [key, varName] of Object.entries(TEXT_COLOR_CSS_VARS)) {
-                if (settings[key] != null) {
-                    document.documentElement.style.setProperty(varName, getContrastColor(settings[key]));
-                }
-            }
-
-            // Apply dark mode theme attribute
-            if (settings.darkMode) {
+            // Apply dark mode attribute for CSS overrides
+            if (theme.isDark) {
                 document.documentElement.setAttribute('data-theme', 'dark');
             } else {
                 document.documentElement.removeAttribute('data-theme');

@@ -173,6 +173,14 @@
     "message": "色設定",
     "description": "色設定セクションのタイトル"
   },
+  "colorThemeSettings": {
+    "message": "カラーテーマ",
+    "description": "カラーテーマ選択カードのタイトル"
+  },
+  "colorThemeDescription": {
+    "message": "拡張機能のカラーセットを選択します。",
+    "description": "カラーテーマ選択カードの説明"
+  },
   "timelineBackgroundColor": {
     "message": "タイムライン背景",
     "description": "タイムライン（ボディ）背景色入力のラベル"

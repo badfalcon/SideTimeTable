@@ -98,7 +98,8 @@ export const DEFAULT_SETTINGS = {
     language: 'auto', // Language setting (auto/en/ja)
     googleEventReminder: false, // Automatic reminder for Google events
     reminderMinutes: 5, // Reminder time in minutes before event starts
-    darkMode: false // Dark mode theme
+    darkMode: false, // Dark mode theme (legacy, kept for migration)
+    colorTheme: 'default' // Active colour-set ID (see color-themes.js)
 };
 
 // Mapping from color setting keys to CSS variable names
