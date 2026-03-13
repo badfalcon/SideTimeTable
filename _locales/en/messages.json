@@ -1012,5 +1012,21 @@
   "memoPlaceholder": {
     "message": "Add your notes here...",
     "description": "Placeholder text for the memo textarea"
+  },
+  "rsvpLabel": {
+    "message": "Your response",
+    "description": "Label for the RSVP response buttons"
+  },
+  "rsvpAccept": {
+    "message": "Accept",
+    "description": "Accept button for event RSVP"
+  },
+  "rsvpDecline": {
+    "message": "Decline",
+    "description": "Decline button for event RSVP"
+  },
+  "rsvpTentative": {
+    "message": "Maybe",
+    "description": "Tentative/Maybe button for event RSVP"
   }
 }

@@ -1012,5 +1012,21 @@
   "memoPlaceholder": {
     "message": "メモを入力...",
     "description": "メモテキストエリアのプレースホルダー"
+  },
+  "rsvpLabel": {
+    "message": "出欠の回答",
+    "description": "出欠回答ボタンのラベル"
+  },
+  "rsvpAccept": {
+    "message": "参加",
+    "description": "出欠回答の参加ボタン"
+  },
+  "rsvpDecline": {
+    "message": "不参加",
+    "description": "出欠回答の不参加ボタン"
+  },
+  "rsvpTentative": {
+    "message": "未定",
+    "description": "出欠回答の未定ボタン"
   }
 }

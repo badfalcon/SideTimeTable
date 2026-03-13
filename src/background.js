@@ -609,6 +609,83 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             })();
             return true; // Indicates async response
 
+        case "respondToEvent":
+            // Respond to a Google Calendar event (accept/decline/tentative)
+            (async () => {
+                try {
+                    const { calendarId, eventId, response: rsvpResponse } = request;
+                    if (!calendarId || !eventId || !rsvpResponse) {
+                        sendResponse({ success: false, error: 'Missing required parameters' });
+                        return;
+                    }
+
+                    const token = await new Promise((resolve, reject) => {
+                        chrome.identity.getAuthToken({ interactive: true }, (t) => {
+                            if (chrome.runtime.lastError || !t) {
+                                reject(chrome.runtime.lastError || new Error('Failed to get token'));
+                            } else {
+                                resolve(t);
+                            }
+                        });
+                    });
+
+                    // Map response to Google Calendar API attendee responseStatus
+                    const responseStatusMap = {
+                        'accepted': 'accepted',
+                        'declined': 'declined',
+                        'tentative': 'tentative'
+                    };
+                    const responseStatus = responseStatusMap[rsvpResponse];
+                    if (!responseStatus) {
+                        sendResponse({ success: false, error: 'Invalid response status' });
+                        return;
+                    }
+
+                    // First, get the current event to find the self attendee
+                    const baseUrl = 'https://www.googleapis.com/calendar/v3/calendars';
+                    const getUrl = `${baseUrl}/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`;
+                    const getRes = await fetch(getUrl, {
+                        headers: { Authorization: 'Bearer ' + token }
+                    });
+                    if (!getRes.ok) {
+                        throw new Error(`Failed to get event: ${getRes.status} ${getRes.statusText}`);
+                    }
+                    const eventData = await getRes.json();
+
+                    // Update the self attendee's response status
+                    const attendees = eventData.attendees || [];
+                    const selfAttendee = attendees.find(a => a.self);
+                    if (selfAttendee) {
+                        selfAttendee.responseStatus = responseStatus;
+                    } else {
+                        sendResponse({ success: false, error: 'Self attendee not found in event' });
+                        return;
+                    }
+
+                    // PATCH the event with updated attendees
+                    const patchUrl = `${baseUrl}/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`;
+                    const patchRes = await fetch(patchUrl, {
+                        method: 'PATCH',
+                        headers: {
+                            Authorization: 'Bearer ' + token,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ attendees })
+                    });
+
+                    if (!patchRes.ok) {
+                        throw new Error(`Failed to update event: ${patchRes.status} ${patchRes.statusText}`);
+                    }
+
+                    const updatedEvent = await patchRes.json();
+                    sendResponse({ success: true, event: updatedEvent });
+                } catch (error) {
+                    console.error('Failed to respond to event:', error);
+                    sendResponse({ success: false, error: error.message });
+                }
+            })();
+            return true; // Indicates async response
+
         default:
             console.warn("Unknown action:", request.action);
             sendResponse({error: "Unknown action"});

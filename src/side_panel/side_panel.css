@@ -455,6 +455,67 @@ button {
     line-height: 1.2;
 }
 
+/* RSVP response buttons */
+.google-event-rsvp {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.google-event-rsvp-wrapper {
+    flex: 1 1 auto;
+}
+
+.google-event-rsvp-label {
+    font-size: 0.85em;
+    color: #6c757d;
+    margin-bottom: 6px;
+}
+
+.google-event-rsvp-buttons {
+    display: flex;
+    gap: 6px;
+}
+
+.google-event-rsvp-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border: 1px solid #dee2e6;
+    border-radius: 16px;
+    background: #fff;
+    color: #495057;
+    font-size: 0.8em;
+    cursor: pointer;
+    margin-top: 0;
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.google-event-rsvp-btn:hover {
+    background-color: #f0f0f0;
+    border-color: #adb5bd;
+}
+
+.google-event-rsvp-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.google-event-rsvp-btn.active {
+    background-color: #e8f5e9;
+    border-color: #4caf50;
+    color: #2e7d32;
+}
+
+.google-event-rsvp-btn.active i.fa-times {
+    color: #c62828;
+}
+
+.google-event-rsvp-btn.active i.fa-question {
+    color: #f57f17;
+}
+
 /* Links within Google event details */
 .google-event-description a,
 .google-event-location a {
