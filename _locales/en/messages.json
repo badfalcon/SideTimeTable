@@ -181,6 +181,14 @@
     "message": "Choose a colour set for the extension.",
     "description": "Subtitle for colour theme selection card"
   },
+  "useGoogleCalendarColorsLabel": {
+    "message": "Use Google Calendar colors",
+    "description": "Label for toggle to use per-calendar colors from Google Calendar"
+  },
+  "useGoogleCalendarColorsHelp": {
+    "message": "When disabled, all Google events use the theme's default color.",
+    "description": "Help text for Google Calendar colors toggle"
+  },
   "timelineBackgroundColor": {
     "message": "Timeline Background",
     "description": "Label for timeline (body) background color input"

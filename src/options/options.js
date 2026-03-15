@@ -183,7 +183,10 @@ class OptionsPageManager {
 
             // Migrate: if colorTheme is not set, infer from darkMode flag
             const themeId = settings.colorTheme || (settings.darkMode ? 'dark' : 'default');
-            this.colorSettingsCard.updateSettings({ colorTheme: themeId });
+            this.colorSettingsCard.updateSettings({
+                colorTheme: themeId,
+                useGoogleCalendarColors: settings.useGoogleCalendarColors !== false
+            });
 
             // Apply theme to options page preview
             const theme = getThemeById(themeId);
@@ -324,17 +327,18 @@ class OptionsPageManager {
 
     async handleColorSettingsChange(themeSettings) {
         try {
-            const { colorTheme: themeId, isDark, ...colorValues } = themeSettings;
+            const { colorTheme: themeId, isDark, useGoogleCalendarColors, ...colorValues } = themeSettings;
             const theme = getThemeById(themeId);
             const { cssVars } = resolveThemeColors(theme);
 
-            // Persist: theme ID + the 7 resolved colour values + darkMode flag
+            // Persist: theme ID + the 7 resolved colour values + darkMode flag + calendar colors toggle
             const currentSettings = await loadSettings();
             const updatedSettings = {
                 ...currentSettings,
                 ...colorValues,
                 colorTheme: themeId,
-                darkMode: isDark
+                darkMode: isDark,
+                useGoogleCalendarColors: useGoogleCalendarColors !== undefined ? useGoogleCalendarColors : currentSettings.useGoogleCalendarColors
             };
             await saveSettings(updatedSettings);
 
