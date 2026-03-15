@@ -112,15 +112,18 @@ function getCalendarList() {
                         }));
 
 
-                    // Automatically select only the primary calendar
-                    const primaryCalendar = calendars.find(cal => cal.primary);
-                    if (primaryCalendar) {
-                        const primaryCalendarIds = [primaryCalendar.id];
-                        try {
-                            await StorageHelper.set({ selectedCalendars: primaryCalendarIds });
-                        } catch (error) {
-                            console.error("Primary calendar selection setting error:", error);
+                    // Auto-select only the primary calendar if no calendars are currently selected
+                    try {
+                        const existing = await StorageHelper.get(['selectedCalendars'], { selectedCalendars: [] });
+                        const existingIds = existing.selectedCalendars || [];
+                        if (existingIds.length === 0) {
+                            const primaryCalendar = calendars.find(cal => cal.primary);
+                            if (primaryCalendar) {
+                                await StorageHelper.set({ selectedCalendars: [primaryCalendar.id] });
+                            }
                         }
+                    } catch (error) {
+                        console.error("Primary calendar selection setting error:", error);
                     }
 
                     resolve(calendars);
