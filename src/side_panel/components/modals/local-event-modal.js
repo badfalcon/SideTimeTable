@@ -97,14 +97,14 @@ export class LocalEventModal extends ModalComponent {
         this.reminderCheckbox = document.createElement('input');
         this.reminderCheckbox.type = 'checkbox';
         this.reminderCheckbox.id = 'eventReminder';
-        this.reminderCheckbox.checked = true; // Default: enabled
+        this.reminderCheckbox.checked = true;
         this.reminderCheckbox.style.cssText = 'margin: 0; flex-shrink: 0;';
 
         const reminderLabel = document.createElement('label');
         reminderLabel.htmlFor = 'eventReminder';
         reminderLabel.setAttribute('data-localize', '__MSG_remindMeBefore__');
         reminderLabel.textContent = window.getLocalizedMessage('remindMeBefore');
-        reminderLabel.style.cssText = 'margin-left: 8px; user-select: none; cursor: pointer; display: inline-block;';
+        reminderLabel.style.cssText = 'margin-left: 8px; margin-bottom: 0; user-select: none; cursor: pointer; display: inline-block; font-weight: normal;';
 
         reminderContainer.appendChild(this.reminderCheckbox);
         reminderContainer.appendChild(reminderLabel);
