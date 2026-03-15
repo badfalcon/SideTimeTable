@@ -85,7 +85,7 @@ export class TimeSettingsCard extends CardComponent {
         label.htmlFor = 'time-settings-open-time';
         label.className = 'form-label';
         label.setAttribute('data-localize', '__MSG_workHours__');
-        label.textContent = 'Work Hours:';
+        label.textContent = chrome.i18n.getMessage('workHours') || 'Work Hours:';
 
         // The input group
         const inputGroup = document.createElement('div');
@@ -140,7 +140,7 @@ export class TimeSettingsCard extends CardComponent {
         label.htmlFor = 'time-settings-break-time-fixed';
         label.className = 'form-label';
         label.setAttribute('data-localize', '__MSG_breakTime__');
-        label.textContent = 'Break Time:';
+        label.textContent = chrome.i18n.getMessage('breakTime') || 'Break Time:';
 
         // The checkbox
         const checkboxDiv = document.createElement('div');
@@ -156,7 +156,7 @@ export class TimeSettingsCard extends CardComponent {
         checkboxLabel.className = 'form-check-label';
         checkboxLabel.htmlFor = 'time-settings-break-time-fixed';
         checkboxLabel.setAttribute('data-localize', '__MSG_fixed__');
-        checkboxLabel.textContent = 'Fixed';
+        checkboxLabel.textContent = chrome.i18n.getMessage('fixed') || 'Fixed';
 
         checkboxDiv.appendChild(this.breakTimeFixedCheckbox);
         checkboxDiv.appendChild(checkboxLabel);
