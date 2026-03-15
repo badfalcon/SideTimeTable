@@ -120,6 +120,8 @@ export class ColorSettingsCard extends CardComponent {
     _createGoogleCalendarColorsToggle() {
         const container = document.createElement('div');
         container.className = 'mt-3 pt-3 border-top';
+        container.style.display = 'none';
+        this._googleColorsContainer = container;
 
         const formCheck = document.createElement('div');
         formCheck.className = 'form-check form-switch';
@@ -220,6 +222,12 @@ export class ColorSettingsCard extends CardComponent {
             useGoogleCalendarColors: this.useGoogleCalendarColors,
             ...colorSettings
         };
+    }
+
+    setGoogleCalendarColorsToggleVisible(visible) {
+        if (this._googleColorsContainer) {
+            this._googleColorsContainer.style.display = visible ? '' : 'none';
+        }
     }
 
     resetToDefaults() {
