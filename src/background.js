@@ -94,8 +94,11 @@ function getCalendarList() {
                         Authorization: "Bearer " + token
                     }
                 })
-                .then(response => {
+                .then(async response => {
                     if (!response.ok) {
+                        const errorBody = await response.text();
+                        console.error(`CalendarList API error body:`, errorBody);
+                        console.error(`Token used:`, token.substring(0, 10) + '...');
                         throw new Error(`CalendarList API error: ${response.status} ${response.statusText}`);
                     }
                     return response.json();
@@ -174,8 +177,11 @@ function getCalendarEvents(targetDate = null) {
                     let calendarListDataPromise = fetch(calendarListUrl, {
                         headers: { Authorization: "Bearer " + token }
                     })
-                    .then(response => {
+                    .then(async response => {
                         if (!response.ok) {
+                            const errorBody = await response.text();
+                            console.error(`[getCalendarEvents] CalendarList API error body:`, errorBody);
+                            console.error(`[getCalendarEvents] Token used:`, token.substring(0, 10) + '...');
                             throw new Error(`CalendarList API error: ${response.status} ${response.statusText}`);
                         }
                         return response.json();
