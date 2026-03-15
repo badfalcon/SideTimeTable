@@ -73,6 +73,11 @@ class SidePanelUIController {
      */
     async initialize() {
         try {
+            // Load locale messages based on the user's language setting
+            if (window.loadLocalizedMessages) {
+                await window.loadLocalizedMessages();
+            }
+
             // Migrate event data from sync to local storage (one-time)
             await migrateEventDataToLocal();
 
@@ -103,7 +108,7 @@ class SidePanelUIController {
 
         } catch (error) {
             console.error('Side panel UI initialization error:', error);
-            this._showError(chrome.i18n.getMessage('initializationError') + ': ' + error.message);
+            this._showError((window.getLocalizedMessage?.('initializationError') || 'Initialization error') + ': ' + error.message);
         }
     }
 

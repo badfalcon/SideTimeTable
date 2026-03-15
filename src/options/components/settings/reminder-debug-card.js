@@ -34,7 +34,7 @@ export class ReminderDebugCard extends CardComponent {
         const testButton = document.createElement('button');
         testButton.type = 'button';
         testButton.className = 'btn btn-sm btn-outline-primary me-2';
-        testButton.textContent = chrome.i18n.getMessage('testNotification') || 'Test Notification';
+        testButton.textContent = window.getLocalizedMessage('testNotification') || 'Test Notification';
         testButton.onclick = () => this._testNotification();
         container.appendChild(testButton);
 
@@ -42,7 +42,7 @@ export class ReminderDebugCard extends CardComponent {
         const syncButton = document.createElement('button');
         syncButton.type = 'button';
         syncButton.className = 'btn btn-sm btn-outline-secondary me-2';
-        syncButton.textContent = chrome.i18n.getMessage('forceSyncNow') || 'Force Sync Now';
+        syncButton.textContent = window.getLocalizedMessage('forceSyncNow') || 'Force Sync Now';
         syncButton.onclick = () => this._forceSyncReminders();
         container.appendChild(syncButton);
 
@@ -50,7 +50,7 @@ export class ReminderDebugCard extends CardComponent {
         const debugButton = document.createElement('button');
         debugButton.type = 'button';
         debugButton.className = 'btn btn-sm btn-outline-info';
-        debugButton.textContent = chrome.i18n.getMessage('showDebugInfo') || 'Show Debug Info';
+        debugButton.textContent = window.getLocalizedMessage('showDebugInfo') || 'Show Debug Info';
         debugButton.onclick = () => this._showDebugInfo();
         container.appendChild(debugButton);
 
@@ -71,12 +71,12 @@ export class ReminderDebugCard extends CardComponent {
         try {
             const response = await chrome.runtime.sendMessage({ action: 'testReminder' });
             if (response.success) {
-                alert(chrome.i18n.getMessage('testNotificationSent') || 'Test notification sent! Check your notifications.');
+                alert(window.getLocalizedMessage('testNotificationSent') || 'Test notification sent! Check your notifications.');
             } else {
-                alert((chrome.i18n.getMessage('testNotificationFailed') || 'Failed to send test notification: ') + response.error);
+                alert((window.getLocalizedMessage('testNotificationFailed') || 'Failed to send test notification: ') + response.error);
             }
         } catch (error) {
-            alert((chrome.i18n.getMessage('errorPrefix') || 'Error: ') + error.message);
+            alert((window.getLocalizedMessage('errorPrefix') || 'Error: ') + error.message);
         }
     }
 
@@ -88,12 +88,12 @@ export class ReminderDebugCard extends CardComponent {
         try {
             const response = await chrome.runtime.sendMessage({ action: 'forceSyncReminders' });
             if (response.success) {
-                alert(chrome.i18n.getMessage('syncCompleted') || 'Reminder sync completed! Check background console for logs.');
+                alert(window.getLocalizedMessage('syncCompleted') || 'Reminder sync completed! Check background console for logs.');
             } else {
-                alert((chrome.i18n.getMessage('syncFailed') || 'Failed to sync reminders: ') + response.error);
+                alert((window.getLocalizedMessage('syncFailed') || 'Failed to sync reminders: ') + response.error);
             }
         } catch (error) {
-            alert((chrome.i18n.getMessage('errorPrefix') || 'Error: ') + error.message);
+            alert((window.getLocalizedMessage('errorPrefix') || 'Error: ') + error.message);
         }
     }
 
@@ -113,10 +113,10 @@ export class ReminderDebugCard extends CardComponent {
                 this.debugOutput.textContent = JSON.stringify(info, null, 2);
                 this.debugOutput.style.display = 'block';
             } else {
-                alert((chrome.i18n.getMessage('debugInfoFailed') || 'Failed to get debug info: ') + response.error);
+                alert((window.getLocalizedMessage('debugInfoFailed') || 'Failed to get debug info: ') + response.error);
             }
         } catch (error) {
-            alert((chrome.i18n.getMessage('errorPrefix') || 'Error: ') + error.message);
+            alert((window.getLocalizedMessage('errorPrefix') || 'Error: ') + error.message);
         }
     }
 }
