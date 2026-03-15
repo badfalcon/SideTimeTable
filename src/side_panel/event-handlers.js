@@ -443,7 +443,7 @@ export class LocalEventManager {
         const { title, startTime, endTime } = event;
         const eventDiv = document.createElement('div');
         eventDiv.className = 'event local-event';
-        eventDiv.title = title;
+        eventDiv.title = event.description ? `${title}\n${event.description}` : title;
 
         // Set the time on the target date
         const [startHours, startMinutes] = startTime.split(':');
