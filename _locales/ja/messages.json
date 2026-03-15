@@ -1260,5 +1260,41 @@
   "exportFailed": {
     "message": "エクスポートに失敗しました: ",
     "description": "エクスポート失敗時のエラーメッセージ"
+  },
+  "validationWarning": {
+    "message": "警告:",
+    "description": "バリデーション警告メッセージのプレフィックス"
+  },
+  "validationEndTimeAfterStart": {
+    "message": "終了時刻は開始時刻より後にしてください",
+    "description": "終了時刻が開始時刻より前の場合のバリデーションエラー"
+  },
+  "validationBreakEndAfterStart": {
+    "message": "休憩の終了時刻は開始時刻より後にしてください",
+    "description": "休憩終了時刻が開始時刻より前の場合のバリデーションエラー"
+  },
+  "validationBreakWithinWork": {
+    "message": "休憩時間は就業時間内にしてください",
+    "description": "休憩時間が就業時間外の場合のバリデーションエラー"
+  },
+  "clearLocalEvents": {
+    "message": "ローカルイベントを削除",
+    "description": "ローカルイベント削除ボタンのラベル"
+  },
+  "clearMemo": {
+    "message": "メモを削除",
+    "description": "メモデータ削除ボタンのラベル"
+  },
+  "exportSettings": {
+    "message": "設定をエクスポート",
+    "description": "設定エクスポートボタンのラベル"
+  },
+  "syncStorageLabel": {
+    "message": "同期ストレージ（設定）",
+    "description": "ビューアーの同期ストレージセクションラベル"
+  },
+  "localStorageLabel": {
+    "message": "ローカルストレージ",
+    "description": "ビューアーのローカルストレージセクションラベル"
   }
 }

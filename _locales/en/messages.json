@@ -1260,5 +1260,41 @@
   "exportFailed": {
     "message": "Export failed: ",
     "description": "Error message when export fails"
+  },
+  "validationWarning": {
+    "message": "Warning:",
+    "description": "Prefix for validation warning messages"
+  },
+  "validationEndTimeAfterStart": {
+    "message": "End time must be after start time",
+    "description": "Validation error when end time is before start time"
+  },
+  "validationBreakEndAfterStart": {
+    "message": "Break end time must be after start time",
+    "description": "Validation error when break end time is before break start time"
+  },
+  "validationBreakWithinWork": {
+    "message": "Break time must be within work hours",
+    "description": "Validation error when break time is outside work hours"
+  },
+  "clearLocalEvents": {
+    "message": "Clear Local Events",
+    "description": "Button label for clearing local events"
+  },
+  "clearMemo": {
+    "message": "Clear Memo",
+    "description": "Button label for clearing memo data"
+  },
+  "exportSettings": {
+    "message": "Export Settings",
+    "description": "Button label for exporting settings"
+  },
+  "syncStorageLabel": {
+    "message": "Sync Storage (Settings)",
+    "description": "Label for sync storage section in viewer"
+  },
+  "localStorageLabel": {
+    "message": "Local Storage",
+    "description": "Label for local storage section in viewer"
   }
 }
