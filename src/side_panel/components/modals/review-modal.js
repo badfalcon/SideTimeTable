@@ -55,7 +55,7 @@ export class ReviewModal extends ModalComponent {
         const title = document.createElement('h2');
         title.className = 'modal-title review-modal-title';
         title.setAttribute('data-localize', '__MSG_reviewTitle__');
-        title.textContent = 'How are you finding SideTimeTable?';
+        title.textContent = chrome.i18n.getMessage('reviewTitle') || 'How are you finding SideTimeTable?';
         header.appendChild(title);
 
         content.appendChild(header);
@@ -67,28 +67,28 @@ export class ReviewModal extends ModalComponent {
         const message = document.createElement('p');
         message.className = 'review-modal-message';
         message.setAttribute('data-localize', '__MSG_reviewMessage__');
-        message.textContent = "Thank you for using SideTimeTable!\nWe'd love to hear about your experience.";
+        message.textContent = chrome.i18n.getMessage('reviewMessage') || "Thank you for using SideTimeTable!\nWe'd love to hear about your experience.";
         body.appendChild(message);
 
         // Rate Now button
         this.rateButton = document.createElement('button');
         this.rateButton.className = 'review-btn-rate';
         this.rateButton.setAttribute('data-localize', '__MSG_reviewRateNow__');
-        this.rateButton.innerHTML = '<i class="fas fa-star"></i> Write a Review';
+        this.rateButton.innerHTML = `<i class="fas fa-star"></i> ${chrome.i18n.getMessage('reviewRateNow') || 'Write a Review'}`;
         body.appendChild(this.rateButton);
 
         // Later button
         this.laterButton = document.createElement('button');
         this.laterButton.className = 'review-btn-later';
         this.laterButton.setAttribute('data-localize', '__MSG_reviewLater__');
-        this.laterButton.textContent = 'Maybe Later';
+        this.laterButton.textContent = chrome.i18n.getMessage('reviewLater') || 'Maybe Later';
         body.appendChild(this.laterButton);
 
         // Never button
         this.neverButton = document.createElement('button');
         this.neverButton.className = 'review-btn-never';
         this.neverButton.setAttribute('data-localize', '__MSG_reviewNever__');
-        this.neverButton.textContent = "Don't ask again";
+        this.neverButton.textContent = chrome.i18n.getMessage('reviewNever') || "Don't ask again";
         body.appendChild(this.neverButton);
 
         content.appendChild(body);

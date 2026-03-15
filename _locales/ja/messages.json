@@ -569,6 +569,26 @@
     "message": "Google連携を解除",
     "description": "Google連携解除ボタンテキスト"
   },
+  "connectingStatus": {
+    "message": "接続中...",
+    "description": "Google連携接続中のステータステキスト"
+  },
+  "disconnectingStatus": {
+    "message": "解除中...",
+    "description": "Google連携解除中のステータステキスト"
+  },
+  "manualRevokeTitle": {
+    "message": "完全な連携解除には追加の手順が必要です",
+    "description": "Google連携解除後の手動取り消し通知のタイトル"
+  },
+  "manualRevokeDescription": {
+    "message": "拡張機能からトークンを削除しましたが、完全に連携を解除するには、Googleアカウントの設定から手動で権限を取り消してください。",
+    "description": "手動取り消し通知の説明文"
+  },
+  "openGoogleAccountSettings": {
+    "message": "Googleアカウント設定を開く",
+    "description": "手動取り消しのためのGoogleアカウント設定を開くボタンテキスト"
+  },
   "to": {
     "message": "～",
     "description": "時間範囲の区切り文字（例: 9:00～18:00）"
@@ -1060,5 +1080,213 @@
   "rsvpErrorFeedback": {
     "message": "回答の送信に失敗しました",
     "description": "出欠回答の送信に失敗した際のフィードバック"
+  },
+  "close": {
+    "message": "閉じる",
+    "description": "閉じるボタンテキスト"
+  },
+  "darkBadge": {
+    "message": "ダーク",
+    "description": "ダークテーマのバッジラベル"
+  },
+  "detectingLanguage": {
+    "message": "検出中...",
+    "description": "ブラウザ言語検出中のステータステキスト"
+  },
+  "loadingStatus": {
+    "message": "読み込み中...",
+    "description": "汎用の読み込み中ステータステキスト"
+  },
+  "copyToClipboard": {
+    "message": "クリップボードにコピー",
+    "description": "クリップボードにコピーボタンのツールチップ"
+  },
+  "languageChanged": {
+    "message": "言語設定が変更されました",
+    "description": "言語変更通知のタイトル"
+  },
+  "languageReloadRequired": {
+    "message": "変更を反映するにはページの再読み込みが必要です。",
+    "description": "言語変更通知の説明"
+  },
+  "reloadPage": {
+    "message": "ページを再読み込み",
+    "description": "言語変更後にページを再読み込みするボタン"
+  },
+  "screenReaderLoading": {
+    "message": "読み込み中...",
+    "description": "読み込みスピナーのスクリーンリーダーテキスト"
+  },
+  "demoMode": {
+    "message": "デモモード",
+    "description": "デモモードトグルラベル"
+  },
+  "demoModeHelp": {
+    "message": "サンプルデータを表示します（APIアクセスは行いません）",
+    "description": "デモモードトグルのヘルプテキスト"
+  },
+  "demoTimeLabel": {
+    "message": "現在時刻ラインの位置",
+    "description": "デモモードの時刻入力ラベル"
+  },
+  "demoTimeHelp": {
+    "message": "デモモードで現在時刻ラインに表示される時刻",
+    "description": "デモモードの時刻入力ヘルプテキスト"
+  },
+  "demoScenarioLabel": {
+    "message": "シナリオ",
+    "description": "デモモードのシナリオ選択ラベル"
+  },
+  "demoScenarioHelp": {
+    "message": "変更を反映するにはサイドパネルを再読み込みしてください。",
+    "description": "デモモードのシナリオ選択ヘルプテキスト"
+  },
+  "demoLanguageLabel": {
+    "message": "デモ言語",
+    "description": "デモモードの言語選択ラベル"
+  },
+  "demoLanguageHelp": {
+    "message": "デモデータで使用する言語を上書きします（スクリーンショット用など）",
+    "description": "デモモードの言語選択ヘルプテキスト"
+  },
+  "demoLanguageAuto": {
+    "message": "自動（拡張機能の設定に従う）",
+    "description": "デモ言語選択の自動オプション"
+  },
+  "demoLinkInfo": {
+    "message": "<code>?demo=true</code> で開くとデモ設定をプレビューできます：",
+    "description": "デモリンクセクションの情報テキスト"
+  },
+  "demoModeEnabled": {
+    "message": "デモモードを有効にしました",
+    "description": "デモモード有効時の通知"
+  },
+  "demoModeDisabled": {
+    "message": "デモモードを無効にしました",
+    "description": "デモモード無効時の通知"
+  },
+  "demoLanguageChanged": {
+    "message": "言語を変更しました — サイドパネルを再読み込みしてください。",
+    "description": "デモ言語変更時の通知"
+  },
+  "demoScenarioChanged": {
+    "message": "シナリオを変更しました — サイドパネルを再読み込みしてください。",
+    "description": "デモシナリオ変更時の通知"
+  },
+  "testNotification": {
+    "message": "テスト通知",
+    "description": "テスト通知ボタン"
+  },
+  "forceSyncNow": {
+    "message": "今すぐ同期",
+    "description": "リマインダー強制同期ボタン"
+  },
+  "showDebugInfo": {
+    "message": "デバッグ情報を表示",
+    "description": "デバッグ情報表示ボタン"
+  },
+  "testNotificationSent": {
+    "message": "テスト通知を送信しました！通知を確認してください。",
+    "description": "テスト通知送信後のアラート"
+  },
+  "testNotificationFailed": {
+    "message": "テスト通知の送信に失敗しました: ",
+    "description": "テスト通知失敗時のアラート"
+  },
+  "syncCompleted": {
+    "message": "リマインダーの同期が完了しました！バックグラウンドコンソールでログを確認してください。",
+    "description": "リマインダー同期完了時のアラート"
+  },
+  "syncFailed": {
+    "message": "リマインダーの同期に失敗しました: ",
+    "description": "リマインダー同期失敗時のアラート"
+  },
+  "debugInfoFailed": {
+    "message": "デバッグ情報の取得に失敗しました: ",
+    "description": "デバッグ情報取得失敗時のアラート"
+  },
+  "storageActions": {
+    "message": "操作",
+    "description": "ストレージ操作セクションのタイトル"
+  },
+  "storageViewer": {
+    "message": "ビューアー",
+    "description": "ストレージビューアーセクションのタイトル"
+  },
+  "storageRefresh": {
+    "message": "更新",
+    "description": "ストレージビューアーの更新ボタン"
+  },
+  "storageLoading": {
+    "message": "読み込み中…",
+    "description": "ストレージビューアーの読み込み中テキスト"
+  },
+  "storageLoadFailed": {
+    "message": "ストレージの読み込みに失敗しました: ",
+    "description": "ストレージ読み込み失敗時のエラーメッセージ"
+  },
+  "storageCopy": {
+    "message": "コピー",
+    "description": "ストレージビューアーのコピーボタンツールチップ"
+  },
+  "confirmClearLocalEvents": {
+    "message": "localEvents_* キーをすべて削除しますか？",
+    "description": "ローカルイベント削除の確認"
+  },
+  "clearLocalEventsSuccess": {
+    "message": "Local Events を削除しました。",
+    "description": "ローカルイベント削除成功メッセージ"
+  },
+  "confirmClearMemo": {
+    "message": "memoContent / memoCollapsed / memoHeight を削除しますか？",
+    "description": "メモデータ削除の確認"
+  },
+  "clearMemoSuccess": {
+    "message": "Memo データを削除しました。",
+    "description": "メモデータ削除成功メッセージ"
+  },
+  "deleteFailed": {
+    "message": "削除に失敗しました: ",
+    "description": "削除失敗時のエラーメッセージ"
+  },
+  "exportFailed": {
+    "message": "エクスポートに失敗しました: ",
+    "description": "エクスポート失敗時のエラーメッセージ"
+  },
+  "validationWarning": {
+    "message": "警告:",
+    "description": "バリデーション警告メッセージのプレフィックス"
+  },
+  "validationEndTimeAfterStart": {
+    "message": "終了時刻は開始時刻より後にしてください",
+    "description": "終了時刻が開始時刻より前の場合のバリデーションエラー"
+  },
+  "validationBreakEndAfterStart": {
+    "message": "休憩の終了時刻は開始時刻より後にしてください",
+    "description": "休憩終了時刻が開始時刻より前の場合のバリデーションエラー"
+  },
+  "validationBreakWithinWork": {
+    "message": "休憩時間は就業時間内にしてください",
+    "description": "休憩時間が就業時間外の場合のバリデーションエラー"
+  },
+  "clearLocalEvents": {
+    "message": "ローカルイベントを削除",
+    "description": "ローカルイベント削除ボタンのラベル"
+  },
+  "clearMemo": {
+    "message": "メモを削除",
+    "description": "メモデータ削除ボタンのラベル"
+  },
+  "exportSettings": {
+    "message": "設定をエクスポート",
+    "description": "設定エクスポートボタンのラベル"
+  },
+  "syncStorageLabel": {
+    "message": "同期ストレージ（設定）",
+    "description": "ビューアーの同期ストレージセクションラベル"
+  },
+  "localStorageLabel": {
+    "message": "ローカルストレージ",
+    "description": "ビューアーのローカルストレージセクションラベル"
   }
 }

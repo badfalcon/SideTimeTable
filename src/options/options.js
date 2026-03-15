@@ -257,7 +257,7 @@ class OptionsPageManager {
         try {
             if (shouldIntegrate) {
                 this.googleIntegrationCard.setButtonEnabled(false);
-                this.googleIntegrationCard.updateIntegrationStatus(false, 'Connecting...');
+                this.googleIntegrationCard.updateIntegrationStatus(false, chrome.i18n.getMessage('connectingStatus') || 'Connecting...');
 
                 const response = await new Promise((resolve) => {
                     chrome.runtime.sendMessage({action: 'authenticateGoogle'}, resolve);
@@ -277,7 +277,7 @@ class OptionsPageManager {
             } else {
                 // Disable the Google integration
                 this.googleIntegrationCard.setButtonEnabled(false);
-                this.googleIntegrationCard.updateIntegrationStatus(false, 'Disconnecting...');
+                this.googleIntegrationCard.updateIntegrationStatus(false, chrome.i18n.getMessage('disconnectingStatus') || 'Disconnecting...');
 
                 const response = await new Promise((resolve) => {
                     chrome.runtime.sendMessage({action: 'disconnectGoogle'}, resolve);
@@ -471,18 +471,21 @@ class OptionsPageManager {
         // Create a notification message
         const notice = document.createElement('div');
         notice.className = 'alert alert-warning alert-dismissible fade show manual-revoke-notice mt-3';
+        const manualRevokeTitle = chrome.i18n.getMessage('manualRevokeTitle') || 'Additional steps are required for complete disconnection';
+        const manualRevokeDescription = chrome.i18n.getMessage('manualRevokeDescription') || 'We have removed the token from the extension, but to completely disconnect, please manually revoke permission in your Google account settings.';
+        const openGoogleAccountSettings = chrome.i18n.getMessage('openGoogleAccountSettings') || 'Open Google Account Settings';
         notice.innerHTML = `
             <div class="d-flex align-items-start">
                 <i class="fas fa-exclamation-triangle me-2 mt-1"></i>
                 <div class="flex-grow-1">
-                    <strong>Additional steps are required for complete disconnection</strong><br>
+                    <strong>${manualRevokeTitle}</strong><br>
                     <small class="text-muted">
-                        We have removed the token from the extension, but to completely disconnect, please manually revoke permission in your Google account settings.
+                        ${manualRevokeDescription}
                     </small>
                     <div class="mt-2">
                         <a href="" target="_blank" class="btn btn-sm btn-outline-primary revoke-link">
                             <i class="fas fa-external-link-alt me-1"></i>
-                            Open Google Account Settings
+                            ${openGoogleAccountSettings}
                         </a>
                     </div>
                 </div>

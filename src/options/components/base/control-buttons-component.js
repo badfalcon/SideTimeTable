@@ -20,7 +20,7 @@ export class ControlButtonsComponent {
         this.resetButton.id = 'resetButton';
         this.resetButton.className = 'btn btn-outline-secondary';
         this.resetButton.setAttribute('data-localize', '__MSG_resetToDefault__');
-        this.resetButton.textContent = 'Reset to Default';
+        this.resetButton.textContent = chrome.i18n.getMessage('resetToDefault') || 'Reset to Default';
 
         container.appendChild(this.resetButton);
 
