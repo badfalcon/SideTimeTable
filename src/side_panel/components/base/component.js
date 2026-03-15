@@ -176,6 +176,9 @@ export class Component {
      * @returns {string} Localized message or the key itself
      */
     getMessage(key) {
+        if (window.getLocalizedMessage) {
+            return window.getLocalizedMessage(key);
+        }
         try {
             const msg = chrome.i18n.getMessage(key);
             return msg || key;

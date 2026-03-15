@@ -168,7 +168,7 @@ export class GoogleEventManager {
                     errorDiv.className = 'error-message';
                     const rid = response.requestId ? ` [Request ID: ${response.requestId}]` : '';
                     const errType = response.errorType ? ` (${response.errorType})` : '';
-                    errorDiv.textContent = (chrome.i18n.getMessage("errorPrefix") || 'Error: ') + response.error + errType + rid;
+                    errorDiv.textContent = (window.getLocalizedMessage("errorPrefix") || 'Error: ') + response.error + errType + rid;
                     this.googleEventsDiv.appendChild(errorDiv);
                     return;
                 }

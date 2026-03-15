@@ -45,14 +45,14 @@ export class LocalEventModal extends ModalComponent {
         // Title
         const title = document.createElement('h2');
         title.setAttribute('data-localize', '__MSG_eventDialogTitle__');
-        title.textContent = chrome.i18n.getMessage('eventDialogTitle');
+        title.textContent = window.getLocalizedMessage('eventDialogTitle');
         content.appendChild(title);
 
         // Title input
         const titleLabel = document.createElement('label');
         titleLabel.htmlFor = 'eventTitle';
         titleLabel.setAttribute('data-localize', '__MSG_eventTitle__');
-        titleLabel.textContent = chrome.i18n.getMessage('eventTitle');
+        titleLabel.textContent = window.getLocalizedMessage('eventTitle');
         content.appendChild(titleLabel);
 
         this.titleInput = document.createElement('input');
@@ -65,7 +65,7 @@ export class LocalEventModal extends ModalComponent {
         const startLabel = document.createElement('label');
         startLabel.htmlFor = 'eventStartTime';
         startLabel.setAttribute('data-localize', '__MSG_startTime__');
-        startLabel.textContent = chrome.i18n.getMessage('startTime');
+        startLabel.textContent = window.getLocalizedMessage('startTime');
         content.appendChild(startLabel);
 
         this.startTimeInput = document.createElement('input');
@@ -79,7 +79,7 @@ export class LocalEventModal extends ModalComponent {
         const endLabel = document.createElement('label');
         endLabel.htmlFor = 'eventEndTime';
         endLabel.setAttribute('data-localize', '__MSG_endTime__');
-        endLabel.textContent = chrome.i18n.getMessage('endTime');
+        endLabel.textContent = window.getLocalizedMessage('endTime');
         content.appendChild(endLabel);
 
         this.endTimeInput = document.createElement('input');
@@ -103,7 +103,7 @@ export class LocalEventModal extends ModalComponent {
         const reminderLabel = document.createElement('label');
         reminderLabel.htmlFor = 'eventReminder';
         reminderLabel.setAttribute('data-localize', '__MSG_remindMeBefore__');
-        reminderLabel.textContent = chrome.i18n.getMessage('remindMeBefore');
+        reminderLabel.textContent = window.getLocalizedMessage('remindMeBefore');
         reminderLabel.style.cssText = 'margin-left: 8px; user-select: none; cursor: pointer; display: inline-block;';
 
         reminderContainer.appendChild(this.reminderCheckbox);
@@ -119,7 +119,7 @@ export class LocalEventModal extends ModalComponent {
         const recurrenceLabel = document.createElement('label');
         recurrenceLabel.htmlFor = 'recurrenceType';
         recurrenceLabel.setAttribute('data-localize', '__MSG_recurrence__');
-        recurrenceLabel.textContent = chrome.i18n.getMessage('recurrence') || 'Recurrence:';
+        recurrenceLabel.textContent = window.getLocalizedMessage('recurrence') || 'Recurrence:';
         recurrenceSection.appendChild(recurrenceLabel);
 
         this.recurrenceSelect = document.createElement('select');
@@ -138,7 +138,7 @@ export class LocalEventModal extends ModalComponent {
             const option = document.createElement('option');
             option.value = opt.value;
             option.setAttribute('data-localize', `__MSG_${opt.msgKey}__`);
-            option.textContent = chrome.i18n.getMessage(opt.msgKey) || opt.default;
+            option.textContent = window.getLocalizedMessage(opt.msgKey) || opt.default;
             this.recurrenceSelect.appendChild(option);
         });
 
@@ -176,7 +176,7 @@ export class LocalEventModal extends ModalComponent {
 
             const dayText = document.createElement('span');
             dayText.setAttribute('data-localize', `__MSG_${day.msgKey}__`);
-            dayText.textContent = chrome.i18n.getMessage(day.msgKey) || day.default;
+            dayText.textContent = window.getLocalizedMessage(day.msgKey) || day.default;
 
             dayLabel.appendChild(checkbox);
             dayLabel.appendChild(dayText);
@@ -194,7 +194,7 @@ export class LocalEventModal extends ModalComponent {
         const endDateLabel = document.createElement('label');
         endDateLabel.htmlFor = 'recurrenceEndDate';
         endDateLabel.setAttribute('data-localize', '__MSG_recurrenceEndDate__');
-        endDateLabel.textContent = chrome.i18n.getMessage('recurrenceEndDate') || 'End date:';
+        endDateLabel.textContent = window.getLocalizedMessage('recurrenceEndDate') || 'End date:';
         endDateSection.appendChild(endDateLabel);
 
         const endDateRow = document.createElement('div');
@@ -216,7 +216,7 @@ export class LocalEventModal extends ModalComponent {
 
         const noEndDateLabel = document.createElement('span');
         noEndDateLabel.setAttribute('data-localize', '__MSG_noEndDate__');
-        noEndDateLabel.textContent = chrome.i18n.getMessage('noEndDate') || 'No end date';
+        noEndDateLabel.textContent = window.getLocalizedMessage('noEndDate') || 'No end date';
         noEndDateLabel.style.cssText = 'font-size: 0.9em;';
 
         noEndDateContainer.appendChild(this.noEndDateCheckbox);
@@ -240,21 +240,21 @@ export class LocalEventModal extends ModalComponent {
         this.saveButton.id = 'saveEventButton';
         this.saveButton.className = 'btn btn-success';
         this.saveButton.setAttribute('data-localize', '__MSG_save__');
-        this.saveButton.textContent = chrome.i18n.getMessage('save');
+        this.saveButton.textContent = window.getLocalizedMessage('save');
 
         // Delete button
         this.deleteButton = document.createElement('button');
         this.deleteButton.id = 'deleteEventButton';
         this.deleteButton.className = 'btn btn-danger';
         this.deleteButton.setAttribute('data-localize', '__MSG_delete__');
-        this.deleteButton.textContent = chrome.i18n.getMessage('delete');
+        this.deleteButton.textContent = window.getLocalizedMessage('delete');
 
         // Cancel button
         this.cancelButton = document.createElement('button');
         this.cancelButton.id = 'cancelEventButton';
         this.cancelButton.className = 'btn btn-secondary';
         this.cancelButton.setAttribute('data-localize', '__MSG_cancel__');
-        this.cancelButton.textContent = chrome.i18n.getMessage('cancel');
+        this.cancelButton.textContent = window.getLocalizedMessage('cancel');
 
         buttonGroup.appendChild(this.saveButton);
         buttonGroup.appendChild(this.deleteButton);
@@ -358,7 +358,7 @@ export class LocalEventModal extends ModalComponent {
 
             // Validate end date is not before start date
             if (endDate && endDate < startDate) {
-                this._showError(chrome.i18n.getMessage('endDateMustBeLater') || 'End date must be on or after start date');
+                this._showError(window.getLocalizedMessage('endDateMustBeLater') || 'End date must be on or after start date');
                 return;
             }
 
@@ -465,13 +465,13 @@ export class LocalEventModal extends ModalComponent {
         const title = document.createElement('h3');
         title.style.cssText = 'margin: 0 0 15px 0; font-size: 1.1em;';
         title.setAttribute('data-localize', '__MSG_deleteRecurringTitle__');
-        title.textContent = chrome.i18n.getMessage('deleteRecurringTitle') || 'Delete recurring event?';
+        title.textContent = window.getLocalizedMessage('deleteRecurringTitle') || 'Delete recurring event?';
         dialog.appendChild(title);
 
         const message = document.createElement('p');
         message.style.cssText = 'margin: 0 0 20px 0; font-size: 0.9em; color: var(--side-calendar-secondary-text-color);';
         message.setAttribute('data-localize', '__MSG_deleteRecurringMessage__');
-        message.textContent = chrome.i18n.getMessage('deleteRecurringMessage') || 'Do you want to delete this occurrence only or all occurrences?';
+        message.textContent = window.getLocalizedMessage('deleteRecurringMessage') || 'Do you want to delete this occurrence only or all occurrences?';
         dialog.appendChild(message);
 
         const buttonContainer = document.createElement('div');
@@ -482,7 +482,7 @@ export class LocalEventModal extends ModalComponent {
         deleteThisBtn.className = 'btn btn-outline-danger';
         deleteThisBtn.style.cssText = 'width: 100%; padding: 8px;';
         deleteThisBtn.setAttribute('data-localize', '__MSG_deleteThisOccurrence__');
-        deleteThisBtn.textContent = chrome.i18n.getMessage('deleteThisOccurrence') || 'Delete this occurrence';
+        deleteThisBtn.textContent = window.getLocalizedMessage('deleteThisOccurrence') || 'Delete this occurrence';
         deleteThisBtn.addEventListener('click', () => {
             overlay.remove();
             if (this.onDelete) {
@@ -496,7 +496,7 @@ export class LocalEventModal extends ModalComponent {
         deleteAllBtn.className = 'btn btn-danger';
         deleteAllBtn.style.cssText = 'width: 100%; padding: 8px;';
         deleteAllBtn.setAttribute('data-localize', '__MSG_deleteAllOccurrences__');
-        deleteAllBtn.textContent = chrome.i18n.getMessage('deleteAllOccurrences') || 'Delete all occurrences';
+        deleteAllBtn.textContent = window.getLocalizedMessage('deleteAllOccurrences') || 'Delete all occurrences';
         deleteAllBtn.addEventListener('click', () => {
             overlay.remove();
             if (this.onDeleteSeries) {
@@ -512,7 +512,7 @@ export class LocalEventModal extends ModalComponent {
         cancelBtn.className = 'btn btn-secondary';
         cancelBtn.style.cssText = 'width: 100%; padding: 8px;';
         cancelBtn.setAttribute('data-localize', '__MSG_cancel__');
-        cancelBtn.textContent = chrome.i18n.getMessage('cancel') || 'Cancel';
+        cancelBtn.textContent = window.getLocalizedMessage('cancel') || 'Cancel';
         cancelBtn.addEventListener('click', () => {
             overlay.remove();
         });
@@ -552,20 +552,20 @@ export class LocalEventModal extends ModalComponent {
     _validateForm() {
         // Title check
         if (!this.titleInput.value.trim()) {
-            this._showError(chrome.i18n.getMessage('pleaseEnterTitle'));
+            this._showError(window.getLocalizedMessage('pleaseEnterTitle'));
             this.titleInput.focus();
             return false;
         }
 
         // Time check
         if (!this.startTimeInput.value) {
-            this._showError(chrome.i18n.getMessage('pleaseEnterStartTime'));
+            this._showError(window.getLocalizedMessage('pleaseEnterStartTime'));
             this.startTimeInput.focus();
             return false;
         }
 
         if (!this.endTimeInput.value) {
-            this._showError(chrome.i18n.getMessage('pleaseEnterEndTime'));
+            this._showError(window.getLocalizedMessage('pleaseEnterEndTime'));
             this.endTimeInput.focus();
             return false;
         }
@@ -591,7 +591,7 @@ export class LocalEventModal extends ModalComponent {
         const endTime = this.endTimeInput.value;
 
         if (startTime >= endTime) {
-            this._showError(chrome.i18n.getMessage('endTimeMustBeLater'));
+            this._showError(window.getLocalizedMessage('endTimeMustBeLater'));
             this.endTimeInput.focus();
             return false;
         }
@@ -654,7 +654,7 @@ export class LocalEventModal extends ModalComponent {
         this.deleteButton.style.display = 'none';
 
         // Update title
-        this.setTitle(chrome.i18n.getMessage('eventDialogTitle'));
+        this.setTitle(window.getLocalizedMessage('eventDialogTitle'));
 
         this._clearError();
         this.show();
@@ -723,7 +723,7 @@ export class LocalEventModal extends ModalComponent {
         this.deleteButton.style.display = '';
 
         // Update title
-        this.setTitle(chrome.i18n.getMessage('eventDialogTitle'));
+        this.setTitle(window.getLocalizedMessage('eventDialogTitle'));
 
         this._clearError();
         this.show();
@@ -796,8 +796,8 @@ export class LocalEventModal extends ModalComponent {
             const elementsToLocalize = this.element.querySelectorAll('[data-localize]');
             elementsToLocalize.forEach(element => {
                 const key = element.getAttribute('data-localize');
-                if (key && chrome.i18n && chrome.i18n.getMessage) {
-                    const message = chrome.i18n.getMessage(key.replace('__MSG_', '').replace('__', ''));
+                if (key && window.getLocalizedMessage) {
+                    const message = window.getLocalizedMessage(key.replace('__MSG_', '').replace('__', ''));
                     if (message) {
                         element.textContent = message;
                     }

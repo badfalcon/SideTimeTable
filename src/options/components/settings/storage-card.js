@@ -43,43 +43,43 @@ export class StorageCard extends CardComponent {
 
         const title = document.createElement('h6');
         title.className = 'mb-3 text-secondary';
-        title.innerHTML = `<i class="fas fa-tools me-1"></i>${chrome.i18n.getMessage('storageActions') || 'Actions'}`;
+        title.innerHTML = `<i class="fas fa-tools me-1"></i>${window.getLocalizedMessage('storageActions') || 'Actions'}`;
 
         const btnGroup = document.createElement('div');
         btnGroup.className = 'd-flex flex-wrap gap-2';
 
-        btnGroup.appendChild(this._createActionBtn('trash', chrome.i18n.getMessage('clearLocalEvents') || 'Clear Local Events', 'danger', async () => {
-            if (!window.confirm(chrome.i18n.getMessage('confirmClearLocalEvents') || 'Delete all localEvents_* keys?')) return;
+        btnGroup.appendChild(this._createActionBtn('trash', window.getLocalizedMessage('clearLocalEvents') || 'Clear Local Events', 'danger', async () => {
+            if (!window.confirm(window.getLocalizedMessage('confirmClearLocalEvents') || 'Delete all localEvents_* keys?')) return;
             try {
                 const localData = await StorageHelper.getLocal(null);
                 const keys = Object.keys(localData).filter(k => k.startsWith(STORAGE_KEYS.LOCAL_EVENTS_PREFIX));
                 if (keys.length > 0) await chrome.storage.local.remove(keys);
-                this._showAlert(chrome.i18n.getMessage('clearLocalEventsSuccess') || 'Local Events deleted.', 'success');
+                this._showAlert(window.getLocalizedMessage('clearLocalEventsSuccess') || 'Local Events deleted.', 'success');
                 await this._refreshViewer();
             } catch (e) {
-                this._showAlert((chrome.i18n.getMessage('deleteFailed') || 'Deletion failed: ') + e.message, 'danger');
+                this._showAlert((window.getLocalizedMessage('deleteFailed') || 'Deletion failed: ') + e.message, 'danger');
             }
         }));
 
-        btnGroup.appendChild(this._createActionBtn('eraser', chrome.i18n.getMessage('clearMemo') || 'Clear Memo', 'warning', async () => {
-            if (!window.confirm(chrome.i18n.getMessage('confirmClearMemo') || 'Delete memoContent / memoCollapsed / memoHeight?')) return;
+        btnGroup.appendChild(this._createActionBtn('eraser', window.getLocalizedMessage('clearMemo') || 'Clear Memo', 'warning', async () => {
+            if (!window.confirm(window.getLocalizedMessage('confirmClearMemo') || 'Delete memoContent / memoCollapsed / memoHeight?')) return;
             try {
                 await chrome.storage.local.remove(['memoContent', 'memoCollapsed', 'memoHeight']);
-                this._showAlert(chrome.i18n.getMessage('clearMemoSuccess') || 'Memo data deleted.', 'success');
+                this._showAlert(window.getLocalizedMessage('clearMemoSuccess') || 'Memo data deleted.', 'success');
                 await this._refreshViewer();
             } catch (e) {
-                this._showAlert((chrome.i18n.getMessage('deleteFailed') || 'Deletion failed: ') + e.message, 'danger');
+                this._showAlert((window.getLocalizedMessage('deleteFailed') || 'Deletion failed: ') + e.message, 'danger');
             }
         }));
 
-        btnGroup.appendChild(this._createActionBtn('download', chrome.i18n.getMessage('exportSettings') || 'Export Settings', 'primary', async (e) => {
+        btnGroup.appendChild(this._createActionBtn('download', window.getLocalizedMessage('exportSettings') || 'Export Settings', 'primary', async (e) => {
             const btn = e.currentTarget;
             try {
                 const syncData = await StorageHelper.get(null);
                 await this._copyToClipboard(JSON.stringify(syncData, null, 2));
                 this._showCopyNotification(btn);
             } catch (err) {
-                this._showAlert((chrome.i18n.getMessage('exportFailed') || 'Export failed: ') + err.message, 'danger');
+                this._showAlert((window.getLocalizedMessage('exportFailed') || 'Export failed: ') + err.message, 'danger');
             }
         }));
 
@@ -107,12 +107,12 @@ export class StorageCard extends CardComponent {
 
         const title = document.createElement('h6');
         title.className = 'mb-0 text-secondary';
-        title.innerHTML = `<i class="fas fa-eye me-1"></i>${chrome.i18n.getMessage('storageViewer') || 'Viewer'}`;
+        title.innerHTML = `<i class="fas fa-eye me-1"></i>${window.getLocalizedMessage('storageViewer') || 'Viewer'}`;
 
         const refreshBtn = document.createElement('button');
         refreshBtn.type = 'button';
         refreshBtn.className = 'btn btn-outline-secondary btn-sm';
-        refreshBtn.innerHTML = `<i class="fas fa-sync-alt me-1"></i>${chrome.i18n.getMessage('storageRefresh') || 'Refresh'}`;
+        refreshBtn.innerHTML = `<i class="fas fa-sync-alt me-1"></i>${window.getLocalizedMessage('storageRefresh') || 'Refresh'}`;
         refreshBtn.addEventListener('click', () => this._refreshViewer());
 
         header.appendChild(title);
@@ -120,7 +120,7 @@ export class StorageCard extends CardComponent {
 
         this._viewerContent = document.createElement('div');
         this._viewerContent.className = 'small';
-        this._viewerContent.textContent = chrome.i18n.getMessage('storageLoading') || 'Loading…';
+        this._viewerContent.textContent = window.getLocalizedMessage('storageLoading') || 'Loading…';
 
         section.appendChild(header);
         section.appendChild(this._viewerContent);
@@ -133,7 +133,7 @@ export class StorageCard extends CardComponent {
     async _refreshViewer() {
         const content = this._viewerContent;
         if (!content) return;
-        content.textContent = chrome.i18n.getMessage('storageLoading') || 'Loading…';
+        content.textContent = window.getLocalizedMessage('storageLoading') || 'Loading…';
 
         try {
             const syncQuota = chrome.storage.sync.QUOTA_BYTES || StorageCard.SYNC_QUOTA;
@@ -159,10 +159,10 @@ export class StorageCard extends CardComponent {
                 `Local: <strong>${localBytesInUse.toLocaleString()}</strong> / ${localQuota.toLocaleString()} bytes (${localPct}%)`;
             content.appendChild(usageDiv);
 
-            content.appendChild(this._createStorageBlock(chrome.i18n.getMessage('syncStorageLabel') || 'Sync Storage (Settings)', syncData));
-            content.appendChild(this._createStorageBlock(chrome.i18n.getMessage('localStorageLabel') || 'Local Storage', localData));
+            content.appendChild(this._createStorageBlock(window.getLocalizedMessage('syncStorageLabel') || 'Sync Storage (Settings)', syncData));
+            content.appendChild(this._createStorageBlock(window.getLocalizedMessage('localStorageLabel') || 'Local Storage', localData));
         } catch (e) {
-            content.textContent = (chrome.i18n.getMessage('storageLoadFailed') || 'Failed to load storage: ') + e.message;
+            content.textContent = (window.getLocalizedMessage('storageLoadFailed') || 'Failed to load storage: ') + e.message;
         }
     }
 
@@ -301,7 +301,7 @@ export class StorageCard extends CardComponent {
         copyBtn.type = 'button';
         copyBtn.className = 'btn btn-outline-secondary btn-sm py-0 px-1 flex-shrink-0';
         copyBtn.innerHTML = '<i class="fas fa-copy fa-xs"></i>';
-        copyBtn.title = chrome.i18n.getMessage('storageCopy') || 'Copy';
+        copyBtn.title = window.getLocalizedMessage('storageCopy') || 'Copy';
         copyBtn.addEventListener('click', async (e) => {
             e.stopPropagation();
             await this._copyToClipboard(rawValue);

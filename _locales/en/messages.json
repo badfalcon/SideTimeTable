@@ -881,6 +881,14 @@
     "message": "Your daily schedule is displayed on a 24-hour timeline. The red line marks the current time.",
     "description": "Tutorial: timeline step description"
   },
+  "tutorialMemoTitle": {
+    "message": "Memo",
+    "description": "Tutorial: memo step title"
+  },
+  "tutorialMemoDesc": {
+    "message": "Use the memo panel at the bottom to jot down quick notes. It saves automatically and persists across sessions.",
+    "description": "Tutorial: memo step description"
+  },
   "tutorialFinishTitle": {
     "message": "You're All Set!",
     "description": "Tutorial: finish step title"
