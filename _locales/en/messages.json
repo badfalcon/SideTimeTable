@@ -569,6 +569,26 @@
     "message": "Disconnect Google",
     "description": "Google disconnect button text"
   },
+  "connectingStatus": {
+    "message": "Connecting...",
+    "description": "Status text while connecting to Google"
+  },
+  "disconnectingStatus": {
+    "message": "Disconnecting...",
+    "description": "Status text while disconnecting from Google"
+  },
+  "manualRevokeTitle": {
+    "message": "Additional steps are required for complete disconnection",
+    "description": "Title of the manual revoke notification after disconnecting Google"
+  },
+  "manualRevokeDescription": {
+    "message": "We have removed the token from the extension, but to completely disconnect, please manually revoke permission in your Google account settings.",
+    "description": "Description of the manual revoke notification"
+  },
+  "openGoogleAccountSettings": {
+    "message": "Open Google Account Settings",
+    "description": "Button text to open Google account settings for manual revoke"
+  },
   "to": {
     "message": "to",
     "description": "Time range separator (e.g., 9:00 to 18:00)"
@@ -1060,5 +1080,213 @@
   "rsvpErrorFeedback": {
     "message": "Failed to send response.",
     "description": "Feedback message when RSVP response fails"
+  },
+  "close": {
+    "message": "Close",
+    "description": "Close button text"
+  },
+  "darkBadge": {
+    "message": "Dark",
+    "description": "Badge label for dark themes"
+  },
+  "detectingLanguage": {
+    "message": "Detecting...",
+    "description": "Status text while detecting browser language"
+  },
+  "loadingStatus": {
+    "message": "Loading...",
+    "description": "Generic loading status text"
+  },
+  "copyToClipboard": {
+    "message": "Copy to clipboard",
+    "description": "Tooltip for copy to clipboard button"
+  },
+  "languageChanged": {
+    "message": "Language setting changed",
+    "description": "Title of language change notification"
+  },
+  "languageReloadRequired": {
+    "message": "A page reload is required to apply the changes.",
+    "description": "Description for language change notification"
+  },
+  "reloadPage": {
+    "message": "Reload Page",
+    "description": "Button to reload page after language change"
+  },
+  "screenReaderLoading": {
+    "message": "Loading...",
+    "description": "Screen reader text for loading spinner"
+  },
+  "demoMode": {
+    "message": "Demo Mode",
+    "description": "Demo mode toggle label"
+  },
+  "demoModeHelp": {
+    "message": "Display sample data (no API access will be made)",
+    "description": "Demo mode toggle help text"
+  },
+  "demoTimeLabel": {
+    "message": "Current time line position",
+    "description": "Label for demo mode time input"
+  },
+  "demoTimeHelp": {
+    "message": "Time shown by the current time line in demo mode",
+    "description": "Help text for demo mode time input"
+  },
+  "demoScenarioLabel": {
+    "message": "Scenario",
+    "description": "Label for demo mode scenario select"
+  },
+  "demoScenarioHelp": {
+    "message": "Reload the side panel to apply changes.",
+    "description": "Help text for demo mode scenario select"
+  },
+  "demoLanguageLabel": {
+    "message": "Demo language",
+    "description": "Label for demo mode language select"
+  },
+  "demoLanguageHelp": {
+    "message": "Override language used in demo data (for screenshots etc.)",
+    "description": "Help text for demo mode language select"
+  },
+  "demoLanguageAuto": {
+    "message": "Auto (follow extension setting)",
+    "description": "Auto option in demo language select"
+  },
+  "demoLinkInfo": {
+    "message": "Open with <code>?demo=true</code> to preview demo settings:",
+    "description": "Info text for demo link section"
+  },
+  "demoModeEnabled": {
+    "message": "Demo mode enabled",
+    "description": "Notification when demo mode is enabled"
+  },
+  "demoModeDisabled": {
+    "message": "Demo mode disabled",
+    "description": "Notification when demo mode is disabled"
+  },
+  "demoLanguageChanged": {
+    "message": "Language changed — reload the side panel to apply.",
+    "description": "Notification when demo language is changed"
+  },
+  "demoScenarioChanged": {
+    "message": "Scenario changed — reload the side panel to apply.",
+    "description": "Notification when demo scenario is changed"
+  },
+  "testNotification": {
+    "message": "Test Notification",
+    "description": "Button to test notification"
+  },
+  "forceSyncNow": {
+    "message": "Force Sync Now",
+    "description": "Button to force sync reminders"
+  },
+  "showDebugInfo": {
+    "message": "Show Debug Info",
+    "description": "Button to show debug info"
+  },
+  "testNotificationSent": {
+    "message": "Test notification sent! Check your notifications.",
+    "description": "Alert after test notification is sent"
+  },
+  "testNotificationFailed": {
+    "message": "Failed to send test notification: ",
+    "description": "Alert when test notification fails"
+  },
+  "syncCompleted": {
+    "message": "Reminder sync completed! Check background console for logs.",
+    "description": "Alert after reminder sync completes"
+  },
+  "syncFailed": {
+    "message": "Failed to sync reminders: ",
+    "description": "Alert when reminder sync fails"
+  },
+  "debugInfoFailed": {
+    "message": "Failed to get debug info: ",
+    "description": "Alert when debug info retrieval fails"
+  },
+  "storageActions": {
+    "message": "Actions",
+    "description": "Title for storage actions section"
+  },
+  "storageViewer": {
+    "message": "Viewer",
+    "description": "Title for storage viewer section"
+  },
+  "storageRefresh": {
+    "message": "Refresh",
+    "description": "Refresh button for storage viewer"
+  },
+  "storageLoading": {
+    "message": "Loading…",
+    "description": "Loading text for storage viewer"
+  },
+  "storageLoadFailed": {
+    "message": "Failed to load storage: ",
+    "description": "Error message when storage loading fails"
+  },
+  "storageCopy": {
+    "message": "Copy",
+    "description": "Copy button tooltip in storage viewer"
+  },
+  "confirmClearLocalEvents": {
+    "message": "Delete all localEvents_* keys?",
+    "description": "Confirmation for clearing local events"
+  },
+  "clearLocalEventsSuccess": {
+    "message": "Local Events deleted.",
+    "description": "Success message after clearing local events"
+  },
+  "confirmClearMemo": {
+    "message": "Delete memoContent / memoCollapsed / memoHeight?",
+    "description": "Confirmation for clearing memo data"
+  },
+  "clearMemoSuccess": {
+    "message": "Memo data deleted.",
+    "description": "Success message after clearing memo data"
+  },
+  "deleteFailed": {
+    "message": "Deletion failed: ",
+    "description": "Error message when deletion fails"
+  },
+  "exportFailed": {
+    "message": "Export failed: ",
+    "description": "Error message when export fails"
+  },
+  "validationWarning": {
+    "message": "Warning:",
+    "description": "Prefix for validation warning messages"
+  },
+  "validationEndTimeAfterStart": {
+    "message": "End time must be after start time",
+    "description": "Validation error when end time is before start time"
+  },
+  "validationBreakEndAfterStart": {
+    "message": "Break end time must be after start time",
+    "description": "Validation error when break end time is before break start time"
+  },
+  "validationBreakWithinWork": {
+    "message": "Break time must be within work hours",
+    "description": "Validation error when break time is outside work hours"
+  },
+  "clearLocalEvents": {
+    "message": "Clear Local Events",
+    "description": "Button label for clearing local events"
+  },
+  "clearMemo": {
+    "message": "Clear Memo",
+    "description": "Button label for clearing memo data"
+  },
+  "exportSettings": {
+    "message": "Export Settings",
+    "description": "Button label for exporting settings"
+  },
+  "syncStorageLabel": {
+    "message": "Sync Storage (Settings)",
+    "description": "Label for sync storage section in viewer"
+  },
+  "localStorageLabel": {
+    "message": "Local Storage",
+    "description": "Label for local storage section in viewer"
   }
 }

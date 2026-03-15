@@ -25,7 +25,7 @@ export class WhatsNewModal extends ModalComponent {
         const title = document.createElement('h2');
         title.className = 'modal-title';
         title.setAttribute('data-localize', '__MSG_whatsNewTitle__');
-        title.textContent = "What's New";
+        title.textContent = chrome.i18n.getMessage('whatsNewTitle') || "What's New";
         content.appendChild(title);
 
         // Release notes container (populated dynamically)
@@ -37,7 +37,7 @@ export class WhatsNewModal extends ModalComponent {
         this.confirmButton = document.createElement('button');
         this.confirmButton.className = 'btn btn-primary whats-new-confirm-btn';
         this.confirmButton.setAttribute('data-localize', '__MSG_whatsNewConfirm__');
-        this.confirmButton.textContent = 'Got it';
+        this.confirmButton.textContent = chrome.i18n.getMessage('whatsNewConfirm') || 'Got it';
         content.appendChild(this.confirmButton);
 
         // Event listeners

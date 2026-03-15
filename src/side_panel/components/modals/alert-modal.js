@@ -34,7 +34,8 @@ export class AlertModal extends ModalComponent {
         this.confirmButton = document.createElement('button');
         this.confirmButton.id = 'closeAlertButton';
         this.confirmButton.className = 'btn btn-primary';
-        this.confirmButton.textContent = 'Close';
+        this.confirmButton.setAttribute('data-localize', '__MSG_close__');
+        this.confirmButton.textContent = chrome.i18n.getMessage('close') || 'Close';
         content.appendChild(this.confirmButton);
 
         // Set up the event listeners

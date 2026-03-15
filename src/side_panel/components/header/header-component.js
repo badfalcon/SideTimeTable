@@ -97,7 +97,7 @@ export class HeaderComponent extends Component {
         this.syncButton.className = 'fas fa-sync sync-icon';
         this.syncButton.id = 'syncReminderButton';
         this.syncButton.setAttribute('data-localize-title', '__MSG_syncReminders__');
-        this.syncButton.title = 'Sync Reminders';
+        this.syncButton.title = chrome.i18n.getMessage('syncReminders') || 'Sync Reminders';
 
         container.appendChild(this.addEventButton);
         container.appendChild(this.syncButton);

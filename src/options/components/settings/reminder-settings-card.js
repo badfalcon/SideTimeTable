@@ -92,13 +92,13 @@ export class ReminderSettingsCard extends CardComponent {
         label.className = 'form-check-label fw-semibold';
         label.htmlFor = 'google-reminder-toggle';
         label.setAttribute('data-localize', '__MSG_googleEventReminderLabel__');
-        label.textContent = 'Enable reminders for Google Calendar events';
+        label.textContent = chrome.i18n.getMessage('googleEventReminderLabel') || 'Enable reminders for Google Calendar events';
 
         // Help text
         const helpText = document.createElement('small');
         helpText.className = 'form-text text-muted d-block mt-1';
         helpText.setAttribute('data-localize', '__MSG_googleEventReminderHelp__');
-        helpText.textContent = 'You will receive notifications 5 minutes before each event starts, even when the side panel is closed.';
+        helpText.textContent = chrome.i18n.getMessage('googleEventReminderHelp') || 'You will receive notifications 5 minutes before each event starts, even when the side panel is closed.';
 
         formCheck.appendChild(this.googleReminderToggle);
         formCheck.appendChild(label);
@@ -121,7 +121,7 @@ export class ReminderSettingsCard extends CardComponent {
         label.className = 'form-label fw-semibold';
         label.htmlFor = 'reminder-minutes-select';
         label.setAttribute('data-localize', '__MSG_reminderTimeLabel__');
-        label.textContent = 'Notify me before:';
+        label.textContent = chrome.i18n.getMessage('reminderTimeLabel') || 'Notify me before:';
 
         // Select box
         this.reminderMinutesSelect = document.createElement('select');
@@ -146,7 +146,7 @@ export class ReminderSettingsCard extends CardComponent {
         const helpText = document.createElement('small');
         helpText.className = 'form-text text-muted mt-1';
         helpText.setAttribute('data-localize', '__MSG_reminderTimeHelp__');
-        helpText.textContent = 'This applies to both Google Calendar events and local events.';
+        helpText.textContent = chrome.i18n.getMessage('reminderTimeHelp') || 'This applies to both Google Calendar events and local events.';
 
         container.appendChild(label);
         container.appendChild(this.reminderMinutesSelect);

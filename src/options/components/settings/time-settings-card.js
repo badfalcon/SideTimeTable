@@ -85,7 +85,7 @@ export class TimeSettingsCard extends CardComponent {
         label.htmlFor = 'time-settings-open-time';
         label.className = 'form-label';
         label.setAttribute('data-localize', '__MSG_workHours__');
-        label.textContent = 'Work Hours:';
+        label.textContent = chrome.i18n.getMessage('workHours') || 'Work Hours:';
 
         // The input group
         const inputGroup = document.createElement('div');
@@ -140,7 +140,7 @@ export class TimeSettingsCard extends CardComponent {
         label.htmlFor = 'time-settings-break-time-fixed';
         label.className = 'form-label';
         label.setAttribute('data-localize', '__MSG_breakTime__');
-        label.textContent = 'Break Time:';
+        label.textContent = chrome.i18n.getMessage('breakTime') || 'Break Time:';
 
         // The checkbox
         const checkboxDiv = document.createElement('div');
@@ -156,7 +156,7 @@ export class TimeSettingsCard extends CardComponent {
         checkboxLabel.className = 'form-check-label';
         checkboxLabel.htmlFor = 'time-settings-break-time-fixed';
         checkboxLabel.setAttribute('data-localize', '__MSG_fixed__');
-        checkboxLabel.textContent = 'Fixed';
+        checkboxLabel.textContent = chrome.i18n.getMessage('fixed') || 'Fixed';
 
         checkboxDiv.appendChild(this.breakTimeFixedCheckbox);
         checkboxDiv.appendChild(checkboxLabel);
@@ -263,21 +263,21 @@ export class TimeSettingsCard extends CardComponent {
     _validateTimeSettings(settings) {
         // Validate work hours
         if (settings.openTime >= settings.closeTime) {
-            this._showValidationError('End time must be after start time');
+            this._showValidationError(chrome.i18n.getMessage('validationEndTimeAfterStart') || 'End time must be after start time');
             return false;
         }
 
         // Validate break time (when fixed)
         if (settings.breakTimeFixed) {
             if (settings.breakTimeStart >= settings.breakTimeEnd) {
-                this._showValidationError('Break end time must be after start time');
+                this._showValidationError(chrome.i18n.getMessage('validationBreakEndAfterStart') || 'Break end time must be after start time');
                 return false;
             }
 
             // Check if break time is within work hours
             if (settings.breakTimeStart < settings.openTime ||
                 settings.breakTimeEnd > settings.closeTime) {
-                this._showValidationError('Break time must be within work hours');
+                this._showValidationError(chrome.i18n.getMessage('validationBreakWithinWork') || 'Break time must be within work hours');
                 return false;
             }
         }
@@ -293,7 +293,8 @@ export class TimeSettingsCard extends CardComponent {
         this.bodyElement?.querySelector('.time-validation-error')?.remove();
         const el = document.createElement('div');
         el.className = 'alert alert-warning alert-dismissible fade show time-validation-error mt-2';
-        el.innerHTML = `<small><strong>Warning:</strong> ${message}</small><button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+        const warningLabel = chrome.i18n.getMessage('validationWarning') || 'Warning:';
+        el.innerHTML = `<small><strong>${warningLabel}</strong> ${message}</small><button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
         this.bodyElement.appendChild(el);
         setTimeout(() => { if (el.parentNode) el.remove(); }, 3000);
     }
