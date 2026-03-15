@@ -15,6 +15,7 @@ export class LocalEventModal extends ModalComponent {
         this.titleInput = null;
         this.startTimeInput = null;
         this.endTimeInput = null;
+        this.descriptionInput = null;
         this.saveButton = null;
         this.deleteButton = null;
         this.cancelButton = null;
@@ -88,6 +89,19 @@ export class LocalEventModal extends ModalComponent {
         this.endTimeInput.setAttribute('list', 'time-list');
         this.endTimeInput.required = true;
         content.appendChild(this.endTimeInput);
+
+        // Description textarea
+        const descriptionLabel = document.createElement('label');
+        descriptionLabel.htmlFor = 'eventDescription';
+        descriptionLabel.setAttribute('data-localize', '__MSG_eventDescription__');
+        descriptionLabel.textContent = window.getLocalizedMessage('eventDescription');
+        content.appendChild(descriptionLabel);
+
+        this.descriptionInput = document.createElement('textarea');
+        this.descriptionInput.id = 'eventDescription';
+        this.descriptionInput.rows = 3;
+        this.descriptionInput.style.cssText = 'width: 100%; resize: vertical;';
+        content.appendChild(this.descriptionInput);
 
         // Reminder checkbox
         const reminderContainer = document.createElement('div');
@@ -390,6 +404,7 @@ export class LocalEventModal extends ModalComponent {
         const eventData = {
             id: this.currentEvent?.id || null,
             title: this.titleInput.value.trim(),
+            description: this.descriptionInput.value.trim(),
             startTime: this.startTimeInput.value,
             endTime: this.endTimeInput.value,
             reminder: this.reminderCheckbox.checked,
@@ -638,6 +653,7 @@ export class LocalEventModal extends ModalComponent {
 
         // Reset form
         this.titleInput.value = '';
+        this.descriptionInput.value = '';
         this.startTimeInput.value = defaultStartTime;
         this.endTimeInput.value = defaultEndTime;
         this.reminderCheckbox.checked = true;
@@ -683,6 +699,7 @@ export class LocalEventModal extends ModalComponent {
 
         // Set the values in the form
         this.titleInput.value = event.title || '';
+        this.descriptionInput.value = event.description || '';
         this.startTimeInput.value = event.startTime || '';
         this.endTimeInput.value = event.endTime || '';
         this.reminderCheckbox.checked = event.reminder !== false;
@@ -761,6 +778,7 @@ export class LocalEventModal extends ModalComponent {
 
         return {
             title: this.titleInput?.value.trim() || '',
+            description: this.descriptionInput?.value.trim() || '',
             startTime: this.startTimeInput?.value || '',
             endTime: this.endTimeInput?.value || '',
             reminder: this.reminderCheckbox?.checked || false,
@@ -773,6 +791,7 @@ export class LocalEventModal extends ModalComponent {
      */
     resetForm() {
         if (this.titleInput) this.titleInput.value = '';
+        if (this.descriptionInput) this.descriptionInput.value = '';
         if (this.startTimeInput) this.startTimeInput.value = '';
         if (this.endTimeInput) this.endTimeInput.value = '';
         if (this.reminderCheckbox) this.reminderCheckbox.checked = true;
