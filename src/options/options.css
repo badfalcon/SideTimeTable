@@ -8,6 +8,181 @@ body {
     overflow-y: scroll;
 }
 
+/* Dark mode overrides for options page */
+[data-theme="dark"] body,
+body[data-theme="dark"] {
+    background-color: #1e1e2e;
+    color: #e0e0e0;
+}
+
+[data-theme="dark"] .card {
+    background-color: #2a2a3c;
+    border-color: #444;
+    color: #e0e0e0;
+}
+
+[data-theme="dark"] .card-header {
+    background-color: #333348;
+    border-color: #444;
+    color: #e0e0e0;
+}
+
+[data-theme="dark"] .nav-link {
+    color: #ccc;
+}
+
+[data-theme="dark"] .settings-nav .nav-link:hover {
+    background-color: #3a3a52;
+    color: #5b9dff;
+}
+
+[data-theme="dark"] .settings-nav .nav-link.active {
+    background-color: #0d6efd;
+    color: #fff;
+}
+
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select {
+    background-color: #1e1e2e;
+    border-color: #555;
+    color: #e0e0e0;
+}
+
+[data-theme="dark"] .form-check-label {
+    color: #e0e0e0;
+}
+
+[data-theme="dark"] .btn-outline-secondary {
+    color: #ccc;
+    border-color: #555;
+}
+
+[data-theme="dark"] .btn-outline-secondary:hover {
+    background-color: #3a3a52;
+    color: #fff;
+}
+
+[data-theme="dark"] .border {
+    border-color: #444 !important;
+}
+
+[data-theme="dark"] .text-muted {
+    color: #999 !important;
+}
+
+[data-theme="dark"] .settings-sidebar-actions {
+    border-top-color: #444;
+}
+
+[data-theme="dark"] #calendar-list {
+    scrollbar-color: #555 #2a2a3c;
+}
+
+[data-theme="dark"] #calendar-list::-webkit-scrollbar-track {
+    background: #2a2a3c;
+}
+
+[data-theme="dark"] #calendar-list::-webkit-scrollbar-thumb {
+    background: #555;
+}
+
+[data-theme="dark"] #calendar-list .form-check:hover,
+[data-theme="dark"] #calendar-list .list-group-item {
+    background-color: #333348;
+}
+
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4,
+[data-theme="dark"] h5,
+[data-theme="dark"] h6 {
+    color: #e0e0e0;
+}
+
+[data-theme="dark"] .border-top {
+    border-top-color: #444 !important;
+}
+
+[data-theme="dark"] .form-label {
+    color: #e0e0e0;
+}
+
+/* input-group-text (time settings separator "～", clock icons) */
+[data-theme="dark"] .input-group-text {
+    background-color: #333348;
+    border-color: #555;
+    color: #e0e0e0;
+}
+
+/* Inactive sidebar nav tab text */
+[data-theme="dark"] .settings-nav .nav-link:not(.active) {
+    color: #ccc;
+}
+
+/* bg-light backgrounds (browser language display, etc.) */
+[data-theme="dark"] .bg-light {
+    background-color: #333348 !important;
+}
+
+/* text-dark (invisible on dark bg without override) */
+[data-theme="dark"] .text-dark {
+    color: #e0e0e0 !important;
+}
+
+/* Bootstrap text-* colour overrides for dark mode */
+[data-theme="dark"] .text-info {
+    color: #5bc0de !important;
+}
+
+[data-theme="dark"] .text-warning {
+    color: #ffca2c !important;
+}
+
+[data-theme="dark"] .text-success {
+    color: #75b798 !important;
+}
+
+[data-theme="dark"] .text-secondary {
+    color: #adb5bd !important;
+}
+
+[data-theme="dark"] .card-text {
+    color: #ccc;
+}
+
+/* Browser-native clock icon on <input type="time"> */
+[data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+}
+
+/* Theme selection cards */
+[data-theme="dark"] .theme-card {
+    background: #333348 !important;
+    color: #e0e0e0;
+    border-color: #555;
+}
+
+/* text-primary (calendar name primary badge, etc.) */
+[data-theme="dark"] .text-primary {
+    color: #7aabff !important;
+}
+
+/* Placeholder text in dark mode (search bar, etc.) */
+[data-theme="dark"] .form-control::placeholder {
+    color: #888;
+}
+
+/* Calendar list item text */
+[data-theme="dark"] #calendar-list .form-check-label {
+    color: #e0e0e0;
+}
+
+/* Calendar list item names */
+[data-theme="dark"] #calendar-list .fw-bold {
+    color: #e0e0e0;
+}
+
 /* Calendar management card adjustments */
 #calendar-management-card {
     width: 100%;

@@ -13,6 +13,7 @@ import {
     reloadSidePanel,
     logError
 } from '../lib/utils.js';
+import { getThemeById, resolveThemeColors } from '../lib/color-themes.js';
 import { StorageHelper } from '../lib/storage-helper.js';
 import { isDemoMode, setDemoMode, getDemoOptionsSettings, getDemoCalendars, DEMO_BUILD } from '../lib/demo-data.js';
 import {
@@ -180,9 +181,17 @@ class OptionsPageManager {
                 breakTimeEnd: settings.breakTimeEnd
             });
 
-            this.colorSettingsCard.updateSettings(
-                Object.fromEntries(Object.keys(COLOR_CSS_VARS).map(key => [key, settings[key]]))
-            );
+            // Migrate: if colorTheme is not set, infer from darkMode flag
+            const themeId = settings.colorTheme || (settings.darkMode ? 'dark' : 'default');
+            this.colorSettingsCard.updateSettings({ colorTheme: themeId });
+
+            // Apply theme to options page preview
+            const theme = getThemeById(themeId);
+            if (theme.isDark) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+            }
 
             // Load the language settings
             const languageSettings = isDemoMode()
@@ -313,23 +322,38 @@ class OptionsPageManager {
         }
     }
 
-    async handleColorSettingsChange(colorSettings) {
+    async handleColorSettingsChange(themeSettings) {
         try {
-            // Load the existing settings and update only the color settings
-            const currentSettings = await loadSettings();
-            const updatedSettings = { ...currentSettings, ...colorSettings };
+            const { colorTheme: themeId, isDark, ...colorValues } = themeSettings;
+            const theme = getThemeById(themeId);
+            const { cssVars } = resolveThemeColors(theme);
 
+            // Persist: theme ID + the 7 resolved colour values + darkMode flag
+            const currentSettings = await loadSettings();
+            const updatedSettings = {
+                ...currentSettings,
+                ...colorValues,
+                colorTheme: themeId,
+                darkMode: isDark
+            };
             await saveSettings(updatedSettings);
 
-            // Update the CSS variables immediately
-            for (const [key, varName] of Object.entries(COLOR_CSS_VARS)) {
-                document.documentElement.style.setProperty(varName, colorSettings[key]);
+            // Apply all CSS variables immediately on the options page
+            for (const [varName, value] of Object.entries(cssVars)) {
+                document.documentElement.style.setProperty(varName, value);
+            }
+
+            // Apply dark mode attribute
+            if (isDark) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
             }
 
             // Reload the side panel
             this._reloadSidePanel();
         } catch (error) {
-            logError('Color settings save', error);
+            logError('Color theme save', error);
         }
     }
 
@@ -394,10 +418,13 @@ class OptionsPageManager {
             this.languageSettingsCard.resetToDefaults();
             this.reminderSettingsCard.resetToDefaults();
 
-            // Reset the CSS variables too
-            for (const [key, varName] of Object.entries(COLOR_CSS_VARS)) {
-                document.documentElement.style.setProperty(varName, DEFAULT_SETTINGS[key]);
+            // Reset CSS variables via theme system
+            const defaultTheme = getThemeById('default');
+            const { cssVars } = resolveThemeColors(defaultTheme);
+            for (const [varName, value] of Object.entries(cssVars)) {
+                document.documentElement.style.setProperty(varName, value);
             }
+            document.documentElement.removeAttribute('data-theme');
 
             // Reload the side panel
             this._reloadSidePanel();
