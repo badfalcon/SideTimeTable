@@ -569,6 +569,26 @@
     "message": "Google連携を解除",
     "description": "Google連携解除ボタンテキスト"
   },
+  "connectingStatus": {
+    "message": "接続中...",
+    "description": "Google連携接続中のステータステキスト"
+  },
+  "disconnectingStatus": {
+    "message": "解除中...",
+    "description": "Google連携解除中のステータステキスト"
+  },
+  "manualRevokeTitle": {
+    "message": "完全な連携解除には追加の手順が必要です",
+    "description": "Google連携解除後の手動取り消し通知のタイトル"
+  },
+  "manualRevokeDescription": {
+    "message": "拡張機能からトークンを削除しましたが、完全に連携を解除するには、Googleアカウントの設定から手動で権限を取り消してください。",
+    "description": "手動取り消し通知の説明文"
+  },
+  "openGoogleAccountSettings": {
+    "message": "Googleアカウント設定を開く",
+    "description": "手動取り消しのためのGoogleアカウント設定を開くボタンテキスト"
+  },
   "to": {
     "message": "～",
     "description": "時間範囲の区切り文字（例: 9:00～18:00）"
