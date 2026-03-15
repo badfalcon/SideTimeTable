@@ -2,6 +2,8 @@
  * Changelog - Standalone release notes page
  */
 import { RELEASE_NOTES } from '../lib/release-notes.js';
+import { loadSettings } from '../lib/utils.js';
+import { getThemeById, resolveThemeColors } from '../lib/color-themes.js';
 
 function renderReleaseNotes(lang) {
     const container = document.getElementById('release-notes-container');
@@ -62,6 +64,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (error) {
             console.warn('Localization error:', error);
         }
+    }
+
+    // Apply color theme
+    try {
+        const settings = await loadSettings();
+        const themeId = settings.colorTheme || (settings.darkMode ? 'dark' : 'default');
+        const theme = getThemeById(themeId);
+        const { cssVars } = resolveThemeColors(theme);
+
+        for (const [varName, value] of Object.entries(cssVars)) {
+            document.documentElement.style.setProperty(varName, value);
+        }
+
+        if (theme.isDark) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+            document.documentElement.removeAttribute('data-theme');
+        }
+    } catch (error) {
+        console.warn('Failed to apply color theme:', error);
     }
 
     renderReleaseNotes(lang);
