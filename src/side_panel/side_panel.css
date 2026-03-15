@@ -425,6 +425,23 @@ button {
     cursor: pointer;
 }
 
+/* Local event form row layout (matching Google event modal rows) */
+.local-event-form-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.local-event-form-row label {
+    margin-bottom: 3px;
+    font-size: 0.9em;
+}
+
+.local-event-form-row input[type="text"],
+.local-event-form-row input[type="time"] {
+    margin-bottom: 8px;
+}
+
 /* Local event modal buttons - unified style with Google event buttons */
 .modal-buttons {
     display: flex;
