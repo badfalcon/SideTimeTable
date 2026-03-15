@@ -553,18 +553,6 @@
     "message": "第三色覚 (青色弱)",
     "description": "第三色覚異常（青色弱）向けカラープリセット名"
   },
-  "darkModeSettings": {
-    "message": "ダークモード",
-    "description": "ダークモード設定カードのタイトル"
-  },
-  "darkModeDescription": {
-    "message": "拡張機能のインターフェースをダークモードに切り替えます。",
-    "description": "ダークモード設定の説明"
-  },
-  "darkModeToggle": {
-    "message": "ダークモードを有効にする",
-    "description": "ダークモード切り替えラベル"
-  },
   "signInWithGoogle": {
     "message": "Googleでログイン",
     "description": "Googleログインボタンテキスト"
