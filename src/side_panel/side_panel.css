@@ -508,12 +508,35 @@ button {
     color: #2e7d32;
 }
 
-.google-event-rsvp-btn.active i.fa-times {
+.google-event-rsvp-btn:nth-child(2).active {
+    background-color: #fff8e1;
+    border-color: #ffc107;
+    color: #f57f17;
+}
+
+.google-event-rsvp-btn:nth-child(3).active {
+    background-color: #fce4ec;
+    border-color: #ef5350;
     color: #c62828;
 }
 
-.google-event-rsvp-btn.active i.fa-question {
-    color: #f57f17;
+/* RSVP feedback message */
+.google-event-rsvp-feedback {
+    font-size: 0.8em;
+    margin-top: 6px;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.rsvp-feedback-success {
+    color: #2e7d32;
+    background-color: #e8f5e9;
+}
+
+.rsvp-feedback-declined,
+.rsvp-feedback-error {
+    color: #c62828;
+    background-color: #fce4ec;
 }
 
 /* Links within Google event details */

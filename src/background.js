@@ -633,22 +633,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                         });
                     });
 
-                    // Map response to Google Calendar API attendee responseStatus
-                    const responseStatusMap = {
-                        'accepted': 'accepted',
-                        'declined': 'declined',
-                        'tentative': 'tentative'
-                    };
-                    const responseStatus = responseStatusMap[rsvpResponse];
-                    if (!responseStatus) {
+                    // Validate response status
+                    const validStatuses = new Set(['accepted', 'declined', 'tentative']);
+                    if (!validStatuses.has(rsvpResponse)) {
                         sendResponse({ success: false, error: 'Invalid response status' });
                         return;
                     }
 
                     // First, get the current event to find the self attendee
                     const baseUrl = 'https://www.googleapis.com/calendar/v3/calendars';
-                    const getUrl = `${baseUrl}/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`;
-                    const getRes = await fetch(getUrl, {
+                    const eventUrl = `${baseUrl}/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`;
+                    const getRes = await fetch(eventUrl, {
                         headers: { Authorization: 'Bearer ' + token }
                     });
                     if (!getRes.ok) {
@@ -660,15 +655,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     const attendees = eventData.attendees || [];
                     const selfAttendee = attendees.find(a => a.self);
                     if (selfAttendee) {
-                        selfAttendee.responseStatus = responseStatus;
+                        selfAttendee.responseStatus = rsvpResponse;
                     } else {
                         sendResponse({ success: false, error: 'Self attendee not found in event' });
                         return;
                     }
 
                     // PATCH the event with updated attendees
-                    const patchUrl = `${baseUrl}/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`;
-                    const patchRes = await fetch(patchUrl, {
+                    const patchRes = await fetch(eventUrl, {
                         method: 'PATCH',
                         headers: {
                             Authorization: 'Bearer ' + token,
