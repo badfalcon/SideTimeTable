@@ -510,12 +510,7 @@ export class LocalEventManager {
             typeof window.getTimeFormatPreference === 'function' ? window.getTimeFormatPreference() : Promise.resolve('24h')
         ]);
 
-        const formatOne = (t) => window.formatTime(t, { format: timeFormat, locale });
-
-        const formattedStart = formatOne(startTime);
-        const formattedEnd = formatOne(endTime);
-        const sep = locale === 'en' ? ' - ' : '～';
-        const formattedTimeRange = `${formattedStart}${sep}${formattedEnd}`;
+        const formattedStart = window.formatTime(startTime, { format: timeFormat, locale });
 
         // Clear existing content
         eventDiv.innerHTML = '';
@@ -528,10 +523,10 @@ export class LocalEventManager {
             eventDiv.appendChild(icon);
         }
 
-        // Add text content
+        // Display time and title in the same format as Google events
         const timeSpan = document.createElement('span');
         timeSpan.className = 'event-time';
-        timeSpan.textContent = `${formattedTimeRange}: `;
+        timeSpan.textContent = `${formattedStart} - `;
         eventDiv.appendChild(timeSpan);
         const titleSpan = document.createElement('span');
         titleSpan.className = 'event-title';
