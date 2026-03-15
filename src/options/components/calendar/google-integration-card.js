@@ -37,7 +37,7 @@ export class GoogleIntegrationCard extends CardComponent {
         this.statusElement.id = 'google-integration-status';
         this.statusElement.className = 'ms-2';
         this.statusElement.setAttribute('data-localize', '__MSG_notIntegrated__');
-        this.statusElement.textContent = 'Not integrated';
+        this.statusElement.textContent = chrome.i18n.getMessage('notIntegrated') || 'Not integrated';
         controlsDiv.appendChild(this.statusElement);
 
         this.addContent(controlsDiv);

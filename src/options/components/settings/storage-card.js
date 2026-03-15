@@ -43,32 +43,32 @@ export class StorageCard extends CardComponent {
 
         const title = document.createElement('h6');
         title.className = 'mb-3 text-secondary';
-        title.innerHTML = '<i class="fas fa-tools me-1"></i>Actions';
+        title.innerHTML = `<i class="fas fa-tools me-1"></i>${chrome.i18n.getMessage('storageActions') || 'Actions'}`;
 
         const btnGroup = document.createElement('div');
         btnGroup.className = 'd-flex flex-wrap gap-2';
 
         btnGroup.appendChild(this._createActionBtn('trash', 'Clear Local Events', 'danger', async () => {
-            if (!window.confirm('localEvents_* キーをすべて削除しますか？')) return;
+            if (!window.confirm(chrome.i18n.getMessage('confirmClearLocalEvents') || 'Delete all localEvents_* keys?')) return;
             try {
                 const localData = await StorageHelper.getLocal(null);
                 const keys = Object.keys(localData).filter(k => k.startsWith(STORAGE_KEYS.LOCAL_EVENTS_PREFIX));
                 if (keys.length > 0) await chrome.storage.local.remove(keys);
-                this._showAlert('Local Events を削除しました。', 'success');
+                this._showAlert(chrome.i18n.getMessage('clearLocalEventsSuccess') || 'Local Events deleted.', 'success');
                 await this._refreshViewer();
             } catch (e) {
-                this._showAlert('削除に失敗しました: ' + e.message, 'danger');
+                this._showAlert((chrome.i18n.getMessage('deleteFailed') || 'Deletion failed: ') + e.message, 'danger');
             }
         }));
 
         btnGroup.appendChild(this._createActionBtn('eraser', 'Clear Memo', 'warning', async () => {
-            if (!window.confirm('memoContent / memoCollapsed / memoHeight を削除しますか？')) return;
+            if (!window.confirm(chrome.i18n.getMessage('confirmClearMemo') || 'Delete memoContent / memoCollapsed / memoHeight?')) return;
             try {
                 await chrome.storage.local.remove(['memoContent', 'memoCollapsed', 'memoHeight']);
-                this._showAlert('Memo データを削除しました。', 'success');
+                this._showAlert(chrome.i18n.getMessage('clearMemoSuccess') || 'Memo data deleted.', 'success');
                 await this._refreshViewer();
             } catch (e) {
-                this._showAlert('削除に失敗しました: ' + e.message, 'danger');
+                this._showAlert((chrome.i18n.getMessage('deleteFailed') || 'Deletion failed: ') + e.message, 'danger');
             }
         }));
 
@@ -79,7 +79,7 @@ export class StorageCard extends CardComponent {
                 await this._copyToClipboard(JSON.stringify(syncData, null, 2));
                 this._showCopyNotification(btn);
             } catch (err) {
-                this._showAlert('エクスポートに失敗しました: ' + err.message, 'danger');
+                this._showAlert((chrome.i18n.getMessage('exportFailed') || 'Export failed: ') + err.message, 'danger');
             }
         }));
 
@@ -107,12 +107,12 @@ export class StorageCard extends CardComponent {
 
         const title = document.createElement('h6');
         title.className = 'mb-0 text-secondary';
-        title.innerHTML = '<i class="fas fa-eye me-1"></i>Viewer';
+        title.innerHTML = `<i class="fas fa-eye me-1"></i>${chrome.i18n.getMessage('storageViewer') || 'Viewer'}`;
 
         const refreshBtn = document.createElement('button');
         refreshBtn.type = 'button';
         refreshBtn.className = 'btn btn-outline-secondary btn-sm';
-        refreshBtn.innerHTML = '<i class="fas fa-sync-alt me-1"></i>更新';
+        refreshBtn.innerHTML = `<i class="fas fa-sync-alt me-1"></i>${chrome.i18n.getMessage('storageRefresh') || 'Refresh'}`;
         refreshBtn.addEventListener('click', () => this._refreshViewer());
 
         header.appendChild(title);
@@ -120,7 +120,7 @@ export class StorageCard extends CardComponent {
 
         this._viewerContent = document.createElement('div');
         this._viewerContent.className = 'small';
-        this._viewerContent.textContent = '読み込み中…';
+        this._viewerContent.textContent = chrome.i18n.getMessage('storageLoading') || 'Loading…';
 
         section.appendChild(header);
         section.appendChild(this._viewerContent);
@@ -133,7 +133,7 @@ export class StorageCard extends CardComponent {
     async _refreshViewer() {
         const content = this._viewerContent;
         if (!content) return;
-        content.textContent = '読み込み中…';
+        content.textContent = chrome.i18n.getMessage('storageLoading') || 'Loading…';
 
         try {
             const syncQuota = chrome.storage.sync.QUOTA_BYTES || StorageCard.SYNC_QUOTA;
@@ -162,7 +162,7 @@ export class StorageCard extends CardComponent {
             content.appendChild(this._createStorageBlock('Sync Storage (Settings)', syncData));
             content.appendChild(this._createStorageBlock('Local Storage', localData));
         } catch (e) {
-            content.textContent = 'ストレージの読み込みに失敗しました: ' + e.message;
+            content.textContent = (chrome.i18n.getMessage('storageLoadFailed') || 'Failed to load storage: ') + e.message;
         }
     }
 
@@ -301,7 +301,7 @@ export class StorageCard extends CardComponent {
         copyBtn.type = 'button';
         copyBtn.className = 'btn btn-outline-secondary btn-sm py-0 px-1 flex-shrink-0';
         copyBtn.innerHTML = '<i class="fas fa-copy fa-xs"></i>';
-        copyBtn.title = 'コピー';
+        copyBtn.title = chrome.i18n.getMessage('storageCopy') || 'Copy';
         copyBtn.addEventListener('click', async (e) => {
             e.stopPropagation();
             await this._copyToClipboard(rawValue);

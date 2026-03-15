@@ -98,7 +98,7 @@ export class ColorSettingsCard extends CardComponent {
             const badge = document.createElement('span');
             badge.className = 'badge bg-dark ms-1';
             badge.style.fontSize = '0.65rem';
-            badge.textContent = 'Dark';
+            badge.textContent = chrome.i18n.getMessage('darkBadge') || 'Dark';
             name.appendChild(badge);
         }
 
@@ -136,12 +136,12 @@ export class ColorSettingsCard extends CardComponent {
         label.className = 'form-check-label fw-semibold';
         label.htmlFor = 'use-google-calendar-colors-toggle';
         label.setAttribute('data-localize', '__MSG_useGoogleCalendarColorsLabel__');
-        label.textContent = 'Use Google Calendar colors';
+        label.textContent = chrome.i18n.getMessage('useGoogleCalendarColorsLabel') || 'Use Google Calendar colors';
 
         const helpText = document.createElement('small');
         helpText.className = 'form-text text-muted d-block mt-1';
         helpText.setAttribute('data-localize', '__MSG_useGoogleCalendarColorsHelp__');
-        helpText.textContent = 'When disabled, all Google events use the theme\'s default color.';
+        helpText.textContent = chrome.i18n.getMessage('useGoogleCalendarColorsHelp') || 'When disabled, all Google events use the theme\'s default color.';
 
         this._googleColorsToggle.addEventListener('change', () => {
             this.useGoogleCalendarColors = this._googleColorsToggle.checked;

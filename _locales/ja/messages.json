@@ -1080,5 +1080,185 @@
   "rsvpErrorFeedback": {
     "message": "回答の送信に失敗しました",
     "description": "出欠回答の送信に失敗した際のフィードバック"
+  },
+  "close": {
+    "message": "閉じる",
+    "description": "閉じるボタンテキスト"
+  },
+  "noSearchResults": {
+    "message": "検索結果が見つかりません",
+    "description": "カレンダー検索で結果がない場合のメッセージ"
+  },
+  "darkBadge": {
+    "message": "ダーク",
+    "description": "ダークテーマのバッジラベル"
+  },
+  "detectingLanguage": {
+    "message": "検出中...",
+    "description": "ブラウザ言語検出中のステータステキスト"
+  },
+  "loadingStatus": {
+    "message": "読み込み中...",
+    "description": "汎用の読み込み中ステータステキスト"
+  },
+  "copyToClipboard": {
+    "message": "クリップボードにコピー",
+    "description": "クリップボードにコピーボタンのツールチップ"
+  },
+  "languageChanged": {
+    "message": "言語設定が変更されました",
+    "description": "言語変更通知のタイトル"
+  },
+  "languageReloadRequired": {
+    "message": "変更を反映するにはページの再読み込みが必要です。",
+    "description": "言語変更通知の説明"
+  },
+  "reloadPage": {
+    "message": "ページを再読み込み",
+    "description": "言語変更後にページを再読み込みするボタン"
+  },
+  "screenReaderLoading": {
+    "message": "読み込み中...",
+    "description": "読み込みスピナーのスクリーンリーダーテキスト"
+  },
+  "demoMode": {
+    "message": "デモモード",
+    "description": "デモモードトグルラベル"
+  },
+  "demoModeHelp": {
+    "message": "サンプルデータを表示します（APIアクセスは行いません）",
+    "description": "デモモードトグルのヘルプテキスト"
+  },
+  "demoTimeLabel": {
+    "message": "現在時刻ラインの位置",
+    "description": "デモモードの時刻入力ラベル"
+  },
+  "demoTimeHelp": {
+    "message": "デモモードで現在時刻ラインに表示される時刻",
+    "description": "デモモードの時刻入力ヘルプテキスト"
+  },
+  "demoScenarioLabel": {
+    "message": "シナリオ",
+    "description": "デモモードのシナリオ選択ラベル"
+  },
+  "demoScenarioHelp": {
+    "message": "変更を反映するにはサイドパネルを再読み込みしてください。",
+    "description": "デモモードのシナリオ選択ヘルプテキスト"
+  },
+  "demoLanguageLabel": {
+    "message": "デモ言語",
+    "description": "デモモードの言語選択ラベル"
+  },
+  "demoLanguageHelp": {
+    "message": "デモデータで使用する言語を上書きします（スクリーンショット用など）",
+    "description": "デモモードの言語選択ヘルプテキスト"
+  },
+  "demoLanguageAuto": {
+    "message": "自動（拡張機能の設定に従う）",
+    "description": "デモ言語選択の自動オプション"
+  },
+  "demoLinkInfo": {
+    "message": "<code>?demo=true</code> で開くとデモ設定をプレビューできます：",
+    "description": "デモリンクセクションの情報テキスト"
+  },
+  "demoModeEnabled": {
+    "message": "デモモードを有効にしました",
+    "description": "デモモード有効時の通知"
+  },
+  "demoModeDisabled": {
+    "message": "デモモードを無効にしました",
+    "description": "デモモード無効時の通知"
+  },
+  "demoLanguageChanged": {
+    "message": "言語を変更しました — サイドパネルを再読み込みしてください。",
+    "description": "デモ言語変更時の通知"
+  },
+  "demoScenarioChanged": {
+    "message": "シナリオを変更しました — サイドパネルを再読み込みしてください。",
+    "description": "デモシナリオ変更時の通知"
+  },
+  "testNotification": {
+    "message": "テスト通知",
+    "description": "テスト通知ボタン"
+  },
+  "forceSyncNow": {
+    "message": "今すぐ同期",
+    "description": "リマインダー強制同期ボタン"
+  },
+  "showDebugInfo": {
+    "message": "デバッグ情報を表示",
+    "description": "デバッグ情報表示ボタン"
+  },
+  "testNotificationSent": {
+    "message": "テスト通知を送信しました！通知を確認してください。",
+    "description": "テスト通知送信後のアラート"
+  },
+  "testNotificationFailed": {
+    "message": "テスト通知の送信に失敗しました: ",
+    "description": "テスト通知失敗時のアラート"
+  },
+  "syncCompleted": {
+    "message": "リマインダーの同期が完了しました！バックグラウンドコンソールでログを確認してください。",
+    "description": "リマインダー同期完了時のアラート"
+  },
+  "syncFailed": {
+    "message": "リマインダーの同期に失敗しました: ",
+    "description": "リマインダー同期失敗時のアラート"
+  },
+  "debugInfoFailed": {
+    "message": "デバッグ情報の取得に失敗しました: ",
+    "description": "デバッグ情報取得失敗時のアラート"
+  },
+  "errorPrefix": {
+    "message": "エラー: ",
+    "description": "エラーメッセージのプレフィックス"
+  },
+  "storageActions": {
+    "message": "操作",
+    "description": "ストレージ操作セクションのタイトル"
+  },
+  "storageViewer": {
+    "message": "ビューアー",
+    "description": "ストレージビューアーセクションのタイトル"
+  },
+  "storageRefresh": {
+    "message": "更新",
+    "description": "ストレージビューアーの更新ボタン"
+  },
+  "storageLoading": {
+    "message": "読み込み中…",
+    "description": "ストレージビューアーの読み込み中テキスト"
+  },
+  "storageLoadFailed": {
+    "message": "ストレージの読み込みに失敗しました: ",
+    "description": "ストレージ読み込み失敗時のエラーメッセージ"
+  },
+  "storageCopy": {
+    "message": "コピー",
+    "description": "ストレージビューアーのコピーボタンツールチップ"
+  },
+  "confirmClearLocalEvents": {
+    "message": "localEvents_* キーをすべて削除しますか？",
+    "description": "ローカルイベント削除の確認"
+  },
+  "clearLocalEventsSuccess": {
+    "message": "Local Events を削除しました。",
+    "description": "ローカルイベント削除成功メッセージ"
+  },
+  "confirmClearMemo": {
+    "message": "memoContent / memoCollapsed / memoHeight を削除しますか？",
+    "description": "メモデータ削除の確認"
+  },
+  "clearMemoSuccess": {
+    "message": "Memo データを削除しました。",
+    "description": "メモデータ削除成功メッセージ"
+  },
+  "deleteFailed": {
+    "message": "削除に失敗しました: ",
+    "description": "削除失敗時のエラーメッセージ"
+  },
+  "exportFailed": {
+    "message": "エクスポートに失敗しました: ",
+    "description": "エクスポート失敗時のエラーメッセージ"
   }
 }
