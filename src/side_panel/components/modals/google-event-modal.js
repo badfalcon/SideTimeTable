@@ -522,17 +522,53 @@ export class GoogleEventModal extends ModalComponent {
                     this._setAttendeesInfo(this.currentEvent);
                 }
 
-                // Notify parent to refresh events
-                if (this.onRsvpResponse) {
-                    this.onRsvpResponse(response, event);
+                // If declined, close modal after a brief delay (event will be removed from timeline)
+                if (response === 'declined') {
+                    this._showRsvpFeedback(chrome.i18n.getMessage('rsvpDeclinedFeedback') || 'Declined. Event will be hidden.', 'declined');
+                    setTimeout(() => {
+                        this.hide();
+                        if (this.onRsvpResponse) {
+                            this.onRsvpResponse(response, event);
+                        }
+                    }, 1200);
+                } else {
+                    this._showRsvpFeedback(chrome.i18n.getMessage('rsvpSuccessFeedback') || 'Response sent.', 'success');
+                    // Notify parent to refresh events
+                    if (this.onRsvpResponse) {
+                        this.onRsvpResponse(response, event);
+                    }
                 }
             } else {
                 console.error('RSVP response failed:', result?.error);
                 allButtons.forEach(btn => btn.disabled = false);
+                this._showRsvpFeedback(chrome.i18n.getMessage('rsvpErrorFeedback') || 'Failed to send response.', 'error');
             }
         } catch (error) {
             console.error('Failed to send RSVP response:', error);
             allButtons.forEach(btn => btn.disabled = false);
+            this._showRsvpFeedback(chrome.i18n.getMessage('rsvpErrorFeedback') || 'Failed to send response.', 'error');
+        }
+    }
+
+    /**
+     * Show a brief feedback message in the RSVP area
+     * @private
+     */
+    _showRsvpFeedback(message, type) {
+        if (!this.rsvpContainer) return;
+
+        // Remove existing feedback
+        const existing = this.rsvpContainer.querySelector('.google-event-rsvp-feedback');
+        if (existing) existing.remove();
+
+        const feedback = document.createElement('div');
+        feedback.className = `google-event-rsvp-feedback rsvp-feedback-${type}`;
+        feedback.textContent = message;
+        this.rsvpContainer.appendChild(feedback);
+
+        // Auto-remove after delay (unless declined, which closes modal)
+        if (type !== 'declined') {
+            setTimeout(() => feedback.remove(), 3000);
         }
     }
 
