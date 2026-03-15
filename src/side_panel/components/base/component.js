@@ -2,6 +2,32 @@
  * Component - Base component class for side panel
  */
 export class Component {
+    /** @type {Object<string, {message: string}>|null} Cached locale messages */
+    static _messages = null;
+
+    /**
+     * Load locale messages based on the user's language setting.
+     * Must be called once before components render.
+     */
+    static async loadMessages() {
+        try {
+            const result = await chrome.storage.sync.get(['language']);
+            const setting = result.language || 'auto';
+            let lang;
+            if (setting === 'auto') {
+                const browserLang = chrome.i18n.getUILanguage().toLowerCase();
+                lang = browserLang.startsWith('ja') ? 'ja' : 'en';
+            } else {
+                lang = setting;
+            }
+            const url = chrome.runtime.getURL(`/_locales/${lang}/messages.json`);
+            const response = await fetch(url);
+            Component._messages = await response.json();
+        } catch {
+            Component._messages = null;
+        }
+    }
+
     constructor(options = {}) {
         this.options = {
             id: options.id || '',
@@ -177,6 +203,10 @@ export class Component {
      */
     getMessage(key) {
         try {
+            // Prefer cached messages (respects user's language setting)
+            if (Component._messages && Component._messages[key]) {
+                return Component._messages[key].message || key;
+            }
             const msg = chrome.i18n.getMessage(key);
             return msg || key;
         } catch {
