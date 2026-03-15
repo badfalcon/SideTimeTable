@@ -99,8 +99,8 @@ export class GoogleEventManager {
         // Dynamically check the current settings
         // Use mock data in demo mode
         if (isDemoMode()) {
-            const demoSettings = await loadSettings();
-            this.useGoogleCalendarColors = demoSettings.useGoogleCalendarColors !== false;
+            const settings = await loadSettings();
+            this.useGoogleCalendarColors = settings.useGoogleCalendarColors !== false;
             return this._processDemoEvents();
         }
 
