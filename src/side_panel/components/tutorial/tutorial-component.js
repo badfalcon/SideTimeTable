@@ -100,6 +100,11 @@ export class TutorialComponent extends Component {
                 target: '#settingsIcon'
             },
             {
+                titleKey: 'tutorialMemoTitle',
+                descKey: 'tutorialMemoDesc',
+                target: '#memoPanelWrapper'
+            },
+            {
                 type: 'finish',
                 titleKey: 'tutorialFinishTitle',
                 descKey: 'tutorialFinishDesc',
