@@ -99,6 +99,7 @@ export const DEFAULT_SETTINGS = {
     googleEventReminder: false, // Automatic reminder for Google events
     reminderMinutes: 5, // Reminder time in minutes before event starts
     darkMode: false, // Dark mode theme (legacy, kept for migration)
+    useGoogleCalendarColors: true, // Use per-calendar colors from Google Calendar API
     colorTheme: 'default' // Active colour-set ID (see color-themes.js)
 };
 

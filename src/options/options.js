@@ -183,7 +183,10 @@ class OptionsPageManager {
 
             // Migrate: if colorTheme is not set, infer from darkMode flag
             const themeId = settings.colorTheme || (settings.darkMode ? 'dark' : 'default');
-            this.colorSettingsCard.updateSettings({ colorTheme: themeId });
+            this.colorSettingsCard.updateSettings({
+                colorTheme: themeId,
+                useGoogleCalendarColors: settings.useGoogleCalendarColors !== false
+            });
 
             // Apply theme to options page preview
             const theme = getThemeById(themeId);
@@ -215,6 +218,7 @@ class OptionsPageManager {
         // Show demo Google integration state in demo mode
         if (isDemoMode()) {
             this.googleIntegrationCard.updateIntegrationStatus(true);
+            this.colorSettingsCard.setGoogleCalendarColorsToggleVisible(true);
             await this._loadDemoCalendars();
             return;
         }
@@ -228,6 +232,7 @@ class OptionsPageManager {
             if (response.authenticated) {
                 this.googleIntegrationCard.updateIntegrationStatus(true);
                 this.calendarManagementCard.show();
+                this.colorSettingsCard.setGoogleCalendarColorsToggleVisible(true);
             }
         } catch (error) {
             console.error('Google auth status check error:', error);
@@ -261,6 +266,7 @@ class OptionsPageManager {
                 if (response.success) {
                     this.googleIntegrationCard.updateIntegrationStatus(true);
                     this.calendarManagementCard.show();
+                    this.colorSettingsCard.setGoogleCalendarColorsToggleVisible(true);
                     // Enable the Google integration
                     const settings = await loadSettings();
                     await saveSettings({ ...settings, googleIntegrated: true });
@@ -282,6 +288,7 @@ class OptionsPageManager {
                     await saveSettings({ ...settings, googleIntegrated: false });
                     this.googleIntegrationCard.updateIntegrationStatus(false);
                     this.calendarManagementCard.hide();
+                    this.colorSettingsCard.setGoogleCalendarColorsToggleVisible(false);
                     this._reloadSidePanel();
 
                     // Show the notification if the manual authentication deletion is required
@@ -324,17 +331,18 @@ class OptionsPageManager {
 
     async handleColorSettingsChange(themeSettings) {
         try {
-            const { colorTheme: themeId, isDark, ...colorValues } = themeSettings;
+            const { colorTheme: themeId, isDark, useGoogleCalendarColors, ...colorValues } = themeSettings;
             const theme = getThemeById(themeId);
             const { cssVars } = resolveThemeColors(theme);
 
-            // Persist: theme ID + the 7 resolved colour values + darkMode flag
+            // Persist: theme ID + the 7 resolved colour values + darkMode flag + calendar colors toggle
             const currentSettings = await loadSettings();
             const updatedSettings = {
                 ...currentSettings,
                 ...colorValues,
                 colorTheme: themeId,
-                darkMode: isDark
+                darkMode: isDark,
+                useGoogleCalendarColors: useGoogleCalendarColors !== undefined ? useGoogleCalendarColors : currentSettings.useGoogleCalendarColors
             };
             await saveSettings(updatedSettings);
 
