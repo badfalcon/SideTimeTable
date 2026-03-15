@@ -76,7 +76,7 @@ export class CalendarManagementCard extends CardComponent {
         this.loadingIndicator.style.display = 'none';
         this.loadingIndicator.innerHTML = `
             <div class="spinner-border spinner-border-sm text-primary" role="status">
-                <span class="visually-hidden">${chrome.i18n.getMessage('screenReaderLoading') || 'Loading...'}</span>
+                <span class="visually-hidden">${window.getLocalizedMessage('screenReaderLoading') || 'Loading...'}</span>
             </div>
         `;
 
@@ -107,7 +107,7 @@ export class CalendarManagementCard extends CardComponent {
         this.searchInput.type = 'text';
         this.searchInput.id = 'calendar-search';
         this.searchInput.className = 'form-control';
-        this.searchInput.placeholder = chrome.i18n.getMessage('searchCalendars') || 'Search calendars...';
+        this.searchInput.placeholder = window.getLocalizedMessage('searchCalendars') || 'Search calendars...';
         this.searchInput.setAttribute('data-localize-placeholder', '__MSG_searchCalendars__');
 
         // The clear button
@@ -144,7 +144,7 @@ export class CalendarManagementCard extends CardComponent {
         this.noCalendarsMsg.className = 'text-muted';
         this.noCalendarsMsg.style.display = 'none';
         this.noCalendarsMsg.setAttribute('data-localize', '__MSG_noCalendarsFound__');
-        this.noCalendarsMsg.textContent = chrome.i18n.getMessage('noCalendarsFound') || 'No calendars found.';
+        this.noCalendarsMsg.textContent = window.getLocalizedMessage('noCalendarsFound') || 'No calendars found.';
 
         container.appendChild(this.calendarList);
         container.appendChild(this.noCalendarsMsg);
@@ -424,7 +424,7 @@ export class CalendarManagementCard extends CardComponent {
      * @private
      */
     _showNoSearchResults() {
-        const noResultsMsg = chrome.i18n.getMessage('noSearchResults') || 'No search results found';
+        const noResultsMsg = window.getLocalizedMessage('noSearchResults') || 'No search results found';
         this.calendarList.innerHTML = `<div class="text-muted text-center p-3">${noResultsMsg}</div>`;
         this.noCalendarsMsg.style.display = 'none';
     }

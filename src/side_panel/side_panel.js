@@ -30,7 +30,6 @@ import { getThemeById, resolveThemeColors } from '../lib/color-themes.js';
 import { setDemoMode } from '../lib/demo-data.js';
 import { AlarmManager } from '../lib/alarm-manager.js';
 import { StorageHelper } from '../lib/storage-helper.js';
-import { Component } from './components/base/component.js';
 
 // The reload message listener
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -75,7 +74,9 @@ class SidePanelUIController {
     async initialize() {
         try {
             // Load locale messages based on the user's language setting
-            await Component.loadMessages();
+            if (window.loadLocalizedMessages) {
+                await window.loadLocalizedMessages();
+            }
 
             // Migrate event data from sync to local storage (one-time)
             await migrateEventDataToLocal();
@@ -107,7 +108,7 @@ class SidePanelUIController {
 
         } catch (error) {
             console.error('Side panel UI initialization error:', error);
-            this._showError(chrome.i18n.getMessage('initializationError') + ': ' + error.message);
+            this._showError((window.getLocalizedMessage?.('initializationError') || 'Initialization error') + ': ' + error.message);
         }
     }
 

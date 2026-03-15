@@ -58,11 +58,11 @@ export class DemoModeCard extends CardComponent {
         label.htmlFor = 'demo-mode-toggle';
 
         const labelText = document.createElement('span');
-        labelText.textContent = chrome.i18n.getMessage('demoMode') || 'Demo Mode';
+        labelText.textContent = window.getLocalizedMessage('demoMode') || 'Demo Mode';
 
         const helpText = document.createElement('small');
         helpText.className = 'text-muted d-block';
-        helpText.textContent = chrome.i18n.getMessage('demoModeHelp') || 'Display sample data (no API access will be made)';
+        helpText.textContent = window.getLocalizedMessage('demoModeHelp') || 'Display sample data (no API access will be made)';
 
         label.appendChild(labelText);
         label.appendChild(helpText);
@@ -78,7 +78,7 @@ export class DemoModeCard extends CardComponent {
         const label = document.createElement('label');
         label.className = 'form-label small mb-1';
         label.htmlFor = 'demo-time-input';
-        label.textContent = chrome.i18n.getMessage('demoTimeLabel') || 'Current time line position';
+        label.textContent = window.getLocalizedMessage('demoTimeLabel') || 'Current time line position';
 
         this.timeInput = document.createElement('input');
         this.timeInput.type = 'time';
@@ -89,7 +89,7 @@ export class DemoModeCard extends CardComponent {
 
         const helpText = document.createElement('small');
         helpText.className = 'text-muted d-block mt-1';
-        helpText.textContent = chrome.i18n.getMessage('demoTimeHelp') || 'Time shown by the current time line in demo mode';
+        helpText.textContent = window.getLocalizedMessage('demoTimeHelp') || 'Time shown by the current time line in demo mode';
 
         section.appendChild(label);
         section.appendChild(this.timeInput);
@@ -105,7 +105,7 @@ export class DemoModeCard extends CardComponent {
         const label = document.createElement('label');
         label.className = 'form-label small mb-1';
         label.htmlFor = 'demo-scenario-select';
-        label.textContent = chrome.i18n.getMessage('demoScenarioLabel') || 'Scenario';
+        label.textContent = window.getLocalizedMessage('demoScenarioLabel') || 'Scenario';
 
         this.scenarioSelect = document.createElement('select');
         this.scenarioSelect.className = 'form-select form-select-sm';
@@ -118,7 +118,7 @@ export class DemoModeCard extends CardComponent {
 
         const helpText = document.createElement('small');
         helpText.className = 'text-muted d-block mt-1';
-        helpText.textContent = chrome.i18n.getMessage('demoScenarioHelp') || 'Reload the side panel to apply changes.';
+        helpText.textContent = window.getLocalizedMessage('demoScenarioHelp') || 'Reload the side panel to apply changes.';
 
         section.appendChild(label);
         section.appendChild(this.scenarioSelect);
@@ -160,7 +160,7 @@ export class DemoModeCard extends CardComponent {
         const label = document.createElement('label');
         label.className = 'form-label small mb-1';
         label.htmlFor = 'demo-lang-select';
-        label.textContent = chrome.i18n.getMessage('demoLanguageLabel') || 'Demo language';
+        label.textContent = window.getLocalizedMessage('demoLanguageLabel') || 'Demo language';
 
         this.langSelect = document.createElement('select');
         this.langSelect.className = 'form-select form-select-sm';
@@ -169,7 +169,7 @@ export class DemoModeCard extends CardComponent {
         this.langSelect.disabled = true;
 
         [
-            { value: 'auto', label: chrome.i18n.getMessage('demoLanguageAuto') || 'Auto (follow extension setting)' },
+            { value: 'auto', label: window.getLocalizedMessage('demoLanguageAuto') || 'Auto (follow extension setting)' },
             { value: 'en', label: 'English' },
             { value: 'ja', label: '日本語' }
         ].forEach(({ value, label: text }) => {
@@ -182,7 +182,7 @@ export class DemoModeCard extends CardComponent {
 
         const helpText = document.createElement('small');
         helpText.className = 'text-muted d-block mt-1';
-        helpText.textContent = chrome.i18n.getMessage('demoLanguageHelp') || 'Override language used in demo data (for screenshots etc.)';
+        helpText.textContent = window.getLocalizedMessage('demoLanguageHelp') || 'Override language used in demo data (for screenshots etc.)';
 
         section.appendChild(label);
         section.appendChild(this.langSelect);
@@ -197,7 +197,7 @@ export class DemoModeCard extends CardComponent {
 
         const demoUrl = window.location.pathname + '?demo=true';
 
-        const demoLinkInfoMsg = chrome.i18n.getMessage('demoLinkInfo') || 'Open with <code>?demo=true</code> to preview demo settings:';
+        const demoLinkInfoMsg = window.getLocalizedMessage('demoLinkInfo') || 'Open with <code>?demo=true</code> to preview demo settings:';
         section.innerHTML = `
             <small class="text-muted d-block mb-2">
                 <i class="fas fa-info-circle me-1"></i>
@@ -240,8 +240,8 @@ export class DemoModeCard extends CardComponent {
             setDemoMode(enabled);
             this._updateUI();
             const demoMsg = enabled
-                ? (chrome.i18n.getMessage('demoModeEnabled') || 'Demo mode enabled')
-                : (chrome.i18n.getMessage('demoModeDisabled') || 'Demo mode disabled');
+                ? (window.getLocalizedMessage('demoModeEnabled') || 'Demo mode enabled')
+                : (window.getLocalizedMessage('demoModeDisabled') || 'Demo mode disabled');
             this._showAlert(
                 `<i class="fas fa-${enabled ? 'flask' : 'globe'} me-1"></i>` +
                 `<strong>${demoMsg}</strong>`,
@@ -259,7 +259,7 @@ export class DemoModeCard extends CardComponent {
             setDemoLang(e.target.value);
             this._loadScenarioOptions();
             this._showAlert(
-                `<i class="fas fa-language me-1"></i>${chrome.i18n.getMessage('demoLanguageChanged') || 'Language changed — reload the side panel to apply.'}`,
+                `<i class="fas fa-language me-1"></i>${window.getLocalizedMessage('demoLanguageChanged') || 'Language changed — reload the side panel to apply.'}`,
                 'info', 4000
             );
         });
@@ -269,7 +269,7 @@ export class DemoModeCard extends CardComponent {
             setDemoScenario(id);
             this._updateScenarioDesc(this._scenarioOptions, id);
             this._showAlert(
-                `<i class="fas fa-users me-1"></i>${chrome.i18n.getMessage('demoScenarioChanged') || 'Scenario changed — reload the side panel to apply.'}`,
+                `<i class="fas fa-users me-1"></i>${window.getLocalizedMessage('demoScenarioChanged') || 'Scenario changed — reload the side panel to apply.'}`,
                 'info', 4000
             );
             if (this.onSettingsChange) this.onSettingsChange({ demoScenario: id });

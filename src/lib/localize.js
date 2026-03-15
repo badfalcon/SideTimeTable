@@ -41,18 +41,59 @@ async function localizeHtmlPageWithLang() {
     }
 }
 
+/** @type {Object<string, {message: string}>|null} Cached locale messages */
+let _cachedMessages = null;
+
+/**
+ * Get a localized message respecting the user's language setting.
+ * Falls back to chrome.i18n.getMessage() if cache is not loaded.
+ * @param {string} key - i18n message key
+ * @returns {string} Localized message or the key itself
+ */
+function getLocalizedMessage(key) {
+    if (_cachedMessages && _cachedMessages[key]) {
+        return _cachedMessages[key].message || key;
+    }
+    try {
+        const msg = chrome.i18n.getMessage(key);
+        return msg || key;
+    } catch {
+        return key;
+    }
+}
+
+/**
+ * Load locale messages based on the user's language setting.
+ * Must be called once before components render.
+ * @returns {Promise<void>}
+ */
+async function loadLocalizedMessages() {
+    try {
+        const userLanguageSetting = await getCurrentLanguageSetting();
+        const targetLanguage = resolveLanguageCode(userLanguageSetting);
+        const messagesUrl = chrome.runtime.getURL(`/_locales/${targetLanguage}/messages.json`);
+        const response = await fetch(messagesUrl);
+        _cachedMessages = await response.json();
+    } catch {
+        _cachedMessages = null;
+    }
+}
+
 // Execute the localization in the specified language
 async function localizeWithLanguage(targetLang) {
     const messageFiles = {
         'en': '/_locales/en/messages.json',
         'ja': '/_locales/ja/messages.json'
     };
-    
+
     try {
         // Get the message file for the specified language
         const messagesUrl = chrome.runtime.getURL(messageFiles[targetLang] || messageFiles['en']);
         const response = await fetch(messagesUrl);
         const messages = await response.json();
+
+        // Update the cached messages
+        _cachedMessages = messages;
         
         
         // Localize the HTML elements
@@ -100,3 +141,5 @@ window.getCurrentLanguageSetting = getCurrentLanguageSetting;
 window.resolveLanguageCode = resolveLanguageCode;
 window.localizeHtmlPageWithLang = localizeHtmlPageWithLang;
 window.localizeWithLanguage = localizeWithLanguage;
+window.getLocalizedMessage = getLocalizedMessage;
+window.loadLocalizedMessages = loadLocalizedMessages;

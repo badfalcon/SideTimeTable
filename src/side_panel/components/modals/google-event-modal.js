@@ -91,7 +91,7 @@ export class GoogleEventModal extends ModalComponent {
             const titleLink = document.createElement('a');
             titleLink.href = event.htmlLink;
             titleLink.target = '_blank';
-            titleLink.textContent = event.summary || chrome.i18n.getMessage('noTitle');
+            titleLink.textContent = event.summary || window.getLocalizedMessage('noTitle');
             titleLink.style.cssText = 'color: inherit; text-decoration: none;';
             titleLink.addEventListener('mouseenter', () => {
                 titleLink.style.textDecoration = 'underline';
@@ -108,7 +108,7 @@ export class GoogleEventModal extends ModalComponent {
                 this.titleElement.appendChild(colorIndicator);
             }
             const titleText = document.createElement('span');
-            titleText.textContent = event.summary || chrome.i18n.getMessage('noTitle');
+            titleText.textContent = event.summary || window.getLocalizedMessage('noTitle');
             this.titleElement.appendChild(titleText);
         }
 
@@ -189,7 +189,7 @@ export class GoogleEventModal extends ModalComponent {
             const end = event.end.dateTime || event.end.date;
 
             if (!start || !end) {
-                return chrome.i18n.getMessage('noTimeInfo');
+                return window.getLocalizedMessage('noTimeInfo');
             }
 
             const startDate = new Date(start);
@@ -197,7 +197,7 @@ export class GoogleEventModal extends ModalComponent {
 
             // For all-day events
             if (event.start.date && event.end.date) {
-                return chrome.i18n.getMessage('allDay');
+                return window.getLocalizedMessage('allDay');
             }
 
             // For the timed events - use browser locale
@@ -210,7 +210,7 @@ export class GoogleEventModal extends ModalComponent {
             return `${startTime}${separator}${endTime}`;
         } catch (error) {
             console.warn('Time format error:', error);
-            return chrome.i18n.getMessage('timeInfoError');
+            return window.getLocalizedMessage('timeInfoError');
         }
     }
 
@@ -273,7 +273,7 @@ export class GoogleEventModal extends ModalComponent {
             link.href = meetUrl;
             link.target = '_blank';
             link.setAttribute('data-localize', '__MSG_joinGoogleMeet__');
-            link.textContent = chrome.i18n.getMessage('joinGoogleMeet');
+            link.textContent = window.getLocalizedMessage('joinGoogleMeet');
             link.style.cssText = 'color: var(--side-calendar-link-color); text-decoration: none;';
 
             this.meetElement.appendChild(icon);
@@ -290,7 +290,7 @@ export class GoogleEventModal extends ModalComponent {
             link.href = otherVideoUrl;
             link.target = '_blank';
             link.setAttribute('data-localize', '__MSG_joinVideoConference__');
-            link.textContent = chrome.i18n.getMessage('joinVideoConference');
+            link.textContent = window.getLocalizedMessage('joinVideoConference');
             link.style.cssText = 'color: var(--side-calendar-link-color); text-decoration: none;';
 
             this.meetElement.appendChild(icon);
@@ -332,7 +332,7 @@ export class GoogleEventModal extends ModalComponent {
             // Create a span for the localized text
             const titleText = document.createElement('span');
             titleText.setAttribute('data-localize', '__MSG_attendees__');
-            titleText.textContent = chrome.i18n.getMessage('attendees');
+            titleText.textContent = window.getLocalizedMessage('attendees');
 
             // Create a span for the count
             const countText = document.createTextNode(` (${realAttendees.length})`);
@@ -351,19 +351,19 @@ export class GoogleEventModal extends ModalComponent {
                 switch (attendee.responseStatus) {
                     case 'accepted':
                         statusIcon.className = 'fas fa-check-circle attendee-status-accepted';
-                        statusIcon.title = chrome.i18n.getMessage('accepted');
+                        statusIcon.title = window.getLocalizedMessage('accepted');
                         break;
                     case 'declined':
                         statusIcon.className = 'fas fa-times-circle attendee-status-declined';
-                        statusIcon.title = chrome.i18n.getMessage('declined');
+                        statusIcon.title = window.getLocalizedMessage('declined');
                         break;
                     case 'tentative':
                         statusIcon.className = 'fas fa-question-circle attendee-status-tentative';
-                        statusIcon.title = chrome.i18n.getMessage('tentative');
+                        statusIcon.title = window.getLocalizedMessage('tentative');
                         break;
                     default:
                         statusIcon.className = 'fas fa-circle attendee-status-default';
-                        statusIcon.title = chrome.i18n.getMessage('noResponse');
+                        statusIcon.title = window.getLocalizedMessage('noResponse');
                 }
                 statusIcon.style.cssText = 'margin-right: 8px; font-size: 12px;';
 
@@ -372,7 +372,7 @@ export class GoogleEventModal extends ModalComponent {
                 nameSpan.className = 'google-event-attendee-name';
                 nameSpan.textContent = attendee.displayName || attendee.email;
                 if (attendee.organizer) {
-                    nameSpan.textContent += ` (${chrome.i18n.getMessage('organizer')})`;
+                    nameSpan.textContent += ` (${window.getLocalizedMessage('organizer')})`;
                     nameSpan.style.fontWeight = 'bold';
                 }
 
@@ -427,7 +427,7 @@ export class GoogleEventModal extends ModalComponent {
         label.className = 'google-event-rsvp-label';
         const labelText = document.createElement('span');
         labelText.setAttribute('data-localize', '__MSG_rsvpLabel__');
-        labelText.textContent = chrome.i18n.getMessage('rsvpLabel') || 'Your response';
+        labelText.textContent = window.getLocalizedMessage('rsvpLabel') || 'Your response';
         label.appendChild(labelText);
 
         const btnGroup = document.createElement('div');
@@ -454,7 +454,7 @@ export class GoogleEventModal extends ModalComponent {
 
             const btnText = document.createElement('span');
             btnText.setAttribute('data-localize', `__MSG_${btn.labelKey}__`);
-            btnText.textContent = chrome.i18n.getMessage(btn.labelKey) || btn.fallback;
+            btnText.textContent = window.getLocalizedMessage(btn.labelKey) || btn.fallback;
             button.appendChild(btnText);
 
             button.addEventListener('click', () => {
@@ -521,7 +521,7 @@ export class GoogleEventModal extends ModalComponent {
 
                 // If declined, close modal after a brief delay (event will be removed from timeline)
                 if (response === 'declined') {
-                    this._showRsvpFeedback(chrome.i18n.getMessage('rsvpDeclinedFeedback') || 'Declined. Event will be hidden.', 'declined');
+                    this._showRsvpFeedback(window.getLocalizedMessage('rsvpDeclinedFeedback') || 'Declined. Event will be hidden.', 'declined');
                     setTimeout(() => {
                         this.hide();
                         if (this.onRsvpResponse) {
@@ -529,7 +529,7 @@ export class GoogleEventModal extends ModalComponent {
                         }
                     }, 1200);
                 } else {
-                    this._showRsvpFeedback(chrome.i18n.getMessage('rsvpSuccessFeedback') || 'Response sent.', 'success');
+                    this._showRsvpFeedback(window.getLocalizedMessage('rsvpSuccessFeedback') || 'Response sent.', 'success');
                     // Notify parent to refresh events
                     if (this.onRsvpResponse) {
                         this.onRsvpResponse(response, event);
@@ -538,12 +538,12 @@ export class GoogleEventModal extends ModalComponent {
             } else {
                 console.error('RSVP response failed:', result?.error);
                 allButtons.forEach(btn => btn.disabled = false);
-                this._showRsvpFeedback(chrome.i18n.getMessage('rsvpErrorFeedback') || 'Failed to send response.', 'error');
+                this._showRsvpFeedback(window.getLocalizedMessage('rsvpErrorFeedback') || 'Failed to send response.', 'error');
             }
         } catch (error) {
             console.error('Failed to send RSVP response:', error);
             allButtons.forEach(btn => btn.disabled = false);
-            this._showRsvpFeedback(chrome.i18n.getMessage('rsvpErrorFeedback') || 'Failed to send response.', 'error');
+            this._showRsvpFeedback(window.getLocalizedMessage('rsvpErrorFeedback') || 'Failed to send response.', 'error');
         }
     }
 
@@ -659,8 +659,8 @@ export class GoogleEventModal extends ModalComponent {
             const elementsToLocalize = this.element.querySelectorAll('[data-localize]');
             elementsToLocalize.forEach(element => {
                 const key = element.getAttribute('data-localize');
-                if (key && chrome.i18n && chrome.i18n.getMessage) {
-                    const message = chrome.i18n.getMessage(key.replace('__MSG_', '').replace('__', ''));
+                if (key && window.getLocalizedMessage) {
+                    const message = window.getLocalizedMessage(key.replace('__MSG_', '').replace('__', ''));
                     if (message) {
                         element.textContent = message;
                     }
