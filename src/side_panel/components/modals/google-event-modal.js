@@ -450,6 +450,7 @@ export class GoogleEventModal extends ModalComponent {
                 button.classList.add('active');
             }
             button.type = 'button';
+            button.dataset.response = btn.response;
 
             const btnIcon = document.createElement('i');
             btnIcon.className = `fas ${btn.icon}`;
