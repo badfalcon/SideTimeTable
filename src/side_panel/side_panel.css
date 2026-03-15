@@ -60,47 +60,6 @@
     --side-calendar-success-badge-text: #2e7d32;
 }
 
-/* Dark mode overrides for UI chrome */
-[data-theme="dark"] {
-    --side-calendar-border-color: #444;
-    --side-calendar-border-color-light: #555;
-    --side-calendar-border-color-lighter: #3a3a3a;
-    --side-calendar-shadow-color: rgba(0, 0, 0, 0.5);
-    --side-calendar-secondary-text-color: #aaa;
-    --side-calendar-muted-text-color: #888;
-    --side-calendar-hover-color: #5b9dff;
-    --side-calendar-icon-color: #ccc;
-    --side-calendar-modal-bg: #2a2a3c;
-    --side-calendar-input-bg: #1e1e2e;
-    --side-calendar-input-border: #555;
-    --side-calendar-extended-zone-bg: rgba(255, 255, 255, 0.04);
-    --side-calendar-hour-line-color: #444;
-    --side-calendar-memo-toggle-hover-bg: #3a3a4a;
-    --side-calendar-textarea-bg: #1e1e2e;
-    --side-calendar-textarea-border: #555;
-    --side-calendar-link-color: #7aabff;
-    --side-calendar-link-hover-color: #5b9dff;
-    --side-calendar-subtle-bg: #333348;
-    --side-calendar-subtle-bg-hover: #3a3a52;
-    --side-calendar-btn-secondary-bg: #3a3a52;
-    --side-calendar-btn-secondary-text: #ccc;
-    --side-calendar-btn-secondary-hover-bg: #4a4a62;
-    --side-calendar-close-hover-color: #fff;
-    --side-calendar-review-message-color: #aaa;
-    --side-calendar-review-later-text: #aaa;
-    --side-calendar-review-later-border: #555;
-    --side-calendar-review-never-text: #777;
-    --side-calendar-accent-color: #5b9dff;
-    --side-calendar-accent-hover-color: #4a8af0;
-    --side-calendar-accent-shadow: rgba(91, 157, 255, 0.2);
-    --side-calendar-toggle-bg: #555;
-    --side-calendar-toggle-knob: #ddd;
-    --side-calendar-progress-dot-bg: #555;
-    --side-calendar-success-badge-bg: #1b3a2a;
-    --side-calendar-success-badge-border: #2e7d32;
-    --side-calendar-success-badge-text: #81c784;
-}
-
 html {
     height: 100%;
 }

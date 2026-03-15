@@ -100,10 +100,6 @@ body[data-theme="dark"] {
     color: #e0e0e0;
 }
 
-[data-theme="dark"] .d-flex.align-items-center.gap-2.p-3.border.rounded {
-    background-color: #333348 !important;
-}
-
 [data-theme="dark"] .border-top {
     border-top-color: #444 !important;
 }
