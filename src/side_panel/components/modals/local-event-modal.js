@@ -39,6 +39,30 @@ export class LocalEventModal extends ModalComponent {
         this.mode = 'create';
     }
 
+    /**
+     * Create icon-based form row (matching Google event modal layout)
+     * @param {string} iconClass - Font Awesome icon class
+     * @param {HTMLElement[]} children - Child elements to add
+     * @returns {HTMLElement} The row element
+     * @private
+     */
+    _createFormRow(iconClass, children) {
+        const row = document.createElement('div');
+        row.className = 'google-event-row local-event-form-row mb-2';
+
+        const icon = document.createElement('i');
+        icon.className = `${iconClass} me-1`;
+        icon.style.cssText = 'margin-top: 8px; color: var(--side-calendar-secondary-text-color);';
+        row.appendChild(icon);
+
+        const fieldContainer = document.createElement('div');
+        fieldContainer.style.cssText = 'flex: 1; min-width: 0;';
+        children.forEach(child => fieldContainer.appendChild(child));
+        row.appendChild(fieldContainer);
+
+        return row;
+    }
+
     createContent() {
         const content = document.createElement('div');
 
@@ -48,79 +72,73 @@ export class LocalEventModal extends ModalComponent {
         title.textContent = window.getLocalizedMessage('eventDialogTitle');
         content.appendChild(title);
 
-        // Title input
+        // Title input row (with edit icon)
         const titleLabel = document.createElement('label');
         titleLabel.htmlFor = 'eventTitle';
         titleLabel.setAttribute('data-localize', '__MSG_eventTitle__');
         titleLabel.textContent = window.getLocalizedMessage('eventTitle');
-        content.appendChild(titleLabel);
 
         this.titleInput = document.createElement('input');
         this.titleInput.type = 'text';
         this.titleInput.id = 'eventTitle';
         this.titleInput.required = true;
-        content.appendChild(this.titleInput);
 
-        // The start time input
+        content.appendChild(this._createFormRow('fas fa-pencil-alt', [titleLabel, this.titleInput]));
+
+        // Time inputs row (with clock icon)
         const startLabel = document.createElement('label');
         startLabel.htmlFor = 'eventStartTime';
         startLabel.setAttribute('data-localize', '__MSG_startTime__');
         startLabel.textContent = window.getLocalizedMessage('startTime');
-        content.appendChild(startLabel);
 
         this.startTimeInput = document.createElement('input');
         this.startTimeInput.type = 'time';
         this.startTimeInput.id = 'eventStartTime';
         this.startTimeInput.setAttribute('list', 'time-list');
         this.startTimeInput.required = true;
-        content.appendChild(this.startTimeInput);
 
-        // The end time input
         const endLabel = document.createElement('label');
         endLabel.htmlFor = 'eventEndTime';
         endLabel.setAttribute('data-localize', '__MSG_endTime__');
         endLabel.textContent = window.getLocalizedMessage('endTime');
-        content.appendChild(endLabel);
 
         this.endTimeInput = document.createElement('input');
         this.endTimeInput.type = 'time';
         this.endTimeInput.id = 'eventEndTime';
         this.endTimeInput.setAttribute('list', 'time-list');
         this.endTimeInput.required = true;
-        content.appendChild(this.endTimeInput);
 
-        // Reminder checkbox
-        const reminderContainer = document.createElement('div');
-        reminderContainer.className = 'reminder-container';
-        reminderContainer.style.cssText = 'margin: 10px 0; display: flex; align-items: center;';
+        content.appendChild(this._createFormRow('fas fa-clock', [startLabel, this.startTimeInput, endLabel, this.endTimeInput]));
+
+        // Reminder row (with bell icon)
+        const reminderInner = document.createElement('div');
+        reminderInner.style.cssText = 'display: flex; align-items: center; margin-top: 4px;';
 
         this.reminderCheckbox = document.createElement('input');
         this.reminderCheckbox.type = 'checkbox';
         this.reminderCheckbox.id = 'eventReminder';
-        this.reminderCheckbox.checked = true; // Default: enabled
+        this.reminderCheckbox.checked = true;
         this.reminderCheckbox.style.cssText = 'margin: 0; flex-shrink: 0;';
 
         const reminderLabel = document.createElement('label');
         reminderLabel.htmlFor = 'eventReminder';
         reminderLabel.setAttribute('data-localize', '__MSG_remindMeBefore__');
         reminderLabel.textContent = window.getLocalizedMessage('remindMeBefore');
-        reminderLabel.style.cssText = 'margin-left: 8px; user-select: none; cursor: pointer; display: inline-block;';
+        reminderLabel.style.cssText = 'margin-left: 8px; margin-bottom: 0; user-select: none; cursor: pointer; display: inline-block; font-weight: normal;';
 
-        reminderContainer.appendChild(this.reminderCheckbox);
-        reminderContainer.appendChild(reminderLabel);
-        content.appendChild(reminderContainer);
+        reminderInner.appendChild(this.reminderCheckbox);
+        reminderInner.appendChild(reminderLabel);
 
-        // Recurrence section
-        const recurrenceSection = document.createElement('div');
-        recurrenceSection.className = 'recurrence-section';
-        recurrenceSection.style.cssText = 'margin: 15px 0; padding: 10px; background: var(--side-calendar-subtle-bg); border-radius: 5px;';
+        content.appendChild(this._createFormRow('fas fa-bell', [reminderInner]));
 
-        // Recurrence label and select
+        // Recurrence section (with repeat icon)
+        const recurrenceInner = document.createElement('div');
+
         const recurrenceLabel = document.createElement('label');
         recurrenceLabel.htmlFor = 'recurrenceType';
         recurrenceLabel.setAttribute('data-localize', '__MSG_recurrence__');
         recurrenceLabel.textContent = window.getLocalizedMessage('recurrence') || 'Recurrence:';
-        recurrenceSection.appendChild(recurrenceLabel);
+        recurrenceInner.appendChild(recurrenceLabel);
 
         this.recurrenceSelect = document.createElement('select');
         this.recurrenceSelect.id = 'recurrenceType';
@@ -142,7 +160,7 @@ export class LocalEventModal extends ModalComponent {
             this.recurrenceSelect.appendChild(option);
         });
 
-        recurrenceSection.appendChild(this.recurrenceSelect);
+        recurrenceInner.appendChild(this.recurrenceSelect);
 
         // Recurrence options container (for weekly day selection)
         this.recurrenceOptionsContainer = document.createElement('div');
@@ -184,7 +202,7 @@ export class LocalEventModal extends ModalComponent {
         });
 
         this.recurrenceOptionsContainer.appendChild(weekdayContainer);
-        recurrenceSection.appendChild(this.recurrenceOptionsContainer);
+        recurrenceInner.appendChild(this.recurrenceOptionsContainer);
 
         // End date section
         const endDateSection = document.createElement('div');
@@ -226,10 +244,10 @@ export class LocalEventModal extends ModalComponent {
         endDateRow.appendChild(noEndDateContainer);
         endDateSection.appendChild(endDateRow);
 
-        recurrenceSection.appendChild(endDateSection);
+        recurrenceInner.appendChild(endDateSection);
         this.endDateSection = endDateSection;
 
-        content.appendChild(recurrenceSection);
+        content.appendChild(this._createFormRow('fas fa-repeat', [recurrenceInner]));
 
         // Button group
         const buttonGroup = document.createElement('div');
