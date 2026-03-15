@@ -99,11 +99,14 @@ export class GoogleEventManager {
         // Dynamically check the current settings
         // Use mock data in demo mode
         if (isDemoMode()) {
+            const demoSettings = await loadSettings();
+            this.useGoogleCalendarColors = demoSettings.useGoogleCalendarColors !== false;
             return this._processDemoEvents();
         }
 
         const settings = await loadSettings();
         const isGoogleIntegrated = settings.googleIntegrated === true;
+        this.useGoogleCalendarColors = settings.useGoogleCalendarColors !== false;
 
         if (!isGoogleIntegrated) {
             return Promise.resolve();
@@ -300,8 +303,8 @@ export class GoogleEventManager {
         eventDiv.style.width = `${initialWidth}px`;
         eventDiv.style.left = `${EVENT_STYLING.DEFAULT_VALUES.INITIAL_LEFT_OFFSET}px`;
 
-        // Apply the Google colors directly
-        if (event.calendarBackgroundColor) {
+        // Apply the Google colors directly (unless disabled by user setting)
+        if (this.useGoogleCalendarColors && event.calendarBackgroundColor) {
             eventDiv.style.backgroundColor = event.calendarBackgroundColor;
             eventDiv.style.color = event.calendarForegroundColor;
         }

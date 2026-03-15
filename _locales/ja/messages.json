@@ -181,6 +181,14 @@
     "message": "拡張機能のカラーセットを選択します。",
     "description": "カラーテーマ選択カードの説明"
   },
+  "useGoogleCalendarColorsLabel": {
+    "message": "Googleカレンダーの色を使用する",
+    "description": "Googleカレンダーのカレンダーごとの色を使用するトグルのラベル"
+  },
+  "useGoogleCalendarColorsHelp": {
+    "message": "無効にすると、すべてのGoogleイベントにテーマのデフォルト色が使用されます。",
+    "description": "Googleカレンダーの色トグルのヘルプテキスト"
+  },
   "timelineBackgroundColor": {
     "message": "タイムライン背景",
     "description": "タイムライン（ボディ）背景色入力のラベル"
