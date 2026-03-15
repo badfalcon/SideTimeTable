@@ -6,6 +6,28 @@
  */
 export const RELEASE_NOTES = [
     {
+        version: '1.8.0',
+        date: '2026-03-16',
+        highlights: {
+            en: [
+                'Dark mode support with CSS variable-based theming',
+                'MD3-inspired color theme presets',
+                'RSVP buttons for Google Calendar events',
+                'Option to disable Google Calendar colors',
+                'Unified local event modal design',
+                'Complete localization of all UI strings'
+            ],
+            ja: [
+                'ダークモード対応（CSS変数ベースのテーマシステム）',
+                'MD3インスパイアのカラーテーマプリセット',
+                'Googleカレンダーイベントの出欠回答ボタン',
+                'Googleカレンダーの色を無効化する設定',
+                'ローカルイベントモーダルのデザイン統一',
+                'すべてのUI文字列のローカライズ完了'
+            ]
+        }
+    },
+    {
         version: '1.7.3',
         date: '2026-03-11',
         highlights: {
