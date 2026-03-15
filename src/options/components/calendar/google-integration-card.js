@@ -37,7 +37,7 @@ export class GoogleIntegrationCard extends CardComponent {
         this.statusElement.id = 'google-integration-status';
         this.statusElement.className = 'ms-2';
         this.statusElement.setAttribute('data-localize', '__MSG_notIntegrated__');
-        this.statusElement.textContent = chrome.i18n.getMessage('notIntegrated') || 'Not integrated';
+        this.statusElement.textContent = window.getLocalizedMessage('notIntegrated') || 'Not integrated';
         controlsDiv.appendChild(this.statusElement);
 
         this.addContent(controlsDiv);
@@ -81,10 +81,10 @@ export class GoogleIntegrationCard extends CardComponent {
                 this.statusElement.removeAttribute('data-localize');
             } else if (integrated) {
                 this.statusElement.setAttribute('data-localize', '__MSG_integrated__');
-                this.statusElement.textContent = chrome.i18n.getMessage('integrated');
+                this.statusElement.textContent = window.getLocalizedMessage('integrated');
             } else {
                 this.statusElement.setAttribute('data-localize', '__MSG_notIntegrated__');
-                this.statusElement.textContent = chrome.i18n.getMessage('notIntegrated');
+                this.statusElement.textContent = window.getLocalizedMessage('notIntegrated');
             }
         }
 
@@ -94,8 +94,8 @@ export class GoogleIntegrationCard extends CardComponent {
             if (textSpan) {
                 textSpan.setAttribute('data-localize', integrated ? '__MSG_disconnectGoogle__' : '__MSG_signInWithGoogle__');
                 textSpan.textContent = integrated
-                    ? chrome.i18n.getMessage('disconnectGoogle')
-                    : chrome.i18n.getMessage('signInWithGoogle');
+                    ? window.getLocalizedMessage('disconnectGoogle')
+                    : window.getLocalizedMessage('signInWithGoogle');
             }
         }
     }

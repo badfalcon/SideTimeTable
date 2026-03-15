@@ -50,7 +50,7 @@ export class ShortcutSettingsCard extends CardComponent {
         const label = document.createElement('label');
         label.className = 'form-label';
         label.setAttribute('data-localize', '__MSG_currentShortcut__');
-        label.textContent = chrome.i18n.getMessage('currentShortcut') || 'Current Shortcut:';
+        label.textContent = window.getLocalizedMessage('currentShortcut') || 'Current Shortcut:';
 
         // The control area
         const controlsDiv = document.createElement('div');
@@ -70,7 +70,7 @@ export class ShortcutSettingsCard extends CardComponent {
         this.shortcutDisplay = document.createElement('span');
         this.shortcutDisplay.id = 'shortcut-key';
         this.shortcutDisplay.className = 'form-control-plaintext text-muted flex-grow-1';
-        this.shortcutDisplay.textContent = chrome.i18n.getMessage('loadingStatus') || 'Loading...';
+        this.shortcutDisplay.textContent = window.getLocalizedMessage('loadingStatus') || 'Loading...';
 
         controlsDiv.appendChild(this.configureButton);
         controlsDiv.appendChild(this.shortcutDisplay);
@@ -79,7 +79,7 @@ export class ShortcutSettingsCard extends CardComponent {
         const helpText = document.createElement('small');
         helpText.className = 'form-text text-muted';
         helpText.setAttribute('data-localize', '__MSG_shortcutHelp__');
-        helpText.textContent = chrome.i18n.getMessage('shortcutHelp') || 'To change settings, please use the Chrome extension management page (chrome://extensions/shortcuts).';
+        helpText.textContent = window.getLocalizedMessage('shortcutHelp') || 'To change settings, please use the Chrome extension management page (chrome://extensions/shortcuts).';
 
         container.appendChild(label);
         container.appendChild(controlsDiv);
@@ -149,7 +149,7 @@ export class ShortcutSettingsCard extends CardComponent {
             this.shortcutDisplay.className = 'form-control-plaintext text-dark fw-bold flex-grow-1';
         } else {
             this.shortcutDisplay.setAttribute('data-localize', '__MSG_noShortcutSet__');
-            this.shortcutDisplay.textContent = chrome.i18n?.getMessage('noShortcutSet') || 'Not Set';
+            this.shortcutDisplay.textContent = window.getLocalizedMessage?.('noShortcutSet') || 'Not Set';
             this.shortcutDisplay.className = 'form-control-plaintext text-muted flex-grow-1';
         }
     }
@@ -191,7 +191,7 @@ export class ShortcutSettingsCard extends CardComponent {
      * Reload shortcut information
      */
     async refreshShortcuts() {
-        this.shortcutDisplay.textContent = chrome.i18n.getMessage('loadingStatus') || 'Loading...';
+        this.shortcutDisplay.textContent = window.getLocalizedMessage('loadingStatus') || 'Loading...';
         await this._loadCurrentShortcut();
     }
 

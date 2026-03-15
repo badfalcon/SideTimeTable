@@ -87,7 +87,7 @@ export class LanguageSettingsCard extends CardComponent {
         label.htmlFor = 'language-settings-select';
         label.className = 'form-label fw-semibold';
         label.setAttribute('data-localize', '__MSG_selectLanguage__');
-        label.textContent = chrome.i18n.getMessage('selectLanguage') || 'Select Language:';
+        label.textContent = window.getLocalizedMessage('selectLanguage') || 'Select Language:';
 
         // The select box
         this.languageSelect = document.createElement('select');
@@ -112,7 +112,7 @@ export class LanguageSettingsCard extends CardComponent {
         const helpText = document.createElement('small');
         helpText.className = 'form-text text-muted mt-1';
         helpText.setAttribute('data-localize', '__MSG_languageHelp__');
-        helpText.textContent = chrome.i18n.getMessage('languageHelp') || 'If the language is changed, you need to reload the extension to apply the changes.';
+        helpText.textContent = window.getLocalizedMessage('languageHelp') || 'If the language is changed, you need to reload the extension to apply the changes.';
 
         col.appendChild(label);
         col.appendChild(this.languageSelect);
@@ -133,7 +133,7 @@ export class LanguageSettingsCard extends CardComponent {
         const label = document.createElement('label');
         label.className = 'form-label fw-semibold';
         label.setAttribute('data-localize', '__MSG_currentLanguage__');
-        label.textContent = chrome.i18n.getMessage('currentLanguage') || 'Current Browser Language:';
+        label.textContent = window.getLocalizedMessage('currentLanguage') || 'Current Browser Language:';
 
         // The display area
         const display = document.createElement('div');
@@ -146,7 +146,7 @@ export class LanguageSettingsCard extends CardComponent {
         this.currentLanguageDisplay = document.createElement('span');
         this.currentLanguageDisplay.id = 'current-language-display';
         this.currentLanguageDisplay.className = 'text-dark';
-        this.currentLanguageDisplay.textContent = chrome.i18n.getMessage('detectingLanguage') || 'Detecting...';
+        this.currentLanguageDisplay.textContent = window.getLocalizedMessage('detectingLanguage') || 'Detecting...';
 
         display.appendChild(icon);
         display.appendChild(this.currentLanguageDisplay);
@@ -242,9 +242,9 @@ export class LanguageSettingsCard extends CardComponent {
         // Create the confirmation message
         const notice = document.createElement('div');
         notice.className = 'alert alert-info alert-dismissible fade show language-reload-notice mt-3';
-        const langChangedTitle = chrome.i18n.getMessage('languageChanged') || 'Language setting changed';
-        const langReloadDesc = chrome.i18n.getMessage('languageReloadRequired') || 'A page reload is required to apply the changes.';
-        const reloadPageText = chrome.i18n.getMessage('reloadPage') || 'Reload Page';
+        const langChangedTitle = window.getLocalizedMessage('languageChanged') || 'Language setting changed';
+        const langReloadDesc = window.getLocalizedMessage('languageReloadRequired') || 'A page reload is required to apply the changes.';
+        const reloadPageText = window.getLocalizedMessage('reloadPage') || 'Reload Page';
         notice.innerHTML = `
             <div class="d-flex align-items-center">
                 <i class="fas fa-sync-alt me-2"></i>

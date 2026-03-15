@@ -57,7 +57,7 @@ export class ExtensionInfoCard extends CardComponent {
             copyBtn.type = 'button';
             copyBtn.className = 'btn btn-outline-secondary btn-sm';
             copyBtn.innerHTML = '<i class="fas fa-copy"></i>';
-            copyBtn.title = chrome.i18n.getMessage('copyToClipboard') || 'Copy to clipboard';
+            copyBtn.title = window.getLocalizedMessage('copyToClipboard') || 'Copy to clipboard';
             copyBtn.addEventListener('click', () => {
                 this._copyToClipboard(item.value);
                 this._showCopyNotification(copyBtn);
