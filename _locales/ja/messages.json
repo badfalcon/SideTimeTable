@@ -1085,10 +1085,6 @@
     "message": "閉じる",
     "description": "閉じるボタンテキスト"
   },
-  "noSearchResults": {
-    "message": "検索結果が見つかりません",
-    "description": "カレンダー検索で結果がない場合のメッセージ"
-  },
   "darkBadge": {
     "message": "ダーク",
     "description": "ダークテーマのバッジラベル"
@@ -1208,10 +1204,6 @@
   "debugInfoFailed": {
     "message": "デバッグ情報の取得に失敗しました: ",
     "description": "デバッグ情報取得失敗時のアラート"
-  },
-  "errorPrefix": {
-    "message": "エラー: ",
-    "description": "エラーメッセージのプレフィックス"
   },
   "storageActions": {
     "message": "操作",
