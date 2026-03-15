@@ -354,10 +354,14 @@ body[data-theme="dark"] {
     border-top: 1px solid #dee2e6;
 }
 
-.settings-sidebar-actions > div {
+.settings-sidebar-actions > div:not(.control-notification) {
     flex-direction: column !important;
     gap: 0.375rem !important;
     margin-top: 0 !important;
+}
+
+.settings-sidebar-actions .control-notification {
+    margin-top: 0.5rem !important;
 }
 
 .settings-sidebar-actions .btn,
@@ -406,7 +410,7 @@ body[data-theme="dark"] {
         border-top: none;
     }
 
-    .settings-sidebar-actions > div {
+    .settings-sidebar-actions > div:not(.control-notification) {
         flex-direction: row !important;
         flex-wrap: wrap;
     }
