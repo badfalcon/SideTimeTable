@@ -239,6 +239,9 @@ function getCalendarEvents(targetDate = null) {
                     // Build color map from the already-fetched calendarList data
                     try {
                         let calendarColors = {};
+                        const ownedCalendarIds = new Set(
+                            (listData.items || []).filter(cal => cal.accessRole === 'owner').map(cal => cal.id)
+                        );
                         listData.items?.forEach(cal => {
                             calendarColors[cal.id] = {
                                 backgroundColor: cal.backgroundColor,
@@ -270,6 +273,7 @@ function getCalendarEvents(targetDate = null) {
                                         event.calendarForegroundColor = calendarInfo.foregroundColor;
                                         event.calendarName = calendarInfo.summary;
                                     }
+                                    event.isOwnedCalendar = ownedCalendarIds.has(event.calendarId);
                                     allEvents.push(event);
                                 });
                             }
@@ -604,6 +608,77 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     }
                 } catch (error) {
                     console.error('[Auto Sync] Failed to auto-sync reminders:', error);
+                    sendResponse({ success: false, error: error.message });
+                }
+            })();
+            return true; // Indicates async response
+
+        case "respondToEvent":
+            // Respond to a Google Calendar event (accept/decline/tentative)
+            (async () => {
+                try {
+                    const { calendarId, eventId, response: rsvpResponse } = request;
+                    if (!calendarId || !eventId || !rsvpResponse) {
+                        sendResponse({ success: false, error: 'Missing required parameters' });
+                        return;
+                    }
+
+                    const token = await new Promise((resolve, reject) => {
+                        chrome.identity.getAuthToken({ interactive: true }, (t) => {
+                            if (chrome.runtime.lastError || !t) {
+                                reject(chrome.runtime.lastError || new Error('Failed to get token'));
+                            } else {
+                                resolve(t);
+                            }
+                        });
+                    });
+
+                    // Validate response status
+                    const validStatuses = new Set(['accepted', 'declined', 'tentative']);
+                    if (!validStatuses.has(rsvpResponse)) {
+                        sendResponse({ success: false, error: 'Invalid response status' });
+                        return;
+                    }
+
+                    // First, get the current event to find the self attendee
+                    const baseUrl = 'https://www.googleapis.com/calendar/v3/calendars';
+                    const eventUrl = `${baseUrl}/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`;
+                    const getRes = await fetch(eventUrl, {
+                        headers: { Authorization: 'Bearer ' + token }
+                    });
+                    if (!getRes.ok) {
+                        throw new Error(`Failed to get event: ${getRes.status} ${getRes.statusText}`);
+                    }
+                    const eventData = await getRes.json();
+
+                    // Update the self attendee's response status
+                    const attendees = eventData.attendees || [];
+                    const selfAttendee = attendees.find(a => a.self);
+                    if (selfAttendee) {
+                        selfAttendee.responseStatus = rsvpResponse;
+                    } else {
+                        sendResponse({ success: false, error: 'Self attendee not found in event' });
+                        return;
+                    }
+
+                    // PATCH the event with updated attendees
+                    const patchRes = await fetch(eventUrl, {
+                        method: 'PATCH',
+                        headers: {
+                            Authorization: 'Bearer ' + token,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ attendees })
+                    });
+
+                    if (!patchRes.ok) {
+                        throw new Error(`Failed to update event: ${patchRes.status} ${patchRes.statusText}`);
+                    }
+
+                    const updatedEvent = await patchRes.json();
+                    sendResponse({ success: true, event: updatedEvent });
+                } catch (error) {
+                    console.error('Failed to respond to event:', error);
                     sendResponse({ success: false, error: error.message });
                 }
             })();

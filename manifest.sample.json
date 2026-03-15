@@ -7,7 +7,7 @@
   "permissions": ["sidePanel", "identity", "storage", "notifications", "alarms", "contextMenus"],
   "oauth2": {
     "client_id": "FILL_OUT_YOUR_CLIENT_ID",
-    "scopes": ["https://www.googleapis.com/auth/calendar.readonly"]
+    "scopes": ["https://www.googleapis.com/auth/calendar.events"]
   },
   "key": "FILL_OUT_YOUR_KEY",
   "action": {

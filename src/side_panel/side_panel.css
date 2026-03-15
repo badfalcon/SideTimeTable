@@ -455,6 +455,90 @@ button {
     line-height: 1.2;
 }
 
+/* RSVP response buttons */
+.google-event-rsvp {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.google-event-rsvp-wrapper {
+    flex: 1 1 auto;
+}
+
+.google-event-rsvp-label {
+    font-size: 0.85em;
+    color: #6c757d;
+    margin-bottom: 6px;
+}
+
+.google-event-rsvp-buttons {
+    display: flex;
+    gap: 6px;
+}
+
+.google-event-rsvp-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border: 1px solid #dee2e6;
+    border-radius: 16px;
+    background: #fff;
+    color: #495057;
+    font-size: 0.8em;
+    cursor: pointer;
+    margin-top: 0;
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.google-event-rsvp-btn:hover {
+    background-color: #f0f0f0;
+    border-color: #adb5bd;
+}
+
+.google-event-rsvp-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.google-event-rsvp-btn.active {
+    background-color: #e8f5e9;
+    border-color: #4caf50;
+    color: #2e7d32;
+}
+
+.google-event-rsvp-btn[data-response="tentative"].active {
+    background-color: #fff8e1;
+    border-color: #ffc107;
+    color: #f57f17;
+}
+
+.google-event-rsvp-btn[data-response="declined"].active {
+    background-color: #fce4ec;
+    border-color: #ef5350;
+    color: #c62828;
+}
+
+/* RSVP feedback message */
+.google-event-rsvp-feedback {
+    font-size: 0.8em;
+    margin-top: 6px;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.rsvp-feedback-success {
+    color: #2e7d32;
+    background-color: #e8f5e9;
+}
+
+.rsvp-feedback-declined,
+.rsvp-feedback-error {
+    color: #c62828;
+    background-color: #fce4ec;
+}
+
 /* Links within Google event details */
 .google-event-description a,
 .google-event-location a {
