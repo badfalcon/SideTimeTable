@@ -569,6 +569,26 @@
     "message": "Disconnect Google",
     "description": "Google disconnect button text"
   },
+  "connectingStatus": {
+    "message": "Connecting...",
+    "description": "Status text while connecting to Google"
+  },
+  "disconnectingStatus": {
+    "message": "Disconnecting...",
+    "description": "Status text while disconnecting from Google"
+  },
+  "manualRevokeTitle": {
+    "message": "Additional steps are required for complete disconnection",
+    "description": "Title of the manual revoke notification after disconnecting Google"
+  },
+  "manualRevokeDescription": {
+    "message": "We have removed the token from the extension, but to completely disconnect, please manually revoke permission in your Google account settings.",
+    "description": "Description of the manual revoke notification"
+  },
+  "openGoogleAccountSettings": {
+    "message": "Open Google Account Settings",
+    "description": "Button text to open Google account settings for manual revoke"
+  },
   "to": {
     "message": "to",
     "description": "Time range separator (e.g., 9:00 to 18:00)"
