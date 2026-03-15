@@ -218,6 +218,7 @@ class OptionsPageManager {
         // Show demo Google integration state in demo mode
         if (isDemoMode()) {
             this.googleIntegrationCard.updateIntegrationStatus(true);
+            this.colorSettingsCard.setGoogleCalendarColorsToggleVisible(true);
             await this._loadDemoCalendars();
             return;
         }
@@ -231,6 +232,7 @@ class OptionsPageManager {
             if (response.authenticated) {
                 this.googleIntegrationCard.updateIntegrationStatus(true);
                 this.calendarManagementCard.show();
+                this.colorSettingsCard.setGoogleCalendarColorsToggleVisible(true);
             }
         } catch (error) {
             console.error('Google auth status check error:', error);
@@ -264,6 +266,7 @@ class OptionsPageManager {
                 if (response.success) {
                     this.googleIntegrationCard.updateIntegrationStatus(true);
                     this.calendarManagementCard.show();
+                    this.colorSettingsCard.setGoogleCalendarColorsToggleVisible(true);
                     // Enable the Google integration
                     const settings = await loadSettings();
                     await saveSettings({ ...settings, googleIntegrated: true });
@@ -285,6 +288,7 @@ class OptionsPageManager {
                     await saveSettings({ ...settings, googleIntegrated: false });
                     this.googleIntegrationCard.updateIntegrationStatus(false);
                     this.calendarManagementCard.hide();
+                    this.colorSettingsCard.setGoogleCalendarColorsToggleVisible(false);
                     this._reloadSidePanel();
 
                     // Show the notification if the manual authentication deletion is required
