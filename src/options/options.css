@@ -24,6 +24,7 @@ body[data-theme="dark"] {
 [data-theme="dark"] .card-header {
     background-color: #333348;
     border-color: #444;
+    color: #e0e0e0;
 }
 
 [data-theme="dark"] .nav-link {
@@ -145,8 +146,23 @@ body[data-theme="dark"] {
     border-color: #555;
 }
 
+/* text-primary (calendar name primary badge, etc.) */
+[data-theme="dark"] .text-primary {
+    color: #7aabff !important;
+}
+
+/* Placeholder text in dark mode (search bar, etc.) */
+[data-theme="dark"] .form-control::placeholder {
+    color: #888;
+}
+
 /* Calendar list item text */
 [data-theme="dark"] #calendar-list .form-check-label {
+    color: #e0e0e0;
+}
+
+/* Calendar list item names */
+[data-theme="dark"] #calendar-list .fw-bold {
     color: #e0e0e0;
 }
 
