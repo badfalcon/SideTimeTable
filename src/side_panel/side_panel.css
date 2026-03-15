@@ -508,13 +508,13 @@ button {
     color: #2e7d32;
 }
 
-.google-event-rsvp-btn:nth-child(2).active {
+.google-event-rsvp-btn[data-response="tentative"].active {
     background-color: #fff8e1;
     border-color: #ffc107;
     color: #f57f17;
 }
 
-.google-event-rsvp-btn:nth-child(3).active {
+.google-event-rsvp-btn[data-response="declined"].active {
     background-color: #fce4ec;
     border-color: #ef5350;
     color: #c62828;
