@@ -274,7 +274,7 @@ export class GoogleEventModal extends ModalComponent {
             link.target = '_blank';
             link.setAttribute('data-localize', '__MSG_joinGoogleMeet__');
             link.textContent = chrome.i18n.getMessage('joinGoogleMeet');
-            link.style.cssText = 'color: #4285f4; text-decoration: none;';
+            link.style.cssText = 'color: var(--side-calendar-link-color); text-decoration: none;';
 
             this.meetElement.appendChild(icon);
             this.meetElement.appendChild(link);
@@ -291,7 +291,7 @@ export class GoogleEventModal extends ModalComponent {
             link.target = '_blank';
             link.setAttribute('data-localize', '__MSG_joinVideoConference__');
             link.textContent = chrome.i18n.getMessage('joinVideoConference');
-            link.style.cssText = 'color: #4285f4; text-decoration: none;';
+            link.style.cssText = 'color: var(--side-calendar-link-color); text-decoration: none;';
 
             this.meetElement.appendChild(icon);
             this.meetElement.appendChild(link);
@@ -318,7 +318,7 @@ export class GoogleEventModal extends ModalComponent {
         if (realAttendees.length > 0) {
             const icon = document.createElement('i');
             icon.className = 'fas fa-users me-1';
-            icon.style.cssText = 'margin-top: 2px; color: #6c757d;';
+            icon.style.cssText = 'margin-top: 2px; color: var(--side-calendar-secondary-text-color);';
 
             const container = document.createElement('div');
             container.className = 'google-event-detail-text';
@@ -350,26 +350,22 @@ export class GoogleEventModal extends ModalComponent {
                 const statusIcon = document.createElement('i');
                 switch (attendee.responseStatus) {
                     case 'accepted':
-                        statusIcon.className = 'fas fa-check-circle';
-                        statusIcon.style.color = '#28a745';
+                        statusIcon.className = 'fas fa-check-circle attendee-status-accepted';
                         statusIcon.title = chrome.i18n.getMessage('accepted');
                         break;
                     case 'declined':
-                        statusIcon.className = 'fas fa-times-circle';
-                        statusIcon.style.color = '#dc3545';
+                        statusIcon.className = 'fas fa-times-circle attendee-status-declined';
                         statusIcon.title = chrome.i18n.getMessage('declined');
                         break;
                     case 'tentative':
-                        statusIcon.className = 'fas fa-question-circle';
-                        statusIcon.style.color = '#ffc107';
+                        statusIcon.className = 'fas fa-question-circle attendee-status-tentative';
                         statusIcon.title = chrome.i18n.getMessage('tentative');
                         break;
                     default:
-                        statusIcon.className = 'fas fa-circle';
-                        statusIcon.style.color = '#6c757d';
+                        statusIcon.className = 'fas fa-circle attendee-status-default';
                         statusIcon.title = chrome.i18n.getMessage('noResponse');
                 }
-                statusIcon.style.cssText += ' margin-right: 8px; font-size: 12px;';
+                statusIcon.style.cssText = 'margin-right: 8px; font-size: 12px;';
 
                 // The attendee name and email
                 const nameSpan = document.createElement('span');
@@ -422,7 +418,7 @@ export class GoogleEventModal extends ModalComponent {
 
         const icon = document.createElement('i');
         icon.className = 'fas fa-reply me-1';
-        icon.style.cssText = 'margin-top: 6px; color: #6c757d;';
+        icon.style.cssText = 'margin-top: 6px; color: var(--side-calendar-secondary-text-color);';
 
         const buttonsWrapper = document.createElement('div');
         buttonsWrapper.className = 'google-event-rsvp-wrapper';

@@ -113,7 +113,7 @@ export class LocalEventModal extends ModalComponent {
         // Recurrence section
         const recurrenceSection = document.createElement('div');
         recurrenceSection.className = 'recurrence-section';
-        recurrenceSection.style.cssText = 'margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 5px;';
+        recurrenceSection.style.cssText = 'margin: 15px 0; padding: 10px; background: var(--side-calendar-subtle-bg); border-radius: 5px;';
 
         // Recurrence label and select
         const recurrenceLabel = document.createElement('label');
@@ -124,7 +124,7 @@ export class LocalEventModal extends ModalComponent {
 
         this.recurrenceSelect = document.createElement('select');
         this.recurrenceSelect.id = 'recurrenceType';
-        this.recurrenceSelect.style.cssText = 'width: 100%; padding: 6px; margin-top: 5px; border: 1px solid #ced4da; border-radius: 4px;';
+        this.recurrenceSelect.style.cssText = 'width: 100%; padding: 6px; margin-top: 5px; border: 1px solid var(--side-calendar-input-border); border-radius: 4px; background: var(--side-calendar-input-bg); color: inherit;';
 
         const recurrenceOptions = [
             { value: RECURRENCE_TYPES.NONE, msgKey: 'recurrenceNone', default: 'Does not repeat' },
@@ -166,7 +166,7 @@ export class LocalEventModal extends ModalComponent {
 
         weekdays.forEach(day => {
             const dayLabel = document.createElement('label');
-            dayLabel.style.cssText = 'display: flex; align-items: center; padding: 4px 8px; background: #e9ecef; border-radius: 3px; cursor: pointer; font-size: 0.85em;';
+            dayLabel.style.cssText = 'display: flex; align-items: center; padding: 4px 8px; background: var(--side-calendar-btn-secondary-bg); border-radius: 3px; cursor: pointer; font-size: 0.85em;';
 
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
@@ -203,7 +203,7 @@ export class LocalEventModal extends ModalComponent {
         this.endDateInput = document.createElement('input');
         this.endDateInput.type = 'date';
         this.endDateInput.id = 'recurrenceEndDate';
-        this.endDateInput.style.cssText = 'flex: 1; padding: 6px; border: 1px solid #ced4da; border-radius: 4px;';
+        this.endDateInput.style.cssText = 'flex: 1; padding: 6px; border: 1px solid var(--side-calendar-input-border); border-radius: 4px; background: var(--side-calendar-input-bg); color: inherit;';
 
         const noEndDateContainer = document.createElement('label');
         noEndDateContainer.style.cssText = 'display: flex; align-items: center; cursor: pointer; white-space: nowrap;';
@@ -460,7 +460,7 @@ export class LocalEventModal extends ModalComponent {
 
         const dialog = document.createElement('div');
         dialog.className = 'delete-recurring-dialog';
-        dialog.style.cssText = 'background: white; padding: 20px; border-radius: 8px; max-width: 300px; text-align: center;';
+        dialog.style.cssText = 'background: var(--side-calendar-modal-bg); color: inherit; padding: 20px; border-radius: 8px; max-width: 300px; text-align: center;';
 
         const title = document.createElement('h3');
         title.style.cssText = 'margin: 0 0 15px 0; font-size: 1.1em;';
@@ -469,7 +469,7 @@ export class LocalEventModal extends ModalComponent {
         dialog.appendChild(title);
 
         const message = document.createElement('p');
-        message.style.cssText = 'margin: 0 0 20px 0; font-size: 0.9em; color: #666;';
+        message.style.cssText = 'margin: 0 0 20px 0; font-size: 0.9em; color: var(--side-calendar-secondary-text-color);';
         message.setAttribute('data-localize', '__MSG_deleteRecurringMessage__');
         message.textContent = chrome.i18n.getMessage('deleteRecurringMessage') || 'Do you want to delete this occurrence only or all occurrences?';
         dialog.appendChild(message);
