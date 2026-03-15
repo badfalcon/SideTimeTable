@@ -412,11 +412,11 @@ export class GoogleEventModal extends ModalComponent {
         this.rsvpContainer.innerHTML = '';
 
         // Only show RSVP buttons if:
-        // - The event is from the user's primary calendar
+        // - The event is from a calendar owned by the user (not shared/read-only calendars)
         // - The event has attendees and the user is one of them
         const attendees = event.attendees || [];
         const selfAttendee = attendees.find(a => a.self);
-        if (!selfAttendee || !event.isPrimaryCalendar || !event.calendarId || !event.id) {
+        if (!selfAttendee || !event.isOwnedCalendar || !event.calendarId || !event.id) {
             return;
         }
 
