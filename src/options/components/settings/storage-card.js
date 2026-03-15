@@ -48,7 +48,7 @@ export class StorageCard extends CardComponent {
         const btnGroup = document.createElement('div');
         btnGroup.className = 'd-flex flex-wrap gap-2';
 
-        btnGroup.appendChild(this._createActionBtn('trash', 'Clear Local Events', 'danger', async () => {
+        btnGroup.appendChild(this._createActionBtn('trash', chrome.i18n.getMessage('clearLocalEvents') || 'Clear Local Events', 'danger', async () => {
             if (!window.confirm(chrome.i18n.getMessage('confirmClearLocalEvents') || 'Delete all localEvents_* keys?')) return;
             try {
                 const localData = await StorageHelper.getLocal(null);
@@ -61,7 +61,7 @@ export class StorageCard extends CardComponent {
             }
         }));
 
-        btnGroup.appendChild(this._createActionBtn('eraser', 'Clear Memo', 'warning', async () => {
+        btnGroup.appendChild(this._createActionBtn('eraser', chrome.i18n.getMessage('clearMemo') || 'Clear Memo', 'warning', async () => {
             if (!window.confirm(chrome.i18n.getMessage('confirmClearMemo') || 'Delete memoContent / memoCollapsed / memoHeight?')) return;
             try {
                 await chrome.storage.local.remove(['memoContent', 'memoCollapsed', 'memoHeight']);
@@ -72,7 +72,7 @@ export class StorageCard extends CardComponent {
             }
         }));
 
-        btnGroup.appendChild(this._createActionBtn('download', 'Export Settings', 'primary', async (e) => {
+        btnGroup.appendChild(this._createActionBtn('download', chrome.i18n.getMessage('exportSettings') || 'Export Settings', 'primary', async (e) => {
             const btn = e.currentTarget;
             try {
                 const syncData = await StorageHelper.get(null);
@@ -159,8 +159,8 @@ export class StorageCard extends CardComponent {
                 `Local: <strong>${localBytesInUse.toLocaleString()}</strong> / ${localQuota.toLocaleString()} bytes (${localPct}%)`;
             content.appendChild(usageDiv);
 
-            content.appendChild(this._createStorageBlock('Sync Storage (Settings)', syncData));
-            content.appendChild(this._createStorageBlock('Local Storage', localData));
+            content.appendChild(this._createStorageBlock(chrome.i18n.getMessage('syncStorageLabel') || 'Sync Storage (Settings)', syncData));
+            content.appendChild(this._createStorageBlock(chrome.i18n.getMessage('localStorageLabel') || 'Local Storage', localData));
         } catch (e) {
             content.textContent = (chrome.i18n.getMessage('storageLoadFailed') || 'Failed to load storage: ') + e.message;
         }
