@@ -1036,5 +1036,33 @@
   "memoPlaceholder": {
     "message": "メモを入力...",
     "description": "メモテキストエリアのプレースホルダー"
+  },
+  "rsvpLabel": {
+    "message": "出欠の回答",
+    "description": "出欠回答ボタンのラベル"
+  },
+  "rsvpAccept": {
+    "message": "参加",
+    "description": "出欠回答の参加ボタン"
+  },
+  "rsvpDecline": {
+    "message": "不参加",
+    "description": "出欠回答の不参加ボタン"
+  },
+  "rsvpTentative": {
+    "message": "未定",
+    "description": "出欠回答の未定ボタン"
+  },
+  "rsvpSuccessFeedback": {
+    "message": "回答を送信しました",
+    "description": "出欠回答が正常に送信された際のフィードバック"
+  },
+  "rsvpDeclinedFeedback": {
+    "message": "不参加にしました。イベントは非表示になります。",
+    "description": "不参加を選択した際のフィードバック"
+  },
+  "rsvpErrorFeedback": {
+    "message": "回答の送信に失敗しました",
+    "description": "出欠回答の送信に失敗した際のフィードバック"
   }
 }
