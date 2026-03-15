@@ -20,13 +20,19 @@ export class ColorSettingsCard extends CardComponent {
 
         this.onSettingsChange = onSettingsChange;
         this.selectedThemeId = 'default';
+        this.useGoogleCalendarColors = true;
         this._themeCards = new Map();   // id → HTMLElement
+        this._googleColorsToggle = null;
     }
 
     createElement() {
         const card = super.createElement();
         const grid = this._createThemeGrid();
         this.addContent(grid);
+
+        const googleColorsToggle = this._createGoogleCalendarColorsToggle();
+        this.addContent(googleColorsToggle);
+
         return card;
     }
 
@@ -108,23 +114,69 @@ export class ColorSettingsCard extends CardComponent {
     }
 
     // ------------------------------------------------------------------
+    // Google Calendar colors toggle
+    // ------------------------------------------------------------------
+
+    _createGoogleCalendarColorsToggle() {
+        const container = document.createElement('div');
+        container.className = 'mt-3 pt-3 border-top';
+        container.style.display = 'none';
+        this._googleColorsContainer = container;
+
+        const formCheck = document.createElement('div');
+        formCheck.className = 'form-check form-switch';
+
+        this._googleColorsToggle = document.createElement('input');
+        this._googleColorsToggle.type = 'checkbox';
+        this._googleColorsToggle.className = 'form-check-input';
+        this._googleColorsToggle.id = 'use-google-calendar-colors-toggle';
+        this._googleColorsToggle.checked = this.useGoogleCalendarColors;
+
+        const label = document.createElement('label');
+        label.className = 'form-check-label fw-semibold';
+        label.htmlFor = 'use-google-calendar-colors-toggle';
+        label.setAttribute('data-localize', '__MSG_useGoogleCalendarColorsLabel__');
+        label.textContent = 'Use Google Calendar colors';
+
+        const helpText = document.createElement('small');
+        helpText.className = 'form-text text-muted d-block mt-1';
+        helpText.setAttribute('data-localize', '__MSG_useGoogleCalendarColorsHelp__');
+        helpText.textContent = 'When disabled, all Google events use the theme\'s default color.';
+
+        this._googleColorsToggle.addEventListener('change', () => {
+            this.useGoogleCalendarColors = this._googleColorsToggle.checked;
+            this._notifyChange();
+        });
+
+        formCheck.appendChild(this._googleColorsToggle);
+        formCheck.appendChild(label);
+        container.appendChild(formCheck);
+        container.appendChild(helpText);
+
+        return container;
+    }
+
+    _notifyChange() {
+        if (this.onSettingsChange) {
+            const theme = getThemeById(this.selectedThemeId);
+            const { colorSettings } = resolveThemeColors(theme);
+            this.onSettingsChange({
+                colorTheme: this.selectedThemeId,
+                isDark: theme.isDark,
+                useGoogleCalendarColors: this.useGoogleCalendarColors,
+                ...colorSettings
+            });
+        }
+    }
+
+    // ------------------------------------------------------------------
     // Selection logic
     // ------------------------------------------------------------------
 
     _selectTheme(themeId) {
         this.selectedThemeId = themeId;
         this._updateHighlight();
-
-        const theme = getThemeById(themeId);
-        const { colorSettings } = resolveThemeColors(theme);
-
-        if (this.onSettingsChange) {
-            this.onSettingsChange({
-                colorTheme: themeId,
-                isDark: theme.isDark,
-                ...colorSettings
-            });
-        }
+        this._notifyChange();
     }
 
     _updateHighlight() {
@@ -152,6 +204,12 @@ export class ColorSettingsCard extends CardComponent {
         if (settings.colorTheme) {
             this.selectedThemeId = settings.colorTheme;
         }
+        if (settings.useGoogleCalendarColors !== undefined) {
+            this.useGoogleCalendarColors = settings.useGoogleCalendarColors;
+            if (this._googleColorsToggle) {
+                this._googleColorsToggle.checked = this.useGoogleCalendarColors;
+            }
+        }
         this._updateHighlight();
     }
 
@@ -161,11 +219,22 @@ export class ColorSettingsCard extends CardComponent {
         return {
             colorTheme: this.selectedThemeId,
             isDark: theme.isDark,
+            useGoogleCalendarColors: this.useGoogleCalendarColors,
             ...colorSettings
         };
     }
 
+    setGoogleCalendarColorsToggleVisible(visible) {
+        if (this._googleColorsContainer) {
+            this._googleColorsContainer.style.display = visible ? '' : 'none';
+        }
+    }
+
     resetToDefaults() {
+        this.useGoogleCalendarColors = true;
+        if (this._googleColorsToggle) {
+            this._googleColorsToggle.checked = true;
+        }
         this._selectTheme('default');
     }
 }
