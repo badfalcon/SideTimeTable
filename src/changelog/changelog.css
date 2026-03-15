@@ -5,10 +5,12 @@
 body {
     font-family: Arial, sans-serif;
     padding: 20px;
+    background-color: var(--side-calendar-timeline-background-color, #ffffff);
+    color: var(--side-calendar-timeline-text-color, #212529);
 }
 
 .version-section {
-    border-left: 3px solid #0d6efd;
+    border-left: 3px solid var(--side-calendar-accent-color, #0d6efd);
     padding-left: 1rem;
     margin-bottom: 1.5rem;
 }
@@ -24,7 +26,24 @@ body {
 
 .version-section li {
     margin-bottom: 0.25rem;
-    color: #555;
+    color: var(--side-calendar-secondary-text-color, #555);
+}
+
+.text-muted {
+    color: var(--side-calendar-secondary-text-color, #6c757d) !important;
+}
+
+h1 {
+    color: var(--side-calendar-timeline-text-color, #212529);
+}
+
+/* Dark mode overrides for Bootstrap classes */
+[data-theme="dark"] .badge.bg-primary {
+    background-color: var(--side-calendar-accent-color, #5b9dff) !important;
+}
+
+[data-theme="dark"] .text-info {
+    color: var(--side-calendar-accent-color, #5b9dff) !important;
 }
 
 @media (max-width: 576px) {
