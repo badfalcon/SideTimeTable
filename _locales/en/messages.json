@@ -1085,10 +1085,6 @@
     "message": "Close",
     "description": "Close button text"
   },
-  "noSearchResults": {
-    "message": "No search results found",
-    "description": "Message when calendar search returns no results"
-  },
   "darkBadge": {
     "message": "Dark",
     "description": "Badge label for dark themes"
@@ -1208,10 +1204,6 @@
   "debugInfoFailed": {
     "message": "Failed to get debug info: ",
     "description": "Alert when debug info retrieval fails"
-  },
-  "errorPrefix": {
-    "message": "Error: ",
-    "description": "Prefix for error messages"
   },
   "storageActions": {
     "message": "Actions",

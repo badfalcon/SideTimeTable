@@ -257,7 +257,7 @@ class OptionsPageManager {
         try {
             if (shouldIntegrate) {
                 this.googleIntegrationCard.setButtonEnabled(false);
-                this.googleIntegrationCard.updateIntegrationStatus(false, chrome.i18n.getMessage('connectingStatus'));
+                this.googleIntegrationCard.updateIntegrationStatus(false, chrome.i18n.getMessage('connectingStatus') || 'Connecting...');
 
                 const response = await new Promise((resolve) => {
                     chrome.runtime.sendMessage({action: 'authenticateGoogle'}, resolve);
@@ -277,7 +277,7 @@ class OptionsPageManager {
             } else {
                 // Disable the Google integration
                 this.googleIntegrationCard.setButtonEnabled(false);
-                this.googleIntegrationCard.updateIntegrationStatus(false, chrome.i18n.getMessage('disconnectingStatus'));
+                this.googleIntegrationCard.updateIntegrationStatus(false, chrome.i18n.getMessage('disconnectingStatus') || 'Disconnecting...');
 
                 const response = await new Promise((resolve) => {
                     chrome.runtime.sendMessage({action: 'disconnectGoogle'}, resolve);
@@ -471,9 +471,9 @@ class OptionsPageManager {
         // Create a notification message
         const notice = document.createElement('div');
         notice.className = 'alert alert-warning alert-dismissible fade show manual-revoke-notice mt-3';
-        const manualRevokeTitle = chrome.i18n.getMessage('manualRevokeTitle');
-        const manualRevokeDescription = chrome.i18n.getMessage('manualRevokeDescription');
-        const openGoogleAccountSettings = chrome.i18n.getMessage('openGoogleAccountSettings');
+        const manualRevokeTitle = chrome.i18n.getMessage('manualRevokeTitle') || 'Additional steps are required for complete disconnection';
+        const manualRevokeDescription = chrome.i18n.getMessage('manualRevokeDescription') || 'We have removed the token from the extension, but to completely disconnect, please manually revoke permission in your Google account settings.';
+        const openGoogleAccountSettings = chrome.i18n.getMessage('openGoogleAccountSettings') || 'Open Google Account Settings';
         notice.innerHTML = `
             <div class="d-flex align-items-start">
                 <i class="fas fa-exclamation-triangle me-2 mt-1"></i>
