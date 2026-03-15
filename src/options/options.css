@@ -155,6 +155,11 @@ body[data-theme="dark"] {
     color: #ccc;
 }
 
+/* Browser-native clock icon on <input type="time"> */
+[data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+}
+
 /* Theme selection cards */
 [data-theme="dark"] .theme-card {
     background: #333348 !important;
