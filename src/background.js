@@ -239,6 +239,7 @@ function getCalendarEvents(targetDate = null) {
                     // Build color map from the already-fetched calendarList data
                     try {
                         let calendarColors = {};
+                        const primaryCalendarId = listData.items?.find(cal => cal.primary)?.id;
                         listData.items?.forEach(cal => {
                             calendarColors[cal.id] = {
                                 backgroundColor: cal.backgroundColor,
@@ -270,6 +271,7 @@ function getCalendarEvents(targetDate = null) {
                                         event.calendarForegroundColor = calendarInfo.foregroundColor;
                                         event.calendarName = calendarInfo.summary;
                                     }
+                                    event.isPrimaryCalendar = (event.calendarId === primaryCalendarId);
                                     allEvents.push(event);
                                 });
                             }
