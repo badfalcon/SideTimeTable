@@ -134,9 +134,25 @@ body[data-theme="dark"] {
     color: #e0e0e0 !important;
 }
 
-/* text-info icons */
+/* Bootstrap text-* colour overrides for dark mode */
 [data-theme="dark"] .text-info {
     color: #5bc0de !important;
+}
+
+[data-theme="dark"] .text-warning {
+    color: #ffca2c !important;
+}
+
+[data-theme="dark"] .text-success {
+    color: #75b798 !important;
+}
+
+[data-theme="dark"] .text-secondary {
+    color: #adb5bd !important;
+}
+
+[data-theme="dark"] .card-text {
+    color: #ccc;
 }
 
 /* Theme selection cards */
