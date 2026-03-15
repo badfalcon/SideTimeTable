@@ -350,26 +350,22 @@ export class GoogleEventModal extends ModalComponent {
                 const statusIcon = document.createElement('i');
                 switch (attendee.responseStatus) {
                     case 'accepted':
-                        statusIcon.className = 'fas fa-check-circle';
-                        statusIcon.style.color = '#28a745';
+                        statusIcon.className = 'fas fa-check-circle attendee-status-accepted';
                         statusIcon.title = chrome.i18n.getMessage('accepted');
                         break;
                     case 'declined':
-                        statusIcon.className = 'fas fa-times-circle';
-                        statusIcon.style.color = '#dc3545';
+                        statusIcon.className = 'fas fa-times-circle attendee-status-declined';
                         statusIcon.title = chrome.i18n.getMessage('declined');
                         break;
                     case 'tentative':
-                        statusIcon.className = 'fas fa-question-circle';
-                        statusIcon.style.color = '#ffc107';
+                        statusIcon.className = 'fas fa-question-circle attendee-status-tentative';
                         statusIcon.title = chrome.i18n.getMessage('tentative');
                         break;
                     default:
-                        statusIcon.className = 'fas fa-circle';
-                        statusIcon.style.color = '#6c757d';
+                        statusIcon.className = 'fas fa-circle attendee-status-default';
                         statusIcon.title = chrome.i18n.getMessage('noResponse');
                 }
-                statusIcon.style.cssText += ' margin-right: 8px; font-size: 12px;';
+                statusIcon.style.cssText = 'margin-right: 8px; font-size: 12px;';
 
                 // The attendee name and email
                 const nameSpan = document.createElement('span');

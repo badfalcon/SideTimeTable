@@ -111,6 +111,45 @@ body[data-theme="dark"] {
     color: #e0e0e0;
 }
 
+/* input-group-text (time settings separator "～", clock icons) */
+[data-theme="dark"] .input-group-text {
+    background-color: #333348;
+    border-color: #555;
+    color: #e0e0e0;
+}
+
+/* Inactive sidebar nav tab text */
+[data-theme="dark"] .settings-nav .nav-link:not(.active) {
+    color: #ccc;
+}
+
+/* bg-light backgrounds (browser language display, etc.) */
+[data-theme="dark"] .bg-light {
+    background-color: #333348 !important;
+}
+
+/* text-dark (invisible on dark bg without override) */
+[data-theme="dark"] .text-dark {
+    color: #e0e0e0 !important;
+}
+
+/* text-info icons */
+[data-theme="dark"] .text-info {
+    color: #5bc0de !important;
+}
+
+/* Theme selection cards */
+[data-theme="dark"] .theme-card {
+    background: #333348 !important;
+    color: #e0e0e0;
+    border-color: #555;
+}
+
+/* Calendar list item text */
+[data-theme="dark"] #calendar-list .form-check-label {
+    color: #e0e0e0;
+}
+
 /* Calendar management card adjustments */
 #calendar-management-card {
     width: 100%;
