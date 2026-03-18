@@ -27,6 +27,10 @@
     "message": "タイトル:",
     "description": "予定タイトル入力のラベル"
   },
+  "eventDescription": {
+    "message": "詳細:",
+    "description": "予定の詳細入力のラベル"
+  },
   "startTime": {
     "message": "開始時刻:",
     "description": "開始時刻入力のラベル"

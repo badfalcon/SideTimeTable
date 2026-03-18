@@ -315,10 +315,10 @@ function _devTeamEvents(today, locale) {
 function _devTeamLocalEvents(locale) {
     const T = (en, ja) => L(locale, en, ja);
     return [
-        { id: 'demo_local_1', title: T('Morning Run', '朝のルーティン'),        startTime: '08:00', endTime: '08:30', reminder: true },
-        { id: 'demo_local_2', title: T('No-Meeting Block', '割り込み禁止タイム'), startTime: '13:45', endTime: '14:45', reminder: false },
+        { id: 'demo_local_1', title: T('Morning Run', '朝のルーティン'),        startTime: '08:00', endTime: '08:30', reminder: true, description: T('5km jog around the park', '公園を5kmジョギング') },
+        { id: 'demo_local_2', title: T('No-Meeting Block', '割り込み禁止タイム'), startTime: '13:45', endTime: '14:45', reminder: false, description: T('Focus time for deep work', '集中して作業するための時間') },
         { id: 'demo_local_3', title: T('Gym', 'ジム'),                           startTime: '16:45', endTime: '17:15', reminder: true },
-        { id: 'demo_local_4', title: T('Evening Reading', '技術書を読む'),        startTime: '20:00', endTime: '21:00', reminder: false }
+        { id: 'demo_local_4', title: T('Evening Reading', '技術書を読む'),        startTime: '20:00', endTime: '21:00', reminder: false, description: T('Chapter 5-6 of Clean Architecture', 'Clean Architecture 第5-6章') }
     ];
 }
 
@@ -556,9 +556,9 @@ function _salesTeamEvents(today, locale) {
 function _salesTeamLocalEvents(locale) {
     const T = (en, ja) => L(locale, en, ja);
     return [
-        { id: 'demo_local_1', title: T('Industry Podcast', '業界ニュースチェック'),    startTime: '08:00', endTime: '08:30', reminder: true },
+        { id: 'demo_local_1', title: T('Industry Podcast', '業界ニュースチェック'),    startTime: '08:00', endTime: '08:30', reminder: true, description: T('SaaS Weekly ep.42', 'SaaS Weekly ep.42') },
         { id: 'demo_local_2', title: T('CRM Update', 'CRM更新'),                       startTime: '13:45', endTime: '14:45', reminder: false },
-        { id: 'demo_local_3', title: T('Networking Event', '業界交流会'),               startTime: '16:45', endTime: '17:15', reminder: true },
+        { id: 'demo_local_3', title: T('Networking Event', '業界交流会'),               startTime: '16:45', endTime: '17:15', reminder: true, description: T('Bring business cards', '名刺を忘れずに') },
         { id: 'demo_local_4', title: T('Sales Course', '営業スキル勉強'),               startTime: '20:00', endTime: '21:00', reminder: false }
     ];
 }
@@ -794,10 +794,10 @@ function _managerEvents(today, locale) {
 function _managerLocalEvents(locale) {
     const T = (en, ja) => L(locale, en, ja);
     return [
-        { id: 'demo_local_1', title: T('Morning Journaling', '朝の振り返り'),          startTime: '08:00', endTime: '08:30', reminder: true },
+        { id: 'demo_local_1', title: T('Morning Journaling', '朝の振り返り'),          startTime: '08:00', endTime: '08:30', reminder: true, description: T('Gratitude + priorities for the day', '感謝と本日の優先事項を整理') },
         { id: 'demo_local_2', title: T('Slack & Email Catch-up', 'メール・Slack整理'),  startTime: '13:45', endTime: '14:45', reminder: false },
         { id: 'demo_local_3', title: T('Team Retro Notes', 'レトロ振り返りメモ'),       startTime: '16:45', endTime: '17:15', reminder: true },
-        { id: 'demo_local_4', title: T('Book Club', '技術書輪読会'),                    startTime: '20:00', endTime: '21:00', reminder: false }
+        { id: 'demo_local_4', title: T('Book Club', '技術書輪読会'),                    startTime: '20:00', endTime: '21:00', reminder: false, description: T('Discuss chapters 3-4', '第3-4章のディスカッション') }
     ];
 }
 

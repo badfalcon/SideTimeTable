@@ -417,6 +417,18 @@ input[type="time"] {
     color: inherit;
 }
 
+.event-description-input {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid var(--side-calendar-input-border);
+    border-radius: 5px;
+    background-color: var(--side-calendar-input-bg);
+    color: inherit;
+    resize: vertical;
+    font-family: inherit;
+}
+
 button {
     margin-top: 10px;
     padding: 10px 20px;

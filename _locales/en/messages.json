@@ -27,6 +27,10 @@
     "message": "Title:",
     "description": "Label for event title input"
   },
+  "eventDescription": {
+    "message": "Description:",
+    "description": "Label for event description input"
+  },
   "startTime": {
     "message": "Start Time:",
     "description": "Label for start time input"
