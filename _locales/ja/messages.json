@@ -1300,5 +1300,17 @@
   "localStorageLabel": {
     "message": "ローカルストレージ",
     "description": "ビューアーのローカルストレージセクションラベル"
+  },
+  "editEvent": {
+    "message": "編集",
+    "description": "ローカルイベント表示モードの編集ボタンラベル"
+  },
+  "localEventDetailTitle": {
+    "message": "予定の詳細",
+    "description": "ローカルイベント表示モードのダイアログタイトル"
+  },
+  "reminderOn": {
+    "message": "リマインダーあり",
+    "description": "イベント表示でのリマインダー有効状態"
   }
 }
