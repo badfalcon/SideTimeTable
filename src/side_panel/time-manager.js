@@ -481,6 +481,7 @@ export class EventLayoutManager {
                 // Show the title only if too narrow
                 if (laneWidth < LAYOUT_CONSTANTS.MIN_DISPLAY_WIDTH) {
                     event.element.classList.add('narrow-display');
+                    event.element.classList.remove('event-detailed');
                 } else {
                     event.element.classList.remove('narrow-display');
                 }
