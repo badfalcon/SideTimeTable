@@ -188,9 +188,9 @@ export class AlarmManager {
      */
     static async getEventData(eventId, dateStr) {
         try {
-            // First, check date-specific events
+            // First, check date-specific events (stored in local storage)
             const storageKey = `${STORAGE_KEYS.LOCAL_EVENTS_PREFIX}${dateStr}`;
-            const result = await chrome.storage.sync.get(storageKey);
+            const result = await chrome.storage.local.get(storageKey);
             const events = result[storageKey] || [];
 
             let event = events.find(e => e.id === eventId);
@@ -222,9 +222,9 @@ export class AlarmManager {
      */
     static async setDateReminders(dateStr) {
         try {
-            // Get date-specific events
+            // Get date-specific events (stored in local storage)
             const storageKey = `${STORAGE_KEYS.LOCAL_EVENTS_PREFIX}${dateStr}`;
-            const result = await chrome.storage.sync.get(storageKey);
+            const result = await chrome.storage.local.get(storageKey);
             const dateEvents = result[storageKey] || [];
 
             // Get recurring events for this date (convert string to Date)
