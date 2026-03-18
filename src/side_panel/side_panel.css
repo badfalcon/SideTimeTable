@@ -764,6 +764,11 @@ button {
     filter: invert(1);
 }
 
+/* Time picker clock icon for dark mode */
+[data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+}
+
 /* Links within Google event details */
 .google-event-description a,
 .google-event-location a {
