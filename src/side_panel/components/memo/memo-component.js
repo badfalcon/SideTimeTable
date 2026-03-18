@@ -1,9 +1,10 @@
 /**
- * MemoComponent - Simple persistent memo panel at the bottom of the side panel
+ * MemoComponent - Persistent memo panel with Markdown preview at the bottom of the side panel
  */
 import { Component } from '../base/component.js';
 import { StorageHelper } from '../../../lib/storage-helper.js';
 import { isDemoMode, getDemoMemoContent } from '../../../lib/demo-data.js';
+import { marked } from 'marked';
 
 const DEFAULT_HEIGHT = 150;
 const MIN_HEIGHT = 80;
@@ -15,6 +16,12 @@ const ANIM_DURATION = 420;
 const ICON_CLASS_DOWN = 'fas fa-chevron-down memo-toggle-icon';
 const ICON_CLASS_UP = 'fas fa-chevron-up memo-toggle-icon';
 
+// Configure marked for safe rendering
+marked.setOptions({
+    breaks: true,
+    gfm: true
+});
+
 export class MemoComponent extends Component {
     constructor(options = {}) {
         super({
@@ -23,6 +30,7 @@ export class MemoComponent extends Component {
         });
 
         this.textarea = null;
+        this._preview = null;
         this.toggleIcon = null;
         this._dragHandle = null;
         this._toggleBtn = null;
@@ -35,6 +43,7 @@ export class MemoComponent extends Component {
         this._saveDebounceTimer = null;
         this._collapsed = false;
         this._panelHeight = DEFAULT_HEIGHT;
+        this._isEditing = false;
 
         // Drag state
         this._dragStartY = 0;
@@ -71,10 +80,16 @@ export class MemoComponent extends Component {
 
         this.textarea = document.createElement('textarea');
         this.textarea.id = 'memoTextarea';
+        this.textarea.className = 'memo-editing';
         this.textarea.placeholder = this.getMessage('memoPlaceholder');
         this.textarea.setAttribute('data-localize-placeholder', '__MSG_memoPlaceholder__');
 
+        this._preview = document.createElement('div');
+        this._preview.id = 'memoPreview';
+        this._preview.className = 'memo-preview';
+
         body.appendChild(this.textarea);
+        body.appendChild(this._preview);
         wrapper.appendChild(this._dragHandle);
         wrapper.appendChild(this._toggleBtn);
         wrapper.appendChild(body);
@@ -86,7 +101,12 @@ export class MemoComponent extends Component {
 
         this.addEventListener(this._toggleBtn, 'click', () => this._toggleCollapse());
         this.addEventListener(this.textarea, 'input', () => this._onInput());
+        this.addEventListener(this.textarea, 'blur', () => this._switchToPreview());
+        this.addEventListener(this._preview, 'click', () => this._switchToEdit());
         this._setupDragHandle();
+
+        // Start in preview mode
+        this._switchToPreview();
 
         return wrapper;
     }
@@ -96,6 +116,7 @@ export class MemoComponent extends Component {
             if (isDemoMode()) {
                 if (this.textarea) {
                     this.textarea.value = await getDemoMemoContent();
+                    this._renderMarkdown(this.textarea.value);
                 }
                 this._applyHeight(false);
                 return;
@@ -103,6 +124,7 @@ export class MemoComponent extends Component {
             const result = await StorageHelper.getLocal(['memoContent', 'memoCollapsed', 'memoHeight']);
             if (this.textarea && result.memoContent !== undefined) {
                 this.textarea.value = result.memoContent;
+                this._renderMarkdown(result.memoContent);
             }
             if (result.memoHeight) {
                 this._panelHeight = result.memoHeight;
@@ -247,6 +269,37 @@ export class MemoComponent extends Component {
             this._expandedDuringDrag = false;
             document.addEventListener('mousemove', this._onDragMove);
             document.addEventListener('mouseup', this._onDragEnd);
+        });
+    }
+
+    _switchToPreview() {
+        if (!this.textarea || !this._preview) return;
+        this._isEditing = false;
+        const text = this.textarea.value;
+        this._renderMarkdown(text);
+        this.textarea.classList.add('memo-editing');
+        this._preview.classList.remove('memo-editing');
+    }
+
+    _switchToEdit() {
+        if (!this.textarea || !this._preview) return;
+        this._isEditing = true;
+        this._preview.classList.add('memo-editing');
+        this.textarea.classList.remove('memo-editing');
+        this.textarea.focus();
+    }
+
+    _renderMarkdown(text) {
+        if (!this._preview) return;
+        if (!text || !text.trim()) {
+            this._preview.innerHTML = `<span class="memo-preview-placeholder">${this.textarea.placeholder}</span>`;
+            return;
+        }
+        this._preview.innerHTML = marked.parse(text);
+        // Open links in new tab
+        this._preview.querySelectorAll('a').forEach(a => {
+            a.setAttribute('target', '_blank');
+            a.setAttribute('rel', 'noopener noreferrer');
         });
     }
 

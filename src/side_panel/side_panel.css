@@ -1571,16 +1571,17 @@ button {
     transition: transform 0.22s cubic-bezier(0.4, 0, 1, 1);
 }
 
-#memoPanelWrapper.memo-animating #memoTextarea {
+#memoPanelWrapper.memo-animating #memoTextarea,
+#memoPanelWrapper.memo-animating #memoPreview {
     overflow: hidden;
 }
 
-#memoTextarea {
+#memoTextarea,
+#memoPreview {
     flex: 1 1 auto;
     min-height: 0;
     width: 100%;
     box-sizing: border-box;
-    resize: none;
     border: 1px solid var(--side-calendar-textarea-border);
     border-radius: 10px;
     padding: 6px 8px;
@@ -1591,6 +1592,112 @@ button {
     outline: none;
 }
 
+#memoTextarea {
+    resize: none;
+}
+
 #memoTextarea:focus {
     border-color: var(--side-calendar-accent-color);
+}
+
+.memo-editing {
+    display: none !important;
+}
+
+#memoPreview {
+    overflow-y: auto;
+    cursor: text;
+}
+
+#memoPreview p {
+    margin: 0 0 0.4em;
+}
+
+#memoPreview p:last-child {
+    margin-bottom: 0;
+}
+
+#memoPreview h1, #memoPreview h2, #memoPreview h3,
+#memoPreview h4, #memoPreview h5, #memoPreview h6 {
+    margin: 0.3em 0 0.2em;
+    line-height: 1.3;
+}
+
+#memoPreview h1 { font-size: 1.3em; }
+#memoPreview h2 { font-size: 1.15em; }
+#memoPreview h3 { font-size: 1.05em; }
+
+#memoPreview ul, #memoPreview ol {
+    margin: 0.2em 0;
+    padding-left: 1.4em;
+}
+
+#memoPreview li {
+    margin: 0.1em 0;
+}
+
+#memoPreview code {
+    background-color: var(--side-calendar-subtle-bg);
+    padding: 0.1em 0.3em;
+    border-radius: 3px;
+    font-size: 0.9em;
+}
+
+#memoPreview pre {
+    background-color: var(--side-calendar-subtle-bg);
+    padding: 0.4em 0.6em;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 0.3em 0;
+}
+
+#memoPreview pre code {
+    padding: 0;
+    background: none;
+}
+
+#memoPreview blockquote {
+    margin: 0.3em 0;
+    padding: 0.2em 0.6em;
+    border-left: 3px solid var(--side-calendar-border-color);
+    color: var(--side-calendar-secondary-text-color);
+}
+
+#memoPreview a {
+    color: var(--side-calendar-accent-color);
+    text-decoration: none;
+}
+
+#memoPreview a:hover {
+    text-decoration: underline;
+}
+
+#memoPreview hr {
+    border: none;
+    border-top: 1px solid var(--side-calendar-border-color);
+    margin: 0.4em 0;
+}
+
+#memoPreview table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 0.3em 0;
+}
+
+#memoPreview th, #memoPreview td {
+    border: 1px solid var(--side-calendar-border-color);
+    padding: 0.2em 0.4em;
+    text-align: left;
+}
+
+#memoPreview th {
+    background-color: var(--side-calendar-subtle-bg);
+}
+
+#memoPreview input[type="checkbox"] {
+    margin-right: 0.3em;
+}
+
+.memo-preview-placeholder {
+    color: var(--side-calendar-muted-text-color);
 }
