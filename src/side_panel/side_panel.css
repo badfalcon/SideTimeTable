@@ -417,6 +417,27 @@ input[type="time"] {
     color: inherit;
 }
 
+/* Time inputs side by side layout */
+.time-input-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 5px;
+}
+
+.time-input-group {
+    flex: 1;
+    min-width: 0;
+}
+
+.time-input-group label {
+    display: block;
+}
+
+.time-input-group input[type="time"] {
+    width: 100%;
+    box-sizing: border-box;
+}
+
 .event-description-input {
     width: calc(100% - 20px);
     padding: 10px;

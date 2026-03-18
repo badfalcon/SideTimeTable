@@ -62,33 +62,47 @@ export class LocalEventModal extends ModalComponent {
         this.titleInput.required = true;
         content.appendChild(this.titleInput);
 
-        // The start time input
+        // Time inputs row (side by side)
+        const timeRow = document.createElement('div');
+        timeRow.className = 'time-input-row';
+
+        // Start time group
+        const startGroup = document.createElement('div');
+        startGroup.className = 'time-input-group';
+
         const startLabel = document.createElement('label');
         startLabel.htmlFor = 'eventStartTime';
         startLabel.setAttribute('data-localize', '__MSG_startTime__');
         startLabel.textContent = window.getLocalizedMessage('startTime');
-        content.appendChild(startLabel);
+        startGroup.appendChild(startLabel);
 
         this.startTimeInput = document.createElement('input');
         this.startTimeInput.type = 'time';
         this.startTimeInput.id = 'eventStartTime';
         this.startTimeInput.setAttribute('list', 'time-list');
         this.startTimeInput.required = true;
-        content.appendChild(this.startTimeInput);
+        startGroup.appendChild(this.startTimeInput);
 
-        // The end time input
+        // End time group
+        const endGroup = document.createElement('div');
+        endGroup.className = 'time-input-group';
+
         const endLabel = document.createElement('label');
         endLabel.htmlFor = 'eventEndTime';
         endLabel.setAttribute('data-localize', '__MSG_endTime__');
         endLabel.textContent = window.getLocalizedMessage('endTime');
-        content.appendChild(endLabel);
+        endGroup.appendChild(endLabel);
 
         this.endTimeInput = document.createElement('input');
         this.endTimeInput.type = 'time';
         this.endTimeInput.id = 'eventEndTime';
         this.endTimeInput.setAttribute('list', 'time-list');
         this.endTimeInput.required = true;
-        content.appendChild(this.endTimeInput);
+        endGroup.appendChild(this.endTimeInput);
+
+        timeRow.appendChild(startGroup);
+        timeRow.appendChild(endGroup);
+        content.appendChild(timeRow);
 
         // Description textarea
         const descriptionLabel = document.createElement('label');
