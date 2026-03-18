@@ -562,6 +562,7 @@ class SidePanelUIController {
                 const newEvent = {
                     id: `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                     title: eventData.title,
+                    description: eventData.description || '',
                     startTime: eventData.startTime,
                     endTime: eventData.endTime,
                     reminder: eventData.reminder !== false
@@ -614,6 +615,7 @@ class SidePanelUIController {
                             const newRecurringEvent = {
                                 id: existingEvent.id || `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                                 title: eventData.title,
+                                description: eventData.description || '',
                                 startTime: eventData.startTime,
                                 endTime: eventData.endTime,
                                 reminder: eventData.reminder !== false,
@@ -632,6 +634,7 @@ class SidePanelUIController {
                             nonRecurringEvents[eventIndex] = {
                                 id: existingEvent.id || `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                                 title: eventData.title,
+                                description: eventData.description || '',
                                 startTime: eventData.startTime,
                                 endTime: eventData.endTime,
                                 reminder: eventData.reminder !== false
@@ -678,6 +681,7 @@ class SidePanelUIController {
             recurringEvents[eventIndex] = {
                 ...recurringEvents[eventIndex],
                 title: eventData.title,
+                description: eventData.description || '',
                 startTime: eventData.startTime,
                 endTime: eventData.endTime,
                 reminder: eventData.reminder !== false,
@@ -695,6 +699,7 @@ class SidePanelUIController {
                 nonRecurringEvents.push({
                     id: removedEvent.id,
                     title: eventData.title,
+                    description: eventData.description || '',
                     startTime: eventData.startTime,
                     endTime: eventData.endTime,
                     reminder: eventData.reminder !== false
