@@ -37,7 +37,8 @@ function onClickOnly(el, handler, threshold = 5) {
 const EVENT_STYLING = {
     DURATION_THRESHOLDS: {
         MICRO: 15,     // 15 minutes or less → no vertical padding
-        COMPACT: 30    // 30 minutes or less → reduced vertical padding
+        COMPACT: 30,   // 30 minutes or less → reduced vertical padding
+        DETAILED: 45   // 45 minutes or more → show location/description details
     },
     HEIGHT: {
         MIN_HEIGHT: 15,      // Minimum clickable height in pixels
@@ -73,6 +74,11 @@ function applyDurationBasedStyling(eventDiv, duration, baseClasses) {
     }
 
     eventDiv.className = `${baseClasses} ${sizeClass}`.trim();
+
+    // Add detailed class for longer events (shows location/description)
+    if (duration >= EVENT_STYLING.DURATION_THRESHOLDS.DETAILED) {
+        eventDiv.classList.add('event-detailed');
+    }
 }
 
 /**
@@ -354,14 +360,47 @@ export class GoogleEventManager {
 
         // Display time and title without attendance status
         eventDiv.innerHTML = '';
+
+        // Primary line: time + title
+        const primaryLine = document.createElement('div');
+        primaryLine.className = 'event-primary-line';
         const timeSpan = document.createElement('span');
         timeSpan.className = 'event-time';
         timeSpan.textContent = `${formattedTime} - `;
-        eventDiv.appendChild(timeSpan);
+        primaryLine.appendChild(timeSpan);
         const titleSpan = document.createElement('span');
         titleSpan.className = 'event-title';
         titleSpan.textContent = summary;
-        eventDiv.appendChild(titleSpan);
+        primaryLine.appendChild(titleSpan);
+        eventDiv.appendChild(primaryLine);
+
+        // Detail lines for larger blocks
+        if (eventDiv.classList.contains('event-detailed')) {
+            if (event.location) {
+                const locationLine = document.createElement('div');
+                locationLine.className = 'event-detail-line';
+                const icon = document.createElement('i');
+                icon.className = 'fa-solid fa-location-dot';
+                icon.setAttribute('aria-hidden', 'true');
+                locationLine.appendChild(icon);
+                const text = document.createElement('span');
+                text.textContent = event.location;
+                locationLine.appendChild(text);
+                eventDiv.appendChild(locationLine);
+            }
+            if (event.description) {
+                const descLine = document.createElement('div');
+                descLine.className = 'event-detail-line';
+                const icon = document.createElement('i');
+                icon.className = 'fa-solid fa-align-left';
+                icon.setAttribute('aria-hidden', 'true');
+                descLine.appendChild(icon);
+                const text = document.createElement('span');
+                text.textContent = event.description.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+                descLine.appendChild(text);
+                eventDiv.appendChild(descLine);
+            }
+        }
     }
 
 
@@ -476,7 +515,7 @@ export class LocalEventManager {
         const isRecurring = event.isRecurringInstance || (event.recurrence && event.recurrence.type !== RECURRENCE_TYPES.NONE);
 
         // Set locale-aware time display asynchronously
-        await this._setLocalEventContentWithLocale(eventDiv, startTime, endTime, title, isRecurring);
+        await this._setLocalEventContentWithLocale(eventDiv, startTime, endTime, title, isRecurring, event);
 
         // Setup the edit functionality
         this._setupEventEdit(eventDiv, event);
@@ -501,9 +540,10 @@ export class LocalEventManager {
      * @param {string} endTime - The end time (HH:mm format)
      * @param {string} title - The event title
      * @param {boolean} isRecurring - Whether this is a recurring event
+     * @param {Object} event - The full event object
      * @private
      */
-    async _setLocalEventContentWithLocale(eventDiv, startTime, endTime, title, isRecurring = false) {
+    async _setLocalEventContentWithLocale(eventDiv, startTime, endTime, title, isRecurring = false, event = {}) {
         // Resolve locale and time format in parallel
         const [locale, timeFormat] = await Promise.all([
             typeof window.getCurrentLocale === 'function' ? window.getCurrentLocale() : Promise.resolve('en'),
@@ -515,23 +555,42 @@ export class LocalEventManager {
         // Clear existing content
         eventDiv.innerHTML = '';
 
+        // Primary line: time + title
+        const primaryLine = document.createElement('div');
+        primaryLine.className = 'event-primary-line';
+
         // Add recurrence indicator if this is a recurring event
         if (isRecurring) {
             const icon = document.createElement('i');
             icon.className = 'fa-solid fa-repeat';
             icon.style.cssText = 'margin-right: 4px; font-size: 0.85em;';
-            eventDiv.appendChild(icon);
+            primaryLine.appendChild(icon);
         }
 
         // Display time and title in the same format as Google events
         const timeSpan = document.createElement('span');
         timeSpan.className = 'event-time';
         timeSpan.textContent = `${formattedStart} - `;
-        eventDiv.appendChild(timeSpan);
+        primaryLine.appendChild(timeSpan);
         const titleSpan = document.createElement('span');
         titleSpan.className = 'event-title';
         titleSpan.textContent = title;
-        eventDiv.appendChild(titleSpan);
+        primaryLine.appendChild(titleSpan);
+        eventDiv.appendChild(primaryLine);
+
+        // Detail lines for larger blocks
+        if (eventDiv.classList.contains('event-detailed') && event.description) {
+            const descLine = document.createElement('div');
+            descLine.className = 'event-detail-line';
+            const icon = document.createElement('i');
+            icon.className = 'fa-solid fa-align-left';
+            icon.setAttribute('aria-hidden', 'true');
+            descLine.appendChild(icon);
+            const text = document.createElement('span');
+            text.textContent = event.description;
+            descLine.appendChild(text);
+            eventDiv.appendChild(descLine);
+        }
     }
 
     /**
