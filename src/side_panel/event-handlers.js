@@ -316,7 +316,7 @@ export class GoogleEventManager {
         }
         
         // Set the locale-aware time display asynchronously (with attendee information)
-        await this._setEventContentWithLocale(eventDiv, startDate, event.summary, event);
+        await this._setEventContentWithLocale(eventDiv, startDate, endDate, event.summary, event);
 
         this.googleEventsDiv.appendChild(eventDiv);
 
@@ -344,19 +344,26 @@ export class GoogleEventManager {
      * @param {Object} event - The full event information
      * @private
      */
-    async _setEventContentWithLocale(eventDiv, startDate, summary, event) {
+    async _setEventContentWithLocale(eventDiv, startDate, endDate, summary, event) {
         // Resolve locale and time format in parallel
         const [locale, timeFormat] = await Promise.all([
             typeof window.getCurrentLocale === 'function' ? window.getCurrentLocale() : Promise.resolve('en'),
             typeof window.getTimeFormatPreference === 'function' ? window.getTimeFormatPreference() : Promise.resolve('24h')
         ]);
 
-        // Build HH:mm
+        // Build HH:mm for start
         const startHours = String(startDate.getHours()).padStart(2, '0');
         const startMinutes = String(startDate.getMinutes()).padStart(2, '0');
-        const timeString = `${startHours}:${startMinutes}`;
+        const startTimeString = `${startHours}:${startMinutes}`;
 
-        const formattedTime = window.formatTime(timeString, { format: timeFormat, locale });
+        // Build HH:mm for end
+        const endHours = String(endDate.getHours()).padStart(2, '0');
+        const endMinutes = String(endDate.getMinutes()).padStart(2, '0');
+        const endTimeString = `${endHours}:${endMinutes}`;
+
+        const formattedStart = window.formatTime(startTimeString, { format: timeFormat, locale });
+        const formattedEnd = window.formatTime(endTimeString, { format: timeFormat, locale });
+        const separator = locale === 'ja' ? '～' : '-';
 
         // Display time and title without attendance status
         eventDiv.innerHTML = '';
@@ -366,7 +373,7 @@ export class GoogleEventManager {
         primaryLine.className = 'event-primary-line';
         const timeSpan = document.createElement('span');
         timeSpan.className = 'event-time';
-        timeSpan.textContent = `${formattedTime} - `;
+        timeSpan.textContent = `${formattedStart}${separator}${formattedEnd} `;
         primaryLine.appendChild(timeSpan);
         const titleSpan = document.createElement('span');
         titleSpan.className = 'event-title';
@@ -551,6 +558,8 @@ export class LocalEventManager {
         ]);
 
         const formattedStart = window.formatTime(startTime, { format: timeFormat, locale });
+        const formattedEnd = window.formatTime(endTime, { format: timeFormat, locale });
+        const separator = locale === 'ja' ? '～' : '-';
 
         // Clear existing content
         eventDiv.innerHTML = '';
@@ -567,10 +576,10 @@ export class LocalEventManager {
             primaryLine.appendChild(icon);
         }
 
-        // Display time and title in the same format as Google events
+        // Display start time, end time, and title side by side
         const timeSpan = document.createElement('span');
         timeSpan.className = 'event-time';
-        timeSpan.textContent = `${formattedStart} - `;
+        timeSpan.textContent = `${formattedStart}${separator}${formattedEnd} `;
         primaryLine.appendChild(timeSpan);
         const titleSpan = document.createElement('span');
         titleSpan.className = 'event-title';
