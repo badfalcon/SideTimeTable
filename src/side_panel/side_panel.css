@@ -846,10 +846,6 @@ button {
     display: none;
 }
 
-.event.narrow-display .event-detail-line {
-    display: none;
-}
-
 /* What's New modal styles */
 .whats-new-content {
     text-align: left;
