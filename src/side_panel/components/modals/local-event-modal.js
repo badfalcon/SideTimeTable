@@ -99,8 +99,8 @@ export class LocalEventModal extends ModalComponent {
 
         this.descriptionInput = document.createElement('textarea');
         this.descriptionInput.id = 'eventDescription';
+        this.descriptionInput.className = 'event-description-input';
         this.descriptionInput.rows = 3;
-        this.descriptionInput.style.cssText = 'width: 100%; resize: vertical;';
         content.appendChild(this.descriptionInput);
 
         // Reminder checkbox
