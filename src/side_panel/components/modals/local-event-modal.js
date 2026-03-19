@@ -48,6 +48,9 @@ export class LocalEventModal extends ModalComponent {
 
         // Edit mode (create/edit/view)
         this.mode = 'create';
+
+        // Recurring delete dialog overlay (tracked for cleanup)
+        this._deleteRecurringOverlay = null;
     }
 
     createContent() {
@@ -770,7 +773,7 @@ export class LocalEventModal extends ModalComponent {
         deleteThisBtn.setAttribute('data-localize', '__MSG_deleteThisOccurrence__');
         deleteThisBtn.textContent = window.getLocalizedMessage('deleteThisOccurrence') || 'Delete this occurrence';
         deleteThisBtn.addEventListener('click', () => {
-            overlay.remove();
+            this._removeDeleteRecurringOverlay();
             if (this.onDelete) {
                 this.onDelete(this.currentEvent, 'this');
             }
@@ -784,7 +787,7 @@ export class LocalEventModal extends ModalComponent {
         deleteAllBtn.setAttribute('data-localize', '__MSG_deleteAllOccurrences__');
         deleteAllBtn.textContent = window.getLocalizedMessage('deleteAllOccurrences') || 'Delete all occurrences';
         deleteAllBtn.addEventListener('click', () => {
-            overlay.remove();
+            this._removeDeleteRecurringOverlay();
             if (this.onDeleteSeries) {
                 this.onDeleteSeries(this.currentEvent);
             } else if (this.onDelete) {
@@ -800,7 +803,7 @@ export class LocalEventModal extends ModalComponent {
         cancelBtn.setAttribute('data-localize', '__MSG_cancel__');
         cancelBtn.textContent = window.getLocalizedMessage('cancel') || 'Cancel';
         cancelBtn.addEventListener('click', () => {
-            overlay.remove();
+            this._removeDeleteRecurringOverlay();
         });
 
         buttonContainer.appendChild(deleteThisBtn);
@@ -810,13 +813,33 @@ export class LocalEventModal extends ModalComponent {
 
         overlay.appendChild(dialog);
         document.body.appendChild(overlay);
+        this._deleteRecurringOverlay = overlay;
 
         // Close on overlay click
         overlay.addEventListener('click', (e) => {
             if (e.target === overlay) {
-                overlay.remove();
+                this._removeDeleteRecurringOverlay();
             }
         });
+    }
+
+    /**
+     * Remove recurring delete dialog overlay
+     * @private
+     */
+    _removeDeleteRecurringOverlay() {
+        if (this._deleteRecurringOverlay) {
+            this._deleteRecurringOverlay.remove();
+            this._deleteRecurringOverlay = null;
+        }
+    }
+
+    /**
+     * Hide modal and clean up overlays
+     */
+    hide() {
+        this._removeDeleteRecurringOverlay();
+        super.hide();
     }
 
     /**
