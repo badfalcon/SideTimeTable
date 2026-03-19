@@ -238,7 +238,7 @@ export class EventLayoutManager {
      * @private
      */
     _getCachedTimeValue(time) {
-        const timeKey = time.toISOString();
+        const timeKey = time.getTime();
 
         if (this.timeValueCache.has(timeKey)) {
             return this.timeValueCache.get(timeKey);
