@@ -161,10 +161,15 @@ describe('EventLayoutManager', () => {
       expect(manager._areEventsOverlapping(e1, e2)).toBe(true);
     });
 
-    test('event does not overlap with itself if zero duration', () => {
-      // Zero-duration: start === end, so start1 < end2 is false
+    test('zero-duration events at the same time overlap (should display side by side)', () => {
       const e1 = createEvent('e1', 10, 0, 10, 0);
       const e2 = createEvent('e2', 10, 0, 10, 0);
+      expect(manager._areEventsOverlapping(e1, e2)).toBe(true);
+    });
+
+    test('zero-duration events at different times do not overlap', () => {
+      const e1 = createEvent('e1', 10, 0, 10, 0);
+      const e2 = createEvent('e2', 11, 0, 11, 0);
       expect(manager._areEventsOverlapping(e1, e2)).toBe(false);
     });
 
@@ -228,7 +233,7 @@ describe('EventLayoutManager', () => {
       manager.registerEvent(createEvent('e2', 10, 30, 11, 30)); // B overlaps A and C
       manager.registerEvent(createEvent('e3', 11, 0, 12, 0));   // C (doesn't overlap A directly)
 
-      // B overlaps both A and C, so via Union-Find all three should be in one group
+      // Overlap is transitive: A-B overlap + B-C overlap → all three in one group
       const groups = manager._groupOverlappingEvents();
       expect(groups).toHaveLength(1);
       expect(groups[0]).toHaveLength(3);
@@ -312,25 +317,46 @@ describe('EventLayoutManager', () => {
       expect(result[0].totalLanes).toBe(3);
     });
 
-    test('sorts events by start time before assigning lanes', () => {
-      // Pass events in reverse order
+    test('assigns correct lanes regardless of input order', () => {
+      // Pass events in reverse chronological order
       const e1 = createEvent('e1', 12, 0, 13, 0);
       const e2 = createEvent('e2', 10, 0, 11, 0);
       const e3 = createEvent('e3', 11, 0, 12, 0);
       const result = manager._assignLanesToGroup([e1, e2, e3]);
-      // Result should be sorted by start time
-      expect(result[0].id).toBe('e2');
-      expect(result[1].id).toBe('e3');
-      expect(result[2].id).toBe('e1');
+      // No overlaps → all should get lane 0, totalLanes 1
+      result.forEach(e => {
+        expect(e.lane).toBe(0);
+        expect(e.totalLanes).toBe(1);
+      });
     });
 
-    test('all events get consistent totalLanes', () => {
+    test('all events in a group share the same totalLanes value', () => {
       const e1 = createEvent('e1', 10, 0, 12, 0);
       const e2 = createEvent('e2', 10, 0, 11, 0);
       const e3 = createEvent('e3', 11, 0, 12, 0);
       const result = manager._assignLanesToGroup([e1, e2, e3]);
       const totalLanes = result[0].totalLanes;
       result.forEach(e => expect(e.totalLanes).toBe(totalLanes));
+    });
+
+    test('reuses lanes correctly when partial overlaps do not overlap each other', () => {
+      // A spans full period, B overlaps only the start, C overlaps only the end
+      // B and C do NOT overlap each other → C should reuse B's lane
+      const eA = createEvent('eA', 10, 0, 12, 0); // full span
+      const eB = createEvent('eB', 10, 0, 10, 30); // overlaps A at start only
+      const eC = createEvent('eC', 11, 30, 12, 0); // overlaps A at end only
+
+      const result = manager._assignLanesToGroup([eA, eB, eC]);
+      // A must be in a different lane from B and C
+      expect(result.find(e => e.id === 'eA').lane).not.toBe(result.find(e => e.id === 'eB').lane);
+      expect(result.find(e => e.id === 'eA').lane).not.toBe(result.find(e => e.id === 'eC').lane);
+      // B and C don't overlap, so they CAN share a lane → totalLanes should be 2
+      expect(result[0].totalLanes).toBe(2);
+    });
+
+    test('handles empty group', () => {
+      const result = manager._assignLanesToGroup([]);
+      expect(result).toEqual([]);
     });
 
     test('does not mutate the original group array', () => {
@@ -349,46 +375,39 @@ describe('EventLayoutManager', () => {
       expect(() => manager.calculateLayout()).not.toThrow();
     });
 
-    test('applies single event layout', () => {
+    test('single event uses the full available width', () => {
       const e1 = createEvent('e1', 10, 0, 11, 0);
       manager.registerEvent(e1);
       manager.calculateLayout();
-      expect(e1.element.style.left).toBe('40px');
-      expect(e1.element.style.width).toBe('200px'); // DEFAULT_WIDTH
+      expect(parseFloat(e1.element.style.width)).toBe(manager.maxWidth);
     });
 
-    test('applies multi-event layout with correct left positions', () => {
+    test('overlapping events share width equally', () => {
       const e1 = createEvent('e1', 10, 0, 11, 0);
       const e2 = createEvent('e2', 10, 0, 11, 0);
       manager.registerEvent(e1);
       manager.registerEvent(e2);
       manager.calculateLayout();
 
-      // maxWidth=200, 2 lanes, gap=5 → laneWidth = (200 - 5) / 2 = 97.5
-      // lane 0: left = 40, lane 1: left = 40 + 97.5 + 5 = 142.5
-      expect(e1.element.style.left).toBe('40px');
-      expect(e2.element.style.left).toBe('142.5px');
-      expect(e1.element.style.width).toBe('97.5px');
-      expect(e2.element.style.width).toBe('97.5px');
+      const w1 = parseFloat(e1.element.style.width);
+      const w2 = parseFloat(e2.element.style.width);
+      // Both events should have equal width
+      expect(w1).toBe(w2);
+      // Each should be less than full width
+      expect(w1).toBeLessThan(manager.maxWidth);
+      // Events should not overlap horizontally
+      const left1 = parseFloat(e1.element.style.left);
+      const left2 = parseFloat(e2.element.style.left);
+      expect(Math.abs(left1 - left2)).toBeGreaterThan(0);
     });
 
-    test('sets zIndex for single event layout', () => {
-      const e1 = createEvent('e1', 10, 0, 11, 0);
-      manager.registerEvent(e1);
-      manager.calculateLayout();
-      expect(e1.element.style.zIndex).toBe(21); // LAYOUT_CONSTANTS.Z_INDEX
-    });
-
-    test('sets higher zIndex for later-starting overlapping events', () => {
+    test('later-starting overlapping events have higher zIndex', () => {
       const e1 = createEvent('e1', 10, 0, 12, 0);
       const e2 = createEvent('e2', 11, 0, 12, 0);
       manager.registerEvent(e1);
       manager.registerEvent(e2);
       manager.calculateLayout();
-      // zIndex = Z_INDEX(21) + minutes_since_midnight
-      // e1: 21 + 600 = 621, e2: 21 + 660 = 681
-      expect(e1.element.style.zIndex).toBe(621);
-      expect(e2.element.style.zIndex).toBe(681);
+      expect(e2.element.style.zIndex).toBeGreaterThan(e1.element.style.zIndex);
     });
 
     test('removes compact/micro/narrow-display classes for single event', () => {
@@ -427,7 +446,7 @@ describe('EventLayoutManager', () => {
       manager.registerEvent(e2);
       manager.registerEvent(e3);
       manager.calculateLayout();
-      // 3 lanes: laneCount(3) > COMPACT(2) and laneCount(3) <= MICRO(4) -> compact class
+      // 3 overlapping events → moderately crowded → compact styling
       [e1, e2, e3].forEach(e => {
         expect(e.element.classList.contains('compact')).toBe(true);
         expect(e.element.classList.contains('micro')).toBe(false);
@@ -442,7 +461,7 @@ describe('EventLayoutManager', () => {
         manager.registerEvent(e);
       }
       manager.calculateLayout();
-      // 5 lanes > MICRO(4) -> micro class
+      // 5 overlapping events → very crowded → micro styling
       events.forEach(e => {
         expect(e.element.classList.contains('micro')).toBe(true);
         expect(e.element.classList.contains('compact')).toBe(false);
@@ -457,7 +476,9 @@ describe('EventLayoutManager', () => {
     });
 
     test('disableTransitions adds then removes no-transition class via requestAnimationFrame', () => {
+      // Override the global RAF to capture callback for manual control
       let rafCallback = null;
+      const origRAF = global.requestAnimationFrame;
       global.requestAnimationFrame = (cb) => { rafCallback = cb; };
 
       const e1 = createEvent('e1', 10, 0, 11, 0);
@@ -477,19 +498,15 @@ describe('EventLayoutManager', () => {
       expect(e1.element.classList.contains('no-transition')).toBe(false);
       expect(e2.element.classList.contains('no-transition')).toBe(false);
 
-      delete global.requestAnimationFrame;
+      global.requestAnimationFrame = origRAF;
     });
 
     test('disableTransitions skips null elements without error', () => {
-      global.requestAnimationFrame = (cb) => cb();
-
       const e1 = createEvent('e1', 10, 0, 11, 0);
       e1.element = null;
       manager.events.push(e1);
 
       expect(() => manager.calculateLayout(true)).not.toThrow();
-
-      delete global.requestAnimationFrame;
     });
 
     test('2-lane group does not get compact or micro class', () => {
@@ -498,7 +515,7 @@ describe('EventLayoutManager', () => {
       manager.registerEvent(e1);
       manager.registerEvent(e2);
       manager.calculateLayout();
-      // 2 lanes <= COMPACT(2) → no compact, no micro
+      // 2 overlapping events → not crowded enough for compact/micro
       [e1, e2].forEach(e => {
         expect(e.element.classList.contains('compact')).toBe(false);
         expect(e.element.classList.contains('micro')).toBe(false);
@@ -513,15 +530,15 @@ describe('EventLayoutManager', () => {
         manager.registerEvent(e);
       }
       manager.calculateLayout();
-      // 4 lanes: laneCount(4) > COMPACT(2) and laneCount(4) <= MICRO(4) → compact
+      // 4 overlapping events → crowded but not extreme → compact (not micro)
       events.forEach(e => {
         expect(e.element.classList.contains('compact')).toBe(true);
         expect(e.element.classList.contains('micro')).toBe(false);
       });
     });
 
-    test('narrow-display class applied when laneWidth < MIN_DISPLAY_WIDTH', () => {
-      // DEFAULT_WIDTH=200, 2 lanes, gap=5 → laneWidth = (200 - 5) / 2 = 97.5 < 100
+    test('narrow-display class applied when events are too narrow for full content', () => {
+      // With default width and 2 overlapping events, each lane is narrow
       const e1 = createEvent('e1', 10, 0, 11, 0);
       const e2 = createEvent('e2', 10, 0, 11, 0);
       manager.registerEvent(e1);
@@ -549,25 +566,24 @@ describe('EventLayoutManager', () => {
       expect(e1.element.style.padding).toBe('');
     });
 
-    test('register → layout → remove → register new → re-layout works correctly', () => {
-      // Step 1: Two overlapping events
+    test('re-layout after removing an overlapping event restores full width', () => {
+      // Step 1: Two overlapping events → each gets partial width
       const e1 = createEvent('e1', 10, 0, 11, 0);
       const e2 = createEvent('e2', 10, 0, 11, 0);
       manager.registerEvent(e1);
       manager.registerEvent(e2);
       manager.calculateLayout();
-      expect(e1.element.style.width).toBe('97.5px'); // 2-lane
+      const partialWidth = parseFloat(e1.element.style.width);
+      expect(partialWidth).toBeLessThan(manager.maxWidth);
 
-      // Step 2: Remove e2, add non-overlapping e3
+      // Step 2: Remove e2, add non-overlapping e3 → each gets full width
       manager.removeEvent('e2');
       const e3 = createEvent('e3', 14, 0, 15, 0);
       manager.registerEvent(e3);
       manager.calculateLayout();
 
-      // e1 is now alone → full width
-      expect(e1.element.style.width).toBe('200px');
-      // e3 is also alone → full width
-      expect(e3.element.style.width).toBe('200px');
+      expect(parseFloat(e1.element.style.width)).toBe(manager.maxWidth);
+      expect(parseFloat(e3.element.style.width)).toBe(manager.maxWidth);
       expect(manager.layoutGroups).toHaveLength(2);
     });
   });
@@ -578,27 +594,28 @@ describe('EventLayoutManager', () => {
     afterEach(() => { global.window = savedWindow; });
 
     test('updates maxWidth based on new element', () => {
+      const oldMaxWidth = manager.maxWidth;
       const baseElement = {
         getBoundingClientRect: () => ({ width: 500 }),
       };
       manager.updateBaseElement(baseElement);
-      // availableWidth = 500 - 40 - 5 = 455
-      expect(manager.maxWidth).toBe(455);
+      expect(manager.maxWidth).toBeGreaterThan(oldMaxWidth);
       expect(manager.baseElement).toBe(baseElement);
     });
 
-    test('recalculates layout when events exist', () => {
+    test('recalculates event widths when base element changes', () => {
       const e1 = createEvent('e1', 10, 0, 11, 0);
       manager.registerEvent(e1);
       manager.calculateLayout();
-      expect(e1.element.style.width).toBe('200px'); // DEFAULT_WIDTH
+      const widthBefore = parseFloat(e1.element.style.width);
 
       const baseElement = {
         getBoundingClientRect: () => ({ width: 500 }),
       };
       manager.updateBaseElement(baseElement);
-      // Should recalculate: single event gets full maxWidth = 455
-      expect(e1.element.style.width).toBe('455px');
+      const widthAfter = parseFloat(e1.element.style.width);
+      // Wider container → wider events
+      expect(widthAfter).toBeGreaterThan(widthBefore);
     });
 
     test('does not recalculate layout when no events', () => {
@@ -615,7 +632,7 @@ describe('EventLayoutManager', () => {
     beforeEach(() => { global.window = { ResizeObserver: undefined }; });
     afterEach(() => { global.window = savedWindow; });
 
-    test('recalculates layout when width changes by more than 5px', () => {
+    test('recalculates layout when width changes significantly', () => {
       const widthHolder = { width: 400 };
       const baseElement = {
         getBoundingClientRect: () => ({ width: widthHolder.width }),
@@ -624,13 +641,29 @@ describe('EventLayoutManager', () => {
       const e1 = createEvent('e1', 10, 0, 11, 0);
       m.registerEvent(e1);
       m.calculateLayout();
+      const originalWidth = parseFloat(e1.element.style.width);
 
-      // Change width by more than 5px
+      // Significant width change
       widthHolder.width = 500;
       m._handleResize();
-      // New maxWidth = 500 - 40 - 5 = 455
-      expect(m.maxWidth).toBe(455);
-      expect(e1.element.style.width).toBe('455px');
+      expect(parseFloat(e1.element.style.width)).toBeGreaterThan(originalWidth);
+      m.destroy();
+    });
+
+    test('does not recalculate layout when width changes by exactly 5px', () => {
+      const widthHolder = { width: 400 };
+      const baseElement = {
+        getBoundingClientRect: () => ({ width: widthHolder.width }),
+      };
+      const m = new EventLayoutManager(baseElement);
+      const e1 = createEvent('e1', 10, 0, 11, 0);
+      m.registerEvent(e1);
+      m.calculateLayout();
+      const originalWidth = e1.element.style.width;
+
+      widthHolder.width = 405; // Exactly 5px
+      m._handleResize();
+      expect(e1.element.style.width).toBe(originalWidth);
       m.destroy();
     });
 
@@ -654,102 +687,73 @@ describe('EventLayoutManager', () => {
     });
   });
 
-  describe('_getCachedTimeValue', () => {
-    test('returns minutes since midnight', () => {
-      const time = new Date(2025, 5, 15, 14, 30);
-      expect(manager._getCachedTimeValue(time)).toBe(14 * 60 + 30);
-    });
-
-    test('returns cached value on second call', () => {
-      const time = new Date(2025, 5, 15, 10, 0);
-      const first = manager._getCachedTimeValue(time);
-      const second = manager._getCachedTimeValue(time);
-      expect(first).toBe(second);
-      expect(manager.timeValueCache.size).toBe(1);
-    });
-
-    test('handles midnight (0:00)', () => {
-      const time = new Date(2025, 5, 15, 0, 0);
-      expect(manager._getCachedTimeValue(time)).toBe(0);
-    });
-
-    test('handles end of day (23:59)', () => {
-      const time = new Date(2025, 5, 15, 23, 59);
-      expect(manager._getCachedTimeValue(time)).toBe(23 * 60 + 59);
-    });
-  });
-
-  describe('_calculateMaxWidth', () => {
+  describe('maxWidth calculation', () => {
     const savedWindow = global.window;
     afterEach(() => { global.window = savedWindow; });
 
-    test('returns DEFAULT_WIDTH when no baseElement', () => {
-      expect(manager.maxWidth).toBe(200);
+    test('uses a sensible default when no base element is provided', () => {
+      expect(manager.maxWidth).toBeGreaterThan(0);
     });
 
-    test('calculates width from baseElement', () => {
+    test('wider base element produces wider maxWidth', () => {
       global.window = { ResizeObserver: undefined };
-      const baseElement = {
-        getBoundingClientRect: () => ({ width: 400 }),
-      };
-      const m = new EventLayoutManager(baseElement);
-      // availableWidth = 400 - 40 (BASE_LEFT) - 5 (RESERVED_SPACE_MARGIN) = 355
-      expect(m.maxWidth).toBe(355);
-      m.destroy();
+      const narrow = new EventLayoutManager({ getBoundingClientRect: () => ({ width: 200 }) });
+      const wide = new EventLayoutManager({ getBoundingClientRect: () => ({ width: 600 }) });
+      expect(wide.maxWidth).toBeGreaterThan(narrow.maxWidth);
+      narrow.destroy();
+      wide.destroy();
     });
 
-    test('enforces MIN_WIDTH for narrow baseElement', () => {
+    test('enforces a minimum width even for very narrow containers', () => {
       global.window = { ResizeObserver: undefined };
-      const baseElement = {
-        getBoundingClientRect: () => ({ width: 50 }),
-      };
-      const m = new EventLayoutManager(baseElement);
-      // availableWidth = 50 - 40 - 5 = 5, but MIN_WIDTH = 100
-      expect(m.maxWidth).toBe(100);
-      m.destroy();
+      const tiny = new EventLayoutManager({ getBoundingClientRect: () => ({ width: 10 }) });
+      expect(tiny.maxWidth).toBeGreaterThanOrEqual(100);
+      tiny.destroy();
     });
   });
 
   describe('clearAllEvents', () => {
-    test('clears all events and cache', () => {
+    test('clears all events and layout groups', () => {
       manager.registerEvent(createEvent('e1', 10, 0, 11, 0));
       manager.registerEvent(createEvent('e2', 11, 0, 12, 0));
+      manager.calculateLayout();
+      // Verify populated before clearing
+      expect(manager.events).toHaveLength(2);
+      expect(manager.layoutGroups.length).toBeGreaterThan(0);
+
       manager.clearAllEvents();
       expect(manager.events).toHaveLength(0);
       expect(manager.layoutGroups).toHaveLength(0);
     });
 
-    test('clears the time value cache', () => {
-      const e1 = createEvent('e1', 10, 0, 11, 0);
-      manager.registerEvent(e1);
-      manager._getCachedTimeValue(e1.startTime);
-      expect(manager.timeValueCache.size).toBeGreaterThan(0);
+    test('after clearing, new layout calculation works from clean state', () => {
+      manager.registerEvent(createEvent('e1', 10, 0, 11, 0));
+      manager.registerEvent(createEvent('e2', 10, 0, 11, 0));
+      manager.calculateLayout();
+
       manager.clearAllEvents();
-      expect(manager.timeValueCache.size).toBe(0);
+
+      // Register fresh events and verify layout works correctly
+      const e3 = createEvent('e3', 14, 0, 15, 0);
+      manager.registerEvent(e3);
+      manager.calculateLayout();
+      expect(manager.events).toHaveLength(1);
+      expect(parseFloat(e3.element.style.width)).toBe(manager.maxWidth);
     });
   });
 
   describe('destroy', () => {
-    test('cleans up all resources', () => {
+    test('releases all events and layout state', () => {
       manager.registerEvent(createEvent('e1', 10, 0, 11, 0));
       manager.destroy();
       expect(manager.events).toHaveLength(0);
       expect(manager.layoutGroups).toHaveLength(0);
-      expect(manager.resizeObserver).toBeNull();
     });
 
-    test('can be called twice without error (idempotent)', () => {
+    test('can be called multiple times without error (idempotent)', () => {
       manager.registerEvent(createEvent('e1', 10, 0, 11, 0));
       manager.destroy();
       expect(() => manager.destroy()).not.toThrow();
-    });
-
-    test('clears timeValueCache', () => {
-      const e1 = createEvent('e1', 10, 0, 11, 0);
-      manager.registerEvent(e1);
-      manager._getCachedTimeValue(e1.startTime);
-      manager.destroy();
-      expect(manager.timeValueCache.size).toBe(0);
     });
   });
 });

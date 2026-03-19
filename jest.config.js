@@ -10,6 +10,7 @@ module.exports = {
     }],
   },
   testMatch: ['**/tests/**/*.test.js'],
+  setupFiles: ['<rootDir>/tests/setup.js'],
   collectCoverageFrom: [
     'src/**/*.js',
     '!src/lib/bootstrap.min.js',
