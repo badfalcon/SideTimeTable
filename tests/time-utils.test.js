@@ -61,57 +61,66 @@ describe('createTimeOnDate', () => {
 });
 
 describe('parseTimeString', () => {
-  test('parses valid HH:MM string', () => {
-    expect(parseTimeString('09:30')).toEqual({ hour: 9, minute: 30 });
-    expect(parseTimeString('0:00')).toEqual({ hour: 0, minute: 0 });
-    expect(parseTimeString('23:59')).toEqual({ hour: 23, minute: 59 });
+  // Spec: Accepts "H:MM" or "HH:MM" format with digits only.
+  // Returns {hour, minute} within valid ranges (0-23, 0-59).
+  // Throws on any invalid input.
+
+  describe('valid inputs', () => {
+    test('parses two-digit hour and minute', () => {
+      expect(parseTimeString('09:30')).toEqual({ hour: 9, minute: 30 });
+      expect(parseTimeString('23:59')).toEqual({ hour: 23, minute: 59 });
+    });
+
+    test('accepts single-digit hour and minute', () => {
+      expect(parseTimeString('9:5')).toEqual({ hour: 9, minute: 5 });
+      expect(parseTimeString('0:00')).toEqual({ hour: 0, minute: 0 });
+    });
+
+    test('parses boundary values: midnight and end of day', () => {
+      expect(parseTimeString('00:00')).toEqual({ hour: 0, minute: 0 });
+      expect(parseTimeString('23:59')).toEqual({ hour: 23, minute: 59 });
+    });
   });
 
-  test('throws on null/undefined/non-string', () => {
-    expect(() => parseTimeString(null)).toThrow('Invalid time string');
-    expect(() => parseTimeString(undefined)).toThrow('Invalid time string');
-    expect(() => parseTimeString(123)).toThrow('Invalid time string');
-  });
+  describe('invalid inputs', () => {
+    test('rejects null, undefined, and non-string types', () => {
+      expect(() => parseTimeString(null)).toThrow();
+      expect(() => parseTimeString(undefined)).toThrow();
+      expect(() => parseTimeString(123)).toThrow();
+    });
 
-  test('throws on wrong format', () => {
-    expect(() => parseTimeString('1230')).toThrow('must be in "HH:MM" format');
-    expect(() => parseTimeString('12:30:00')).toThrow('must be in "HH:MM" format');
-  });
+    test('rejects empty string', () => {
+      expect(() => parseTimeString('')).toThrow();
+    });
 
-  test('throws on out-of-range values', () => {
-    expect(() => parseTimeString('24:00')).toThrow('Invalid time value');
-    expect(() => parseTimeString('12:60')).toThrow('Invalid time value');
-    expect(() => parseTimeString('-1:00')).toThrow('Invalid time value');
-  });
+    test('rejects strings without colon separator', () => {
+      expect(() => parseTimeString('1230')).toThrow();
+    });
 
-  test('throws on empty string', () => {
-    expect(() => parseTimeString('')).toThrow('Invalid time string');
-  });
+    test('rejects strings with multiple colons', () => {
+      expect(() => parseTimeString('12:30:00')).toThrow();
+    });
 
-  test('throws on non-numeric parts', () => {
-    expect(() => parseTimeString('ab:cd')).toThrow('Invalid time value');
-    expect(() => parseTimeString('12:xy')).toThrow('Invalid time value');
-  });
+    test('rejects out-of-range hours (24+) and minutes (60+)', () => {
+      expect(() => parseTimeString('24:00')).toThrow();
+      expect(() => parseTimeString('12:60')).toThrow();
+    });
 
-  test('parses boundary values correctly', () => {
-    expect(parseTimeString('00:00')).toEqual({ hour: 0, minute: 0 });
-    expect(parseTimeString('12:00')).toEqual({ hour: 12, minute: 0 });
-  });
+    test('rejects negative values', () => {
+      expect(() => parseTimeString('-1:00')).toThrow();
+    });
 
-  test('parseInt silently accepts leading/trailing whitespace in parts', () => {
-    // parseInt(' 09', 10) returns 9, so ' 09:30' splits to [' 09', '30']
-    // This documents current behavior (not necessarily desired)
-    expect(parseTimeString(' 09:30')).toEqual({ hour: 9, minute: 30 });
-  });
+    test('rejects non-numeric characters', () => {
+      expect(() => parseTimeString('ab:cd')).toThrow();
+      expect(() => parseTimeString('12:xy')).toThrow();
+      expect(() => parseTimeString('10.5:30')).toThrow();
+      expect(() => parseTimeString('10:30abc')).toThrow();
+    });
 
-  test('parseInt silently accepts trailing non-numeric chars', () => {
-    // parseInt('10.5', 10) returns 10
-    // This documents current behavior
-    expect(parseTimeString('10.5:30')).toEqual({ hour: 10, minute: 30 });
-  });
-
-  test('parses single-digit minute', () => {
-    expect(parseTimeString('9:5')).toEqual({ hour: 9, minute: 5 });
+    test('rejects whitespace in parts', () => {
+      expect(() => parseTimeString(' 09:30')).toThrow();
+      expect(() => parseTimeString('09: 30')).toThrow();
+    });
   });
 });
 
@@ -209,6 +218,11 @@ describe('calculateTimeDifference', () => {
     expect(calculateTimeDifference(date, timestamp)).toBe(3600000);
   });
 
+  test('returns NaN for invalid Date objects', () => {
+    const result = calculateTimeDifference(new Date('invalid'), new Date());
+    expect(result).toBeNaN();
+  });
+
   test('calculates cross-day difference', () => {
     const day1 = new Date(2025, 0, 1, 23, 0);
     const day2 = new Date(2025, 0, 2, 1, 0);
@@ -217,33 +231,29 @@ describe('calculateTimeDifference', () => {
 });
 
 describe('calculateWorkHours', () => {
-  test('calculates work hours correctly', () => {
-    const date = new Date(2025, 5, 15);
+  // Spec: Calculates business hours for a given date.
+  // open time must be <= close time. Throws otherwise.
+
+  const date = new Date(2025, 5, 15);
+
+  test('returns correct hourDiff, openTime, and closeTime', () => {
     const result = calculateWorkHours(date, '09:00', '17:00');
     expect(result.hourDiff).toBe(8);
     expect(result.openTime.getHours()).toBe(9);
     expect(result.closeTime.getHours()).toBe(17);
   });
 
-  test('handles half-hour boundaries', () => {
-    const date = new Date(2025, 5, 15);
+  test('supports half-hour boundaries', () => {
     const result = calculateWorkHours(date, '09:30', '18:00');
     expect(result.hourDiff).toBe(8.5);
   });
 
-  test('propagates parseTimeString errors', () => {
-    const date = new Date(2025, 5, 15);
-    expect(() => calculateWorkHours(date, 'invalid', '17:00')).toThrow();
-  });
-
   test('returns zero hours when open and close are the same', () => {
-    const date = new Date(2025, 5, 15);
     const result = calculateWorkHours(date, '09:00', '09:00');
     expect(result.hourDiff).toBe(0);
   });
 
-  test('preserves the input date in results', () => {
-    const date = new Date(2025, 5, 15);
+  test('preserves the target date in returned Date objects', () => {
     const result = calculateWorkHours(date, '09:00', '17:00');
     expect(result.openTime.getFullYear()).toBe(2025);
     expect(result.openTime.getMonth()).toBe(5);
@@ -251,9 +261,12 @@ describe('calculateWorkHours', () => {
     expect(result.closeTime.getDate()).toBe(15);
   });
 
-  test('returns negative hours when close is before open', () => {
-    const date = new Date(2025, 5, 15);
-    const result = calculateWorkHours(date, '17:00', '09:00');
-    expect(result.hourDiff).toBe(-8);
+  test('throws when close time is before open time', () => {
+    expect(() => calculateWorkHours(date, '17:00', '09:00'))
+      .toThrow('Close time must not be before open time');
+  });
+
+  test('throws when time strings are invalid', () => {
+    expect(() => calculateWorkHours(date, 'invalid', '17:00')).toThrow();
   });
 });

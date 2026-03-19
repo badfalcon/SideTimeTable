@@ -7,10 +7,12 @@
 
 export class StorageHelper {
     /**
-     * Retrieve the data from Chrome storage
-     * @param {string|Object|Array} keys - The storage keys to retrieve
-     * @param {Object} defaultValues - The default values if the keys don't exist
-     * @returns {Promise<Object>} The retrieved data with the defaults applied
+     * Retrieve the data from Chrome storage.
+     * Pass null to retrieve all stored data.
+     *
+     * @param {string|Object|Array|null} keys - The storage keys to retrieve, or null for all
+     * @param {Object} defaultValues - The default values for missing keys
+     * @returns {Promise<Object>} The retrieved data merged with defaults
      */
     static async get(keys, defaultValues = {}) {
         return new Promise((resolve, reject) => {

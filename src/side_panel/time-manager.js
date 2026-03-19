@@ -266,7 +266,13 @@ export class EventLayoutManager {
         const start2 = this._getCachedTimeValue(event2.startTime);
         const end2 = this._getCachedTimeValue(event2.endTime);
 
-        // Overlap condition: event1 start < event2 end AND event2 start < event1 end
+        // Zero-duration events at the same time are considered overlapping
+        // (same-time appointments should display side by side)
+        if (start1 === end1 && start2 === end2 && start1 === start2) {
+            return true;
+        }
+
+        // Standard overlap: event1 start < event2 end AND event2 start < event1 end
         return start1 < end2 && start2 < end1;
     }
 
