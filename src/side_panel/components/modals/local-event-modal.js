@@ -107,7 +107,7 @@ export class LocalEventModal extends ModalComponent {
         editButton.className = 'btn btn-primary';
         editButton.setAttribute('data-localize', '__MSG_editEvent__');
         editButton.textContent = window.getLocalizedMessage('editEvent') || 'Edit';
-        editButton.addEventListener('click', () => {
+        this.addEventListener(editButton, 'click', () => {
             this.showEdit(this.currentEvent);
         });
 
@@ -115,7 +115,7 @@ export class LocalEventModal extends ModalComponent {
         deleteButton.className = 'btn btn-danger';
         deleteButton.setAttribute('data-localize', '__MSG_delete__');
         deleteButton.textContent = window.getLocalizedMessage('delete');
-        deleteButton.addEventListener('click', () => {
+        this.addEventListener(deleteButton, 'click', () => {
             this._handleDelete();
         });
 
@@ -130,10 +130,10 @@ export class LocalEventModal extends ModalComponent {
      */
     _createEditContent() {
         // Title
-        const title = document.createElement('h2');
-        title.setAttribute('data-localize', '__MSG_eventDialogTitle__');
-        title.textContent = window.getLocalizedMessage('eventDialogTitle');
-        this.editContent.appendChild(title);
+        this.editTitleElement = document.createElement('h2');
+        this.editTitleElement.setAttribute('data-localize', '__MSG_eventDialogTitle__');
+        this.editTitleElement.textContent = window.getLocalizedMessage('eventDialogTitle');
+        this.editContent.appendChild(this.editTitleElement);
 
         // Title input
         const titleLabel = document.createElement('label');
@@ -474,9 +474,6 @@ export class LocalEventModal extends ModalComponent {
         // Populate view content
         this._populateViewContent(event);
 
-        // Update title
-        this.setTitle(window.getLocalizedMessage('localEventDetailTitle') || 'Event Details');
-
         this.show();
         this._localizeModal();
     }
@@ -592,7 +589,7 @@ export class LocalEventModal extends ModalComponent {
         if (!recurrence || !recurrence.type || recurrence.type === RECURRENCE_TYPES.NONE) {
             // Check if it's a recurring instance without explicit recurrence data
             if (event.isRecurringInstance) {
-                return window.getLocalizedMessage('recurrenceDaily') || 'Recurring';
+                return window.getLocalizedMessage('recurrence')?.replace(':', '') || 'Recurring';
             }
             return null;
         }
@@ -681,7 +678,7 @@ export class LocalEventModal extends ModalComponent {
         };
 
         if (this.onSave) {
-            this.onSave(eventData, this.mode === 'view' ? 'edit' : this.mode);
+            this.onSave(eventData, this.mode);
         }
 
         if (this.mode === 'edit') {
@@ -958,8 +955,8 @@ export class LocalEventModal extends ModalComponent {
         // Adjust the button display
         this.deleteButton.style.display = 'none';
 
-        // Update title
-        this.setTitle(window.getLocalizedMessage('eventDialogTitle'));
+        // Update edit title
+        this.editTitleElement.textContent = window.getLocalizedMessage('eventDialogTitle');
 
         this._clearError();
         this.show();
@@ -1037,8 +1034,8 @@ export class LocalEventModal extends ModalComponent {
         // Adjust the button display
         this.deleteButton.style.display = '';
 
-        // Update title
-        this.setTitle(window.getLocalizedMessage('eventDialogTitle'));
+        // Update edit title
+        this.editTitleElement.textContent = window.getLocalizedMessage('eventDialogTitle');
 
         this._clearError();
         this.show();
