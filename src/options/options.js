@@ -25,6 +25,7 @@ import {
     LanguageSettingsCard,
     ShortcutSettingsCard,
     ReminderSettingsCard,
+    MemoSettingsCard,
     ReminderDebugCard,
     DemoModeCard,
     StorageCard,
@@ -45,6 +46,7 @@ class OptionsPageManager {
         this.languageSettingsCard = null;
         this.shortcutSettingsCard = null;
         this.reminderSettingsCard = null;
+        this.memoSettingsCard = null;
         this.reminderDebugCard = null;
         this.demoModeCard = null;
         this.storageCard = null;
@@ -97,6 +99,11 @@ class OptionsPageManager {
         this.shortcutSettingsCard.createElement();
         this.shortcutSettingsCard.appendTo(tabGeneral);
         this.componentManager.components.set('shortcutSettings', this.shortcutSettingsCard);
+
+        this.memoSettingsCard = new MemoSettingsCard(this.handleMemoSettingsChange.bind(this));
+        this.memoSettingsCard.createElement();
+        this.memoSettingsCard.appendTo(tabGeneral);
+        this.componentManager.components.set('memoSettings', this.memoSettingsCard);
 
         // --- コントロールボタン (タブ外) ---
         this.controlButtons = new ControlButtonsComponent(this.handleResetSettings.bind(this));
@@ -207,6 +214,11 @@ class OptionsPageManager {
             this.reminderSettingsCard.updateSettings({
                 googleEventReminder: settings.googleEventReminder || false,
                 reminderMinutes: settings.reminderMinutes || 5
+            });
+
+            // Load the memo settings
+            this.memoSettingsCard.updateSettings({
+                memoMarkdown: settings.memoMarkdown || false
             });
 
         } catch (error) {
@@ -410,6 +422,22 @@ class OptionsPageManager {
         }
     }
 
+    async handleMemoSettingsChange(memoSettings) {
+        try {
+            const currentSettings = await loadSettings();
+            const updatedSettings = {
+                ...currentSettings,
+                memoMarkdown: memoSettings.memoMarkdown
+            };
+
+            await saveSettings(updatedSettings);
+
+            this._reloadSidePanel();
+        } catch (error) {
+            logError('Memo settings save', error);
+        }
+    }
+
     async handleResetSettings() {
         try {
             // Reset to the default settings while preserving Google auth state and calendar selections
@@ -425,6 +453,7 @@ class OptionsPageManager {
             this.colorSettingsCard.resetToDefaults();
             this.languageSettingsCard.resetToDefaults();
             this.reminderSettingsCard.resetToDefaults();
+            this.memoSettingsCard.resetToDefaults();
 
             // Reset CSS variables via theme system
             const defaultTheme = getThemeById('default');
