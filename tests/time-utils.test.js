@@ -33,6 +33,31 @@ describe('createTimeOnDate', () => {
     expect(result.getSeconds()).toBe(30);
     expect(result.getMilliseconds()).toBe(500);
   });
+
+  test('handles midnight boundary (0:00:00.000)', () => {
+    const base = new Date(2025, 6, 20, 12, 30);
+    const result = createTimeOnDate(base, 0, 0, 0, 0);
+    expect(result.getHours()).toBe(0);
+    expect(result.getMinutes()).toBe(0);
+    expect(result.getSeconds()).toBe(0);
+    expect(result.getMilliseconds()).toBe(0);
+    expect(result.getDate()).toBe(20);
+  });
+
+  test('handles end-of-day boundary (23:59:59.999)', () => {
+    const base = new Date(2025, 0, 1);
+    const result = createTimeOnDate(base, 23, 59, 59, 999);
+    expect(result.getHours()).toBe(23);
+    expect(result.getMinutes()).toBe(59);
+    expect(result.getSeconds()).toBe(59);
+    expect(result.getMilliseconds()).toBe(999);
+  });
+
+  test('returns a different Date instance from the input', () => {
+    const base = new Date(2025, 0, 1);
+    const result = createTimeOnDate(base, 10, 0);
+    expect(result).not.toBe(base);
+  });
 });
 
 describe('parseTimeString', () => {
@@ -58,6 +83,20 @@ describe('parseTimeString', () => {
     expect(() => parseTimeString('12:60')).toThrow('Invalid time value');
     expect(() => parseTimeString('-1:00')).toThrow('Invalid time value');
   });
+
+  test('throws on empty string', () => {
+    expect(() => parseTimeString('')).toThrow('Invalid time string');
+  });
+
+  test('throws on non-numeric parts', () => {
+    expect(() => parseTimeString('ab:cd')).toThrow('Invalid time value');
+    expect(() => parseTimeString('12:xy')).toThrow('Invalid time value');
+  });
+
+  test('parses boundary values correctly', () => {
+    expect(parseTimeString('00:00')).toEqual({ hour: 0, minute: 0 });
+    expect(parseTimeString('12:00')).toEqual({ hour: 12, minute: 0 });
+  });
 });
 
 describe('isToday', () => {
@@ -69,6 +108,22 @@ describe('isToday', () => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     expect(isToday(yesterday)).toBe(false);
+  });
+
+  test('returns false for tomorrow', () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    expect(isToday(tomorrow)).toBe(false);
+  });
+
+  test('returns true for today at different times', () => {
+    const earlyToday = new Date();
+    earlyToday.setHours(0, 0, 0, 0);
+    expect(isToday(earlyToday)).toBe(true);
+
+    const lateToday = new Date();
+    lateToday.setHours(23, 59, 59, 999);
+    expect(isToday(lateToday)).toBe(true);
   });
 });
 
@@ -92,6 +147,24 @@ describe('isSameDay', () => {
     expect(d1.getHours()).toBe(15);
     expect(d2.getHours()).toBe(20);
   });
+
+  test('returns false for same day number in different months', () => {
+    const d1 = new Date(2025, 2, 15); // March 15
+    const d2 = new Date(2025, 3, 15); // April 15
+    expect(isSameDay(d1, d2)).toBe(false);
+  });
+
+  test('returns false for same day/month in different years', () => {
+    const d1 = new Date(2024, 5, 15);
+    const d2 = new Date(2025, 5, 15);
+    expect(isSameDay(d1, d2)).toBe(false);
+  });
+
+  test('returns false for year boundary (Dec 31 vs Jan 1)', () => {
+    const d1 = new Date(2025, 11, 31); // Dec 31
+    const d2 = new Date(2026, 0, 1);   // Jan 1
+    expect(isSameDay(d1, d2)).toBe(false);
+  });
 });
 
 describe('calculateTimeDifference', () => {
@@ -107,6 +180,17 @@ describe('calculateTimeDifference', () => {
 
   test('returns negative for reversed times', () => {
     expect(calculateTimeDifference(5000, 1000)).toBe(-4000);
+  });
+
+  test('returns zero for identical times', () => {
+    const time = new Date(2025, 0, 1, 12, 0);
+    expect(calculateTimeDifference(time, time)).toBe(0);
+  });
+
+  test('handles mixed Date and number inputs', () => {
+    const date = new Date(2025, 0, 1, 10, 0);
+    const timestamp = date.getTime() + 3600000; // +1 hour
+    expect(calculateTimeDifference(date, timestamp)).toBe(3600000);
   });
 });
 
@@ -128,5 +212,26 @@ describe('calculateWorkHours', () => {
   test('propagates parseTimeString errors', () => {
     const date = new Date(2025, 5, 15);
     expect(() => calculateWorkHours(date, 'invalid', '17:00')).toThrow();
+  });
+
+  test('returns zero hours when open and close are the same', () => {
+    const date = new Date(2025, 5, 15);
+    const result = calculateWorkHours(date, '09:00', '09:00');
+    expect(result.hourDiff).toBe(0);
+  });
+
+  test('preserves the input date in results', () => {
+    const date = new Date(2025, 5, 15);
+    const result = calculateWorkHours(date, '09:00', '17:00');
+    expect(result.openTime.getFullYear()).toBe(2025);
+    expect(result.openTime.getMonth()).toBe(5);
+    expect(result.openTime.getDate()).toBe(15);
+    expect(result.closeTime.getDate()).toBe(15);
+  });
+
+  test('returns negative hours when close is before open', () => {
+    const date = new Date(2025, 5, 15);
+    const result = calculateWorkHours(date, '17:00', '09:00');
+    expect(result.hourDiff).toBe(-8);
   });
 });
