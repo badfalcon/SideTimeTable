@@ -98,7 +98,6 @@ function getCalendarList() {
                     if (!response.ok) {
                         const errorBody = await response.text();
                         console.error(`CalendarList API error body:`, errorBody);
-                        console.error(`Token used:`, token.substring(0, 10) + '...');
                         throw new Error(`CalendarList API error: ${response.status} ${response.statusText}`);
                     }
                     return response.json();
