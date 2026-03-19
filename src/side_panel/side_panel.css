@@ -1600,8 +1600,8 @@ button {
     border-color: var(--side-calendar-accent-color);
 }
 
-.memo-editing {
-    display: none !important;
+.memo-body > .memo-hidden {
+    display: none;
 }
 
 #memoPreview {
