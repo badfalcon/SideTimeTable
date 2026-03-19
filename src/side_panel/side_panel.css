@@ -82,11 +82,6 @@ body {
     position: relative;
 }
 
-h1 {
-    font-size: 20px;
-    text-align: center;
-}
-
 .side-time-table {
     position: relative;
     border: 1px solid var(--side-calendar-border-color);
@@ -259,10 +254,6 @@ h1 {
 
 .event.no-transition {
     transition: none !important;
-}
-
-.short {
-    padding: 0 10px;
 }
 
 .google-event {
@@ -779,25 +770,6 @@ button {
 .google-event-location a:hover {
     color: var(--side-calendar-link-hover-color);
     text-decoration: none;
-}
-
-/* Flexbox layout styles */
-#event-flex-container {
-    position: absolute;
-    top: 0;
-    height: 100%;
-    display: flex;
-    pointer-events: none;
-    z-index: 5;
-}
-
-.event-flex-lane {
-    display: flex;
-    flex-direction: column;
-    min-height: 100%;
-    pointer-events: none;
-    /* Debug border - can be removed in production */
-    /* border: 1px dashed rgba(0, 0, 255, 0.2); */
 }
 
 /* Event element flexbox adjustments */
@@ -1621,7 +1593,6 @@ button {
 #memoPreview h4, #memoPreview h5, #memoPreview h6 {
     margin: 0.3em 0 0.2em;
     line-height: 1.3;
-    text-align: left;
 }
 
 #memoPreview h1 { font-size: 1.4em; }
