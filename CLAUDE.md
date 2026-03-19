@@ -110,6 +110,15 @@ npm run dev           # Development mode with file watching
 npm run package       # Create release zip file (builds + packages)
 ```
 
+**Quality checks (must run after any code change):**
+```bash
+npm test              # Run all tests (Jest)
+npm run lint          # Run ESLint
+npm run build         # Verify production build succeeds
+```
+
+> **Important:** After modifying any source file (`src/`), always run `npm test` and `npm run lint` to catch regressions before committing. If tests fail, fix the issue before proceeding.
+
 **Build system architecture:**
 - **Webpack**: Bundles ES6 modules into CommonJS format
 - **Babel**: Transforms modern JavaScript (ES6+) for compatibility
