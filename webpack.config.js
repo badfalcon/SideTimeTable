@@ -48,7 +48,7 @@ module.exports = (env = {}, argv) => {
       extensions: ['.js']
     },
     optimization: {
-      minimize: false
+      minimize: argv.mode === 'production'
     },
     plugins
   };
