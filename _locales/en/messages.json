@@ -1316,5 +1316,17 @@
   "localStorageLabel": {
     "message": "Local Storage",
     "description": "Label for local storage section in viewer"
+  },
+  "editEvent": {
+    "message": "Edit",
+    "description": "Edit button label in local event view mode"
+  },
+  "localEventDetailTitle": {
+    "message": "Event Details",
+    "description": "Title of local event view mode dialog"
+  },
+  "reminderOn": {
+    "message": "Reminder on",
+    "description": "Reminder enabled status in event view"
   }
 }

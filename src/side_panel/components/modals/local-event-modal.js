@@ -1,5 +1,5 @@
 /**
- * LocalEventModal - Local event editing modal
+ * LocalEventModal - Local event modal with view and edit modes
  */
 import { ModalComponent } from './modal-component.js';
 import { RECURRENCE_TYPES } from '../../../lib/utils.js';
@@ -11,7 +11,17 @@ export class LocalEventModal extends ModalComponent {
             ...options
         });
 
-        // Form elements
+        // View mode elements
+        this.viewContent = null;
+        this.viewTitleElement = null;
+        this.viewTimeElement = null;
+        this.viewDescriptionElement = null;
+        this.viewReminderElement = null;
+        this.viewRecurrenceElement = null;
+        this.viewButtons = null;
+
+        // Edit mode elements
+        this.editContent = null;
         this.titleInput = null;
         this.startTimeInput = null;
         this.endTimeInput = null;
@@ -36,31 +46,107 @@ export class LocalEventModal extends ModalComponent {
         this.onCancel = options.onCancel || null;
         this.onDeleteSeries = options.onDeleteSeries || null;
 
-        // Edit mode (create/edit)
+        // Edit mode (create/edit/view)
         this.mode = 'create';
     }
 
     createContent() {
         const content = document.createElement('div');
 
+        // === View mode content ===
+        this.viewContent = document.createElement('div');
+        this.viewContent.className = 'local-event-view-content';
+        this.viewContent.style.display = 'none';
+        this._createViewContent();
+        content.appendChild(this.viewContent);
+
+        // === Edit mode content ===
+        this.editContent = document.createElement('div');
+        this.editContent.className = 'local-event-edit-content';
+        this._createEditContent();
+        content.appendChild(this.editContent);
+
+        return content;
+    }
+
+    /**
+     * Create view mode content (Google event modal style)
+     * @private
+     */
+    _createViewContent() {
+        // Event title
+        this.viewTitleElement = document.createElement('h2');
+        this.viewTitleElement.className = 'google-event-title';
+        this.viewContent.appendChild(this.viewTitleElement);
+
+        // Time row
+        this.viewTimeElement = document.createElement('div');
+        this.viewTimeElement.className = 'google-event-row mb-2';
+        this.viewContent.appendChild(this.viewTimeElement);
+
+        // Description row
+        this.viewDescriptionElement = document.createElement('div');
+        this.viewDescriptionElement.className = 'google-event-row mb-2';
+        this.viewContent.appendChild(this.viewDescriptionElement);
+
+        // Reminder row
+        this.viewReminderElement = document.createElement('div');
+        this.viewReminderElement.className = 'google-event-row mb-2';
+        this.viewContent.appendChild(this.viewReminderElement);
+
+        // Recurrence row
+        this.viewRecurrenceElement = document.createElement('div');
+        this.viewRecurrenceElement.className = 'google-event-row mb-2';
+        this.viewContent.appendChild(this.viewRecurrenceElement);
+
+        // View mode buttons
+        this.viewButtons = document.createElement('div');
+        this.viewButtons.className = 'modal-buttons';
+
+        const editButton = document.createElement('button');
+        editButton.className = 'btn btn-primary';
+        editButton.setAttribute('data-localize', '__MSG_editEvent__');
+        editButton.textContent = window.getLocalizedMessage('editEvent') || 'Edit';
+        this.addEventListener(editButton, 'click', () => {
+            this.showEdit(this.currentEvent);
+        });
+
+        const deleteButton = document.createElement('button');
+        deleteButton.className = 'btn btn-danger';
+        deleteButton.setAttribute('data-localize', '__MSG_delete__');
+        deleteButton.textContent = window.getLocalizedMessage('delete');
+        this.addEventListener(deleteButton, 'click', () => {
+            this._handleDelete();
+        });
+
+        this.viewButtons.appendChild(editButton);
+        this.viewButtons.appendChild(deleteButton);
+        this.viewContent.appendChild(this.viewButtons);
+    }
+
+    /**
+     * Create edit mode content (existing form)
+     * @private
+     */
+    _createEditContent() {
         // Title
-        const title = document.createElement('h2');
-        title.setAttribute('data-localize', '__MSG_eventDialogTitle__');
-        title.textContent = window.getLocalizedMessage('eventDialogTitle');
-        content.appendChild(title);
+        this.editTitleElement = document.createElement('h2');
+        this.editTitleElement.setAttribute('data-localize', '__MSG_eventDialogTitle__');
+        this.editTitleElement.textContent = window.getLocalizedMessage('eventDialogTitle');
+        this.editContent.appendChild(this.editTitleElement);
 
         // Title input
         const titleLabel = document.createElement('label');
         titleLabel.htmlFor = 'eventTitle';
         titleLabel.setAttribute('data-localize', '__MSG_eventTitle__');
         titleLabel.textContent = window.getLocalizedMessage('eventTitle');
-        content.appendChild(titleLabel);
+        this.editContent.appendChild(titleLabel);
 
         this.titleInput = document.createElement('input');
         this.titleInput.type = 'text';
         this.titleInput.id = 'eventTitle';
         this.titleInput.required = true;
-        content.appendChild(this.titleInput);
+        this.editContent.appendChild(this.titleInput);
 
         // Time inputs row (side by side)
         const timeRow = document.createElement('div');
@@ -102,20 +188,20 @@ export class LocalEventModal extends ModalComponent {
 
         timeRow.appendChild(startGroup);
         timeRow.appendChild(endGroup);
-        content.appendChild(timeRow);
+        this.editContent.appendChild(timeRow);
 
         // Description textarea
         const descriptionLabel = document.createElement('label');
         descriptionLabel.htmlFor = 'eventDescription';
         descriptionLabel.setAttribute('data-localize', '__MSG_eventDescription__');
         descriptionLabel.textContent = window.getLocalizedMessage('eventDescription');
-        content.appendChild(descriptionLabel);
+        this.editContent.appendChild(descriptionLabel);
 
         this.descriptionInput = document.createElement('textarea');
         this.descriptionInput.id = 'eventDescription';
         this.descriptionInput.className = 'event-description-input';
         this.descriptionInput.rows = 3;
-        content.appendChild(this.descriptionInput);
+        this.editContent.appendChild(this.descriptionInput);
 
         // Reminder checkbox
         const reminderContainer = document.createElement('div');
@@ -136,7 +222,7 @@ export class LocalEventModal extends ModalComponent {
 
         reminderContainer.appendChild(this.reminderCheckbox);
         reminderContainer.appendChild(reminderLabel);
-        content.appendChild(reminderContainer);
+        this.editContent.appendChild(reminderContainer);
 
         // Recurrence section
         const recurrenceSection = document.createElement('div');
@@ -257,7 +343,7 @@ export class LocalEventModal extends ModalComponent {
         recurrenceSection.appendChild(endDateSection);
         this.endDateSection = endDateSection;
 
-        content.appendChild(recurrenceSection);
+        this.editContent.appendChild(recurrenceSection);
 
         // Button group
         const buttonGroup = document.createElement('div');
@@ -287,12 +373,10 @@ export class LocalEventModal extends ModalComponent {
         buttonGroup.appendChild(this.saveButton);
         buttonGroup.appendChild(this.deleteButton);
         buttonGroup.appendChild(this.cancelButton);
-        content.appendChild(buttonGroup);
+        this.editContent.appendChild(buttonGroup);
 
         // Set up the event listeners
         this._setupFormEventListeners();
-
-        return content;
     }
 
     /**
@@ -368,6 +452,172 @@ export class LocalEventModal extends ModalComponent {
         }
     }
 
+    // ========== View Mode ==========
+
+    /**
+     * Display event in view mode (read-only, Google event style)
+     * @param {Object} event Event to display
+     */
+    showView(event) {
+        this.mode = 'view';
+        this.currentEvent = event;
+
+        // Create the element if it doesn't exist
+        if (!this.element) {
+            this.createElement();
+        }
+
+        // Show view content, hide edit content
+        this.viewContent.style.display = '';
+        this.editContent.style.display = 'none';
+
+        // Populate view content
+        this._populateViewContent(event);
+
+        this.show();
+        this._localizeModal();
+    }
+
+    /**
+     * Populate view mode content with event data
+     * @private
+     */
+    _populateViewContent(event) {
+        // Title
+        this.viewTitleElement.textContent = event.title || window.getLocalizedMessage('noTitle');
+
+        // Time
+        this.viewTimeElement.innerHTML = '';
+        if (event.startTime && event.endTime) {
+            const icon = document.createElement('i');
+            icon.className = 'fas fa-clock';
+
+            const text = document.createElement('span');
+            text.textContent = this._formatViewTime(event.startTime, event.endTime);
+
+            this.viewTimeElement.appendChild(icon);
+            this.viewTimeElement.appendChild(text);
+            this.viewTimeElement.style.display = '';
+        } else {
+            this.viewTimeElement.style.display = 'none';
+        }
+
+        // Description
+        this.viewDescriptionElement.innerHTML = '';
+        if (event.description) {
+            const icon = document.createElement('i');
+            icon.className = 'fas fa-align-left';
+
+            const text = document.createElement('div');
+            text.className = 'google-event-detail-text';
+            text.textContent = event.description;
+
+            this.viewDescriptionElement.appendChild(icon);
+            this.viewDescriptionElement.appendChild(text);
+            this.viewDescriptionElement.style.display = '';
+        } else {
+            this.viewDescriptionElement.style.display = 'none';
+        }
+
+        // Reminder
+        this.viewReminderElement.innerHTML = '';
+        if (event.reminder !== false) {
+            const icon = document.createElement('i');
+            icon.className = 'fas fa-bell';
+
+            const text = document.createElement('span');
+            text.setAttribute('data-localize', '__MSG_reminderOn__');
+            text.textContent = window.getLocalizedMessage('reminderOn') || 'Reminder on';
+
+            this.viewReminderElement.appendChild(icon);
+            this.viewReminderElement.appendChild(text);
+            this.viewReminderElement.style.display = '';
+        } else {
+            this.viewReminderElement.style.display = 'none';
+        }
+
+        // Recurrence
+        this.viewRecurrenceElement.innerHTML = '';
+        const recurrenceText = this._getRecurrenceDisplayText(event);
+        if (recurrenceText) {
+            const icon = document.createElement('i');
+            icon.className = 'fas fa-sync-alt';
+
+            const text = document.createElement('span');
+            text.textContent = recurrenceText;
+
+            this.viewRecurrenceElement.appendChild(icon);
+            this.viewRecurrenceElement.appendChild(text);
+            this.viewRecurrenceElement.style.display = '';
+        } else {
+            this.viewRecurrenceElement.style.display = 'none';
+        }
+    }
+
+    /**
+     * Format time for view mode display (locale-aware)
+     * @private
+     */
+    _formatViewTime(startTime, endTime) {
+        try {
+            const locale = navigator.language || 'en';
+            const today = new Date();
+            const timeOptions = { hour: '2-digit', minute: '2-digit' };
+
+            const [sh, sm] = startTime.split(':').map(Number);
+            const [eh, em] = endTime.split(':').map(Number);
+
+            const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), sh, sm);
+            const endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), eh, em);
+
+            const startStr = startDate.toLocaleTimeString(locale, timeOptions);
+            const endStr = endDate.toLocaleTimeString(locale, timeOptions);
+            const separator = locale.startsWith('ja') ? ' ～ ' : ' - ';
+
+            return `${startStr}${separator}${endStr}`;
+        } catch {
+            return `${startTime} - ${endTime}`;
+        }
+    }
+
+    /**
+     * Get recurrence display text
+     * @private
+     */
+    _getRecurrenceDisplayText(event) {
+        const recurrence = event.recurrence || (event.isRecurringInstance ? event : null);
+        if (!recurrence || !recurrence.type || recurrence.type === RECURRENCE_TYPES.NONE) {
+            // Check if it's a recurring instance without explicit recurrence data
+            if (event.isRecurringInstance) {
+                return window.getLocalizedMessage('recurrence')?.replace(':', '') || 'Recurring';
+            }
+            return null;
+        }
+
+        const typeMap = {
+            [RECURRENCE_TYPES.DAILY]: 'recurrenceDaily',
+            [RECURRENCE_TYPES.WEEKDAYS]: 'recurrenceWeekdays',
+            [RECURRENCE_TYPES.WEEKLY]: 'recurrenceWeekly',
+            [RECURRENCE_TYPES.MONTHLY]: 'recurrenceMonthly'
+        };
+
+        const msgKey = typeMap[recurrence.type];
+        if (!msgKey) return null;
+
+        let text = window.getLocalizedMessage(msgKey) || recurrence.type;
+
+        // For weekly, add day names
+        if (recurrence.type === RECURRENCE_TYPES.WEEKLY && recurrence.daysOfWeek && recurrence.daysOfWeek.length > 0) {
+            const dayKeys = ['daySun', 'dayMon', 'dayTue', 'dayWed', 'dayThu', 'dayFri', 'daySat'];
+            const dayNames = recurrence.daysOfWeek.map(d => window.getLocalizedMessage(dayKeys[d]) || dayKeys[d]);
+            text += ` (${dayNames.join(', ')})`;
+        }
+
+        return text;
+    }
+
+    // ========== Edit Mode ==========
+
     /**
      * Save processing
      * @private
@@ -431,7 +681,14 @@ export class LocalEventModal extends ModalComponent {
             this.onSave(eventData, this.mode);
         }
 
-        this.hide();
+        if (this.mode === 'edit') {
+            // Edit mode: switch back to view mode with updated data
+            const updatedEvent = { ...this.currentEvent, ...eventData };
+            this.showView(updatedEvent);
+        } else {
+            // Create mode: close the modal
+            this.hide();
+        }
     }
 
     /**
@@ -567,6 +824,12 @@ export class LocalEventModal extends ModalComponent {
      * @private
      */
     _handleCancel() {
+        if (this.mode === 'edit' && this.currentEvent) {
+            // Return to view mode instead of closing
+            this.showView(this.currentEvent);
+            return;
+        }
+
         if (this.onCancel) {
             this.onCancel();
         }
@@ -665,6 +928,15 @@ export class LocalEventModal extends ModalComponent {
         this.mode = 'create';
         this.currentEvent = null;
 
+        // Create the element if it doesn't exist
+        if (!this.element) {
+            this.createElement();
+        }
+
+        // Show edit content, hide view content
+        this.viewContent.style.display = 'none';
+        this.editContent.style.display = '';
+
         // Reset form
         this.titleInput.value = '';
         this.descriptionInput.value = '';
@@ -683,8 +955,8 @@ export class LocalEventModal extends ModalComponent {
         // Adjust the button display
         this.deleteButton.style.display = 'none';
 
-        // Update title
-        this.setTitle(window.getLocalizedMessage('eventDialogTitle'));
+        // Update edit title
+        this.editTitleElement.textContent = window.getLocalizedMessage('eventDialogTitle');
 
         this._clearError();
         this.show();
@@ -710,6 +982,15 @@ export class LocalEventModal extends ModalComponent {
     showEdit(event) {
         this.mode = 'edit';
         this.currentEvent = event;
+
+        // Create the element if it doesn't exist
+        if (!this.element) {
+            this.createElement();
+        }
+
+        // Show edit content, hide view content
+        this.viewContent.style.display = 'none';
+        this.editContent.style.display = '';
 
         // Set the values in the form
         this.titleInput.value = event.title || '';
@@ -753,8 +1034,8 @@ export class LocalEventModal extends ModalComponent {
         // Adjust the button display
         this.deleteButton.style.display = '';
 
-        // Update title
-        this.setTitle(window.getLocalizedMessage('eventDialogTitle'));
+        // Update edit title
+        this.editTitleElement.textContent = window.getLocalizedMessage('eventDialogTitle');
 
         this._clearError();
         this.show();

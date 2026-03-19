@@ -272,7 +272,7 @@ class SidePanelUIController {
 
                 // Set the event click callback
                 this.localEventManager.setEventClickCallback((event) => {
-                    this.localEventModal.showEdit(event);
+                    this.localEventModal.showView(event);
                 });
             }
         }
@@ -305,7 +305,7 @@ class SidePanelUIController {
 
         // Set the event click callback
         this.localEventManager.setEventClickCallback((event) => {
-            this.localEventModal.showEdit(event);
+            this.localEventModal.showView(event);
         });
 
         // Load the settings and apply initial configuration
