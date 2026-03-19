@@ -12,3 +12,6 @@ SideTimeTable-release.zip
 
 # Source maps
 *.map
+
+# Test coverage
+coverage/
