@@ -1,9 +1,10 @@
 /**
- * MemoComponent - Simple persistent memo panel at the bottom of the side panel
+ * MemoComponent - Persistent memo panel with Markdown preview at the bottom of the side panel
  */
 import { Component } from '../base/component.js';
 import { StorageHelper } from '../../../lib/storage-helper.js';
 import { isDemoMode, getDemoMemoContent } from '../../../lib/demo-data.js';
+import { loadSettings } from '../../../lib/utils.js';
 
 const DEFAULT_HEIGHT = 150;
 const MIN_HEIGHT = 80;
@@ -15,6 +16,22 @@ const ANIM_DURATION = 420;
 const ICON_CLASS_DOWN = 'fas fa-chevron-down memo-toggle-icon';
 const ICON_CLASS_UP = 'fas fa-chevron-up memo-toggle-icon';
 
+// Lazy-loaded markdown renderer (only loaded when markdown is enabled)
+let _renderer = null;
+
+async function getMarkdownRenderer() {
+    if (!_renderer) {
+        const [{ Marked }, DOMPurify] = await Promise.all([
+            import(/* webpackChunkName: "markdown" */ 'marked'),
+            import(/* webpackChunkName: "markdown" */ 'dompurify')
+        ]);
+        const purify = DOMPurify.default || DOMPurify;
+        const marked = new Marked({ breaks: true, gfm: true });
+        _renderer = (text) => purify.sanitize(marked.parse(text));
+    }
+    return _renderer;
+}
+
 export class MemoComponent extends Component {
     constructor(options = {}) {
         super({
@@ -23,6 +40,7 @@ export class MemoComponent extends Component {
         });
 
         this.textarea = null;
+        this._preview = null;
         this.toggleIcon = null;
         this._dragHandle = null;
         this._toggleBtn = null;
@@ -35,6 +53,7 @@ export class MemoComponent extends Component {
         this._saveDebounceTimer = null;
         this._collapsed = false;
         this._panelHeight = DEFAULT_HEIGHT;
+        this._markdownEnabled = false;
 
         // Drag state
         this._dragStartY = 0;
@@ -74,7 +93,12 @@ export class MemoComponent extends Component {
         this.textarea.placeholder = this.getMessage('memoPlaceholder');
         this.textarea.setAttribute('data-localize-placeholder', '__MSG_memoPlaceholder__');
 
+        this._preview = document.createElement('div');
+        this._preview.id = 'memoPreview';
+        this._preview.className = 'memo-hidden';
+
         body.appendChild(this.textarea);
+        body.appendChild(this._preview);
         wrapper.appendChild(this._dragHandle);
         wrapper.appendChild(this._toggleBtn);
         wrapper.appendChild(body);
@@ -82,10 +106,16 @@ export class MemoComponent extends Component {
         // Apply default height immediately to avoid flash before async load
         this._applyHeight(false);
 
+        // Fire-and-forget: textarea is shown by default, then _loadState swaps
+        // to preview mode once settings are loaded (avoids blocking createElement)
         this._loadState();
 
         this.addEventListener(this._toggleBtn, 'click', () => this._toggleCollapse());
         this.addEventListener(this.textarea, 'input', () => this._onInput());
+        this.addEventListener(this.textarea, 'blur', () => this._switchToPreview());
+        this.addEventListener(this._preview, 'click', (e) => {
+            if (!e.target.closest('a')) this._switchToEdit();
+        });
         this._setupDragHandle();
 
         return wrapper;
@@ -93,9 +123,17 @@ export class MemoComponent extends Component {
 
     async _loadState() {
         try {
+            // Load markdown setting
+            const settings = await loadSettings();
+            this._markdownEnabled = settings.memoMarkdown === true;
+            this._applyMarkdownMode();
+
             if (isDemoMode()) {
                 if (this.textarea) {
                     this.textarea.value = await getDemoMemoContent();
+                    if (this._markdownEnabled) {
+                        this._renderMarkdown(this.textarea.value);
+                    }
                 }
                 this._applyHeight(false);
                 return;
@@ -103,6 +141,9 @@ export class MemoComponent extends Component {
             const result = await StorageHelper.getLocal(['memoContent', 'memoCollapsed', 'memoHeight']);
             if (this.textarea && result.memoContent !== undefined) {
                 this.textarea.value = result.memoContent;
+                if (this._markdownEnabled) {
+                    this._renderMarkdown(result.memoContent);
+                }
             }
             if (result.memoHeight) {
                 this._panelHeight = result.memoHeight;
@@ -111,6 +152,16 @@ export class MemoComponent extends Component {
             this._applyHeight(false);
         } catch (e) {
             // ignore
+        }
+    }
+
+    _applyMarkdownMode() {
+        if (!this.textarea || !this._preview) return;
+        if (this._markdownEnabled) {
+            this._switchToPreview();
+        } else {
+            this._preview.classList.add('memo-hidden');
+            this.textarea.classList.remove('memo-hidden');
         }
     }
 
@@ -247,6 +298,40 @@ export class MemoComponent extends Component {
             this._expandedDuringDrag = false;
             document.addEventListener('mousemove', this._onDragMove);
             document.addEventListener('mouseup', this._onDragEnd);
+        });
+    }
+
+    _switchToPreview() {
+        if (!this.textarea || !this._preview || !this._markdownEnabled) return;
+        this._renderMarkdown(this.textarea.value);
+        this.textarea.classList.add('memo-hidden');
+        this._preview.classList.remove('memo-hidden');
+    }
+
+    _switchToEdit() {
+        if (!this.textarea || !this._preview || !this._markdownEnabled) return;
+        this._preview.classList.add('memo-hidden');
+        this.textarea.classList.remove('memo-hidden');
+        this.textarea.focus();
+        this.textarea.selectionStart = this.textarea.selectionEnd = this.textarea.value.length;
+    }
+
+    async _renderMarkdown(text) {
+        if (!this._preview) return;
+        if (!text || !text.trim()) {
+            this._preview.textContent = '';
+            const placeholder = document.createElement('span');
+            placeholder.className = 'memo-preview-placeholder';
+            placeholder.textContent = this.textarea.placeholder;
+            this._preview.appendChild(placeholder);
+            return;
+        }
+        const render = await getMarkdownRenderer();
+        this._preview.innerHTML = render(text);
+        // Open links in new tab
+        this._preview.querySelectorAll('a').forEach(a => {
+            a.setAttribute('target', '_blank');
+            a.setAttribute('rel', 'noopener noreferrer');
         });
     }
 
