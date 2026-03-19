@@ -26,6 +26,12 @@
     "48": "src/img/icon48.png",
     "128": "src/img/icon128.png"
   },
+  "web_accessible_resources": [
+    {
+      "resources": ["dist/*.chunk.js"],
+      "matches": ["<all_urls>"]
+    }
+  ],
   "commands": {
     "open-side-panel": {
       "suggested_key": {

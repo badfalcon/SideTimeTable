@@ -890,7 +890,7 @@
     "description": "Tutorial: memo step title"
   },
   "tutorialMemoDesc": {
-    "message": "Use the memo panel at the bottom to jot down quick notes. It saves automatically and persists across sessions.",
+    "message": "Use the memo panel at the bottom to jot down quick notes. It saves automatically and persists across sessions. You can enable Markdown rendering in Settings.",
     "description": "Tutorial: memo step description"
   },
   "tutorialFinishTitle": {
@@ -1064,6 +1064,22 @@
   "memoPlaceholder": {
     "message": "Add your notes here...",
     "description": "Placeholder text for the memo textarea"
+  },
+  "memoSettings": {
+    "message": "Memo Settings",
+    "description": "Title for the memo settings card"
+  },
+  "memoSettingsDescription": {
+    "message": "Configure the memo panel behavior.",
+    "description": "Subtitle for the memo settings card"
+  },
+  "memoMarkdownLabel": {
+    "message": "Enable Markdown rendering",
+    "description": "Label for the Markdown toggle switch"
+  },
+  "memoMarkdownHelp": {
+    "message": "When enabled, memo content is rendered as Markdown when not editing. Click the memo to switch to edit mode.",
+    "description": "Help text for the Markdown toggle"
   },
   "rsvpLabel": {
     "message": "Your response",

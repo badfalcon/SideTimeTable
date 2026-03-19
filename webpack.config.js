@@ -24,6 +24,7 @@ module.exports = (env = {}, argv) => {
     output: {
       path: path.resolve(__dirname, 'dist'),
       filename: '[name].bundle.js',
+      chunkFilename: '[name].chunk.js',
       clean: true
     },
     module: {
@@ -31,11 +32,13 @@ module.exports = (env = {}, argv) => {
         {
           test: /\.js$/,
           exclude: /node_modules/,
+          type: 'javascript/auto',
           use: {
             loader: 'babel-loader',
             options: {
               cacheDirectory: false,
-              cacheCompression: false
+              cacheCompression: false,
+              sourceType: 'module'
             }
           }
         }

@@ -890,7 +890,7 @@
     "description": "チュートリアル：メモステップのタイトル"
   },
   "tutorialMemoDesc": {
-    "message": "画面下部のメモ欄にちょっとしたメモを残せます。自動保存され、次回以降も内容が保持されます。",
+    "message": "画面下部のメモ欄にちょっとしたメモを残せます。自動保存され、次回以降も内容が保持されます。設定からMarkdown表示を有効にできます。",
     "description": "チュートリアル：メモステップの説明"
   },
   "tutorialFinishTitle": {
@@ -1064,6 +1064,22 @@
   "memoPlaceholder": {
     "message": "メモを入力...",
     "description": "メモテキストエリアのプレースホルダー"
+  },
+  "memoSettings": {
+    "message": "メモ設定",
+    "description": "メモ設定カードのタイトル"
+  },
+  "memoSettingsDescription": {
+    "message": "メモパネルの動作を設定します。",
+    "description": "メモ設定カードのサブタイトル"
+  },
+  "memoMarkdownLabel": {
+    "message": "Markdown表示を有効にする",
+    "description": "Markdownトグルスイッチのラベル"
+  },
+  "memoMarkdownHelp": {
+    "message": "有効にすると、編集していないときにメモがMarkdown形式で表示されます。クリックすると編集モードに切り替わります。",
+    "description": "Markdownトグルのヘルプテキスト"
   },
   "rsvpLabel": {
     "message": "出欠の回答",
