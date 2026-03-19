@@ -1623,8 +1623,8 @@ button {
     line-height: 1.3;
 }
 
-#memoPreview h1 { font-size: 1.3em; }
-#memoPreview h2 { font-size: 1.15em; }
+#memoPreview h1 { font-size: 1.4em; }
+#memoPreview h2 { font-size: 1.2em; }
 #memoPreview h3 { font-size: 1.05em; }
 
 #memoPreview ul, #memoPreview ol {
@@ -1647,7 +1647,8 @@ button {
     background-color: var(--side-calendar-subtle-bg);
     padding: 0.4em 0.6em;
     border-radius: 6px;
-    overflow-x: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
     margin: 0.3em 0;
 }
 
@@ -1666,6 +1667,7 @@ button {
 #memoPreview a {
     color: var(--side-calendar-accent-color);
     text-decoration: none;
+    cursor: pointer;
 }
 
 #memoPreview a:hover {

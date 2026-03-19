@@ -5,8 +5,6 @@ import { Component } from '../base/component.js';
 import { StorageHelper } from '../../../lib/storage-helper.js';
 import { isDemoMode, getDemoMemoContent } from '../../../lib/demo-data.js';
 import { loadSettings } from '../../../lib/utils.js';
-import { Marked } from 'marked';
-import DOMPurify from 'dompurify';
 
 const DEFAULT_HEIGHT = 150;
 const MIN_HEIGHT = 80;
@@ -18,7 +16,21 @@ const ANIM_DURATION = 420;
 const ICON_CLASS_DOWN = 'fas fa-chevron-down memo-toggle-icon';
 const ICON_CLASS_UP = 'fas fa-chevron-up memo-toggle-icon';
 
-const markedInstance = new Marked({ breaks: true, gfm: true });
+// Lazy-loaded markdown renderer (only loaded when markdown is enabled)
+let _renderer = null;
+
+async function getMarkdownRenderer() {
+    if (!_renderer) {
+        const [{ Marked }, DOMPurify] = await Promise.all([
+            import(/* webpackChunkName: "markdown" */ 'marked'),
+            import(/* webpackChunkName: "markdown" */ 'dompurify')
+        ]);
+        const purify = DOMPurify.default || DOMPurify;
+        const marked = new Marked({ breaks: true, gfm: true });
+        _renderer = (text) => purify.sanitize(marked.parse(text));
+    }
+    return _renderer;
+}
 
 export class MemoComponent extends Component {
     constructor(options = {}) {
@@ -94,6 +106,8 @@ export class MemoComponent extends Component {
         // Apply default height immediately to avoid flash before async load
         this._applyHeight(false);
 
+        // Fire-and-forget: textarea is shown by default, then _loadState swaps
+        // to preview mode once settings are loaded (avoids blocking createElement)
         this._loadState();
 
         this.addEventListener(this._toggleBtn, 'click', () => this._toggleCollapse());
@@ -302,7 +316,7 @@ export class MemoComponent extends Component {
         this.textarea.selectionStart = this.textarea.selectionEnd = this.textarea.value.length;
     }
 
-    _renderMarkdown(text) {
+    async _renderMarkdown(text) {
         if (!this._preview) return;
         if (!text || !text.trim()) {
             this._preview.textContent = '';
@@ -312,7 +326,8 @@ export class MemoComponent extends Component {
             this._preview.appendChild(placeholder);
             return;
         }
-        this._preview.innerHTML = DOMPurify.sanitize(markedInstance.parse(text));
+        const render = await getMarkdownRenderer();
+        this._preview.innerHTML = render(text);
         // Open links in new tab
         this._preview.querySelectorAll('a').forEach(a => {
             a.setAttribute('target', '_blank');

@@ -1,7 +1,8 @@
 module.exports = {
   presets: [
     ['@babel/preset-env', {
-      modules: 'commonjs',
+      // Let webpack handle ES modules so dynamic import() is preserved for code-splitting
+      modules: false,
       targets: {
         chrome: '88'
       }
