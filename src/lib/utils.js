@@ -100,7 +100,8 @@ export const DEFAULT_SETTINGS = {
     reminderMinutes: 5, // Reminder time in minutes before event starts
     darkMode: false, // Dark mode theme (legacy, kept for migration)
     useGoogleCalendarColors: true, // Use per-calendar colors from Google Calendar API
-    colorTheme: 'default' // Active colour-set ID (see color-themes.js)
+    colorTheme: 'default', // Active colour-set ID (see color-themes.js)
+    memoMarkdown: false // Enable Markdown rendering in memo panel
 };
 
 // Mapping from color setting keys to CSS variable names
