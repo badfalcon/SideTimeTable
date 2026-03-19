@@ -118,17 +118,13 @@ export class GoogleEventManager {
             return Promise.resolve();
         }
 
-        // If there's a request in progress, return it (prevent duplicates)
-        if (this.currentFetchPromise) {
-            return this.currentFetchPromise;
-        }
-
         // Check for the duplicate call restriction on the same date
         const targetDay = targetDate || new Date();
         const targetDateStr = targetDay.toDateString(); // Compare by the date string
 
-        if (this.lastFetchDate === targetDateStr && this.currentFetchPromise) {
-            return this.currentFetchPromise; // Return the existing Promise
+        // If there's a request in progress for the same date, return it (prevent duplicates)
+        if (this.currentFetchPromise && this.lastFetchDate === targetDateStr) {
+            return this.currentFetchPromise;
         }
 
         this.lastFetchDate = targetDateStr;
