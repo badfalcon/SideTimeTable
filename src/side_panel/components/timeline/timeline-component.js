@@ -320,9 +320,7 @@ export class TimelineComponent extends Component {
         try {
             const [hour, minute] = time.split(':').map(Number);
             const totalMinutes = hour * 60 + minute + this.TIMELINE_OFFSET;
-            const scrollTop = Math.max(0, totalMinutes - 200); // 200px margin above
-
-            this.element.scrollTop = scrollTop;
+            this.element.scrollTop = Math.max(0, totalMinutes - 200); // 200px margin above
         } catch (error) {
             console.warn('Failed to scroll to time:', error);
         }

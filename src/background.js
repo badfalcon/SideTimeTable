@@ -298,12 +298,9 @@ function getCalendarEvents(targetDate = null) {
                                     return false;
                                 }
                                 // Exclude the declined events
-                                if (event.attendees && event.attendees.some(attendee => 
+                                return !(event.attendees && event.attendees.some(attendee =>
                                     attendee.self && attendee.responseStatus === 'declined'
-                                )) {
-                                    return false;
-                                }
-                                return true;
+                                ));
                             })
                         );
                         resolve(merged);
@@ -372,12 +369,9 @@ function getPrimaryCalendarEvents(targetDate = null) {
                             return false;
                         }
                         // Skip declined events
-                        if (event.attendees && event.attendees.some(attendee =>
+                        return !(event.attendees && event.attendees.some(attendee =>
                             attendee.self && attendee.responseStatus === 'declined'
-                        )) {
-                            return false;
-                        }
-                        return true;
+                        ));
                     });
 
                     resolve(filteredEvents);
@@ -655,7 +649,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                         headers: { Authorization: 'Bearer ' + token }
                     });
                     if (!getRes.ok) {
-                        throw new Error(`Failed to get event: ${getRes.status} ${getRes.statusText}`);
+                        sendResponse({ success: false, error: `Failed to get event: ${getRes.status} ${getRes.statusText}` });
+                        return;
                     }
                     const eventData = await getRes.json();
 
@@ -680,7 +675,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     });
 
                     if (!patchRes.ok) {
-                        throw new Error(`Failed to update event: ${patchRes.status} ${patchRes.statusText}`);
+                        sendResponse({ success: false, error: `Failed to update event: ${patchRes.status} ${patchRes.statusText}` });
+                        return;
                     }
 
                     const updatedEvent = await patchRes.json();

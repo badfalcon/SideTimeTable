@@ -886,11 +886,7 @@ export class LocalEventModal extends ModalComponent {
         }
 
         // The time validity check
-        if (!this._validateTimes()) {
-            return false;
-        }
-
-        return true;
+        return this._validateTimes();
     }
 
     /**
