@@ -34,7 +34,7 @@ export class MemoSettingsCard extends CardComponent {
     }
 
     _createForm() {
-        const form = document.createElement('form');
+        const container = document.createElement('div');
 
         const checkWrapper = document.createElement('div');
         checkWrapper.className = 'form-check form-switch';
@@ -59,10 +59,10 @@ export class MemoSettingsCard extends CardComponent {
         checkWrapper.appendChild(this.markdownCheckbox);
         checkWrapper.appendChild(label);
 
-        form.appendChild(checkWrapper);
-        form.appendChild(helpText);
+        container.appendChild(checkWrapper);
+        container.appendChild(helpText);
 
-        return form;
+        return container;
     }
 
     _setupEventListeners() {
