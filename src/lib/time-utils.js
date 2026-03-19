@@ -23,11 +23,12 @@ export function createTimeOnDate(date, hour, minute, second = 0, millisecond = 0
 }
 
 /**
- * Parse the time string in "HH:MM" format and return the hour and minute
+ * Parse a time string in "H:MM" or "HH:MM" format and return the hour and minute.
+ * Single-digit hours and minutes are accepted (e.g. "9:05", "9:5").
  *
- * @param {string} timeString - The time string in "HH:MM" format
+ * @param {string} timeString - The time string (e.g. "09:30", "9:5")
  * @returns {{hour: number, minute: number}} The parse result
- * @throws {Error} If the format is invalid
+ * @throws {Error} If the string is not a valid time
  */
 export function parseTimeString(timeString) {
     if (!timeString || typeof timeString !== 'string') {
@@ -38,10 +39,15 @@ export function parseTimeString(timeString) {
     if (parts.length !== 2) {
         throw new Error('Time string must be in "HH:MM" format');
     }
-    
+
+    // Strict numeric validation: reject strings with non-digit characters (e.g. "10.5", " 09")
+    if (!/^\d+$/.test(parts[0]) || !/^\d+$/.test(parts[1])) {
+        throw new Error('Invalid time value');
+    }
+
     const hour = parseInt(parts[0], 10);
     const minute = parseInt(parts[1], 10);
-    
+
     if (isNaN(hour) || isNaN(minute) || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
         throw new Error('Invalid time value');
     }
@@ -89,20 +95,27 @@ export function calculateTimeDifference(startTime, endTime) {
 }
 
 /**
- * Calculate the business start and end times for a specified date
+ * Calculate the business start and end times for a specified date.
+ * The open time must be before or equal to the close time.
  *
  * @param {Date} date - The target date
  * @param {string} openHour - The business start time ("HH:MM" format)
  * @param {string} closeHour - The business end time ("HH:MM" format)
  * @returns {{openTime: Date, closeTime: Date, hourDiff: number}} The calculation result
+ * @throws {Error} If closeHour is before openHour
  */
 export function calculateWorkHours(date, openHour, closeHour) {
     const { hour: openTimeHour, minute: openTimeMinute } = parseTimeString(openHour);
     const { hour: closeTimeHour, minute: closeTimeMinute } = parseTimeString(closeHour);
-    
+
     const openTime = createTimeOnDate(date, openTimeHour, openTimeMinute);
     const closeTime = createTimeOnDate(date, closeTimeHour, closeTimeMinute);
+
+    if (closeTime < openTime) {
+        throw new Error('Close time must not be before open time');
+    }
+
     const hourDiff = calculateTimeDifference(openTime, closeTime) / (60 * 60 * 1000);
-    
+
     return { openTime, closeTime, hourDiff };
 }
