@@ -146,6 +146,7 @@ export class TimelineComponent extends Component {
 
                 Promise.all(tasks)
                     .then(results => {
+                        if (!this.element) return; // component destroyed
                         if (hasLocale) {
                             const locale = results[0];
                             if (locale === 'en' || locale === 'ja') {
