@@ -4,6 +4,7 @@
 import { Component } from '../base/component.js';
 import { StorageHelper } from '../../../lib/storage-helper.js';
 import { isDemoMode, getDemoMemoContent } from '../../../lib/demo-data.js';
+import { loadSettings } from '../../../lib/utils.js';
 import { marked } from 'marked';
 
 const DEFAULT_HEIGHT = 150;
@@ -44,6 +45,7 @@ export class MemoComponent extends Component {
         this._collapsed = false;
         this._panelHeight = DEFAULT_HEIGHT;
         this._isEditing = false;
+        this._markdownEnabled = false;
 
         // Drag state
         this._dragStartY = 0;
@@ -105,18 +107,22 @@ export class MemoComponent extends Component {
         this.addEventListener(this._preview, 'click', () => this._switchToEdit());
         this._setupDragHandle();
 
-        // Start in preview mode
-        this._switchToPreview();
-
         return wrapper;
     }
 
     async _loadState() {
         try {
+            // Load markdown setting
+            const settings = await loadSettings();
+            this._markdownEnabled = settings.memoMarkdown === true;
+            this._applyMarkdownMode();
+
             if (isDemoMode()) {
                 if (this.textarea) {
                     this.textarea.value = await getDemoMemoContent();
-                    this._renderMarkdown(this.textarea.value);
+                    if (this._markdownEnabled) {
+                        this._renderMarkdown(this.textarea.value);
+                    }
                 }
                 this._applyHeight(false);
                 return;
@@ -124,7 +130,9 @@ export class MemoComponent extends Component {
             const result = await StorageHelper.getLocal(['memoContent', 'memoCollapsed', 'memoHeight']);
             if (this.textarea && result.memoContent !== undefined) {
                 this.textarea.value = result.memoContent;
-                this._renderMarkdown(result.memoContent);
+                if (this._markdownEnabled) {
+                    this._renderMarkdown(result.memoContent);
+                }
             }
             if (result.memoHeight) {
                 this._panelHeight = result.memoHeight;
@@ -133,6 +141,18 @@ export class MemoComponent extends Component {
             this._applyHeight(false);
         } catch (e) {
             // ignore
+        }
+    }
+
+    _applyMarkdownMode() {
+        if (!this.textarea || !this._preview) return;
+        if (this._markdownEnabled) {
+            // Start in preview mode
+            this._switchToPreview();
+        } else {
+            // Plain text mode: show textarea, hide preview
+            this._preview.classList.add('memo-editing');
+            this.textarea.classList.remove('memo-editing');
         }
     }
 
@@ -273,7 +293,7 @@ export class MemoComponent extends Component {
     }
 
     _switchToPreview() {
-        if (!this.textarea || !this._preview) return;
+        if (!this.textarea || !this._preview || !this._markdownEnabled) return;
         this._isEditing = false;
         const text = this.textarea.value;
         this._renderMarkdown(text);
@@ -282,7 +302,7 @@ export class MemoComponent extends Component {
     }
 
     _switchToEdit() {
-        if (!this.textarea || !this._preview) return;
+        if (!this.textarea || !this._preview || !this._markdownEnabled) return;
         this._isEditing = true;
         this._preview.classList.add('memo-editing');
         this.textarea.classList.remove('memo-editing');
