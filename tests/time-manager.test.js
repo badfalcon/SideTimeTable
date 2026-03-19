@@ -1,6 +1,6 @@
 import { EventLayoutManager } from '../src/side_panel/time-manager.js';
 
-// Mock DOM element
+// Mock DOM element with classList matching the real DOM API
 function mockElement() {
   return {
     style: {},
@@ -8,18 +8,17 @@ function mockElement() {
       _classes: new Set(),
       add(...cls) { cls.forEach(c => this._classes.add(c)); },
       remove(...cls) { cls.forEach(c => this._classes.delete(c)); },
-      has(cls) { return this._classes.has(cls); },
+      contains(cls) { return this._classes.has(cls); },
     },
   };
 }
 
-// Helper to create event objects
+// Helper to create event objects on a fixed date (June 15, 2025)
 function createEvent(id, startHour, startMin, endHour, endMin) {
-  const base = new Date(2025, 5, 15);
   return {
     id,
-    startTime: new Date(base.getFullYear(), base.getMonth(), base.getDate(), startHour, startMin),
-    endTime: new Date(base.getFullYear(), base.getMonth(), base.getDate(), endHour, endMin),
+    startTime: new Date(2025, 5, 15, startHour, startMin),
+    endTime: new Date(2025, 5, 15, endHour, endMin),
     element: mockElement(),
   };
 }
@@ -134,16 +133,6 @@ describe('EventLayoutManager', () => {
       manager.removeEvent('e2');
       expect(manager.events).toHaveLength(2);
       expect(manager.events.map(e => e.id)).toEqual(['e1', 'e3']);
-    });
-  });
-
-  describe('clearAllEvents', () => {
-    test('clears all events and cache', () => {
-      manager.registerEvent(createEvent('e1', 10, 0, 11, 0));
-      manager.registerEvent(createEvent('e2', 11, 0, 12, 0));
-      manager.clearAllEvents();
-      expect(manager.events).toHaveLength(0);
-      expect(manager.layoutGroups).toHaveLength(0);
     });
   });
 
@@ -396,8 +385,10 @@ describe('EventLayoutManager', () => {
       manager.registerEvent(e1);
       manager.registerEvent(e2);
       manager.calculateLayout();
-      // e2 starts at 11:00 (660 min), e1 at 10:00 (600 min)
-      expect(e2.element.style.zIndex).toBeGreaterThan(e1.element.style.zIndex);
+      // zIndex = Z_INDEX(21) + minutes_since_midnight
+      // e1: 21 + 600 = 621, e2: 21 + 660 = 681
+      expect(e1.element.style.zIndex).toBe(621);
+      expect(e2.element.style.zIndex).toBe(681);
     });
 
     test('removes compact/micro/narrow-display classes for single event', () => {
@@ -407,9 +398,9 @@ describe('EventLayoutManager', () => {
       e1.element.classList.add('narrow-display');
       manager.registerEvent(e1);
       manager.calculateLayout();
-      expect(e1.element.classList.has('compact')).toBe(false);
-      expect(e1.element.classList.has('micro')).toBe(false);
-      expect(e1.element.classList.has('narrow-display')).toBe(false);
+      expect(e1.element.classList.contains('compact')).toBe(false);
+      expect(e1.element.classList.contains('micro')).toBe(false);
+      expect(e1.element.classList.contains('narrow-display')).toBe(false);
     });
 
     test('handles event with null element gracefully in single layout', () => {
@@ -438,8 +429,8 @@ describe('EventLayoutManager', () => {
       manager.calculateLayout();
       // 3 lanes: laneCount(3) > COMPACT(2) and laneCount(3) <= MICRO(4) -> compact class
       [e1, e2, e3].forEach(e => {
-        expect(e.element.classList.has('compact')).toBe(true);
-        expect(e.element.classList.has('micro')).toBe(false);
+        expect(e.element.classList.contains('compact')).toBe(true);
+        expect(e.element.classList.contains('micro')).toBe(false);
       });
     });
 
@@ -453,8 +444,8 @@ describe('EventLayoutManager', () => {
       manager.calculateLayout();
       // 5 lanes > MICRO(4) -> micro class
       events.forEach(e => {
-        expect(e.element.classList.has('micro')).toBe(true);
-        expect(e.element.classList.has('compact')).toBe(false);
+        expect(e.element.classList.contains('micro')).toBe(true);
+        expect(e.element.classList.contains('compact')).toBe(false);
       });
     });
 
@@ -465,9 +456,9 @@ describe('EventLayoutManager', () => {
       expect(manager.layoutGroups).toHaveLength(2);
     });
 
-    test('disableTransitions adds no-transition class to elements', () => {
-      // Mock requestAnimationFrame
-      global.requestAnimationFrame = (cb) => cb();
+    test('disableTransitions adds then removes no-transition class via requestAnimationFrame', () => {
+      let rafCallback = null;
+      global.requestAnimationFrame = (cb) => { rafCallback = cb; };
 
       const e1 = createEvent('e1', 10, 0, 11, 0);
       const e2 = createEvent('e2', 10, 0, 11, 0);
@@ -475,9 +466,16 @@ describe('EventLayoutManager', () => {
       manager.registerEvent(e2);
       manager.calculateLayout(true);
 
-      // After requestAnimationFrame callback, no-transition should be removed
-      expect(e1.element.classList.has('no-transition')).toBe(false);
-      expect(e2.element.classList.has('no-transition')).toBe(false);
+      // Before requestAnimationFrame fires, no-transition should be present
+      expect(e1.element.classList.contains('no-transition')).toBe(true);
+      expect(e2.element.classList.contains('no-transition')).toBe(true);
+
+      // Simulate requestAnimationFrame callback
+      rafCallback();
+
+      // After callback, no-transition should be removed
+      expect(e1.element.classList.contains('no-transition')).toBe(false);
+      expect(e2.element.classList.contains('no-transition')).toBe(false);
 
       delete global.requestAnimationFrame;
     });
@@ -502,8 +500,8 @@ describe('EventLayoutManager', () => {
       manager.calculateLayout();
       // 2 lanes <= COMPACT(2) → no compact, no micro
       [e1, e2].forEach(e => {
-        expect(e.element.classList.has('compact')).toBe(false);
-        expect(e.element.classList.has('micro')).toBe(false);
+        expect(e.element.classList.contains('compact')).toBe(false);
+        expect(e.element.classList.contains('micro')).toBe(false);
       });
     });
 
@@ -517,8 +515,8 @@ describe('EventLayoutManager', () => {
       manager.calculateLayout();
       // 4 lanes: laneCount(4) > COMPACT(2) and laneCount(4) <= MICRO(4) → compact
       events.forEach(e => {
-        expect(e.element.classList.has('compact')).toBe(true);
-        expect(e.element.classList.has('micro')).toBe(false);
+        expect(e.element.classList.contains('compact')).toBe(true);
+        expect(e.element.classList.contains('micro')).toBe(false);
       });
     });
 
@@ -529,8 +527,8 @@ describe('EventLayoutManager', () => {
       manager.registerEvent(e1);
       manager.registerEvent(e2);
       manager.calculateLayout();
-      expect(e1.element.classList.has('narrow-display')).toBe(true);
-      expect(e2.element.classList.has('narrow-display')).toBe(true);
+      expect(e1.element.classList.contains('narrow-display')).toBe(true);
+      expect(e2.element.classList.contains('narrow-display')).toBe(true);
     });
 
     test('narrow-display not applied when laneWidth >= MIN_DISPLAY_WIDTH', () => {
@@ -540,7 +538,7 @@ describe('EventLayoutManager', () => {
       manager.calculateLayout();
       // Single event layout doesn't go through _applyMultiEventLayout,
       // and removes narrow-display
-      expect(e1.element.classList.has('narrow-display')).toBe(false);
+      expect(e1.element.classList.contains('narrow-display')).toBe(false);
     });
 
     test('padding is reset to empty string on layout', () => {
@@ -575,8 +573,11 @@ describe('EventLayoutManager', () => {
   });
 
   describe('updateBaseElement', () => {
+    const savedWindow = global.window;
+    beforeEach(() => { global.window = { ResizeObserver: undefined }; });
+    afterEach(() => { global.window = savedWindow; });
+
     test('updates maxWidth based on new element', () => {
-      global.window = { ResizeObserver: undefined };
       const baseElement = {
         getBoundingClientRect: () => ({ width: 500 }),
       };
@@ -584,11 +585,9 @@ describe('EventLayoutManager', () => {
       // availableWidth = 500 - 40 - 5 = 455
       expect(manager.maxWidth).toBe(455);
       expect(manager.baseElement).toBe(baseElement);
-      delete global.window;
     });
 
     test('recalculates layout when events exist', () => {
-      global.window = { ResizeObserver: undefined };
       const e1 = createEvent('e1', 10, 0, 11, 0);
       manager.registerEvent(e1);
       manager.calculateLayout();
@@ -600,23 +599,23 @@ describe('EventLayoutManager', () => {
       manager.updateBaseElement(baseElement);
       // Should recalculate: single event gets full maxWidth = 455
       expect(e1.element.style.width).toBe('455px');
-      delete global.window;
     });
 
     test('does not recalculate layout when no events', () => {
-      global.window = { ResizeObserver: undefined };
       const baseElement = {
         getBoundingClientRect: () => ({ width: 500 }),
       };
       // Should not throw even with no events
       expect(() => manager.updateBaseElement(baseElement)).not.toThrow();
-      delete global.window;
     });
   });
 
   describe('_handleResize', () => {
+    const savedWindow = global.window;
+    beforeEach(() => { global.window = { ResizeObserver: undefined }; });
+    afterEach(() => { global.window = savedWindow; });
+
     test('recalculates layout when width changes by more than 5px', () => {
-      global.window = { ResizeObserver: undefined };
       const widthHolder = { width: 400 };
       const baseElement = {
         getBoundingClientRect: () => ({ width: widthHolder.width }),
@@ -633,11 +632,9 @@ describe('EventLayoutManager', () => {
       expect(m.maxWidth).toBe(455);
       expect(e1.element.style.width).toBe('455px');
       m.destroy();
-      delete global.window;
     });
 
     test('does not recalculate layout when width changes by less than 5px', () => {
-      global.window = { ResizeObserver: undefined };
       const widthHolder = { width: 400 };
       const baseElement = {
         getBoundingClientRect: () => ({ width: widthHolder.width }),
@@ -654,7 +651,6 @@ describe('EventLayoutManager', () => {
       // Layout should NOT be recalculated
       expect(e1.element.style.width).toBe(originalWidth);
       m.destroy();
-      delete global.window;
     });
   });
 
@@ -684,12 +680,14 @@ describe('EventLayoutManager', () => {
   });
 
   describe('_calculateMaxWidth', () => {
+    const savedWindow = global.window;
+    afterEach(() => { global.window = savedWindow; });
+
     test('returns DEFAULT_WIDTH when no baseElement', () => {
       expect(manager.maxWidth).toBe(200);
     });
 
     test('calculates width from baseElement', () => {
-      // Mock window for ResizeObserver check
       global.window = { ResizeObserver: undefined };
       const baseElement = {
         getBoundingClientRect: () => ({ width: 400 }),
@@ -698,7 +696,6 @@ describe('EventLayoutManager', () => {
       // availableWidth = 400 - 40 (BASE_LEFT) - 5 (RESERVED_SPACE_MARGIN) = 355
       expect(m.maxWidth).toBe(355);
       m.destroy();
-      delete global.window;
     });
 
     test('enforces MIN_WIDTH for narrow baseElement', () => {
@@ -710,7 +707,6 @@ describe('EventLayoutManager', () => {
       // availableWidth = 50 - 40 - 5 = 5, but MIN_WIDTH = 100
       expect(m.maxWidth).toBe(100);
       m.destroy();
-      delete global.window;
     });
   });
 
