@@ -97,6 +97,22 @@ describe('parseTimeString', () => {
     expect(parseTimeString('00:00')).toEqual({ hour: 0, minute: 0 });
     expect(parseTimeString('12:00')).toEqual({ hour: 12, minute: 0 });
   });
+
+  test('parseInt silently accepts leading/trailing whitespace in parts', () => {
+    // parseInt(' 09', 10) returns 9, so ' 09:30' splits to [' 09', '30']
+    // This documents current behavior (not necessarily desired)
+    expect(parseTimeString(' 09:30')).toEqual({ hour: 9, minute: 30 });
+  });
+
+  test('parseInt silently accepts trailing non-numeric chars', () => {
+    // parseInt('10.5', 10) returns 10
+    // This documents current behavior
+    expect(parseTimeString('10.5:30')).toEqual({ hour: 10, minute: 30 });
+  });
+
+  test('parses single-digit minute', () => {
+    expect(parseTimeString('9:5')).toEqual({ hour: 9, minute: 5 });
+  });
 });
 
 describe('isToday', () => {
@@ -191,6 +207,12 @@ describe('calculateTimeDifference', () => {
     const date = new Date(2025, 0, 1, 10, 0);
     const timestamp = date.getTime() + 3600000; // +1 hour
     expect(calculateTimeDifference(date, timestamp)).toBe(3600000);
+  });
+
+  test('calculates cross-day difference', () => {
+    const day1 = new Date(2025, 0, 1, 23, 0);
+    const day2 = new Date(2025, 0, 2, 1, 0);
+    expect(calculateTimeDifference(day1, day2)).toBe(2 * 60 * 60 * 1000);
   });
 });
 
