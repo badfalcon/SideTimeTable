@@ -1328,5 +1328,81 @@
   "reminderOn": {
     "message": "リマインダーあり",
     "description": "イベント表示でのリマインダー有効状態"
+  },
+  "reminderDebugTitle": {
+    "message": "リマインダー デバッグ＆テスト",
+    "description": "開発者設定のリマインダーデバッグカードのタイトル"
+  },
+  "storageCardTitle": {
+    "message": "ストレージ",
+    "description": "開発者設定のストレージカードのタイトル"
+  },
+  "storageCardSubtitle": {
+    "message": "Chromeストレージデータの確認と管理。",
+    "description": "開発者設定のストレージカードのサブタイトル"
+  },
+  "demoModeCardTitle": {
+    "message": "デモモード",
+    "description": "開発者設定のデモモードカードのタイトル"
+  },
+  "demoModeCardSubtitle": {
+    "message": "サンプルデータを表示します（APIアクセスは行いません）。",
+    "description": "開発者設定のデモモードカードのサブタイトル"
+  },
+  "extensionInfoCardTitle": {
+    "message": "拡張機能情報",
+    "description": "開発者設定の拡張機能情報カードのタイトル"
+  },
+  "extensionInfoCardSubtitle": {
+    "message": "この拡張機能についての情報。",
+    "description": "開発者設定の拡張機能情報カードのサブタイトル"
+  },
+  "extensionIdLabel": {
+    "message": "拡張機能ID",
+    "description": "情報カードの拡張機能IDラベル"
+  },
+  "manifestVersionLabel": {
+    "message": "マニフェストバージョン",
+    "description": "情報カードのマニフェストバージョンラベル"
+  },
+  "versionLabel": {
+    "message": "バージョン",
+    "description": "情報カードのバージョンラベル"
+  },
+  "cannotRetrieve": {
+    "message": "取得できません",
+    "description": "値が取得できない場合のフォールバックテキスト"
+  },
+  "unknown": {
+    "message": "不明",
+    "description": "不明な値のフォールバックテキスト"
+  },
+  "storageItems": {
+    "message": "件",
+    "description": "ストレージビューアーの配列アイテム数ラベル"
+  },
+  "storageKeys": {
+    "message": "キー",
+    "description": "ストレージビューアーのオブジェクトキー数ラベル"
+  },
+  "storageDeeplyNested": {
+    "message": "（深くネストされているため省略）",
+    "description": "ストレージデータが深すぎる場合のメッセージ"
+  },
+  "storageEmpty": {
+    "message": "（空）",
+    "description": "ストレージデータが空の場合のメッセージ"
+  },
+  "storageSyncLabel": {
+    "message": "同期",
+    "description": "同期ストレージ使用量のラベル"
+  },
+  "storageLocalLabel": {
+    "message": "ローカル",
+    "description": "ローカルストレージ使用量のラベル"
+  },
+  "demoLinkOpen": {
+    "message": "開く",
+    "description": "デモモードリンクを開くボタンラベル"
   }
 }

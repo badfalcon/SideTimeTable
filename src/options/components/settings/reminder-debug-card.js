@@ -7,7 +7,7 @@ import { sendMessage } from '../../../lib/chrome-messaging.js';
 export class ReminderDebugCard extends CardComponent {
     constructor() {
         super({
-            title: 'Reminder Debug & Test',
+            title: window.getLocalizedMessage('reminderDebugTitle') || 'Reminder Debug & Test',
             icon: 'fas fa-bug',
             iconColor: 'text-warning'
         });
