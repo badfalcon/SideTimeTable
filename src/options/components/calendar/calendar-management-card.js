@@ -4,6 +4,7 @@
 import { CardComponent } from '../base/card-component.js';
 import { logError } from '../../../lib/utils.js';
 import { loadSelectedCalendars, saveSelectedCalendars } from '../../../lib/settings-storage.js';
+import { sendMessage } from '../../../lib/chrome-messaging.js';
 
 export class CalendarManagementCard extends CardComponent {
     constructor(onCalendarSelectionChange) {
@@ -219,10 +220,8 @@ export class CalendarManagementCard extends CardComponent {
         this._setLoading(true);
 
         try {
-            const response = await new Promise((resolve) => {
-                const requestId = `req-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
-                chrome.runtime.sendMessage({action: 'getCalendarList', requestId}, resolve);
-            });
+            const requestId = `req-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+            const response = await sendMessage({action: 'getCalendarList', requestId});
 
             if (response.error) {
                 const detail = response.errorType ? `${response.error} (${response.errorType})` : response.error;

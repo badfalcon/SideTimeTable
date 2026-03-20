@@ -2,6 +2,7 @@
  * GoogleEventModal - Google event details modal
  */
 import { ModalComponent } from './modal-component.js';
+import { sendMessage } from '../../../lib/chrome-messaging.js';
 
 export class GoogleEventModal extends ModalComponent {
     constructor(options = {}) {
@@ -483,19 +484,11 @@ export class GoogleEventModal extends ModalComponent {
         });
 
         try {
-            const result = await new Promise((resolve, reject) => {
-                chrome.runtime.sendMessage({
-                    action: 'respondToEvent',
-                    calendarId: event.calendarId,
-                    eventId: event.id,
-                    response: response
-                }, (res) => {
-                    if (chrome.runtime.lastError) {
-                        reject(chrome.runtime.lastError);
-                    } else {
-                        resolve(res);
-                    }
-                });
+            const result = await sendMessage({
+                action: 'respondToEvent',
+                calendarId: event.calendarId,
+                eventId: event.id,
+                response: response
             });
 
             if (result && result.success) {

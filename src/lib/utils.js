@@ -51,30 +51,17 @@ export function getFormattedDateFromDate(date) {
     return `${year}-${month}-${day}`;
 }
 
+import { sendMessage } from './chrome-messaging.js';
+
 /**
  * Reload the side panel
  * @returns {Promise} A promise for the reload process
  */
-export function reloadSidePanel() {
-    return new Promise((resolve, reject) => {
-        try {
-            chrome.runtime.sendMessage({ action: "reloadSideTimeTable" }, (response) => {
-                if (chrome.runtime.lastError) {
-                    reject(chrome.runtime.lastError);
-                    return;
-                }
-
-                if (!response || !response.success) {
-                    reject(new Error('Reload failed'));
-                    return;
-                }
-
-                resolve();
-            });
-        } catch (error) {
-            reject(error);
-        }
-    });
+export async function reloadSidePanel() {
+    const response = await sendMessage({ action: "reloadSideTimeTable" });
+    if (!response || !response.success) {
+        throw new Error('Reload failed');
+    }
 }
 
 /**
