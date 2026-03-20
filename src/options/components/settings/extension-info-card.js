@@ -7,8 +7,8 @@ export class ExtensionInfoCard extends CardComponent {
     constructor() {
         super({
             id: 'extension-info-card',
-            title: 'Extension Info',
-            subtitle: 'Information about this extension.',
+            title: window.getLocalizedMessage('extensionInfoCardTitle') || 'Extension Info',
+            subtitle: window.getLocalizedMessage('extensionInfoCardSubtitle') || 'Information about this extension.',
             icon: 'fas fa-info-circle',
             iconColor: 'text-secondary',
             hidden: true
@@ -27,9 +27,9 @@ export class ExtensionInfoCard extends CardComponent {
 
         const manifest = chrome.runtime?.getManifest?.() || {};
         const infoItems = [
-            { label: 'Extension ID', value: chrome.runtime?.id || 'Cannot retrieve', copyable: true },
-            { label: 'Manifest Version', value: manifest.manifest_version || 'Unknown' },
-            { label: 'Version', value: manifest.version || 'Unknown' }
+            { label: window.getLocalizedMessage('extensionIdLabel') || 'Extension ID', value: chrome.runtime?.id || (window.getLocalizedMessage('cannotRetrieve') || 'Cannot retrieve'), copyable: true },
+            { label: window.getLocalizedMessage('manifestVersionLabel') || 'Manifest Version', value: manifest.manifest_version || (window.getLocalizedMessage('unknown') || 'Unknown') },
+            { label: window.getLocalizedMessage('versionLabel') || 'Version', value: manifest.version || (window.getLocalizedMessage('unknown') || 'Unknown') }
         ];
 
         infoItems.forEach(item => infoList.appendChild(this._createInfoRow(item)));

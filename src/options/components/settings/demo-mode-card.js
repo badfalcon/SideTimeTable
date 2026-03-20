@@ -13,8 +13,8 @@ export class DemoModeCard extends CardComponent {
     constructor(onSettingsChange) {
         super({
             id: 'demo-mode-card',
-            title: 'Demo Mode',
-            subtitle: 'Display sample data (no API access will be made).',
+            title: window.getLocalizedMessage('demoModeCardTitle') || 'Demo Mode',
+            subtitle: window.getLocalizedMessage('demoModeCardSubtitle') || 'Display sample data (no API access will be made).',
             icon: 'fas fa-flask',
             iconColor: 'text-warning',
             hidden: true
@@ -206,7 +206,7 @@ export class DemoModeCard extends CardComponent {
             <div class="d-flex align-items-center gap-2">
                 <code class="flex-grow-1 text-truncate small border rounded px-2 py-1 bg-white">${demoUrl}</code>
                 <a href="${demoUrl}" target="_blank" class="btn btn-sm btn-outline-warning text-nowrap">
-                    <i class="fas fa-external-link-alt me-1"></i>Open
+                    <i class="fas fa-external-link-alt me-1"></i>${window.getLocalizedMessage('demoLinkOpen') || 'Open'}
                 </a>
             </div>
         `;
