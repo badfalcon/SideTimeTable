@@ -1,4 +1,4 @@
-import { StorageHelper } from '../src/lib/storage-helper.js';
+import { StorageHelper } from '../../src/lib/storage-helper.js';
 
 describe('StorageHelper', () => {
   beforeEach(() => {

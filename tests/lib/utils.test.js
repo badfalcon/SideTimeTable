@@ -12,7 +12,7 @@ import {
   getRecurringEventsForDate,
   addRecurringEventException,
   deleteRecurringEvent,
-} from '../src/lib/utils.js';
+} from '../../src/lib/utils.js';
 
 describe('getContrastColor', () => {
   test('returns black for light backgrounds', () => {

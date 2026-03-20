@@ -5,7 +5,7 @@ import {
   isSameDay,
   calculateTimeDifference,
   calculateWorkHours,
-} from '../src/lib/time-utils.js';
+} from '../../src/lib/time-utils.js';
 
 describe('createTimeOnDate', () => {
   test('creates a new Date with specified time on the given date', () => {
