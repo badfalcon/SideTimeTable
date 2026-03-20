@@ -4,15 +4,10 @@
  * The options page using the new component-based architecture
  */
 
-import {
-    DEFAULT_SETTINGS,
-    COLOR_CSS_VARS,
-    generateTimeList,
-    loadSettings,
-    saveSettings,
-    reloadSidePanel,
-    logError
-} from '../lib/utils.js';
+import { generateTimeList, reloadSidePanel, logError } from '../lib/utils.js';
+import { DEFAULT_SETTINGS, COLOR_CSS_VARS } from '../lib/constants.js';
+import { loadSettings, saveSettings } from '../lib/settings-storage.js';
+import { sendMessage } from '../lib/chrome-messaging.js';
 import { getThemeById, resolveThemeColors } from '../lib/color-themes.js';
 import { StorageHelper } from '../lib/storage-helper.js';
 import { isDemoMode, setDemoMode, getDemoOptionsSettings, getDemoCalendars, DEMO_BUILD } from '../lib/demo-data.js';
@@ -237,9 +232,7 @@ class OptionsPageManager {
 
         try {
             // Check the Google integration status
-            const response = await new Promise((resolve) => {
-                chrome.runtime.sendMessage({action: 'checkGoogleAuth'}, resolve);
-            });
+            const response = await sendMessage({action: 'checkGoogleAuth'});
 
             if (response.authenticated) {
                 this.googleIntegrationCard.updateIntegrationStatus(true);
@@ -271,9 +264,7 @@ class OptionsPageManager {
                 this.googleIntegrationCard.setButtonEnabled(false);
                 this.googleIntegrationCard.updateIntegrationStatus(false, window.getLocalizedMessage('connectingStatus') || 'Connecting...');
 
-                const response = await new Promise((resolve) => {
-                    chrome.runtime.sendMessage({action: 'authenticateGoogle'}, resolve);
-                });
+                const response = await sendMessage({action: 'authenticateGoogle'});
 
                 if (response.success) {
                     this.googleIntegrationCard.updateIntegrationStatus(true);
@@ -291,9 +282,7 @@ class OptionsPageManager {
                 this.googleIntegrationCard.setButtonEnabled(false);
                 this.googleIntegrationCard.updateIntegrationStatus(false, window.getLocalizedMessage('disconnectingStatus') || 'Disconnecting...');
 
-                const response = await new Promise((resolve) => {
-                    chrome.runtime.sendMessage({action: 'disconnectGoogle'}, resolve);
-                });
+                const response = await sendMessage({action: 'disconnectGoogle'});
 
                 if (response.success) {
                     const settings = await loadSettings();
@@ -412,7 +401,7 @@ class OptionsPageManager {
             await saveSettings(updatedSettings);
 
             // Notify background script about the change
-            chrome.runtime.sendMessage({
+            sendMessage({
                 action: 'updateReminderSettings',
                 settings: reminderSettings
             });
@@ -478,7 +467,7 @@ class OptionsPageManager {
      */
     _reloadSidePanel() {
         try {
-            chrome.runtime.sendMessage({
+            sendMessage({
                 action: 'reloadSideTimeTable'
             });
         } catch (error) {

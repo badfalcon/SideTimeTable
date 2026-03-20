@@ -18,14 +18,12 @@ import {
 
 import { EventLayoutManager } from './time-manager.js';
 import { GoogleEventManager, LocalEventManager } from './event-handlers.js';
-import {
-    generateTimeList, loadSettings, RECURRENCE_TYPES,
-    loadLocalEventsForDate, saveLocalEventsForDate,
-    loadRecurringEvents, saveRecurringEvents,
-    addRecurringEventException, deleteRecurringEvent,
-    migrateEventDataToLocal
-} from '../lib/utils.js';
-import { isToday } from '../lib/time-utils.js';
+import { LocalEventService } from './services/local-event-service.js';
+import { DateNavigationService } from './services/date-navigation-service.js';
+import { generateTimeList } from '../lib/utils.js';
+import { loadSettings } from '../lib/settings-storage.js';
+import { migrateEventDataToLocal } from '../lib/event-storage.js';
+import { sendMessage } from '../lib/chrome-messaging.js';
 import { getThemeById, resolveThemeColors } from '../lib/color-themes.js';
 import { setDemoMode } from '../lib/demo-data.js';
 import { AlarmManager } from '../lib/alarm-manager.js';
@@ -59,12 +57,13 @@ class SidePanelUIController {
         this.initialSetupComponent = null;
         this.memoComponent = null;
 
+        // Services
+        this.localEventService = new LocalEventService();
+        this.dateNavService = new DateNavigationService();
+
         // The state management
-        this.currentDate = new Date();
-        this.currentDate.setHours(0, 0, 0, 0);
         this.updateInterval = null;
         this.loadEventsDebounceTimeout = null;
-        this.wasViewingToday = true; // Track if the user was viewing today
         this.loadRequestId = 0; // Tracks the latest load request to prevent stale results
     }
 
@@ -346,7 +345,7 @@ class SidePanelUIController {
             }
 
             // Set the current date
-            this.headerComponent.setCurrentDate(this.currentDate);
+            this.headerComponent.setCurrentDate(this.dateNavService.getDate());
 
         } catch (error) {
             console.warn('Failed to apply initial configuration:', error);
@@ -385,7 +384,7 @@ class SidePanelUIController {
         this._autoSyncReminders();
 
         // Set initial date to TimelineComponent
-        this.timelineComponent.setCurrentDate(this.currentDate);
+        this.timelineComponent.setCurrentDate(this.dateNavService.getDate());
 
         await this._loadEventsForCurrentDate();
         this._scrollToAppropriateTime();
@@ -427,7 +426,7 @@ class SidePanelUIController {
     async _loadEventsForCurrentDate() {
         // Increment request ID and capture it; stale responses from older requests will be discarded
         const requestId = ++this.loadRequestId;
-        const targetDate = new Date(this.currentDate);
+        const targetDate = this.dateNavService.getDate();
 
         try {
             // Clear existing events (prevent duplicates)
@@ -464,7 +463,7 @@ class SidePanelUIController {
      * @private
      */
     _scrollToAppropriateTime() {
-        if (isToday(this.currentDate)) {
+        if (this.dateNavService.isViewingToday()) {
             // For today, scroll to current time
             this.timelineComponent.scrollToCurrentTime();
         } else {
@@ -485,16 +484,12 @@ class SidePanelUIController {
         // Current time lines are auto-updated by each component,
         // so here we only monitor date changes
         this.updateInterval = setInterval(() => {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-
             // Only auto-advance to today if the user was previously viewing today
             // This prevents forced switching when the user is intentionally viewing past/future dates
-            if (this.wasViewingToday && !isToday(this.currentDate)) {
-                this.currentDate = today;
-                this.wasViewingToday = true; // Still viewing today after the auto-advance
-                this.headerComponent.setCurrentDate(this.currentDate);
-                this.timelineComponent.setCurrentDate(this.currentDate);
+            if (this.dateNavService.advanceToTodayIfNeeded()) {
+                const currentDate = this.dateNavService.getDate();
+                this.headerComponent.setCurrentDate(currentDate);
+                this.timelineComponent.setCurrentDate(currentDate);
                 this.timelineComponent.setCurrentTimeLineVisible(true);
                 this._loadEventsForCurrentDate();
             }
@@ -506,11 +501,8 @@ class SidePanelUIController {
      * @private
      */
     _handleDateChange(date) {
-        this.currentDate = new Date(date);
-        this.currentDate.setHours(0, 0, 0, 0);
-
-        // Track if the user is viewing today
-        this.wasViewingToday = isToday(this.currentDate);
+        this.dateNavService.setDate(date);
+        const currentDate = this.dateNavService.getDate();
 
         // Immediately remove the old date events
         this.timelineComponent.clearAllEvents();
@@ -521,13 +513,13 @@ class SidePanelUIController {
         }
 
         // Set the date to TimelineComponent
-        this.timelineComponent.setCurrentDate(this.currentDate);
+        this.timelineComponent.setCurrentDate(currentDate);
 
         // Reload the events
         this._debounceLoadEvents();
 
         // Update the current time line display
-        this.timelineComponent.setCurrentTimeLineVisible(isToday(this.currentDate));
+        this.timelineComponent.setCurrentTimeLineVisible(this.dateNavService.isViewingToday());
 
         // Adjust the scroll position
         this._scrollToAppropriateTime();
@@ -556,103 +548,15 @@ class SidePanelUIController {
      */
     async _handleSaveLocalEvent(eventData, mode) {
         try {
-            const isRecurring = eventData.recurrence && eventData.recurrence.type !== RECURRENCE_TYPES.NONE;
-
             if (mode === 'create') {
-                const newEvent = {
-                    id: `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                    title: eventData.title,
-                    description: eventData.description || '',
-                    startTime: eventData.startTime,
-                    endTime: eventData.endTime,
-                    reminder: eventData.reminder !== false
-                };
-
-                if (isRecurring) {
-                    // Save as recurring event
-                    newEvent.recurrence = eventData.recurrence;
-                    const recurringEvents = await loadRecurringEvents();
-                    recurringEvents.push(newEvent);
-                    await saveRecurringEvents(recurringEvents);
-                } else {
-                    // Save as date-specific event
-                    const localEvents = await loadLocalEventsForDate(this.currentDate);
-                    // Filter out recurring instances before adding
-                    const nonRecurringEvents = localEvents.filter(e => !e.isRecurringInstance);
-                    nonRecurringEvents.push(newEvent);
-                    await saveLocalEventsForDate(nonRecurringEvents, this.currentDate);
-
-                    // Set reminder if enabled
-                    if (newEvent.reminder) {
-                        const dateStr = this.getCurrentDateString();
-                        await AlarmManager.setReminder(newEvent, dateStr);
-                    }
-                }
+                await this.localEventService.createEvent(eventData, this.dateNavService.getDate());
             } else if (mode === 'edit') {
                 const currentEvent = this.localEventModal.currentEvent;
-
-                if (currentEvent.isRecurringInstance || currentEvent.recurrence) {
-                    // Editing a recurring event
-                    await this._handleEditRecurringEvent(eventData, currentEvent, isRecurring);
-                } else {
-                    // Edit a regular date-specific event
-                    const localEvents = await loadLocalEventsForDate(this.currentDate);
-                    // Filter out recurring instances
-                    const nonRecurringEvents = localEvents.filter(e => !e.isRecurringInstance);
-                    const eventIndex = nonRecurringEvents.findIndex(e => e.id === currentEvent.id);
-
-                    if (eventIndex !== -1) {
-                        const existingEvent = nonRecurringEvents[eventIndex];
-                        const dateStr = this.getCurrentDateString();
-
-                        // Clear old reminder
-                        if (existingEvent.id) {
-                            await AlarmManager.clearReminder(existingEvent.id, dateStr);
-                        }
-
-                        if (isRecurring) {
-                            // Convert to recurring event
-                            const newRecurringEvent = {
-                                id: existingEvent.id || `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                                title: eventData.title,
-                                description: eventData.description || '',
-                                startTime: eventData.startTime,
-                                endTime: eventData.endTime,
-                                reminder: eventData.reminder !== false,
-                                recurrence: eventData.recurrence
-                            };
-
-                            // Remove from date-specific and add to recurring
-                            nonRecurringEvents.splice(eventIndex, 1);
-                            await saveLocalEventsForDate(nonRecurringEvents, this.currentDate);
-
-                            const recurringEvents = await loadRecurringEvents();
-                            recurringEvents.push(newRecurringEvent);
-                            await saveRecurringEvents(recurringEvents);
-                        } else {
-                            // Update as regular event
-                            nonRecurringEvents[eventIndex] = {
-                                id: existingEvent.id || `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                                title: eventData.title,
-                                description: eventData.description || '',
-                                startTime: eventData.startTime,
-                                endTime: eventData.endTime,
-                                reminder: eventData.reminder !== false
-                            };
-
-                            await saveLocalEventsForDate(nonRecurringEvents, this.currentDate);
-
-                            // Set new reminder if enabled
-                            if (nonRecurringEvents[eventIndex].reminder) {
-                                await AlarmManager.setReminder(nonRecurringEvents[eventIndex], dateStr);
-                            }
-                        }
-                    }
-                }
+                await this.localEventService.updateEvent(eventData, currentEvent, this.dateNavService.getDate());
             }
 
             // Reload event display
-            await this.localEventManager.loadLocalEvents(this.currentDate);
+            await this.localEventManager.loadLocalEvents(this.dateNavService.getDate());
 
             await this._syncRemindersIfNeeded();
 
@@ -668,50 +572,6 @@ class SidePanelUIController {
     }
 
     /**
-     * Handle editing a recurring event
-     * @private
-     */
-    async _handleEditRecurringEvent(eventData, currentEvent, isRecurring) {
-        const recurringEvents = await loadRecurringEvents();
-        const eventId = currentEvent.originalId || currentEvent.id;
-        const eventIndex = recurringEvents.findIndex(e => e.id === eventId);
-
-        if (eventIndex !== -1) {
-            // Update the entire series
-            recurringEvents[eventIndex] = {
-                ...recurringEvents[eventIndex],
-                title: eventData.title,
-                description: eventData.description || '',
-                startTime: eventData.startTime,
-                endTime: eventData.endTime,
-                reminder: eventData.reminder !== false,
-                recurrence: isRecurring ? eventData.recurrence : null
-            };
-
-            // If recurrence was removed, convert to date-specific event
-            if (!isRecurring) {
-                const removedEvent = recurringEvents.splice(eventIndex, 1)[0];
-                await saveRecurringEvents(recurringEvents);
-
-                // Create a date-specific event instead
-                const localEvents = await loadLocalEventsForDate(this.currentDate);
-                const nonRecurringEvents = localEvents.filter(e => !e.isRecurringInstance);
-                nonRecurringEvents.push({
-                    id: removedEvent.id,
-                    title: eventData.title,
-                    description: eventData.description || '',
-                    startTime: eventData.startTime,
-                    endTime: eventData.endTime,
-                    reminder: eventData.reminder !== false
-                });
-                await saveLocalEventsForDate(nonRecurringEvents, this.currentDate);
-            } else {
-                await saveRecurringEvents(recurringEvents);
-            }
-        }
-    }
-
-    /**
      * Local event deletion handler
      * @private
      * @param {Object} event - The event to delete
@@ -719,37 +579,10 @@ class SidePanelUIController {
      */
     async _handleDeleteLocalEvent(event, deleteType = null) {
         try {
-            // Check if this is a recurring event
-            if (event.isRecurringInstance || event.recurrence) {
-                const eventId = event.originalId || event.id;
-
-                if (deleteType === 'all') {
-                    // Delete entire series
-                    await deleteRecurringEvent(eventId);
-                } else {
-                    // Delete only this instance (add exception)
-                    const dateStr = event.instanceDate || this.getCurrentDateString();
-                    await addRecurringEventException(eventId, dateStr);
-                }
-            } else {
-                // Regular date-specific event
-                const localEvents = await loadLocalEventsForDate(this.currentDate);
-                // Filter out recurring instances
-                const nonRecurringEvents = localEvents.filter(e => !e.isRecurringInstance);
-
-                // Clear reminder if exists
-                if (event.id) {
-                    const dateStr = this.getCurrentDateString();
-                    await AlarmManager.clearReminder(event.id, dateStr);
-                }
-
-                const updatedEvents = nonRecurringEvents.filter(e => e.id !== event.id);
-
-                await saveLocalEventsForDate(updatedEvents, this.currentDate);
-            }
+            await this.localEventService.deleteEvent(event, deleteType, this.dateNavService.getDate());
 
             // Reload event display
-            await this.localEventManager.loadLocalEvents(this.currentDate);
+            await this.localEventManager.loadLocalEvents(this.dateNavService.getDate());
 
             await this._syncRemindersIfNeeded();
 
@@ -778,15 +611,7 @@ class SidePanelUIController {
      * @private
      */
     getCurrentDateString() {
-        // Use the currently displayed date from timeline, or today if not set
-        const targetDate = this.currentDate || new Date();
-
-        // Use local timezone to avoid date shifting issues
-        const year = targetDate.getFullYear();
-        const month = String(targetDate.getMonth() + 1).padStart(2, '0');
-        const day = String(targetDate.getDate()).padStart(2, '0');
-
-        return `${year}-${month}-${day}`;
+        return this.dateNavService.getDateString();
     }
 
     /**
@@ -797,7 +622,7 @@ class SidePanelUIController {
         try {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            if (this.currentDate >= today) {
+            if (this.dateNavService.getDate() >= today) {
                 await AlarmManager.setDateReminders(this.getCurrentDateString());
             }
         } catch (error) {
@@ -890,7 +715,7 @@ class SidePanelUIController {
     async _handleSyncReminders() {
         try {
             // Send message to background to force sync
-            const response = await chrome.runtime.sendMessage({ action: 'forceSyncReminders' });
+            const response = await sendMessage({ action: 'forceSyncReminders' });
 
             if (response.success) {
                 // Reload events to reflect any changes
@@ -915,7 +740,7 @@ class SidePanelUIController {
     async _autoSyncReminders() {
         try {
             // Send message to background to auto-sync with throttle
-            const response = await chrome.runtime.sendMessage({ action: 'autoSyncReminders' });
+            const response = await sendMessage({ action: 'autoSyncReminders' });
 
             if (!response.success) {
                 console.warn('[Auto Sync] Failed to auto-sync reminders:', response.error);

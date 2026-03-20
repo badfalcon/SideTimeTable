@@ -4,82 +4,19 @@
  * This file manages the Google Calendar events and the local events.
  */
 
-import {
-    loadLocalEvents,
-    loadLocalEventsForDate,
-    loadSettings,
-    logError,
-    TIME_CONSTANTS,
-    RECURRENCE_TYPES
-} from '../lib/utils.js';
+import { logError } from '../lib/utils.js';
+import { RECURRENCE_TYPES } from '../lib/constants.js';
+import { loadSettings } from '../lib/settings-storage.js';
+import { loadLocalEvents, loadLocalEventsForDate } from '../lib/event-storage.js';
+import { sendMessage } from '../lib/chrome-messaging.js';
 import {createTimeOnDate} from '../lib/time-utils.js';
 import {getDemoEvents, getDemoLocalEvents, isDemoMode} from '../lib/demo-data.js';
-
-/**
- * Offset in pixels for the 30-min top extension zone (-0:30 to 0:00)
- */
-const TIMELINE_OFFSET = 30;
-
-/**
- * Add a click listener that fires only when the mouse hasn't moved significantly (i.e. not a drag).
- */
-function onClickOnly(el, handler, threshold = 5) {
-    let sx, sy;
-    el.addEventListener('mousedown', (e) => { sx = e.clientX; sy = e.clientY; });
-    el.addEventListener('click', (e) => {
-        if ((e.clientX - sx) ** 2 + (e.clientY - sy) ** 2 <= threshold ** 2) handler(e);
-    });
-}
-
-/**
- * Constants for event styling and layout
- */
-const EVENT_STYLING = {
-    DURATION_THRESHOLDS: {
-        MICRO: 15,     // 15 minutes or less → no vertical padding
-        COMPACT: 30,   // 30 minutes or less → reduced vertical padding
-        DETAILED: 45   // 45 minutes or more → show location/description details
-    },
-    HEIGHT: {
-        MIN_HEIGHT: 15,      // Minimum clickable height in pixels
-    },
-    CSS_CLASSES: {
-        MICRO: 'event-micro',       // Duration-based: controls vertical padding only
-        COMPACT: 'event-compact'    // Duration-based: controls vertical padding only
-    },
-    DEFAULT_VALUES: {
-        ZERO_DURATION_MINUTES: 15,    // Default duration for zero-duration events
-        INITIAL_LEFT_OFFSET: 40       // Default left position (30px time labels + 5px margin)
-    }
-};
-
-/**
- * Apply duration-based styling to event element.
- * - height: set to raw duration px (box-sizing:border-box keeps rendered size = duration)
- * - class: event-micro / event-compact added for vertical padding control only
- *   (horizontal padding / font-size are managed separately by EventLayoutManager
- *    via compact / micro classes based on lane density)
- * @param {HTMLElement} eventDiv - The event element
- * @param {number} duration - Duration in minutes
- * @param {string} baseClasses - Base CSS classes (e.g., 'event google-event')
- */
-function applyDurationBasedStyling(eventDiv, duration, baseClasses) {
-    eventDiv.style.height = `${Math.max(duration, EVENT_STYLING.HEIGHT.MIN_HEIGHT)}px`;
-
-    let sizeClass = '';
-    if (duration <= EVENT_STYLING.DURATION_THRESHOLDS.MICRO) {
-        sizeClass = EVENT_STYLING.CSS_CLASSES.MICRO;
-    } else if (duration <= EVENT_STYLING.DURATION_THRESHOLDS.COMPACT) {
-        sizeClass = EVENT_STYLING.CSS_CLASSES.COMPACT;
-    }
-
-    eventDiv.className = `${baseClasses} ${sizeClass}`.trim();
-
-    // Add detailed class for longer events (shows location/description)
-    if (duration >= EVENT_STYLING.DURATION_THRESHOLDS.DETAILED) {
-        eventDiv.classList.add('event-detailed');
-    }
-}
+import {
+    EVENT_STYLING,
+    onClickOnly,
+    resolveLocaleSettings,
+    EventElementFactory
+} from './event-element-factory.js';
 
 /**
  * GoogleEventManager - The Google event management class
@@ -130,21 +67,14 @@ export class GoogleEventManager {
         this.lastFetchDate = targetDateStr;
 
         // Fetch the events (use the Google colors directly)
-        this.currentFetchPromise = new Promise((resolve, reject) => {
+        this.currentFetchPromise = (() => {
             const requestId = `req-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
             const message = { action: "getEvents", requestId };
             if (targetDate) {
                 message.targetDate = targetDate.toISOString();
             }
-            
-            chrome.runtime.sendMessage(message, (response) => {
-                if (chrome.runtime.lastError) {
-                    reject(chrome.runtime.lastError);
-                    return;
-                }
-                resolve(response);
-            });
-        })
+            return sendMessage(message);
+        })()
             .then(async response => {
                 // Clear the previous display
                 this.googleEventsDiv.innerHTML = '';
@@ -238,10 +168,11 @@ export class GoogleEventManager {
                     case 'focusTime':
                     case 'outOfOffice':
                         continue;
-                    case 'default':
+                    case 'default': {
                         const uniqueEvent = { ...event, uniqueId };
                         await this._createGoogleEventElement(uniqueEvent);
                         break;
+                    }
                     default:
                 }
             } catch (error) {
@@ -261,10 +192,6 @@ export class GoogleEventManager {
             return;
         }
 
-        const eventDiv = document.createElement('div');
-        eventDiv.className = 'event google-event';
-        eventDiv.title = event.summary;
-
         const startDate = new Date(event.start.dateTime || event.start.date);
         let endDate = new Date(event.end.dateTime || event.end.date);
 
@@ -272,6 +199,15 @@ export class GoogleEventManager {
         if (startDate.getTime() >= endDate.getTime()) {
             endDate = new Date(startDate.getTime() + EVENT_STYLING.DEFAULT_VALUES.ZERO_DURATION_MINUTES * 60 * 1000);
         }
+
+        // Create the positioned event element via the factory
+        const { eventDiv } = EventElementFactory.createEventElement({
+            startDate,
+            endDate,
+            cssClass: 'event google-event',
+            tooltip: event.summary,
+            initialWidth: this.eventLayoutManager.maxWidth
+        });
 
         // Add time information to data attributes
         eventDiv.dataset.startTime = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -290,27 +226,12 @@ export class GoogleEventManager {
             }
         });
 
-        // Calculate position in the 24-hour coordinate system (convert minutes from 0:00 to pixels)
-        const startOffset = (startDate.getHours() * 60 + startDate.getMinutes()) + TIMELINE_OFFSET;
-        const duration = (endDate - startDate) / TIME_CONSTANTS.MINUTE_MILLIS;
-
-        // Apply duration-based styling
-        applyDurationBasedStyling(eventDiv, duration, 'event google-event');
-
-        eventDiv.style.top = `${startOffset}px`;
-
-        // Set the initial width and position to prevent visible resize during layout calculation
-        // This will be overridden by EventLayoutManager, but prevents initial flash
-        const initialWidth = this.eventLayoutManager.maxWidth;
-        eventDiv.style.width = `${initialWidth}px`;
-        eventDiv.style.left = `${EVENT_STYLING.DEFAULT_VALUES.INITIAL_LEFT_OFFSET}px`;
-
         // Apply the Google colors directly (unless disabled by user setting)
         if (this.useGoogleCalendarColors && event.calendarBackgroundColor) {
             eventDiv.style.backgroundColor = event.calendarBackgroundColor;
             eventDiv.style.color = event.calendarForegroundColor;
         }
-        
+
         // Set the locale-aware time display asynchronously (with attendee information)
         await this._setEventContentWithLocale(eventDiv, startDate, event.summary, event);
 
@@ -341,11 +262,7 @@ export class GoogleEventManager {
      * @private
      */
     async _setEventContentWithLocale(eventDiv, startDate, summary, event) {
-        // Resolve locale and time format in parallel
-        const [locale, timeFormat] = await Promise.all([
-            typeof window.getCurrentLocale === 'function' ? window.getCurrentLocale() : Promise.resolve('en'),
-            typeof window.getTimeFormatPreference === 'function' ? window.getTimeFormatPreference() : Promise.resolve('24h')
-        ]);
+        const [locale, timeFormat] = await resolveLocaleSettings();
 
         // Build HH:mm
         const startHours = String(startDate.getHours()).padStart(2, '0');
@@ -357,17 +274,8 @@ export class GoogleEventManager {
         // Display time and title without attendance status
         eventDiv.innerHTML = '';
 
-        // Primary line: time + title
-        const primaryLine = document.createElement('div');
-        primaryLine.className = 'event-primary-line';
-        const timeSpan = document.createElement('span');
-        timeSpan.className = 'event-time';
-        timeSpan.textContent = `${formattedTime} - `;
-        primaryLine.appendChild(timeSpan);
-        const titleSpan = document.createElement('span');
-        titleSpan.className = 'event-title';
-        titleSpan.textContent = summary;
-        primaryLine.appendChild(titleSpan);
+        // Primary line: time + title (via factory)
+        const primaryLine = EventElementFactory.createPrimaryLine(formattedTime, summary);
         eventDiv.appendChild(primaryLine);
 
         // Detail lines for larger blocks
@@ -399,7 +307,15 @@ export class GoogleEventManager {
         }
     }
 
-
+    /**
+     * Clean up resources
+     */
+    destroy() {
+        if (this.googleEventsDiv) this.googleEventsDiv.innerHTML = '';
+        this.eventLayoutManager = null;
+        this.currentFetchPromise = null;
+        this.lastFetchDate = null;
+    }
 }
 
 /**
@@ -434,7 +350,7 @@ export class LocalEventManager {
     async loadLocalEvents(targetDate = null) {
         // Update the target date
         this.currentTargetDate = targetDate || new Date();
-        
+
         this.localEventsDiv.innerHTML = ''; // Clear the previous display
 
         // Use mock data in demo mode
@@ -476,36 +392,26 @@ export class LocalEventManager {
      */
     async _createEventDiv(event) {
         const { title, startTime, endTime } = event;
-        const eventDiv = document.createElement('div');
-        eventDiv.className = 'event local-event';
-        eventDiv.title = event.description ? `${title}\n${event.description}` : title;
 
         // Set the time on the target date
         const [startHours, startMinutes] = startTime.split(':');
         const [endHours, endMinutes] = endTime.split(':');
-        
+
         const startDate = createTimeOnDate(this.currentTargetDate, parseInt(startHours), parseInt(startMinutes));
         const endDate = createTimeOnDate(this.currentTargetDate, parseInt(endHours), parseInt(endMinutes));
+
+        // Create the positioned event element via the factory
+        const { eventDiv } = EventElementFactory.createEventElement({
+            startDate,
+            endDate,
+            cssClass: 'event local-event',
+            tooltip: event.description ? `${title}\n${event.description}` : title,
+            initialWidth: this.eventLayoutManager.maxWidth
+        });
 
         // Add time information to data attributes
         eventDiv.dataset.startTime = startTime;
         eventDiv.dataset.endTime = endTime;
-
-        // Calculate position in 24-hour coordinate system (convert minutes from 0:00 to pixels)
-        const startOffset = (startDate.getHours() * 60 + startDate.getMinutes()) + TIMELINE_OFFSET;
-        const duration = (endDate.getTime() - startDate.getTime()) / TIME_CONSTANTS.MINUTE_MILLIS;
-
-        // Apply duration-based styling
-        applyDurationBasedStyling(eventDiv, duration, 'event local-event');
-
-        eventDiv.style.top = `${startOffset}px`;
-
-        // Set the initial width and position to prevent visible resize during layout calculation
-        // This will be overridden by EventLayoutManager, but prevents initial flash
-        const initialWidth = this.eventLayoutManager.maxWidth;
-        eventDiv.style.width = `${initialWidth}px`;
-
-        eventDiv.style.left = `${EVENT_STYLING.DEFAULT_VALUES.INITIAL_LEFT_OFFSET}px`;
 
         // Check if this is a recurring event
         const isRecurring = event.isRecurringInstance || (event.recurrence && event.recurrence.type !== RECURRENCE_TYPES.NONE);
@@ -540,38 +446,24 @@ export class LocalEventManager {
      * @private
      */
     async _setLocalEventContentWithLocale(eventDiv, startTime, endTime, title, isRecurring = false, event = {}) {
-        // Resolve locale and time format in parallel
-        const [locale, timeFormat] = await Promise.all([
-            typeof window.getCurrentLocale === 'function' ? window.getCurrentLocale() : Promise.resolve('en'),
-            typeof window.getTimeFormatPreference === 'function' ? window.getTimeFormatPreference() : Promise.resolve('24h')
-        ]);
+        const [locale, timeFormat] = await resolveLocaleSettings();
 
         const formattedStart = window.formatTime(startTime, { format: timeFormat, locale });
 
         // Clear existing content
         eventDiv.innerHTML = '';
 
-        // Primary line: time + title
-        const primaryLine = document.createElement('div');
-        primaryLine.className = 'event-primary-line';
+        // Primary line: time + title (via factory, then prepend recurrence icon if needed)
+        const primaryLine = EventElementFactory.createPrimaryLine(formattedStart, title);
 
         // Add recurrence indicator if this is a recurring event
         if (isRecurring) {
             const icon = document.createElement('i');
             icon.className = 'fa-solid fa-repeat';
             icon.style.cssText = 'margin-right: 4px; font-size: 0.85em;';
-            primaryLine.appendChild(icon);
+            primaryLine.insertBefore(icon, primaryLine.firstChild);
         }
 
-        // Display time and title in the same format as Google events
-        const timeSpan = document.createElement('span');
-        timeSpan.className = 'event-time';
-        timeSpan.textContent = `${formattedStart} - `;
-        primaryLine.appendChild(timeSpan);
-        const titleSpan = document.createElement('span');
-        titleSpan.className = 'event-title';
-        titleSpan.textContent = title;
-        primaryLine.appendChild(titleSpan);
         eventDiv.appendChild(primaryLine);
 
         // Detail lines for larger blocks
@@ -599,5 +491,12 @@ export class LocalEventManager {
         });
     }
 
-
+    /**
+     * Clean up resources
+     */
+    destroy() {
+        if (this.localEventsDiv) this.localEventsDiv.innerHTML = '';
+        this.eventLayoutManager = null;
+        this.onEventClick = null;
+    }
 }

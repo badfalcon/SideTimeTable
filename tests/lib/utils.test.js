@@ -2,9 +2,16 @@ import {
   getContrastColor,
   getFormattedDateFromDate,
   logError,
-  DEFAULT_SETTINGS,
+} from '../../src/lib/utils.js';
+
+import { DEFAULT_SETTINGS } from '../../src/lib/constants.js';
+
+import {
   loadSettings,
   saveSettings,
+} from '../../src/lib/settings-storage.js';
+
+import {
   loadLocalEventsForDate,
   saveLocalEventsForDate,
   loadRecurringEvents,
@@ -12,7 +19,7 @@ import {
   getRecurringEventsForDate,
   addRecurringEventException,
   deleteRecurringEvent,
-} from '../../src/lib/utils.js';
+} from '../../src/lib/event-storage.js';
 
 describe('getContrastColor', () => {
   test('returns black for light backgrounds', () => {
