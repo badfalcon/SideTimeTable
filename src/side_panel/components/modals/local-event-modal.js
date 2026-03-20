@@ -2,7 +2,7 @@
  * LocalEventModal - Local event modal with view and edit modes
  */
 import { ModalComponent } from './modal-component.js';
-import { RECURRENCE_TYPES } from '../../../lib/utils.js';
+import { RECURRENCE_TYPES } from '../../../lib/constants.js';
 
 export class LocalEventModal extends ModalComponent {
     constructor(options = {}) {

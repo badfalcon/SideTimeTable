@@ -9,7 +9,8 @@
  */
 import { Component } from '../base/component.js';
 import { StorageHelper } from '../../../lib/storage-helper.js';
-import { DEFAULT_SETTINGS, saveSettings, loadSettings } from '../../../lib/utils.js';
+import { DEFAULT_SETTINGS } from '../../../lib/constants.js';
+import { saveSettings, loadSettings } from '../../../lib/settings-storage.js';
 import { createGoogleSignInButton } from '../../../lib/google-button-helper.js';
 
 const SETUP_STORAGE_KEY = 'initialSetupCompleted';

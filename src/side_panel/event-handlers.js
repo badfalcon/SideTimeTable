@@ -4,14 +4,10 @@
  * This file manages the Google Calendar events and the local events.
  */
 
-import {
-    loadLocalEvents,
-    loadLocalEventsForDate,
-    loadSettings,
-    logError,
-    TIME_CONSTANTS,
-    RECURRENCE_TYPES
-} from '../lib/utils.js';
+import { logError } from '../lib/utils.js';
+import { TIME_CONSTANTS, RECURRENCE_TYPES } from '../lib/constants.js';
+import { loadSettings } from '../lib/settings-storage.js';
+import { loadLocalEvents, loadLocalEventsForDate } from '../lib/event-storage.js';
 import {createTimeOnDate} from '../lib/time-utils.js';
 import {getDemoEvents, getDemoLocalEvents, isDemoMode} from '../lib/demo-data.js';
 

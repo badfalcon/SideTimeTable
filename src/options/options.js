@@ -4,15 +4,9 @@
  * The options page using the new component-based architecture
  */
 
-import {
-    DEFAULT_SETTINGS,
-    COLOR_CSS_VARS,
-    generateTimeList,
-    loadSettings,
-    saveSettings,
-    reloadSidePanel,
-    logError
-} from '../lib/utils.js';
+import { generateTimeList, reloadSidePanel, logError } from '../lib/utils.js';
+import { DEFAULT_SETTINGS, COLOR_CSS_VARS } from '../lib/constants.js';
+import { loadSettings, saveSettings } from '../lib/settings-storage.js';
 import { getThemeById, resolveThemeColors } from '../lib/color-themes.js';
 import { StorageHelper } from '../lib/storage-helper.js';
 import { isDemoMode, setDemoMode, getDemoOptionsSettings, getDemoCalendars, DEMO_BUILD } from '../lib/demo-data.js';
