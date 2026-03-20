@@ -401,7 +401,7 @@ class OptionsPageManager {
             await saveSettings(updatedSettings);
 
             // Notify background script about the change
-            chrome.runtime.sendMessage({
+            sendMessage({
                 action: 'updateReminderSettings',
                 settings: reminderSettings
             });
@@ -467,7 +467,7 @@ class OptionsPageManager {
      */
     _reloadSidePanel() {
         try {
-            chrome.runtime.sendMessage({
+            sendMessage({
                 action: 'reloadSideTimeTable'
             });
         } catch (error) {

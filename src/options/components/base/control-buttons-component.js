@@ -2,6 +2,7 @@
  * ControlButtonsComponent - The reset button component
  */
 import { StorageHelper } from '../../../lib/storage-helper.js';
+import { sendMessage } from '../../../lib/chrome-messaging.js';
 
 export class ControlButtonsComponent {
     constructor(onReset) {
@@ -87,7 +88,7 @@ export class ControlButtonsComponent {
 
             // Reload side panel so it picks up the reset state
             try {
-                chrome.runtime.sendMessage({ action: 'reloadSideTimeTable' });
+                sendMessage({ action: 'reloadSideTimeTable' });
             } catch {
                 // Non-blocking
             }
