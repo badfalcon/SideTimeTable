@@ -1,4 +1,4 @@
-import { EventLayoutManager } from '../src/side_panel/time-manager.js';
+import { EventLayoutManager } from '../../src/side_panel/time-manager.js';
 
 // Mock DOM element with classList matching the real DOM API
 function mockElement() {

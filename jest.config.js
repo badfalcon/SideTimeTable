@@ -13,7 +13,7 @@ module.exports = {
   setupFiles: ['<rootDir>/tests/setup.js'],
   collectCoverageFrom: [
     'src/**/*.js',
-    '!src/lib/bootstrap.min.js',
-    '!src/lib/popper.min.js',
+    '!src/vendor/bootstrap.min.js',
+    '!src/vendor/popper.min.js',
   ],
 };
