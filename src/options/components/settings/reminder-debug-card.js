@@ -2,11 +2,12 @@
  * ReminderDebugCard - Reminder debug & test card for the Developer tab
  */
 import { CardComponent } from '../base/card-component.js';
+import { sendMessage } from '../../../lib/chrome-messaging.js';
 
 export class ReminderDebugCard extends CardComponent {
     constructor() {
         super({
-            title: 'Reminder Debug & Test',
+            title: window.getLocalizedMessage('reminderDebugTitle') || 'Reminder Debug & Test',
             icon: 'fas fa-bug',
             iconColor: 'text-warning'
         });
@@ -69,7 +70,7 @@ export class ReminderDebugCard extends CardComponent {
      */
     async _testNotification() {
         try {
-            const response = await chrome.runtime.sendMessage({ action: 'testReminder' });
+            const response = await sendMessage({ action: 'testReminder' });
             if (response.success) {
                 alert(window.getLocalizedMessage('testNotificationSent') || 'Test notification sent! Check your notifications.');
             } else {
@@ -86,7 +87,7 @@ export class ReminderDebugCard extends CardComponent {
      */
     async _forceSyncReminders() {
         try {
-            const response = await chrome.runtime.sendMessage({ action: 'forceSyncReminders' });
+            const response = await sendMessage({ action: 'forceSyncReminders' });
             if (response.success) {
                 alert(window.getLocalizedMessage('syncCompleted') || 'Reminder sync completed! Check background console for logs.');
             } else {
@@ -103,7 +104,7 @@ export class ReminderDebugCard extends CardComponent {
      */
     async _showDebugInfo() {
         try {
-            const response = await chrome.runtime.sendMessage({ action: 'debugAlarms' });
+            const response = await sendMessage({ action: 'debugAlarms' });
             if (response.success) {
                 const info = {
                     settings: response.settings,

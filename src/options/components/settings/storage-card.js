@@ -3,7 +3,7 @@
  */
 import { CardComponent } from '../base/card-component.js';
 import { StorageHelper } from '../../../lib/storage-helper.js';
-import { STORAGE_KEYS } from '../../../lib/utils.js';
+import { STORAGE_KEYS } from '../../../lib/constants.js';
 
 export class StorageCard extends CardComponent {
     // 階層ごとの縦線の色
@@ -14,8 +14,8 @@ export class StorageCard extends CardComponent {
     constructor() {
         super({
             id: 'storage-card',
-            title: 'Storage',
-            subtitle: 'Inspect and manage Chrome storage data.',
+            title: window.getLocalizedMessage('storageCardTitle') || 'Storage',
+            subtitle: window.getLocalizedMessage('storageCardSubtitle') || 'Inspect and manage Chrome storage data.',
             icon: 'fas fa-database',
             iconColor: 'text-info',
             hidden: true
@@ -155,8 +155,8 @@ export class StorageCard extends CardComponent {
             const localPct = ((localBytesInUse / localQuota) * 100).toFixed(1);
             usageDiv.innerHTML =
                 `<i class="fas fa-hdd me-1"></i>` +
-                `Sync: <strong>${syncBytesInUse.toLocaleString()}</strong> / ${syncQuota.toLocaleString()} bytes (${syncPct}%)&nbsp;&nbsp;` +
-                `Local: <strong>${localBytesInUse.toLocaleString()}</strong> / ${localQuota.toLocaleString()} bytes (${localPct}%)`;
+                `${window.getLocalizedMessage('storageSyncLabel') || 'Sync'}: <strong>${syncBytesInUse.toLocaleString()}</strong> / ${syncQuota.toLocaleString()} bytes (${syncPct}%)&nbsp;&nbsp;` +
+                `${window.getLocalizedMessage('storageLocalLabel') || 'Local'}: <strong>${localBytesInUse.toLocaleString()}</strong> / ${localQuota.toLocaleString()} bytes (${localPct}%)`;
             content.appendChild(usageDiv);
 
             content.appendChild(this._createStorageBlock(window.getLocalizedMessage('syncStorageLabel') || 'Sync Storage (Settings)', syncData));
@@ -177,7 +177,9 @@ export class StorageCard extends CardComponent {
 
         const chevron = this._makeChevron(details, { open: true });
         const count = Array.isArray(data) ? data.length : Object.keys(data).length;
-        const countLabel = Array.isArray(data) ? 'items' : 'keys';
+        const countLabel = Array.isArray(data)
+            ? (window.getLocalizedMessage('storageItems') || 'items')
+            : (window.getLocalizedMessage('storageKeys') || 'keys');
 
         const labelEl = document.createElement('span');
         labelEl.textContent = `${label} (${count} ${countLabel})`;
@@ -198,7 +200,7 @@ export class StorageCard extends CardComponent {
         if (depth > 10) {
             const el = document.createElement('div');
             el.className = 'text-muted fst-italic small';
-            el.textContent = '(deeply nested, truncated)';
+            el.textContent = window.getLocalizedMessage('storageDeeplyNested') || '(deeply nested, truncated)';
             return el;
         }
 
@@ -216,7 +218,7 @@ export class StorageCard extends CardComponent {
             table.style.borderLeft = 'none';
             const empty = document.createElement('div');
             empty.className = 'text-muted fst-italic';
-            empty.textContent = '(empty)';
+            empty.textContent = window.getLocalizedMessage('storageEmpty') || '(empty)';
             table.appendChild(empty);
             return table;
         }
@@ -242,8 +244,8 @@ export class StorageCard extends CardComponent {
                 const metaEl = document.createElement('code');
                 metaEl.className = 'text-muted small ms-auto';
                 metaEl.textContent = Array.isArray(value)
-                    ? `[${value.length} items]`
-                    : `{${Object.keys(value).length} keys}`;
+                    ? `[${value.length} ${window.getLocalizedMessage('storageItems') || 'items'}]`
+                    : `{${Object.keys(value).length} ${window.getLocalizedMessage('storageKeys') || 'keys'}}`;
 
                 summary.appendChild(chevron);
                 summary.appendChild(keyEl);

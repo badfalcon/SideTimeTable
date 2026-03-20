@@ -1328,5 +1328,81 @@
   "reminderOn": {
     "message": "Reminder on",
     "description": "Reminder enabled status in event view"
+  },
+  "reminderDebugTitle": {
+    "message": "Reminder Debug & Test",
+    "description": "Title for the reminder debug card in developer settings"
+  },
+  "storageCardTitle": {
+    "message": "Storage",
+    "description": "Title for the storage card in developer settings"
+  },
+  "storageCardSubtitle": {
+    "message": "Inspect and manage Chrome storage data.",
+    "description": "Subtitle for the storage card in developer settings"
+  },
+  "demoModeCardTitle": {
+    "message": "Demo Mode",
+    "description": "Title for the demo mode card in developer settings"
+  },
+  "demoModeCardSubtitle": {
+    "message": "Display sample data (no API access will be made).",
+    "description": "Subtitle for the demo mode card in developer settings"
+  },
+  "extensionInfoCardTitle": {
+    "message": "Extension Info",
+    "description": "Title for the extension info card in developer settings"
+  },
+  "extensionInfoCardSubtitle": {
+    "message": "Information about this extension.",
+    "description": "Subtitle for the extension info card in developer settings"
+  },
+  "extensionIdLabel": {
+    "message": "Extension ID",
+    "description": "Label for extension ID in info card"
+  },
+  "manifestVersionLabel": {
+    "message": "Manifest Version",
+    "description": "Label for manifest version in info card"
+  },
+  "versionLabel": {
+    "message": "Version",
+    "description": "Label for version in info card"
+  },
+  "cannotRetrieve": {
+    "message": "Cannot retrieve",
+    "description": "Fallback text when a value cannot be retrieved"
+  },
+  "unknown": {
+    "message": "Unknown",
+    "description": "Fallback text for unknown values"
+  },
+  "storageItems": {
+    "message": "items",
+    "description": "Count label for array items in storage viewer"
+  },
+  "storageKeys": {
+    "message": "keys",
+    "description": "Count label for object keys in storage viewer"
+  },
+  "storageDeeplyNested": {
+    "message": "(deeply nested, truncated)",
+    "description": "Message shown when storage data is too deeply nested"
+  },
+  "storageEmpty": {
+    "message": "(empty)",
+    "description": "Message shown when storage data is empty"
+  },
+  "storageSyncLabel": {
+    "message": "Sync",
+    "description": "Label for sync storage usage"
+  },
+  "storageLocalLabel": {
+    "message": "Local",
+    "description": "Label for local storage usage"
+  },
+  "demoLinkOpen": {
+    "message": "Open",
+    "description": "Button label to open demo mode link"
   }
 }

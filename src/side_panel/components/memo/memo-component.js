@@ -4,7 +4,7 @@
 import { Component } from '../base/component.js';
 import { StorageHelper } from '../../../lib/storage-helper.js';
 import { isDemoMode, getDemoMemoContent } from '../../../lib/demo-data.js';
-import { loadSettings } from '../../../lib/utils.js';
+import { loadSettings } from '../../../lib/settings-storage.js';
 
 const DEFAULT_HEIGHT = 150;
 const MIN_HEIGHT = 80;

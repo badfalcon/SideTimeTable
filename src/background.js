@@ -7,6 +7,12 @@
 
 import { StorageHelper } from './lib/storage-helper.js';
 import { AlarmManager } from './lib/alarm-manager.js';
+import { GoogleCalendarClient } from './services/google-calendar-client.js';
+import { ReminderSyncService } from './services/reminder-sync-service.js';
+
+// Instantiate services
+const calendarClient = new GoogleCalendarClient();
+const reminderSync = new ReminderSyncService(calendarClient);
 
 // Side panel configuration - opens when clicking the action toolbar icon
 chrome.sidePanel
@@ -16,10 +22,10 @@ chrome.sidePanel
 // Handler for when the extension is installed
 chrome.runtime.onInstalled.addListener(async () => {
     // Set up daily alarm for Google event reminder sync (runs at 00:00 every day)
-    await setupDailyReminderSync();
+    await reminderSync.setupDailySync();
 
     // Initial sync on install
-    await syncAllReminders();
+    await reminderSync.syncAll();
 
     // Create context menu for "Changelog"
     if (chrome.contextMenus) {
@@ -44,14 +50,14 @@ if (chrome.contextMenus) {
 // Handler for when the browser/profile starts
 chrome.runtime.onStartup.addListener(async () => {
     // Sync reminders on startup
-    await syncAllReminders();
+    await reminderSync.syncAll();
 });
 
 // Keyboard shortcut handler
 // StackOverflow solution: don't use await, call sidePanel.open() immediately with callback
 if (chrome.commands && chrome.commands.onCommand && chrome.commands.onCommand.addListener) {
     chrome.commands.onCommand.addListener((command) => {
-        
+
         switch (command) {
             case 'open-side-panel':
                 // Minimize async operations and call sidePanel.open() immediately
@@ -63,7 +69,7 @@ if (chrome.commands && chrome.commands.onCommand && chrome.commands.onCommand.ad
                     }
                 });
                 break;
-                
+
             default:
                 console.warn("Unknown command:", command);
                 break;
@@ -73,352 +79,14 @@ if (chrome.commands && chrome.commands.onCommand && chrome.commands.onCommand.ad
     console.warn("chrome.commands API is not available. Please check the commands configuration in manifest.json.");
 }
 
-/**
- * Get Google Calendar list
- * @returns {Promise<Array>} A promise that returns the calendar list
- */
-function getCalendarList() {
-    return new Promise((resolve, reject) => {
-        try {
-            chrome.identity.getAuthToken({interactive: true}, (token) => {
-                if (chrome.runtime.lastError || !token) {
-                    const error = chrome.runtime.lastError || new Error("Failed to get authentication token");
-                    console.error("Authentication token acquisition error:", error);
-                    reject(error);
-                    return;
-                }
-
-                const calendarListUrl = `https://www.googleapis.com/calendar/v3/users/me/calendarList`;
-                fetch(calendarListUrl, {
-                    headers: {
-                        Authorization: "Bearer " + token
-                    }
-                })
-                .then(async response => {
-                    if (!response.ok) {
-                        const errorBody = await response.text();
-                        console.error(`CalendarList API error body:`, errorBody);
-                        throw new Error(`CalendarList API error: ${response.status} ${response.statusText}`);
-                    }
-                    return response.json();
-                })
-                .then(async listData => {
-                    const calendars = (listData.items || [])
-                        .filter(cal => cal.accessRole && cal.accessRole !== 'none')
-                        .map(cal => ({
-                            id: cal.id,
-                            summary: cal.summary,
-                            primary: cal.primary || false,
-                            backgroundColor: cal.backgroundColor,
-                            foregroundColor: cal.foregroundColor
-                        }));
-
-
-                    // Auto-select only the primary calendar if no calendars are currently selected
-                    try {
-                        const existing = await StorageHelper.get(['selectedCalendars'], { selectedCalendars: [] });
-                        const existingIds = existing.selectedCalendars || [];
-                        if (existingIds.length === 0) {
-                            const primaryCalendar = calendars.find(cal => cal.primary);
-                            if (primaryCalendar) {
-                                await StorageHelper.set({ selectedCalendars: [primaryCalendar.id] });
-                            }
-                        }
-                    } catch (error) {
-                        console.error("Primary calendar selection setting error:", error);
-                    }
-
-                    resolve(calendars);
-                })
-                .catch(error => {
-                    console.error("Calendar list acquisition error:", error);
-                    reject(error);
-                });
-            });
-        } catch (error) {
-            console.error("Calendar list acquisition exception:", error);
-            reject(error);
-        }
-    });
-}
-
-/**
- * Get events from Google Calendar
- * @param {Date} targetDate - The target date (today if omitted)
- * @returns {Promise<Array>} A promise that returns an array of events
- */
-function getCalendarEvents(targetDate = null) {
-    return new Promise((resolve, reject) => {
-        try {
-            // Get the list of the selected calendars
-            StorageHelper.get(['selectedCalendars'], { selectedCalendars: [] })
-                .then((storageData) => {
-                chrome.identity.getAuthToken({interactive: true}, (token) => {
-                    if (chrome.runtime.lastError || !token) {
-                        const error = chrome.runtime.lastError || new Error("Failed to get authentication token");
-                        console.error("Authentication token acquisition error:", error);
-                        reject(error);
-                        return;
-                    }
-
-                    
-                    // Set the target date range
-                    const targetDay = targetDate || new Date();
-                    const startOfDay = new Date(targetDay);
-                    startOfDay.setHours(0, 0, 0, 0);
-                    const endOfDay = new Date(targetDay);
-                    endOfDay.setHours(23, 59, 59, 999);
-                    
-                    const selectedCalendarIds = storageData.selectedCalendars || [];
-
-                    // Fetch calendarList once and reuse for both calendar selection and color info
-                    const calendarListUrl = `https://www.googleapis.com/calendar/v3/users/me/calendarList`;
-                    let calendarListDataPromise = fetch(calendarListUrl, {
-                        headers: { Authorization: "Bearer " + token }
-                    })
-                    .then(async response => {
-                        if (!response.ok) {
-                            const errorBody = await response.text();
-                            console.error(`[getCalendarEvents] CalendarList API error body:`, errorBody);
-                            console.error(`[getCalendarEvents] Token used:`, token.substring(0, 10) + '...');
-                            throw new Error(`CalendarList API error: ${response.status} ${response.statusText}`);
-                        }
-                        return response.json();
-                    });
-
-                    calendarListDataPromise
-                .then(listData => {
-                    let calendarsToFetch;
-
-                    if (selectedCalendarIds.length === 0) {
-                        const allCalendars = listData.items || [];
-                        const selectedCalendars = allCalendars.filter(cal => cal.selected);
-                        const accessibleCalendars = selectedCalendars.filter(cal => cal.accessRole && cal.accessRole !== 'none');
-
-                        const calendarsToReturn = [...accessibleCalendars];
-                        const primaryCalendar = allCalendars.find(cal => cal.primary);
-
-                        if (primaryCalendar && !calendarsToReturn.some(cal => cal.id === primaryCalendar.id)) {
-                            calendarsToReturn.unshift(primaryCalendar);
-                        }
-
-                        if (calendarsToReturn.length === 0) {
-                            calendarsToFetch = [{ id: 'primary' }];
-                        } else {
-                            calendarsToFetch = calendarsToReturn.map(c => ({ id: c.id }));
-                        }
-                    } else {
-                        calendarsToFetch = selectedCalendarIds.map(id => ({ id }));
-                    }
-
-                    // Set today's date range (use the previously calculated startOfDay/endOfDay)
-                    const baseUrl = 'https://www.googleapis.com/calendar/v3/calendars';
-
-                    const fetches = calendarsToFetch.map(cal => {
-                        const url = `${baseUrl}/${encodeURIComponent(cal.id)}/events?timeMin=${startOfDay.toISOString()}&timeMax=${endOfDay.toISOString()}&singleEvents=true&orderBy=startTime`;
-                        return fetch(url, {
-                            headers: { Authorization: "Bearer " + token }
-                        })
-                        .then(res => {
-                            if (!res.ok) {
-                                // For individual calendar errors, just log and skip
-                                console.warn(`Failed to get calendar(${cal.id}): ${res.status} ${res.statusText}`);
-                                return { items: [] };
-                            }
-                            return res.json();
-                        })
-                        .then(data => {
-                            // Add the calendar ID to each event
-                            const events = data.items || [];
-                            events.forEach(event => {
-                                event.calendarId = cal.id;
-                            });
-                            return { calendarId: cal.id, events };
-                        })
-                        .catch(err => {
-                            console.warn(`Skip exception when getting calendar(${cal.id}):`, err);
-                            return { calendarId: cal.id, events: [] };
-                        });
-                    });
-
-                    return Promise.all(fetches).then(results => ({ listData, results }));
-                })
-                .then(async ({ listData, results: resultsPerCalendar }) => {
-                    // Build color map from the already-fetched calendarList data
-                    try {
-                        let calendarColors = {};
-                        const ownedCalendarIds = new Set(
-                            (listData.items || []).filter(cal => cal.accessRole === 'owner').map(cal => cal.id)
-                        );
-                        listData.items?.forEach(cal => {
-                            calendarColors[cal.id] = {
-                                backgroundColor: cal.backgroundColor,
-                                foregroundColor: cal.foregroundColor,
-                                summary: cal.summary
-                            };
-                        });
-                        
-                        // Flatten the results and add the color information
-                        const allEvents = [];
-                        resultsPerCalendar.forEach(result => {
-                            if (result.events) {
-                                result.events.forEach(event => {
-                                    // Skip the cancelled events
-                                    if (event.status === 'cancelled') {
-                                        return;
-                                    }
-                                    
-                                    // Skip the declined events
-                                    if (event.attendees && event.attendees.some(attendee => 
-                                        attendee.self && attendee.responseStatus === 'declined'
-                                    )) {
-                                        return;
-                                    }
-                                    
-                                    const calendarInfo = calendarColors[event.calendarId];
-                                    if (calendarInfo) {
-                                        event.calendarBackgroundColor = calendarInfo.backgroundColor;
-                                        event.calendarForegroundColor = calendarInfo.foregroundColor;
-                                        event.calendarName = calendarInfo.summary;
-                                    }
-                                    event.isOwnedCalendar = ownedCalendarIds.has(event.calendarId);
-                                    allEvents.push(event);
-                                });
-                            }
-                        });
-                        
-                        resolve(allEvents);
-                    } catch (colorError) {
-                        console.warn('Calendar color information acquisition error:', colorError);
-                        // Return the events even without color information (excluding the cancelled and declined events)
-                        const merged = resultsPerCalendar.flatMap(r => 
-                            (r.events || []).filter(event => {
-                                // Exclude the cancelled events
-                                if (event.status === 'cancelled') {
-                                    return false;
-                                }
-                                // Exclude the declined events
-                                return !(event.attendees && event.attendees.some(attendee =>
-                                    attendee.self && attendee.responseStatus === 'declined'
-                                ));
-                            })
-                        );
-                        resolve(merged);
-                    }
-                })
-                .catch(error => {
-                    console.error("Calendar event acquisition error:", error);
-                    reject(error);
-                });
-                });
-                })
-                .catch((error) => {
-                    console.error("Selected calendar acquisition error:", error);
-                    reject(error);
-                });
-        } catch (error) {
-            console.error("Calendar event acquisition exception:", error);
-            reject(error);
-        }
-    });
-}
-
-/**
- * Get events from PRIMARY Google Calendar only (for reminders)
- * @param {Date} targetDate - The target date (today if omitted)
- * @returns {Promise<Array>} A promise that returns an array of events
- */
-function getPrimaryCalendarEvents(targetDate = null) {
-    return new Promise((resolve, reject) => {
-        try {
-            chrome.identity.getAuthToken({interactive: false}, (token) => {
-                if (chrome.runtime.lastError || !token) {
-                    const error = chrome.runtime.lastError || new Error("Failed to get authentication token");
-                    console.error("Authentication token acquisition error:", error);
-                    reject(error);
-                    return;
-                }
-
-                // Set the target date range
-                const targetDay = targetDate || new Date();
-                const startOfDay = new Date(targetDay);
-                startOfDay.setHours(0, 0, 0, 0);
-                const endOfDay = new Date(targetDay);
-                endOfDay.setHours(23, 59, 59, 999);
-
-                // Fetch from PRIMARY calendar only
-                const baseUrl = 'https://www.googleapis.com/calendar/v3/calendars';
-                const url = `${baseUrl}/primary/events?timeMin=${startOfDay.toISOString()}&timeMax=${endOfDay.toISOString()}&singleEvents=true&orderBy=startTime`;
-
-                fetch(url, {
-                    headers: { Authorization: "Bearer " + token }
-                })
-                .then(res => {
-                    if (!res.ok) {
-                        throw new Error(`Primary calendar API error: ${res.status} ${res.statusText}`);
-                    }
-                    return res.json();
-                })
-                .then(data => {
-                    const events = data.items || [];
-
-                    // Filter out cancelled and declined events
-                    const filteredEvents = events.filter(event => {
-                        // Skip cancelled events
-                        if (event.status === 'cancelled') {
-                            return false;
-                        }
-                        // Skip declined events
-                        return !(event.attendees && event.attendees.some(attendee =>
-                            attendee.self && attendee.responseStatus === 'declined'
-                        ));
-                    });
-
-                    resolve(filteredEvents);
-                })
-                .catch(error => {
-                    console.error("Primary calendar event acquisition error:", error);
-                    reject(error);
-                });
-            });
-        } catch (error) {
-            console.error("Primary calendar event acquisition exception:", error);
-            reject(error);
-        }
-    });
-}
-
-/**
- * Check Google account authentication status
- * @returns {Promise<boolean>} A promise that returns the authentication status
- */
-function checkGoogleAuth() {
-    return new Promise((resolve, reject) => {
-        try {
-            chrome.identity.getAuthToken({interactive: false}, (token) => {
-                if (chrome.runtime.lastError) {
-                    resolve(false); // Even if there's an error, just not authenticated so don't reject
-                    return;
-                }
-
-                const isAuthenticated = !!token;
-                resolve(isAuthenticated);
-            });
-        } catch (error) {
-            console.error("Authentication status check exception:", error);
-            reject(error);
-        }
-    });
-}
-
 // Message listener
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    
+
     switch (request.action) {
-        case "getEvents":
+        case "getEvents": {
             const targetDate = request.targetDate ? new Date(request.targetDate) : null;
             const requestId = request.requestId;
-            getCalendarEvents(targetDate)
+            calendarClient.getCalendarEvents(targetDate)
                 .then(events => sendResponse({events, requestId}))
                 .catch(error => {
                     const detail = (error && (error.message || error.toString())) || "Event acquisition error";
@@ -426,10 +94,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     sendResponse({ error: detail, errorType: (error && error.name) || undefined, requestId });
                 });
             return true; // Indicates async response
-            
-        case "getCalendarList":
+        }
+
+        case "getCalendarList": {
             const reqIdList = request.requestId;
-            getCalendarList()
+            calendarClient.getCalendarList()
                 .then(calendars => sendResponse({calendars, requestId: reqIdList}))
                 .catch(error => {
                     const detail = (error && (error.message || error.toString())) || "Calendar list acquisition error";
@@ -437,9 +106,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     sendResponse({ error: detail, errorType: (error && error.name) || undefined, requestId: reqIdList });
                 });
             return true; // Indicates async response
-            
+        }
+
         case "checkGoogleAuth":
-            checkGoogleAuth()
+            calendarClient.checkAuth()
                 .then(isAuthenticated => {
                     sendResponse({authenticated: isAuthenticated});
                 })
@@ -461,10 +131,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 }
 
                 // After successful authentication, fetch calendar list to set up primary calendar
-                getCalendarList()
+                calendarClient.getCalendarList()
                     .then(async () => {
                         // After authentication and calendar list fetch, sync reminders
-                        await syncAllReminders();
+                        await reminderSync.syncAll();
                         sendResponse({ success: true });
                     })
                     .catch((error) => {
@@ -508,7 +178,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
         case "updateReminderSettings":
             // Handle reminder settings update
-            syncGoogleEventReminders()
+            reminderSync.syncGoogleEventReminders()
                 .then(() => {
                     sendResponse({ success: true });
                 })
@@ -583,7 +253,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
         case "forceSyncReminders":
             // Force sync reminders immediately (for testing)
-            syncAllReminders()
+            reminderSync.syncAll()
                 .then(() => {
                     sendResponse({ success: true, message: 'Reminder sync completed' });
                 })
@@ -605,7 +275,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     if (now - lastSyncTime < SYNC_THROTTLE_MS) {
                         sendResponse({ success: true, skipped: true, message: 'Skipped (recently synced)' });
                     } else {
-                        await syncAllReminders();
+                        await reminderSync.syncAll();
                         sendResponse({ success: true, skipped: false, message: 'Reminder sync completed' });
                     }
                 } catch (error) {
@@ -620,66 +290,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             (async () => {
                 try {
                     const { calendarId, eventId, response: rsvpResponse } = request;
-                    if (!calendarId || !eventId || !rsvpResponse) {
-                        sendResponse({ success: false, error: 'Missing required parameters' });
-                        return;
-                    }
-
-                    const token = await new Promise((resolve, reject) => {
-                        chrome.identity.getAuthToken({ interactive: true }, (t) => {
-                            if (chrome.runtime.lastError || !t) {
-                                reject(chrome.runtime.lastError || new Error('Failed to get token'));
-                            } else {
-                                resolve(t);
-                            }
-                        });
-                    });
-
-                    // Validate response status
-                    const validStatuses = new Set(['accepted', 'declined', 'tentative']);
-                    if (!validStatuses.has(rsvpResponse)) {
-                        sendResponse({ success: false, error: 'Invalid response status' });
-                        return;
-                    }
-
-                    // First, get the current event to find the self attendee
-                    const baseUrl = 'https://www.googleapis.com/calendar/v3/calendars';
-                    const eventUrl = `${baseUrl}/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`;
-                    const getRes = await fetch(eventUrl, {
-                        headers: { Authorization: 'Bearer ' + token }
-                    });
-                    if (!getRes.ok) {
-                        sendResponse({ success: false, error: `Failed to get event: ${getRes.status} ${getRes.statusText}` });
-                        return;
-                    }
-                    const eventData = await getRes.json();
-
-                    // Update the self attendee's response status
-                    const attendees = eventData.attendees || [];
-                    const selfAttendee = attendees.find(a => a.self);
-                    if (selfAttendee) {
-                        selfAttendee.responseStatus = rsvpResponse;
-                    } else {
-                        sendResponse({ success: false, error: 'Self attendee not found in event' });
-                        return;
-                    }
-
-                    // PATCH the event with updated attendees
-                    const patchRes = await fetch(eventUrl, {
-                        method: 'PATCH',
-                        headers: {
-                            Authorization: 'Bearer ' + token,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ attendees })
-                    });
-
-                    if (!patchRes.ok) {
-                        sendResponse({ success: false, error: `Failed to update event: ${patchRes.status} ${patchRes.statusText}` });
-                        return;
-                    }
-
-                    const updatedEvent = await patchRes.json();
+                    const updatedEvent = await calendarClient.respondToEvent(calendarId, eventId, rsvpResponse);
                     sendResponse({ success: true, event: updatedEvent });
                 } catch (error) {
                     console.error('Failed to respond to event:', error);
@@ -698,7 +309,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 // Alarm listener for event reminders and periodic sync
 chrome.alarms.onAlarm.addListener(async (alarm) => {
     if (alarm.name === 'daily_reminder_sync') {
-        await syncAllReminders();
+        await reminderSync.syncAll();
     } else if (alarm.name.startsWith(AlarmManager.ALARM_PREFIX) || alarm.name.startsWith(AlarmManager.GOOGLE_ALARM_PREFIX)) {
         await AlarmManager.showReminderNotification(alarm.name);
     }
@@ -759,93 +370,3 @@ chrome.notifications.onButtonClicked.addListener(async (notificationId, buttonIn
         }
     }
 });
-
-/**
- * Set up daily alarm for Google event reminder sync
- */
-async function setupDailyReminderSync() {
-    try {
-        // Clear existing daily sync alarm
-        await chrome.alarms.clear('daily_reminder_sync');
-
-        // Calculate next midnight
-        const now = new Date();
-        const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0);
-
-        // Create alarm for midnight (00:00) every day
-        await chrome.alarms.create('daily_reminder_sync', {
-            when: tomorrow.getTime(),
-            periodInMinutes: 24 * 60 // Repeat every 24 hours
-        });
-
-    } catch (error) {
-        console.error('Failed to setup daily reminder sync:', error);
-    }
-}
-
-/**
- * Sync all event reminders (local and Google)
- */
-async function syncAllReminders() {
-    await Promise.all([
-        syncLocalEventReminders(),
-        syncGoogleEventReminders()
-    ]);
-}
-
-/**
- * Sync local event reminders for today
- */
-async function syncLocalEventReminders() {
-    try {
-        const today = new Date();
-        const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-        await AlarmManager.setDateReminders(dateStr);
-    } catch (error) {
-        console.error('[Reminder Sync] Failed to sync local event reminders:', error);
-    }
-}
-
-/**
- * Sync Google event reminders for today
- */
-async function syncGoogleEventReminders() {
-    try {
-        const settings = await StorageHelper.get(['googleEventReminder', 'googleIntegrated', 'reminderMinutes'], {
-            googleEventReminder: false,
-            googleIntegrated: false,
-            reminderMinutes: 5
-        });
-
-        if (!settings.googleEventReminder) return;
-        if (!settings.googleIntegrated) return;
-
-        const today = new Date();
-        const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-
-        // Clear old reminders from previous dates
-        const allAlarms = await chrome.alarms.getAll();
-        const oldReminders = allAlarms.filter(alarm =>
-            alarm.name.startsWith(AlarmManager.GOOGLE_ALARM_PREFIX) &&
-            !alarm.name.includes(`${AlarmManager.GOOGLE_ALARM_PREFIX}${dateStr}_`)
-        );
-
-        for (const alarm of oldReminders) {
-            await chrome.alarms.clear(alarm.name);
-            // Also clear stored event data
-            const storageKey = `googleEventData_${alarm.name}`;
-            await chrome.storage.local.remove(storageKey);
-        }
-
-        const events = await getPrimaryCalendarEvents(today);
-        if (events && events.length > 0) {
-            await AlarmManager.setGoogleEventReminders(events, dateStr);
-        }
-
-        // Record sync timestamp
-        await StorageHelper.setLocal({ lastReminderSyncTime: Date.now() });
-    } catch (error) {
-        console.error('[Reminder Sync] ERROR:', error);
-        console.error('[Reminder Sync] Stack trace:', error.stack);
-    }
-}
