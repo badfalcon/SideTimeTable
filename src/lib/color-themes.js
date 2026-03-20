@@ -5,7 +5,8 @@
  * extension are derived from these 7 colours plus the `isDark` flag.
  */
 
-import { COLOR_CSS_VARS, TEXT_COLOR_CSS_VARS, getContrastColor } from './utils.js';
+import { COLOR_CSS_VARS, TEXT_COLOR_CSS_VARS } from './constants.js';
+import { getContrastColor } from './utils.js';
 
 // ---------------------------------------------------------------------------
 // Palette role → CSS variable mapping (the 7 user-facing colours)

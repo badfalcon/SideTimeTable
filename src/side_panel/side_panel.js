@@ -18,13 +18,15 @@ import {
 
 import { EventLayoutManager } from './time-manager.js';
 import { GoogleEventManager, LocalEventManager } from './event-handlers.js';
+import { generateTimeList } from '../lib/utils.js';
+import { RECURRENCE_TYPES } from '../lib/constants.js';
+import { loadSettings } from '../lib/settings-storage.js';
 import {
-    generateTimeList, loadSettings, RECURRENCE_TYPES,
     loadLocalEventsForDate, saveLocalEventsForDate,
     loadRecurringEvents, saveRecurringEvents,
     addRecurringEventException, deleteRecurringEvent,
     migrateEventDataToLocal
-} from '../lib/utils.js';
+} from '../lib/event-storage.js';
 import { isToday } from '../lib/time-utils.js';
 import { getThemeById, resolveThemeColors } from '../lib/color-themes.js';
 import { setDemoMode } from '../lib/demo-data.js';

@@ -3,7 +3,7 @@
  */
 import { CardComponent } from '../base/card-component.js';
 import { StorageHelper } from '../../../lib/storage-helper.js';
-import { STORAGE_KEYS } from '../../../lib/utils.js';
+import { STORAGE_KEYS } from '../../../lib/constants.js';
 
 export class StorageCard extends CardComponent {
     // 階層ごとの縦線の色

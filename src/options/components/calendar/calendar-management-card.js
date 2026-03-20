@@ -2,7 +2,8 @@
  * CalendarManagementCard - The calendar management card component
  */
 import { CardComponent } from '../base/card-component.js';
-import { loadSelectedCalendars, saveSelectedCalendars, logError } from '../../../lib/utils.js';
+import { logError } from '../../../lib/utils.js';
+import { loadSelectedCalendars, saveSelectedCalendars } from '../../../lib/settings-storage.js';
 
 export class CalendarManagementCard extends CardComponent {
     constructor(onCalendarSelectionChange) {
