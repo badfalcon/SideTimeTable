@@ -567,7 +567,7 @@ export class InitialSetupComponent extends Component {
             // Notify background about reminder settings
             if (this.setupData.googleEventReminder) {
                 try {
-                    chrome.runtime.sendMessage({
+                    sendMessage({
                         action: 'updateReminderSettings',
                         settings: {
                             googleEventReminder: this.setupData.googleEventReminder,

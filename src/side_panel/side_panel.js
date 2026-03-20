@@ -19,10 +19,11 @@ import {
 import { EventLayoutManager } from './time-manager.js';
 import { GoogleEventManager, LocalEventManager } from './event-handlers.js';
 import { LocalEventService } from './services/local-event-service.js';
-import { generateTimeList, getFormattedDateFromDate } from '../lib/utils.js';
+import { DateNavigationService } from './services/date-navigation-service.js';
+import { generateTimeList } from '../lib/utils.js';
 import { loadSettings } from '../lib/settings-storage.js';
 import { migrateEventDataToLocal } from '../lib/event-storage.js';
-import { isToday } from '../lib/time-utils.js';
+import { sendMessage } from '../lib/chrome-messaging.js';
 import { getThemeById, resolveThemeColors } from '../lib/color-themes.js';
 import { setDemoMode } from '../lib/demo-data.js';
 import { AlarmManager } from '../lib/alarm-manager.js';
@@ -58,13 +59,11 @@ class SidePanelUIController {
 
         // Services
         this.localEventService = new LocalEventService();
+        this.dateNavService = new DateNavigationService();
 
         // The state management
-        this.currentDate = new Date();
-        this.currentDate.setHours(0, 0, 0, 0);
         this.updateInterval = null;
         this.loadEventsDebounceTimeout = null;
-        this.wasViewingToday = true; // Track if the user was viewing today
         this.loadRequestId = 0; // Tracks the latest load request to prevent stale results
     }
 
@@ -346,7 +345,7 @@ class SidePanelUIController {
             }
 
             // Set the current date
-            this.headerComponent.setCurrentDate(this.currentDate);
+            this.headerComponent.setCurrentDate(this.dateNavService.getDate());
 
         } catch (error) {
             console.warn('Failed to apply initial configuration:', error);
@@ -385,7 +384,7 @@ class SidePanelUIController {
         this._autoSyncReminders();
 
         // Set initial date to TimelineComponent
-        this.timelineComponent.setCurrentDate(this.currentDate);
+        this.timelineComponent.setCurrentDate(this.dateNavService.getDate());
 
         await this._loadEventsForCurrentDate();
         this._scrollToAppropriateTime();
@@ -427,7 +426,7 @@ class SidePanelUIController {
     async _loadEventsForCurrentDate() {
         // Increment request ID and capture it; stale responses from older requests will be discarded
         const requestId = ++this.loadRequestId;
-        const targetDate = new Date(this.currentDate);
+        const targetDate = this.dateNavService.getDate();
 
         try {
             // Clear existing events (prevent duplicates)
@@ -464,7 +463,7 @@ class SidePanelUIController {
      * @private
      */
     _scrollToAppropriateTime() {
-        if (isToday(this.currentDate)) {
+        if (this.dateNavService.isViewingToday()) {
             // For today, scroll to current time
             this.timelineComponent.scrollToCurrentTime();
         } else {
@@ -485,16 +484,12 @@ class SidePanelUIController {
         // Current time lines are auto-updated by each component,
         // so here we only monitor date changes
         this.updateInterval = setInterval(() => {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-
             // Only auto-advance to today if the user was previously viewing today
             // This prevents forced switching when the user is intentionally viewing past/future dates
-            if (this.wasViewingToday && !isToday(this.currentDate)) {
-                this.currentDate = today;
-                this.wasViewingToday = true; // Still viewing today after the auto-advance
-                this.headerComponent.setCurrentDate(this.currentDate);
-                this.timelineComponent.setCurrentDate(this.currentDate);
+            if (this.dateNavService.advanceToTodayIfNeeded()) {
+                const currentDate = this.dateNavService.getDate();
+                this.headerComponent.setCurrentDate(currentDate);
+                this.timelineComponent.setCurrentDate(currentDate);
                 this.timelineComponent.setCurrentTimeLineVisible(true);
                 this._loadEventsForCurrentDate();
             }
@@ -506,11 +501,7 @@ class SidePanelUIController {
      * @private
      */
     _handleDateChange(date) {
-        this.currentDate = new Date(date);
-        this.currentDate.setHours(0, 0, 0, 0);
-
-        // Track if the user is viewing today
-        this.wasViewingToday = isToday(this.currentDate);
+        this.dateNavService.setDate(date);
 
         // Immediately remove the old date events
         this.timelineComponent.clearAllEvents();
@@ -521,13 +512,13 @@ class SidePanelUIController {
         }
 
         // Set the date to TimelineComponent
-        this.timelineComponent.setCurrentDate(this.currentDate);
+        this.timelineComponent.setCurrentDate(this.dateNavService.getDate());
 
         // Reload the events
         this._debounceLoadEvents();
 
         // Update the current time line display
-        this.timelineComponent.setCurrentTimeLineVisible(isToday(this.currentDate));
+        this.timelineComponent.setCurrentTimeLineVisible(this.dateNavService.isViewingToday());
 
         // Adjust the scroll position
         this._scrollToAppropriateTime();
@@ -557,14 +548,14 @@ class SidePanelUIController {
     async _handleSaveLocalEvent(eventData, mode) {
         try {
             if (mode === 'create') {
-                await this.localEventService.createEvent(eventData, this.currentDate);
+                await this.localEventService.createEvent(eventData, this.dateNavService.getDate());
             } else if (mode === 'edit') {
                 const currentEvent = this.localEventModal.currentEvent;
-                await this.localEventService.updateEvent(eventData, currentEvent, this.currentDate);
+                await this.localEventService.updateEvent(eventData, currentEvent, this.dateNavService.getDate());
             }
 
             // Reload event display
-            await this.localEventManager.loadLocalEvents(this.currentDate);
+            await this.localEventManager.loadLocalEvents(this.dateNavService.getDate());
 
             await this._syncRemindersIfNeeded();
 
@@ -587,10 +578,10 @@ class SidePanelUIController {
      */
     async _handleDeleteLocalEvent(event, deleteType = null) {
         try {
-            await this.localEventService.deleteEvent(event, deleteType, this.currentDate);
+            await this.localEventService.deleteEvent(event, deleteType, this.dateNavService.getDate());
 
             // Reload event display
-            await this.localEventManager.loadLocalEvents(this.currentDate);
+            await this.localEventManager.loadLocalEvents(this.dateNavService.getDate());
 
             await this._syncRemindersIfNeeded();
 
@@ -619,7 +610,7 @@ class SidePanelUIController {
      * @private
      */
     getCurrentDateString() {
-        return getFormattedDateFromDate(this.currentDate || new Date());
+        return this.dateNavService.getDateString();
     }
 
     /**
@@ -630,7 +621,7 @@ class SidePanelUIController {
         try {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            if (this.currentDate >= today) {
+            if (this.dateNavService.getDate() >= today) {
                 await AlarmManager.setDateReminders(this.getCurrentDateString());
             }
         } catch (error) {
@@ -723,7 +714,7 @@ class SidePanelUIController {
     async _handleSyncReminders() {
         try {
             // Send message to background to force sync
-            const response = await chrome.runtime.sendMessage({ action: 'forceSyncReminders' });
+            const response = await sendMessage({ action: 'forceSyncReminders' });
 
             if (response.success) {
                 // Reload events to reflect any changes
@@ -748,7 +739,7 @@ class SidePanelUIController {
     async _autoSyncReminders() {
         try {
             // Send message to background to auto-sync with throttle
-            const response = await chrome.runtime.sendMessage({ action: 'autoSyncReminders' });
+            const response = await sendMessage({ action: 'autoSyncReminders' });
 
             if (!response.success) {
                 console.warn('[Auto Sync] Failed to auto-sync reminders:', response.error);
