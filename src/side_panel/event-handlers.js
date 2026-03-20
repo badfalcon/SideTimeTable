@@ -5,17 +5,15 @@
  */
 
 import { logError } from '../lib/utils.js';
-import { TIME_CONSTANTS, RECURRENCE_TYPES } from '../lib/constants.js';
+import { RECURRENCE_TYPES } from '../lib/constants.js';
 import { loadSettings } from '../lib/settings-storage.js';
 import { loadLocalEvents, loadLocalEventsForDate } from '../lib/event-storage.js';
 import { sendMessage } from '../lib/chrome-messaging.js';
 import {createTimeOnDate} from '../lib/time-utils.js';
 import {getDemoEvents, getDemoLocalEvents, isDemoMode} from '../lib/demo-data.js';
 import {
-    TIMELINE_OFFSET,
     EVENT_STYLING,
     onClickOnly,
-    applyDurationBasedStyling,
     resolveLocaleSettings,
     EventElementFactory
 } from './event-element-factory.js';
@@ -170,10 +168,11 @@ export class GoogleEventManager {
                     case 'focusTime':
                     case 'outOfOffice':
                         continue;
-                    case 'default':
+                    case 'default': {
                         const uniqueEvent = { ...event, uniqueId };
                         await this._createGoogleEventElement(uniqueEvent);
                         break;
+                    }
                     default:
                 }
             } catch (error) {
