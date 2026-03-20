@@ -15,7 +15,7 @@ export class DateNavigationService {
         this._currentDate.setHours(0, 0, 0, 0);
 
         /** @type {boolean} Whether the user was viewing today before the last change */
-        this.wasViewingToday = true;
+        this._wasViewingToday = true;
     }
 
     /**
@@ -25,7 +25,7 @@ export class DateNavigationService {
     setDate(date) {
         this._currentDate = new Date(date);
         this._currentDate.setHours(0, 0, 0, 0);
-        this.wasViewingToday = isToday(this._currentDate);
+        this._wasViewingToday = isToday(this._currentDate);
     }
 
     /**
@@ -58,11 +58,11 @@ export class DateNavigationService {
      * @returns {boolean} true if the date was advanced
      */
     advanceToTodayIfNeeded() {
-        if (this.wasViewingToday && !isToday(this._currentDate)) {
+        if (this._wasViewingToday && !isToday(this._currentDate)) {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             this._currentDate = today;
-            this.wasViewingToday = true;
+            this._wasViewingToday = true;
             return true;
         }
         return false;
