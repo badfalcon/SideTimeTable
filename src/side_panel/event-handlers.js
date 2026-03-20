@@ -389,7 +389,15 @@ export class GoogleEventManager {
         }
     }
 
-
+    /**
+     * Clean up resources
+     */
+    destroy() {
+        if (this.googleEventsDiv) this.googleEventsDiv.innerHTML = '';
+        this.eventLayoutManager = null;
+        this.currentFetchPromise = null;
+        this.lastFetchDate = null;
+    }
 }
 
 /**
@@ -589,5 +597,12 @@ export class LocalEventManager {
         });
     }
 
-
+    /**
+     * Clean up resources
+     */
+    destroy() {
+        if (this.localEventsDiv) this.localEventsDiv.innerHTML = '';
+        this.eventLayoutManager = null;
+        this.onEventClick = null;
+    }
 }
