@@ -8,6 +8,7 @@ import { logError } from '../lib/utils.js';
 import { TIME_CONSTANTS, RECURRENCE_TYPES } from '../lib/constants.js';
 import { loadSettings } from '../lib/settings-storage.js';
 import { loadLocalEvents, loadLocalEventsForDate } from '../lib/event-storage.js';
+import { sendMessage } from '../lib/chrome-messaging.js';
 import {createTimeOnDate} from '../lib/time-utils.js';
 import {getDemoEvents, getDemoLocalEvents, isDemoMode} from '../lib/demo-data.js';
 
@@ -126,21 +127,14 @@ export class GoogleEventManager {
         this.lastFetchDate = targetDateStr;
 
         // Fetch the events (use the Google colors directly)
-        this.currentFetchPromise = new Promise((resolve, reject) => {
+        this.currentFetchPromise = (() => {
             const requestId = `req-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
             const message = { action: "getEvents", requestId };
             if (targetDate) {
                 message.targetDate = targetDate.toISOString();
             }
-            
-            chrome.runtime.sendMessage(message, (response) => {
-                if (chrome.runtime.lastError) {
-                    reject(chrome.runtime.lastError);
-                    return;
-                }
-                resolve(response);
-            });
-        })
+            return sendMessage(message);
+        })()
             .then(async response => {
                 // Clear the previous display
                 this.googleEventsDiv.innerHTML = '';

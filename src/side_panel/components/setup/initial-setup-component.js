@@ -11,6 +11,7 @@ import { Component } from '../base/component.js';
 import { StorageHelper } from '../../../lib/storage-helper.js';
 import { DEFAULT_SETTINGS } from '../../../lib/constants.js';
 import { saveSettings, loadSettings } from '../../../lib/settings-storage.js';
+import { sendMessage } from '../../../lib/chrome-messaging.js';
 import { createGoogleSignInButton } from '../../../lib/google-button-helper.js';
 
 const SETUP_STORAGE_KEY = 'initialSetupCompleted';
@@ -361,9 +362,7 @@ export class InitialSetupComponent extends Component {
      */
     async _checkGoogleAuthStatus(buttonContainer) {
         try {
-            const response = await new Promise((resolve) => {
-                chrome.runtime.sendMessage({action: 'checkGoogleAuth'}, resolve);
-            });
+            const response = await sendMessage({action: 'checkGoogleAuth'});
 
             if (response && response.authenticated) {
                 this.setupData.googleIntegrated = true;
@@ -427,9 +426,7 @@ export class InitialSetupComponent extends Component {
             if (statusText) statusText.textContent = this.getMessage('setupGoogleConnecting');
 
             try {
-                const response = await new Promise((resolve) => {
-                    chrome.runtime.sendMessage({action: 'authenticateGoogle'}, resolve);
-                });
+                const response = await sendMessage({action: 'authenticateGoogle'});
 
                 if (response && response.success) {
                     this.setupData.googleIntegrated = true;
