@@ -66,6 +66,6 @@ module.exports = [
     },
   },
   {
-    ignores: ['dist/', 'node_modules/', '*.min.js', 'src/lib/bootstrap.min.js', 'src/lib/popper.min.js'],
+    ignores: ['dist/', 'node_modules/', '*.min.js', 'src/vendor/'],
   },
 ];
