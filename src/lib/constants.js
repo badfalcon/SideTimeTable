@@ -71,6 +71,36 @@ export const COLOR_CSS_VARS = {
     currentTimeLineColor: '--side-calendar-current-time-line-color'
 };
 
+// Valid sync storage keys (single source of truth for cleanup)
+// When adding new sync storage keys, add them here to prevent cleanup from removing them.
+export const VALID_SYNC_KEYS = new Set([
+    ...Object.keys(DEFAULT_SETTINGS),
+    STORAGE_KEYS.RECURRING_EVENTS,
+    'lastSeenVersion',
+    'initialSetupCompleted',
+    'tutorialCompleted',
+    'timeFormat'
+]);
+
+// Valid local storage keys (exact match)
+// When adding new local storage keys, add them here to prevent cleanup from removing them.
+export const VALID_LOCAL_KEYS = new Set([
+    'memoContent',
+    'memoCollapsed',
+    'memoHeight',
+    'lastReminderSyncTime',
+    'reviewStats',
+    'eventDataMigratedToLocal_v2',
+    'enableDeveloperFeatures',
+    'enableReminderDebug'
+]);
+
+// Valid local storage key patterns (for dynamic keys like localEvents_2025-03-21)
+// Each regex must match the entire key.
+export const VALID_LOCAL_KEY_PATTERNS = [
+    new RegExp(`^${STORAGE_KEYS.LOCAL_EVENTS_PREFIX}\\d{4}-\\d{2}-\\d{2}$`)
+];
+
 // Background color keys that need a corresponding computed text color CSS variable
 export const TEXT_COLOR_CSS_VARS = {
     timelineBackgroundColor: '--side-calendar-timeline-text-color',

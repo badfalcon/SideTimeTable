@@ -115,6 +115,27 @@ export class StorageHelper {
     }
 
     /**
+     * Remove the data from Chrome local storage
+     * @param {string|Array<string>} keys - The keys to remove
+     * @returns {Promise<void>} A promise that resolves when the data is removed
+     */
+    static async removeLocal(keys) {
+        return new Promise((resolve, reject) => {
+            try {
+                chrome.storage.local.remove(keys, () => {
+                    if (chrome.runtime.lastError) {
+                        reject(chrome.runtime.lastError);
+                        return;
+                    }
+                    resolve();
+                });
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
+    /**
      * Retrieve the data from Chrome local storage
      * @param {string|Object|Array} keys - The storage keys to retrieve
      * @param {Object} defaultValues - The default values if the keys don't exist
