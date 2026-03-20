@@ -23,6 +23,7 @@ import { DateNavigationService } from './services/date-navigation-service.js';
 import { generateTimeList } from '../lib/utils.js';
 import { loadSettings } from '../lib/settings-storage.js';
 import { migrateEventDataToLocal } from '../lib/event-storage.js';
+import { cleanupObsoleteStorageKeys } from '../lib/storage-cleanup.js';
 import { sendMessage } from '../lib/chrome-messaging.js';
 import { getThemeById, resolveThemeColors } from '../lib/color-themes.js';
 import { setDemoMode } from '../lib/demo-data.js';
@@ -79,6 +80,9 @@ class SidePanelUIController {
 
             // Migrate event data from sync to local storage (one-time)
             await migrateEventDataToLocal();
+
+            // Clean up obsolete storage keys
+            await cleanupObsoleteStorageKeys();
 
             // Check the demo mode via the URL parameter
             const urlParams = new URLSearchParams(window.location.search);
