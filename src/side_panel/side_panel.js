@@ -502,6 +502,7 @@ class SidePanelUIController {
      */
     _handleDateChange(date) {
         this.dateNavService.setDate(date);
+        const currentDate = this.dateNavService.getDate();
 
         // Immediately remove the old date events
         this.timelineComponent.clearAllEvents();
@@ -512,7 +513,7 @@ class SidePanelUIController {
         }
 
         // Set the date to TimelineComponent
-        this.timelineComponent.setCurrentDate(this.dateNavService.getDate());
+        this.timelineComponent.setCurrentDate(currentDate);
 
         // Reload the events
         this._debounceLoadEvents();
