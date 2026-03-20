@@ -2,7 +2,7 @@
 
 ## Overview
 
-This plan addresses 6 structural issues in the codebase, organized into independent phases that each leave the project in a fully working state. The guiding principle is to split responsibilities while preserving the existing public API through re-export patterns, ensuring zero disruption to existing consumers.
+This plan addresses 6 structural issues in the codebase, organized into independent phases that each leave the project in a fully working state. Since this is a self-contained Chrome extension with no external consumers, we directly update all import paths rather than maintaining backward-compatible re-export facades.
 
 ---
 
@@ -26,11 +26,17 @@ This plan addresses 6 structural issues in the codebase, organized into independ
 
 ### Modified Files
 
-**`src/lib/utils.js`** becomes a thin re-export facade (~40 lines) keeping only true utility functions (`generateTimeList`, `getFormattedDateFromDate`, `getContrastColor`, `reloadSidePanel`, `logError`) and re-exporting everything from the new modules.
+**`src/lib/utils.js`** → only true utility functions remain (~60 lines):
+- `generateTimeList`, `getFormattedDateFromDate`, `getContrastColor`, `reloadSidePanel`, `logError`
+- All constants and storage code removed
 
-### Backward Compatibility
+**All import sites updated directly** (12+ files):
+- `import { RECURRENCE_TYPES } from '../lib/utils'` → `from '../lib/constants'`
+- `import { loadSettings } from '../lib/utils'` → `from '../lib/settings-storage'`
+- `import { loadLocalEventsForDate } from '../lib/utils'` → `from '../lib/event-storage'`
+- etc.
 
-All 12+ existing import sites continue to work unchanged since `utils.js` re-exports everything. New code should import from the specific modules directly.
+**Tests split accordingly**: `tests/lib/utils.test.js` split into per-module test files.
 
 ### Verification
 ```bash
