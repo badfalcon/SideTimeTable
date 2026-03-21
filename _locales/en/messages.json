@@ -1404,5 +1404,45 @@
   "demoLinkOpen": {
     "message": "Open",
     "description": "Button label to open demo mode link"
+  },
+  "outlookIntegrationTitle": {
+    "message": "Outlook Calendar Integration",
+    "description": "Title of the Outlook integration card"
+  },
+  "outlookIntegration": {
+    "message": "Integrate with Outlook Calendar to display events. Requires an Azure App Client ID with PKCE support.",
+    "description": "Outlook Calendar integration description"
+  },
+  "outlookClientIdLabel": {
+    "message": "Azure App Client ID",
+    "description": "Label for the Outlook Client ID input"
+  },
+  "outlookClientIdPlaceholder": {
+    "message": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+    "description": "Placeholder for the Outlook Client ID input"
+  },
+  "outlookClientIdHelp": {
+    "message": "Register an app in Azure Portal to get a Client ID. Enable 'Single-page application' redirect URI.",
+    "description": "Help text for configuring Outlook Client ID"
+  },
+  "signInWithOutlook": {
+    "message": "Sign in with Microsoft",
+    "description": "Outlook sign in button text"
+  },
+  "disconnectOutlook": {
+    "message": "Disconnect Outlook",
+    "description": "Outlook disconnect button text"
+  },
+  "outlookCalendarSelection": {
+    "message": "Outlook Calendar Management",
+    "description": "Title for Outlook calendar selection card"
+  },
+  "outlookCalendarSelectionDescription": {
+    "message": "Select Outlook Calendars to display.",
+    "description": "Description for Outlook calendar selection card"
+  },
+  "saved": {
+    "message": "Saved!",
+    "description": "Confirmation text after saving"
   }
 }

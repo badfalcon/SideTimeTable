@@ -8,10 +8,12 @@
 import { StorageHelper } from './lib/storage-helper.js';
 import { AlarmManager } from './lib/alarm-manager.js';
 import { GoogleCalendarClient } from './services/google-calendar-client.js';
+import { OutlookCalendarClient } from './services/outlook-calendar-client.js';
 import { ReminderSyncService } from './services/reminder-sync-service.js';
 
 // Instantiate services
 const calendarClient = new GoogleCalendarClient();
+const outlookClient = new OutlookCalendarClient();
 const reminderSync = new ReminderSyncService(calendarClient);
 
 // Side panel configuration - opens when clicking the action toolbar icon
@@ -284,6 +286,61 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 }
             })();
             return true; // Indicates async response
+
+        case "getOutlookEvents": {
+            const outlookTargetDate = request.targetDate ? new Date(request.targetDate) : null;
+            const outlookReqId = request.requestId;
+            outlookClient.getCalendarEvents(outlookTargetDate)
+                .then(events => sendResponse({ events, requestId: outlookReqId }))
+                .catch(error => {
+                    const detail = (error && (error.message || error.toString())) || "Outlook event acquisition error";
+                    console.error("Outlook event acquisition error:", error);
+                    sendResponse({ error: detail, requestId: outlookReqId });
+                });
+            return true;
+        }
+
+        case "getOutlookCalendarList": {
+            const outlookListReqId = request.requestId;
+            outlookClient.getCalendarList()
+                .then(calendars => sendResponse({ calendars, requestId: outlookListReqId }))
+                .catch(error => {
+                    const detail = (error && (error.message || error.toString())) || "Outlook calendar list error";
+                    console.error("Outlook calendar list error:", error);
+                    sendResponse({ error: detail, requestId: outlookListReqId });
+                });
+            return true;
+        }
+
+        case "checkOutlookAuth":
+            outlookClient.checkAuth()
+                .then(isAuthenticated => sendResponse({ authenticated: isAuthenticated }))
+                .catch(error => {
+                    console.error("Outlook auth check error:", error);
+                    sendResponse({ error: error.message });
+                });
+            return true;
+
+        case "authenticateOutlook":
+            outlookClient.authenticate()
+                .then(async () => {
+                    await outlookClient.getCalendarList();
+                    sendResponse({ success: true });
+                })
+                .catch(error => {
+                    console.error("Outlook authentication error:", error);
+                    sendResponse({ success: false, error: error.message });
+                });
+            return true;
+
+        case "disconnectOutlook":
+            outlookClient.clearTokens()
+                .then(() => sendResponse({ success: true }))
+                .catch(error => {
+                    console.error("Outlook disconnect error:", error);
+                    sendResponse({ success: false, error: error.message });
+                });
+            return true;
 
         case "respondToEvent":
             // Respond to a Google Calendar event (accept/decline/tentative)

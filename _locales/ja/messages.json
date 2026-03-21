@@ -1404,5 +1404,45 @@
   "demoLinkOpen": {
     "message": "開く",
     "description": "デモモードリンクを開くボタンラベル"
+  },
+  "outlookIntegrationTitle": {
+    "message": "Outlook カレンダー連携",
+    "description": "Outlook連携カードのタイトル"
+  },
+  "outlookIntegration": {
+    "message": "Outlook カレンダーと連携して予定を表示します。Azure アプリのクライアント ID（PKCE対応）が必要です。",
+    "description": "Outlookカレンダー連携説明"
+  },
+  "outlookClientIdLabel": {
+    "message": "Azure アプリ クライアント ID",
+    "description": "OutlookクライアントID入力のラベル"
+  },
+  "outlookClientIdPlaceholder": {
+    "message": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+    "description": "OutlookクライアントID入力のプレースホルダー"
+  },
+  "outlookClientIdHelp": {
+    "message": "Azure Portal でアプリを登録してクライアント ID を取得してください。「シングルページアプリケーション」のリダイレクト URI を有効にしてください。",
+    "description": "OutlookクライアントID設定のヘルプテキスト"
+  },
+  "signInWithOutlook": {
+    "message": "Microsoft でサインイン",
+    "description": "Outlookサインインボタンのテキスト"
+  },
+  "disconnectOutlook": {
+    "message": "Outlook を切断",
+    "description": "Outlook切断ボタンのテキスト"
+  },
+  "outlookCalendarSelection": {
+    "message": "Outlook カレンダー管理",
+    "description": "Outlookカレンダー選択カードのタイトル"
+  },
+  "outlookCalendarSelectionDescription": {
+    "message": "表示する Outlook カレンダーを選択します。",
+    "description": "Outlookカレンダー選択カードの説明"
+  },
+  "saved": {
+    "message": "保存しました！",
+    "description": "保存後の確認テキスト"
   }
 }

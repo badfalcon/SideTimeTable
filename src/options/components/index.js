@@ -11,6 +11,8 @@ export { ControlButtonsComponent } from './base/control-buttons-component.js';
 // The calendar-related components
 export { GoogleIntegrationCard } from './calendar/google-integration-card.js';
 export { CalendarManagementCard } from './calendar/calendar-management-card.js';
+export { OutlookIntegrationCard } from './calendar/outlook-integration-card.js';
+export { OutlookCalendarManagementCard } from './calendar/outlook-calendar-management-card.js';
 
 // The settings-related components
 export { TimeSettingsCard } from './settings/time-settings-card.js';

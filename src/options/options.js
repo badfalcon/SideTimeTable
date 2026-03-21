@@ -15,6 +15,8 @@ import {
     ComponentManager,
     GoogleIntegrationCard,
     CalendarManagementCard,
+    OutlookIntegrationCard,
+    OutlookCalendarManagementCard,
     TimeSettingsCard,
     ColorSettingsCard,
     LanguageSettingsCard,
@@ -36,6 +38,8 @@ class OptionsPageManager {
         this.componentManager = new ComponentManager();
         this.googleIntegrationCard = null;
         this.calendarManagementCard = null;
+        this.outlookIntegrationCard = null;
+        this.outlookCalendarManagementCard = null;
         this.timeSettingsCard = null;
         this.colorSettingsCard = null;
         this.languageSettingsCard = null;
@@ -67,6 +71,16 @@ class OptionsPageManager {
         this.calendarManagementCard.createElement();
         this.calendarManagementCard.appendTo(tabGoogle);
         this.componentManager.components.set('calendarManagement', this.calendarManagementCard);
+
+        this.outlookIntegrationCard = new OutlookIntegrationCard(this.handleOutlookIntegrationChange.bind(this));
+        this.outlookIntegrationCard.createElement();
+        this.outlookIntegrationCard.appendTo(tabGoogle);
+        this.componentManager.components.set('outlookIntegration', this.outlookIntegrationCard);
+
+        this.outlookCalendarManagementCard = new OutlookCalendarManagementCard(this.handleOutlookCalendarSelectionChange.bind(this));
+        this.outlookCalendarManagementCard.createElement();
+        this.outlookCalendarManagementCard.appendTo(tabGoogle);
+        this.componentManager.components.set('outlookCalendarManagement', this.outlookCalendarManagementCard);
 
         this.reminderSettingsCard = new ReminderSettingsCard(this.handleReminderSettingsChange.bind(this));
         this.reminderSettingsCard.createElement();
@@ -152,8 +166,9 @@ class OptionsPageManager {
         // Initialize the components
         await this.componentManager.initializeAll();
 
-        // Check Google auth status after components are initialized
+        // Check Google and Outlook auth status after components are initialized
         await this._checkGoogleAuthStatus();
+        await this._checkOutlookAuthStatus();
 
         // Re-execute the localization after the component generation
         if (window.localizeHtmlPageWithLang) {
@@ -256,6 +271,69 @@ class OptionsPageManager {
         this.calendarManagementCard.hasAutoFetched = true;
         this.calendarManagementCard.show();
         this.calendarManagementCard.render();
+    }
+
+    async _checkOutlookAuthStatus() {
+        if (isDemoMode()) return;
+
+        try {
+            const response = await sendMessage({ action: 'checkOutlookAuth' });
+            if (response.authenticated) {
+                this.outlookIntegrationCard.updateIntegrationStatus(true);
+                this.outlookCalendarManagementCard.show();
+            }
+        } catch (error) {
+            console.error('Outlook auth status check error:', error);
+        }
+    }
+
+    async handleOutlookIntegrationChange(shouldIntegrate) {
+        try {
+            if (shouldIntegrate) {
+                this.outlookIntegrationCard.setButtonEnabled(false);
+                this.outlookIntegrationCard.updateIntegrationStatus(false, window.getLocalizedMessage('connectingStatus') || 'Connecting...');
+
+                const response = await sendMessage({ action: 'authenticateOutlook' });
+
+                if (response.success) {
+                    this.outlookIntegrationCard.updateIntegrationStatus(true);
+                    this.outlookCalendarManagementCard.show();
+                    const settings = await loadSettings();
+                    await saveSettings({ ...settings, outlookIntegrated: true });
+                    this._reloadSidePanel();
+                } else {
+                    throw new Error(response.error || 'Authentication failed');
+                }
+            } else {
+                this.outlookIntegrationCard.setButtonEnabled(false);
+                this.outlookIntegrationCard.updateIntegrationStatus(false, window.getLocalizedMessage('disconnectingStatus') || 'Disconnecting...');
+
+                const response = await sendMessage({ action: 'disconnectOutlook' });
+
+                if (response.success) {
+                    const settings = await loadSettings();
+                    await saveSettings({ ...settings, outlookIntegrated: false });
+                    this.outlookIntegrationCard.updateIntegrationStatus(false);
+                    this.outlookCalendarManagementCard.hide();
+                    this._reloadSidePanel();
+                } else {
+                    throw new Error(response.error || 'Disconnection failed');
+                }
+            }
+        } catch (error) {
+            logError('Outlook integration change', error);
+            this.outlookIntegrationCard.updateIntegrationStatus(false, `Error: ${error.message}`);
+        } finally {
+            this.outlookIntegrationCard.setButtonEnabled(true);
+        }
+    }
+
+    async handleOutlookCalendarSelectionChange(selectedCalendarIds) {
+        try {
+            this._reloadSidePanel();
+        } catch (error) {
+            logError('Outlook calendar selection change', error);
+        }
     }
 
     async handleGoogleIntegrationChange(shouldIntegrate) {
@@ -434,7 +512,9 @@ class OptionsPageManager {
             await saveSettings({
                 ...DEFAULT_SETTINGS,
                 googleIntegrated: currentSettings.googleIntegrated,
-                selectedCalendars: currentSettings.selectedCalendars
+                selectedCalendars: currentSettings.selectedCalendars,
+                outlookIntegrated: currentSettings.outlookIntegrated,
+                selectedOutlookCalendars: currentSettings.selectedOutlookCalendars
             });
 
             // Update each component with the default settings

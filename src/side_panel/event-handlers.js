@@ -319,6 +319,202 @@ export class GoogleEventManager {
 }
 
 /**
+ * OutlookEventManager - The Outlook event management class
+ */
+export class OutlookEventManager {
+    /**
+     * Constructor
+     * @param {HTMLElement} outlookEventsDiv - The DOM element for displaying Outlook events
+     * @param {Object} eventLayoutManager - An instance of the event layout manager
+     */
+    constructor(outlookEventsDiv, eventLayoutManager) {
+        this.outlookEventsDiv = outlookEventsDiv;
+        this.eventLayoutManager = eventLayoutManager;
+        this.lastFetchDate = null;
+        this.currentFetchPromise = null;
+    }
+
+    /**
+     * Fetch events from Outlook Calendar
+     * @param {Date} targetDate - The target date
+     */
+    async fetchEvents(targetDate = null) {
+        if (isDemoMode()) return Promise.resolve();
+
+        const settings = await loadSettings();
+        const isOutlookIntegrated = settings.outlookIntegrated === true;
+
+        if (!isOutlookIntegrated) {
+            return Promise.resolve();
+        }
+
+        const targetDay = targetDate || new Date();
+        const targetDateStr = targetDay.toDateString();
+
+        if (this.currentFetchPromise && this.lastFetchDate === targetDateStr) {
+            return this.currentFetchPromise;
+        }
+
+        this.lastFetchDate = targetDateStr;
+
+        this.currentFetchPromise = (() => {
+            const requestId = `req-outlook-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+            const message = { action: "getOutlookEvents", requestId };
+            if (targetDate) {
+                message.targetDate = targetDate.toISOString();
+            }
+            return sendMessage(message);
+        })()
+            .then(async response => {
+                this.outlookEventsDiv.innerHTML = '';
+
+                // Remove only Outlook events from layout manager
+                if (this.eventLayoutManager && this.eventLayoutManager.events) {
+                    const events = [...this.eventLayoutManager.events];
+                    events.forEach(event => {
+                        if (event && event.type === 'outlook') {
+                            this.eventLayoutManager.removeEvent(event.id);
+                        }
+                    });
+                }
+
+                if (!response) {
+                    logError('Outlook event fetch', 'No response');
+                    return;
+                }
+
+                if (response.error) {
+                    logError('Outlook event fetch', response.error);
+                    return;
+                }
+
+                if (!response.events || !Array.isArray(response.events) || response.events.length === 0) {
+                    return;
+                }
+
+                await this._processEvents(response.events);
+
+                if (this.eventLayoutManager && typeof this.eventLayoutManager.calculateLayout === 'function') {
+                    this.eventLayoutManager.calculateLayout();
+                }
+            })
+            .catch(error => {
+                logError('Outlook event fetch exception', error);
+            })
+            .finally(() => {
+                this.currentFetchPromise = null;
+            });
+
+        return this.currentFetchPromise;
+    }
+
+    /**
+     * Process event data and display
+     * @private
+     */
+    async _processEvents(events) {
+        for (let i = 0; i < events.length; i++) {
+            try {
+                const event = events[i];
+                const uniqueId = `outlook-${event.id}-${i}`;
+                if (event.eventType !== 'default') continue;
+                const uniqueEvent = { ...event, uniqueId };
+                await this._createOutlookEventElement(uniqueEvent);
+            } catch (error) {
+                console.error(`Error processing Outlook event ${i}:`, error);
+            }
+        }
+    }
+
+    /**
+     * Create an Outlook event element
+     * @private
+     */
+    async _createOutlookEventElement(event) {
+        // Skip all-day events
+        if (event.start.date || event.end.date) return;
+
+        const startDate = new Date(event.start.dateTime || event.start.date);
+        let endDate = new Date(event.end.dateTime || event.end.date);
+
+        if (startDate.getTime() >= endDate.getTime()) {
+            endDate = new Date(startDate.getTime() + EVENT_STYLING.DEFAULT_VALUES.ZERO_DURATION_MINUTES * 60 * 1000);
+        }
+
+        const { eventDiv } = EventElementFactory.createEventElement({
+            startDate,
+            endDate,
+            cssClass: 'event outlook-event',
+            tooltip: event.summary,
+            initialWidth: this.eventLayoutManager.maxWidth
+        });
+
+        eventDiv.dataset.startTime = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        eventDiv.dataset.endTime = endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        eventDiv.dataset.description = event.description || '';
+        eventDiv.dataset.location = event.location || '';
+
+        // Click handler - show Google event modal (compatible format)
+        onClickOnly(eventDiv, () => {
+            const sidePanelController = window.sidePanelController;
+            if (sidePanelController && sidePanelController.googleEventModal) {
+                sidePanelController.googleEventModal.showEvent(event);
+            }
+        });
+
+        // Apply Outlook calendar colors
+        if (event.calendarBackgroundColor) {
+            eventDiv.style.backgroundColor = event.calendarBackgroundColor;
+            eventDiv.style.color = event.calendarForegroundColor || '#ffffff';
+        }
+
+        await this._setEventContentWithLocale(eventDiv, startDate, event.summary);
+
+        this.outlookEventsDiv.appendChild(eventDiv);
+
+        const eventId = event.uniqueId || event.id || `outlook-${Date.now()}-${Math.random()}`;
+        if (this.eventLayoutManager && typeof this.eventLayoutManager.registerEvent === 'function') {
+            this.eventLayoutManager.registerEvent({
+                startTime: startDate,
+                endTime: endDate,
+                element: eventDiv,
+                title: event.summary,
+                type: 'outlook',
+                id: eventId,
+                calendarId: event.calendarId
+            });
+        }
+    }
+
+    /**
+     * Set event content with locale-aware time display
+     * @private
+     */
+    async _setEventContentWithLocale(eventDiv, startDate, summary) {
+        const [locale, timeFormat] = await resolveLocaleSettings();
+
+        const startHours = String(startDate.getHours()).padStart(2, '0');
+        const startMinutes = String(startDate.getMinutes()).padStart(2, '0');
+        const timeString = `${startHours}:${startMinutes}`;
+        const formattedTime = window.formatTime(timeString, { format: timeFormat, locale });
+
+        eventDiv.innerHTML = '';
+        const primaryLine = EventElementFactory.createPrimaryLine(formattedTime, summary);
+        eventDiv.appendChild(primaryLine);
+    }
+
+    /**
+     * Clean up resources
+     */
+    destroy() {
+        if (this.outlookEventsDiv) this.outlookEventsDiv.innerHTML = '';
+        this.eventLayoutManager = null;
+        this.currentFetchPromise = null;
+        this.lastFetchDate = null;
+    }
+}
+
+/**
  * LocalEventManager - Local event management class
  */
 export class LocalEventManager {

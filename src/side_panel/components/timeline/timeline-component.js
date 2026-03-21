@@ -23,6 +23,7 @@ export class TimelineComponent extends Component {
         this.eventsLayer = null;
         this.localEventsContainer = null;
         this.googleEventsContainer = null;
+        this.outlookEventsContainer = null;
 
         // Hour label DOM cache for localization updates
         this.hourLabels = [];
@@ -215,8 +216,14 @@ export class TimelineComponent extends Component {
         this.googleEventsContainer.className = 'side-time-table-events-google';
         this.googleEventsContainer.id = 'sideTimeTableEventsGoogle';
 
+        // The Outlook events container
+        this.outlookEventsContainer = document.createElement('div');
+        this.outlookEventsContainer.className = 'side-time-table-events-outlook';
+        this.outlookEventsContainer.id = 'sideTimeTableEventsOutlook';
+
         eventsDiv.appendChild(this.localEventsContainer);
         eventsDiv.appendChild(this.googleEventsContainer);
+        eventsDiv.appendChild(this.outlookEventsContainer);
 
         return eventsDiv;
     }
@@ -373,6 +380,7 @@ export class TimelineComponent extends Component {
     clearAllEvents() {
         this.clearLocalEvents();
         this.clearGoogleEvents();
+        this.clearOutlookEvents();
     }
 
     /**
@@ -389,6 +397,23 @@ export class TimelineComponent extends Component {
      */
     getGoogleEventsContainer() {
         return this.googleEventsContainer;
+    }
+
+    /**
+     * Clear Outlook events
+     */
+    clearOutlookEvents() {
+        if (this.outlookEventsContainer) {
+            this.outlookEventsContainer.innerHTML = '';
+        }
+    }
+
+    /**
+     * Get Outlook events container
+     * @returns {HTMLElement} The Outlook events container element
+     */
+    getOutlookEventsContainer() {
+        return this.outlookEventsContainer;
     }
 
     /**

@@ -17,7 +17,7 @@ import {
 } from './components';
 
 import { EventLayoutManager } from './time-manager.js';
-import { GoogleEventManager, LocalEventManager } from './event-handlers.js';
+import { GoogleEventManager, OutlookEventManager, LocalEventManager } from './event-handlers.js';
 import { LocalEventService } from './services/local-event-service.js';
 import { DateNavigationService } from './services/date-navigation-service.js';
 import { generateTimeList } from '../lib/utils.js';
@@ -270,6 +270,9 @@ class SidePanelUIController {
             if (this.googleEventManager) {
                 this.googleEventManager.eventLayoutManager = this.eventLayoutManager;
             }
+            if (this.outlookEventManager) {
+                this.outlookEventManager.eventLayoutManager = this.eventLayoutManager;
+            }
             if (this.localEventManager) {
                 this.localEventManager.eventLayoutManager = this.eventLayoutManager;
 
@@ -297,6 +300,12 @@ class SidePanelUIController {
         // Initialize the Google event manager
         this.googleEventManager = new GoogleEventManager(
             this.timelineComponent.getGoogleEventsContainer(),
+            this.eventLayoutManager
+        );
+
+        // Initialize the Outlook event manager
+        this.outlookEventManager = new OutlookEventManager(
+            this.timelineComponent.getOutlookEventsContainer(),
             this.eventLayoutManager
         );
 
@@ -439,10 +448,11 @@ class SidePanelUIController {
                 this.eventLayoutManager.clearAllEvents();
             }
 
-            // Load Google events and local events via Manager classes
+            // Load Google, Outlook, and local events via Manager classes
             await Promise.allSettled([
                 this.localEventManager.loadLocalEvents(targetDate),
-                this.googleEventManager.fetchEvents(targetDate)
+                this.googleEventManager.fetchEvents(targetDate),
+                this.outlookEventManager.fetchEvents(targetDate)
             ]);
 
             // Discard results if a newer request has started

@@ -33,11 +33,13 @@ export const STORAGE_KEYS = {
 // Default settings
 export const DEFAULT_SETTINGS = {
     googleIntegrated: false,
+    outlookIntegrated: false, // Outlook Calendar integration
     openTime: TIME_CONSTANTS.DEFAULT_OPEN_HOUR,
     closeTime: TIME_CONSTANTS.DEFAULT_CLOSE_HOUR,
     timelineBackgroundColor: '#ffffff', // Timeline (body) background color
     panelBackgroundColor: '#ffffff', // Header and memo panel background color
     googleEventDefaultColor: '#fff0b8', // Default Google event color
+    outlookEventDefaultColor: '#cce0ff', // Default Outlook event color
     workTimeColor: '#e3e3e3',
     breakTimeFixed: false,
     breakTimeStart: TIME_CONSTANTS.DEFAULT_BREAK_START,
@@ -45,7 +47,8 @@ export const DEFAULT_SETTINGS = {
     breakTimeColor: '#bcdcfb', // Break time background color
     localEventColor: '#bbf2b1',
     currentTimeLineColor: '#ff0000', // Current time line color
-    selectedCalendars: [], // An array of the selected calendar IDs
+    selectedCalendars: [], // An array of the selected Google calendar IDs
+    selectedOutlookCalendars: [], // An array of the selected Outlook calendar IDs
     language: 'auto', // Language setting (auto/en/ja)
     googleEventReminder: false, // Automatic reminder for Google events
     reminderMinutes: 5, // Reminder time in minutes before event starts
@@ -92,7 +95,11 @@ export const VALID_LOCAL_KEYS = new Set([
     'reviewStats',
     'eventDataMigratedToLocal_v2',
     'enableDeveloperFeatures',
-    'enableReminderDebug'
+    'enableReminderDebug',
+    'outlookClientId',
+    'outlookAccessToken',
+    'outlookRefreshToken',
+    'outlookTokenExpiry'
 ]);
 
 // Valid local storage key patterns (for dynamic keys like localEvents_2025-03-21)
