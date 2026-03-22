@@ -67,6 +67,37 @@ describe('OutlookCalendarClient', () => {
             // 09:00 PDT = 16:00 UTC
             expect(result).toBe('2025-03-21T16:00:00.000Z');
         });
+
+        test('handles DST Fall Back (November, EST UTC-5)', () => {
+            // November 2, 2025 is after Fall Back (Nov 2 at 2:00 AM)
+            // Eastern = EST = UTC-5
+            const result = client._toISOWithTimezone('2025-11-03T10:00:00.0000000', 'Eastern Standard Time');
+            // 10:00 EST = 15:00 UTC
+            expect(result).toBe('2025-11-03T15:00:00.000Z');
+        });
+
+        test('handles DST Spring Forward day (March, EDT UTC-4)', () => {
+            // March 9, 2025 is Spring Forward day for US Eastern
+            // After 2:00 AM, Eastern = EDT = UTC-4
+            const result = client._toISOWithTimezone('2025-03-09T14:00:00.0000000', 'Eastern Standard Time');
+            // 14:00 EDT = 18:00 UTC
+            expect(result).toBe('2025-03-09T18:00:00.000Z');
+        });
+
+        test('handles pre-DST date (January, EST UTC-5)', () => {
+            // January is firmly in EST (UTC-5)
+            const result = client._toISOWithTimezone('2025-01-15T12:00:00.0000000', 'Eastern Standard Time');
+            // 12:00 EST = 17:00 UTC
+            expect(result).toBe('2025-01-15T17:00:00.000Z');
+        });
+
+        test('handles DST in non-US timezone (W. Europe Standard Time)', () => {
+            // October 26, 2025 is after Fall Back for Europe (last Sunday of October)
+            // W. Europe = CET = UTC+1
+            const result = client._toISOWithTimezone('2025-10-27T09:00:00.0000000', 'W. Europe Standard Time');
+            // 09:00 CET = 08:00 UTC
+            expect(result).toBe('2025-10-27T08:00:00.000Z');
+        });
     });
 
     describe('_normalizeEvent', () => {

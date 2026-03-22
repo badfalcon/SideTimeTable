@@ -192,8 +192,8 @@ export class GoogleEventManager {
             return;
         }
 
-        const startDate = new Date(event.start.dateTime || event.start.date);
-        let endDate = new Date(event.end.dateTime || event.end.date);
+        const startDate = new Date(event.start.dateTime);
+        let endDate = new Date(event.end.dateTime);
 
         // If the start and end times are the same, treat as a default duration appointment
         if (startDate.getTime() >= endDate.getTime()) {
@@ -434,8 +434,8 @@ export class OutlookEventManager {
         // Skip all-day events
         if (event.start.date || event.end.date) return;
 
-        const startDate = new Date(event.start.dateTime || event.start.date);
-        let endDate = new Date(event.end.dateTime || event.end.date);
+        const startDate = new Date(event.start.dateTime);
+        let endDate = new Date(event.end.dateTime);
 
         if (startDate.getTime() >= endDate.getTime()) {
             endDate = new Date(startDate.getTime() + EVENT_STYLING.DEFAULT_VALUES.ZERO_DURATION_MINUTES * 60 * 1000);

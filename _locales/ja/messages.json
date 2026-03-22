@@ -130,8 +130,8 @@
     "description": "オプションページのタイトル"
   },
   "integration": {
-    "message": "連携",
-    "description": "連携セクションのタイトル"
+    "message": "カレンダー",
+    "description": "カレンダー連携セクションのタイトル（タブラベル）"
   },
   "googleIntegration": {
     "message": "Google カレンダーと連携して予定を表示します。",

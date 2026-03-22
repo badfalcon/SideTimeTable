@@ -130,8 +130,8 @@
     "description": "Title of the options page"
   },
   "integration": {
-    "message": "Integration",
-    "description": "Title of the integration section"
+    "message": "Calendar",
+    "description": "Title of the calendar integration section (tab label)"
   },
   "googleIntegration": {
     "message": "Integrate with Google Calendar to display events.",
