@@ -66,7 +66,7 @@ export class OutlookCalendarManagementCard extends CalendarManagementCard {
      */
     async loadData() {
         try {
-            const data = await StorageHelper.get(['selectedOutlookCalendars'], { selectedOutlookCalendars: [] });
+            const data = await StorageHelper.getLocal(['selectedOutlookCalendars'], { selectedOutlookCalendars: [] });
             this.selectedCalendarIds = Array.isArray(data.selectedOutlookCalendars) ? data.selectedOutlookCalendars : [];
             this.render();
         } catch (error) {
@@ -103,7 +103,7 @@ export class OutlookCalendarManagementCard extends CalendarManagementCard {
                     this.selectedCalendarIds.unshift(defaultCal.id);
                 }
 
-                await StorageHelper.set({ selectedOutlookCalendars: this.selectedCalendarIds });
+                await StorageHelper.setLocal({ selectedOutlookCalendars: this.selectedCalendarIds });
                 this.render();
             }
         } catch (error) {
@@ -131,7 +131,7 @@ export class OutlookCalendarManagementCard extends CalendarManagementCard {
         }
 
         try {
-            await StorageHelper.set({ selectedOutlookCalendars: this.selectedCalendarIds });
+            await StorageHelper.setLocal({ selectedOutlookCalendars: this.selectedCalendarIds });
             if (this.onCalendarSelectionChange) {
                 this.onCalendarSelectionChange(this.selectedCalendarIds);
             }

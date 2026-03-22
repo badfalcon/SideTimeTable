@@ -67,6 +67,11 @@ const WINDOWS_TZ_TO_IANA = {
 
 export class OutlookCalendarClient {
 
+    constructor() {
+        /** @type {Object<string, string>} Cached calendar ID → hex color map */
+        this._calendarColorCache = {};
+    }
+
     /**
      * Get the stored Outlook configuration (clientId and tokens).
      * @returns {Promise<Object>} { outlookClientId, outlookAccessToken, outlookRefreshToken, outlookTokenExpiry }
@@ -99,8 +104,10 @@ export class OutlookCalendarClient {
      */
     async clearTokens() {
         await StorageHelper.removeLocal([
-            'outlookAccessToken', 'outlookRefreshToken', 'outlookTokenExpiry'
+            'outlookAccessToken', 'outlookRefreshToken', 'outlookTokenExpiry',
+            'selectedOutlookCalendars'
         ]);
+        this._calendarColorCache = {};
     }
 
     /**
@@ -301,22 +308,27 @@ export class OutlookCalendarClient {
         }
 
         const data = await response.json();
-        const calendars = (data.value || []).map(cal => ({
-            id: cal.id,
-            summary: cal.name,
-            primary: cal.isDefaultCalendar || false,
-            backgroundColor: this._mapCalendarColor(cal.color),
-            foregroundColor: '#ffffff',
-            provider: 'outlook'
-        }));
+        const calendars = (data.value || []).map(cal => {
+            const bgColor = this._mapCalendarColor(cal.color);
+            // Populate calendar color cache for use by getCalendarEvents
+            this._calendarColorCache[cal.id] = bgColor;
+            return {
+                id: cal.id,
+                summary: cal.name,
+                primary: cal.isDefaultCalendar || false,
+                backgroundColor: bgColor,
+                foregroundColor: '#ffffff',
+                provider: 'outlook'
+            };
+        });
 
         // Auto-select default calendar if none selected
         try {
-            const existing = await StorageHelper.get(['selectedOutlookCalendars'], { selectedOutlookCalendars: [] });
+            const existing = await StorageHelper.getLocal(['selectedOutlookCalendars'], { selectedOutlookCalendars: [] });
             if ((existing.selectedOutlookCalendars || []).length === 0) {
                 const defaultCal = calendars.find(cal => cal.primary);
                 if (defaultCal) {
-                    await StorageHelper.set({ selectedOutlookCalendars: [defaultCal.id] });
+                    await StorageHelper.setLocal({ selectedOutlookCalendars: [defaultCal.id] });
                 }
             }
         } catch (error) {
@@ -332,7 +344,7 @@ export class OutlookCalendarClient {
      * @returns {Promise<Array>} Array of events in Google-compatible format
      */
     async getCalendarEvents(targetDate = null) {
-        const storageData = await StorageHelper.get(['selectedOutlookCalendars'], { selectedOutlookCalendars: [] });
+        const storageData = await StorageHelper.getLocal(['selectedOutlookCalendars'], { selectedOutlookCalendars: [] });
         const selectedIds = storageData.selectedOutlookCalendars || [];
 
         const targetDay = targetDate || new Date();
@@ -352,19 +364,22 @@ export class OutlookCalendarClient {
         const startDateTime = startOfDay.toISOString();
         const endDateTime = endOfDay.toISOString();
 
-        // Build a calendar color map from the calendar list
-        const calendarColorMap = {};
-        try {
-            const calListResponse = await this._fetchWithAuth(`${GRAPH_API_BASE}/me/calendars?$select=id,color`);
-            if (calListResponse.ok) {
-                const calListData = await calListResponse.json();
-                for (const cal of (calListData.value || [])) {
-                    calendarColorMap[cal.id] = this._mapCalendarColor(cal.color);
+        // Use cached calendar colors (populated by getCalendarList)
+        // If cache is empty, fetch once and populate it
+        if (Object.keys(this._calendarColorCache).length === 0) {
+            try {
+                const calListResponse = await this._fetchWithAuth(`${GRAPH_API_BASE}/me/calendars?$select=id,color`);
+                if (calListResponse.ok) {
+                    const calListData = await calListResponse.json();
+                    for (const cal of (calListData.value || [])) {
+                        this._calendarColorCache[cal.id] = this._mapCalendarColor(cal.color);
+                    }
                 }
+            } catch {
+                // Non-fatal: events will use default color
             }
-        } catch {
-            // Non-fatal: events will use default color
         }
+        const calendarColorMap = this._calendarColorCache;
 
         const fetches = calendarsToFetch.map(async (cal) => {
             try {
@@ -382,7 +397,7 @@ export class OutlookCalendarClient {
                 }
 
                 const data = await response.json();
-                const calColor = calendarColorMap[cal.id] || '#0078d4';
+                const calColor = calendarColorMap[cal.id] || '#cce0ff';
                 const events = (data.value || []).map(ev => this._normalizeEvent(ev, cal.id, calColor));
                 return { calendarId: cal.id, events };
             } catch (err) {
@@ -417,7 +432,7 @@ export class OutlookCalendarClient {
      * @returns {Object} Normalized event
      * @private
      */
-    _normalizeEvent(outlookEvent, calendarId, calendarColor = '#0078d4') {
+    _normalizeEvent(outlookEvent, calendarId, calendarColor = '#cce0ff') {
         const isAllDay = outlookEvent.isAllDay || false;
 
         // Convert Outlook dateTime to Google format
@@ -504,8 +519,8 @@ export class OutlookCalendarClient {
             return dateTimeStr;
         }
 
-        // Clean up the datetime string (remove extra precision from Graph API)
-        const cleanDt = dateTimeStr.replace(/\.?\d*$/, '').replace(/T$/, '');
+        // Clean up the datetime string (remove fractional seconds from Graph API, e.g. ".0000000")
+        const cleanDt = dateTimeStr.replace(/\.\d+$/, '');
 
         // Resolve Windows timezone names to IANA
         const ianaTz = WINDOWS_TZ_TO_IANA[timeZone] || timeZone;

@@ -409,8 +409,12 @@ export class GoogleEventModal extends ModalComponent {
         this.rsvpContainer.innerHTML = '';
 
         // Only show RSVP buttons if:
+        // - The event is from Google Calendar (not Outlook or other providers)
         // - The event is from a calendar owned by the user (not shared/read-only calendars)
         // - The event has attendees and the user is one of them
+        if (event.provider === 'outlook') {
+            return;
+        }
         const attendees = event.attendees || [];
         const selfAttendee = attendees.find(a => a.self);
         if (!selfAttendee || !event.isOwnedCalendar || !event.calendarId || !event.id) {

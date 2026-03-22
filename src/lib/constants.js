@@ -48,7 +48,7 @@ export const DEFAULT_SETTINGS = {
     localEventColor: '#bbf2b1',
     currentTimeLineColor: '#ff0000', // Current time line color
     selectedCalendars: [], // An array of the selected Google calendar IDs
-    selectedOutlookCalendars: [], // An array of the selected Outlook calendar IDs
+    // Note: selectedOutlookCalendars is stored in local storage (not sync) due to long calendar IDs
     language: 'auto', // Language setting (auto/en/ja)
     googleEventReminder: false, // Automatic reminder for Google events
     reminderMinutes: 5, // Reminder time in minutes before event starts
@@ -99,7 +99,8 @@ export const VALID_LOCAL_KEYS = new Set([
     'outlookClientId',
     'outlookAccessToken',
     'outlookRefreshToken',
-    'outlookTokenExpiry'
+    'outlookTokenExpiry',
+    'selectedOutlookCalendars'
 ]);
 
 // Valid local storage key patterns (for dynamic keys like localEvents_2025-03-21)
