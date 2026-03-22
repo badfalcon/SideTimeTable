@@ -328,7 +328,7 @@ class OptionsPageManager {
         }
     }
 
-    async handleOutlookCalendarSelectionChange(selectedCalendarIds) {
+    async handleOutlookCalendarSelectionChange(_selectedCalendarIds) {
         try {
             this._reloadSidePanel();
         } catch (error) {
@@ -457,7 +457,7 @@ class OptionsPageManager {
         }
     }
 
-    async handleCalendarSelectionChange(selectedCalendarIds) {
+    async handleCalendarSelectionChange(_selectedCalendarIds) {
         try {
             // Reload the side panel to reflect calendar changes
             this._reloadSidePanel();

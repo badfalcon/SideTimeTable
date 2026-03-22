@@ -121,14 +121,20 @@ export class OutlookIntegrationCard extends CardComponent {
         if (this.saveClientIdBtn) {
             this.saveClientIdBtn.addEventListener('click', async () => {
                 const clientId = this.clientIdInput.value.trim();
-                if (clientId) {
-                    await StorageHelper.setLocal({ outlookClientId: clientId });
-                    this.saveClientIdBtn.textContent = window.getLocalizedMessage('saved') || 'Saved!';
-                    setTimeout(() => {
-                        this.saveClientIdBtn.setAttribute('data-localize', '__MSG_save__');
-                        this.saveClientIdBtn.textContent = window.getLocalizedMessage('save') || 'Save';
-                    }, 2000);
+                // Validate UUID format (Azure App Client ID)
+                const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+                if (!clientId || !uuidRegex.test(clientId)) {
+                    this.clientIdInput.classList.add('is-invalid');
+                    setTimeout(() => this.clientIdInput.classList.remove('is-invalid'), 3000);
+                    return;
                 }
+                this.clientIdInput.classList.remove('is-invalid');
+                await StorageHelper.setLocal({ outlookClientId: clientId });
+                this.saveClientIdBtn.textContent = window.getLocalizedMessage('saved') || 'Saved!';
+                setTimeout(() => {
+                    this.saveClientIdBtn.setAttribute('data-localize', '__MSG_save__');
+                    this.saveClientIdBtn.textContent = window.getLocalizedMessage('save') || 'Save';
+                }, 2000);
             });
         }
     }

@@ -1,14 +1,21 @@
 /**
  * OutlookCalendarManagementCard - Calendar selection for Outlook
+ *
+ * Extends CalendarManagementCard to reuse shared UI logic (list rendering,
+ * checkbox toggle, loading states) while overriding provider-specific behavior
+ * (storage keys, message actions).
  */
-import { CardComponent } from '../base/card-component.js';
+import { CalendarManagementCard } from './calendar-management-card.js';
 import { logError } from '../../../lib/utils.js';
 import { StorageHelper } from '../../../lib/storage-helper.js';
 import { sendMessage } from '../../../lib/chrome-messaging.js';
 
-export class OutlookCalendarManagementCard extends CardComponent {
+export class OutlookCalendarManagementCard extends CalendarManagementCard {
     constructor(onCalendarSelectionChange) {
-        super({
+        super(onCalendarSelectionChange);
+
+        // Override card metadata for Outlook
+        this._cardOptions = {
             id: 'outlook-calendar-management-card',
             title: 'Outlook Calendar Management',
             titleLocalize: '__MSG_outlookCalendarSelection__',
@@ -17,71 +24,46 @@ export class OutlookCalendarManagementCard extends CardComponent {
             icon: 'fas fa-calendar-alt',
             iconColor: 'text-info',
             hidden: true
-        });
-
-        this.onCalendarSelectionChange = onCalendarSelectionChange;
-        this.selectedCalendarIds = [];
-        this.hasAutoFetched = false;
-        this.allCalendars = [];
-        this.refreshBtn = null;
-        this.loadingIndicator = null;
-        this.calendarList = null;
-        this.noCalendarsMsg = null;
+        };
+        // Re-apply card options (CardComponent stores these in constructor)
+        this.id = this._cardOptions.id;
     }
 
+    /**
+     * Override createElement to apply Outlook-specific card options
+     */
     createElement() {
+        // Temporarily override the title/subtitle before creating the element
+        if (this.titleElement) {
+            this.titleElement.textContent = this._cardOptions.title;
+        }
         const card = super.createElement();
 
-        // Refresh button
-        const controlsDiv = document.createElement('div');
-        controlsDiv.className = 'd-flex align-items-center mb-3';
+        // Update title and subtitle elements after creation
+        if (this.element) {
+            const titleEl = this.element.querySelector('.card-title, [data-localize]');
+            if (titleEl && titleEl.getAttribute('data-localize') === '__MSG_calendarSelection__') {
+                titleEl.setAttribute('data-localize', '__MSG_outlookCalendarSelection__');
+                titleEl.textContent = window.getLocalizedMessage('outlookCalendarSelection') || this._cardOptions.title;
+            }
+            const subtitleEl = this.element.querySelector('.text-muted[data-localize="__MSG_calendarSelectionDescription__"]');
+            if (subtitleEl) {
+                subtitleEl.setAttribute('data-localize', '__MSG_outlookCalendarSelectionDescription__');
+                subtitleEl.textContent = window.getLocalizedMessage('outlookCalendarSelectionDescription') || this._cardOptions.subtitle;
+            }
+            const iconEl = this.element.querySelector('.text-success');
+            if (iconEl) {
+                iconEl.classList.remove('text-success');
+                iconEl.classList.add('text-info');
+            }
+        }
 
-        this.refreshBtn = document.createElement('button');
-        this.refreshBtn.className = 'btn btn-outline-primary btn-sm';
-        this.refreshBtn.innerHTML = `
-            <i class="fas fa-refresh me-1"></i>
-            <span data-localize="__MSG_refreshCalendars__">Refresh</span>
-        `;
-
-        this.loadingIndicator = document.createElement('div');
-        this.loadingIndicator.className = 'ms-2';
-        this.loadingIndicator.style.display = 'none';
-        this.loadingIndicator.innerHTML = `
-            <div class="spinner-border spinner-border-sm text-primary" role="status">
-                <span class="visually-hidden">${window.getLocalizedMessage('screenReaderLoading') || 'Loading...'}</span>
-            </div>
-        `;
-
-        controlsDiv.appendChild(this.refreshBtn);
-        controlsDiv.appendChild(this.loadingIndicator);
-        this.addContent(controlsDiv);
-
-        // Calendar list
-        const listContainer = document.createElement('div');
-        this.calendarList = document.createElement('div');
-        this.calendarList.className = 'list-group';
-        this.noCalendarsMsg = document.createElement('div');
-        this.noCalendarsMsg.className = 'text-muted';
-        this.noCalendarsMsg.style.display = 'none';
-        this.noCalendarsMsg.setAttribute('data-localize', '__MSG_noCalendarsFound__');
-        this.noCalendarsMsg.textContent = window.getLocalizedMessage('noCalendarsFound') || 'No calendars found.';
-        listContainer.appendChild(this.calendarList);
-        listContainer.appendChild(this.noCalendarsMsg);
-        this.addContent(listContainer);
-
-        this._setupEventListeners();
         return card;
     }
 
-    _setupEventListeners() {
-        this.refreshBtn?.addEventListener('click', () => this.refreshCalendars());
-        this.calendarList?.addEventListener('change', (e) => {
-            if (e.target.type === 'checkbox') {
-                this._handleCalendarToggle(e);
-            }
-        });
-    }
-
+    /**
+     * Override loadData to use Outlook storage keys
+     */
     async loadData() {
         try {
             const data = await StorageHelper.get(['selectedOutlookCalendars'], { selectedOutlookCalendars: [] });
@@ -92,18 +74,9 @@ export class OutlookCalendarManagementCard extends CardComponent {
         }
     }
 
-    show() {
-        this.setVisible(true);
-        if (!this.hasAutoFetched && (!this.allCalendars || this.allCalendars.length === 0)) {
-            this.hasAutoFetched = true;
-            this.refreshCalendars();
-        }
-    }
-
-    hide() {
-        this.setVisible(false);
-    }
-
+    /**
+     * Override refreshCalendars to use Outlook API
+     */
     async refreshCalendars() {
         this._setLoading(true);
         try {
@@ -124,66 +97,27 @@ export class OutlookCalendarManagementCard extends CardComponent {
                     }
                 }
 
+                // Ensure default calendar is included
+                const defaultCal = response.calendars.find(cal => cal.primary);
+                if (defaultCal && !this.selectedCalendarIds.includes(defaultCal.id)) {
+                    this.selectedCalendarIds.unshift(defaultCal.id);
+                }
+
                 await StorageHelper.set({ selectedOutlookCalendars: this.selectedCalendarIds });
                 this.render();
             }
         } catch (error) {
             logError('Outlook calendar list update', error);
+            this._showError(`Failed to update Outlook calendars: ${error.message || 'Unknown error'}`);
         } finally {
             this._setLoading(false);
         }
     }
 
-    render() {
-        if (!this.allCalendars || this.allCalendars.length === 0) {
-            this.calendarList.innerHTML = '';
-            this.noCalendarsMsg.style.display = 'block';
-            return;
-        }
-
-        this.noCalendarsMsg.style.display = 'none';
-        this.calendarList.innerHTML = '';
-
-        const sorted = [...this.allCalendars].sort((a, b) => {
-            if (a.primary && !b.primary) return -1;
-            if (!a.primary && b.primary) return 1;
-            return a.summary.localeCompare(b.summary);
-        });
-
-        sorted.forEach(calendar => {
-            const isSelected = this.selectedCalendarIds.includes(calendar.id);
-            const item = document.createElement('div');
-            item.className = 'list-group-item d-flex align-items-center py-2';
-            item.dataset.calendarId = calendar.id;
-
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.className = 'form-check-input me-3';
-            checkbox.checked = isSelected;
-            if (calendar.primary) {
-                checkbox.disabled = true;
-                checkbox.checked = true;
-            }
-
-            const info = document.createElement('div');
-            info.className = 'flex-grow-1';
-            const name = document.createElement('div');
-            name.className = 'fw-bold';
-            name.textContent = calendar.summary;
-            if (calendar.primary) name.classList.add('text-primary');
-            info.appendChild(name);
-
-            const colorIndicator = document.createElement('div');
-            colorIndicator.className = 'me-2';
-            colorIndicator.style.cssText = `width:12px;height:12px;background-color:${calendar.backgroundColor || '#0078d4'};border-radius:50%;border:1px solid #ddd;`;
-
-            item.appendChild(checkbox);
-            item.appendChild(info);
-            item.appendChild(colorIndicator);
-            this.calendarList.appendChild(item);
-        });
-    }
-
+    /**
+     * Override _handleCalendarToggle to use Outlook storage keys
+     * @private
+     */
     async _handleCalendarToggle(event) {
         const calendarId = event.target.closest('[data-calendar-id]')?.dataset.calendarId;
         if (!calendarId) return;
@@ -203,11 +137,7 @@ export class OutlookCalendarManagementCard extends CardComponent {
             }
         } catch (error) {
             logError('Outlook calendar selection save', error);
+            this._showError('Failed to save settings');
         }
-    }
-
-    _setLoading(loading) {
-        if (this.loadingIndicator) this.loadingIndicator.style.display = loading ? 'block' : 'none';
-        if (this.refreshBtn) this.refreshBtn.disabled = loading;
     }
 }
