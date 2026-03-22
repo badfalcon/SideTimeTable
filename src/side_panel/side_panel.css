@@ -266,8 +266,9 @@ body {
 }
 
 .outlook-event {
-    /* Background color is set dynamically from Outlook Calendar API */
+    /* Background/foreground colors are set dynamically from Outlook Calendar API */
     background-color: var(--side-calendar-outlook-event-default-color, #cce0ff);
+    color: #ffffff;
 }
 
 .drag-preview.event {

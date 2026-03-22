@@ -312,35 +312,41 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             return true;
         }
 
-        case "checkOutlookAuth":
+        case "checkOutlookAuth": {
+            const checkAuthReqId = request.requestId;
             outlookClient.checkAuth()
-                .then(isAuthenticated => sendResponse({ authenticated: isAuthenticated }))
+                .then(isAuthenticated => sendResponse({ authenticated: isAuthenticated, requestId: checkAuthReqId }))
                 .catch(error => {
                     console.error("Outlook auth check error:", error);
-                    sendResponse({ error: error.message });
+                    sendResponse({ error: error.message, requestId: checkAuthReqId });
                 });
             return true;
+        }
 
-        case "authenticateOutlook":
+        case "authenticateOutlook": {
+            const authReqId = request.requestId;
             outlookClient.authenticate()
                 .then(async () => {
                     await outlookClient.getCalendarList();
-                    sendResponse({ success: true });
+                    sendResponse({ success: true, requestId: authReqId });
                 })
                 .catch(error => {
                     console.error("Outlook authentication error:", error);
-                    sendResponse({ success: false, error: error.message });
+                    sendResponse({ success: false, error: error.message, requestId: authReqId });
                 });
             return true;
+        }
 
-        case "disconnectOutlook":
+        case "disconnectOutlook": {
+            const disconnectReqId = request.requestId;
             outlookClient.clearTokens()
-                .then(() => sendResponse({ success: true }))
+                .then(() => sendResponse({ success: true, requestId: disconnectReqId }))
                 .catch(error => {
                     console.error("Outlook disconnect error:", error);
-                    sendResponse({ success: false, error: error.message });
+                    sendResponse({ success: false, error: error.message, requestId: disconnectReqId });
                 });
             return true;
+        }
 
         case "respondToEvent":
             // Respond to a Google Calendar event (accept/decline/tentative)

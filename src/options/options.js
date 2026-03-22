@@ -167,8 +167,10 @@ class OptionsPageManager {
         await this.componentManager.initializeAll();
 
         // Check Google and Outlook auth status after components are initialized
-        await this._checkGoogleAuthStatus();
-        await this._checkOutlookAuthStatus();
+        await Promise.all([
+            this._checkGoogleAuthStatus(),
+            this._checkOutlookAuthStatus()
+        ]);
 
         // Re-execute the localization after the component generation
         if (window.localizeHtmlPageWithLang) {

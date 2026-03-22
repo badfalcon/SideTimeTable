@@ -14,51 +14,16 @@ export class OutlookCalendarManagementCard extends CalendarManagementCard {
     constructor(onCalendarSelectionChange) {
         super(onCalendarSelectionChange);
 
-        // Override card metadata for Outlook
-        this._cardOptions = {
-            id: 'outlook-calendar-management-card',
-            title: 'Outlook Calendar Management',
-            titleLocalize: '__MSG_outlookCalendarSelection__',
-            subtitle: 'Select Outlook Calendars to display.',
-            subtitleLocalize: '__MSG_outlookCalendarSelectionDescription__',
-            icon: 'fas fa-calendar-alt',
-            iconColor: 'text-info',
-            hidden: true
-        };
-        // Re-apply card options (CardComponent stores these in constructor)
-        this.id = this._cardOptions.id;
-    }
-
-    /**
-     * Override createElement to apply Outlook-specific card options
-     */
-    createElement() {
-        // Temporarily override the title/subtitle before creating the element
-        if (this.titleElement) {
-            this.titleElement.textContent = this._cardOptions.title;
-        }
-        const card = super.createElement();
-
-        // Update title and subtitle elements after creation
-        if (this.element) {
-            const titleEl = this.element.querySelector('.card-title, [data-localize]');
-            if (titleEl && titleEl.getAttribute('data-localize') === '__MSG_calendarSelection__') {
-                titleEl.setAttribute('data-localize', '__MSG_outlookCalendarSelection__');
-                titleEl.textContent = window.getLocalizedMessage('outlookCalendarSelection') || this._cardOptions.title;
-            }
-            const subtitleEl = this.element.querySelector('.text-muted[data-localize="__MSG_calendarSelectionDescription__"]');
-            if (subtitleEl) {
-                subtitleEl.setAttribute('data-localize', '__MSG_outlookCalendarSelectionDescription__');
-                subtitleEl.textContent = window.getLocalizedMessage('outlookCalendarSelectionDescription') || this._cardOptions.subtitle;
-            }
-            const iconEl = this.element.querySelector('.text-success');
-            if (iconEl) {
-                iconEl.classList.remove('text-success');
-                iconEl.classList.add('text-info');
-            }
-        }
-
-        return card;
+        // Override card options that CardComponent uses during createElement()
+        this.options.id = 'outlook-calendar-management-card';
+        this.options.title = 'Outlook Calendar Management';
+        this.options.titleLocalize = '__MSG_outlookCalendarSelection__';
+        this.options.subtitle = 'Select Outlook Calendars to display.';
+        this.options.subtitleLocalize = '__MSG_outlookCalendarSelectionDescription__';
+        this.options.icon = 'fas fa-calendar-alt';
+        this.options.iconColor = 'text-info';
+        this.options.hidden = true;
+        this.id = this.options.id;
     }
 
     /**
@@ -90,17 +55,12 @@ export class OutlookCalendarManagementCard extends CalendarManagementCard {
             if (response.calendars) {
                 this.allCalendars = response.calendars;
 
+                // Auto-select default calendar only on first use (no calendars selected yet)
                 if (this.selectedCalendarIds.length === 0) {
                     const defaultCal = response.calendars.find(cal => cal.primary);
                     if (defaultCal) {
                         this.selectedCalendarIds = [defaultCal.id];
                     }
-                }
-
-                // Ensure default calendar is included
-                const defaultCal = response.calendars.find(cal => cal.primary);
-                if (defaultCal && !this.selectedCalendarIds.includes(defaultCal.id)) {
-                    this.selectedCalendarIds.unshift(defaultCal.id);
                 }
 
                 await StorageHelper.setLocal({ selectedOutlookCalendars: this.selectedCalendarIds });

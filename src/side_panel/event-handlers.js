@@ -417,6 +417,7 @@ export class OutlookEventManager {
             try {
                 const event = events[i];
                 const uniqueId = `outlook-${event.id}-${i}`;
+                // Guard for future event types (currently always 'default' from _normalizeEvent)
                 if (event.eventType !== 'default') continue;
                 const uniqueEvent = { ...event, uniqueId };
                 await this._createOutlookEventElement(uniqueEvent);
@@ -462,10 +463,12 @@ export class OutlookEventManager {
             }
         });
 
-        // Apply Outlook calendar colors
+        // Apply Outlook calendar colors (dynamic API values require inline styles)
         if (event.calendarBackgroundColor) {
             eventDiv.style.backgroundColor = event.calendarBackgroundColor;
-            eventDiv.style.color = event.calendarForegroundColor || '#ffffff';
+        }
+        if (event.calendarForegroundColor) {
+            eventDiv.style.color = event.calendarForegroundColor;
         }
 
         await this._setEventContentWithLocale(eventDiv, startDate, event.summary);
