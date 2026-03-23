@@ -21,7 +21,7 @@ export const RELEASE_NOTES = [
     },
     {
         version: '1.8.0',
-        date: '2026-03-16',
+        date: '2026-03-19',
         highlights: {
             en: [
                 'Dark mode and color theme presets',
