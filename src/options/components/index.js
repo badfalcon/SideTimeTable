@@ -19,6 +19,7 @@ export { LanguageSettingsCard } from './settings/language-settings-card.js';
 export { ShortcutSettingsCard } from './settings/shortcut-settings-card.js';
 export { ReminderSettingsCard } from './settings/reminder-settings-card.js';
 export { MemoSettingsCard } from './settings/memo-settings-card.js';
+export { DisplaySettingsCard } from './settings/display-settings-card.js';
 export { ReminderDebugCard } from './settings/reminder-debug-card.js';
 export { DemoModeCard } from './settings/demo-mode-card.js';
 export { StorageCard } from './settings/storage-card.js';

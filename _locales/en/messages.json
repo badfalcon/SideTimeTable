@@ -1081,6 +1081,22 @@
     "message": "When enabled, memo content is rendered as Markdown when not editing. Click the memo to switch to edit mode.",
     "description": "Help text for the Markdown toggle"
   },
+  "displaySettings": {
+    "message": "Display Settings",
+    "description": "Title for the display settings card"
+  },
+  "displaySettingsDescription": {
+    "message": "Configure the side panel display.",
+    "description": "Subtitle for the display settings card"
+  },
+  "thinScrollbarLabel": {
+    "message": "Use thin scrollbar",
+    "description": "Label for the thin scrollbar toggle"
+  },
+  "thinScrollbarHelp": {
+    "message": "Display a narrow scrollbar in the side panel for a cleaner look.",
+    "description": "Help text for the thin scrollbar toggle"
+  },
   "rsvpLabel": {
     "message": "Your response",
     "description": "Label for the RSVP response buttons"
