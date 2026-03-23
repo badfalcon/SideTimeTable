@@ -131,9 +131,6 @@ export class GoogleEventModal extends ModalComponent {
         // Attendees information
         this._setAttendeesInfo(event);
 
-        // RSVP buttons
-        this._setRsvpButtons(event);
-
         this.show();
 
         // Apply the localization after showing the modal
