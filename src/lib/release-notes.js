@@ -6,8 +6,22 @@
  */
 export const RELEASE_NOTES = [
     {
+        version: '1.8.1',
+        date: '2026-03-22',
+        highlights: {
+            en: [
+                'RSVP feature temporarily removed due to pending store review for additional permissions',
+                'Bug fixes and stability improvements'
+            ],
+            ja: [
+                'ストア審査に時間がかかっているため、出欠回答（RSVP）機能を一時的に無効化',
+                'バグ修正と安定性の向上'
+            ]
+        }
+    },
+    {
         version: '1.8.0',
-        date: '2026-03-16',
+        date: '2026-03-19',
         highlights: {
             en: [
                 'Dark mode and color theme presets',
