@@ -7,7 +7,7 @@
 export const RELEASE_NOTES = [
     {
         version: '1.8.1',
-        date: '2026-03-23',
+        date: '2026-03-22',
         highlights: {
             en: [
                 'RSVP feature temporarily removed due to pending store review for additional permissions',
