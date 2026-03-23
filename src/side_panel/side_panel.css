@@ -1675,3 +1675,42 @@ button {
 .memo-preview-placeholder {
     color: var(--side-calendar-muted-text-color);
 }
+
+/* Thin scrollbar mode */
+.thin-scrollbar {
+    scrollbar-width: thin;
+}
+
+.thin-scrollbar::-webkit-scrollbar {
+    width: 4px;
+}
+
+.thin-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.thin-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--side-calendar-border-color);
+    border-radius: 2px;
+}
+
+.thin-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--side-calendar-secondary-text-color);
+}
+
+.thin-scrollbar *::-webkit-scrollbar {
+    width: 4px;
+}
+
+.thin-scrollbar *::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.thin-scrollbar *::-webkit-scrollbar-thumb {
+    background: var(--side-calendar-border-color);
+    border-radius: 2px;
+}
+
+.thin-scrollbar *::-webkit-scrollbar-thumb:hover {
+    background: var(--side-calendar-secondary-text-color);
+}

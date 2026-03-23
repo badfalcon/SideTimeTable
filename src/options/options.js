@@ -21,6 +21,7 @@ import {
     ShortcutSettingsCard,
     ReminderSettingsCard,
     MemoSettingsCard,
+    DisplaySettingsCard,
     ReminderDebugCard,
     DemoModeCard,
     StorageCard,
@@ -42,6 +43,7 @@ class OptionsPageManager {
         this.shortcutSettingsCard = null;
         this.reminderSettingsCard = null;
         this.memoSettingsCard = null;
+        this.displaySettingsCard = null;
         this.reminderDebugCard = null;
         this.demoModeCard = null;
         this.storageCard = null;
@@ -83,6 +85,11 @@ class OptionsPageManager {
         this.colorSettingsCard.createElement();
         this.colorSettingsCard.appendTo(tabDisplay);
         this.componentManager.components.set('colorSettings', this.colorSettingsCard);
+
+        this.displaySettingsCard = new DisplaySettingsCard(this.handleDisplaySettingsChange.bind(this));
+        this.displaySettingsCard.createElement();
+        this.displaySettingsCard.appendTo(tabDisplay);
+        this.componentManager.components.set('displaySettings', this.displaySettingsCard);
 
         // --- General タブ ---
         this.languageSettingsCard = new LanguageSettingsCard(this.handleLanguageSettingsChange.bind(this));
@@ -214,6 +221,11 @@ class OptionsPageManager {
             // Load the memo settings
             this.memoSettingsCard.updateSettings({
                 memoMarkdown: settings.memoMarkdown || false
+            });
+
+            // Load the display settings
+            this.displaySettingsCard.updateSettings({
+                thinScrollbar: settings.thinScrollbar || false
             });
 
         } catch (error) {
@@ -411,6 +423,22 @@ class OptionsPageManager {
         }
     }
 
+    async handleDisplaySettingsChange(displaySettings) {
+        try {
+            const currentSettings = await loadSettings();
+            const updatedSettings = {
+                ...currentSettings,
+                thinScrollbar: displaySettings.thinScrollbar
+            };
+
+            await saveSettings(updatedSettings);
+
+            this._reloadSidePanel();
+        } catch (error) {
+            logError('Display settings save', error);
+        }
+    }
+
     async handleMemoSettingsChange(memoSettings) {
         try {
             const currentSettings = await loadSettings();
@@ -443,6 +471,7 @@ class OptionsPageManager {
             this.languageSettingsCard.resetToDefaults();
             this.reminderSettingsCard.resetToDefaults();
             this.memoSettingsCard.resetToDefaults();
+            this.displaySettingsCard.resetToDefaults();
 
             // Reset CSS variables via theme system
             const defaultTheme = getThemeById('default');

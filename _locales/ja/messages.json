@@ -1081,6 +1081,22 @@
     "message": "有効にすると、編集していないときにメモがMarkdown形式で表示されます。クリックすると編集モードに切り替わります。",
     "description": "Markdownトグルのヘルプテキスト"
   },
+  "displaySettings": {
+    "message": "表示設定",
+    "description": "表示設定カードのタイトル"
+  },
+  "displaySettingsDescription": {
+    "message": "サイドパネルの表示を設定します。",
+    "description": "表示設定カードの説明文"
+  },
+  "thinScrollbarLabel": {
+    "message": "細いスクロールバーを使用する",
+    "description": "細いスクロールバーのトグルラベル"
+  },
+  "thinScrollbarHelp": {
+    "message": "サイドパネルのスクロールバーを細く表示して、すっきりした見た目にします。",
+    "description": "細いスクロールバーのヘルプテキスト"
+  },
   "rsvpLabel": {
     "message": "出欠の回答",
     "description": "出欠回答ボタンのラベル"
