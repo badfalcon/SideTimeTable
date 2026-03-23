@@ -6,15 +6,14 @@
  */
 export const RELEASE_NOTES = [
     {
-        version: '1.8.0',
-        date: '2026-03-16',
+        version: '1.8.1',
+        date: '2026-03-23',
         highlights: {
             en: [
                 'Dark mode and color theme presets',
                 'Local event enhancements: description, view/edit mode',
                 'Event details shown on timeline blocks',
                 'Markdown support for memo panel',
-                'RSVP buttons for Google Calendar events',
                 'Complete localization of all UI strings',
                 'Bug fixes and stability improvements'
             ],
@@ -23,7 +22,6 @@ export const RELEASE_NOTES = [
                 'ローカルイベント強化：説明フィールド、表示/編集モード',
                 'タイムラインにイベント詳細を表示',
                 'メモパネルのMarkdown対応',
-                'Googleカレンダーの出欠回答ボタン',
                 'すべてのUI文字列のローカライズ完了',
                 'バグ修正と安定性の向上'
             ]
