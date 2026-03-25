@@ -348,6 +348,8 @@ export class MemoComponent extends Component {
             a.setAttribute('target', '_blank');
             a.setAttribute('rel', 'noopener noreferrer');
         });
+        // Strip non-checkbox inputs that may pass through DOMPurify
+        this._preview.querySelectorAll('input:not([type="checkbox"])').forEach(el => el.remove());
         // Enable checkbox toggling: add index for identification
         let checkboxIndex = 0;
         this._preview.querySelectorAll('input[type="checkbox"]').forEach(cb => {
@@ -380,6 +382,8 @@ export class MemoComponent extends Component {
                 const newText = lines.join('\n');
                 this.textarea.value = newText;
                 StorageHelper.setLocal({ memoContent: newText }).catch(() => {});
+                // _renderMarkdown is async but renderer is already cached at this point
+                // (preview was rendered before the checkbox became clickable)
                 this._renderMarkdown(newText);
                 return;
             }
@@ -406,7 +410,7 @@ export class MemoComponent extends Component {
             this._handleTabIndent(e);
             return;
         }
-        if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) {
+        if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && this._markdownEnabled) {
             if (e.key === 'b' || e.key === 'B') {
                 e.preventDefault();
                 this._wrapSelection('**', '**');
@@ -418,9 +422,11 @@ export class MemoComponent extends Component {
                 return;
             }
         }
-        const pair = { '(': ')', '[': ']', '{': '}', '"': '"', "'": "'" }[e.key];
-        if (pair) {
-            this._handleAutoPair(e, pair);
+        if (this._markdownEnabled) {
+            const pair = { '(': ')', '[': ']', '{': '}', '"': '"', "'": "'" }[e.key];
+            if (pair) {
+                this._handleAutoPair(e, pair);
+            }
         }
     }
 
@@ -446,7 +452,7 @@ export class MemoComponent extends Component {
 
         const line = this._getFullCurrentLine();
         // Match: checkbox list, unordered list, ordered list (with optional leading whitespace)
-        const checkboxMatch = line.match(/^(\s*)- \[([ xX])\]\s(.*)$/);
+        const checkboxMatch = line.match(/^(\s*)- \[([ xX])\]\s?(.*)$/);
         const ulMatch = line.match(/^(\s*)([*+-])\s(.*)$/);
         const olMatch = line.match(/^(\s*)(\d+)\.\s(.*)$/);
 
