@@ -6,11 +6,11 @@ import { CardComponent } from '../base/card-component.js';
 export class DisplaySettingsCard extends CardComponent {
     constructor(onSettingsChange) {
         super({
-            title: 'Display Settings',
-            titleLocalize: '__MSG_displaySettings__',
-            subtitle: 'Configure the side panel display.',
-            subtitleLocalize: '__MSG_displaySettingsDescription__',
-            icon: 'fas fa-desktop',
+            title: 'Scrollbar Settings',
+            titleLocalize: '__MSG_scrollbarSettings__',
+            subtitle: 'Configure the scrollbar appearance.',
+            subtitleLocalize: '__MSG_scrollbarSettingsDescription__',
+            icon: 'fas fa-arrows-alt-v',
             iconColor: 'text-info'
         });
 
