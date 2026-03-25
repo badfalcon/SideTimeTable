@@ -115,6 +115,7 @@ export class MemoComponent extends Component {
 
         this.addEventListener(this._toggleBtn, 'click', () => this._toggleCollapse());
         this.addEventListener(this.textarea, 'input', () => this._onInput());
+        this.addEventListener(this.textarea, 'keydown', (e) => this._onKeyDown(e));
         this.addEventListener(this.textarea, 'blur', () => this._switchToPreview());
         this.addEventListener(this._preview, 'click', (e) => {
             if (e.target.matches('input[type="checkbox"]')) {
@@ -368,6 +369,187 @@ export class MemoComponent extends Component {
                 return;
             }
             currentIndex++;
+        }
+    }
+
+    // --- Markdown editing helpers ---
+
+    _onKeyDown(e) {
+        if (e.key === 'Enter' && !e.shiftKey && !e.compositionUpdate) {
+            if (this._handleListContinuation(e)) return;
+        }
+        if (e.key === 'Tab') {
+            this._handleTabIndent(e);
+            return;
+        }
+        if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) {
+            if (e.key === 'b' || e.key === 'B') {
+                e.preventDefault();
+                this._wrapSelection('**', '**');
+                return;
+            }
+            if (e.key === 'i' || e.key === 'I') {
+                e.preventDefault();
+                this._wrapSelection('*', '*');
+                return;
+            }
+        }
+        const pair = { '`': '`', '(': ')', '[': ']', '{': '}', '"': '"', "'": "'" }[e.key];
+        if (pair) {
+            this._handleAutoPair(e, pair);
+        }
+    }
+
+    _getCurrentLine() {
+        const ta = this.textarea;
+        const text = ta.value;
+        const lineStart = text.lastIndexOf('\n', ta.selectionStart - 1) + 1;
+        return text.substring(lineStart, ta.selectionStart);
+    }
+
+    _replaceRange(start, end, replacement) {
+        const ta = this.textarea;
+        ta.setSelectionRange(start, end);
+        document.execCommand('insertText', false, replacement);
+    }
+
+    _handleListContinuation(e) {
+        const ta = this.textarea;
+        if (ta.selectionStart !== ta.selectionEnd) return false;
+
+        const line = this._getCurrentLine();
+        // Match: checkbox list, unordered list, ordered list (with optional leading whitespace)
+        const checkboxMatch = line.match(/^(\s*)- \[([ xX])\]\s(.*)$/);
+        const ulMatch = line.match(/^(\s*)([*+-])\s(.*)$/);
+        const olMatch = line.match(/^(\s*)(\d+)\.\s(.*)$/);
+
+        let indent, content, prefix;
+        if (checkboxMatch) {
+            indent = checkboxMatch[1];
+            content = checkboxMatch[3];
+            prefix = `${indent}- [ ] `;
+        } else if (olMatch) {
+            indent = olMatch[1];
+            content = olMatch[3];
+            const nextNum = parseInt(olMatch[2], 10) + 1;
+            prefix = `${indent}${nextNum}. `;
+        } else if (ulMatch) {
+            indent = ulMatch[1];
+            content = ulMatch[3];
+            prefix = `${indent}${ulMatch[2]} `;
+        } else {
+            return false;
+        }
+
+        e.preventDefault();
+
+        // Empty content → remove the list prefix (exit list)
+        if (!content.trim()) {
+            const text = ta.value;
+            const lineStart = text.lastIndexOf('\n', ta.selectionStart - 1) + 1;
+            this._replaceRange(lineStart, ta.selectionStart, '');
+            return true;
+        }
+
+        // Insert newline + list prefix
+        document.execCommand('insertText', false, '\n' + prefix);
+        return true;
+    }
+
+    _handleTabIndent(e) {
+        e.preventDefault();
+        const ta = this.textarea;
+        const text = ta.value;
+        const start = ta.selectionStart;
+        const end = ta.selectionEnd;
+
+        // Find the lines covered by the selection
+        const lineStart = text.lastIndexOf('\n', start - 1) + 1;
+        const lineEnd = text.indexOf('\n', end);
+        const blockEnd = lineEnd === -1 ? text.length : lineEnd;
+        const block = text.substring(lineStart, blockEnd);
+        const lines = block.split('\n');
+
+        let newBlock;
+        let startDelta = 0;
+        let totalDelta = 0;
+
+        if (e.shiftKey) {
+            // Outdent: remove up to 2 leading spaces
+            newBlock = lines.map((l, i) => {
+                const removed = l.match(/^( {1,2})/);
+                const count = removed ? removed[1].length : 0;
+                if (i === 0) startDelta = -count;
+                totalDelta -= count;
+                return count > 0 ? l.substring(count) : l;
+            }).join('\n');
+        } else {
+            // Indent: add 2 spaces
+            newBlock = lines.map((l, i) => {
+                if (i === 0) startDelta = 2;
+                totalDelta += 2;
+                return '  ' + l;
+            }).join('\n');
+        }
+
+        this._replaceRange(lineStart, blockEnd, newBlock);
+        // Restore selection across the modified lines
+        const newStart = Math.max(lineStart, start + startDelta);
+        const newEnd = end + totalDelta;
+        ta.setSelectionRange(newStart, newEnd);
+    }
+
+    _wrapSelection(before, after) {
+        const ta = this.textarea;
+        const start = ta.selectionStart;
+        const end = ta.selectionEnd;
+        const text = ta.value;
+        const selected = text.substring(start, end);
+
+        // If already wrapped, unwrap
+        if (start >= before.length && text.substring(start - before.length, start) === before
+            && text.substring(end, end + after.length) === after) {
+            this._replaceRange(start - before.length, end + after.length, selected);
+            ta.setSelectionRange(start - before.length, end - before.length);
+            return;
+        }
+
+        const replacement = before + selected + after;
+        this._replaceRange(start, end, replacement);
+        if (selected.length > 0) {
+            ta.setSelectionRange(start + before.length, end + before.length);
+        } else {
+            ta.setSelectionRange(start + before.length, start + before.length);
+        }
+    }
+
+    _handleAutoPair(e, closing) {
+        const ta = this.textarea;
+        const start = ta.selectionStart;
+        const end = ta.selectionEnd;
+
+        // If there's a selection, wrap it
+        if (start !== end) {
+            e.preventDefault();
+            const selected = ta.value.substring(start, end);
+            this._replaceRange(start, end, e.key + selected + closing);
+            ta.setSelectionRange(start + 1, end + 1);
+            return;
+        }
+
+        // If next char is the same closing char, skip over it
+        if (e.key === closing && ta.value[start] === closing) {
+            e.preventDefault();
+            ta.setSelectionRange(start + 1, start + 1);
+            return;
+        }
+
+        // Auto-pair only when next char is whitespace, end of text, or a closing bracket
+        const nextChar = ta.value[start] || '';
+        if (!nextChar || /[\s)\]}>,.;:]/.test(nextChar)) {
+            e.preventDefault();
+            document.execCommand('insertText', false, e.key + closing);
+            ta.setSelectionRange(start + 1, start + 1);
         }
     }
 
