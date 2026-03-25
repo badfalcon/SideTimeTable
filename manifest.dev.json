@@ -6,7 +6,7 @@
   "description": "__MSG_appDesc__",
   "permissions": ["sidePanel", "identity", "storage", "notifications", "alarms", "contextMenus"],
   "oauth2": {
-    "client_id": "62076165035-dt37o7vkjfj6csb6mehephbebekslimc.apps.googleusercontent.com",
+    "client_id": "976638980490-mrn3egp5mgo6j31ieigbnjtbv02fpieh.apps.googleusercontent.com",
     "scopes": ["https://www.googleapis.com/auth/calendar.readonly"]
   },
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAl+NVghlUTGjEBvuWdYG6HPg+szsw1M4qcIKx5Es4+Y2EpWcTkyltvJXpGvH8Zr0YF2zs+/gKbYS7L5y4sEklR3QWk+uoEIX/Ap/8nZPvnAm09jtvFGqcx1QQqei0L8nNRDx/69UfXHOwc23IIwyXmNjyii8JMz03a7kmAutet6OxGMYtpff1yix5nUDAXLomaKlwTJYkMAc9AUwKqImTGFYKENEDn5Hb9JU1tDGo4ONr+v2BGLJmY3Quv6+Z1Ws7moSywWy23utfg6K/pjnqzhaQDlmzHguWfNBPfzvRpZihTZ7DxhK5YKH62KbsvdGOHd5VC0/MEqdCw9yKs1EnRNwIDAQAB",
