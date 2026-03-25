@@ -353,9 +353,10 @@ export class MemoComponent extends Component {
         });
         // Strip non-checkbox inputs that may pass through DOMPurify
         this._preview.querySelectorAll('input:not([type="checkbox"])').forEach(el => el.remove());
-        // Enable checkbox toggling: add index for identification
+        // Enable checkbox toggling: only index checkboxes inside list items
+        // (matches _toggleCheckbox's Markdown-only source parsing, ignoring raw HTML checkboxes)
         let checkboxIndex = 0;
-        this._preview.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        this._preview.querySelectorAll('li > input[type="checkbox"]').forEach(cb => {
             cb.dataset.cbIndex = checkboxIndex++;
         });
     }
