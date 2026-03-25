@@ -122,7 +122,10 @@ export class MemoComponent extends Component {
             this._onInput();
         });
         this.addEventListener(this.textarea, 'keydown', (e) => this._onKeyDown(e));
-        this.addEventListener(this.textarea, 'blur', () => this._switchToPreview());
+        this.addEventListener(this.textarea, 'blur', () => {
+            this._tabTrapped = false;
+            this._switchToPreview();
+        });
         this.addEventListener(this._preview, 'click', (e) => {
             if (e.target.matches('input[type="checkbox"]')) {
                 this._toggleCheckbox(e.target);
@@ -378,9 +381,13 @@ export class MemoComponent extends Component {
 
             if (currentIndex === cbIndex) {
                 const isChecked = m[2] !== ' ';
-                lines[i] = m[1] + (isChecked ? ' ' : 'x') + m[3];
-                const newText = lines.join('\n');
-                this.textarea.value = newText;
+                const newChar = isChecked ? ' ' : 'x';
+                // Calculate the byte offset of the checkbox char within the full text
+                const lineOffset = lines.slice(0, i).reduce((acc, l) => acc + l.length + 1, 0);
+                const charPos = lineOffset + m[1].length;
+                // Use _replaceRange (execCommand) to preserve undo history
+                this._replaceRange(charPos, charPos + 1, newChar);
+                const newText = this.textarea.value;
                 StorageHelper.setLocal({ memoContent: newText }).catch(() => {});
                 // _renderMarkdown is async but renderer is already cached at this point
                 // (preview was rendered before the checkbox became clickable)
@@ -403,10 +410,10 @@ export class MemoComponent extends Component {
             return;
         }
 
-        if (e.key === 'Enter' && !e.shiftKey) {
+        if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey && this._markdownEnabled) {
             if (this._handleListContinuation(e)) return;
         }
-        if (e.key === 'Tab' && this._tabTrapped) {
+        if (e.key === 'Tab' && this._tabTrapped && this._markdownEnabled) {
             this._handleTabIndent(e);
             return;
         }
@@ -535,7 +542,7 @@ export class MemoComponent extends Component {
         this._replaceRange(lineStart, blockEnd, newBlock);
         // Restore selection across the modified lines
         const newStart = Math.max(lineStart, start + startDelta);
-        const newEnd = end + totalDelta;
+        const newEnd = Math.max(newStart, end + totalDelta);
         ta.setSelectionRange(newStart, newEnd);
     }
 
