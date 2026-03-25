@@ -458,7 +458,7 @@ export class EventLayoutManager {
             // Calculate the available width (considering gaps)
             const totalGap = LAYOUT_CONSTANTS.GAP * (laneCount - 1);
             const availableWidth = this.maxWidth - totalGap;
-            const laneWidth = Math.max(availableWidth / laneCount, LAYOUT_CONSTANTS.MIN_CONTENT_WIDTH);
+            const laneWidth = availableWidth / laneCount;
 
             // Apply layout synchronously so that no-transition suppression in calculateLayout works correctly
             events.forEach((event) => {
