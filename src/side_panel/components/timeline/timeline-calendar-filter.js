@@ -28,6 +28,7 @@ export class TimelineCalendarFilter extends Component {
         // Bound handlers
         this._boundOnScroll = null;
         this._boundOnClickOutside = null;
+        this._rafId = null;
     }
 
     createElement() {
@@ -42,7 +43,7 @@ export class TimelineCalendarFilter extends Component {
         this.button.title = this.getMessage('calendarFilterTooltip');
         this.button.type = 'button';
         this.button.innerHTML = '<i class="fa-solid fa-sliders"></i>';
-        this.button.addEventListener('click', (e) => {
+        this.addEventListener(this.button, 'click', (e) => {
             e.stopPropagation();
             this._toggle();
         });
@@ -75,9 +76,13 @@ export class TimelineCalendarFilter extends Component {
         // Initial position
         this._syncPosition();
 
-        // Sync position on scroll
+        // Sync position on scroll (deduplicate rAF calls)
         this._boundOnScroll = () => {
-            requestAnimationFrame(() => this._syncPosition());
+            if (this._rafId) window.cancelAnimationFrame(this._rafId);
+            this._rafId = window.requestAnimationFrame(() => {
+                this._rafId = null;
+                this._syncPosition();
+            });
         };
         scrollContainer.addEventListener('scroll', this._boundOnScroll);
 
@@ -141,6 +146,12 @@ export class TimelineCalendarFilter extends Component {
         } else {
             // Refresh selected state each time
             this.selectedIds = await loadSelectedCalendars();
+            // Ensure primary calendar stays in selection
+            const primary = this.calendars.find(c => c.primary);
+            if (primary && !this.selectedIds.includes(primary.id)) {
+                this.selectedIds.unshift(primary.id);
+                await saveSelectedCalendars(this.selectedIds);
+            }
             this._renderCalendarList();
         }
     }
@@ -180,13 +191,11 @@ export class TimelineCalendarFilter extends Component {
                 this.calendars = response.calendars;
                 this.selectedIds = selectedIds;
 
-                // Auto-select primary calendar if nothing selected
-                if (this.selectedIds.length === 0) {
-                    const primary = this.calendars.find(c => c.primary);
-                    if (primary) {
-                        this.selectedIds = [primary.id];
-                        await saveSelectedCalendars(this.selectedIds);
-                    }
+                // Ensure primary calendar is always included in selection
+                const primary = this.calendars.find(c => c.primary);
+                if (primary && !this.selectedIds.includes(primary.id)) {
+                    this.selectedIds.unshift(primary.id);
+                    await saveSelectedCalendars(this.selectedIds);
                 }
 
                 this.hasFetched = true;
@@ -291,6 +300,10 @@ export class TimelineCalendarFilter extends Component {
      * Clean up resources
      */
     destroy() {
+        if (this._rafId) {
+            window.cancelAnimationFrame(this._rafId);
+            this._rafId = null;
+        }
         if (this._boundOnScroll && this.scrollContainer) {
             this.scrollContainer.removeEventListener('scroll', this._boundOnScroll);
             this._boundOnScroll = null;
