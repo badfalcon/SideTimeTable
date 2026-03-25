@@ -21,6 +21,7 @@ import {
     ShortcutSettingsCard,
     ReminderSettingsCard,
     MemoSettingsCard,
+    ScrollbarSettingsCard,
     ReminderDebugCard,
     DemoModeCard,
     StorageCard,
@@ -42,6 +43,7 @@ class OptionsPageManager {
         this.shortcutSettingsCard = null;
         this.reminderSettingsCard = null;
         this.memoSettingsCard = null;
+        this.scrollbarSettingsCard = null;
         this.reminderDebugCard = null;
         this.demoModeCard = null;
         this.storageCard = null;
@@ -83,6 +85,11 @@ class OptionsPageManager {
         this.colorSettingsCard.createElement();
         this.colorSettingsCard.appendTo(tabDisplay);
         this.componentManager.components.set('colorSettings', this.colorSettingsCard);
+
+        this.scrollbarSettingsCard = new ScrollbarSettingsCard(this.handleScrollbarSettingsChange.bind(this));
+        this.scrollbarSettingsCard.createElement();
+        this.scrollbarSettingsCard.appendTo(tabDisplay);
+        this.componentManager.components.set('scrollbarSettings', this.scrollbarSettingsCard);
 
         // --- General タブ ---
         this.languageSettingsCard = new LanguageSettingsCard(this.handleLanguageSettingsChange.bind(this));
@@ -215,6 +222,14 @@ class OptionsPageManager {
             this.memoSettingsCard.updateSettings({
                 memoMarkdown: settings.memoMarkdown || false
             });
+
+            // Load the scrollbar settings
+            this.scrollbarSettingsCard.updateSettings({
+                thinScrollbar: settings.thinScrollbar || false
+            });
+
+            // Apply thin scrollbar to options page
+            document.body.classList.toggle('thin-scrollbar', !!settings.thinScrollbar);
 
         } catch (error) {
             console.error('Settings loading error:', error);
@@ -411,6 +426,25 @@ class OptionsPageManager {
         }
     }
 
+    async handleScrollbarSettingsChange(scrollbarSettings) {
+        try {
+            const currentSettings = await loadSettings();
+            const updatedSettings = {
+                ...currentSettings,
+                thinScrollbar: scrollbarSettings.thinScrollbar
+            };
+
+            await saveSettings(updatedSettings);
+
+            // Apply to options page as preview
+            document.body.classList.toggle('thin-scrollbar', scrollbarSettings.thinScrollbar);
+
+            this._reloadSidePanel();
+        } catch (error) {
+            logError('Scrollbar settings save', error);
+        }
+    }
+
     async handleMemoSettingsChange(memoSettings) {
         try {
             const currentSettings = await loadSettings();
@@ -443,6 +477,8 @@ class OptionsPageManager {
             this.languageSettingsCard.resetToDefaults();
             this.reminderSettingsCard.resetToDefaults();
             this.memoSettingsCard.resetToDefaults();
+            this.scrollbarSettingsCard.resetToDefaults();
+            document.body.classList.remove('thin-scrollbar');
 
             // Reset CSS variables via theme system
             const defaultTheme = getThemeById('default');

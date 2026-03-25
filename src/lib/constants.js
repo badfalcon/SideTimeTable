@@ -52,7 +52,8 @@ export const DEFAULT_SETTINGS = {
     darkMode: false, // Dark mode theme (legacy, kept for migration)
     useGoogleCalendarColors: true, // Use per-calendar colors from Google Calendar API
     colorTheme: 'default', // Active colour-set ID (see color-themes.js)
-    memoMarkdown: false // Enable Markdown rendering in memo panel
+    memoMarkdown: false, // Enable Markdown rendering in memo panel
+    thinScrollbar: false // Use thin (narrow) scrollbar in side panel
 };
 
 // Mapping from color setting keys to CSS variable names
