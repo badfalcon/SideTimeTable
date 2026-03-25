@@ -381,13 +381,12 @@ export class MemoComponent extends Component {
 
             if (currentIndex === cbIndex) {
                 const isChecked = m[2] !== ' ';
-                const newChar = isChecked ? ' ' : 'x';
-                // Calculate the byte offset of the checkbox char within the full text
-                const lineOffset = lines.slice(0, i).reduce((acc, l) => acc + l.length + 1, 0);
-                const charPos = lineOffset + m[1].length;
-                // Use _replaceRange (execCommand) to preserve undo history
-                this._replaceRange(charPos, charPos + 1, newChar);
-                const newText = this.textarea.value;
+                lines[i] = m[1] + (isChecked ? ' ' : 'x') + m[3];
+                const newText = lines.join('\n');
+                // Direct assignment is intentional: textarea is hidden (display:none)
+                // during preview mode, so execCommand would be a no-op.
+                // Undo history loss is acceptable since the user is not in edit mode.
+                this.textarea.value = newText;
                 StorageHelper.setLocal({ memoContent: newText }).catch(() => {});
                 // _renderMarkdown is async but renderer is already cached at this point
                 // (preview was rendered before the checkbox became clickable)
@@ -430,6 +429,16 @@ export class MemoComponent extends Component {
             }
         }
         if (this._markdownEnabled) {
+            // Skip over closing bracket if it matches the next character
+            const closingBrackets = new Set([')', ']', '}']);
+            if (closingBrackets.has(e.key)) {
+                const ta = this.textarea;
+                if (ta.selectionStart === ta.selectionEnd && ta.value[ta.selectionStart] === e.key) {
+                    e.preventDefault();
+                    ta.setSelectionRange(ta.selectionStart + 1, ta.selectionStart + 1);
+                    return;
+                }
+            }
             const pair = { '(': ')', '[': ']', '{': '}', '"': '"', "'": "'" }[e.key];
             if (pair) {
                 this._handleAutoPair(e, pair);
