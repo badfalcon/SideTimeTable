@@ -349,11 +349,7 @@ class SidePanelUIController {
             }
 
             // Apply thin scrollbar setting
-            if (settings.thinScrollbar) {
-                document.body.classList.add('thin-scrollbar');
-            } else {
-                document.body.classList.remove('thin-scrollbar');
-            }
+            document.body.classList.toggle('thin-scrollbar', !!settings.thinScrollbar);
 
             // Set the current date
             this.headerComponent.setCurrentDate(this.dateNavService.getDate());

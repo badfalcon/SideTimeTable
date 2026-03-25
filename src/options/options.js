@@ -89,7 +89,7 @@ class OptionsPageManager {
         this.scrollbarSettingsCard = new ScrollbarSettingsCard(this.handleScrollbarSettingsChange.bind(this));
         this.scrollbarSettingsCard.createElement();
         this.scrollbarSettingsCard.appendTo(tabDisplay);
-        this.componentManager.components.set('displaySettings', this.scrollbarSettingsCard);
+        this.componentManager.components.set('scrollbarSettings', this.scrollbarSettingsCard);
 
         // --- General タブ ---
         this.languageSettingsCard = new LanguageSettingsCard(this.handleLanguageSettingsChange.bind(this));
