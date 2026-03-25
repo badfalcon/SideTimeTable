@@ -197,7 +197,9 @@ class SidePanelUIController {
             onCancel: () => this._handleCancelLocalEvent()
         });
 
-        this.googleEventModal = new GoogleEventModal({});
+        this.googleEventModal = new GoogleEventModal({
+            onRsvpResponse: () => this._loadEventsForCurrentDate()
+        });
 
         this.alertModal = new AlertModal();
 
