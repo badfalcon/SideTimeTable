@@ -420,3 +420,30 @@ body[data-theme="dark"] {
         width: auto;
     }
 }
+
+/* Thin scrollbar mode */
+.thin-scrollbar,
+.thin-scrollbar * {
+    scrollbar-width: thin;
+}
+
+.thin-scrollbar::-webkit-scrollbar,
+.thin-scrollbar *::-webkit-scrollbar {
+    width: 4px;
+}
+
+.thin-scrollbar::-webkit-scrollbar-track,
+.thin-scrollbar *::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.thin-scrollbar::-webkit-scrollbar-thumb,
+.thin-scrollbar *::-webkit-scrollbar-thumb {
+    background: var(--side-calendar-border-color, #ccc);
+    border-radius: 2px;
+}
+
+.thin-scrollbar::-webkit-scrollbar-thumb:hover,
+.thin-scrollbar *::-webkit-scrollbar-thumb:hover {
+    background: var(--side-calendar-secondary-text-color, #666);
+}
