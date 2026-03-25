@@ -27,7 +27,10 @@ async function getMarkdownRenderer() {
         ]);
         const purify = DOMPurify.default || DOMPurify;
         const marked = new Marked({ breaks: true, gfm: true });
-        _renderer = (text) => purify.sanitize(marked.parse(text));
+        _renderer = (text) => purify.sanitize(marked.parse(text), {
+            ADD_TAGS: ['input'],
+            ADD_ATTR: ['type', 'checked', 'disabled']
+        });
     }
     return _renderer;
 }
@@ -114,6 +117,10 @@ export class MemoComponent extends Component {
         this.addEventListener(this.textarea, 'input', () => this._onInput());
         this.addEventListener(this.textarea, 'blur', () => this._switchToPreview());
         this.addEventListener(this._preview, 'click', (e) => {
+            if (e.target.matches('input[type="checkbox"]')) {
+                this._toggleCheckbox(e.target);
+                return;
+            }
             if (!e.target.closest('a')) this._switchToEdit();
         });
         this._setupDragHandle();
@@ -333,6 +340,35 @@ export class MemoComponent extends Component {
             a.setAttribute('target', '_blank');
             a.setAttribute('rel', 'noopener noreferrer');
         });
+        // Enable checkbox toggling: remove disabled, add index for identification
+        let checkboxIndex = 0;
+        this._preview.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+            cb.removeAttribute('disabled');
+            cb.dataset.cbIndex = checkboxIndex++;
+        });
+    }
+
+    _toggleCheckbox(checkbox) {
+        const cbIndex = parseInt(checkbox.dataset.cbIndex, 10);
+        if (isNaN(cbIndex) || !this.textarea) return;
+
+        const text = this.textarea.value;
+        const pattern = /- \[([ xX])\]/g;
+        let match;
+        let currentIndex = 0;
+
+        while ((match = pattern.exec(text)) !== null) {
+            if (currentIndex === cbIndex) {
+                const isChecked = match[1] !== ' ';
+                const replacement = isChecked ? '- [ ]' : '- [x]';
+                const newText = text.substring(0, match.index) + replacement + text.substring(match.index + match[0].length);
+                this.textarea.value = newText;
+                StorageHelper.setLocal({ memoContent: newText }).catch(() => {});
+                this._renderMarkdown(newText);
+                return;
+            }
+            currentIndex++;
+        }
     }
 
     _onInput() {
