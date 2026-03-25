@@ -187,7 +187,8 @@ class SidePanelUIController {
         // The timeline component
         this.timelineComponent = new TimelineComponent({
             showCurrentTimeLine: true,
-            onDragCreate: (startTime, endTime) => this._handleAddLocalEvent(startTime, endTime)
+            onDragCreate: (startTime, endTime) => this._handleAddLocalEvent(startTime, endTime),
+            onCalendarChange: () => this._loadEventsForCurrentDate()
         });
 
         // The modal components
