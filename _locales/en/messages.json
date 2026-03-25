@@ -1436,5 +1436,13 @@
   "noCalendarsAvailable": {
     "message": "No calendars found",
     "description": "Message shown when no calendars are available in the filter"
+  },
+  "calendarFilterSearchPlaceholder": {
+    "message": "Search",
+    "description": "Placeholder text for the search input in the calendar filter"
+  },
+  "calendarFilterRefreshTooltip": {
+    "message": "Refresh calendar list",
+    "description": "Tooltip for the refresh button in the calendar filter"
   }
 }

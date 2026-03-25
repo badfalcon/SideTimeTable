@@ -1436,5 +1436,13 @@
   "noCalendarsAvailable": {
     "message": "カレンダーが見つかりません",
     "description": "フィルターでカレンダーが見つからない場合のメッセージ"
+  },
+  "calendarFilterSearchPlaceholder": {
+    "message": "検索",
+    "description": "カレンダーフィルターの検索入力のプレースホルダーテキスト"
+  },
+  "calendarFilterRefreshTooltip": {
+    "message": "カレンダー一覧を更新",
+    "description": "カレンダーフィルターの更新ボタンのツールチップ"
   }
 }

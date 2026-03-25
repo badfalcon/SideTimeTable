@@ -20,10 +20,14 @@ export class TimelineCalendarFilter extends Component {
         this.selectedIds = [];
         this.hasFetched = false;
         this.isAuthenticated = false;
+        this.searchTerm = '';
 
         // DOM references
         this.button = null;
         this.dropdown = null;
+        this.searchInput = null;
+        this.calendarList = null;
+        this.refreshBtn = null;
 
         // Bound handlers
         this._boundOnScroll = null;
@@ -152,7 +156,7 @@ export class TimelineCalendarFilter extends Component {
                 this.selectedIds.unshift(primary.id);
                 await saveSelectedCalendars(this.selectedIds);
             }
-            this._renderCalendarList();
+            this._renderDropdownContent();
         }
     }
 
@@ -163,6 +167,7 @@ export class TimelineCalendarFilter extends Component {
     _close() {
         this.isOpen = false;
         this.dropdown.classList.remove('open');
+        this.searchTerm = '';
     }
 
     /**
@@ -172,7 +177,7 @@ export class TimelineCalendarFilter extends Component {
     async _fetchCalendars() {
         this.dropdown.innerHTML = '';
         const loading = document.createElement('div');
-        loading.className = 'timeline-calendar-filter-loading';
+        loading.className = 'timeline-calendar-filter-status';
         loading.textContent = this.getMessage('calendarFilterLoading');
         this.dropdown.appendChild(loading);
 
@@ -199,29 +204,72 @@ export class TimelineCalendarFilter extends Component {
                 }
 
                 this.hasFetched = true;
-                this._renderCalendarList();
+                this._renderDropdownContent();
             }
         } catch {
             this.dropdown.innerHTML = '';
             const errorEl = document.createElement('div');
-            errorEl.className = 'timeline-calendar-filter-loading';
+            errorEl.className = 'timeline-calendar-filter-status';
             errorEl.textContent = this.getMessage('calendarFilterError');
             this.dropdown.appendChild(errorEl);
         }
     }
 
     /**
-     * Render the calendar list with checkboxes
+     * Render the full dropdown content (toolbar + calendar list)
+     * @private
+     */
+    _renderDropdownContent() {
+        this.dropdown.innerHTML = '';
+
+        // Toolbar: search + refresh
+        const toolbar = document.createElement('div');
+        toolbar.className = 'timeline-calendar-filter-toolbar';
+
+        this.searchInput = document.createElement('input');
+        this.searchInput.type = 'text';
+        this.searchInput.className = 'timeline-calendar-filter-search';
+        this.searchInput.placeholder = this.getMessage('calendarFilterSearchPlaceholder');
+        this.searchInput.value = this.searchTerm;
+        this.searchInput.addEventListener('input', () => {
+            this.searchTerm = this.searchInput.value;
+            this._renderCalendarList();
+        });
+
+        this.refreshBtn = document.createElement('button');
+        this.refreshBtn.type = 'button';
+        this.refreshBtn.className = 'timeline-calendar-filter-refresh-btn';
+        this.refreshBtn.title = this.getMessage('calendarFilterRefreshTooltip');
+        this.refreshBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i>';
+        this.refreshBtn.addEventListener('click', () => {
+            this._refreshCalendars();
+        });
+
+        toolbar.appendChild(this.searchInput);
+        toolbar.appendChild(this.refreshBtn);
+        this.dropdown.appendChild(toolbar);
+
+        // Calendar list container
+        this.calendarList = document.createElement('div');
+        this.calendarList.className = 'timeline-calendar-filter-list';
+        this.dropdown.appendChild(this.calendarList);
+
+        this._renderCalendarList();
+    }
+
+    /**
+     * Render the calendar list with checkboxes (filtered by search)
      * @private
      */
     _renderCalendarList() {
-        this.dropdown.innerHTML = '';
+        if (!this.calendarList) return;
+        this.calendarList.innerHTML = '';
 
         if (!this.calendars || this.calendars.length === 0) {
             const empty = document.createElement('div');
-            empty.className = 'timeline-calendar-filter-loading';
+            empty.className = 'timeline-calendar-filter-status';
             empty.textContent = this.getMessage('noCalendarsAvailable');
-            this.dropdown.appendChild(empty);
+            this.calendarList.appendChild(empty);
             return;
         }
 
@@ -232,7 +280,21 @@ export class TimelineCalendarFilter extends Component {
             return a.summary.localeCompare(b.summary);
         });
 
-        sorted.forEach(calendar => {
+        // Filter by search term
+        const term = this.searchTerm.toLowerCase().trim();
+        const filtered = term
+            ? sorted.filter(c => c.summary.toLowerCase().includes(term))
+            : sorted;
+
+        if (filtered.length === 0) {
+            const noResult = document.createElement('div');
+            noResult.className = 'timeline-calendar-filter-status';
+            noResult.textContent = this.getMessage('noCalendarsAvailable');
+            this.calendarList.appendChild(noResult);
+            return;
+        }
+
+        filtered.forEach(calendar => {
             const isSelected = this.selectedIds.includes(calendar.id);
             const item = document.createElement('label');
             item.className = 'timeline-calendar-filter-item';
@@ -265,8 +327,23 @@ export class TimelineCalendarFilter extends Component {
             item.appendChild(checkbox);
             item.appendChild(color);
             item.appendChild(name);
-            this.dropdown.appendChild(item);
+            this.calendarList.appendChild(item);
         });
+    }
+
+    /**
+     * Refresh calendars from the API
+     * @private
+     */
+    async _refreshCalendars() {
+        if (this.refreshBtn) {
+            this.refreshBtn.querySelector('i').classList.add('fa-spin');
+        }
+        this.hasFetched = false;
+        await this._fetchCalendars();
+        if (this.refreshBtn) {
+            this.refreshBtn.querySelector('i').classList.remove('fa-spin');
+        }
     }
 
     /**
@@ -315,6 +392,9 @@ export class TimelineCalendarFilter extends Component {
         this.scrollContainer = null;
         this.button = null;
         this.dropdown = null;
+        this.searchInput = null;
+        this.calendarList = null;
+        this.refreshBtn = null;
         this.calendars = [];
         this.selectedIds = [];
         super.destroy();
