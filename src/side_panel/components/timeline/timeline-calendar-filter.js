@@ -102,7 +102,7 @@ export class TimelineCalendarFilter extends Component {
     async _checkAuthAndVisibility() {
         try {
             const response = await sendMessage({ action: 'checkGoogleAuth' });
-            this.isAuthenticated = !!(response && response.isAuthenticated);
+            this.isAuthenticated = !!(response && response.authenticated);
         } catch {
             this.isAuthenticated = false;
         }
