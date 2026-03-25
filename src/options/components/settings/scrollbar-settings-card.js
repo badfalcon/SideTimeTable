@@ -1,9 +1,9 @@
 /**
- * DisplaySettingsCard - Display settings card component
+ * ScrollbarSettingsCard - Scrollbar settings card component
  */
 import { CardComponent } from '../base/card-component.js';
 
-export class DisplaySettingsCard extends CardComponent {
+export class ScrollbarSettingsCard extends CardComponent {
     constructor(onSettingsChange) {
         super({
             title: 'Scrollbar Settings',
