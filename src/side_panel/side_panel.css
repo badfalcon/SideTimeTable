@@ -1671,6 +1671,7 @@ button {
 #memoPreview input[type="checkbox"] {
     margin-right: 0.3em;
     cursor: pointer;
+    vertical-align: middle;
 }
 
 .memo-preview-placeholder {
