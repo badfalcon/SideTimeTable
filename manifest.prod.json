@@ -6,10 +6,10 @@
   "description": "__MSG_appDesc__",
   "permissions": ["sidePanel", "identity", "storage", "notifications", "alarms", "contextMenus"],
   "oauth2": {
-    "client_id": "976638980490-mrn3egp5mgo6j31ieigbnjtbv02fpieh.apps.googleusercontent.com",
+    "client_id": "62076165035-dt37o7vkjfj6csb6mehephbebekslimc.apps.googleusercontent.com",
     "scopes": ["https://www.googleapis.com/auth/calendar.readonly"]
   },
-  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtAxP+ite+mwVacpQLI4Fo99vYqOavD+81s0+EQexHtaD49PJcJRMbyXl1LQbkGDkmMPJZwMeqfEb0ZLS/T8JATUM8S/nCCHkzI9KcaTcfDPisOvwrfzWct+6dxNs0qX5UgXmgpJGKpWNZo8ZrxHBibwelBxEtuMnaKipBZrApgdF7o3rspArGI2V29/F/XhIojnO7ALIb8FcJ8EOhoIYEHvauIWdQ0Tywf8CrGAunKY+UvPXTSJnoOAiDX/s5aPsY4DBC4bthOUFgUbSCOYfJMeQOMI0U9effPhtqHpX7visUaGNYNcEG1aXKi7nrDubtNyghfZpCt6rVU6l9NCpHQIDAQAB",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAl+NVghlUTGjEBvuWdYG6HPg+szsw1M4qcIKx5Es4+Y2EpWcTkyltvJXpGvH8Zr0YF2zs+/gKbYS7L5y4sEklR3QWk+uoEIX/Ap/8nZPvnAm09jtvFGqcx1QQqei0L8nNRDx/69UfXHOwc23IIwyXmNjyii8JMz03a7kmAutet6OxGMYtpff1yix5nUDAXLomaKlwTJYkMAc9AUwKqImTGFYKENEDn5Hb9JU1tDGo4ONr+v2BGLJmY3Quv6+Z1Ws7moSywWy23utfg6K/pjnqzhaQDlmzHguWfNBPfzvRpZihTZ7DxhK5YKH62KbsvdGOHd5VC0/MEqdCw9yKs1EnRNwIDAQAB",
   "action": {
     "default_popup": "src/side_panel/side_panel.html"
   },
