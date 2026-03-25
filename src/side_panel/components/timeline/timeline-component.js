@@ -4,6 +4,7 @@
 import { Component } from '../base/component.js';
 import { CurrentTimeLineManager } from '../../../lib/current-time-line-manager.js';
 import { getCurrentTime } from '../../../lib/demo-data.js';
+import { TimelineCalendarFilter } from './timeline-calendar-filter.js';
 
 export class TimelineComponent extends Component {
     constructor(options = {}) {
@@ -43,6 +44,10 @@ export class TimelineComponent extends Component {
         // Drag-to-create callback
         this.onDragCreate = options.onDragCreate || null;
 
+        // Calendar filter button
+        this.onCalendarChange = options.onCalendarChange || null;
+        this.calendarFilter = null;
+
         // Drag state
         this._drag = { active: false, anchorStart: 0, anchorEnd: 0, previewEl: null, timer: null };
         this._boundMouseDown = null;
@@ -77,7 +82,22 @@ export class TimelineComponent extends Component {
         // Set up drag-to-create listeners
         this._setupDragListeners();
 
+        // Set up calendar filter button
+        this._setupCalendarFilter(container);
+
         return container;
+    }
+
+    /**
+     * Set up the calendar filter button
+     * @param {HTMLElement} container - The timeline container
+     * @private
+     */
+    _setupCalendarFilter(container) {
+        this.calendarFilter = new TimelineCalendarFilter({
+            onCalendarChange: this.onCalendarChange
+        });
+        this.calendarFilter.attachTo(container);
     }
 
     /**
@@ -578,6 +598,12 @@ export class TimelineComponent extends Component {
         if (this._boundMouseDown) {
             this.eventsLayer?.removeEventListener('mousedown', this._boundMouseDown);
             this._boundMouseDown = null;
+        }
+
+        // Destroy the calendar filter
+        if (this.calendarFilter) {
+            this.calendarFilter.destroy();
+            this.calendarFilter = null;
         }
 
         // Destroy the current time line management

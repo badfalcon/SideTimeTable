@@ -1706,3 +1706,104 @@ button {
 .thin-scrollbar *::-webkit-scrollbar-thumb:hover {
     background: var(--side-calendar-secondary-text-color);
 }
+
+/* ===== Calendar Filter Button (Timeline top-right) ===== */
+
+.timeline-calendar-filter {
+    position: absolute;
+    right: 8px;
+    z-index: 25;
+    pointer-events: auto;
+}
+
+.timeline-calendar-filter-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid var(--side-calendar-border-color);
+    background-color: var(--side-calendar-panel-background-color);
+    color: var(--side-calendar-secondary-text-color);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    box-shadow: 0 1px 3px var(--side-calendar-shadow-color);
+    transition: color 0.2s ease, background-color 0.2s ease;
+    opacity: 0.7;
+}
+
+.timeline-calendar-filter-btn:hover {
+    color: var(--side-calendar-hover-color);
+    background-color: var(--side-calendar-subtle-bg-hover);
+    opacity: 1;
+}
+
+.timeline-calendar-filter-dropdown {
+    position: absolute;
+    top: 32px;
+    right: 0;
+    width: 220px;
+    max-height: 300px;
+    overflow-y: auto;
+    background-color: var(--side-calendar-modal-bg);
+    border: 1px solid var(--side-calendar-border-color);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px var(--side-calendar-shadow-color);
+    padding: 4px 0;
+    display: none;
+}
+
+.timeline-calendar-filter-dropdown.open {
+    display: block;
+}
+
+.timeline-calendar-filter-item {
+    display: flex;
+    align-items: center;
+    padding: 6px 10px;
+    cursor: pointer;
+    gap: 8px;
+    font-size: 13px;
+    color: inherit;
+    margin: 0;
+}
+
+.timeline-calendar-filter-item:hover {
+    background-color: var(--side-calendar-subtle-bg-hover);
+}
+
+.timeline-calendar-filter-checkbox {
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    cursor: pointer;
+    accent-color: var(--side-calendar-accent-color);
+}
+
+.timeline-calendar-filter-color {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 1px solid var(--side-calendar-border-color-light);
+}
+
+.timeline-calendar-filter-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.timeline-calendar-filter-primary {
+    font-weight: bold;
+}
+
+.timeline-calendar-filter-loading {
+    padding: 12px;
+    text-align: center;
+    color: var(--side-calendar-muted-text-color);
+    font-size: 12px;
+}
