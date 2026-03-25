@@ -9,7 +9,7 @@
     "client_id": "62076165035-dt37o7vkjfj6csb6mehephbebekslimc.apps.googleusercontent.com",
     "scopes": ["https://www.googleapis.com/auth/calendar.readonly"]
   },
-  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAl+NVghlUTGjEBvuWdYG6HPg+szsw1M4qcIKx5Es4+Y2EpWcTkyltvJXpGvH8Zr0YF2zs+/gKbYS7L5y4sEklR3QWk+uoEIX/Ap/8nZPvnAm09jtvFGqcx1QQqei0L8nNRDx/69UfXHOwc23IIwyXmNjyii8JMz03a7kmAutet6OxGMYtpff1yix5nUDAXLomaKlwTJYkMAc9AUwKqImTGFYKENEDn5Hb9JU1tDGo4ONr+v2BGLJmY3Quv6+Z1Ws7moSywWy23utfg6K/pjnqzhaQDlmzHguWfNBPfzvRpZihTZ7DxhK5YKH62KbsvdGOHd5VC0/MEqdCw9yKs1EnRNwIDAQAB",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3hm/UlsEUTl/pO6fWiQg+tb+qktXcpoBh+Z7pzNew4jSreWfYWEbboDEJYTDdojucrq3ObJEqJTUNcERY86domU70peDrIu6/E3k5qO45DSYofHqNYTfPeG33YObAG8K4bqKyn4D/14jFz8tJhKAFmGGG/5I6qQtFr0dIAxkXTGa4WShNfl8WnfN5b7IFC7kt9UoUlLgFRLoEtbNSTspgE7jrvuK79MIoBvtjBrG9zCyYe7YYqggZETbqDkkslKENVKBq+zK8EX6y7ybS29klDcS5g2eqbyl83jSLFoxoGeKYxLf2dAzl9Vj2VZ9+dHEcQOvzhNusCa7sJl12+qtcwIDAQAB",
   "action": {
     "default_popup": "src/side_panel/side_panel.html"
   },
