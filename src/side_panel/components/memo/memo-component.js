@@ -368,10 +368,22 @@ export class MemoComponent extends Component {
         const lines = text.split('\n');
         let currentIndex = 0;
         let inCodeBlock = false;
+        let fenceChar = null;
 
         for (let i = 0; i < lines.length; i++) {
-            if (lines[i].match(/^\s*(`{3,}|~{3,})/)) {
-                inCodeBlock = !inCodeBlock;
+            const fenceMatch = lines[i].match(/^\s*(`{3,}|~{3,})(.*)?$/);
+            if (fenceMatch) {
+                const char = fenceMatch[1][0];
+                if (inCodeBlock) {
+                    // Closing fence: must use same char and have no info string
+                    if (char === fenceChar && (!fenceMatch[2] || !fenceMatch[2].trim())) {
+                        inCodeBlock = false;
+                        fenceChar = null;
+                    }
+                } else {
+                    inCodeBlock = true;
+                    fenceChar = char;
+                }
                 continue;
             }
             if (inCodeBlock) continue;
