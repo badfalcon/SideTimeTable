@@ -10,10 +10,12 @@ export const RELEASE_NOTES = [
         date: '2026-03-22',
         highlights: {
             en: [
+                'Added thin scrollbar option for a cleaner side panel appearance',
                 'RSVP feature temporarily removed due to pending store review for additional permissions',
                 'Bug fixes and stability improvements'
             ],
             ja: [
+                'サイドパネルの細いスクロールバーオプションを追加',
                 'ストア審査に時間がかかっているため、出欠回答（RSVP）機能を一時的に無効化',
                 'バグ修正と安定性の向上'
             ]

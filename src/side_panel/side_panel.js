@@ -348,6 +348,9 @@ class SidePanelUIController {
                 document.documentElement.removeAttribute('data-theme');
             }
 
+            // Apply thin scrollbar setting
+            document.body.classList.toggle('thin-scrollbar', !!settings.thinScrollbar);
+
             // Set the current date
             this.headerComponent.setCurrentDate(this.dateNavService.getDate());
 
