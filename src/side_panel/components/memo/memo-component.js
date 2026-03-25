@@ -58,6 +58,9 @@ export class MemoComponent extends Component {
         this._panelHeight = DEFAULT_HEIGHT;
         this._markdownEnabled = false;
 
+        // Tab trap: enabled on text input, disabled on Escape for accessibility
+        this._tabTrapped = false;
+
         // Drag state
         this._dragStartY = 0;
         this._dragStartHeight = 0;
@@ -114,7 +117,10 @@ export class MemoComponent extends Component {
         this._loadState();
 
         this.addEventListener(this._toggleBtn, 'click', () => this._toggleCollapse());
-        this.addEventListener(this.textarea, 'input', () => this._onInput());
+        this.addEventListener(this.textarea, 'input', () => {
+            this._tabTrapped = true;
+            this._onInput();
+        });
         this.addEventListener(this.textarea, 'keydown', (e) => this._onKeyDown(e));
         this.addEventListener(this.textarea, 'blur', () => this._switchToPreview());
         this.addEventListener(this._preview, 'click', (e) => {
@@ -320,6 +326,7 @@ export class MemoComponent extends Component {
         if (!this.textarea || !this._preview || !this._markdownEnabled) return;
         this._preview.classList.add('memo-hidden');
         this.textarea.classList.remove('memo-hidden');
+        this._tabTrapped = true;
         this.textarea.focus();
         this.textarea.selectionStart = this.textarea.selectionEnd = this.textarea.value.length;
     }
@@ -354,15 +361,24 @@ export class MemoComponent extends Component {
         if (isNaN(cbIndex) || !this.textarea) return;
 
         const text = this.textarea.value;
-        const pattern = /- \[([ xX])\]/g;
-        let match;
+        const lines = text.split('\n');
         let currentIndex = 0;
+        let inCodeBlock = false;
 
-        while ((match = pattern.exec(text)) !== null) {
+        for (let i = 0; i < lines.length; i++) {
+            if (lines[i].match(/^```/)) {
+                inCodeBlock = !inCodeBlock;
+                continue;
+            }
+            if (inCodeBlock) continue;
+
+            const m = lines[i].match(/^(\s*- \[)([ xX])(\].*)$/);
+            if (!m) continue;
+
             if (currentIndex === cbIndex) {
-                const isChecked = match[1] !== ' ';
-                const replacement = isChecked ? '- [ ]' : '- [x]';
-                const newText = text.substring(0, match.index) + replacement + text.substring(match.index + match[0].length);
+                const isChecked = m[2] !== ' ';
+                lines[i] = m[1] + (isChecked ? ' ' : 'x') + m[3];
+                const newText = lines.join('\n');
                 this.textarea.value = newText;
                 StorageHelper.setLocal({ memoContent: newText }).catch(() => {});
                 this._renderMarkdown(newText);
@@ -375,10 +391,19 @@ export class MemoComponent extends Component {
     // --- Markdown editing helpers ---
 
     _onKeyDown(e) {
-        if (e.key === 'Enter' && !e.shiftKey && !e.compositionUpdate) {
+        // Skip all helpers during IME composition (e.g. Japanese input)
+        if (e.isComposing) return;
+
+        // Escape releases Tab trap for accessibility
+        if (e.key === 'Escape') {
+            this._tabTrapped = false;
+            return;
+        }
+
+        if (e.key === 'Enter' && !e.shiftKey) {
             if (this._handleListContinuation(e)) return;
         }
-        if (e.key === 'Tab') {
+        if (e.key === 'Tab' && this._tabTrapped) {
             this._handleTabIndent(e);
             return;
         }
@@ -394,19 +419,22 @@ export class MemoComponent extends Component {
                 return;
             }
         }
-        const pair = { '`': '`', '(': ')', '[': ']', '{': '}', '"': '"', "'": "'" }[e.key];
+        const pair = { '(': ')', '[': ']', '{': '}', '"': '"', "'": "'" }[e.key];
         if (pair) {
             this._handleAutoPair(e, pair);
         }
     }
 
-    _getCurrentLine() {
+    _getFullCurrentLine() {
         const ta = this.textarea;
         const text = ta.value;
         const lineStart = text.lastIndexOf('\n', ta.selectionStart - 1) + 1;
-        return text.substring(lineStart, ta.selectionStart);
+        let lineEnd = text.indexOf('\n', ta.selectionStart);
+        if (lineEnd === -1) lineEnd = text.length;
+        return text.substring(lineStart, lineEnd);
     }
 
+    // Uses execCommand for undo/redo integration (no modern alternative for textareas)
     _replaceRange(start, end, replacement) {
         const ta = this.textarea;
         ta.setSelectionRange(start, end);
@@ -417,7 +445,7 @@ export class MemoComponent extends Component {
         const ta = this.textarea;
         if (ta.selectionStart !== ta.selectionEnd) return false;
 
-        const line = this._getCurrentLine();
+        const line = this._getFullCurrentLine();
         // Match: checkbox list, unordered list, ordered list (with optional leading whitespace)
         const checkboxMatch = line.match(/^(\s*)- \[([ xX])\]\s(.*)$/);
         const ulMatch = line.match(/^(\s*)([*+-])\s(.*)$/);
@@ -447,11 +475,13 @@ export class MemoComponent extends Component {
         if (!content.trim()) {
             const text = ta.value;
             const lineStart = text.lastIndexOf('\n', ta.selectionStart - 1) + 1;
-            this._replaceRange(lineStart, ta.selectionStart, '');
+            const lineEnd = text.indexOf('\n', ta.selectionStart);
+            const fullLineEnd = lineEnd === -1 ? text.length : lineEnd;
+            this._replaceRange(lineStart, fullLineEnd, '');
             return true;
         }
 
-        // Insert newline + list prefix
+        // Insert newline + list prefix (text after cursor is carried to the new line naturally)
         document.execCommand('insertText', false, '\n' + prefix);
         return true;
     }
