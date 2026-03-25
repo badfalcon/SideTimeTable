@@ -1081,13 +1081,13 @@
     "message": "有効にすると、編集していないときにメモがMarkdown形式で表示されます。クリックすると編集モードに切り替わります。",
     "description": "Markdownトグルのヘルプテキスト"
   },
-  "displaySettings": {
-    "message": "表示設定",
-    "description": "表示設定カードのタイトル"
+  "scrollbarSettings": {
+    "message": "スクロールバー",
+    "description": "スクロールバー設定カードのタイトル"
   },
-  "displaySettingsDescription": {
-    "message": "サイドパネルの表示を設定します。",
-    "description": "表示設定カードの説明文"
+  "scrollbarSettingsDescription": {
+    "message": "スクロールバーの外観を設定します。",
+    "description": "スクロールバー設定カードの説明文"
   },
   "thinScrollbarLabel": {
     "message": "細いスクロールバーを使用する",
