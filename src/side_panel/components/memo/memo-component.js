@@ -29,7 +29,7 @@ async function getMarkdownRenderer() {
         const marked = new Marked({ breaks: true, gfm: true });
         _renderer = (text) => purify.sanitize(marked.parse(text), {
             ADD_TAGS: ['input'],
-            ADD_ATTR: ['type', 'checked', 'disabled']
+            ADD_ATTR: ['type', 'checked']
         });
     }
     return _renderer;
@@ -348,10 +348,9 @@ export class MemoComponent extends Component {
             a.setAttribute('target', '_blank');
             a.setAttribute('rel', 'noopener noreferrer');
         });
-        // Enable checkbox toggling: remove disabled, add index for identification
+        // Enable checkbox toggling: add index for identification
         let checkboxIndex = 0;
         this._preview.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-            cb.removeAttribute('disabled');
             cb.dataset.cbIndex = checkboxIndex++;
         });
     }
@@ -366,7 +365,7 @@ export class MemoComponent extends Component {
         let inCodeBlock = false;
 
         for (let i = 0; i < lines.length; i++) {
-            if (lines[i].match(/^```/)) {
+            if (lines[i].match(/^\s*(`{3,}|~{3,})/)) {
                 inCodeBlock = !inCodeBlock;
                 continue;
             }
@@ -451,19 +450,16 @@ export class MemoComponent extends Component {
         const ulMatch = line.match(/^(\s*)([*+-])\s(.*)$/);
         const olMatch = line.match(/^(\s*)(\d+)\.\s(.*)$/);
 
-        let indent, content, prefix;
+        let indent, prefix;
         if (checkboxMatch) {
             indent = checkboxMatch[1];
-            content = checkboxMatch[3];
             prefix = `${indent}- [ ] `;
         } else if (olMatch) {
             indent = olMatch[1];
-            content = olMatch[3];
             const nextNum = parseInt(olMatch[2], 10) + 1;
             prefix = `${indent}${nextNum}. `;
         } else if (ulMatch) {
             indent = ulMatch[1];
-            content = ulMatch[3];
             prefix = `${indent}${ulMatch[2]} `;
         } else {
             return false;
@@ -471,10 +467,16 @@ export class MemoComponent extends Component {
 
         e.preventDefault();
 
-        // Empty content → remove the list prefix (exit list)
-        if (!content.trim()) {
-            const text = ta.value;
-            const lineStart = text.lastIndexOf('\n', ta.selectionStart - 1) + 1;
+        // Use text from line start to cursor for empty check (ignores text after cursor)
+        const text = ta.value;
+        const lineStart = text.lastIndexOf('\n', ta.selectionStart - 1) + 1;
+        const lineBeforeCursor = text.substring(lineStart, ta.selectionStart);
+        // Extract content after the list marker prefix in the portion before cursor
+        const prefixPattern = /^\s*(?:- \[[ xX]\]\s|[*+-]\s|\d+\.\s)/;
+        const contentBeforeCursor = lineBeforeCursor.replace(prefixPattern, '');
+
+        // Empty content before cursor → remove the list prefix (exit list)
+        if (!contentBeforeCursor.trim()) {
             const lineEnd = text.indexOf('\n', ta.selectionStart);
             const fullLineEnd = lineEnd === -1 ? text.length : lineEnd;
             this._replaceRange(lineStart, fullLineEnd, '');
@@ -495,7 +497,9 @@ export class MemoComponent extends Component {
 
         // Find the lines covered by the selection
         const lineStart = text.lastIndexOf('\n', start - 1) + 1;
-        const lineEnd = text.indexOf('\n', end);
+        // If selection ends right at a newline, don't include the next line
+        const effectiveEnd = (end > start && text[end - 1] === '\n') ? end - 1 : end;
+        const lineEnd = text.indexOf('\n', effectiveEnd);
         const blockEnd = lineEnd === -1 ? text.length : lineEnd;
         const block = text.substring(lineStart, blockEnd);
         const lines = block.split('\n');
