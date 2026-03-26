@@ -10,6 +10,7 @@ export { HeaderComponent } from './header/header-component.js';
 
 // The timeline Components
 export { TimelineComponent } from './timeline/timeline-component.js';
+export { TimelineCalendarFilter } from './timeline/timeline-calendar-filter.js';
 
 // The modal Components
 export { ModalComponent } from './modals/modal-component.js';

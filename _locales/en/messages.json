@@ -1420,5 +1420,29 @@
   "demoLinkOpen": {
     "message": "Open",
     "description": "Button label to open demo mode link"
+  },
+  "calendarFilterTooltip": {
+    "message": "Filter calendars",
+    "description": "Tooltip for the calendar filter button in the timeline"
+  },
+  "calendarFilterLoading": {
+    "message": "Loading calendars...",
+    "description": "Loading message shown in the calendar filter dropdown"
+  },
+  "calendarFilterError": {
+    "message": "Failed to load calendars",
+    "description": "Error message shown in the calendar filter dropdown"
+  },
+  "noCalendarsAvailable": {
+    "message": "No calendars found",
+    "description": "Message shown when no calendars are available in the filter"
+  },
+  "calendarFilterSearchPlaceholder": {
+    "message": "Search",
+    "description": "Placeholder text for the search input in the calendar filter"
+  },
+  "calendarFilterRefreshTooltip": {
+    "message": "Refresh calendar list",
+    "description": "Tooltip for the refresh button in the calendar filter"
   }
 }

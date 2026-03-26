@@ -1420,5 +1420,29 @@
   "demoLinkOpen": {
     "message": "開く",
     "description": "デモモードリンクを開くボタンラベル"
+  },
+  "calendarFilterTooltip": {
+    "message": "カレンダーを絞り込む",
+    "description": "タイムライン内のカレンダーフィルターボタンのツールチップ"
+  },
+  "calendarFilterLoading": {
+    "message": "カレンダーを読み込み中...",
+    "description": "カレンダーフィルターのドロップダウンに表示される読み込みメッセージ"
+  },
+  "calendarFilterError": {
+    "message": "カレンダーの読み込みに失敗しました",
+    "description": "カレンダーフィルターのドロップダウンに表示されるエラーメッセージ"
+  },
+  "noCalendarsAvailable": {
+    "message": "カレンダーが見つかりません",
+    "description": "フィルターでカレンダーが見つからない場合のメッセージ"
+  },
+  "calendarFilterSearchPlaceholder": {
+    "message": "検索",
+    "description": "カレンダーフィルターの検索入力のプレースホルダーテキスト"
+  },
+  "calendarFilterRefreshTooltip": {
+    "message": "カレンダー一覧を更新",
+    "description": "カレンダーフィルターの更新ボタンのツールチップ"
   }
 }

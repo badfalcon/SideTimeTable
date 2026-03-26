@@ -1,15 +1,15 @@
 {
   "manifest_version": 3,
   "default_locale": "en",
-  "name": "SideTimeTable",
+  "name": "SideTimeTable dev",
   "version": "1.8.1",
   "description": "__MSG_appDesc__",
   "permissions": ["sidePanel", "identity", "storage", "notifications", "alarms", "contextMenus"],
   "oauth2": {
-    "client_id": "FILL_OUT_YOUR_CLIENT_ID",
+    "client_id": "976638980490-mrn3egp5mgo6j31ieigbnjtbv02fpieh.apps.googleusercontent.com",
     "scopes": ["https://www.googleapis.com/auth/calendar.readonly"]
   },
-  "key": "FILL_OUT_YOUR_KEY",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtAxP+ite+mwVacpQLI4Fo99vYqOavD+81s0+EQexHtaD49PJcJRMbyXl1LQbkGDkmMPJZwMeqfEb0ZLS/T8JATUM8S/nCCHkzI9KcaTcfDPisOvwrfzWct+6dxNs0qX5UgXmgpJGKpWNZo8ZrxHBibwelBxEtuMnaKipBZrApgdF7o3rspArGI2V29/F/XhIojnO7ALIb8FcJ8EOhoIYEHvauIWdQ0Tywf8CrGAunKY+UvPXTSJnoOAiDX/s5aPsY4DBC4bthOUFgUbSCOYfJMeQOMI0U9effPhtqHpX7visUaGNYNcEG1aXKi7nrDubtNyghfZpCt6rVU6l9NCpHQIDAQAB",
   "action": {
     "default_popup": "src/side_panel/side_panel.html"
   },

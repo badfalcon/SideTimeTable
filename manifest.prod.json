@@ -1,0 +1,44 @@
+{
+  "manifest_version": 3,
+  "default_locale": "en",
+  "name": "SideTimeTable",
+  "version": "1.8.1",
+  "description": "__MSG_appDesc__",
+  "permissions": ["sidePanel", "identity", "storage", "notifications", "alarms", "contextMenus"],
+  "oauth2": {
+    "client_id": "62076165035-dt37o7vkjfj6csb6mehephbebekslimc.apps.googleusercontent.com",
+    "scopes": ["https://www.googleapis.com/auth/calendar.readonly"]
+  },
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3hm/UlsEUTl/pO6fWiQg+tb+qktXcpoBh+Z7pzNew4jSreWfYWEbboDEJYTDdojucrq3ObJEqJTUNcERY86domU70peDrIu6/E3k5qO45DSYofHqNYTfPeG33YObAG8K4bqKyn4D/14jFz8tJhKAFmGGG/5I6qQtFr0dIAxkXTGa4WShNfl8WnfN5b7IFC7kt9UoUlLgFRLoEtbNSTspgE7jrvuK79MIoBvtjBrG9zCyYe7YYqggZETbqDkkslKENVKBq+zK8EX6y7ybS29klDcS5g2eqbyl83jSLFoxoGeKYxLf2dAzl9Vj2VZ9+dHEcQOvzhNusCa7sJl12+qtcwIDAQAB",
+  "action": {
+    "default_popup": "src/side_panel/side_panel.html"
+  },
+  "side_panel": {
+    "default_path": "src/side_panel/side_panel.html"
+  },
+  "background": {
+    "service_worker": "dist/background.bundle.js"
+  },
+  "options_page": "src/options/options.html",
+  "icons": {
+    "16": "src/img/icon16.png",
+    "32": "src/img/icon32.png",
+    "48": "src/img/icon48.png",
+    "128": "src/img/icon128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["dist/*.chunk.js"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "commands": {
+    "open-side-panel": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+S",
+        "mac": "Command+Shift+S"
+      },
+      "description": "__MSG_toggleSidePanelShortcut__"
+    }
+  }
+}
