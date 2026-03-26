@@ -313,9 +313,6 @@ body {
     z-index: 5;
 }
 
-.modal-content button {
-    margin-top: 10px;
-}
 
 /* Google event action row (Meet and Map buttons side by side) */
 .google-event-meet {
