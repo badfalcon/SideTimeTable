@@ -1724,6 +1724,7 @@ button {
     max-width: 28px;
     max-height: 28px;
     padding: 0;
+    margin: 0;
     border-radius: 50%;
     border: 1px solid var(--side-calendar-border-color);
     background-color: var(--side-calendar-panel-background-color);
@@ -1789,6 +1790,9 @@ button {
     font-size: 11px;
     outline: none;
     box-sizing: border-box;
+    /* Reset globals from modal input[type="text"] */
+    width: auto;
+    margin: 0;
 }
 
 .timeline-calendar-filter-search:focus {
@@ -1806,6 +1810,8 @@ button {
     min-width: 22px;
     padding: 0;
     box-sizing: border-box;
+    /* Reset global button margin-top */
+    margin: 0;
     border: 1px solid var(--side-calendar-input-border);
     border-radius: 3px;
     background-color: var(--side-calendar-input-bg);
@@ -1838,7 +1844,9 @@ button {
     gap: 8px;
     font-size: 13px;
     color: inherit;
+    /* Reset global label styles */
     margin: 0;
+    font-weight: normal;
 }
 
 .timeline-calendar-filter-item:hover {
