@@ -56,7 +56,17 @@ export class TimelineCalendarFilter extends Component {
         this.dropdown = document.createElement('div');
         this.dropdown.className = 'timeline-calendar-filter-dropdown';
 
+        // Transparent backdrop to block clicks on events behind the dropdown
+        this.backdrop = document.createElement('div');
+        this.backdrop.className = 'timeline-calendar-filter-backdrop';
+        this.addEventListener(this.backdrop, 'mousedown', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            this._close();
+        });
+
         wrapper.appendChild(this.button);
+        wrapper.appendChild(this.backdrop);
         wrapper.appendChild(this.dropdown);
 
         // Check auth and hide if not connected
@@ -90,13 +100,11 @@ export class TimelineCalendarFilter extends Component {
         };
         scrollContainer.addEventListener('scroll', this._boundOnScroll);
 
-        // Click-outside handler
-        this._boundOnClickOutside = (e) => {
-            if (this.isOpen && this.element && !this.element.contains(e.target)) {
-                this._close();
-            }
+        // Close dropdown when side panel loses focus (e.g., user clicks on main page)
+        this._boundOnWindowBlur = () => {
+            if (this.isOpen) this._close();
         };
-        document.addEventListener('mousedown', this._boundOnClickOutside);
+        window.addEventListener('blur', this._boundOnWindowBlur);
     }
 
     /**
@@ -143,6 +151,7 @@ export class TimelineCalendarFilter extends Component {
      */
     async _open() {
         this.isOpen = true;
+        this.backdrop.classList.add('open');
         this.dropdown.classList.add('open');
 
         if (!this.hasFetched) {
@@ -166,6 +175,7 @@ export class TimelineCalendarFilter extends Component {
      */
     _close() {
         this.isOpen = false;
+        this.backdrop.classList.remove('open');
         this.dropdown.classList.remove('open');
         this.searchTerm = '';
     }
@@ -388,12 +398,13 @@ export class TimelineCalendarFilter extends Component {
             this.scrollContainer.removeEventListener('scroll', this._boundOnScroll);
             this._boundOnScroll = null;
         }
-        if (this._boundOnClickOutside) {
-            document.removeEventListener('mousedown', this._boundOnClickOutside);
-            this._boundOnClickOutside = null;
+        if (this._boundOnWindowBlur) {
+            window.removeEventListener('blur', this._boundOnWindowBlur);
+            this._boundOnWindowBlur = null;
         }
         this.scrollContainer = null;
         this.button = null;
+        this.backdrop = null;
         this.dropdown = null;
         this.searchInput = null;
         this.calendarList = null;
