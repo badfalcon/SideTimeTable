@@ -231,7 +231,7 @@ export class TimelineCalendarFilter extends Component {
         this.searchInput.className = 'timeline-calendar-filter-search';
         this.searchInput.placeholder = this.getMessage('calendarFilterSearchPlaceholder');
         this.searchInput.value = this.searchTerm;
-        this.searchInput.addEventListener('input', () => {
+        this.addEventListener(this.searchInput, 'input', () => {
             this.searchTerm = this.searchInput.value;
             this._renderCalendarList();
         });
@@ -241,7 +241,7 @@ export class TimelineCalendarFilter extends Component {
         this.refreshBtn.className = 'timeline-calendar-filter-refresh-btn';
         this.refreshBtn.title = this.getMessage('calendarFilterRefreshTooltip');
         this.refreshBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i>';
-        this.refreshBtn.addEventListener('click', () => {
+        this.addEventListener(this.refreshBtn, 'click', () => {
             this._refreshCalendars();
         });
 
@@ -340,9 +340,12 @@ export class TimelineCalendarFilter extends Component {
             this.refreshBtn.querySelector('i').classList.add('fa-spin');
         }
         this.hasFetched = false;
-        await this._fetchCalendars();
-        if (this.refreshBtn) {
-            this.refreshBtn.querySelector('i').classList.remove('fa-spin');
+        try {
+            await this._fetchCalendars();
+        } finally {
+            if (this.refreshBtn) {
+                this.refreshBtn.querySelector('i').classList.remove('fa-spin');
+            }
         }
     }
 
