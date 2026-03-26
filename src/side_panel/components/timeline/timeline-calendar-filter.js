@@ -198,24 +198,27 @@ export class TimelineCalendarFilter extends Component {
                 loadSelectedCalendars()
             ]);
 
-            if (response.error) {
-                throw new Error(response.error);
+            if (response.error || !response.calendars) {
+                this.dropdown.innerHTML = '';
+                const errorEl = document.createElement('div');
+                errorEl.className = 'timeline-calendar-filter-status';
+                errorEl.textContent = this.getMessage('calendarFilterError');
+                this.dropdown.appendChild(errorEl);
+                return;
             }
 
-            if (response.calendars) {
-                this.calendars = response.calendars;
-                this.selectedIds = selectedIds;
+            this.calendars = response.calendars;
+            this.selectedIds = selectedIds;
 
-                // Ensure primary calendar is always included in selection
-                const primary = this.calendars.find(c => c.primary);
-                if (primary && !this.selectedIds.includes(primary.id)) {
-                    this.selectedIds.unshift(primary.id);
-                    await saveSelectedCalendars(this.selectedIds);
-                }
-
-                this.hasFetched = true;
-                this._renderDropdownContent();
+            // Ensure primary calendar is always included in selection
+            const primary = this.calendars.find(c => c.primary);
+            if (primary && !this.selectedIds.includes(primary.id)) {
+                this.selectedIds.unshift(primary.id);
+                await saveSelectedCalendars(this.selectedIds);
             }
+
+            this.hasFetched = true;
+            this._renderDropdownContent();
         } catch {
             this.dropdown.innerHTML = '';
             const errorEl = document.createElement('div');
