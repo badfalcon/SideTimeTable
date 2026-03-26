@@ -1760,6 +1760,7 @@ body {
     position: absolute;
     top: 32px;
     right: 0;
+    z-index: 25;
     width: 220px;
     min-width: 160px;
     min-height: 80px;
