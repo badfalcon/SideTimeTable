@@ -726,7 +726,8 @@ export class CalendarManagementCard extends CardComponent {
                 this._closePopover();
             }
         };
-        setTimeout(() => {
+        this._popoverTimerId = setTimeout(() => {
+            this._popoverTimerId = null;
             if (this._activePopover === popover) {
                 document.addEventListener('click', this._popoverCloseHandler);
             }
@@ -738,6 +739,10 @@ export class CalendarManagementCard extends CardComponent {
      * @private
      */
     _closePopover() {
+        if (this._popoverTimerId) {
+            clearTimeout(this._popoverTimerId);
+            this._popoverTimerId = null;
+        }
         if (this._activePopover) {
             this._activePopover.remove();
             this._activePopover = null;

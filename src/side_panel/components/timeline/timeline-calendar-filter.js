@@ -61,8 +61,9 @@ export class TimelineCalendarFilter extends Component {
         // Dropdown popover
         this.dropdown = document.createElement('div');
         this.dropdown.className = 'timeline-calendar-filter-dropdown';
-        this.dropdown.setAttribute('role', 'dialog');
+        this.dropdown.id = 'timeline-calendar-filter-dropdown';
         this.dropdown.setAttribute('aria-label', this.getMessage('calendarFilterTooltip'));
+        this.button.setAttribute('aria-controls', 'timeline-calendar-filter-dropdown');
 
         // Transparent backdrop to block clicks on events behind the dropdown
         this.backdrop = document.createElement('div');
@@ -483,6 +484,7 @@ export class TimelineCalendarFilter extends Component {
 
         header.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
+                if (e.target === checkbox) return;
                 e.preventDefault();
                 toggleCollapse();
             }
@@ -653,15 +655,16 @@ export class TimelineCalendarFilter extends Component {
      * @private
      */
     async _refreshCalendars() {
-        if (this.refreshBtn) {
-            this.refreshBtn.querySelector('i').classList.add('fa-spin');
+        const spinIcon = this.refreshBtn?.querySelector('i');
+        if (spinIcon) {
+            spinIcon.classList.add('fa-spin');
         }
         this.hasFetched = false;
         try {
             await this._fetchCalendars();
         } finally {
-            if (this.refreshBtn) {
-                this.refreshBtn.querySelector('i').classList.remove('fa-spin');
+            if (spinIcon) {
+                spinIcon.classList.remove('fa-spin');
             }
         }
     }
