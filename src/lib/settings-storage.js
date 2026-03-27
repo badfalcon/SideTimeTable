@@ -70,9 +70,9 @@ export async function loadCalendarGroups() {
 function sanitizeCalendarGroups(raw) {
     if (!Array.isArray(raw)) return [];
     return raw
-        .filter(g => g && typeof g === 'object')
+        .filter(g => g && typeof g === 'object' && typeof g.id === 'string')
         .map(g => ({
-            id: typeof g.id === 'string' ? g.id : `group_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+            id: g.id,
             name: (typeof g.name === 'string' ? g.name : 'Group').slice(0, 50),
             calendarIds: Array.isArray(g.calendarIds) ? g.calendarIds.filter(id => typeof id === 'string') : [],
             collapsed: typeof g.collapsed === 'boolean' ? g.collapsed : false

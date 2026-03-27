@@ -1040,6 +1040,7 @@ export class CalendarManagementCard extends CardComponent {
         const calendarId = event.target.closest('[data-calendar-id]')?.dataset.calendarId;
         if (!calendarId) return;
 
+        const previousIds = [...this.selectedCalendarIds];
         const isChecked = event.target.checked;
 
         if (isChecked) {
@@ -1059,6 +1060,7 @@ export class CalendarManagementCard extends CardComponent {
             // Update group header checkbox states
             this._updateGroupCheckboxStates();
         } catch (error) {
+            this.selectedCalendarIds = previousIds;
             logError('Calendar selection save', error);
             this._showError(window.getLocalizedMessage('calendarSaveError') || 'Failed to save settings');
         }
