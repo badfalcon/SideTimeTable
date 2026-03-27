@@ -849,6 +849,7 @@ export class CalendarManagementCard extends CardComponent {
      */
     _showGroupModal(editingGroup) {
         this._closeGroupModal();
+        this._isSubmittingGroup = false;
 
         const isEdit = !!editingGroup;
         const modalTitle = isEdit
@@ -878,7 +879,7 @@ export class CalendarManagementCard extends CardComponent {
         const closeBtn = document.createElement('button');
         closeBtn.type = 'button';
         closeBtn.className = 'btn-close';
-        closeBtn.setAttribute('aria-label', window.getLocalizedMessage('cancelButton') || 'Cancel');
+        closeBtn.setAttribute('aria-label', window.getLocalizedMessage('close') || 'Close');
         closeBtn.addEventListener('click', () => this._closeGroupModal());
         header.appendChild(title);
         header.appendChild(closeBtn);

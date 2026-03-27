@@ -734,6 +734,7 @@ body[data-theme="dark"] {
 .create-group-modal-chip > span:not(.calendar-color-indicator-inline) {
     overflow: hidden;
     text-overflow: ellipsis;
+    min-width: 0;
 }
 
 .create-group-modal-chip-remove {
