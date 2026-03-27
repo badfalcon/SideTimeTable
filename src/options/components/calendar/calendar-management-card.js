@@ -1297,8 +1297,8 @@ export class CalendarManagementCard extends CardComponent {
         if (header) {
             const body = header.nextElementSibling;
             const icon = header.querySelector('.group-collapse-icon');
-            if (body) body.classList.toggle('collapsed');
-            if (icon) icon.classList.toggle('collapsed');
+            if (body) body.classList.toggle('collapsed', group.collapsed);
+            if (icon) icon.classList.toggle('collapsed', group.collapsed);
             header.setAttribute('aria-expanded', group.collapsed ? 'false' : 'true');
         }
 
