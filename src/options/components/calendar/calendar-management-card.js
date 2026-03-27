@@ -823,6 +823,7 @@ export class CalendarManagementCard extends CardComponent {
      * @private
      */
     _showGroupModal(editingGroup) {
+        this._closePopover();
         this._groupModalTrigger = document.activeElement;
         this._closeGroupModal();
         this._isSubmittingGroup = false;
@@ -1052,9 +1053,9 @@ export class CalendarManagementCard extends CardComponent {
                 return;
             }
             if (e.key === 'Tab') {
-                const focusable = modal.querySelectorAll(
+                const focusable = Array.from(modal.querySelectorAll(
                     'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-                );
+                )).filter(el => el.offsetParent !== null);
                 if (focusable.length === 0) return;
                 const first = focusable[0];
                 const last = focusable[focusable.length - 1];
@@ -1219,9 +1220,10 @@ export class CalendarManagementCard extends CardComponent {
         const primaryId = this.allCalendars.find(c => c.primary)?.id;
 
         if (isChecked) {
-            // Add all group calendar IDs not already selected
+            // Add all valid group calendar IDs not already selected
+            const allCalendarIds = new Set(this.allCalendars.map(c => c.id));
             for (const calId of group.calendarIds) {
-                if (!this.selectedCalendarIds.includes(calId)) {
+                if (allCalendarIds.has(calId) && !this.selectedCalendarIds.includes(calId)) {
                     this.selectedCalendarIds.push(calId);
                 }
             }

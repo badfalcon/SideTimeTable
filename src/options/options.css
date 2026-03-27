@@ -780,6 +780,10 @@ body[data-theme="dark"] {
     border-bottom-color: #444;
 }
 
+[data-theme="dark"] .create-group-modal-header .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
 [data-theme="dark"] .create-group-modal-footer {
     border-top-color: #444;
 }
