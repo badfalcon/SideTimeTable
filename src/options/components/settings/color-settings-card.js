@@ -81,7 +81,7 @@ export class ColorSettingsCard extends CardComponent {
                 height: 14px;
                 border-radius: 50%;
                 background-color: ${theme.palette[role]};
-                border: 1px solid rgba(128,128,128,0.3);
+                border: 1px solid var(--side-calendar-border-color-light, #ddd);
             `;
             dot.title = role;
             swatchRow.appendChild(dot);

@@ -249,7 +249,14 @@ function _lightChromeVars(palette) {
         '--side-calendar-progress-dot-bg': _adjustBrightness(bg, -0.13),
         '--side-calendar-success-badge-bg': '#e8f5e9',
         '--side-calendar-success-badge-border': '#a5d6a7',
-        '--side-calendar-success-badge-text': '#2e7d32'
+        '--side-calendar-success-badge-text': '#2e7d32',
+        '--side-calendar-scrollbar-thumb': _adjustBrightness(bg, -0.2),
+        '--side-calendar-scrollbar-track': 'transparent',
+        '--side-calendar-modal-btn-bg': palette.surface || bg,
+        '--side-calendar-modal-btn-border': _adjustBrightness(bg, -0.13),
+        '--side-calendar-modal-btn-text': _adjustBrightness(textColor, textColor === '#000000' ? 0.27 : -0.27),
+        '--side-calendar-modal-btn-hover-bg': _adjustBrightness(bg, -0.09),
+        '--side-calendar-modal-btn-hover-border': _adjustBrightness(bg, -0.32)
     };
 }
 
@@ -294,7 +301,14 @@ function _darkChromeVars(palette) {
         '--side-calendar-progress-dot-bg': _adjustBrightness(bg, 0.22),
         '--side-calendar-success-badge-bg': '#1b3a2a',
         '--side-calendar-success-badge-border': '#2e7d32',
-        '--side-calendar-success-badge-text': '#81c784'
+        '--side-calendar-success-badge-text': '#81c784',
+        '--side-calendar-scrollbar-thumb': _adjustBrightness(bg, 0.2),
+        '--side-calendar-scrollbar-track': 'transparent',
+        '--side-calendar-modal-btn-bg': surface,
+        '--side-calendar-modal-btn-border': _adjustBrightness(bg, 0.22),
+        '--side-calendar-modal-btn-text': _adjustBrightness('#ffffff', -0.2),
+        '--side-calendar-modal-btn-hover-bg': _adjustBrightness(surface, 0.1),
+        '--side-calendar-modal-btn-hover-border': _adjustBrightness(bg, 0.35)
     };
 }
 

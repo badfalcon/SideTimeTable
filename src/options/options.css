@@ -6,6 +6,7 @@ body {
     font-family: Arial, sans-serif;
     padding: 20px;
     overflow-y: scroll;
+    scrollbar-color: var(--side-calendar-scrollbar-thumb, #ccc) var(--side-calendar-scrollbar-track, transparent);
 }
 
 /* Dark mode overrides for options page */
@@ -74,17 +75,6 @@ body[data-theme="dark"] {
     border-top-color: #444;
 }
 
-[data-theme="dark"] #calendar-list {
-    scrollbar-color: #555 #2a2a3c;
-}
-
-[data-theme="dark"] #calendar-list::-webkit-scrollbar-track {
-    background: #2a2a3c;
-}
-
-[data-theme="dark"] #calendar-list::-webkit-scrollbar-thumb {
-    background: #555;
-}
 
 [data-theme="dark"] #calendar-list .form-check:hover,
 [data-theme="dark"] #calendar-list .list-group-item {
@@ -194,7 +184,7 @@ body[data-theme="dark"] {
     max-height: 300px;
     overflow-y: auto;
     scrollbar-width: thin;
-    scrollbar-color: #ccc #f8f9fa;
+    scrollbar-color: var(--side-calendar-scrollbar-thumb, #ccc) var(--side-calendar-scrollbar-track, transparent);
     width: 100%;
     box-sizing: border-box;
     margin: 0 0 1rem 0;
@@ -207,17 +197,17 @@ body[data-theme="dark"] {
 }
 
 #calendar-list::-webkit-scrollbar-track {
-    background: #f8f9fa;
+    background: var(--side-calendar-scrollbar-track, transparent);
     border-radius: 4px;
 }
 
 #calendar-list::-webkit-scrollbar-thumb {
-    background: #ccc;
+    background: var(--side-calendar-scrollbar-thumb, #ccc);
     border-radius: 4px;
 }
 
 #calendar-list::-webkit-scrollbar-thumb:hover {
-    background: #999;
+    background: var(--side-calendar-secondary-text-color, #666);
 }
 
 /* Calendar list item hover effects */
@@ -231,7 +221,7 @@ body[data-theme="dark"] {
 }
 
 #calendar-list .form-check:hover {
-    background-color: #f8f9fa;
+    background-color: var(--side-calendar-subtle-bg, #f8f9fa);
 }
 
 #calendar-list .form-check:last-child {
@@ -278,12 +268,8 @@ body[data-theme="dark"] {
     height: 12px;
     background-color: #ccc;
     border-radius: 50%;
-    border: 1px solid #ddd;
+    border: 1px solid var(--side-calendar-border-color-light, #ddd);
     flex-shrink: 0;
-}
-
-[data-theme="dark"] .calendar-color-indicator {
-    border-color: #555;
 }
 
 /* Color picker style improvements */
@@ -347,7 +333,7 @@ body[data-theme="dark"] {
 /* nav-pills ボタン */
 .settings-nav .nav-link {
     text-align: left;
-    color: #495057;
+    color: var(--side-calendar-modal-btn-text, #495057);
     border-radius: 0.375rem;
     padding: 0.6rem 1rem;
     margin-bottom: 0.25rem;
@@ -356,12 +342,12 @@ body[data-theme="dark"] {
 }
 
 .settings-nav .nav-link:hover {
-    background-color: #e8f0fe;
-    color: #0d6efd;
+    background-color: var(--side-calendar-subtle-bg-hover, #e9ecef);
+    color: var(--side-calendar-accent-color, #007bff);
 }
 
 .settings-nav .nav-link.active {
-    background-color: #0d6efd;
+    background-color: var(--side-calendar-accent-color, #007bff);
     color: #fff;
 }
 
@@ -369,7 +355,7 @@ body[data-theme="dark"] {
 .settings-sidebar-actions {
     margin-top: 1rem;
     padding-top: 0.75rem;
-    border-top: 1px solid #dee2e6;
+    border-top: 1px solid var(--side-calendar-border-color-light, #ddd);
 }
 
 .settings-sidebar-actions > div:not(.control-notification) {
@@ -443,6 +429,7 @@ body[data-theme="dark"] {
 .thin-scrollbar,
 .thin-scrollbar * {
     scrollbar-width: thin;
+    scrollbar-color: var(--side-calendar-scrollbar-thumb, #ccc) var(--side-calendar-scrollbar-track, transparent);
 }
 
 .thin-scrollbar::-webkit-scrollbar,
@@ -452,12 +439,12 @@ body[data-theme="dark"] {
 
 .thin-scrollbar::-webkit-scrollbar-track,
 .thin-scrollbar *::-webkit-scrollbar-track {
-    background: transparent;
+    background: var(--side-calendar-scrollbar-track, transparent);
 }
 
 .thin-scrollbar::-webkit-scrollbar-thumb,
 .thin-scrollbar *::-webkit-scrollbar-thumb {
-    background: var(--side-calendar-border-color, #ccc);
+    background: var(--side-calendar-scrollbar-thumb, #ccc);
     border-radius: 2px;
 }
 
