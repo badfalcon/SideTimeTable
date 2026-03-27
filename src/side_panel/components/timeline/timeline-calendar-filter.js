@@ -331,7 +331,7 @@ export class TimelineCalendarFilter extends Component {
         this.searchInput.placeholder = this.getMessage('calendarFilterSearchPlaceholder');
         this.searchInput.setAttribute('aria-label', this.getMessage('calendarFilterSearchPlaceholder'));
         this.searchInput.value = this.searchTerm;
-        this.addEventListener(this.searchInput, 'input', () => {
+        this.searchInput.addEventListener('input', () => {
             this.searchTerm = this.searchInput.value;
             this._renderCalendarList();
         });
@@ -342,7 +342,7 @@ export class TimelineCalendarFilter extends Component {
         this.refreshBtn.title = this.getMessage('calendarFilterRefreshTooltip');
         this.refreshBtn.setAttribute('aria-label', this.getMessage('calendarFilterRefreshTooltip'));
         this.refreshBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i>';
-        this.addEventListener(this.refreshBtn, 'click', () => {
+        this.refreshBtn.addEventListener('click', () => {
             this._refreshCalendars();
         });
 
