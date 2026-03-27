@@ -388,6 +388,8 @@ export class CalendarManagementCard extends CardComponent {
      * Render calendar list with group support
      */
     render() {
+        this._closePopover();
+
         if (!this.allCalendars || this.allCalendars.length === 0) {
             this._showEmptyState();
             return;
