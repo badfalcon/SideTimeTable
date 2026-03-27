@@ -1481,6 +1481,30 @@
     "message": "グループがありません",
     "description": "割り当て可能なグループがない場合のメッセージ"
   },
+  "createGroupTitle": {
+    "message": "グループを作成",
+    "description": "グループ作成モーダルのタイトル"
+  },
+  "groupNameLabel": {
+    "message": "グループ名",
+    "description": "グループ作成モーダルのグループ名ラベル"
+  },
+  "selectCalendarsLabel": {
+    "message": "カレンダーを選択",
+    "description": "グループ作成モーダルのカレンダー選択セクションラベル"
+  },
+  "createGroupButton": {
+    "message": "作成",
+    "description": "グループを作成するボタンのラベル"
+  },
+  "cancelButton": {
+    "message": "キャンセル",
+    "description": "モーダルをキャンセルして閉じるボタンのラベル"
+  },
+  "noCalendarsToAdd": {
+    "message": "カレンダーがありません。先にカレンダーリストを更新してください。",
+    "description": "グループ作成モーダルでカレンダーがない場合のメッセージ"
+  },
   "errorLabel": {
     "message": "エラー",
     "description": "エラーメッセージのラベル接頭辞"

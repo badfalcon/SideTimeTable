@@ -1481,6 +1481,30 @@
     "message": "No groups available",
     "description": "Message shown when no groups exist for assignment"
   },
+  "createGroupTitle": {
+    "message": "Create Group",
+    "description": "Title for the create group modal"
+  },
+  "groupNameLabel": {
+    "message": "Group Name",
+    "description": "Label for the group name input in create modal"
+  },
+  "selectCalendarsLabel": {
+    "message": "Select Calendars",
+    "description": "Label for the calendar selection section in create modal"
+  },
+  "createGroupButton": {
+    "message": "Create",
+    "description": "Button label to create a new group"
+  },
+  "cancelButton": {
+    "message": "Cancel",
+    "description": "Button label to cancel and close modal"
+  },
+  "noCalendarsToAdd": {
+    "message": "No calendars available. Refresh the calendar list first.",
+    "description": "Message when no calendars are available in the create group modal"
+  },
   "errorLabel": {
     "message": "Error",
     "description": "Label prefix for error messages"

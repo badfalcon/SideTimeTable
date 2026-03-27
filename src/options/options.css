@@ -624,3 +624,118 @@ body[data-theme="dark"] {
 [data-theme="dark"] .calendar-group-assign-popover input[type="checkbox"] {
     accent-color: #5b9dff;
 }
+
+/* Create Group Modal */
+.create-group-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.create-group-modal {
+    background: var(--side-calendar-modal-bg, #fff);
+    border: 1px solid var(--side-calendar-border-color, #dee2e6);
+    border-radius: 0.5rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    width: 440px;
+    max-width: 90vw;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.create-group-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--side-calendar-border-color, #dee2e6);
+}
+
+.create-group-modal-header h5 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.create-group-modal-body {
+    padding: 1rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.create-group-modal-calendar-list {
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px solid var(--side-calendar-border-color, #dee2e6);
+    border-radius: 0.375rem;
+    padding: 0.5rem;
+}
+
+.create-group-modal-cal-item {
+    padding: 0.25rem 0;
+    margin: 0;
+}
+
+.create-group-modal-cal-item .form-check-label {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    cursor: pointer;
+}
+
+.calendar-color-indicator-inline {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.create-group-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--side-calendar-border-color, #dee2e6);
+}
+
+/* Dark mode for create group modal */
+[data-theme="dark"] .create-group-modal {
+    background: #2a2a3c;
+    border-color: #444;
+    color: #e0e0e0;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .create-group-modal-header {
+    border-bottom-color: #444;
+}
+
+[data-theme="dark"] .create-group-modal-footer {
+    border-top-color: #444;
+}
+
+[data-theme="dark"] .create-group-modal-calendar-list {
+    border-color: #555;
+}
+
+[data-theme="dark"] .create-group-modal .form-control {
+    background-color: #1e1e2e;
+    border-color: #555;
+    color: #e0e0e0;
+}
+
+[data-theme="dark"] .create-group-modal .form-check-label {
+    color: #e0e0e0;
+}
+
+[data-theme="dark"] .create-group-modal .form-check-input {
+    accent-color: #5b9dff;
+}

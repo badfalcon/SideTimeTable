@@ -43,10 +43,15 @@ export class CalendarManagementCard extends CardComponent {
 
         // Debounced save for collapse state
         this._collapseSaveTimer = null;
+
+        // Create-group modal references
+        this._createGroupModalOverlay = null;
+        this._createGroupModalKeyHandler = null;
     }
 
     destroy() {
         this._closePopover();
+        this._closeCreateGroupModal();
         if (this._collapseSaveTimer) {
             clearTimeout(this._collapseSaveTimer);
             this._collapseSaveTimer = null;
@@ -812,30 +817,219 @@ export class CalendarManagementCard extends CardComponent {
     }
 
     /**
-     * Handle adding a new group
+     * Handle adding a new group — opens a modal for name + member selection
      * @private
      */
-    async _handleAddGroup() {
-        const groupId = `group_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-        const groupName = window.getLocalizedMessage('newGroupName') || 'New Group';
+    _handleAddGroup() {
+        this._showCreateGroupModal();
+    }
 
+    /**
+     * Show the create-group modal
+     * @private
+     */
+    _showCreateGroupModal() {
+        // Remove any existing modal
+        this._closeCreateGroupModal();
+
+        // Overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'create-group-modal-overlay';
+
+        // Modal container
+        const modal = document.createElement('div');
+        modal.className = 'create-group-modal';
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-label', window.getLocalizedMessage('createGroupTitle') || 'Create Group');
+
+        // Header
+        const header = document.createElement('div');
+        header.className = 'create-group-modal-header';
+        const title = document.createElement('h5');
+        title.textContent = window.getLocalizedMessage('createGroupTitle') || 'Create Group';
+        const closeBtn = document.createElement('button');
+        closeBtn.type = 'button';
+        closeBtn.className = 'btn-close';
+        closeBtn.setAttribute('aria-label', window.getLocalizedMessage('cancelButton') || 'Cancel');
+        closeBtn.addEventListener('click', () => this._closeCreateGroupModal());
+        header.appendChild(title);
+        header.appendChild(closeBtn);
+
+        // Body
+        const body = document.createElement('div');
+        body.className = 'create-group-modal-body';
+
+        // Group name input
+        const nameLabel = document.createElement('label');
+        nameLabel.className = 'form-label fw-bold';
+        nameLabel.textContent = window.getLocalizedMessage('groupNameLabel') || 'Group Name';
+        const nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.className = 'form-control mb-3';
+        nameInput.placeholder = window.getLocalizedMessage('groupNamePlaceholder') || 'Enter group name';
+        nameInput.maxLength = 50;
+        nameInput.setAttribute('aria-label', window.getLocalizedMessage('groupNameLabel') || 'Group Name');
+
+        body.appendChild(nameLabel);
+        body.appendChild(nameInput);
+
+        // Calendar selection
+        const calLabel = document.createElement('label');
+        calLabel.className = 'form-label fw-bold';
+        calLabel.textContent = window.getLocalizedMessage('selectCalendarsLabel') || 'Select Calendars';
+        body.appendChild(calLabel);
+
+        const calList = document.createElement('div');
+        calList.className = 'create-group-modal-calendar-list';
+
+        const sortedCalendars = [...this.allCalendars].sort((a, b) => {
+            if (a.primary && !b.primary) return -1;
+            if (!a.primary && b.primary) return 1;
+            return (a.summary || '').localeCompare(b.summary || '');
+        });
+
+        const checkboxes = [];
+        if (sortedCalendars.length === 0) {
+            const empty = document.createElement('div');
+            empty.className = 'text-muted p-2';
+            empty.textContent = window.getLocalizedMessage('noCalendarsToAdd')
+                || 'No calendars available. Refresh the calendar list first.';
+            calList.appendChild(empty);
+        } else {
+            for (const cal of sortedCalendars) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'form-check create-group-modal-cal-item';
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'form-check-input';
+                checkbox.id = `create-group-cal-${cal.id}`;
+                checkbox.value = cal.id;
+
+                const label = document.createElement('label');
+                label.className = 'form-check-label';
+                label.htmlFor = checkbox.id;
+
+                // Color indicator
+                const colorDot = document.createElement('span');
+                colorDot.className = 'calendar-color-indicator-inline';
+                if (cal.backgroundColor) {
+                    colorDot.style.backgroundColor = cal.backgroundColor;
+                }
+
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = cal.summary || cal.id;
+                if (cal.primary) {
+                    nameSpan.classList.add('text-primary', 'fw-bold');
+                }
+
+                label.appendChild(colorDot);
+                label.appendChild(nameSpan);
+                wrapper.appendChild(checkbox);
+                wrapper.appendChild(label);
+                calList.appendChild(wrapper);
+                checkboxes.push(checkbox);
+            }
+        }
+        body.appendChild(calList);
+
+        // Footer with buttons
+        const footer = document.createElement('div');
+        footer.className = 'create-group-modal-footer';
+
+        const cancelBtn = document.createElement('button');
+        cancelBtn.type = 'button';
+        cancelBtn.className = 'btn btn-outline-secondary btn-sm';
+        cancelBtn.textContent = window.getLocalizedMessage('cancelButton') || 'Cancel';
+        cancelBtn.addEventListener('click', () => this._closeCreateGroupModal());
+
+        const createBtn = document.createElement('button');
+        createBtn.type = 'button';
+        createBtn.className = 'btn btn-primary btn-sm';
+        createBtn.textContent = window.getLocalizedMessage('createGroupButton') || 'Create';
+        createBtn.addEventListener('click', () => {
+            this._submitCreateGroup(nameInput.value.trim(), checkboxes);
+        });
+
+        footer.appendChild(cancelBtn);
+        footer.appendChild(createBtn);
+
+        modal.appendChild(header);
+        modal.appendChild(body);
+        modal.appendChild(footer);
+        overlay.appendChild(modal);
+
+        // Escape key handler
+        this._createGroupModalKeyHandler = (e) => {
+            if (e.key === 'Escape') {
+                this._closeCreateGroupModal();
+            }
+        };
+        document.addEventListener('keydown', this._createGroupModalKeyHandler);
+
+        // Click overlay to close
+        overlay.addEventListener('mousedown', (e) => {
+            if (e.target === overlay) {
+                this._closeCreateGroupModal();
+            }
+        });
+
+        // Enter key in name input submits
+        nameInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                this._submitCreateGroup(nameInput.value.trim(), checkboxes);
+            }
+        });
+
+        this._createGroupModalOverlay = overlay;
+        document.body.appendChild(overlay);
+
+        // Focus name input
+        setTimeout(() => nameInput.focus(), 0);
+    }
+
+    /**
+     * Submit the create-group modal
+     * @private
+     */
+    async _submitCreateGroup(name, checkboxes) {
+        const groupName = name || (window.getLocalizedMessage('newGroupName') || 'New Group');
+        const selectedCalIds = checkboxes
+            .filter(cb => cb.checked)
+            .map(cb => cb.value);
+
+        const groupId = `group_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
         const newGroup = {
             id: groupId,
-            name: groupName,
-            calendarIds: [],
+            name: groupName.slice(0, 50),
+            calendarIds: selectedCalIds,
             collapsed: false
         };
         this.calendarGroups.push(newGroup);
 
         try {
             await saveCalendarGroups(this.calendarGroups);
+            this._closeCreateGroupModal();
             this.render();
-            // Immediately start editing the new group name
-            this._handleStartRenameGroup(groupId);
         } catch (error) {
-            // Rollback on save failure
             this.calendarGroups = this.calendarGroups.filter(g => g.id !== groupId);
             logError('Add group', error);
+        }
+    }
+
+    /**
+     * Close the create-group modal
+     * @private
+     */
+    _closeCreateGroupModal() {
+        if (this._createGroupModalKeyHandler) {
+            document.removeEventListener('keydown', this._createGroupModalKeyHandler);
+            this._createGroupModalKeyHandler = null;
+        }
+        if (this._createGroupModalOverlay) {
+            this._createGroupModalOverlay.remove();
+            this._createGroupModalOverlay = null;
         }
     }
 
