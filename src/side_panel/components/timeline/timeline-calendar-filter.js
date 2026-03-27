@@ -268,6 +268,7 @@ export class TimelineCalendarFilter extends Component {
         this.searchInput.type = 'text';
         this.searchInput.className = 'timeline-calendar-filter-search';
         this.searchInput.placeholder = this.getMessage('calendarFilterSearchPlaceholder');
+        this.searchInput.setAttribute('aria-label', this.getMessage('calendarFilterSearchPlaceholder'));
         this.searchInput.value = this.searchTerm;
         this.addEventListener(this.searchInput, 'input', () => {
             this.searchTerm = this.searchInput.value;
@@ -449,7 +450,7 @@ export class TimelineCalendarFilter extends Component {
         const sorted = [...calendars].sort((a, b) => {
             if (a.primary && !b.primary) return -1;
             if (!a.primary && b.primary) return 1;
-            return a.summary.localeCompare(b.summary);
+            return (a.summary || '').localeCompare(b.summary || '');
         });
 
         sorted.forEach(calendar => {

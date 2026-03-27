@@ -98,11 +98,14 @@ export class CalendarManagementCard extends CardComponent {
         this.loadingIndicator.id = 'calendar-loading-indicator';
         this.loadingIndicator.className = 'ms-2';
         this.loadingIndicator.style.display = 'none';
-        this.loadingIndicator.innerHTML = `
-            <div class="spinner-border spinner-border-sm text-primary" role="status">
-                <span class="visually-hidden">${window.getLocalizedMessage('screenReaderLoading') || 'Loading...'}</span>
-            </div>
-        `;
+        const spinner = document.createElement('div');
+        spinner.className = 'spinner-border spinner-border-sm text-primary';
+        spinner.setAttribute('role', 'status');
+        const srSpan = document.createElement('span');
+        srSpan.className = 'visually-hidden';
+        srSpan.textContent = window.getLocalizedMessage('screenReaderLoading') || 'Loading...';
+        spinner.appendChild(srSpan);
+        this.loadingIndicator.appendChild(spinner);
 
         controlsDiv.appendChild(this.refreshBtn);
         controlsDiv.appendChild(this.loadingIndicator);
@@ -464,7 +467,7 @@ export class CalendarManagementCard extends CardComponent {
         const sortedCalendars = [...calendars].sort((a, b) => {
             if (a.primary && !b.primary) return -1;
             if (!a.primary && b.primary) return 1;
-            return a.summary.localeCompare(b.summary);
+            return (a.summary || '').localeCompare(b.summary || '');
         });
 
         sortedCalendars.forEach(calendar => {
@@ -605,6 +608,8 @@ export class CalendarManagementCard extends CardComponent {
         checkbox.className = 'form-check-input me-3';
         checkbox.checked = isSelected;
 
+        checkbox.setAttribute('aria-label', calendar.summary || '');
+
         if (calendar.primary) {
             checkbox.disabled = true;
             checkbox.checked = true;
@@ -629,6 +634,7 @@ export class CalendarManagementCard extends CardComponent {
         assignBtn.className = 'calendar-group-assign-btn';
         assignBtn.title = window.getLocalizedMessage('assignToGroups') || 'Assign to groups';
         assignBtn.setAttribute('aria-label', assignBtn.title);
+        assignBtn.setAttribute('aria-haspopup', 'dialog');
         assignBtn.innerHTML = '<i class="fas fa-folder"></i>';
 
         // The color indicator
@@ -657,6 +663,8 @@ export class CalendarManagementCard extends CardComponent {
 
         const popover = document.createElement('div');
         popover.className = 'calendar-group-assign-popover';
+        popover.setAttribute('role', 'dialog');
+        popover.setAttribute('aria-label', window.getLocalizedMessage('assignToGroups') || 'Assign to groups');
 
         if (this.calendarGroups.length === 0) {
             popover.textContent = window.getLocalizedMessage('noGroupsAvailable') || 'No groups available';
