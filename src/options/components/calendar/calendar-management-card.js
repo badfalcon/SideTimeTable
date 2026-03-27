@@ -685,6 +685,7 @@ export class CalendarManagementCard extends CardComponent {
 
         if (this.calendarGroups.length === 0) {
             popover.textContent = window.getLocalizedMessage('noGroupsAvailable') || 'No groups available';
+            popover.setAttribute('tabindex', '-1');
             const calendarItem = anchorElement.closest('[data-calendar-id]');
             if (calendarItem) {
                 calendarItem.appendChild(popover);
@@ -697,6 +698,7 @@ export class CalendarManagementCard extends CardComponent {
                 }
             };
             popover.addEventListener('keydown', this._popoverKeyHandler);
+            setTimeout(() => popover.focus(), 0);
             this._popoverCloseHandler = (e) => {
                 if (!this._activePopover) return;
                 if (!popover.contains(e.target) && !anchorElement.contains(e.target)) {
