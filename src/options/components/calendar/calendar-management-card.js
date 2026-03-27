@@ -690,6 +690,13 @@ export class CalendarManagementCard extends CardComponent {
                 calendarItem.appendChild(popover);
             }
             this._activePopover = popover;
+            this._popoverKeyHandler = (e) => {
+                if (e.key === 'Escape') {
+                    this._closePopover();
+                    anchorElement.focus();
+                }
+            };
+            popover.addEventListener('keydown', this._popoverKeyHandler);
             this._popoverCloseHandler = (e) => {
                 if (!this._activePopover) return;
                 if (!popover.contains(e.target) && !anchorElement.contains(e.target)) {
@@ -1051,6 +1058,7 @@ export class CalendarManagementCard extends CardComponent {
      * @private
      */
     _closeCreateGroupModal() {
+        const wasOpen = !!this._createGroupModalOverlay;
         if (this._createGroupModalKeyHandler) {
             document.removeEventListener('keydown', this._createGroupModalKeyHandler);
             this._createGroupModalKeyHandler = null;
@@ -1059,8 +1067,8 @@ export class CalendarManagementCard extends CardComponent {
             this._createGroupModalOverlay.remove();
             this._createGroupModalOverlay = null;
         }
-        // Restore focus to the trigger button
-        if (this.addGroupBtn) {
+        // Restore focus to the trigger button (only if modal was actually open and element is in DOM)
+        if (wasOpen && this.addGroupBtn && this.addGroupBtn.isConnected) {
             this.addGroupBtn.focus();
         }
     }
