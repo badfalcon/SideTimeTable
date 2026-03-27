@@ -663,14 +663,17 @@ export class TimelineCalendarFilter extends Component {
      * @private
      */
     async _refreshCalendars() {
+        if (this._isFetching) return;
         const spinIcon = this.refreshBtn?.querySelector('i');
         if (spinIcon) {
             spinIcon.classList.add('fa-spin');
         }
         this.hasFetched = false;
+        this._isFetching = true;
         try {
             await this._fetchCalendars();
         } finally {
+            this._isFetching = false;
             if (spinIcon) {
                 spinIcon.classList.remove('fa-spin');
             }

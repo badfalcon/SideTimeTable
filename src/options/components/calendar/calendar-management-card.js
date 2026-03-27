@@ -682,6 +682,18 @@ export class CalendarManagementCard extends CardComponent {
                 calendarItem.appendChild(popover);
             }
             this._activePopover = popover;
+            this._popoverCloseHandler = (e) => {
+                if (!this._activePopover) return;
+                if (!popover.contains(e.target) && !anchorElement.contains(e.target)) {
+                    this._closePopover();
+                }
+            };
+            this._popoverTimerId = setTimeout(() => {
+                this._popoverTimerId = null;
+                if (this._activePopover === popover) {
+                    document.addEventListener('click', this._popoverCloseHandler);
+                }
+            }, 0);
             return;
         }
 
@@ -791,6 +803,7 @@ export class CalendarManagementCard extends CardComponent {
             this.render();
         } catch (error) {
             group.calendarIds = previousCalendarIds;
+            this.render();
             logError('Calendar group assignment save', error);
         }
     }
@@ -938,6 +951,7 @@ export class CalendarManagementCard extends CardComponent {
             this.render();
         } catch (error) {
             this.selectedCalendarIds = previousIds;
+            this.render();
             logError('Group toggle save', error);
         }
     }
