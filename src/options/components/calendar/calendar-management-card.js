@@ -803,6 +803,7 @@ export class CalendarManagementCard extends CardComponent {
             this.render();
         } catch (error) {
             group.calendarIds = previousCalendarIds;
+            this._closePopover();
             this.render();
             logError('Calendar group assignment save', error);
         }
@@ -890,6 +891,7 @@ export class CalendarManagementCard extends CardComponent {
                     try {
                         await saveCalendarGroups(this.calendarGroups);
                     } catch (error) {
+                        group.name = originalName;
                         logError('Rename group', error);
                     }
                 }

@@ -207,11 +207,18 @@ export class TimelineCalendarFilter extends Component {
                 const primary = this.calendars.find(c => c.primary);
                 if (primary && !this.selectedIds.includes(primary.id)) {
                     this.selectedIds.unshift(primary.id);
-                    await saveSelectedCalendars(this.selectedIds);
+                    try {
+                        await saveSelectedCalendars(this.selectedIds);
+                    } catch {
+                        // Non-critical: primary will be re-added on next open
+                    }
                 }
                 if (!this.isOpen) return;
                 this._renderDropdownContent();
                 this._focusDropdown();
+            } catch {
+                if (!this.isOpen) return;
+                this._renderDropdownContent();
             } finally {
                 this._isFetching = false;
             }
@@ -648,13 +655,13 @@ export class TimelineCalendarFilter extends Component {
 
         try {
             await saveSelectedCalendars(this.selectedIds);
+            this._renderCalendarList();
+            if (this.onCalendarChange) {
+                this.onCalendarChange();
+            }
         } catch {
             this.selectedIds = previousIds;
-        }
-        this._renderCalendarList();
-
-        if (this.onCalendarChange) {
-            this.onCalendarChange();
+            this._renderCalendarList();
         }
     }
 
@@ -697,15 +704,14 @@ export class TimelineCalendarFilter extends Component {
 
         try {
             await saveSelectedCalendars(this.selectedIds);
+            // Update group header checkbox states
+            this._updateGroupCheckboxStates();
+            if (this.onCalendarChange) {
+                this.onCalendarChange();
+            }
         } catch {
             this.selectedIds = previousIds;
-        }
-
-        // Update group header checkbox states
-        this._updateGroupCheckboxStates();
-
-        if (this.onCalendarChange) {
-            this.onCalendarChange();
+            this._renderCalendarList();
         }
     }
 
