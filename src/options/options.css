@@ -680,7 +680,18 @@ body[data-theme="dark"] {
 
 .create-group-modal-cal-item {
     padding: 0.25rem 0;
+    padding-left: 0;
     margin: 0;
+    display: flex !important;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.create-group-modal-cal-item .form-check-input {
+    float: none;
+    margin-left: 0;
+    margin-top: 0;
+    flex-shrink: 0;
 }
 
 .create-group-modal-cal-item .form-check-label {
