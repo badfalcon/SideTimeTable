@@ -33,7 +33,6 @@ export class TimelineCalendarFilter extends Component {
 
         // Bound handlers
         this._boundOnScroll = null;
-        this._boundOnClickOutside = null;
         this._rafId = null;
     }
 
@@ -365,6 +364,7 @@ export class TimelineCalendarFilter extends Component {
         // Group header
         const header = document.createElement('div');
         header.className = 'timeline-calendar-filter-group-header';
+        header.dataset.groupId = group.id;
 
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
@@ -589,30 +589,27 @@ export class TimelineCalendarFilter extends Component {
         if (!this.calendarList || this.calendarGroups.length === 0) return;
 
         const calendarMap = new Map(this.calendars.map(c => [c.id, c]));
-        const headers = this.calendarList.querySelectorAll('.timeline-calendar-filter-group-header');
 
-        let groupIndex = 0;
-        headers.forEach(header => {
+        for (const group of this.calendarGroups) {
+            const header = this.calendarList.querySelector(`.timeline-calendar-filter-group-header[data-group-id="${group.id}"]`);
+            if (!header) continue;
+
             const checkbox = header.querySelector('input[type="checkbox"]');
-            if (!checkbox) return;
+            if (!checkbox) continue;
 
-            if (groupIndex < this.calendarGroups.length) {
-                const group = this.calendarGroups[groupIndex];
-                const validCalendars = group.calendarIds.filter(id => calendarMap.has(id));
-                const selectedCount = validCalendars.filter(id => this.selectedIds.includes(id)).length;
+            const validCalendars = group.calendarIds.filter(id => calendarMap.has(id));
+            const selectedCount = validCalendars.filter(id => this.selectedIds.includes(id)).length;
 
-                checkbox.indeterminate = false;
-                if (selectedCount === 0) {
-                    checkbox.checked = false;
-                } else if (selectedCount === validCalendars.length) {
-                    checkbox.checked = true;
-                } else {
-                    checkbox.checked = false;
-                    checkbox.indeterminate = true;
-                }
+            checkbox.indeterminate = false;
+            if (selectedCount === 0) {
+                checkbox.checked = false;
+            } else if (selectedCount === validCalendars.length) {
+                checkbox.checked = true;
+            } else {
+                checkbox.checked = false;
+                checkbox.indeterminate = true;
             }
-            groupIndex++;
-        });
+        }
     }
 
     /**

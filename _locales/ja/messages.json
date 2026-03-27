@@ -1464,5 +1464,21 @@
   "groupNamePlaceholder": {
     "message": "グループ名を入力",
     "description": "グループ名入力のプレースホルダー"
+  },
+  "editGroup": {
+    "message": "編集",
+    "description": "カレンダーグループ名を編集するツールチップ"
+  },
+  "deleteGroup": {
+    "message": "削除",
+    "description": "カレンダーグループを削除するツールチップ"
+  },
+  "assignToGroups": {
+    "message": "グループに追加",
+    "description": "カレンダーをグループに割り当てるツールチップ"
+  },
+  "noGroupsAvailable": {
+    "message": "グループがありません",
+    "description": "割り当て可能なグループがない場合のメッセージ"
   }
 }

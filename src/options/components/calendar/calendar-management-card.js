@@ -269,6 +269,17 @@ export class CalendarManagementCard extends CardComponent {
                 }
             }
         });
+
+        // Keyboard support for group headers
+        this.calendarList?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                const groupHeader = e.target.closest('.calendar-group-header');
+                if (groupHeader && e.target === groupHeader) {
+                    e.preventDefault();
+                    this._handleGroupCollapse(groupHeader.dataset.groupId);
+                }
+            }
+        });
     }
 
     /**
@@ -411,7 +422,7 @@ export class CalendarManagementCard extends CardComponent {
             .sort((a, b) => {
                 if (a.primary && !b.primary) return -1;
                 if (!a.primary && b.primary) return 1;
-                return a.summary.localeCompare(b.summary, 'ja');
+                return a.summary.localeCompare(b.summary);
             });
 
         if (ungroupedCalendars.length > 0 || this.calendarGroups.length > 0) {
@@ -422,7 +433,7 @@ export class CalendarManagementCard extends CardComponent {
             const sortedCalendars = [...filteredCalendars].sort((a, b) => {
                 if (a.primary && !b.primary) return -1;
                 if (!a.primary && b.primary) return 1;
-                return a.summary.localeCompare(b.summary, 'ja');
+                return a.summary.localeCompare(b.summary);
             });
             sortedCalendars.forEach(calendar => {
                 const isSelected = this.selectedCalendarIds.includes(calendar.id);
@@ -454,7 +465,7 @@ export class CalendarManagementCard extends CardComponent {
         const sortedCalendars = [...calendars].sort((a, b) => {
             if (a.primary && !b.primary) return -1;
             if (!a.primary && b.primary) return 1;
-            return a.summary.localeCompare(b.summary, 'ja');
+            return a.summary.localeCompare(b.summary);
         });
 
         sortedCalendars.forEach(calendar => {
@@ -511,18 +522,22 @@ export class CalendarManagementCard extends CardComponent {
         const editBtn = document.createElement('button');
         editBtn.type = 'button';
         editBtn.dataset.groupEdit = group.id;
-        editBtn.title = 'Edit';
+        editBtn.title = window.getLocalizedMessage('editGroup') || 'Edit';
+        editBtn.setAttribute('aria-label', editBtn.title);
         editBtn.innerHTML = '<i class="fas fa-pencil-alt"></i>';
 
         const deleteBtn = document.createElement('button');
         deleteBtn.type = 'button';
         deleteBtn.dataset.groupDelete = group.id;
-        deleteBtn.title = 'Delete';
+        deleteBtn.title = window.getLocalizedMessage('deleteGroup') || 'Delete';
+        deleteBtn.setAttribute('aria-label', deleteBtn.title);
         deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
 
         actions.appendChild(editBtn);
         actions.appendChild(deleteBtn);
 
+        header.setAttribute('tabindex', '0');
+        header.setAttribute('role', 'button');
         header.appendChild(checkbox);
         header.appendChild(collapseIcon);
         header.appendChild(nameSpan);
@@ -576,7 +591,6 @@ export class CalendarManagementCard extends CardComponent {
         const item = document.createElement('div');
         item.className = 'list-group-item d-flex align-items-center py-2';
         item.dataset.calendarId = calendar.id;
-        item.style.position = 'relative';
 
         // The checkbox
         const checkbox = document.createElement('input');
@@ -606,19 +620,16 @@ export class CalendarManagementCard extends CardComponent {
         const assignBtn = document.createElement('button');
         assignBtn.type = 'button';
         assignBtn.className = 'calendar-group-assign-btn';
-        assignBtn.title = 'Assign to groups';
+        assignBtn.title = window.getLocalizedMessage('assignToGroups') || 'Assign to groups';
+        assignBtn.setAttribute('aria-label', assignBtn.title);
         assignBtn.innerHTML = '<i class="fas fa-folder"></i>';
 
         // The color indicator
         const colorIndicator = document.createElement('div');
-        colorIndicator.className = 'me-2';
-        colorIndicator.style.cssText = `
-            width: 12px;
-            height: 12px;
-            background-color: ${calendar.backgroundColor || '#ccc'};
-            border-radius: 50%;
-            border: 1px solid #ddd;
-        `;
+        colorIndicator.className = 'calendar-color-indicator me-2';
+        if (calendar.backgroundColor) {
+            colorIndicator.style.backgroundColor = calendar.backgroundColor;
+        }
 
         item.appendChild(checkbox);
         item.appendChild(info);
@@ -641,7 +652,12 @@ export class CalendarManagementCard extends CardComponent {
         popover.className = 'calendar-group-assign-popover';
 
         if (this.calendarGroups.length === 0) {
-            popover.textContent = 'No groups available';
+            popover.textContent = window.getLocalizedMessage('noGroupsAvailable') || 'No groups available';
+            const calendarItem = anchorElement.closest('[data-calendar-id]');
+            if (calendarItem) {
+                calendarItem.appendChild(popover);
+            }
+            this._activePopover = popover;
             return;
         }
 
@@ -675,12 +691,15 @@ export class CalendarManagementCard extends CardComponent {
 
         this._activePopover = popover;
         this._popoverCloseHandler = (e) => {
+            if (!this._activePopover) return;
             if (!popover.contains(e.target) && !anchorElement.contains(e.target)) {
                 this._closePopover();
             }
         };
         setTimeout(() => {
-            document.addEventListener('click', this._popoverCloseHandler);
+            if (this._activePopover === popover) {
+                document.addEventListener('click', this._popoverCloseHandler);
+            }
         }, 0);
     }
 
@@ -779,15 +798,20 @@ export class CalendarManagementCard extends CardComponent {
         const nameSpan = header.querySelector('.group-name');
         if (!nameSpan) return;
 
+        const originalName = nameSpan.textContent;
         const input = document.createElement('input');
         input.type = 'text';
         input.className = 'group-name-input';
-        input.value = nameSpan.textContent;
+        input.value = originalName;
+        input.maxLength = 50;
         input.placeholder = window.getLocalizedMessage('groupNamePlaceholder') || 'Enter group name';
 
+        let finished = false;
         const finishRename = async () => {
+            if (finished) return;
+            finished = true;
             const newName = input.value.trim();
-            if (newName) {
+            if (newName && newName !== originalName) {
                 const group = this.calendarGroups.find(g => g.id === groupId);
                 if (group) {
                     group.name = newName;
@@ -808,7 +832,7 @@ export class CalendarManagementCard extends CardComponent {
                 input.blur();
             }
             if (e.key === 'Escape') {
-                input.value = nameSpan.textContent;
+                input.value = originalName;
                 input.blur();
             }
         });

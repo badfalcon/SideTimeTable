@@ -1464,5 +1464,21 @@
   "groupNamePlaceholder": {
     "message": "Enter group name",
     "description": "Placeholder for group name input"
+  },
+  "editGroup": {
+    "message": "Edit",
+    "description": "Tooltip for editing a calendar group name"
+  },
+  "deleteGroup": {
+    "message": "Delete",
+    "description": "Tooltip for deleting a calendar group"
+  },
+  "assignToGroups": {
+    "message": "Assign to groups",
+    "description": "Tooltip for assigning a calendar to groups"
+  },
+  "noGroupsAvailable": {
+    "message": "No groups available",
+    "description": "Message shown when no groups exist for assignment"
   }
 }

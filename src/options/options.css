@@ -268,6 +268,24 @@ body[data-theme="dark"] {
     border-radius: 0;
 }
 
+#calendar-list .list-group-item {
+    position: relative;
+}
+
+/* Calendar color indicator */
+.calendar-color-indicator {
+    width: 12px;
+    height: 12px;
+    background-color: #ccc;
+    border-radius: 50%;
+    border: 1px solid #ddd;
+    flex-shrink: 0;
+}
+
+[data-theme="dark"] .calendar-color-indicator {
+    border-color: #555;
+}
+
 /* Color picker style improvements */
 .form-control-color {
     width: 2.5rem;
@@ -496,7 +514,8 @@ body[data-theme="dark"] {
     font-size: 0.8rem;
 }
 
-.calendar-group-header .group-actions button:hover {
+.calendar-group-header .group-actions button:hover,
+.calendar-group-header .group-actions button:focus-visible {
     color: #0d6efd;
 }
 
@@ -513,12 +532,10 @@ body[data-theme="dark"] {
 
 .calendar-group-body {
     overflow: hidden;
-    transition: max-height 0.2s ease-out;
 }
 
 .calendar-group-body.collapsed {
-    max-height: 0 !important;
-    overflow: hidden;
+    display: none;
 }
 
 /* Calendar item group assignment popover */
@@ -537,7 +554,8 @@ body[data-theme="dark"] {
     opacity: 1;
 }
 
-.calendar-group-assign-btn:hover {
+.calendar-group-assign-btn:hover,
+.calendar-group-assign-btn:focus-visible {
     color: #0d6efd;
 }
 
@@ -585,6 +603,7 @@ body[data-theme="dark"] {
 [data-theme="dark"] .calendar-group-assign-popover {
     background: #2a2a3c;
     border-color: #555;
+    color: #e0e0e0;
 }
 
 [data-theme="dark"] .calendar-group-header .group-name-input {
