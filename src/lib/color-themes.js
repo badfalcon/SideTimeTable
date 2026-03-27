@@ -255,7 +255,7 @@ function _lightChromeVars(palette) {
         '--side-calendar-modal-btn-bg': palette.surface || bg,
         '--side-calendar-modal-btn-border': _adjustBrightness(bg, -0.13),
         '--side-calendar-modal-btn-text': _adjustBrightness(textColor, textColor === '#000000' ? 0.27 : -0.27),
-        '--side-calendar-modal-btn-hover-bg': _adjustBrightness(bg, -0.06),
+        '--side-calendar-modal-btn-hover-bg': _adjustBrightness(bg, -0.09),
         '--side-calendar-modal-btn-hover-border': _adjustBrightness(bg, -0.32)
     };
 }
