@@ -8,6 +8,7 @@
 ### Features
 - **Side Panel Interface**: Access your daily events on a handy side panel with auto-width adjustment.
 - **Google Calendar Integration**: Sync with multiple Google Calendars and manage calendar visibility with search functionality.
+- **Calendar Grouping**: Organize calendars into custom groups (e.g., "Work", "Personal") and switch views with one click.
 - **Local Event Management**: Add and configure local events directly from the side panel, or drag on the timeline to create instantly. Automatic midnight reset.
 - **Recurring Events**: Create daily, weekly, monthly, or weekday recurring events with ease.
 - **Reminder Notifications**: Get desktop alerts minutes before events (1/3/5/10/15/30/60 minutes).
@@ -99,6 +100,7 @@ This plugin is released under the [Apache License 2.0]. See the `LICENSE` file f
 ### 特徴
 - **サイドパネルインターフェース**: デイリーイベントを便利なサイドパネルで確認（自動幅調整機能付き）。
 - **Googleカレンダー連携**: 複数のGoogleカレンダーと同期し、検索機能でカレンダー管理が可能。
+- **カレンダーグループ**: カレンダーを「仕事」「プライベート」などにグループ化し、ワンクリックで表示切替。
 - **ローカルイベント管理**: サイドパネルから直接追加・設定、またはタイムライン上のドラッグで即座に作成（自動午前0時リセット）。
 - **繰り返しイベント**: 毎日・毎週・毎月・平日の繰り返し予定を簡単作成。
 - **リマインダー通知**: 予定の◯分前にデスクトップ通知でお知らせ（1/3/5/10/15/30/60分から選択可能）。
