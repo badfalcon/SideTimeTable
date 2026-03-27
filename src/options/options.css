@@ -560,10 +560,8 @@ body[data-theme="dark"] {
 }
 
 .calendar-group-assign-popover {
-    position: absolute;
-    right: 0;
-    top: 100%;
-    z-index: 10;
+    position: fixed;
+    z-index: 1050;
     background: var(--side-calendar-modal-bg, #fff);
     border: 1px solid var(--side-calendar-border-color, #dee2e6);
     border-radius: 0.375rem;

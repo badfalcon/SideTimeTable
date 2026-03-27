@@ -694,78 +694,51 @@ export class CalendarManagementCard extends CardComponent {
         if (this.calendarGroups.length === 0) {
             popover.textContent = window.getLocalizedMessage('noGroupsAvailable') || 'No groups available';
             popover.setAttribute('tabindex', '-1');
-            const calendarItem = anchorElement.closest('[data-calendar-id]');
-            if (calendarItem) {
-                calendarItem.appendChild(popover);
-            }
-            this._activePopover = popover;
-            this._popoverKeyHandler = (e) => {
-                if (e.key === 'Escape') {
-                    this._closePopover();
-                    anchorElement.focus();
-                }
-            };
-            popover.addEventListener('keydown', this._popoverKeyHandler);
-            setTimeout(() => popover.focus(), 0);
-            this._popoverCloseHandler = (e) => {
-                if (!this._activePopover) return;
-                if (!popover.contains(e.target) && !anchorElement.contains(e.target)) {
-                    this._closePopover();
-                }
-            };
-            this._popoverTimerId = setTimeout(() => {
-                this._popoverTimerId = null;
-                if (this._activePopover === popover) {
-                    document.addEventListener('click', this._popoverCloseHandler);
-                }
-            }, 0);
-            return;
-        }
+        } else {
+            this.calendarGroups.forEach(group => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'form-check';
 
-        this.calendarGroups.forEach(group => {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'form-check';
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'form-check-input';
+                checkbox.id = `assign-${calendarId}-${group.id}`;
+                checkbox.checked = group.calendarIds.includes(calendarId);
+                checkbox.addEventListener('change', () => {
+                    this._handleCalendarGroupAssignment(calendarId, group.id, checkbox.checked);
+                });
 
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.className = 'form-check-input';
-            checkbox.id = `assign-${calendarId}-${group.id}`;
-            checkbox.checked = group.calendarIds.includes(calendarId);
-            checkbox.addEventListener('change', () => {
-                this._handleCalendarGroupAssignment(calendarId, group.id, checkbox.checked);
+                const label = document.createElement('label');
+                label.className = 'form-check-label';
+                label.htmlFor = checkbox.id;
+                label.textContent = group.name;
+
+                wrapper.appendChild(checkbox);
+                wrapper.appendChild(label);
+                popover.appendChild(wrapper);
             });
-
-            const label = document.createElement('label');
-            label.className = 'form-check-label';
-            label.htmlFor = checkbox.id;
-            label.textContent = group.name;
-
-            wrapper.appendChild(checkbox);
-            wrapper.appendChild(label);
-            popover.appendChild(wrapper);
-        });
-
-        const calendarItem = anchorElement.closest('[data-calendar-id]');
-        if (calendarItem) {
-            calendarItem.appendChild(popover);
         }
+
+        // Position popover using fixed positioning to avoid overflow clipping
+        const rect = anchorElement.getBoundingClientRect();
+        popover.style.top = `${rect.bottom + 4}px`;
+        popover.style.right = `${document.documentElement.clientWidth - rect.right}px`;
+        document.body.appendChild(popover);
 
         this._activePopover = popover;
 
-        // Escape key closes popover
+        // Escape key closes popover (document-level so it works even after Tab-out)
         this._popoverKeyHandler = (e) => {
             if (e.key === 'Escape') {
                 this._closePopover();
                 anchorElement.focus();
             }
         };
-        popover.addEventListener('keydown', this._popoverKeyHandler);
+        document.addEventListener('keydown', this._popoverKeyHandler);
 
-        // Focus first checkbox in popover
-        const firstCheckbox = popover.querySelector('input[type="checkbox"]');
-        if (firstCheckbox) {
-            setTimeout(() => firstCheckbox.focus(), 0);
-        }
+        // Focus first interactive element in popover
+        const focusTarget = popover.querySelector('input[type="checkbox"]') || popover;
+        setTimeout(() => focusTarget.focus(), 0);
 
         this._popoverCloseHandler = (e) => {
             if (!this._activePopover) return;
@@ -790,10 +763,11 @@ export class CalendarManagementCard extends CardComponent {
             clearTimeout(this._popoverTimerId);
             this._popoverTimerId = null;
         }
+        if (this._popoverKeyHandler) {
+            document.removeEventListener('keydown', this._popoverKeyHandler);
+            this._popoverKeyHandler = null;
+        }
         if (this._activePopover) {
-            if (this._popoverKeyHandler) {
-                this._activePopover.removeEventListener('keydown', this._popoverKeyHandler);
-            }
             this._activePopover.remove();
             this._activePopover = null;
         }
@@ -801,7 +775,6 @@ export class CalendarManagementCard extends CardComponent {
             document.removeEventListener('click', this._popoverCloseHandler);
             this._popoverCloseHandler = null;
         }
-        this._popoverKeyHandler = null;
     }
 
     /**
