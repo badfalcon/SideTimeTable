@@ -180,7 +180,7 @@ export class GoogleCalendarClient {
 
         // Build color map from the already-fetched calendarList data
         try {
-            let calendarColors = {};
+            const calendarColors = {};
             const ownedCalendarIds = new Set(
                 (listData.items || []).filter(cal => cal.accessRole === 'owner').map(cal => cal.id)
             );
