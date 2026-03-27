@@ -61,6 +61,7 @@ export class TimelineCalendarFilter extends Component {
         this.dropdown = document.createElement('div');
         this.dropdown.className = 'timeline-calendar-filter-dropdown';
         this.dropdown.id = 'timeline-calendar-filter-dropdown';
+        this.dropdown.setAttribute('role', 'region');
         this.dropdown.setAttribute('aria-label', this.getMessage('calendarFilterTooltip'));
         this.button.setAttribute('aria-controls', 'timeline-calendar-filter-dropdown');
 
@@ -614,6 +615,7 @@ export class TimelineCalendarFilter extends Component {
     async _handleGroupToggle(group, _calendars, checked) {
         if (group.calendarIds.length === 0) return;
 
+        const previousIds = [...this.selectedIds];
         const primaryId = this.calendars.find(c => c.primary)?.id;
         // Use full group membership (not the filtered view) for toggling
         const fullGroupCalIds = new Set(group.calendarIds);
@@ -647,7 +649,7 @@ export class TimelineCalendarFilter extends Component {
         try {
             await saveSelectedCalendars(this.selectedIds);
         } catch {
-            // Storage save failed - continue with UI update to avoid stale state
+            this.selectedIds = previousIds;
         }
         this._renderCalendarList();
 
@@ -680,6 +682,8 @@ export class TimelineCalendarFilter extends Component {
      * @private
      */
     async _handleToggle(calendarId, checked) {
+        const previousIds = [...this.selectedIds];
+
         if (checked) {
             if (!this.selectedIds.includes(calendarId)) {
                 this.selectedIds.push(calendarId);
@@ -691,7 +695,7 @@ export class TimelineCalendarFilter extends Component {
         try {
             await saveSelectedCalendars(this.selectedIds);
         } catch {
-            // Storage save failed - continue with UI update
+            this.selectedIds = previousIds;
         }
 
         // Update group header checkbox states

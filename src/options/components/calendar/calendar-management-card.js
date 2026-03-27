@@ -349,6 +349,12 @@ export class CalendarManagementCard extends CardComponent {
         this._setLoading(true);
 
         try {
+            // Load current selections from storage to avoid overwriting with empty state
+            if (this.selectedCalendarIds.length === 0) {
+                const storedIds = await loadSelectedCalendars();
+                this.selectedCalendarIds = this._validateSelectedIds(storedIds);
+            }
+
             const requestId = `req-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
             const response = await sendMessage({action: 'getCalendarList', requestId});
 
