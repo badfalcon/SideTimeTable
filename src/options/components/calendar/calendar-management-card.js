@@ -823,8 +823,8 @@ export class CalendarManagementCard extends CardComponent {
      * @private
      */
     _showGroupModal(editingGroup) {
-        this._closePopover();
         this._groupModalTrigger = document.activeElement;
+        this._closePopover();
         this._closeGroupModal();
         this._isSubmittingGroup = false;
 
