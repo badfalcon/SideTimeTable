@@ -1444,5 +1444,97 @@
   "calendarFilterRefreshTooltip": {
     "message": "Refresh calendar list",
     "description": "Tooltip for the refresh button in the calendar filter"
+  },
+  "addGroup": {
+    "message": "Add Group",
+    "description": "Button label to add a new calendar group"
+  },
+  "newGroupName": {
+    "message": "New Group",
+    "description": "Default name for a newly created calendar group"
+  },
+  "ungrouped": {
+    "message": "Ungrouped",
+    "description": "Label for calendars not assigned to any group"
+  },
+  "deleteGroupConfirm": {
+    "message": "Delete this group? Calendars will be moved to Ungrouped.",
+    "description": "Confirmation message when deleting a calendar group"
+  },
+  "groupNamePlaceholder": {
+    "message": "Enter group name",
+    "description": "Placeholder for group name input"
+  },
+  "editGroup": {
+    "message": "Edit",
+    "description": "Tooltip for editing a calendar group name"
+  },
+  "deleteGroup": {
+    "message": "Delete",
+    "description": "Tooltip for deleting a calendar group"
+  },
+  "assignToGroups": {
+    "message": "Assign to groups",
+    "description": "Tooltip for assigning a calendar to groups"
+  },
+  "noGroupsAvailable": {
+    "message": "No groups available",
+    "description": "Message shown when no groups exist for assignment"
+  },
+  "createGroupTitle": {
+    "message": "Create Group",
+    "description": "Title for the create group modal"
+  },
+  "editGroupTitle": {
+    "message": "Edit Group",
+    "description": "Title for the edit group modal"
+  },
+  "groupNameLabel": {
+    "message": "Group Name",
+    "description": "Label for the group name input in create modal"
+  },
+  "selectCalendarsLabel": {
+    "message": "Select Calendars",
+    "description": "Label for the calendar selection section in create modal"
+  },
+  "createGroupButton": {
+    "message": "Create",
+    "description": "Button label to create a new group"
+  },
+  "saveGroupButton": {
+    "message": "Save",
+    "description": "Button label to save group changes"
+  },
+  "cancelButton": {
+    "message": "Cancel",
+    "description": "Button label to cancel and close modal"
+  },
+  "noCalendarsToAdd": {
+    "message": "No calendars available. Refresh the calendar list first.",
+    "description": "Message when no calendars are available in the create group modal"
+  },
+  "removeCalendar": {
+    "message": "Remove",
+    "description": "Aria label prefix for removing a calendar from group selection"
+  },
+  "errorLabel": {
+    "message": "Error",
+    "description": "Label prefix for error messages"
+  },
+  "calendarLoadError": {
+    "message": "Failed to load calendar data",
+    "description": "Error message when calendar data fails to load"
+  },
+  "calendarUpdateError": {
+    "message": "Failed to update calendars",
+    "description": "Error message when calendar update fails"
+  },
+  "calendarSaveError": {
+    "message": "Failed to save settings",
+    "description": "Error message when calendar settings fail to save"
+  },
+  "clearSearch": {
+    "message": "Clear search",
+    "description": "Aria label for the clear search button"
   }
 }

@@ -10,7 +10,7 @@ import { loadSettings, saveSettings } from '../lib/settings-storage.js';
 import { sendMessage } from '../lib/chrome-messaging.js';
 import { getThemeById, resolveThemeColors } from '../lib/color-themes.js';
 import { StorageHelper } from '../lib/storage-helper.js';
-import { isDemoMode, setDemoMode, getDemoOptionsSettings, getDemoCalendars, DEMO_BUILD } from '../lib/demo-data.js';
+import { isDemoMode, setDemoMode, getDemoOptionsSettings, getDemoCalendars, getDemoCalendarGroups, DEMO_BUILD } from '../lib/demo-data.js';
 import {
     ComponentManager,
     GoogleIntegrationCard,
@@ -268,6 +268,7 @@ class OptionsPageManager {
         const demoSettings = getDemoOptionsSettings();
         this.calendarManagementCard.allCalendars = demoCalendars;
         this.calendarManagementCard.selectedCalendarIds = demoSettings.selectedCalendars;
+        this.calendarManagementCard.calendarGroups = getDemoCalendarGroups();
         this.calendarManagementCard.hasAutoFetched = true;
         this.calendarManagementCard.show();
         this.calendarManagementCard.render();

@@ -39,6 +39,7 @@ module.exports = [
         FormData: 'readonly',
         Headers: 'readonly',
         Response: 'readonly',
+        CSS: 'readonly',
         // Chrome extension APIs
         chrome: 'readonly',
         // Node.js (for config files)

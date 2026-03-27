@@ -40,5 +40,41 @@ export function saveSelectedCalendars(selectedCalendars) {
  */
 export async function loadSelectedCalendars() {
     const result = await StorageHelper.get(['selectedCalendars'], { selectedCalendars: [] });
-    return result.selectedCalendars || [];
+    const raw = result.selectedCalendars;
+    return Array.isArray(raw) ? raw.filter(id => typeof id === 'string') : [];
+}
+
+/**
+ * Save the calendar groups
+ * @param {Array<Object>} calendarGroups - An array of group objects
+ * @returns {Promise} A promise for the save process
+ */
+export function saveCalendarGroups(calendarGroups) {
+    return StorageHelper.set({ calendarGroups });
+}
+
+/**
+ * Load the calendar groups
+ * @returns {Promise<Array<Object>>} A promise that returns an array of group objects
+ */
+export async function loadCalendarGroups() {
+    const result = await StorageHelper.get(['calendarGroups'], { calendarGroups: [] });
+    return sanitizeCalendarGroups(result.calendarGroups);
+}
+
+/**
+ * Sanitize calendar groups loaded from storage to prevent crashes from malformed data
+ * @param {*} raw - Raw value from storage
+ * @returns {Array<Object>} Validated array of group objects
+ */
+function sanitizeCalendarGroups(raw) {
+    if (!Array.isArray(raw)) return [];
+    return raw
+        .filter(g => g && typeof g === 'object' && typeof g.id === 'string')
+        .map(g => ({
+            id: g.id,
+            name: (typeof g.name === 'string' ? g.name : 'Group').slice(0, 50),
+            calendarIds: Array.isArray(g.calendarIds) ? g.calendarIds.filter(id => typeof id === 'string') : [],
+            collapsed: typeof g.collapsed === 'boolean' ? g.collapsed : false
+        }));
 }

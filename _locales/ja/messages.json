@@ -1444,5 +1444,97 @@
   "calendarFilterRefreshTooltip": {
     "message": "カレンダー一覧を更新",
     "description": "カレンダーフィルターの更新ボタンのツールチップ"
+  },
+  "addGroup": {
+    "message": "グループを追加",
+    "description": "カレンダーグループ追加ボタンのラベル"
+  },
+  "newGroupName": {
+    "message": "新しいグループ",
+    "description": "新規作成されたカレンダーグループのデフォルト名"
+  },
+  "ungrouped": {
+    "message": "未分類",
+    "description": "どのグループにも属さないカレンダーのラベル"
+  },
+  "deleteGroupConfirm": {
+    "message": "このグループを削除しますか？カレンダーは未分類に移動されます。",
+    "description": "カレンダーグループ削除時の確認メッセージ"
+  },
+  "groupNamePlaceholder": {
+    "message": "グループ名を入力",
+    "description": "グループ名入力のプレースホルダー"
+  },
+  "editGroup": {
+    "message": "編集",
+    "description": "カレンダーグループ名を編集するツールチップ"
+  },
+  "deleteGroup": {
+    "message": "削除",
+    "description": "カレンダーグループを削除するツールチップ"
+  },
+  "assignToGroups": {
+    "message": "グループに追加",
+    "description": "カレンダーをグループに割り当てるツールチップ"
+  },
+  "noGroupsAvailable": {
+    "message": "グループがありません",
+    "description": "割り当て可能なグループがない場合のメッセージ"
+  },
+  "createGroupTitle": {
+    "message": "グループを作成",
+    "description": "グループ作成モーダルのタイトル"
+  },
+  "editGroupTitle": {
+    "message": "グループを編集",
+    "description": "グループ編集モーダルのタイトル"
+  },
+  "groupNameLabel": {
+    "message": "グループ名",
+    "description": "グループ作成モーダルのグループ名ラベル"
+  },
+  "selectCalendarsLabel": {
+    "message": "カレンダーを選択",
+    "description": "グループ作成モーダルのカレンダー選択セクションラベル"
+  },
+  "createGroupButton": {
+    "message": "作成",
+    "description": "グループを作成するボタンのラベル"
+  },
+  "saveGroupButton": {
+    "message": "保存",
+    "description": "グループの変更を保存するボタンのラベル"
+  },
+  "cancelButton": {
+    "message": "キャンセル",
+    "description": "モーダルをキャンセルして閉じるボタンのラベル"
+  },
+  "noCalendarsToAdd": {
+    "message": "カレンダーがありません。先にカレンダーリストを更新してください。",
+    "description": "グループ作成モーダルでカレンダーがない場合のメッセージ"
+  },
+  "removeCalendar": {
+    "message": "削除",
+    "description": "グループ選択からカレンダーを削除するボタンのアリアラベル接頭辞"
+  },
+  "errorLabel": {
+    "message": "エラー",
+    "description": "エラーメッセージのラベル接頭辞"
+  },
+  "calendarLoadError": {
+    "message": "カレンダーデータの読み込みに失敗しました",
+    "description": "カレンダーデータの読み込み失敗時のエラーメッセージ"
+  },
+  "calendarUpdateError": {
+    "message": "カレンダーの更新に失敗しました",
+    "description": "カレンダー更新失敗時のエラーメッセージ"
+  },
+  "calendarSaveError": {
+    "message": "設定の保存に失敗しました",
+    "description": "カレンダー設定の保存失敗時のエラーメッセージ"
+  },
+  "clearSearch": {
+    "message": "検索をクリア",
+    "description": "検索クリアボタンのアリアラベル"
   }
 }
