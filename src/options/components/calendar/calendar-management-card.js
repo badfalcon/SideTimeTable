@@ -1,9 +1,9 @@
 /**
- * CalendarManagementCard - The calendar management card component
+ * CalendarManagementCard - The calendar management card component with group support
  */
 import { CardComponent } from '../base/card-component.js';
 import { logError } from '../../../lib/utils.js';
-import { loadSelectedCalendars, saveSelectedCalendars } from '../../../lib/settings-storage.js';
+import { loadSelectedCalendars, saveSelectedCalendars, loadCalendarGroups, saveCalendarGroups } from '../../../lib/settings-storage.js';
 import { sendMessage } from '../../../lib/chrome-messaging.js';
 
 export class CalendarManagementCard extends CardComponent {
@@ -22,6 +22,7 @@ export class CalendarManagementCard extends CardComponent {
         this.onCalendarSelectionChange = onCalendarSelectionChange;
         this.availableCalendars = {};
         this.selectedCalendarIds = [];
+        this.calendarGroups = [];
         this.hasAutoFetched = false;
         this.allCalendars = [];
 
@@ -32,6 +33,11 @@ export class CalendarManagementCard extends CardComponent {
         this.noCalendarsMsg = null;
         this.searchInput = null;
         this.clearSearchBtn = null;
+        this.addGroupBtn = null;
+
+        // Active popover reference
+        this._activePopover = null;
+        this._popoverCloseHandler = null;
     }
 
     createElement() {
@@ -44,6 +50,10 @@ export class CalendarManagementCard extends CardComponent {
         // The search field
         const searchDiv = this._createSearchSection();
         this.addContent(searchDiv);
+
+        // The group control section
+        const groupControlDiv = this._createGroupControlSection();
+        this.addContent(groupControlDiv);
 
         // The calendar list container
         const listContainer = this._createListContainer();
@@ -129,6 +139,26 @@ export class CalendarManagementCard extends CardComponent {
     }
 
     /**
+     * Create the group control section
+     * @private
+     */
+    _createGroupControlSection() {
+        const div = document.createElement('div');
+        div.className = 'mb-3';
+
+        this.addGroupBtn = document.createElement('button');
+        this.addGroupBtn.className = 'btn btn-outline-secondary btn-sm';
+        this.addGroupBtn.type = 'button';
+        this.addGroupBtn.innerHTML = `
+            <i class="fas fa-folder-plus me-1"></i>
+            <span data-localize="__MSG_addGroup__">${window.getLocalizedMessage('addGroup') || 'Add Group'}</span>
+        `;
+
+        div.appendChild(this.addGroupBtn);
+        return div;
+    }
+
+    /**
      * Create list container
      * @private
      */
@@ -172,10 +202,71 @@ export class CalendarManagementCard extends CardComponent {
 
         this.clearSearchBtn?.addEventListener('click', () => this._clearSearch());
 
+        // Add group button
+        this.addGroupBtn?.addEventListener('click', () => this._handleAddGroup());
+
         // Handle the calendar checkbox using event delegation
         this.calendarList?.addEventListener('change', (e) => {
-            if (e.target.type === 'checkbox') {
+            const target = e.target;
+            if (target.type !== 'checkbox') return;
+
+            const groupHeader = target.closest('.calendar-group-header');
+            if (groupHeader) {
+                const groupId = groupHeader.dataset.groupId;
+                if (groupId) {
+                    this._handleGroupToggle(groupId, target.checked);
+                }
+                return;
+            }
+
+            const calendarItem = target.closest('[data-calendar-id]');
+            if (calendarItem) {
                 this._handleCalendarToggle(e);
+            }
+        });
+
+        // Handle group header clicks (collapse/expand)
+        this.calendarList?.addEventListener('click', (e) => {
+            const collapseIcon = e.target.closest('.group-collapse-icon');
+            if (collapseIcon) {
+                const groupHeader = collapseIcon.closest('.calendar-group-header');
+                if (groupHeader) {
+                    this._handleGroupCollapse(groupHeader.dataset.groupId);
+                }
+                return;
+            }
+
+            // Group name click (also collapse/expand, unless clicking checkbox or actions)
+            const groupHeader = e.target.closest('.calendar-group-header');
+            if (groupHeader && !e.target.closest('input') && !e.target.closest('.group-actions')) {
+                this._handleGroupCollapse(groupHeader.dataset.groupId);
+                return;
+            }
+
+            // Edit group name
+            const editBtn = e.target.closest('[data-group-edit]');
+            if (editBtn) {
+                e.stopPropagation();
+                this._handleStartRenameGroup(editBtn.dataset.groupEdit);
+                return;
+            }
+
+            // Delete group
+            const deleteBtn = e.target.closest('[data-group-delete]');
+            if (deleteBtn) {
+                e.stopPropagation();
+                this._handleDeleteGroup(deleteBtn.dataset.groupDelete);
+                return;
+            }
+
+            // Group assign button
+            const assignBtn = e.target.closest('.calendar-group-assign-btn');
+            if (assignBtn) {
+                e.stopPropagation();
+                const calendarItem = assignBtn.closest('[data-calendar-id]');
+                if (calendarItem) {
+                    this._showGroupAssignPopover(calendarItem.dataset.calendarId, assignBtn);
+                }
             }
         });
     }
@@ -185,7 +276,12 @@ export class CalendarManagementCard extends CardComponent {
      */
     async loadData() {
         try {
-            this.selectedCalendarIds = this._validateSelectedIds(await loadSelectedCalendars());
+            const [selectedIds, groups] = await Promise.all([
+                loadSelectedCalendars(),
+                loadCalendarGroups()
+            ]);
+            this.selectedCalendarIds = this._validateSelectedIds(selectedIds);
+            this.calendarGroups = Array.isArray(groups) ? groups : [];
             this.render();
         } catch (error) {
             logError('Calendar data loading', error);
@@ -258,7 +354,7 @@ export class CalendarManagementCard extends CardComponent {
     }
 
     /**
-     * Render calendar list
+     * Render calendar list with group support
      */
     render() {
         if (!this.allCalendars || this.allCalendars.length === 0) {
@@ -273,14 +369,7 @@ export class CalendarManagementCard extends CardComponent {
                 calendar.summary.toLowerCase().includes(searchTerm))
             : this.allCalendars;
 
-        // Sort the calendars (primary first)
-        const sortedCalendars = [...filteredCalendars].sort((a, b) => {
-            if (a.primary && !b.primary) return -1;
-            if (!a.primary && b.primary) return 1;
-            return a.summary.localeCompare(b.summary, 'ja');
-        });
-
-        if (sortedCalendars.length === 0 && searchTerm) {
+        if (filteredCalendars.length === 0 && searchTerm) {
             this._showNoSearchResults();
             return;
         }
@@ -288,13 +377,195 @@ export class CalendarManagementCard extends CardComponent {
         this._hideEmptyState();
         this.calendarList.innerHTML = '';
 
+        // Build a set of all calendar IDs in groups
+        const calendarIdToCalendar = new Map();
+        for (const cal of this.allCalendars) {
+            calendarIdToCalendar.set(cal.id, cal);
+        }
+
+        const filteredIds = new Set(filteredCalendars.map(c => c.id));
+
+        // Render each group
+        for (const group of this.calendarGroups) {
+            const groupCalendars = group.calendarIds
+                .map(id => calendarIdToCalendar.get(id))
+                .filter(cal => cal && filteredIds.has(cal.id));
+
+            // Skip groups with no matching calendars during search
+            if (searchTerm && groupCalendars.length === 0) continue;
+
+            const groupSection = this._createGroupSection(group, groupCalendars, searchTerm);
+            this.calendarList.appendChild(groupSection);
+        }
+
+        // Render ungrouped calendars
+        const groupedIds = new Set();
+        for (const group of this.calendarGroups) {
+            for (const id of group.calendarIds) {
+                groupedIds.add(id);
+            }
+        }
+
+        const ungroupedCalendars = filteredCalendars
+            .filter(cal => !groupedIds.has(cal.id))
+            .sort((a, b) => {
+                if (a.primary && !b.primary) return -1;
+                if (!a.primary && b.primary) return 1;
+                return a.summary.localeCompare(b.summary, 'ja');
+            });
+
+        if (ungroupedCalendars.length > 0 || this.calendarGroups.length > 0) {
+            const ungroupedSection = this._createUngroupedSection(ungroupedCalendars, searchTerm);
+            this.calendarList.appendChild(ungroupedSection);
+        } else {
+            // No groups defined, render flat list (backward compatible)
+            const sortedCalendars = [...filteredCalendars].sort((a, b) => {
+                if (a.primary && !b.primary) return -1;
+                if (!a.primary && b.primary) return 1;
+                return a.summary.localeCompare(b.summary, 'ja');
+            });
+            sortedCalendars.forEach(calendar => {
+                const isSelected = this.selectedCalendarIds.includes(calendar.id);
+                const item = this._createCalendarItem(calendar, isSelected);
+                this.calendarList.appendChild(item);
+            });
+        }
+
+        this._updateSearchUI(searchTerm);
+    }
+
+    /**
+     * Create a group section (header + body)
+     * @private
+     */
+    _createGroupSection(group, calendars, searchTerm) {
+        const section = document.createElement('div');
+        section.className = 'calendar-group-section';
+
+        const header = this._createGroupHeader(group, calendars);
+        section.appendChild(header);
+
+        const body = document.createElement('div');
+        body.className = 'calendar-group-body';
+        if (group.collapsed && !searchTerm) {
+            body.classList.add('collapsed');
+        }
+
+        const sortedCalendars = [...calendars].sort((a, b) => {
+            if (a.primary && !b.primary) return -1;
+            if (!a.primary && b.primary) return 1;
+            return a.summary.localeCompare(b.summary, 'ja');
+        });
+
         sortedCalendars.forEach(calendar => {
             const isSelected = this.selectedCalendarIds.includes(calendar.id);
             const item = this._createCalendarItem(calendar, isSelected);
-            this.calendarList.appendChild(item);
+            body.appendChild(item);
         });
 
-        this._updateSearchUI(searchTerm);
+        section.appendChild(body);
+        return section;
+    }
+
+    /**
+     * Create a group header
+     * @private
+     */
+    _createGroupHeader(group, calendarsInGroup) {
+        const header = document.createElement('div');
+        header.className = 'calendar-group-header';
+        header.dataset.groupId = group.id;
+
+        // Group checkbox
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'form-check-input';
+
+        // Determine check state
+        const selectedCount = calendarsInGroup.filter(
+            cal => this.selectedCalendarIds.includes(cal.id)
+        ).length;
+
+        if (selectedCount === 0) {
+            checkbox.checked = false;
+        } else if (selectedCount === calendarsInGroup.length) {
+            checkbox.checked = true;
+        } else {
+            checkbox.checked = false;
+            checkbox.indeterminate = true;
+        }
+
+        // Collapse icon
+        const collapseIcon = document.createElement('i');
+        collapseIcon.className = `fas fa-chevron-down group-collapse-icon${group.collapsed ? ' collapsed' : ''}`;
+
+        // Group name
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'group-name';
+        nameSpan.textContent = group.name;
+
+        // Action buttons
+        const actions = document.createElement('div');
+        actions.className = 'group-actions';
+
+        const editBtn = document.createElement('button');
+        editBtn.type = 'button';
+        editBtn.dataset.groupEdit = group.id;
+        editBtn.title = 'Edit';
+        editBtn.innerHTML = '<i class="fas fa-pencil-alt"></i>';
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.dataset.groupDelete = group.id;
+        deleteBtn.title = 'Delete';
+        deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+
+        actions.appendChild(editBtn);
+        actions.appendChild(deleteBtn);
+
+        header.appendChild(checkbox);
+        header.appendChild(collapseIcon);
+        header.appendChild(nameSpan);
+        header.appendChild(actions);
+
+        return header;
+    }
+
+    /**
+     * Create ungrouped section
+     * @private
+     */
+    _createUngroupedSection(calendars, _searchTerm) {
+        const section = document.createElement('div');
+        section.className = 'calendar-group-section';
+
+        // Ungrouped header (simplified, no edit/delete)
+        const header = document.createElement('div');
+        header.className = 'calendar-group-header';
+        header.dataset.groupId = '__ungrouped__';
+
+        const collapseIcon = document.createElement('i');
+        collapseIcon.className = 'fas fa-chevron-down group-collapse-icon';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'group-name';
+        nameSpan.textContent = window.getLocalizedMessage('ungrouped') || 'Ungrouped';
+
+        header.appendChild(collapseIcon);
+        header.appendChild(nameSpan);
+        section.appendChild(header);
+
+        const body = document.createElement('div');
+        body.className = 'calendar-group-body';
+
+        calendars.forEach(calendar => {
+            const isSelected = this.selectedCalendarIds.includes(calendar.id);
+            const item = this._createCalendarItem(calendar, isSelected);
+            body.appendChild(item);
+        });
+
+        section.appendChild(body);
+        return section;
     }
 
     /**
@@ -305,6 +576,7 @@ export class CalendarManagementCard extends CardComponent {
         const item = document.createElement('div');
         item.className = 'list-group-item d-flex align-items-center py-2';
         item.dataset.calendarId = calendar.id;
+        item.style.position = 'relative';
 
         // The checkbox
         const checkbox = document.createElement('input');
@@ -330,6 +602,13 @@ export class CalendarManagementCard extends CardComponent {
 
         info.appendChild(name);
 
+        // Group assign button (only if groups exist)
+        const assignBtn = document.createElement('button');
+        assignBtn.type = 'button';
+        assignBtn.className = 'calendar-group-assign-btn';
+        assignBtn.title = 'Assign to groups';
+        assignBtn.innerHTML = '<i class="fas fa-folder"></i>';
+
         // The color indicator
         const colorIndicator = document.createElement('div');
         colorIndicator.className = 'me-2';
@@ -343,16 +622,301 @@ export class CalendarManagementCard extends CardComponent {
 
         item.appendChild(checkbox);
         item.appendChild(info);
+        if (this.calendarGroups.length > 0) {
+            item.appendChild(assignBtn);
+        }
         item.appendChild(colorIndicator);
 
         return item;
     }
 
     /**
+     * Show group assignment popover for a calendar
+     * @private
+     */
+    _showGroupAssignPopover(calendarId, anchorElement) {
+        this._closePopover();
+
+        const popover = document.createElement('div');
+        popover.className = 'calendar-group-assign-popover';
+
+        if (this.calendarGroups.length === 0) {
+            popover.textContent = 'No groups available';
+            return;
+        }
+
+        this.calendarGroups.forEach(group => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'form-check';
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'form-check-input';
+            checkbox.id = `assign-${calendarId}-${group.id}`;
+            checkbox.checked = group.calendarIds.includes(calendarId);
+            checkbox.addEventListener('change', () => {
+                this._handleCalendarGroupAssignment(calendarId, group.id, checkbox.checked);
+            });
+
+            const label = document.createElement('label');
+            label.className = 'form-check-label';
+            label.htmlFor = checkbox.id;
+            label.textContent = group.name;
+
+            wrapper.appendChild(checkbox);
+            wrapper.appendChild(label);
+            popover.appendChild(wrapper);
+        });
+
+        const calendarItem = anchorElement.closest('[data-calendar-id]');
+        if (calendarItem) {
+            calendarItem.appendChild(popover);
+        }
+
+        this._activePopover = popover;
+        this._popoverCloseHandler = (e) => {
+            if (!popover.contains(e.target) && !anchorElement.contains(e.target)) {
+                this._closePopover();
+            }
+        };
+        setTimeout(() => {
+            document.addEventListener('click', this._popoverCloseHandler);
+        }, 0);
+    }
+
+    /**
+     * Close active popover
+     * @private
+     */
+    _closePopover() {
+        if (this._activePopover) {
+            this._activePopover.remove();
+            this._activePopover = null;
+        }
+        if (this._popoverCloseHandler) {
+            document.removeEventListener('click', this._popoverCloseHandler);
+            this._popoverCloseHandler = null;
+        }
+    }
+
+    /**
+     * Handle calendar group assignment change
+     * @private
+     */
+    async _handleCalendarGroupAssignment(calendarId, groupId, assigned) {
+        const group = this.calendarGroups.find(g => g.id === groupId);
+        if (!group) return;
+
+        if (assigned) {
+            if (!group.calendarIds.includes(calendarId)) {
+                group.calendarIds.push(calendarId);
+            }
+        } else {
+            group.calendarIds = group.calendarIds.filter(id => id !== calendarId);
+        }
+
+        try {
+            await saveCalendarGroups(this.calendarGroups);
+            this._closePopover();
+            this.render();
+        } catch (error) {
+            logError('Calendar group assignment save', error);
+        }
+    }
+
+    /**
+     * Handle adding a new group
+     * @private
+     */
+    async _handleAddGroup() {
+        const groupId = `group_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+        const groupName = window.getLocalizedMessage('newGroupName') || 'New Group';
+
+        this.calendarGroups.push({
+            id: groupId,
+            name: groupName,
+            calendarIds: [],
+            collapsed: false
+        });
+
+        try {
+            await saveCalendarGroups(this.calendarGroups);
+            this.render();
+            // Immediately start editing the new group name
+            this._handleStartRenameGroup(groupId);
+        } catch (error) {
+            logError('Add group', error);
+        }
+    }
+
+    /**
+     * Handle deleting a group
+     * @private
+     */
+    async _handleDeleteGroup(groupId) {
+        const confirmMsg = window.getLocalizedMessage('deleteGroupConfirm')
+            || 'Delete this group? Calendars will be moved to Ungrouped.';
+        if (!confirm(confirmMsg)) return;
+
+        this.calendarGroups = this.calendarGroups.filter(g => g.id !== groupId);
+
+        try {
+            await saveCalendarGroups(this.calendarGroups);
+            this.render();
+        } catch (error) {
+            logError('Delete group', error);
+        }
+    }
+
+    /**
+     * Start inline rename for a group
+     * @private
+     */
+    _handleStartRenameGroup(groupId) {
+        const header = this.calendarList.querySelector(`.calendar-group-header[data-group-id="${groupId}"]`);
+        if (!header) return;
+
+        const nameSpan = header.querySelector('.group-name');
+        if (!nameSpan) return;
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'group-name-input';
+        input.value = nameSpan.textContent;
+        input.placeholder = window.getLocalizedMessage('groupNamePlaceholder') || 'Enter group name';
+
+        const finishRename = async () => {
+            const newName = input.value.trim();
+            if (newName) {
+                const group = this.calendarGroups.find(g => g.id === groupId);
+                if (group) {
+                    group.name = newName;
+                    try {
+                        await saveCalendarGroups(this.calendarGroups);
+                    } catch (error) {
+                        logError('Rename group', error);
+                    }
+                }
+            }
+            this.render();
+        };
+
+        input.addEventListener('blur', finishRename);
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                input.blur();
+            }
+            if (e.key === 'Escape') {
+                input.value = nameSpan.textContent;
+                input.blur();
+            }
+        });
+
+        nameSpan.replaceWith(input);
+        input.focus();
+        input.select();
+    }
+
+    /**
+     * Handle group toggle (select/deselect all calendars in group)
+     * @private
+     */
+    async _handleGroupToggle(groupId, isChecked) {
+        const group = this.calendarGroups.find(g => g.id === groupId);
+        if (!group) return;
+
+        const primaryId = this.allCalendars.find(c => c.primary)?.id;
+
+        if (isChecked) {
+            // Add all group calendar IDs not already selected
+            for (const calId of group.calendarIds) {
+                if (!this.selectedCalendarIds.includes(calId)) {
+                    this.selectedCalendarIds.push(calId);
+                }
+            }
+        } else {
+            // Remove group calendar IDs, but keep those also in other selected groups, and keep primary
+            const otherGroupSelectedIds = this._getOtherGroupSelectedIds(groupId);
+            this.selectedCalendarIds = this.selectedCalendarIds.filter(id => {
+                if (id === primaryId) return true;
+                if (!group.calendarIds.includes(id)) return true;
+                if (otherGroupSelectedIds.has(id)) return true;
+                return false;
+            });
+        }
+
+        try {
+            await saveSelectedCalendars(this.selectedCalendarIds);
+            if (this.onCalendarSelectionChange) {
+                this.onCalendarSelectionChange(this.selectedCalendarIds);
+            }
+            this.render();
+        } catch (error) {
+            logError('Group toggle save', error);
+        }
+    }
+
+    /**
+     * Get calendar IDs that are selected and belong to other active groups
+     * @private
+     */
+    _getOtherGroupSelectedIds(excludeGroupId) {
+        const ids = new Set();
+        for (const group of this.calendarGroups) {
+            if (group.id === excludeGroupId) continue;
+            for (const calId of group.calendarIds) {
+                if (this.selectedCalendarIds.includes(calId)) {
+                    ids.add(calId);
+                }
+            }
+        }
+        return ids;
+    }
+
+    /**
+     * Handle group collapse/expand
+     * @private
+     */
+    async _handleGroupCollapse(groupId) {
+        if (groupId === '__ungrouped__') {
+            // Toggle ungrouped section (UI only, no persistence)
+            const header = this.calendarList.querySelector('.calendar-group-header[data-group-id="__ungrouped__"]');
+            if (header) {
+                const body = header.nextElementSibling;
+                const icon = header.querySelector('.group-collapse-icon');
+                if (body) body.classList.toggle('collapsed');
+                if (icon) icon.classList.toggle('collapsed');
+            }
+            return;
+        }
+
+        const group = this.calendarGroups.find(g => g.id === groupId);
+        if (!group) return;
+
+        group.collapsed = !group.collapsed;
+
+        // Update UI directly without full re-render
+        const header = this.calendarList.querySelector(`.calendar-group-header[data-group-id="${groupId}"]`);
+        if (header) {
+            const body = header.nextElementSibling;
+            const icon = header.querySelector('.group-collapse-icon');
+            if (body) body.classList.toggle('collapsed');
+            if (icon) icon.classList.toggle('collapsed');
+        }
+
+        try {
+            await saveCalendarGroups(this.calendarGroups);
+        } catch (error) {
+            logError('Group collapse save', error);
+        }
+    }
+
+    /**
      * Handle search
      * @private
      */
-    _handleSearch(searchTerm) {
+    _handleSearch() {
         this.render();
     }
 
@@ -391,9 +955,43 @@ export class CalendarManagementCard extends CardComponent {
             if (this.onCalendarSelectionChange) {
                 this.onCalendarSelectionChange(this.selectedCalendarIds);
             }
+            // Update group header checkbox states
+            this._updateGroupCheckboxStates();
         } catch (error) {
             logError('Calendar selection save', error);
             this._showError('Failed to save settings');
+        }
+    }
+
+    /**
+     * Update group header checkbox states without full re-render
+     * @private
+     */
+    _updateGroupCheckboxStates() {
+        const calendarIdToCalendar = new Map();
+        for (const cal of this.allCalendars) {
+            calendarIdToCalendar.set(cal.id, cal);
+        }
+
+        for (const group of this.calendarGroups) {
+            const header = this.calendarList.querySelector(`.calendar-group-header[data-group-id="${group.id}"]`);
+            if (!header) continue;
+
+            const checkbox = header.querySelector('input[type="checkbox"]');
+            if (!checkbox) continue;
+
+            const validCalendars = group.calendarIds.filter(id => calendarIdToCalendar.has(id));
+            const selectedCount = validCalendars.filter(id => this.selectedCalendarIds.includes(id)).length;
+
+            checkbox.indeterminate = false;
+            if (selectedCount === 0) {
+                checkbox.checked = false;
+            } else if (selectedCount === validCalendars.length) {
+                checkbox.checked = true;
+            } else {
+                checkbox.checked = false;
+                checkbox.indeterminate = true;
+            }
         }
     }
 

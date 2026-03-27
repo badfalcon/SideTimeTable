@@ -1890,3 +1890,56 @@ body {
     color: var(--side-calendar-muted-text-color);
     font-size: 12px;
 }
+
+/* Calendar filter group header */
+.timeline-calendar-filter-group-header {
+    display: flex;
+    align-items: center;
+    padding: 6px 10px;
+    background-color: var(--side-calendar-subtle-bg, #f5f5f5);
+    cursor: pointer;
+    user-select: none;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: inherit;
+    border-bottom: 1px solid var(--side-calendar-border-color, #eee);
+}
+
+.timeline-calendar-filter-group-header input[type="checkbox"] {
+    width: 13px;
+    height: 13px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.timeline-calendar-filter-group-header .group-name {
+    flex-grow: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.timeline-calendar-filter-group-header .group-collapse-icon {
+    font-size: 9px;
+    transition: transform 0.15s;
+    width: 12px;
+    text-align: center;
+    color: var(--side-calendar-muted-text-color);
+}
+
+.timeline-calendar-filter-group-header .group-collapse-icon.collapsed {
+    transform: rotate(-90deg);
+}
+
+.timeline-calendar-filter-group-body {
+    overflow: hidden;
+}
+
+.timeline-calendar-filter-group-body.collapsed {
+    display: none;
+}
+
+.timeline-calendar-filter-group-body .timeline-calendar-filter-item {
+    padding-left: 28px;
+}

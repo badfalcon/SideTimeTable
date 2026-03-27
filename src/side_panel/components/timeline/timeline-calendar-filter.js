@@ -1,10 +1,11 @@
 /**
  * TimelineCalendarFilter - A fixed button in the timeline top-right
  * that opens a popover for quick Google Calendar visibility toggling.
+ * Supports calendar groups for batch toggling.
  */
 import { Component } from '../base/component.js';
 import { sendMessage } from '../../../lib/chrome-messaging.js';
-import { loadSelectedCalendars, saveSelectedCalendars } from '../../../lib/settings-storage.js';
+import { loadSelectedCalendars, saveSelectedCalendars, loadCalendarGroups } from '../../../lib/settings-storage.js';
 
 export class TimelineCalendarFilter extends Component {
     constructor(options = {}) {
@@ -18,6 +19,7 @@ export class TimelineCalendarFilter extends Component {
         this.isOpen = false;
         this.calendars = [];
         this.selectedIds = [];
+        this.calendarGroups = [];
         this.hasFetched = false;
         this.isAuthenticated = false;
         this.searchTerm = '';
@@ -157,8 +159,13 @@ export class TimelineCalendarFilter extends Component {
         if (!this.hasFetched) {
             await this._fetchCalendars();
         } else {
-            // Refresh selected state each time
-            this.selectedIds = await loadSelectedCalendars();
+            // Refresh selected state and groups each time
+            const [selectedIds, groups] = await Promise.all([
+                loadSelectedCalendars(),
+                loadCalendarGroups()
+            ]);
+            this.selectedIds = selectedIds;
+            this.calendarGroups = Array.isArray(groups) ? groups : [];
             // Ensure primary calendar stays in selection
             const primary = this.calendars.find(c => c.primary);
             if (primary && !this.selectedIds.includes(primary.id)) {
@@ -193,9 +200,10 @@ export class TimelineCalendarFilter extends Component {
 
         try {
             const requestId = `filter-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-            const [response, selectedIds] = await Promise.all([
+            const [response, selectedIds, groups] = await Promise.all([
                 sendMessage({ action: 'getCalendarList', requestId }),
-                loadSelectedCalendars()
+                loadSelectedCalendars(),
+                loadCalendarGroups()
             ]);
 
             if (response.error || !response.calendars) {
@@ -209,6 +217,7 @@ export class TimelineCalendarFilter extends Component {
 
             this.calendars = response.calendars;
             this.selectedIds = selectedIds;
+            this.calendarGroups = Array.isArray(groups) ? groups : [];
 
             // Ensure primary calendar is always included in selection
             const primary = this.calendars.find(c => c.primary);
@@ -271,7 +280,7 @@ export class TimelineCalendarFilter extends Component {
     }
 
     /**
-     * Render the calendar list with checkboxes (filtered by search)
+     * Render the calendar list with group support
      * @private
      */
     _renderCalendarList() {
@@ -286,18 +295,11 @@ export class TimelineCalendarFilter extends Component {
             return;
         }
 
-        // Sort: primary first, then alphabetical
-        const sorted = [...this.calendars].sort((a, b) => {
-            if (a.primary && !b.primary) return -1;
-            if (!a.primary && b.primary) return 1;
-            return a.summary.localeCompare(b.summary);
-        });
-
         // Filter by search term
         const term = this.searchTerm.toLowerCase().trim();
         const filtered = term
-            ? sorted.filter(c => c.summary.toLowerCase().includes(term))
-            : sorted;
+            ? this.calendars.filter(c => c.summary.toLowerCase().includes(term))
+            : this.calendars;
 
         if (filtered.length === 0) {
             const noResult = document.createElement('div');
@@ -307,41 +309,235 @@ export class TimelineCalendarFilter extends Component {
             return;
         }
 
-        filtered.forEach(calendar => {
-            const isSelected = this.selectedIds.includes(calendar.id);
-            const item = document.createElement('label');
-            item.className = 'timeline-calendar-filter-item';
+        const filteredIds = new Set(filtered.map(c => c.id));
+        const calendarMap = new Map(this.calendars.map(c => [c.id, c]));
 
-            // Checkbox
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.className = 'timeline-calendar-filter-checkbox';
-            checkbox.checked = isSelected || calendar.primary;
-            if (calendar.primary) {
-                checkbox.disabled = true;
+        // If groups exist, render grouped
+        if (this.calendarGroups.length > 0) {
+            for (const group of this.calendarGroups) {
+                const groupCalendars = group.calendarIds
+                    .map(id => calendarMap.get(id))
+                    .filter(cal => cal && filteredIds.has(cal.id));
+
+                if (term && groupCalendars.length === 0) continue;
+
+                this._renderGroupSection(group, groupCalendars);
             }
-            checkbox.addEventListener('change', () => {
-                this._handleToggle(calendar.id, checkbox.checked);
+
+            // Ungrouped
+            const groupedIds = new Set();
+            for (const group of this.calendarGroups) {
+                for (const id of group.calendarIds) {
+                    groupedIds.add(id);
+                }
+            }
+
+            const ungrouped = filtered
+                .filter(c => !groupedIds.has(c.id))
+                .sort((a, b) => {
+                    if (a.primary && !b.primary) return -1;
+                    if (!a.primary && b.primary) return 1;
+                    return a.summary.localeCompare(b.summary);
+                });
+
+            if (ungrouped.length > 0) {
+                this._renderUngroupedSection(ungrouped);
+            }
+        } else {
+            // No groups - flat list (backward compatible)
+            const sorted = [...filtered].sort((a, b) => {
+                if (a.primary && !b.primary) return -1;
+                if (!a.primary && b.primary) return 1;
+                return a.summary.localeCompare(b.summary);
             });
 
-            // Color indicator
-            const color = document.createElement('span');
-            color.className = 'timeline-calendar-filter-color';
-            color.style.backgroundColor = calendar.backgroundColor || '#ccc';
+            sorted.forEach(calendar => {
+                this._renderCalendarItem(this.calendarList, calendar);
+            });
+        }
+    }
 
-            // Name
-            const name = document.createElement('span');
-            name.className = 'timeline-calendar-filter-name';
-            name.textContent = calendar.summary;
-            if (calendar.primary) {
-                name.classList.add('timeline-calendar-filter-primary');
+    /**
+     * Render a group section in the filter dropdown
+     * @private
+     */
+    _renderGroupSection(group, calendars) {
+        // Group header
+        const header = document.createElement('div');
+        header.className = 'timeline-calendar-filter-group-header';
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+
+        // Determine check state
+        const selectedCount = calendars.filter(cal => this.selectedIds.includes(cal.id)).length;
+        if (selectedCount === 0) {
+            checkbox.checked = false;
+        } else if (selectedCount === calendars.length) {
+            checkbox.checked = true;
+        } else {
+            checkbox.checked = false;
+            checkbox.indeterminate = true;
+        }
+
+        checkbox.addEventListener('change', (e) => {
+            e.stopPropagation();
+            this._handleGroupToggle(group, calendars, checkbox.checked);
+        });
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'group-name';
+        nameSpan.textContent = group.name;
+
+        const collapseIcon = document.createElement('i');
+        collapseIcon.className = 'fa-solid fa-chevron-down group-collapse-icon';
+
+        header.appendChild(checkbox);
+        header.appendChild(nameSpan);
+        header.appendChild(collapseIcon);
+
+        header.addEventListener('click', (e) => {
+            if (e.target === checkbox) return;
+            const body = header.nextElementSibling;
+            if (body) body.classList.toggle('collapsed');
+            collapseIcon.classList.toggle('collapsed');
+        });
+
+        this.calendarList.appendChild(header);
+
+        // Group body
+        const body = document.createElement('div');
+        body.className = 'timeline-calendar-filter-group-body';
+
+        const sorted = [...calendars].sort((a, b) => {
+            if (a.primary && !b.primary) return -1;
+            if (!a.primary && b.primary) return 1;
+            return a.summary.localeCompare(b.summary);
+        });
+
+        sorted.forEach(calendar => {
+            this._renderCalendarItem(body, calendar);
+        });
+
+        this.calendarList.appendChild(body);
+    }
+
+    /**
+     * Render ungrouped section
+     * @private
+     */
+    _renderUngroupedSection(calendars) {
+        const header = document.createElement('div');
+        header.className = 'timeline-calendar-filter-group-header';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'group-name';
+        nameSpan.textContent = this.getMessage('ungrouped') || 'Ungrouped';
+
+        const collapseIcon = document.createElement('i');
+        collapseIcon.className = 'fa-solid fa-chevron-down group-collapse-icon';
+
+        header.appendChild(nameSpan);
+        header.appendChild(collapseIcon);
+
+        header.addEventListener('click', () => {
+            const body = header.nextElementSibling;
+            if (body) body.classList.toggle('collapsed');
+            collapseIcon.classList.toggle('collapsed');
+        });
+
+        this.calendarList.appendChild(header);
+
+        const body = document.createElement('div');
+        body.className = 'timeline-calendar-filter-group-body';
+
+        calendars.forEach(calendar => {
+            this._renderCalendarItem(body, calendar);
+        });
+
+        this.calendarList.appendChild(body);
+    }
+
+    /**
+     * Render a single calendar item
+     * @private
+     */
+    _renderCalendarItem(container, calendar) {
+        const isSelected = this.selectedIds.includes(calendar.id);
+        const item = document.createElement('label');
+        item.className = 'timeline-calendar-filter-item';
+
+        // Checkbox
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'timeline-calendar-filter-checkbox';
+        checkbox.checked = isSelected || calendar.primary;
+        if (calendar.primary) {
+            checkbox.disabled = true;
+        }
+        checkbox.addEventListener('change', () => {
+            this._handleToggle(calendar.id, checkbox.checked);
+        });
+
+        // Color indicator
+        const color = document.createElement('span');
+        color.className = 'timeline-calendar-filter-color';
+        color.style.backgroundColor = calendar.backgroundColor || '#ccc';
+
+        // Name
+        const name = document.createElement('span');
+        name.className = 'timeline-calendar-filter-name';
+        name.textContent = calendar.summary;
+        if (calendar.primary) {
+            name.classList.add('timeline-calendar-filter-primary');
+        }
+
+        item.appendChild(checkbox);
+        item.appendChild(color);
+        item.appendChild(name);
+        container.appendChild(item);
+    }
+
+    /**
+     * Handle group toggle in the filter dropdown
+     * @private
+     */
+    async _handleGroupToggle(group, calendars, checked) {
+        const primaryId = this.calendars.find(c => c.primary)?.id;
+
+        if (checked) {
+            for (const cal of calendars) {
+                if (!this.selectedIds.includes(cal.id)) {
+                    this.selectedIds.push(cal.id);
+                }
+            }
+        } else {
+            // Find calendar IDs that are in other groups and still selected
+            const otherGroupIds = new Set();
+            for (const g of this.calendarGroups) {
+                if (g.id === group.id) continue;
+                for (const id of g.calendarIds) {
+                    if (this.selectedIds.includes(id)) {
+                        otherGroupIds.add(id);
+                    }
+                }
             }
 
-            item.appendChild(checkbox);
-            item.appendChild(color);
-            item.appendChild(name);
-            this.calendarList.appendChild(item);
-        });
+            const groupCalIds = new Set(calendars.map(c => c.id));
+            this.selectedIds = this.selectedIds.filter(id => {
+                if (id === primaryId) return true;
+                if (!groupCalIds.has(id)) return true;
+                if (otherGroupIds.has(id)) return true;
+                return false;
+            });
+        }
+
+        await saveSelectedCalendars(this.selectedIds);
+        this._renderCalendarList();
+
+        if (this.onCalendarChange) {
+            this.onCalendarChange();
+        }
     }
 
     /**
@@ -377,9 +573,46 @@ export class TimelineCalendarFilter extends Component {
 
         await saveSelectedCalendars(this.selectedIds);
 
+        // Update group header checkbox states
+        this._updateGroupCheckboxStates();
+
         if (this.onCalendarChange) {
             this.onCalendarChange();
         }
+    }
+
+    /**
+     * Update group header checkbox states after individual toggle
+     * @private
+     */
+    _updateGroupCheckboxStates() {
+        if (!this.calendarList || this.calendarGroups.length === 0) return;
+
+        const calendarMap = new Map(this.calendars.map(c => [c.id, c]));
+        const headers = this.calendarList.querySelectorAll('.timeline-calendar-filter-group-header');
+
+        let groupIndex = 0;
+        headers.forEach(header => {
+            const checkbox = header.querySelector('input[type="checkbox"]');
+            if (!checkbox) return;
+
+            if (groupIndex < this.calendarGroups.length) {
+                const group = this.calendarGroups[groupIndex];
+                const validCalendars = group.calendarIds.filter(id => calendarMap.has(id));
+                const selectedCount = validCalendars.filter(id => this.selectedIds.includes(id)).length;
+
+                checkbox.indeterminate = false;
+                if (selectedCount === 0) {
+                    checkbox.checked = false;
+                } else if (selectedCount === validCalendars.length) {
+                    checkbox.checked = true;
+                } else {
+                    checkbox.checked = false;
+                    checkbox.indeterminate = true;
+                }
+            }
+            groupIndex++;
+        });
     }
 
     /**
@@ -414,6 +647,7 @@ export class TimelineCalendarFilter extends Component {
         this.refreshBtn = null;
         this.calendars = [];
         this.selectedIds = [];
+        this.calendarGroups = [];
         super.destroy();
     }
 }

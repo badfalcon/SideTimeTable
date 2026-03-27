@@ -1444,5 +1444,25 @@
   "calendarFilterRefreshTooltip": {
     "message": "Refresh calendar list",
     "description": "Tooltip for the refresh button in the calendar filter"
+  },
+  "addGroup": {
+    "message": "Add Group",
+    "description": "Button label to add a new calendar group"
+  },
+  "newGroupName": {
+    "message": "New Group",
+    "description": "Default name for a newly created calendar group"
+  },
+  "ungrouped": {
+    "message": "Ungrouped",
+    "description": "Label for calendars not assigned to any group"
+  },
+  "deleteGroupConfirm": {
+    "message": "Delete this group? Calendars will be moved to Ungrouped.",
+    "description": "Confirmation message when deleting a calendar group"
+  },
+  "groupNamePlaceholder": {
+    "message": "Enter group name",
+    "description": "Placeholder for group name input"
   }
 }

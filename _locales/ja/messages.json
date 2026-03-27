@@ -1444,5 +1444,25 @@
   "calendarFilterRefreshTooltip": {
     "message": "カレンダー一覧を更新",
     "description": "カレンダーフィルターの更新ボタンのツールチップ"
+  },
+  "addGroup": {
+    "message": "グループを追加",
+    "description": "カレンダーグループ追加ボタンのラベル"
+  },
+  "newGroupName": {
+    "message": "新しいグループ",
+    "description": "新規作成されたカレンダーグループのデフォルト名"
+  },
+  "ungrouped": {
+    "message": "未分類",
+    "description": "どのグループにも属さないカレンダーのラベル"
+  },
+  "deleteGroupConfirm": {
+    "message": "このグループを削除しますか？カレンダーは未分類に移動されます。",
+    "description": "カレンダーグループ削除時の確認メッセージ"
+  },
+  "groupNamePlaceholder": {
+    "message": "グループ名を入力",
+    "description": "グループ名入力のプレースホルダー"
   }
 }

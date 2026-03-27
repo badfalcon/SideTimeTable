@@ -42,3 +42,21 @@ export async function loadSelectedCalendars() {
     const result = await StorageHelper.get(['selectedCalendars'], { selectedCalendars: [] });
     return result.selectedCalendars || [];
 }
+
+/**
+ * Save the calendar groups
+ * @param {Array<Object>} calendarGroups - An array of group objects
+ * @returns {Promise} A promise for the save process
+ */
+export function saveCalendarGroups(calendarGroups) {
+    return StorageHelper.set({ calendarGroups });
+}
+
+/**
+ * Load the calendar groups
+ * @returns {Promise<Array<Object>>} A promise that returns an array of group objects
+ */
+export async function loadCalendarGroups() {
+    const result = await StorageHelper.get(['calendarGroups'], { calendarGroups: [] });
+    return result.calendarGroups || [];
+}
