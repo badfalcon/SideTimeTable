@@ -155,8 +155,8 @@ ${existingExamples}`,
         }
 
         const parsed = JSON.parse(jsonMatch[0]);
-        if (!Array.isArray(parsed.en) || !Array.isArray(parsed.ja)) {
-            throw new Error('Invalid highlights format from API');
+        if (!Array.isArray(parsed.en) || !Array.isArray(parsed.ja) || parsed.en.length === 0 || parsed.ja.length === 0) {
+            throw new Error('Invalid or empty highlights from API');
         }
 
         return parsed;
@@ -182,7 +182,6 @@ function generateHighlightsFallback(commits) {
     const others = [];
 
     for (const msg of commits) {
-        const lower = msg.toLowerCase();
         if (/^(feat|add|new)[\s(:]/i.test(msg)) {
             // Strip conventional commit prefix
             const clean = msg.replace(/^(feat|add|new)[\s(:]+/i, '').replace(/^\)\s*:?\s*/, '');
@@ -257,7 +256,7 @@ function formatHighlightArray(items, indent) {
 }
 
 function escapeQuotes(str) {
-    return str.replace(/'/g, "\\'");
+    return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 }
 
 function insertReleaseNote(newVersion, highlights) {
