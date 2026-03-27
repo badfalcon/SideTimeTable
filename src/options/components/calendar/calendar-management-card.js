@@ -127,7 +127,7 @@ export class CalendarManagementCard extends CardComponent {
         // The search icon
         const iconSpan = document.createElement('span');
         iconSpan.className = 'input-group-text';
-        iconSpan.innerHTML = '<i class="fas fa-search text-muted"></i>';
+        iconSpan.innerHTML = '<i class="fas fa-search text-muted" aria-hidden="true"></i>';
 
         // The search input field
         this.searchInput = document.createElement('input');
@@ -1128,6 +1128,7 @@ export class CalendarManagementCard extends CardComponent {
         closeBtn.type = 'button';
         closeBtn.className = 'btn-close';
         closeBtn.setAttribute('data-bs-dismiss', 'alert');
+        closeBtn.setAttribute('aria-label', window.getLocalizedMessage('close') || 'Close');
         errorDiv.appendChild(closeBtn);
 
         if (this.calendarList?.parentElement) {

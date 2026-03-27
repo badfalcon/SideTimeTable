@@ -48,7 +48,7 @@ export class TimelineCalendarFilter extends Component {
         this.button.className = 'timeline-calendar-filter-btn';
         this.button.title = this.getMessage('calendarFilterTooltip');
         this.button.setAttribute('aria-label', this.getMessage('calendarFilterTooltip'));
-        this.button.setAttribute('aria-haspopup', 'true');
+        this.button.setAttribute('aria-haspopup', 'dialog');
         this.button.setAttribute('aria-expanded', 'false');
         this.button.type = 'button';
         this.button.innerHTML = '<i class="fa-solid fa-sliders"></i>';
@@ -60,6 +60,8 @@ export class TimelineCalendarFilter extends Component {
         // Dropdown popover
         this.dropdown = document.createElement('div');
         this.dropdown.className = 'timeline-calendar-filter-dropdown';
+        this.dropdown.setAttribute('role', 'dialog');
+        this.dropdown.setAttribute('aria-label', this.getMessage('calendarFilterTooltip'));
 
         // Transparent backdrop to block clicks on events behind the dropdown
         this.backdrop = document.createElement('div');
