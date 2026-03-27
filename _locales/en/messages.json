@@ -1485,6 +1485,10 @@
     "message": "Create Group",
     "description": "Title for the create group modal"
   },
+  "editGroupTitle": {
+    "message": "Edit Group",
+    "description": "Title for the edit group modal"
+  },
   "groupNameLabel": {
     "message": "Group Name",
     "description": "Label for the group name input in create modal"
@@ -1496,6 +1500,10 @@
   "createGroupButton": {
     "message": "Create",
     "description": "Button label to create a new group"
+  },
+  "saveGroupButton": {
+    "message": "Save",
+    "description": "Button label to save group changes"
   },
   "cancelButton": {
     "message": "Cancel",

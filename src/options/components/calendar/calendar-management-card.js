@@ -52,7 +52,7 @@ export class CalendarManagementCard extends CardComponent {
 
     destroy() {
         this._closePopover();
-        this._closeCreateGroupModal();
+        this._closeGroupModal();
         if (this._collapseSaveTimer) {
             clearTimeout(this._collapseSaveTimer);
             this._collapseSaveTimer = null;
@@ -827,20 +827,29 @@ export class CalendarManagementCard extends CardComponent {
     }
 
     /**
-     * Handle adding a new group — opens a modal for name + member selection
+     * Handle adding a new group — opens modal
      * @private
      */
     _handleAddGroup() {
-        this._showCreateGroupModal();
+        this._showGroupModal(null);
     }
 
     /**
-     * Show the create-group modal
+     * Show the group modal for create or edit
+     * @param {Object|null} editingGroup - existing group to edit, or null for create
      * @private
      */
-    _showCreateGroupModal() {
-        // Remove any existing modal
-        this._closeCreateGroupModal();
+    _showGroupModal(editingGroup) {
+        this._closeGroupModal();
+
+        const isEdit = !!editingGroup;
+        const modalTitle = isEdit
+            ? (window.getLocalizedMessage('editGroupTitle') || 'Edit Group')
+            : (window.getLocalizedMessage('createGroupTitle') || 'Create Group');
+        const submitLabel = isEdit
+            ? (window.getLocalizedMessage('saveGroupButton') || 'Save')
+            : (window.getLocalizedMessage('createGroupButton') || 'Create');
+        const existingCalendarIds = isEdit ? new Set(editingGroup.calendarIds) : new Set();
 
         // Overlay
         const overlay = document.createElement('div');
@@ -851,18 +860,18 @@ export class CalendarManagementCard extends CardComponent {
         modal.className = 'create-group-modal';
         modal.setAttribute('role', 'dialog');
         modal.setAttribute('aria-modal', 'true');
-        modal.setAttribute('aria-label', window.getLocalizedMessage('createGroupTitle') || 'Create Group');
+        modal.setAttribute('aria-label', modalTitle);
 
         // Header
         const header = document.createElement('div');
         header.className = 'create-group-modal-header';
         const title = document.createElement('h5');
-        title.textContent = window.getLocalizedMessage('createGroupTitle') || 'Create Group';
+        title.textContent = modalTitle;
         const closeBtn = document.createElement('button');
         closeBtn.type = 'button';
         closeBtn.className = 'btn-close';
         closeBtn.setAttribute('aria-label', window.getLocalizedMessage('cancelButton') || 'Cancel');
-        closeBtn.addEventListener('click', () => this._closeCreateGroupModal());
+        closeBtn.addEventListener('click', () => this._closeGroupModal());
         header.appendChild(title);
         header.appendChild(closeBtn);
 
@@ -881,6 +890,9 @@ export class CalendarManagementCard extends CardComponent {
         nameInput.className = 'form-control mb-3';
         nameInput.placeholder = window.getLocalizedMessage('groupNamePlaceholder') || 'Enter group name';
         nameInput.maxLength = 50;
+        if (isEdit) {
+            nameInput.value = editingGroup.name;
+        }
 
         body.appendChild(nameLabel);
         body.appendChild(nameInput);
@@ -917,12 +929,14 @@ export class CalendarManagementCard extends CardComponent {
                 checkbox.className = 'form-check-input';
                 checkbox.id = `create-group-cal-${cal.id}`;
                 checkbox.value = cal.id;
+                if (existingCalendarIds.has(cal.id)) {
+                    checkbox.checked = true;
+                }
 
                 const label = document.createElement('label');
                 label.className = 'form-check-label';
                 label.htmlFor = checkbox.id;
 
-                // Color indicator
                 const colorDot = document.createElement('span');
                 colorDot.className = 'calendar-color-indicator-inline';
                 if (cal.backgroundColor) {
@@ -945,7 +959,7 @@ export class CalendarManagementCard extends CardComponent {
         }
         body.appendChild(calList);
 
-        // Footer with buttons
+        // Footer
         const footer = document.createElement('div');
         footer.className = 'create-group-modal-footer';
 
@@ -953,18 +967,18 @@ export class CalendarManagementCard extends CardComponent {
         cancelBtn.type = 'button';
         cancelBtn.className = 'btn btn-outline-secondary btn-sm';
         cancelBtn.textContent = window.getLocalizedMessage('cancelButton') || 'Cancel';
-        cancelBtn.addEventListener('click', () => this._closeCreateGroupModal());
+        cancelBtn.addEventListener('click', () => this._closeGroupModal());
 
-        const createBtn = document.createElement('button');
-        createBtn.type = 'button';
-        createBtn.className = 'btn btn-primary btn-sm';
-        createBtn.textContent = window.getLocalizedMessage('createGroupButton') || 'Create';
-        createBtn.addEventListener('click', () => {
-            this._submitCreateGroup(nameInput.value.trim(), checkboxes);
+        const submitBtn = document.createElement('button');
+        submitBtn.type = 'button';
+        submitBtn.className = 'btn btn-primary btn-sm';
+        submitBtn.textContent = submitLabel;
+        submitBtn.addEventListener('click', () => {
+            this._submitGroupModal(nameInput.value.trim(), checkboxes, editingGroup);
         });
 
         footer.appendChild(cancelBtn);
-        footer.appendChild(createBtn);
+        footer.appendChild(submitBtn);
 
         modal.appendChild(header);
         modal.appendChild(body);
@@ -974,7 +988,7 @@ export class CalendarManagementCard extends CardComponent {
         // Keyboard handler: Escape to close + focus trap
         this._createGroupModalKeyHandler = (e) => {
             if (e.key === 'Escape') {
-                this._closeCreateGroupModal();
+                this._closeGroupModal();
                 return;
             }
             if (e.key === 'Tab') {
@@ -1002,7 +1016,7 @@ export class CalendarManagementCard extends CardComponent {
         // Click overlay to close
         overlay.addEventListener('mousedown', (e) => {
             if (e.target === overlay) {
-                this._closeCreateGroupModal();
+                this._closeGroupModal();
             }
         });
 
@@ -1010,7 +1024,7 @@ export class CalendarManagementCard extends CardComponent {
         nameInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                this._submitCreateGroup(nameInput.value.trim(), checkboxes);
+                this._submitGroupModal(nameInput.value.trim(), checkboxes, editingGroup);
             }
         });
 
@@ -1022,10 +1036,10 @@ export class CalendarManagementCard extends CardComponent {
     }
 
     /**
-     * Submit the create-group modal
+     * Submit the group modal (create or edit)
      * @private
      */
-    async _submitCreateGroup(name, checkboxes) {
+    async _submitGroupModal(name, checkboxes, editingGroup) {
         if (this._isSubmittingGroup) return;
         this._isSubmittingGroup = true;
 
@@ -1034,32 +1048,53 @@ export class CalendarManagementCard extends CardComponent {
             .filter(cb => cb.checked)
             .map(cb => cb.value);
 
-        const groupId = `group_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-        const newGroup = {
-            id: groupId,
-            name: groupName.slice(0, 50),
-            calendarIds: selectedCalIds,
-            collapsed: false
-        };
-        this.calendarGroups.push(newGroup);
+        if (editingGroup) {
+            // Edit mode: update existing group
+            const previousName = editingGroup.name;
+            const previousCalendarIds = [...editingGroup.calendarIds];
+            editingGroup.name = groupName.slice(0, 50);
+            editingGroup.calendarIds = selectedCalIds;
 
-        try {
-            await saveCalendarGroups(this.calendarGroups);
-            this._closeCreateGroupModal();
-            this.render();
-        } catch (error) {
-            this.calendarGroups = this.calendarGroups.filter(g => g.id !== groupId);
-            logError('Add group', error);
-        } finally {
-            this._isSubmittingGroup = false;
+            try {
+                await saveCalendarGroups(this.calendarGroups);
+                this._closeGroupModal();
+                this.render();
+            } catch (error) {
+                editingGroup.name = previousName;
+                editingGroup.calendarIds = previousCalendarIds;
+                logError('Edit group', error);
+            } finally {
+                this._isSubmittingGroup = false;
+            }
+        } else {
+            // Create mode: add new group
+            const groupId = `group_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+            const newGroup = {
+                id: groupId,
+                name: groupName.slice(0, 50),
+                calendarIds: selectedCalIds,
+                collapsed: false
+            };
+            this.calendarGroups.push(newGroup);
+
+            try {
+                await saveCalendarGroups(this.calendarGroups);
+                this._closeGroupModal();
+                this.render();
+            } catch (error) {
+                this.calendarGroups = this.calendarGroups.filter(g => g.id !== groupId);
+                logError('Add group', error);
+            } finally {
+                this._isSubmittingGroup = false;
+            }
         }
     }
 
     /**
-     * Close the create-group modal
+     * Close the group modal
      * @private
      */
-    _closeCreateGroupModal() {
+    _closeGroupModal() {
         const wasOpen = !!this._createGroupModalOverlay;
         if (this._createGroupModalKeyHandler) {
             document.removeEventListener('keydown', this._createGroupModalKeyHandler);
@@ -1069,7 +1104,6 @@ export class CalendarManagementCard extends CardComponent {
             this._createGroupModalOverlay.remove();
             this._createGroupModalOverlay = null;
         }
-        // Restore focus to the trigger button (only if modal was actually open and element is in DOM)
         if (wasOpen && this.addGroupBtn && this.addGroupBtn.isConnected) {
             this.addGroupBtn.focus();
         }
@@ -1098,60 +1132,13 @@ export class CalendarManagementCard extends CardComponent {
     }
 
     /**
-     * Start inline rename for a group
+     * Open edit modal for a group
      * @private
      */
     _handleStartRenameGroup(groupId) {
-        const header = this.calendarList.querySelector(`.calendar-group-header[data-group-id="${CSS.escape(groupId)}"]`);
-        if (!header) return;
-
-        const nameSpan = header.querySelector('.group-name');
-        if (!nameSpan) return;
-
-        const originalName = nameSpan.textContent;
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.className = 'group-name-input';
-        input.value = originalName;
-        input.maxLength = 50;
-        input.placeholder = window.getLocalizedMessage('groupNamePlaceholder') || 'Enter group name';
-        input.setAttribute('aria-label', window.getLocalizedMessage('groupNamePlaceholder') || 'Enter group name');
-
-        let finished = false;
-        const finishRename = async () => {
-            if (finished) return;
-            finished = true;
-            const newName = input.value.trim();
-            if (newName && newName !== originalName) {
-                const group = this.calendarGroups.find(g => g.id === groupId);
-                if (group) {
-                    group.name = newName;
-                    try {
-                        await saveCalendarGroups(this.calendarGroups);
-                    } catch (error) {
-                        group.name = originalName;
-                        logError('Rename group', error);
-                    }
-                }
-            }
-            this.render();
-        };
-
-        input.addEventListener('blur', finishRename);
-        input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                input.blur();
-            }
-            if (e.key === 'Escape') {
-                input.value = originalName;
-                input.blur();
-            }
-        });
-
-        nameSpan.replaceWith(input);
-        input.focus();
-        input.select();
+        const group = this.calendarGroups.find(g => g.id === groupId);
+        if (!group) return;
+        this._showGroupModal(group);
     }
 
     /**

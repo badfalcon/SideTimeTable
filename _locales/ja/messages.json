@@ -1485,6 +1485,10 @@
     "message": "グループを作成",
     "description": "グループ作成モーダルのタイトル"
   },
+  "editGroupTitle": {
+    "message": "グループを編集",
+    "description": "グループ編集モーダルのタイトル"
+  },
   "groupNameLabel": {
     "message": "グループ名",
     "description": "グループ作成モーダルのグループ名ラベル"
@@ -1496,6 +1500,10 @@
   "createGroupButton": {
     "message": "作成",
     "description": "グループを作成するボタンのラベル"
+  },
+  "saveGroupButton": {
+    "message": "保存",
+    "description": "グループの変更を保存するボタンのラベル"
   },
   "cancelButton": {
     "message": "キャンセル",
