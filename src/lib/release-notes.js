@@ -6,6 +6,22 @@
  */
 export const RELEASE_NOTES = [
     {
+        version: '1.9.0',
+        date: '2026-03-28',
+        highlights: {
+            en: [
+                'Group your calendars: quickly switch between "Work" and "Personal" views with one click',
+                'Scrollbar now matches your theme for a cleaner look',
+                'Bug fixes and stability improvements'
+            ],
+            ja: [
+                'カレンダーをグループ化：「仕事」「プライベート」などワンクリックで表示切替',
+                'スクロールバーがテーマに合わせた色に対応',
+                'バグ修正と安定性の向上'
+            ]
+        }
+    },
+    {
         version: '1.8.1',
         date: '2026-03-22',
         highlights: {
