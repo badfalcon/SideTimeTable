@@ -663,7 +663,7 @@ export class CalendarManagementCard extends CardComponent {
 
         item.appendChild(checkbox);
         item.appendChild(info);
-        if (this.calendarGroups.length > 0) {
+        if (this.calendarGroups.length > 0 && !calendar.primary) {
             item.appendChild(assignBtn);
         }
         item.appendChild(colorIndicator);
@@ -801,6 +801,8 @@ export class CalendarManagementCard extends CardComponent {
      * @private
      */
     async _handleCalendarGroupAssignment(calendarId, groupId, assigned) {
+        const primaryCalendar = this.allCalendars.find(c => c.primary);
+        if (primaryCalendar && primaryCalendar.id === calendarId) return;
         const group = this.calendarGroups.find(g => g.id === groupId);
         if (!group) return;
 
@@ -906,11 +908,10 @@ export class CalendarManagementCard extends CardComponent {
         const calList = document.createElement('div');
         calList.className = 'create-group-modal-calendar-list';
 
-        const sortedCalendars = [...this.allCalendars].sort((a, b) => {
-            if (a.primary && !b.primary) return -1;
-            if (!a.primary && b.primary) return 1;
-            return (a.summary || '').localeCompare(b.summary || '');
-        });
+        // Exclude primary calendar — it is always visible and not assignable to groups
+        const sortedCalendars = this.allCalendars
+            .filter(c => !c.primary)
+            .sort((a, b) => (a.summary || '').localeCompare(b.summary || ''));
 
         const checkboxes = [];
         if (sortedCalendars.length === 0) {
@@ -945,9 +946,6 @@ export class CalendarManagementCard extends CardComponent {
 
                 const nameSpan = document.createElement('span');
                 nameSpan.textContent = cal.summary || cal.id;
-                if (cal.primary) {
-                    nameSpan.classList.add('text-primary', 'fw-bold');
-                }
 
                 label.appendChild(colorDot);
                 label.appendChild(nameSpan);
