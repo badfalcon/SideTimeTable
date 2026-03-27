@@ -549,7 +549,6 @@ export class CalendarManagementCard extends CardComponent {
         actions.appendChild(deleteBtn);
 
         header.setAttribute('tabindex', '0');
-        header.setAttribute('role', 'button');
         header.setAttribute('aria-expanded', group.collapsed ? 'false' : 'true');
         header.appendChild(checkbox);
         header.appendChild(collapseIcon);
@@ -581,7 +580,6 @@ export class CalendarManagementCard extends CardComponent {
         nameSpan.textContent = window.getLocalizedMessage('ungrouped') || 'Ungrouped';
 
         header.setAttribute('tabindex', '0');
-        header.setAttribute('role', 'button');
         header.setAttribute('aria-expanded', 'true');
         header.appendChild(collapseIcon);
         header.appendChild(nameSpan);
@@ -827,6 +825,7 @@ export class CalendarManagementCard extends CardComponent {
         input.value = originalName;
         input.maxLength = 50;
         input.placeholder = window.getLocalizedMessage('groupNamePlaceholder') || 'Enter group name';
+        input.setAttribute('aria-label', window.getLocalizedMessage('groupNamePlaceholder') || 'Enter group name');
 
         let finished = false;
         const finishRename = async () => {
