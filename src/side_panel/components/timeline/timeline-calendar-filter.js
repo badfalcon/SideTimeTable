@@ -632,8 +632,9 @@ export class TimelineCalendarFilter extends Component {
         const fullGroupCalIds = new Set(group.calendarIds);
 
         if (checked) {
+            const validCalIds = new Set(this.calendars.map(c => c.id));
             for (const calId of group.calendarIds) {
-                if (!this.selectedIds.includes(calId)) {
+                if (validCalIds.has(calId) && !this.selectedIds.includes(calId)) {
                     this.selectedIds.push(calId);
                 }
             }
