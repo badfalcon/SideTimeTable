@@ -49,7 +49,6 @@ export class TimelineCalendarFilter extends Component {
         this.button.className = 'timeline-calendar-filter-btn';
         this.button.title = this.getMessage('calendarFilterTooltip');
         this.button.setAttribute('aria-label', this.getMessage('calendarFilterTooltip'));
-        this.button.setAttribute('aria-haspopup', 'true');
         this.button.setAttribute('aria-expanded', 'false');
         this.button.type = 'button';
         this.button.innerHTML = '<i class="fa-solid fa-sliders"></i>';
@@ -260,6 +259,9 @@ export class TimelineCalendarFilter extends Component {
                 isDemoMode() ? getDemoCalendarGroups() : loadCalendarGroups()
             ]);
 
+            // Bail out if dropdown was closed while fetching
+            if (!this.isOpen) return;
+
             if (response.error || !response.calendars) {
                 this.dropdown.innerHTML = '';
                 this.refreshBtn = null;
@@ -284,6 +286,7 @@ export class TimelineCalendarFilter extends Component {
                 await saveSelectedCalendars(this.selectedIds);
             }
 
+            if (!this.isOpen) return;
             this.hasFetched = true;
             this._renderDropdownContent();
         } catch {
@@ -445,11 +448,14 @@ export class TimelineCalendarFilter extends Component {
         const selectedCount = fullGroupIds.filter(id => this.selectedIds.includes(id)).length;
         if (selectedCount === 0 || fullGroupIds.length === 0) {
             checkbox.checked = false;
+            checkbox.setAttribute('aria-checked', 'false');
         } else if (selectedCount === fullGroupIds.length) {
             checkbox.checked = true;
+            checkbox.setAttribute('aria-checked', 'true');
         } else {
             checkbox.checked = false;
             checkbox.indeterminate = true;
+            checkbox.setAttribute('aria-checked', 'mixed');
         }
 
         checkbox.addEventListener('change', (e) => {
@@ -718,11 +724,14 @@ export class TimelineCalendarFilter extends Component {
             checkbox.indeterminate = false;
             if (selectedCount === 0) {
                 checkbox.checked = false;
+                checkbox.setAttribute('aria-checked', 'false');
             } else if (selectedCount === validCalendars.length) {
                 checkbox.checked = true;
+                checkbox.setAttribute('aria-checked', 'true');
             } else {
                 checkbox.checked = false;
                 checkbox.indeterminate = true;
+                checkbox.setAttribute('aria-checked', 'mixed');
             }
         }
     }

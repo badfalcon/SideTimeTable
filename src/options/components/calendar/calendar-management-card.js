@@ -38,6 +38,8 @@ export class CalendarManagementCard extends CardComponent {
         // Active popover reference
         this._activePopover = null;
         this._popoverCloseHandler = null;
+        this._popoverKeyHandler = null;
+        this._popoverTimerId = null;
 
         // Debounced save for collapse state
         this._collapseSaveTimer = null;
@@ -500,11 +502,14 @@ export class CalendarManagementCard extends CardComponent {
 
         if (selectedCount === 0 || fullGroupIds.length === 0) {
             checkbox.checked = false;
+            checkbox.setAttribute('aria-checked', 'false');
         } else if (selectedCount === fullGroupIds.length) {
             checkbox.checked = true;
+            checkbox.setAttribute('aria-checked', 'true');
         } else {
             checkbox.checked = false;
             checkbox.indeterminate = true;
+            checkbox.setAttribute('aria-checked', 'mixed');
         }
 
         checkbox.setAttribute('aria-label', group.name);
@@ -633,7 +638,6 @@ export class CalendarManagementCard extends CardComponent {
         assignBtn.className = 'calendar-group-assign-btn';
         assignBtn.title = window.getLocalizedMessage('assignToGroups') || 'Assign to groups';
         assignBtn.setAttribute('aria-label', assignBtn.title);
-        assignBtn.setAttribute('aria-haspopup', 'true');
         assignBtn.innerHTML = '<i class="fas fa-folder"></i>';
 
         // The color indicator
@@ -744,6 +748,9 @@ export class CalendarManagementCard extends CardComponent {
             this._popoverTimerId = null;
         }
         if (this._activePopover) {
+            if (this._popoverKeyHandler) {
+                this._activePopover.removeEventListener('keydown', this._popoverKeyHandler);
+            }
             this._activePopover.remove();
             this._activePopover = null;
         }
@@ -762,6 +769,8 @@ export class CalendarManagementCard extends CardComponent {
         const group = this.calendarGroups.find(g => g.id === groupId);
         if (!group) return;
 
+        const previousCalendarIds = [...group.calendarIds];
+
         if (assigned) {
             if (!group.calendarIds.includes(calendarId)) {
                 group.calendarIds.push(calendarId);
@@ -775,6 +784,7 @@ export class CalendarManagementCard extends CardComponent {
             this._closePopover();
             this.render();
         } catch (error) {
+            group.calendarIds = previousCalendarIds;
             logError('Calendar group assignment save', error);
         }
     }
@@ -893,6 +903,7 @@ export class CalendarManagementCard extends CardComponent {
         const group = this.calendarGroups.find(g => g.id === groupId);
         if (!group || group.calendarIds.length === 0) return;
 
+        const previousIds = [...this.selectedCalendarIds];
         const primaryId = this.allCalendars.find(c => c.primary)?.id;
 
         if (isChecked) {
@@ -920,6 +931,7 @@ export class CalendarManagementCard extends CardComponent {
             }
             this.render();
         } catch (error) {
+            this.selectedCalendarIds = previousIds;
             logError('Group toggle save', error);
         }
     }
@@ -1069,11 +1081,14 @@ export class CalendarManagementCard extends CardComponent {
             checkbox.indeterminate = false;
             if (selectedCount === 0) {
                 checkbox.checked = false;
+                checkbox.setAttribute('aria-checked', 'false');
             } else if (selectedCount === validCalendars.length) {
                 checkbox.checked = true;
+                checkbox.setAttribute('aria-checked', 'true');
             } else {
                 checkbox.checked = false;
                 checkbox.indeterminate = true;
+                checkbox.setAttribute('aria-checked', 'mixed');
             }
         }
     }
