@@ -905,6 +905,11 @@ export class CalendarManagementCard extends CardComponent {
         calLabel.textContent = window.getLocalizedMessage('selectCalendarsLabel') || 'Select Calendars';
         body.appendChild(calLabel);
 
+        // Selected calendars chip area
+        const chipArea = document.createElement('div');
+        chipArea.className = 'create-group-modal-chip-area';
+        body.appendChild(chipArea);
+
         // Search input for calendar filtering
         const searchInput = document.createElement('input');
         searchInput.type = 'text';
@@ -921,8 +926,59 @@ export class CalendarManagementCard extends CardComponent {
             .filter(c => !c.primary)
             .sort((a, b) => (a.summary || '').localeCompare(b.summary || ''));
 
+        // Map calendar ID → info for chip rendering
+        const calendarInfoMap = new Map();
+        for (const cal of sortedCalendars) {
+            calendarInfoMap.set(cal.id, { name: cal.summary || cal.id, color: cal.backgroundColor || '' });
+        }
+
         const checkboxes = [];
         const calItems = [];
+
+        // Render chip area from current selection
+        const renderChips = () => {
+            chipArea.innerHTML = '';
+            const selectedIds = checkboxes.filter(cb => cb.checked).map(cb => cb.value);
+            if (selectedIds.length === 0) {
+                chipArea.style.display = 'none';
+                return;
+            }
+            chipArea.style.display = '';
+            for (const id of selectedIds) {
+                const info = calendarInfoMap.get(id);
+                if (!info) continue;
+                const chip = document.createElement('span');
+                chip.className = 'create-group-modal-chip';
+
+                if (info.color) {
+                    const dot = document.createElement('span');
+                    dot.className = 'calendar-color-indicator-inline';
+                    dot.style.backgroundColor = info.color;
+                    chip.appendChild(dot);
+                }
+
+                const nameText = document.createElement('span');
+                nameText.textContent = info.name;
+                chip.appendChild(nameText);
+
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'create-group-modal-chip-remove';
+                removeBtn.setAttribute('aria-label', `${window.getLocalizedMessage('removeCalendar') || 'Remove'} ${info.name}`);
+                removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                removeBtn.addEventListener('click', () => {
+                    // Uncheck the corresponding checkbox
+                    const cb = checkboxes.find(c => c.value === id);
+                    if (cb) {
+                        cb.checked = false;
+                    }
+                    renderChips();
+                });
+                chip.appendChild(removeBtn);
+                chipArea.appendChild(chip);
+            }
+        };
+
         if (sortedCalendars.length === 0) {
             const empty = document.createElement('div');
             empty.className = 'text-muted p-2';
@@ -942,6 +998,8 @@ export class CalendarManagementCard extends CardComponent {
                 if (existingCalendarIds.has(cal.id)) {
                     checkbox.checked = true;
                 }
+
+                checkbox.addEventListener('change', () => renderChips());
 
                 const label = document.createElement('label');
                 label.className = 'form-check-label';
@@ -966,6 +1024,9 @@ export class CalendarManagementCard extends CardComponent {
             }
         }
         body.appendChild(calList);
+
+        // Initial chip render
+        renderChips();
 
         // Filter calendar items as user types
         searchInput.addEventListener('input', () => {

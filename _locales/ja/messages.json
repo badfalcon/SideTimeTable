@@ -1513,6 +1513,10 @@
     "message": "カレンダーがありません。先にカレンダーリストを更新してください。",
     "description": "グループ作成モーダルでカレンダーがない場合のメッセージ"
   },
+  "removeCalendar": {
+    "message": "削除",
+    "description": "グループ選択からカレンダーを削除するボタンのアリアラベル接頭辞"
+  },
   "errorLabel": {
     "message": "エラー",
     "description": "エラーメッセージのラベル接頭辞"

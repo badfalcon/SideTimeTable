@@ -1513,6 +1513,10 @@
     "message": "No calendars available. Refresh the calendar list first.",
     "description": "Message when no calendars are available in the create group modal"
   },
+  "removeCalendar": {
+    "message": "Remove",
+    "description": "Aria label prefix for removing a calendar from group selection"
+  },
   "errorLabel": {
     "message": "Error",
     "description": "Label prefix for error messages"
