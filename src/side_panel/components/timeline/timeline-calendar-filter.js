@@ -389,6 +389,7 @@ export class TimelineCalendarFilter extends Component {
         header.className = 'timeline-calendar-filter-group-header';
         header.dataset.groupId = group.id;
 
+        header.setAttribute('role', 'button');
         header.setAttribute('tabindex', '0');
         header.setAttribute('aria-expanded', 'true');
 
@@ -472,6 +473,7 @@ export class TimelineCalendarFilter extends Component {
     _renderUngroupedSection(calendars) {
         const header = document.createElement('div');
         header.className = 'timeline-calendar-filter-group-header';
+        header.setAttribute('role', 'button');
         header.setAttribute('tabindex', '0');
         header.setAttribute('aria-expanded', 'true');
 

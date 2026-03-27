@@ -548,6 +548,7 @@ export class CalendarManagementCard extends CardComponent {
         actions.appendChild(editBtn);
         actions.appendChild(deleteBtn);
 
+        header.setAttribute('role', 'button');
         header.setAttribute('tabindex', '0');
         header.setAttribute('aria-expanded', group.collapsed ? 'false' : 'true');
         header.appendChild(checkbox);
@@ -579,6 +580,7 @@ export class CalendarManagementCard extends CardComponent {
         nameSpan.className = 'group-name';
         nameSpan.textContent = window.getLocalizedMessage('ungrouped') || 'Ungrouped';
 
+        header.setAttribute('role', 'button');
         header.setAttribute('tabindex', '0');
         header.setAttribute('aria-expanded', 'true');
         header.appendChild(collapseIcon);
