@@ -140,6 +140,7 @@ export class CalendarManagementCard extends CardComponent {
         this.clearSearchBtn.className = 'btn btn-outline-secondary';
         this.clearSearchBtn.type = 'button';
         this.clearSearchBtn.style.display = 'none';
+        this.clearSearchBtn.setAttribute('aria-label', window.getLocalizedMessage('clearSearch') || 'Clear search');
         this.clearSearchBtn.innerHTML = '<i class="fas fa-times"></i>';
 
         inputGroup.appendChild(iconSpan);
@@ -389,7 +390,7 @@ export class CalendarManagementCard extends CardComponent {
         const searchTerm = this.searchInput?.value.toLowerCase().trim() || '';
         const filteredCalendars = searchTerm
             ? this.allCalendars.filter(calendar =>
-                calendar.summary.toLowerCase().includes(searchTerm))
+                (calendar.summary || '').toLowerCase().includes(searchTerm))
             : this.allCalendars;
 
         if (filteredCalendars.length === 0 && searchTerm) {
@@ -434,7 +435,7 @@ export class CalendarManagementCard extends CardComponent {
             .sort((a, b) => {
                 if (a.primary && !b.primary) return -1;
                 if (!a.primary && b.primary) return 1;
-                return a.summary.localeCompare(b.summary);
+                return (a.summary || '').localeCompare(b.summary || '');
             });
 
         const ungroupedSection = this._createUngroupedSection(ungroupedCalendars, searchTerm);
@@ -854,7 +855,7 @@ export class CalendarManagementCard extends CardComponent {
      */
     async _handleGroupToggle(groupId, isChecked) {
         const group = this.calendarGroups.find(g => g.id === groupId);
-        if (!group) return;
+        if (!group || group.calendarIds.length === 0) return;
 
         const primaryId = this.allCalendars.find(c => c.primary)?.id;
 
@@ -917,6 +918,8 @@ export class CalendarManagementCard extends CardComponent {
                 const icon = header.querySelector('.group-collapse-icon');
                 if (body) body.classList.toggle('collapsed');
                 if (icon) icon.classList.toggle('collapsed');
+                const expanded = !body?.classList.contains('collapsed');
+                header.setAttribute('aria-expanded', String(expanded));
             }
             return;
         }

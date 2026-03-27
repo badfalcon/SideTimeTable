@@ -1496,5 +1496,9 @@
   "calendarSaveError": {
     "message": "Failed to save settings",
     "description": "Error message when calendar settings fail to save"
+  },
+  "clearSearch": {
+    "message": "Clear search",
+    "description": "Aria label for the clear search button"
   }
 }

@@ -71,7 +71,7 @@ function sanitizeCalendarGroups(raw) {
     return raw
         .filter(g => g && typeof g === 'object')
         .map(g => ({
-            id: typeof g.id === 'string' ? g.id : `group_${Date.now()}`,
+            id: typeof g.id === 'string' ? g.id : `group_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
             name: (typeof g.name === 'string' ? g.name : 'Group').slice(0, 50),
             calendarIds: Array.isArray(g.calendarIds) ? g.calendarIds.filter(id => typeof id === 'string') : [],
             collapsed: typeof g.collapsed === 'boolean' ? g.collapsed : false

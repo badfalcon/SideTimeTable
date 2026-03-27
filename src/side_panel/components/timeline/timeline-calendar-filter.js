@@ -170,19 +170,24 @@ export class TimelineCalendarFilter extends Component {
             }
         } else {
             // Refresh selected state and groups each time
-            const [selectedIds, groups] = await Promise.all([
-                loadSelectedCalendars(),
-                isDemoMode() ? getDemoCalendarGroups() : loadCalendarGroups()
-            ]);
-            this.selectedIds = selectedIds;
-            this.calendarGroups = Array.isArray(groups) ? groups : [];
-            // Ensure primary calendar stays in selection
-            const primary = this.calendars.find(c => c.primary);
-            if (primary && !this.selectedIds.includes(primary.id)) {
-                this.selectedIds.unshift(primary.id);
-                await saveSelectedCalendars(this.selectedIds);
+            this._isFetching = true;
+            try {
+                const [selectedIds, groups] = await Promise.all([
+                    loadSelectedCalendars(),
+                    isDemoMode() ? getDemoCalendarGroups() : loadCalendarGroups()
+                ]);
+                this.selectedIds = selectedIds;
+                this.calendarGroups = Array.isArray(groups) ? groups : [];
+                // Ensure primary calendar stays in selection
+                const primary = this.calendars.find(c => c.primary);
+                if (primary && !this.selectedIds.includes(primary.id)) {
+                    this.selectedIds.unshift(primary.id);
+                    await saveSelectedCalendars(this.selectedIds);
+                }
+                this._renderDropdownContent();
+            } finally {
+                this._isFetching = false;
             }
-            this._renderDropdownContent();
         }
     }
 
@@ -273,6 +278,7 @@ export class TimelineCalendarFilter extends Component {
         this.refreshBtn.type = 'button';
         this.refreshBtn.className = 'timeline-calendar-filter-refresh-btn';
         this.refreshBtn.title = this.getMessage('calendarFilterRefreshTooltip');
+        this.refreshBtn.setAttribute('aria-label', this.getMessage('calendarFilterRefreshTooltip'));
         this.refreshBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i>';
         this.addEventListener(this.refreshBtn, 'click', () => {
             this._refreshCalendars();
@@ -309,7 +315,7 @@ export class TimelineCalendarFilter extends Component {
         // Filter by search term
         const term = this.searchTerm.toLowerCase().trim();
         const filtered = term
-            ? this.calendars.filter(c => c.summary.toLowerCase().includes(term))
+            ? this.calendars.filter(c => (c.summary || '').toLowerCase().includes(term))
             : this.calendars;
 
         if (filtered.length === 0) {
@@ -348,7 +354,7 @@ export class TimelineCalendarFilter extends Component {
                 .sort((a, b) => {
                     if (a.primary && !b.primary) return -1;
                     if (!a.primary && b.primary) return 1;
-                    return a.summary.localeCompare(b.summary);
+                    return (a.summary || '').localeCompare(b.summary || '');
                 });
 
             if (ungrouped.length > 0) {
@@ -359,7 +365,7 @@ export class TimelineCalendarFilter extends Component {
             const sorted = [...filtered].sort((a, b) => {
                 if (a.primary && !b.primary) return -1;
                 if (!a.primary && b.primary) return 1;
-                return a.summary.localeCompare(b.summary);
+                return (a.summary || '').localeCompare(b.summary || '');
             });
 
             sorted.forEach(calendar => {
@@ -548,13 +554,17 @@ export class TimelineCalendarFilter extends Component {
      * Handle group toggle in the filter dropdown
      * @private
      */
-    async _handleGroupToggle(group, calendars, checked) {
+    async _handleGroupToggle(group, _calendars, checked) {
+        if (group.calendarIds.length === 0) return;
+
         const primaryId = this.calendars.find(c => c.primary)?.id;
+        // Use full group membership (not the filtered view) for toggling
+        const fullGroupCalIds = new Set(group.calendarIds);
 
         if (checked) {
-            for (const cal of calendars) {
-                if (!this.selectedIds.includes(cal.id)) {
-                    this.selectedIds.push(cal.id);
+            for (const calId of group.calendarIds) {
+                if (!this.selectedIds.includes(calId)) {
+                    this.selectedIds.push(calId);
                 }
             }
         } else {
@@ -569,10 +579,9 @@ export class TimelineCalendarFilter extends Component {
                 }
             }
 
-            const groupCalIds = new Set(calendars.map(c => c.id));
             this.selectedIds = this.selectedIds.filter(id => {
                 if (id === primaryId) return true;
-                if (!groupCalIds.has(id)) return true;
+                if (!fullGroupCalIds.has(id)) return true;
                 if (otherGroupIds.has(id)) return true;
                 return false;
             });

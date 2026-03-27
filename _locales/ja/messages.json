@@ -1496,5 +1496,9 @@
   "calendarSaveError": {
     "message": "設定の保存に失敗しました",
     "description": "カレンダー設定の保存失敗時のエラーメッセージ"
+  },
+  "clearSearch": {
+    "message": "検索をクリア",
+    "description": "検索クリアボタンのアリアラベル"
   }
 }
