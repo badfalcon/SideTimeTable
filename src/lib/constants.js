@@ -80,7 +80,8 @@ export const VALID_SYNC_KEYS = new Set([
     'lastSeenVersion',
     'initialSetupCompleted',
     'tutorialCompleted',
-    'timeFormat'
+    'timeFormat',
+    'calendarGroups'
 ]);
 
 // Valid local storage keys (exact match)

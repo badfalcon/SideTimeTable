@@ -926,6 +926,56 @@ const _DEMO_SELECTED_CALENDARS = {
     manager:    ['primary', 'alex@eng.com', 'riley@eng.com', 'morgan@eng.com', 'jamie@eng.com', 'hr@eng.com', 'company@eng.com']
 };
 
+const _DEMO_CALENDAR_GROUPS = {
+    dev_team: [
+        {
+            id: 'group_demo_members',
+            name: 'Team Members',
+            calendarIds: ['jordan@team.com', 'sam@team.com', 'jamie@team.com', 'casey@team.com'],
+            collapsed: false
+        },
+        {
+            id: 'group_demo_shared',
+            name: 'Shared Calendars',
+            calendarIds: ['eng-team@team.com', 'product@team.com', 'research@team.com'],
+            collapsed: false
+        }
+    ],
+    sales_team: [
+        {
+            id: 'group_demo_sales',
+            name: 'Sales Team',
+            calendarIds: ['mike@sales.com', 'tom@sales.com', 'lisa@sales.com', 'emma@sales.com'],
+            collapsed: false
+        },
+        {
+            id: 'group_demo_mkt',
+            name: 'Marketing',
+            calendarIds: ['mkt@sales.com'],
+            collapsed: false
+        }
+    ],
+    manager: [
+        {
+            id: 'group_demo_eng',
+            name: 'Engineering',
+            calendarIds: ['alex@eng.com', 'riley@eng.com', 'morgan@eng.com', 'jamie@eng.com'],
+            collapsed: false
+        },
+        {
+            id: 'group_demo_org',
+            name: 'Organization',
+            calendarIds: ['hr@eng.com', 'company@eng.com'],
+            collapsed: false
+        }
+    ]
+};
+
+export function getDemoCalendarGroups() {
+    const scenario = getDemoScenario();
+    return _DEMO_CALENDAR_GROUPS[scenario] || _DEMO_CALENDAR_GROUPS.dev_team;
+}
+
 export function getDemoOptionsSettings() {
     const scenario = getDemoScenario();
     return {
