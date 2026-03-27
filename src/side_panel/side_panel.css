@@ -1736,10 +1736,16 @@ body {
     aspect-ratio: 1 / 1;
 }
 
-.timeline-calendar-filter-btn:hover {
+.timeline-calendar-filter-btn:hover,
+.timeline-calendar-filter-btn:focus-visible {
     color: var(--side-calendar-hover-color);
     background-color: var(--side-calendar-subtle-bg-hover);
     opacity: 1;
+}
+
+.timeline-calendar-filter-btn:focus-visible {
+    outline: 2px solid var(--side-calendar-accent-color, #4285f4);
+    outline-offset: 1px;
 }
 
 .timeline-calendar-filter-backdrop {
@@ -1911,6 +1917,7 @@ body {
     height: 13px;
     cursor: pointer;
     flex-shrink: 0;
+    accent-color: var(--side-calendar-accent-color);
 }
 
 .timeline-calendar-filter-group-header .group-name {

@@ -359,15 +359,7 @@ export class CalendarManagementCard extends CardComponent {
             if (response.calendars) {
                 this.allCalendars = response.calendars;
 
-                // Auto-select the primary calendar only (if not selected)
-                if (this.selectedCalendarIds.length === 0) {
-                    const primaryCalendar = response.calendars.find(cal => cal.primary);
-                    if (primaryCalendar) {
-                        this.selectedCalendarIds = [primaryCalendar.id];
-                    }
-                }
-
-                // Add the primary calendar if not included in selection
+                // Ensure the primary calendar is always included in selection
                 const primaryCalendar = response.calendars.find(cal => cal.primary);
                 if (primaryCalendar && !this.selectedCalendarIds.includes(primaryCalendar.id)) {
                     this.selectedCalendarIds.unshift(primaryCalendar.id);
@@ -641,7 +633,7 @@ export class CalendarManagementCard extends CardComponent {
         assignBtn.className = 'calendar-group-assign-btn';
         assignBtn.title = window.getLocalizedMessage('assignToGroups') || 'Assign to groups';
         assignBtn.setAttribute('aria-label', assignBtn.title);
-        assignBtn.setAttribute('aria-haspopup', 'dialog');
+        assignBtn.setAttribute('aria-haspopup', 'true');
         assignBtn.innerHTML = '<i class="fas fa-folder"></i>';
 
         // The color indicator
@@ -754,6 +746,7 @@ export class CalendarManagementCard extends CardComponent {
             document.removeEventListener('click', this._popoverCloseHandler);
             this._popoverCloseHandler = null;
         }
+        this._popoverKeyHandler = null;
     }
 
     /**

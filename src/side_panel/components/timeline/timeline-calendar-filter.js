@@ -49,7 +49,7 @@ export class TimelineCalendarFilter extends Component {
         this.button.className = 'timeline-calendar-filter-btn';
         this.button.title = this.getMessage('calendarFilterTooltip');
         this.button.setAttribute('aria-label', this.getMessage('calendarFilterTooltip'));
-        this.button.setAttribute('aria-haspopup', 'dialog');
+        this.button.setAttribute('aria-haspopup', 'true');
         this.button.setAttribute('aria-expanded', 'false');
         this.button.type = 'button';
         this.button.innerHTML = '<i class="fa-solid fa-sliders"></i>';
@@ -71,6 +71,7 @@ export class TimelineCalendarFilter extends Component {
             e.stopPropagation();
             e.preventDefault();
             this._close();
+            this.button.focus();
         });
 
         // Escape key closes the dropdown
@@ -128,6 +129,14 @@ export class TimelineCalendarFilter extends Component {
      * @private
      */
     async _checkAuthAndVisibility() {
+        if (isDemoMode()) {
+            this.isAuthenticated = true;
+            if (this.element) {
+                this.element.style.display = '';
+            }
+            return;
+        }
+
         try {
             const response = await sendMessage({ action: 'checkGoogleAuth' });
             this.isAuthenticated = !!(response && response.authenticated);
@@ -167,6 +176,7 @@ export class TimelineCalendarFilter extends Component {
      */
     async _open() {
         if (this._isFetching) return;
+
         this.isOpen = true;
         this.backdrop.classList.add('open');
         this.dropdown.classList.add('open');
@@ -237,6 +247,7 @@ export class TimelineCalendarFilter extends Component {
         this.dropdown.innerHTML = '';
         const loading = document.createElement('div');
         loading.className = 'timeline-calendar-filter-status';
+        loading.setAttribute('role', 'status');
         loading.textContent = this.getMessage('calendarFilterLoading');
         this.dropdown.appendChild(loading);
 
@@ -250,8 +261,12 @@ export class TimelineCalendarFilter extends Component {
 
             if (response.error || !response.calendars) {
                 this.dropdown.innerHTML = '';
+                this.refreshBtn = null;
+                this.searchInput = null;
+                this.calendarList = null;
                 const errorEl = document.createElement('div');
                 errorEl.className = 'timeline-calendar-filter-status';
+                errorEl.setAttribute('role', 'status');
                 errorEl.textContent = this.getMessage('calendarFilterError');
                 this.dropdown.appendChild(errorEl);
                 return;
@@ -272,8 +287,12 @@ export class TimelineCalendarFilter extends Component {
             this._renderDropdownContent();
         } catch {
             this.dropdown.innerHTML = '';
+            this.refreshBtn = null;
+            this.searchInput = null;
+            this.calendarList = null;
             const errorEl = document.createElement('div');
             errorEl.className = 'timeline-calendar-filter-status';
+            errorEl.setAttribute('role', 'status');
             errorEl.textContent = this.getMessage('calendarFilterError');
             this.dropdown.appendChild(errorEl);
         }
