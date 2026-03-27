@@ -61,6 +61,12 @@
     /* Scrollbar */
     --side-calendar-scrollbar-thumb: #ccc;
     --side-calendar-scrollbar-track: transparent;
+    /* Modal button colors (light theme defaults) */
+    --side-calendar-modal-btn-bg: #fff;
+    --side-calendar-modal-btn-border: #dee2e6;
+    --side-calendar-modal-btn-text: #495057;
+    --side-calendar-modal-btn-hover-bg: #f0f0f0;
+    --side-calendar-modal-btn-hover-border: #adb5bd;
 }
 
 html {
@@ -463,10 +469,10 @@ body {
     align-items: center;
     gap: 4px;
     padding: 6px 16px;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--side-calendar-modal-btn-border);
     border-radius: 16px;
-    background: #fff;
-    color: #495057;
+    background: var(--side-calendar-modal-btn-bg);
+    color: var(--side-calendar-modal-btn-text);
     font-size: 0.9em;
     cursor: pointer;
     margin-top: 0;
@@ -474,8 +480,8 @@ body {
 }
 
 .modal-buttons button:hover {
-    background-color: #f0f0f0;
-    border-color: #adb5bd;
+    background-color: var(--side-calendar-modal-btn-hover-bg);
+    border-color: var(--side-calendar-modal-btn-hover-border);
 }
 
 #saveEventButton {
@@ -503,27 +509,27 @@ body {
 }
 
 #cancelEventButton {
-    background-color: #fff;
-    border-color: #dee2e6;
-    color: #495057;
+    background-color: var(--side-calendar-modal-btn-bg);
+    border-color: var(--side-calendar-modal-btn-border);
+    color: var(--side-calendar-modal-btn-text);
 }
 
 #cancelEventButton:hover,
 #cancelEventButton:focus {
-    background-color: #f0f0f0;
-    border-color: #adb5bd;
+    background-color: var(--side-calendar-modal-btn-hover-bg);
+    border-color: var(--side-calendar-modal-btn-hover-border);
 }
 
 /* Local event modal buttons - dark mode */
 [data-theme="dark"] .modal-buttons button {
-    border-color: #555;
-    background: var(--side-calendar-modal-bg);
-    color: #ccc;
+    border-color: var(--side-calendar-modal-btn-border);
+    background: var(--side-calendar-modal-btn-bg);
+    color: var(--side-calendar-modal-btn-text);
 }
 
 [data-theme="dark"] .modal-buttons button:hover {
-    background-color: #3a3a52;
-    border-color: #777;
+    background-color: var(--side-calendar-modal-btn-hover-bg);
+    border-color: var(--side-calendar-modal-btn-hover-border);
 }
 
 [data-theme="dark"] #saveEventButton {
@@ -551,15 +557,15 @@ body {
 }
 
 [data-theme="dark"] #cancelEventButton {
-    background: var(--side-calendar-modal-bg);
-    border-color: #555;
-    color: #ccc;
+    background: var(--side-calendar-modal-btn-bg);
+    border-color: var(--side-calendar-modal-btn-border);
+    color: var(--side-calendar-modal-btn-text);
 }
 
 [data-theme="dark"] #cancelEventButton:hover,
 [data-theme="dark"] #cancelEventButton:focus {
-    background-color: #3a3a52;
-    border-color: #777;
+    background-color: var(--side-calendar-modal-btn-hover-bg);
+    border-color: var(--side-calendar-modal-btn-hover-border);
 }
 
 /* Google event details calendar name */
@@ -624,7 +630,7 @@ body {
 
 .google-event-rsvp-label {
     font-size: 0.85em;
-    color: #6c757d;
+    color: var(--side-calendar-muted-text-color);
     margin-bottom: 6px;
 }
 
@@ -638,10 +644,10 @@ body {
     align-items: center;
     gap: 4px;
     padding: 4px 10px;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--side-calendar-modal-btn-border);
     border-radius: 16px;
-    background: #fff;
-    color: #495057;
+    background: var(--side-calendar-modal-btn-bg);
+    color: var(--side-calendar-modal-btn-text);
     font-size: 0.8em;
     cursor: pointer;
     margin-top: 0;
@@ -649,8 +655,8 @@ body {
 }
 
 .google-event-rsvp-btn:hover {
-    background-color: #f0f0f0;
-    border-color: #adb5bd;
+    background-color: var(--side-calendar-modal-btn-hover-bg);
+    border-color: var(--side-calendar-modal-btn-hover-border);
 }
 
 .google-event-rsvp-btn:disabled {
@@ -685,8 +691,8 @@ body {
 }
 
 .rsvp-feedback-success {
-    color: #2e7d32;
-    background-color: #e8f5e9;
+    color: var(--side-calendar-success-badge-text);
+    background-color: var(--side-calendar-success-badge-bg);
 }
 
 .rsvp-feedback-declined,
@@ -707,19 +713,15 @@ body {
 [data-theme="dark"] .attendee-status-default { color: #aaa; }
 
 /* RSVP dark mode */
-[data-theme="dark"] .google-event-rsvp-label {
-    color: var(--side-calendar-muted-text-color);
-}
-
 [data-theme="dark"] .google-event-rsvp-btn {
-    border-color: #555;
-    background: var(--side-calendar-modal-bg);
-    color: #ccc;
+    border-color: var(--side-calendar-modal-btn-border);
+    background: var(--side-calendar-modal-btn-bg);
+    color: var(--side-calendar-modal-btn-text);
 }
 
 [data-theme="dark"] .google-event-rsvp-btn:hover {
-    background-color: #3a3a52;
-    border-color: #777;
+    background-color: var(--side-calendar-modal-btn-hover-bg);
+    border-color: var(--side-calendar-modal-btn-hover-border);
 }
 
 [data-theme="dark"] .google-event-rsvp-btn.active {
@@ -1685,6 +1687,7 @@ body {
 .thin-scrollbar,
 .thin-scrollbar * {
     scrollbar-width: thin;
+    scrollbar-color: var(--side-calendar-scrollbar-thumb) var(--side-calendar-scrollbar-track);
 }
 
 .thin-scrollbar::-webkit-scrollbar,

@@ -338,7 +338,7 @@ export class CalendarManagementCard extends CardComponent {
             height: 12px;
             background-color: ${calendar.backgroundColor || '#ccc'};
             border-radius: 50%;
-            border: 1px solid #ddd;
+            border: 1px solid var(--side-calendar-border-color-light, #ddd);
         `;
 
         item.appendChild(checkbox);
