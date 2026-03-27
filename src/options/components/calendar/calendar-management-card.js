@@ -135,6 +135,7 @@ export class CalendarManagementCard extends CardComponent {
         this.searchInput.id = 'calendar-search';
         this.searchInput.className = 'form-control';
         this.searchInput.placeholder = window.getLocalizedMessage('searchCalendars') || 'Search calendars...';
+        this.searchInput.setAttribute('aria-label', window.getLocalizedMessage('searchCalendars') || 'Search calendars');
         this.searchInput.setAttribute('data-localize-placeholder', '__MSG_searchCalendars__');
 
         // The clear button
