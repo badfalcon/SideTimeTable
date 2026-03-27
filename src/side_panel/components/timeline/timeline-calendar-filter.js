@@ -291,7 +291,11 @@ export class TimelineCalendarFilter extends Component {
             const primary = this.calendars.find(c => c.primary);
             if (primary && !this.selectedIds.includes(primary.id)) {
                 this.selectedIds.unshift(primary.id);
-                await saveSelectedCalendars(this.selectedIds);
+                try {
+                    await saveSelectedCalendars(this.selectedIds);
+                } catch {
+                    // Non-critical: primary will be re-added on next open
+                }
             }
 
             if (!this.isOpen) return;

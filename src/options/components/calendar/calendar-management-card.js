@@ -1077,6 +1077,7 @@ export class CalendarManagementCard extends CardComponent {
             this._updateGroupCheckboxStates();
         } catch (error) {
             this.selectedCalendarIds = previousIds;
+            this.render();
             logError('Calendar selection save', error);
             this._showError(window.getLocalizedMessage('calendarSaveError') || 'Failed to save settings');
         }
