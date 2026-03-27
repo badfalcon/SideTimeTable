@@ -1480,5 +1480,21 @@
   "noGroupsAvailable": {
     "message": "グループがありません",
     "description": "割り当て可能なグループがない場合のメッセージ"
+  },
+  "errorLabel": {
+    "message": "エラー",
+    "description": "エラーメッセージのラベル接頭辞"
+  },
+  "calendarLoadError": {
+    "message": "カレンダーデータの読み込みに失敗しました",
+    "description": "カレンダーデータの読み込み失敗時のエラーメッセージ"
+  },
+  "calendarUpdateError": {
+    "message": "カレンダーの更新に失敗しました",
+    "description": "カレンダー更新失敗時のエラーメッセージ"
+  },
+  "calendarSaveError": {
+    "message": "設定の保存に失敗しました",
+    "description": "カレンダー設定の保存失敗時のエラーメッセージ"
   }
 }

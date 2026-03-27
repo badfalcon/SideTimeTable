@@ -501,7 +501,8 @@ body[data-theme="dark"] {
     transition: opacity 0.15s;
 }
 
-.calendar-group-header:hover .group-actions {
+.calendar-group-header:hover .group-actions,
+.calendar-group-header .group-actions:focus-within {
     opacity: 1;
 }
 
@@ -550,7 +551,8 @@ body[data-theme="dark"] {
     transition: opacity 0.15s;
 }
 
-.list-group-item:hover .calendar-group-assign-btn {
+.list-group-item:hover .calendar-group-assign-btn,
+.calendar-group-assign-btn:focus-visible {
     opacity: 1;
 }
 
@@ -610,4 +612,12 @@ body[data-theme="dark"] {
     background-color: #1e1e2e;
     color: #e0e0e0;
     border-color: #5b9dff;
+}
+
+[data-theme="dark"] .calendar-group-assign-popover .form-check-label {
+    color: #e0e0e0;
+}
+
+[data-theme="dark"] .calendar-group-assign-popover input[type="checkbox"] {
+    accent-color: #5b9dff;
 }

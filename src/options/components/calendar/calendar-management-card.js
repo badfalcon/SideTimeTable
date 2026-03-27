@@ -38,6 +38,18 @@ export class CalendarManagementCard extends CardComponent {
         // Active popover reference
         this._activePopover = null;
         this._popoverCloseHandler = null;
+
+        // Debounced save for collapse state
+        this._collapseSaveTimer = null;
+    }
+
+    destroy() {
+        this._closePopover();
+        if (this._collapseSaveTimer) {
+            clearTimeout(this._collapseSaveTimer);
+            this._collapseSaveTimer = null;
+        }
+        super.destroy();
     }
 
     createElement() {
@@ -296,7 +308,7 @@ export class CalendarManagementCard extends CardComponent {
             this.render();
         } catch (error) {
             logError('Calendar data loading', error);
-            this._showError('Failed to load calendar data');
+            this._showError(window.getLocalizedMessage('calendarLoadError') || 'Failed to load calendar data');
         }
     }
 
@@ -358,7 +370,7 @@ export class CalendarManagementCard extends CardComponent {
             }
         } catch (error) {
             logError('Calendar list update', error);
-            this._showError(`Failed to update calendars: ${error.message || 'Unknown error'}`);
+            this._showError(window.getLocalizedMessage('calendarUpdateError') || `Failed to update calendars: ${error.message || 'Unknown error'}`);
         } finally {
             this._setLoading(false);
         }
@@ -425,22 +437,8 @@ export class CalendarManagementCard extends CardComponent {
                 return a.summary.localeCompare(b.summary);
             });
 
-        if (ungroupedCalendars.length > 0 || this.calendarGroups.length > 0) {
-            const ungroupedSection = this._createUngroupedSection(ungroupedCalendars, searchTerm);
-            this.calendarList.appendChild(ungroupedSection);
-        } else {
-            // No groups defined, render flat list (backward compatible)
-            const sortedCalendars = [...filteredCalendars].sort((a, b) => {
-                if (a.primary && !b.primary) return -1;
-                if (!a.primary && b.primary) return 1;
-                return a.summary.localeCompare(b.summary);
-            });
-            sortedCalendars.forEach(calendar => {
-                const isSelected = this.selectedCalendarIds.includes(calendar.id);
-                const item = this._createCalendarItem(calendar, isSelected);
-                this.calendarList.appendChild(item);
-            });
-        }
+        const ungroupedSection = this._createUngroupedSection(ungroupedCalendars, searchTerm);
+        this.calendarList.appendChild(ungroupedSection);
 
         this._updateSearchUI(searchTerm);
     }
@@ -506,9 +504,12 @@ export class CalendarManagementCard extends CardComponent {
             checkbox.indeterminate = true;
         }
 
+        checkbox.setAttribute('aria-label', group.name);
+
         // Collapse icon
         const collapseIcon = document.createElement('i');
         collapseIcon.className = `fas fa-chevron-down group-collapse-icon${group.collapsed ? ' collapsed' : ''}`;
+        collapseIcon.setAttribute('aria-hidden', 'true');
 
         // Group name
         const nameSpan = document.createElement('span');
@@ -538,6 +539,7 @@ export class CalendarManagementCard extends CardComponent {
 
         header.setAttribute('tabindex', '0');
         header.setAttribute('role', 'button');
+        header.setAttribute('aria-expanded', group.collapsed ? 'false' : 'true');
         header.appendChild(checkbox);
         header.appendChild(collapseIcon);
         header.appendChild(nameSpan);
@@ -561,11 +563,15 @@ export class CalendarManagementCard extends CardComponent {
 
         const collapseIcon = document.createElement('i');
         collapseIcon.className = 'fas fa-chevron-down group-collapse-icon';
+        collapseIcon.setAttribute('aria-hidden', 'true');
 
         const nameSpan = document.createElement('span');
         nameSpan.className = 'group-name';
         nameSpan.textContent = window.getLocalizedMessage('ungrouped') || 'Ungrouped';
 
+        header.setAttribute('tabindex', '0');
+        header.setAttribute('role', 'button');
+        header.setAttribute('aria-expanded', 'true');
         header.appendChild(collapseIcon);
         header.appendChild(nameSpan);
         section.appendChild(header);
@@ -927,13 +933,27 @@ export class CalendarManagementCard extends CardComponent {
             const icon = header.querySelector('.group-collapse-icon');
             if (body) body.classList.toggle('collapsed');
             if (icon) icon.classList.toggle('collapsed');
+            header.setAttribute('aria-expanded', group.collapsed ? 'false' : 'true');
         }
 
-        try {
-            await saveCalendarGroups(this.calendarGroups);
-        } catch (error) {
-            logError('Group collapse save', error);
+        this._debouncedSaveGroups();
+    }
+
+    /**
+     * Debounced save for calendar groups (used for collapse state)
+     * @private
+     */
+    _debouncedSaveGroups() {
+        if (this._collapseSaveTimer) {
+            clearTimeout(this._collapseSaveTimer);
         }
+        this._collapseSaveTimer = setTimeout(async () => {
+            try {
+                await saveCalendarGroups(this.calendarGroups);
+            } catch (error) {
+                logError('Group save (debounced)', error);
+            }
+        }, 1000);
     }
 
     /**
@@ -983,7 +1003,7 @@ export class CalendarManagementCard extends CardComponent {
             this._updateGroupCheckboxStates();
         } catch (error) {
             logError('Calendar selection save', error);
-            this._showError('Failed to save settings');
+            this._showError(window.getLocalizedMessage('calendarSaveError') || 'Failed to save settings');
         }
     }
 
@@ -1047,7 +1067,11 @@ export class CalendarManagementCard extends CardComponent {
      */
     _showNoSearchResults() {
         const noResultsMsg = window.getLocalizedMessage('noSearchResults') || 'No search results found';
-        this.calendarList.innerHTML = `<div class="text-muted text-center p-3">${noResultsMsg}</div>`;
+        this.calendarList.innerHTML = '';
+        const div = document.createElement('div');
+        div.className = 'text-muted text-center p-3';
+        div.textContent = noResultsMsg;
+        this.calendarList.appendChild(div);
         this.noCalendarsMsg.style.display = 'none';
     }
 
@@ -1076,10 +1100,17 @@ export class CalendarManagementCard extends CardComponent {
     _showError(message) {
         const errorDiv = document.createElement('div');
         errorDiv.className = 'alert alert-danger alert-dismissible fade show';
-        errorDiv.innerHTML = `
-            <strong>Error:</strong> ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
+
+        const strong = document.createElement('strong');
+        strong.textContent = (window.getLocalizedMessage('errorLabel') || 'Error') + ': ';
+        errorDiv.appendChild(strong);
+        errorDiv.appendChild(document.createTextNode(message));
+
+        const closeBtn = document.createElement('button');
+        closeBtn.type = 'button';
+        closeBtn.className = 'btn-close';
+        closeBtn.setAttribute('data-bs-dismiss', 'alert');
+        errorDiv.appendChild(closeBtn);
 
         if (this.calendarList?.parentElement) {
             this.calendarList.parentElement.insertBefore(errorDiv, this.calendarList);

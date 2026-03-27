@@ -58,5 +58,22 @@ export function saveCalendarGroups(calendarGroups) {
  */
 export async function loadCalendarGroups() {
     const result = await StorageHelper.get(['calendarGroups'], { calendarGroups: [] });
-    return result.calendarGroups || [];
+    return sanitizeCalendarGroups(result.calendarGroups);
+}
+
+/**
+ * Sanitize calendar groups loaded from storage to prevent crashes from malformed data
+ * @param {*} raw - Raw value from storage
+ * @returns {Array<Object>} Validated array of group objects
+ */
+function sanitizeCalendarGroups(raw) {
+    if (!Array.isArray(raw)) return [];
+    return raw
+        .filter(g => g && typeof g === 'object')
+        .map(g => ({
+            id: typeof g.id === 'string' ? g.id : `group_${Date.now()}`,
+            name: (typeof g.name === 'string' ? g.name : 'Group').slice(0, 50),
+            calendarIds: Array.isArray(g.calendarIds) ? g.calendarIds.filter(id => typeof id === 'string') : [],
+            collapsed: typeof g.collapsed === 'boolean' ? g.collapsed : false
+        }));
 }

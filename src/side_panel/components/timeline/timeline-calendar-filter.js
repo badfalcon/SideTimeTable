@@ -6,6 +6,7 @@
 import { Component } from '../base/component.js';
 import { sendMessage } from '../../../lib/chrome-messaging.js';
 import { loadSelectedCalendars, saveSelectedCalendars, loadCalendarGroups } from '../../../lib/settings-storage.js';
+import { isDemoMode, getDemoCalendarGroups } from '../../../lib/demo-data.js';
 
 export class TimelineCalendarFilter extends Component {
     constructor(options = {}) {
@@ -46,6 +47,9 @@ export class TimelineCalendarFilter extends Component {
         this.button = document.createElement('button');
         this.button.className = 'timeline-calendar-filter-btn';
         this.button.title = this.getMessage('calendarFilterTooltip');
+        this.button.setAttribute('aria-label', this.getMessage('calendarFilterTooltip'));
+        this.button.setAttribute('aria-haspopup', 'true');
+        this.button.setAttribute('aria-expanded', 'false');
         this.button.type = 'button';
         this.button.innerHTML = '<i class="fa-solid fa-sliders"></i>';
         this.addEventListener(this.button, 'click', (e) => {
@@ -151,17 +155,24 @@ export class TimelineCalendarFilter extends Component {
      * @private
      */
     async _open() {
+        if (this._isFetching) return;
         this.isOpen = true;
         this.backdrop.classList.add('open');
         this.dropdown.classList.add('open');
+        this.button.setAttribute('aria-expanded', 'true');
 
         if (!this.hasFetched) {
-            await this._fetchCalendars();
+            this._isFetching = true;
+            try {
+                await this._fetchCalendars();
+            } finally {
+                this._isFetching = false;
+            }
         } else {
             // Refresh selected state and groups each time
             const [selectedIds, groups] = await Promise.all([
                 loadSelectedCalendars(),
-                loadCalendarGroups()
+                isDemoMode() ? getDemoCalendarGroups() : loadCalendarGroups()
             ]);
             this.selectedIds = selectedIds;
             this.calendarGroups = Array.isArray(groups) ? groups : [];
@@ -183,6 +194,7 @@ export class TimelineCalendarFilter extends Component {
         this.isOpen = false;
         this.backdrop.classList.remove('open');
         this.dropdown.classList.remove('open');
+        this.button.setAttribute('aria-expanded', 'false');
         this.searchTerm = '';
     }
 
@@ -202,7 +214,7 @@ export class TimelineCalendarFilter extends Component {
             const [response, selectedIds, groups] = await Promise.all([
                 sendMessage({ action: 'getCalendarList', requestId }),
                 loadSelectedCalendars(),
-                loadCalendarGroups()
+                isDemoMode() ? getDemoCalendarGroups() : loadCalendarGroups()
             ]);
 
             if (response.error || !response.calendars) {
@@ -366,8 +378,13 @@ export class TimelineCalendarFilter extends Component {
         header.className = 'timeline-calendar-filter-group-header';
         header.dataset.groupId = group.id;
 
+        header.setAttribute('tabindex', '0');
+        header.setAttribute('role', 'button');
+        header.setAttribute('aria-expanded', 'true');
+
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
+        checkbox.setAttribute('aria-label', group.name);
 
         // Determine check state
         const selectedCount = calendars.filter(cal => this.selectedIds.includes(cal.id)).length;
@@ -391,16 +408,30 @@ export class TimelineCalendarFilter extends Component {
 
         const collapseIcon = document.createElement('i');
         collapseIcon.className = 'fa-solid fa-chevron-down group-collapse-icon';
+        collapseIcon.setAttribute('aria-hidden', 'true');
 
         header.appendChild(checkbox);
         header.appendChild(nameSpan);
         header.appendChild(collapseIcon);
 
-        header.addEventListener('click', (e) => {
-            if (e.target === checkbox) return;
+        const toggleCollapse = () => {
             const body = header.nextElementSibling;
             if (body) body.classList.toggle('collapsed');
             collapseIcon.classList.toggle('collapsed');
+            const expanded = !collapseIcon.classList.contains('collapsed');
+            header.setAttribute('aria-expanded', String(expanded));
+        };
+
+        header.addEventListener('click', (e) => {
+            if (e.target === checkbox) return;
+            toggleCollapse();
+        });
+
+        header.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleCollapse();
+            }
         });
 
         this.calendarList.appendChild(header);
@@ -429,6 +460,9 @@ export class TimelineCalendarFilter extends Component {
     _renderUngroupedSection(calendars) {
         const header = document.createElement('div');
         header.className = 'timeline-calendar-filter-group-header';
+        header.setAttribute('tabindex', '0');
+        header.setAttribute('role', 'button');
+        header.setAttribute('aria-expanded', 'true');
 
         const nameSpan = document.createElement('span');
         nameSpan.className = 'group-name';
@@ -436,14 +470,26 @@ export class TimelineCalendarFilter extends Component {
 
         const collapseIcon = document.createElement('i');
         collapseIcon.className = 'fa-solid fa-chevron-down group-collapse-icon';
+        collapseIcon.setAttribute('aria-hidden', 'true');
 
         header.appendChild(nameSpan);
         header.appendChild(collapseIcon);
 
-        header.addEventListener('click', () => {
+        const toggleCollapse = () => {
             const body = header.nextElementSibling;
             if (body) body.classList.toggle('collapsed');
             collapseIcon.classList.toggle('collapsed');
+            const expanded = !collapseIcon.classList.contains('collapsed');
+            header.setAttribute('aria-expanded', String(expanded));
+        };
+
+        header.addEventListener('click', () => toggleCollapse());
+
+        header.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleCollapse();
+            }
         });
 
         this.calendarList.appendChild(header);

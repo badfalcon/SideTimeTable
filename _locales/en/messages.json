@@ -1480,5 +1480,21 @@
   "noGroupsAvailable": {
     "message": "No groups available",
     "description": "Message shown when no groups exist for assignment"
+  },
+  "errorLabel": {
+    "message": "Error",
+    "description": "Label prefix for error messages"
+  },
+  "calendarLoadError": {
+    "message": "Failed to load calendar data",
+    "description": "Error message when calendar data fails to load"
+  },
+  "calendarUpdateError": {
+    "message": "Failed to update calendars",
+    "description": "Error message when calendar update fails"
+  },
+  "calendarSaveError": {
+    "message": "Failed to save settings",
+    "description": "Error message when calendar settings fail to save"
   }
 }
