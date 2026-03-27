@@ -58,6 +58,9 @@
     --side-calendar-success-badge-bg: #e8f5e9;
     --side-calendar-success-badge-border: #a5d6a7;
     --side-calendar-success-badge-text: #2e7d32;
+    /* Scrollbar */
+    --side-calendar-scrollbar-thumb: #ccc;
+    --side-calendar-scrollbar-track: transparent;
 }
 
 html {
@@ -72,6 +75,7 @@ body {
     overflow: hidden;
     height: 100%;
     margin: 0;
+    scrollbar-color: var(--side-calendar-scrollbar-thumb) var(--side-calendar-scrollbar-track);
 }
 
 #side-panel-container {
@@ -1690,12 +1694,12 @@ body {
 
 .thin-scrollbar::-webkit-scrollbar-track,
 .thin-scrollbar *::-webkit-scrollbar-track {
-    background: transparent;
+    background: var(--side-calendar-scrollbar-track);
 }
 
 .thin-scrollbar::-webkit-scrollbar-thumb,
 .thin-scrollbar *::-webkit-scrollbar-thumb {
-    background: var(--side-calendar-border-color);
+    background: var(--side-calendar-scrollbar-thumb);
     border-radius: 2px;
 }
 
