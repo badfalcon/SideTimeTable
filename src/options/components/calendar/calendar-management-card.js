@@ -591,9 +591,15 @@ export class CalendarManagementCard extends CardComponent {
         nameSpan.className = 'group-name';
         nameSpan.textContent = window.getLocalizedMessage('ungrouped') || 'Ungrouped';
 
+        // Spacer to align with grouped headers that have a checkbox
+        const spacer = document.createElement('span');
+        spacer.className = 'group-checkbox-spacer';
+        spacer.setAttribute('aria-hidden', 'true');
+
         header.setAttribute('role', 'button');
         header.setAttribute('tabindex', '0');
         header.setAttribute('aria-expanded', 'true');
+        header.appendChild(spacer);
         header.appendChild(collapseIcon);
         header.appendChild(nameSpan);
         section.appendChild(header);

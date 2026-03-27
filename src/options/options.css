@@ -521,8 +521,16 @@ body[data-theme="dark"] {
     transform: rotate(-90deg);
 }
 
+/* Spacer to match checkbox width in ungrouped header */
+.calendar-group-header .group-checkbox-spacer {
+    display: inline-block;
+    width: 1em;
+    flex-shrink: 0;
+}
+
 .calendar-group-body {
     overflow: hidden;
+    padding-left: 1.25rem;
 }
 
 .calendar-group-body.collapsed {
