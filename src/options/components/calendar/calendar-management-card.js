@@ -47,6 +47,7 @@ export class CalendarManagementCard extends CardComponent {
         // Create-group modal references
         this._createGroupModalOverlay = null;
         this._createGroupModalKeyHandler = null;
+        this._isSubmittingGroup = false;
     }
 
     destroy() {
@@ -840,6 +841,7 @@ export class CalendarManagementCard extends CardComponent {
         const modal = document.createElement('div');
         modal.className = 'create-group-modal';
         modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
         modal.setAttribute('aria-label', window.getLocalizedMessage('createGroupTitle') || 'Create Group');
 
         // Header
@@ -862,13 +864,14 @@ export class CalendarManagementCard extends CardComponent {
         // Group name input
         const nameLabel = document.createElement('label');
         nameLabel.className = 'form-label fw-bold';
+        nameLabel.htmlFor = 'create-group-name-input';
         nameLabel.textContent = window.getLocalizedMessage('groupNameLabel') || 'Group Name';
         const nameInput = document.createElement('input');
         nameInput.type = 'text';
+        nameInput.id = 'create-group-name-input';
         nameInput.className = 'form-control mb-3';
         nameInput.placeholder = window.getLocalizedMessage('groupNamePlaceholder') || 'Enter group name';
         nameInput.maxLength = 50;
-        nameInput.setAttribute('aria-label', window.getLocalizedMessage('groupNameLabel') || 'Group Name');
 
         body.appendChild(nameLabel);
         body.appendChild(nameInput);
@@ -959,10 +962,30 @@ export class CalendarManagementCard extends CardComponent {
         modal.appendChild(footer);
         overlay.appendChild(modal);
 
-        // Escape key handler
+        // Keyboard handler: Escape to close + focus trap
         this._createGroupModalKeyHandler = (e) => {
             if (e.key === 'Escape') {
                 this._closeCreateGroupModal();
+                return;
+            }
+            if (e.key === 'Tab') {
+                const focusable = modal.querySelectorAll(
+                    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+                );
+                if (focusable.length === 0) return;
+                const first = focusable[0];
+                const last = focusable[focusable.length - 1];
+                if (e.shiftKey) {
+                    if (document.activeElement === first) {
+                        e.preventDefault();
+                        last.focus();
+                    }
+                } else {
+                    if (document.activeElement === last) {
+                        e.preventDefault();
+                        first.focus();
+                    }
+                }
             }
         };
         document.addEventListener('keydown', this._createGroupModalKeyHandler);
@@ -994,6 +1017,9 @@ export class CalendarManagementCard extends CardComponent {
      * @private
      */
     async _submitCreateGroup(name, checkboxes) {
+        if (this._isSubmittingGroup) return;
+        this._isSubmittingGroup = true;
+
         const groupName = name || (window.getLocalizedMessage('newGroupName') || 'New Group');
         const selectedCalIds = checkboxes
             .filter(cb => cb.checked)
@@ -1015,6 +1041,8 @@ export class CalendarManagementCard extends CardComponent {
         } catch (error) {
             this.calendarGroups = this.calendarGroups.filter(g => g.id !== groupId);
             logError('Add group', error);
+        } finally {
+            this._isSubmittingGroup = false;
         }
     }
 
@@ -1030,6 +1058,10 @@ export class CalendarManagementCard extends CardComponent {
         if (this._createGroupModalOverlay) {
             this._createGroupModalOverlay.remove();
             this._createGroupModalOverlay = null;
+        }
+        // Restore focus to the trigger button
+        if (this.addGroupBtn) {
+            this.addGroupBtn.focus();
         }
     }
 
