@@ -453,8 +453,10 @@ export class CalendarManagementCard extends CardComponent {
                 return (a.summary || '').localeCompare(b.summary || '');
             });
 
-        const ungroupedSection = this._createUngroupedSection(ungroupedCalendars, searchTerm);
-        this.calendarList.appendChild(ungroupedSection);
+        if (ungroupedCalendars.length > 0) {
+            const ungroupedSection = this._createUngroupedSection(ungroupedCalendars, searchTerm);
+            this.calendarList.appendChild(ungroupedSection);
+        }
 
         this._updateSearchUI(searchTerm);
     }
