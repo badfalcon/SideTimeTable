@@ -166,10 +166,13 @@ export class CalendarManagementCard extends CardComponent {
         this.addGroupBtn = document.createElement('button');
         this.addGroupBtn.className = 'btn btn-outline-secondary btn-sm';
         this.addGroupBtn.type = 'button';
-        this.addGroupBtn.innerHTML = `
-            <i class="fas fa-folder-plus me-1"></i>
-            <span data-localize="__MSG_addGroup__">${window.getLocalizedMessage('addGroup') || 'Add Group'}</span>
-        `;
+        const addGroupIcon = document.createElement('i');
+        addGroupIcon.className = 'fas fa-folder-plus me-1';
+        const addGroupLabel = document.createElement('span');
+        addGroupLabel.setAttribute('data-localize', '__MSG_addGroup__');
+        addGroupLabel.textContent = window.getLocalizedMessage('addGroup') || 'Add Group';
+        this.addGroupBtn.appendChild(addGroupIcon);
+        this.addGroupBtn.appendChild(addGroupLabel);
 
         div.appendChild(this.addGroupBtn);
         return div;
@@ -485,7 +488,7 @@ export class CalendarManagementCard extends CardComponent {
      * Create a group header
      * @private
      */
-    _createGroupHeader(group, calendarsInGroup) {
+    _createGroupHeader(group, _calendarsInGroup) {
         const header = document.createElement('div');
         header.className = 'calendar-group-header';
         header.dataset.groupId = group.id;
@@ -495,14 +498,17 @@ export class CalendarManagementCard extends CardComponent {
         checkbox.type = 'checkbox';
         checkbox.className = 'form-check-input';
 
-        // Determine check state
-        const selectedCount = calendarsInGroup.filter(
-            cal => this.selectedCalendarIds.includes(cal.id)
+        // Determine check state using full group membership (not search-filtered view)
+        const fullGroupIds = group.calendarIds.filter(id =>
+            this.allCalendars.some(cal => cal.id === id)
+        );
+        const selectedCount = fullGroupIds.filter(
+            id => this.selectedCalendarIds.includes(id)
         ).length;
 
-        if (selectedCount === 0) {
+        if (selectedCount === 0 || fullGroupIds.length === 0) {
             checkbox.checked = false;
-        } else if (selectedCount === calendarsInGroup.length) {
+        } else if (selectedCount === fullGroupIds.length) {
             checkbox.checked = true;
         } else {
             checkbox.checked = false;

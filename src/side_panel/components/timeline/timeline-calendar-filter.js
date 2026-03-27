@@ -168,6 +168,7 @@ export class TimelineCalendarFilter extends Component {
             } finally {
                 this._isFetching = false;
             }
+            if (!this.isOpen) return;
         } else {
             // Refresh selected state and groups each time
             this._isFetching = true;
@@ -176,6 +177,7 @@ export class TimelineCalendarFilter extends Component {
                     loadSelectedCalendars(),
                     isDemoMode() ? getDemoCalendarGroups() : loadCalendarGroups()
                 ]);
+                if (!this.isOpen) return;
                 this.selectedIds = selectedIds;
                 this.calendarGroups = Array.isArray(groups) ? groups : [];
                 // Ensure primary calendar stays in selection
@@ -393,11 +395,13 @@ export class TimelineCalendarFilter extends Component {
         checkbox.type = 'checkbox';
         checkbox.setAttribute('aria-label', group.name);
 
-        // Determine check state
-        const selectedCount = calendars.filter(cal => this.selectedIds.includes(cal.id)).length;
-        if (selectedCount === 0) {
+        // Determine check state using full group membership (not search-filtered view)
+        const calendarMap = new Map(this.calendars.map(c => [c.id, c]));
+        const fullGroupIds = group.calendarIds.filter(id => calendarMap.has(id));
+        const selectedCount = fullGroupIds.filter(id => this.selectedIds.includes(id)).length;
+        if (selectedCount === 0 || fullGroupIds.length === 0) {
             checkbox.checked = false;
-        } else if (selectedCount === calendars.length) {
+        } else if (selectedCount === fullGroupIds.length) {
             checkbox.checked = true;
         } else {
             checkbox.checked = false;
