@@ -905,6 +905,14 @@ export class CalendarManagementCard extends CardComponent {
         calLabel.textContent = window.getLocalizedMessage('selectCalendarsLabel') || 'Select Calendars';
         body.appendChild(calLabel);
 
+        // Search input for calendar filtering
+        const searchInput = document.createElement('input');
+        searchInput.type = 'text';
+        searchInput.className = 'form-control form-control-sm mb-2';
+        searchInput.placeholder = window.getLocalizedMessage('searchCalendars') || 'Search calendars...';
+        searchInput.setAttribute('aria-label', window.getLocalizedMessage('searchCalendars') || 'Search calendars');
+        body.appendChild(searchInput);
+
         const calList = document.createElement('div');
         calList.className = 'create-group-modal-calendar-list';
 
@@ -914,6 +922,7 @@ export class CalendarManagementCard extends CardComponent {
             .sort((a, b) => (a.summary || '').localeCompare(b.summary || ''));
 
         const checkboxes = [];
+        const calItems = [];
         if (sortedCalendars.length === 0) {
             const empty = document.createElement('div');
             empty.className = 'text-muted p-2';
@@ -953,9 +962,18 @@ export class CalendarManagementCard extends CardComponent {
                 wrapper.appendChild(label);
                 calList.appendChild(wrapper);
                 checkboxes.push(checkbox);
+                calItems.push({ element: wrapper, name: (cal.summary || cal.id).toLowerCase() });
             }
         }
         body.appendChild(calList);
+
+        // Filter calendar items as user types
+        searchInput.addEventListener('input', () => {
+            const term = searchInput.value.toLowerCase().trim();
+            for (const item of calItems) {
+                item.element.style.display = (!term || item.name.includes(term)) ? '' : 'none';
+            }
+        });
 
         // Footer
         const footer = document.createElement('div');
