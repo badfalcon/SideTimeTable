@@ -13,7 +13,9 @@
     "test": "jest",
     "test:coverage": "jest --coverage",
     "lint": "eslint src/",
-    "lint:fix": "eslint src/ --fix"
+    "lint:fix": "eslint src/ --fix",
+    "prepare-release": "node scripts/prepare-release.js",
+    "validate-version": "node scripts/validate-version.js"
   },
   "repository": {
     "type": "git",
@@ -28,6 +30,7 @@
   },
   "homepage": "https://github.com/badfalcon/SideTimeTable#readme",
   "devDependencies": {
+    "@anthropic-ai/sdk": "^0.80.0",
     "@babel/cli": "^7.28.3",
     "@babel/core": "^7.28.4",
     "@babel/preset-env": "^7.29.2",
