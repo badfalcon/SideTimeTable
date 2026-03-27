@@ -850,6 +850,7 @@ export class CalendarManagementCard extends CardComponent {
      * @private
      */
     _showGroupModal(editingGroup) {
+        this._groupModalTrigger = document.activeElement;
         this._closeGroupModal();
         this._isSubmittingGroup = false;
 
@@ -1190,8 +1191,14 @@ export class CalendarManagementCard extends CardComponent {
             this._createGroupModalOverlay.remove();
             this._createGroupModalOverlay = null;
         }
-        if (wasOpen && this.addGroupBtn && this.addGroupBtn.isConnected) {
-            this.addGroupBtn.focus();
+        if (wasOpen) {
+            const trigger = this._groupModalTrigger;
+            this._groupModalTrigger = null;
+            if (trigger && trigger.isConnected) {
+                trigger.focus();
+            } else if (this.addGroupBtn && this.addGroupBtn.isConnected) {
+                this.addGroupBtn.focus();
+            }
         }
     }
 
