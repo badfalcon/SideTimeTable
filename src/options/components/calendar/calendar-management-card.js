@@ -712,6 +712,22 @@ export class CalendarManagementCard extends CardComponent {
         }
 
         this._activePopover = popover;
+
+        // Escape key closes popover
+        this._popoverKeyHandler = (e) => {
+            if (e.key === 'Escape') {
+                this._closePopover();
+                anchorElement.focus();
+            }
+        };
+        popover.addEventListener('keydown', this._popoverKeyHandler);
+
+        // Focus first checkbox in popover
+        const firstCheckbox = popover.querySelector('input[type="checkbox"]');
+        if (firstCheckbox) {
+            setTimeout(() => firstCheckbox.focus(), 0);
+        }
+
         this._popoverCloseHandler = (e) => {
             if (!this._activePopover) return;
             if (!popover.contains(e.target) && !anchorElement.contains(e.target)) {
@@ -773,12 +789,13 @@ export class CalendarManagementCard extends CardComponent {
         const groupId = `group_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
         const groupName = window.getLocalizedMessage('newGroupName') || 'New Group';
 
-        this.calendarGroups.push({
+        const newGroup = {
             id: groupId,
             name: groupName,
             calendarIds: [],
             collapsed: false
-        });
+        };
+        this.calendarGroups.push(newGroup);
 
         try {
             await saveCalendarGroups(this.calendarGroups);
@@ -786,6 +803,8 @@ export class CalendarManagementCard extends CardComponent {
             // Immediately start editing the new group name
             this._handleStartRenameGroup(groupId);
         } catch (error) {
+            // Rollback on save failure
+            this.calendarGroups = this.calendarGroups.filter(g => g.id !== groupId);
             logError('Add group', error);
         }
     }
@@ -799,12 +818,15 @@ export class CalendarManagementCard extends CardComponent {
             || 'Delete this group? Calendars will be moved to Ungrouped.';
         if (!confirm(confirmMsg)) return;
 
+        const previousGroups = [...this.calendarGroups];
         this.calendarGroups = this.calendarGroups.filter(g => g.id !== groupId);
 
         try {
             await saveCalendarGroups(this.calendarGroups);
             this.render();
         } catch (error) {
+            // Rollback on save failure
+            this.calendarGroups = previousGroups;
             logError('Delete group', error);
         }
     }
@@ -814,7 +836,7 @@ export class CalendarManagementCard extends CardComponent {
      * @private
      */
     _handleStartRenameGroup(groupId) {
-        const header = this.calendarList.querySelector(`.calendar-group-header[data-group-id="${groupId}"]`);
+        const header = this.calendarList.querySelector(`.calendar-group-header[data-group-id="${CSS.escape(groupId)}"]`);
         if (!header) return;
 
         const nameSpan = header.querySelector('.group-name');
@@ -946,7 +968,7 @@ export class CalendarManagementCard extends CardComponent {
         group.collapsed = !group.collapsed;
 
         // Update UI directly without full re-render
-        const header = this.calendarList.querySelector(`.calendar-group-header[data-group-id="${groupId}"]`);
+        const header = this.calendarList.querySelector(`.calendar-group-header[data-group-id="${CSS.escape(groupId)}"]`);
         if (header) {
             const body = header.nextElementSibling;
             const icon = header.querySelector('.group-collapse-icon');
@@ -1037,7 +1059,7 @@ export class CalendarManagementCard extends CardComponent {
         }
 
         for (const group of this.calendarGroups) {
-            const header = this.calendarList.querySelector(`.calendar-group-header[data-group-id="${group.id}"]`);
+            const header = this.calendarList.querySelector(`.calendar-group-header[data-group-id="${CSS.escape(group.id)}"]`);
             if (!header) continue;
 
             const checkbox = header.querySelector('input[type="checkbox"]');
@@ -1142,6 +1164,6 @@ export class CalendarManagementCard extends CardComponent {
      * @private
      */
     _validateSelectedIds(ids) {
-        return Array.isArray(ids) ? ids : [];
+        return Array.isArray(ids) ? ids.filter(id => typeof id === 'string') : [];
     }
 }

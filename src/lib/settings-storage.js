@@ -40,7 +40,8 @@ export function saveSelectedCalendars(selectedCalendars) {
  */
 export async function loadSelectedCalendars() {
     const result = await StorageHelper.get(['selectedCalendars'], { selectedCalendars: [] });
-    return result.selectedCalendars || [];
+    const raw = result.selectedCalendars;
+    return Array.isArray(raw) ? raw.filter(id => typeof id === 'string') : [];
 }
 
 /**

@@ -35,6 +35,7 @@ export class TimelineCalendarFilter extends Component {
         // Bound handlers
         this._boundOnScroll = null;
         this._rafId = null;
+        this._isFetching = false;
     }
 
     createElement() {
@@ -70,6 +71,14 @@ export class TimelineCalendarFilter extends Component {
             e.stopPropagation();
             e.preventDefault();
             this._close();
+        });
+
+        // Escape key closes the dropdown
+        this.addEventListener(this.dropdown, 'keydown', (e) => {
+            if (e.key === 'Escape') {
+                this._close();
+                this.button.focus();
+            }
         });
 
         wrapper.appendChild(this.button);
@@ -171,6 +180,7 @@ export class TimelineCalendarFilter extends Component {
                 this._isFetching = false;
             }
             if (!this.isOpen) return;
+            this._focusDropdown();
         } else {
             // Refresh selected state and groups each time
             this._isFetching = true;
@@ -188,10 +198,22 @@ export class TimelineCalendarFilter extends Component {
                     this.selectedIds.unshift(primary.id);
                     await saveSelectedCalendars(this.selectedIds);
                 }
+                if (!this.isOpen) return;
                 this._renderDropdownContent();
+                this._focusDropdown();
             } finally {
                 this._isFetching = false;
             }
+        }
+    }
+
+    /**
+     * Focus the search input when dropdown opens
+     * @private
+     */
+    _focusDropdown() {
+        if (this.searchInput) {
+            this.searchInput.focus();
         }
     }
 
@@ -595,7 +617,11 @@ export class TimelineCalendarFilter extends Component {
             });
         }
 
-        await saveSelectedCalendars(this.selectedIds);
+        try {
+            await saveSelectedCalendars(this.selectedIds);
+        } catch {
+            // Storage save failed - continue with UI update to avoid stale state
+        }
         this._renderCalendarList();
 
         if (this.onCalendarChange) {
@@ -634,7 +660,11 @@ export class TimelineCalendarFilter extends Component {
             this.selectedIds = this.selectedIds.filter(id => id !== calendarId);
         }
 
-        await saveSelectedCalendars(this.selectedIds);
+        try {
+            await saveSelectedCalendars(this.selectedIds);
+        } catch {
+            // Storage save failed - continue with UI update
+        }
 
         // Update group header checkbox states
         this._updateGroupCheckboxStates();
@@ -654,7 +684,7 @@ export class TimelineCalendarFilter extends Component {
         const calendarMap = new Map(this.calendars.map(c => [c.id, c]));
 
         for (const group of this.calendarGroups) {
-            const header = this.calendarList.querySelector(`.timeline-calendar-filter-group-header[data-group-id="${group.id}"]`);
+            const header = this.calendarList.querySelector(`.timeline-calendar-filter-group-header[data-group-id="${CSS.escape(group.id)}"]`);
             if (!header) continue;
 
             const checkbox = header.querySelector('input[type="checkbox"]');

@@ -471,8 +471,8 @@ body[data-theme="dark"] {
     display: flex;
     align-items: center;
     padding: 0.5rem 0.75rem;
-    background-color: #f0f0f0;
-    border-bottom: 1px solid #dee2e6;
+    background-color: var(--side-calendar-subtle-bg, #f0f0f0);
+    border-bottom: 1px solid var(--side-calendar-border-color, #dee2e6);
     cursor: pointer;
     user-select: none;
     gap: 0.5rem;
@@ -488,10 +488,12 @@ body[data-theme="dark"] {
     flex-grow: 1;
     font-weight: 600;
     font-size: 0.875rem;
-    border: 1px solid #0d6efd;
+    border: 1px solid var(--side-calendar-input-border, #0d6efd);
     border-radius: 0.25rem;
     padding: 0.125rem 0.375rem;
     outline: none;
+    background-color: var(--side-calendar-input-bg, #fff);
+    color: inherit;
 }
 
 .calendar-group-header .group-actions {
@@ -511,13 +513,13 @@ body[data-theme="dark"] {
     border: none;
     padding: 0.125rem 0.25rem;
     cursor: pointer;
-    color: #6c757d;
+    color: var(--side-calendar-secondary-text-color, #6c757d);
     font-size: 0.8rem;
 }
 
 .calendar-group-header .group-actions button:hover,
 .calendar-group-header .group-actions button:focus-visible {
-    color: #0d6efd;
+    color: var(--side-calendar-link-color, #0d6efd);
 }
 
 .calendar-group-header .group-collapse-icon {
@@ -545,7 +547,7 @@ body[data-theme="dark"] {
     border: none;
     padding: 0.125rem 0.375rem;
     cursor: pointer;
-    color: #6c757d;
+    color: var(--side-calendar-secondary-text-color, #6c757d);
     font-size: 0.8rem;
     opacity: 0;
     transition: opacity 0.15s;
@@ -558,7 +560,7 @@ body[data-theme="dark"] {
 
 .calendar-group-assign-btn:hover,
 .calendar-group-assign-btn:focus-visible {
-    color: #0d6efd;
+    color: var(--side-calendar-link-color, #0d6efd);
 }
 
 .calendar-group-assign-popover {
@@ -566,8 +568,8 @@ body[data-theme="dark"] {
     right: 0;
     top: 100%;
     z-index: 10;
-    background: #fff;
-    border: 1px solid #dee2e6;
+    background: var(--side-calendar-modal-bg, #fff);
+    border: 1px solid var(--side-calendar-border-color, #dee2e6);
     border-radius: 0.375rem;
     box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
     padding: 0.5rem;
