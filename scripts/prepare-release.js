@@ -83,8 +83,8 @@ function getCurrentVersion() {
 
 function getCommitMessages(currentVersion) {
     try {
-        const tags = execSync('git tag -l "v*"', { cwd: ROOT, encoding: 'utf8' }).trim();
-        const tagName = `v${currentVersion}`;
+        const tags = execSync('git tag -l', { cwd: ROOT, encoding: 'utf8' }).trim();
+        const tagName = currentVersion;
 
         let cmd;
         if (tags.split('\n').includes(tagName)) {
@@ -363,7 +363,7 @@ async function main() {
     // Step 2: Get commit messages
     const commits = getCommitMessages(currentVersion);
     if (commits.length > 0) {
-        console.log(`Found ${commits.length} commit(s) since v${currentVersion}`);
+        console.log(`Found ${commits.length} commit(s) since ${currentVersion}`);
     } else {
         console.log('No commits found (this is OK - default highlights will be used)');
     }
@@ -428,7 +428,7 @@ async function main() {
     console.log('  1. Review changes: git diff');
     console.log('  2. Edit release-notes.js highlights if needed');
     console.log(`  3. Commit: git add -A && git commit -m "Release ${args.version}"`);
-    console.log(`  4. Tag: git tag v${args.version}`);
+    console.log(`  4. Tag: git tag ${args.version}`);
     console.log(`  5. Push: git push origin main --tags`);
 }
 
