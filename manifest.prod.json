@@ -7,7 +7,7 @@
   "permissions": ["sidePanel", "identity", "storage", "notifications", "alarms", "contextMenus"],
   "oauth2": {
     "client_id": "62076165035-dt37o7vkjfj6csb6mehephbebekslimc.apps.googleusercontent.com",
-    "scopes": ["https://www.googleapis.com/auth/calendar.readonly"]
+    "scopes": ["https://www.googleapis.com/auth/calendar.events", "https://www.googleapis.com/auth/calendar.calendarlist.readonly"]
   },
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3hm/UlsEUTl/pO6fWiQg+tb+qktXcpoBh+Z7pzNew4jSreWfYWEbboDEJYTDdojucrq3ObJEqJTUNcERY86domU70peDrIu6/E3k5qO45DSYofHqNYTfPeG33YObAG8K4bqKyn4D/14jFz8tJhKAFmGGG/5I6qQtFr0dIAxkXTGa4WShNfl8WnfN5b7IFC7kt9UoUlLgFRLoEtbNSTspgE7jrvuK79MIoBvtjBrG9zCyYe7YYqggZETbqDkkslKENVKBq+zK8EX6y7ybS29klDcS5g2eqbyl83jSLFoxoGeKYxLf2dAzl9Vj2VZ9+dHEcQOvzhNusCa7sJl12+qtcwIDAQAB",
   "action": {
