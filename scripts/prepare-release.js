@@ -109,7 +109,7 @@ function getExistingHighlightsForPrompt() {
 
     // Extract first two entries as style examples
     const entries = [];
-    const entryRegex = /\{\s*version:\s*'[^']+',\s*date:\s*'[^']+',\s*highlights:\s*\{[^}]*en:\s*\[[^\]]*\][^}]*ja:\s*\[[^\]]*\]\s*\}\s*\}/gs;
+    const entryRegex = /\{\s*version:\s*'[^']+',\s*date:\s*'[^']+',\s*highlights:\s*\{[^}]*en:\s*\[[^[\]]*][^}]*ja:\s*\[[^[\]]*]\s*}\s*}/gs;
     let match;
     while ((match = entryRegex.exec(content)) !== null && entries.length < 2) {
         entries.push(match[0]);
@@ -156,14 +156,16 @@ ${existingExamples}`,
 
         const text = response.content[0].text.trim();
         // Extract JSON from response (may be wrapped in markdown code blocks)
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        const jsonMatch = text.match(/\{[\s\S]*}/);
         if (!jsonMatch) {
-            throw new Error('No JSON found in API response');
+            console.warn('\x1b[33mWarning: No JSON found in API response. Falling back to keyword-based generation.\x1b[0m');
+            return null;
         }
 
         const parsed = JSON.parse(jsonMatch[0]);
         if (!Array.isArray(parsed.en) || !Array.isArray(parsed.ja) || parsed.en.length === 0 || parsed.ja.length === 0) {
-            throw new Error('Invalid or empty highlights from API');
+            console.warn('\x1b[33mWarning: Invalid or empty highlights from API. Falling back to keyword-based generation.\x1b[0m');
+            return null;
         }
 
         return parsed;
