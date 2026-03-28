@@ -2,12 +2,22 @@
   "manifest_version": 3,
   "default_locale": "en",
   "name": "SideTimeTable dev",
-  "version": "1.9.0",
+  "version": "1.9.1",
   "description": "__MSG_appDesc__",
-  "permissions": ["sidePanel", "identity", "storage", "notifications", "alarms", "contextMenus"],
+  "permissions": [
+    "sidePanel",
+    "identity",
+    "storage",
+    "notifications",
+    "alarms",
+    "contextMenus"
+  ],
   "oauth2": {
     "client_id": "976638980490-mrn3egp5mgo6j31ieigbnjtbv02fpieh.apps.googleusercontent.com",
-    "scopes": ["https://www.googleapis.com/auth/calendar.events", "https://www.googleapis.com/auth/calendar.calendarlist.readonly"]
+    "scopes": [
+      "https://www.googleapis.com/auth/calendar.events",
+      "https://www.googleapis.com/auth/calendar.calendarlist.readonly"
+    ]
   },
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtAxP+ite+mwVacpQLI4Fo99vYqOavD+81s0+EQexHtaD49PJcJRMbyXl1LQbkGDkmMPJZwMeqfEb0ZLS/T8JATUM8S/nCCHkzI9KcaTcfDPisOvwrfzWct+6dxNs0qX5UgXmgpJGKpWNZo8ZrxHBibwelBxEtuMnaKipBZrApgdF7o3rspArGI2V29/F/XhIojnO7ALIb8FcJ8EOhoIYEHvauIWdQ0Tywf8CrGAunKY+UvPXTSJnoOAiDX/s5aPsY4DBC4bthOUFgUbSCOYfJMeQOMI0U9effPhtqHpX7visUaGNYNcEG1aXKi7nrDubtNyghfZpCt6rVU6l9NCpHQIDAQAB",
   "action": {
@@ -28,8 +38,12 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["dist/*.chunk.js"],
-      "matches": ["<all_urls>"]
+      "resources": [
+        "dist/*.chunk.js"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
     }
   ],
   "commands": {
