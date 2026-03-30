@@ -19,7 +19,7 @@ Main UI displayed in Chrome's side panel:
 - `side_panel.js`: Main controller with `SidePanelUIController` class managing initialization and coordination
 - `time-manager.js`: Exports `EventLayoutManager` for sophisticated overlap resolution algorithms
 - `event-handlers.js`: Exports `GoogleEventManager` and `LocalEventManager` for event data management
-- `side_panel.html`: Bootstrap 5.3.0 based UI with modal dialogs and responsive design
+- `side_panel.html`: Main UI with modal dialogs and responsive design
 - `side_panel.css`: Custom styling with CSS variables for theming
 - `components/`: Modular component-based UI architecture
   - `timeline/timeline-component.js`: Main timeline display with integrated event layout
@@ -29,6 +29,10 @@ Main UI displayed in Chrome's side panel:
   - `setup/initial-setup-component.js`: First-time user setup wizard
   - `tutorial/tutorial-component.js`: Interactive tutorial for new users
   - `base/component.js`: Base component class with lifecycle management
+  - `services/`: Service modules for business logic
+    - `date-navigation-service.js`: Date navigation logic
+    - `local-event-service.js`: Local event data operations
+  - `event-element-factory.js`: Factory for creating event DOM elements
 
 ### Options Page (`src/options/`)
 Extension settings and calendar management:
@@ -37,8 +41,14 @@ Extension settings and calendar management:
 - `options.css`: Styling for settings page with Google-style buttons and sidebar nav
 - `components/`:
   - `calendar/`: Google integration and calendar management components
-  - `settings/`: Time, color (with color blindness presets), language, shortcut, reminder, and developer settings components
+  - `settings/`: Time, color (with color blindness presets), language, shortcut, reminder, memo, scrollbar, storage, extension info, and developer settings components
   - `base/`: Base card and control button components
+
+### Changelog Page (`src/changelog/`)
+Standalone changelog page:
+- `changelog.js`: Changelog display logic with version history rendering
+- `changelog.html`: Changelog page structure
+- `changelog.css`: Changelog page styling
 
 ### Utilities (`src/lib/`)
 Shared functions and framework components:
@@ -52,6 +62,12 @@ Shared functions and framework components:
 - `alarm-manager.js`: Event reminder system using Chrome alarms API
 - `release-notes.js`: Version history and update highlights for What's New modal
 - `google-button-helper.js`: Helper utilities for Google-style buttons
+- `chrome-messaging.js`: Chrome runtime message passing utilities
+- `color-themes.js`: Color theme definitions and dark mode support
+- `constants.js`: Shared constants and configuration values
+- `event-storage.js`: Event persistence and retrieval from Chrome storage
+- `settings-storage.js`: Settings persistence and retrieval
+- `storage-cleanup.js`: Storage maintenance and cleanup utilities
 
 ## Specialized Systems
 
@@ -81,7 +97,7 @@ Dedicated `CurrentTimeLineManager` system:
 
 ### Localization System
 Comprehensive i18n support:
-- `_locales/en/`, `_locales/ja/` message files with 400+ localized strings
+- `_locales/en/`, `_locales/en_US/`, `_locales/ja/` message files with 400+ localized strings
 - Language detection with auto/manual selection
 - Locale-aware time formatting (12h for English, 24h for Japanese)
 - Demo data localization for consistent experience across languages
@@ -167,8 +183,8 @@ Chrome alarm-based reminders:
 ## Dependencies and Libraries
 
 ### UI Framework
-- **Bootstrap 5.3.0**: Complete UI framework (loaded locally from `src/lib/`)
-- **Popper.js**: Tooltip and popover positioning (loaded locally from `src/lib/`)
+- **Bootstrap 5.3.0**: Complete UI framework (loaded locally from `src/vendor/`)
+- **Popper.js**: Tooltip and popover positioning (loaded locally from `src/vendor/`)
 - **Font Awesome 6.7.1**: Icon library (loaded via CDN)
 
 ### Chrome Extension APIs

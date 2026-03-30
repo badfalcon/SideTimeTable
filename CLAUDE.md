@@ -41,7 +41,7 @@ npm run build         # Verify production build succeeds
 - Demo mode: `?demo=true` URL parameter or `localStorage.sideTimeTableDemo=true`
 - OAuth2: configured in `manifest.json` (`oauth2.client_id`), uses Chrome Identity API
 - Scope: `https://www.googleapis.com/auth/calendar.readonly`
-- `manifest.sample.json` provides template for OAuth configuration
+- `manifest.dev.json` / `manifest.prod.json` provide environment-specific configurations
 
 ## Code Style
 

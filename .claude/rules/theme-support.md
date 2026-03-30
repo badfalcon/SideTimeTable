@@ -22,5 +22,5 @@ This project supports dark and light themes via CSS custom properties and `[data
 5. Verify the element looks correct in both light and dark modes
 
 ## Implementation Details
-- Dark theme overrides: Colors that need dark-mode-specific values are set via JS (`applyDarkThemeColors` in the settings system) which updates CSS variables at runtime
+- Dark theme overrides: `[data-theme="dark"]` attribute on `<html>` activates dark mode. Theme colors are managed by `resolveThemeColors()` in `src/lib/color-themes.js` which updates CSS variables at runtime
 - Existing patterns to follow: See `input[type="text"]` and `.event-description-input` in `side_panel.css` for form element styling examples

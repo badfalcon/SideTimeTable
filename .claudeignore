@@ -5,16 +5,16 @@ dist/
 node_modules/
 
 # Vendor libraries (minified, no analysis value)
-src/lib/bootstrap.min.css
-src/lib/bootstrap.min.js
-src/lib/popper.min.js
+src/vendor/bootstrap.min.css
+src/vendor/bootstrap.min.js
+src/vendor/popper.min.js
 
-# Images and assets
+# Images and assets (scoped to known directories)
 docs/img/
-*.png
-*.jpg
-*.ico
-*.gif
+src/img/
+
+# Source maps
+*.map
 
 # Release artifacts
 *.zip

@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "jq -r '.tool_input.file_path // empty' | xargs -I{} sh -c 'echo \"{}\" | grep -q \"src/.*\\.js$\" && npx eslint --fix \"{}\" 2>/dev/null; exit 0'"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/eslint-autofix.sh"
           }
         ]
       }
@@ -60,6 +60,11 @@
       "Edit(~/.aws/**)",
       "Edit(.env)",
       "Edit(.env.*)",
+      "Write(~/.ssh/**)",
+      "Write(~/.gnupg/**)",
+      "Write(~/.aws/**)",
+      "Write(.env)",
+      "Write(.env.*)",
       "Read(~/.ssh/**)",
       "Read(~/.gnupg/**)"
     ]
