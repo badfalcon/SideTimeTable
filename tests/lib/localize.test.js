@@ -18,10 +18,11 @@ describe('localize', () => {
     });
 
     // ---------------------------------------------------------------
-    // Language resolution: "auto" should detect browser language,
-    // explicit "ja"/"en" should be used directly
+    // SPEC: Language Resolution
+    // - "auto" → ja if browser startsWith("ja"), else en
+    // - Explicit "ja"/"en" used directly
     // ---------------------------------------------------------------
-    describe('language resolution', () => {
+    describe('SPEC: language resolution', () => {
         test('auto-detects Japanese for ja-prefixed browser language', () => {
             chrome.i18n.getUILanguage.mockReturnValue('ja');
             expect(window.resolveLanguageCode('auto')).toBe('ja');
@@ -52,9 +53,9 @@ describe('localize', () => {
     });
 
     // ---------------------------------------------------------------
-    // Language preference persistence
+    // SPEC: Language preference persistence
     // ---------------------------------------------------------------
-    describe('language preference persistence', () => {
+    describe('SPEC: language preference persistence', () => {
         test('user-chosen language is remembered across sessions', async () => {
             chrome.storage.sync.set({ language: 'ja' }, () => {});
             const result = await window.getCurrentLanguageSetting();
@@ -68,10 +69,10 @@ describe('localize', () => {
     });
 
     // ---------------------------------------------------------------
-    // Message lookup: the system should try the cache first,
-    // fall back to chrome.i18n, and return the key itself as last resort
+    // SPEC: Message Lookup Fallback Chain
+    // - cache → chrome.i18n → key itself
     // ---------------------------------------------------------------
-    describe('message lookup fallback chain', () => {
+    describe('SPEC: message lookup fallback chain', () => {
         test('returns cached message when available', async () => {
             const messages = {
                 greeting: { message: 'Hello' },
@@ -127,9 +128,11 @@ describe('localize', () => {
     });
 
     // ---------------------------------------------------------------
-    // HTML localization: translating actual page elements
+    // SPEC: HTML Localization
+    // - data-localize → innerHTML, data-localize-placeholder → placeholder attr
+    // - data-localize-title → title attr, data-localize-aria-label → aria-label
     // ---------------------------------------------------------------
-    describe('HTML element localization', () => {
+    describe('SPEC: HTML element localization', () => {
         const enMessages = {
             appTitle: { message: 'SideTimeTable' },
             searchHint: { message: 'Search calendars...' },
@@ -237,9 +240,9 @@ describe('localize', () => {
     });
 
     // ---------------------------------------------------------------
-    // Graceful degradation
+    // SPEC: Graceful degradation — no crash on network/fetch failure
     // ---------------------------------------------------------------
-    describe('graceful degradation', () => {
+    describe('SPEC: graceful degradation', () => {
         test('localizeHtmlPageWithLang does not crash on network failure', async () => {
             global.fetch = jest.fn().mockRejectedValue(new Error('network down'));
             global.document = { querySelectorAll: jest.fn().mockReturnValue([]) };

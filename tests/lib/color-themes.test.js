@@ -2,7 +2,11 @@ import { COLOR_THEMES, getThemeById, resolveThemeColors } from '../../src/lib/co
 import { COLOR_CSS_VARS, TEXT_COLOR_CSS_VARS } from '../../src/lib/constants.js';
 
 describe('color-themes', () => {
-    describe('COLOR_THEMES', () => {
+    // ---------------------------------------------------------------
+    // SPEC: Theme Structure
+    // - 7 palette roles, valid hex, unique id
+    // ---------------------------------------------------------------
+    describe('SPEC: theme structure', () => {
         test('contains at least the default and dark themes', () => {
             const ids = COLOR_THEMES.map(t => t.id);
             expect(ids).toContain('default');
@@ -40,7 +44,11 @@ describe('color-themes', () => {
         });
     });
 
-    describe('getThemeById', () => {
+    // ---------------------------------------------------------------
+    // SPEC: Theme Lookup
+    // - getThemeById returns matching theme or default for unknown ID
+    // ---------------------------------------------------------------
+    describe('SPEC: theme lookup', () => {
         test('returns the matching theme', () => {
             expect(getThemeById('dark').id).toBe('dark');
             expect(getThemeById('pastel').id).toBe('pastel');
@@ -60,7 +68,12 @@ describe('color-themes', () => {
         });
     });
 
-    describe('resolveThemeColors', () => {
+    // ---------------------------------------------------------------
+    // SPEC: Theme Resolution
+    // - colorSettings: 7 values, cssVars: includes derived UI chrome
+    // - Text contrast auto-computed, light/dark shadow differences
+    // ---------------------------------------------------------------
+    describe('SPEC: theme resolution', () => {
         test('returns colorSettings and cssVars for default theme', () => {
             const theme = getThemeById('default');
             const result = resolveThemeColors(theme);

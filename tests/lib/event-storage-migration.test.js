@@ -19,7 +19,14 @@ describe('event-storage (migration & CRUD)', () => {
         resetChromeStorage();
     });
 
-    describe('migrateEventDataToLocal', () => {
+    // ---------------------------------------------------------------
+    // SPEC: Migration (v2)
+    // - Moves localEvents_* from sync to local (one-time)
+    // - Restores recurringEvents from local to sync if sync empty
+    // - Does NOT overwrite existing sync recurring events
+    // - Sets flag to prevent re-running
+    // ---------------------------------------------------------------
+    describe('SPEC: migrateEventDataToLocal', () => {
         test('migrates sync localEvents_ keys to local storage', async () => {
             // Set up per-date events in sync storage
             await StorageHelper.set({
@@ -88,7 +95,10 @@ describe('event-storage (migration & CRUD)', () => {
         });
     });
 
-    describe('saveLocalEventsForDate / loadLocalEventsForDate', () => {
+    // ---------------------------------------------------------------
+    // SPEC: Storage Locations — date-specific in local, recurring in sync
+    // ---------------------------------------------------------------
+    describe('SPEC: date-specific event storage', () => {
         test('saves and loads date-specific events', async () => {
             const date = new Date(2025, 2, 15);
             const events = [{ id: 'e1', title: 'Event1' }];
@@ -110,7 +120,12 @@ describe('event-storage (migration & CRUD)', () => {
         });
     });
 
-    describe('addRecurringEventException', () => {
+    // ---------------------------------------------------------------
+    // SPEC: Exceptions
+    // - If target date is in exceptions → event does not appear
+    // - Adding same exception twice → only stored once
+    // ---------------------------------------------------------------
+    describe('SPEC: recurring event exceptions', () => {
         test('adds exception date to recurring event', async () => {
             const events = [{
                 id: 'r1',
@@ -145,7 +160,7 @@ describe('event-storage (migration & CRUD)', () => {
         });
     });
 
-    describe('deleteRecurringEvent', () => {
+    describe('SPEC: deleteRecurringEvent', () => {
         test('removes event by id', async () => {
             const events = [
                 { id: 'r1', title: 'A' },
@@ -161,7 +176,7 @@ describe('event-storage (migration & CRUD)', () => {
         });
     });
 
-    describe('saveRecurringEvents / loadRecurringEvents', () => {
+    describe('SPEC: recurring events round-trip', () => {
         test('round-trips recurring events', async () => {
             const events = [{ id: 'r1', title: 'Standup', recurrence: { type: 'daily' } }];
             await saveRecurringEvents(events);

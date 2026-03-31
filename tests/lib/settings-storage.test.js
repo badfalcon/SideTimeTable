@@ -10,7 +10,11 @@ describe('settings-storage', () => {
         resetChromeStorage();
     });
 
-    describe('saveSettings / loadSettings', () => {
+    // ---------------------------------------------------------------
+    // SPEC: Settings
+    // - saveSettings persists to sync, loadSettings merges over defaults
+    // ---------------------------------------------------------------
+    describe('SPEC: settings persistence', () => {
         test('saves and loads settings', async () => {
             await saveSettings({ openTime: '08:00', closeTime: '17:00' });
             const result = await loadSettings();
@@ -38,7 +42,11 @@ describe('settings-storage', () => {
         });
     });
 
-    describe('saveSelectedCalendars / loadSelectedCalendars', () => {
+    // ---------------------------------------------------------------
+    // SPEC: Selected Calendars
+    // - Array of strings, non-string filtered, non-array → []
+    // ---------------------------------------------------------------
+    describe('SPEC: selected calendars', () => {
         test('saves and loads calendar IDs', async () => {
             await saveSelectedCalendars(['cal1', 'cal2']);
             const result = await loadSelectedCalendars();
@@ -63,7 +71,13 @@ describe('settings-storage', () => {
         });
     });
 
-    describe('saveCalendarGroups / loadCalendarGroups', () => {
+    // ---------------------------------------------------------------
+    // SPEC: Calendar Groups — sanitization rules
+    // - Missing id → dropped, name not string → "Group", name > 50 → truncated
+    // - calendarIds not array → [], non-string entries filtered
+    // - collapsed not boolean → false
+    // ---------------------------------------------------------------
+    describe('SPEC: calendar groups sanitization', () => {
         test('saves and loads valid groups', async () => {
             const groups = [
                 { id: 'g1', name: 'Work', calendarIds: ['cal1'], collapsed: false },

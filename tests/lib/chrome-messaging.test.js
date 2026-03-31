@@ -6,7 +6,12 @@ describe('chrome-messaging', () => {
         chrome.runtime.sendMessage.mockClear();
     });
 
-    describe('sendMessage', () => {
+    // ---------------------------------------------------------------
+    // SPEC: sendMessage(message)
+    // - Returns Promise, resolves with response, rejects with lastError
+    // - Passes message object exactly as-is (no transformation)
+    // ---------------------------------------------------------------
+    describe('SPEC: sendMessage contract', () => {
         test('resolves with response on success', async () => {
             chrome.runtime.sendMessage.mockImplementation((message, callback) => {
                 callback({ data: 'test' });

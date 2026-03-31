@@ -7,7 +7,10 @@ describe('DateNavigationService', () => {
         service = new DateNavigationService();
     });
 
-    describe('constructor', () => {
+    // ---------------------------------------------------------------
+    // SPEC: State — normalized to midnight, initial value: today
+    // ---------------------------------------------------------------
+    describe('SPEC: initial state', () => {
         test('initializes with today at midnight', () => {
             const date = service.getDate();
             const today = new Date();
@@ -16,7 +19,10 @@ describe('DateNavigationService', () => {
         });
     });
 
-    describe('setDate / getDate', () => {
+    // ---------------------------------------------------------------
+    // SPEC: getDate() returns a copy, setDate normalizes to midnight
+    // ---------------------------------------------------------------
+    describe('SPEC: setDate / getDate', () => {
         test('sets and gets date correctly', () => {
             const target = new Date(2025, 5, 15, 14, 30); // with time
             service.setDate(target);
@@ -53,7 +59,10 @@ describe('DateNavigationService', () => {
         });
     });
 
-    describe('getDateString', () => {
+    // ---------------------------------------------------------------
+    // SPEC: getDateString() — YYYY-MM-DD with zero-padded month/day
+    // ---------------------------------------------------------------
+    describe('SPEC: getDateString', () => {
         test('returns YYYY-MM-DD format', () => {
             service.setDate(new Date(2025, 2, 5));
             expect(service.getDateString()).toBe('2025-03-05');
@@ -65,7 +74,12 @@ describe('DateNavigationService', () => {
         });
     });
 
-    describe('advanceToTodayIfNeeded', () => {
+    // ---------------------------------------------------------------
+    // SPEC: advanceToTodayIfNeeded()
+    // - true ONLY when: was viewing today AND date rolled past midnight
+    // - false when: navigated away, OR still viewing today
+    // ---------------------------------------------------------------
+    describe('SPEC: advanceToTodayIfNeeded', () => {
         test('returns false when viewing today', () => {
             expect(service.advanceToTodayIfNeeded()).toBe(false);
         });

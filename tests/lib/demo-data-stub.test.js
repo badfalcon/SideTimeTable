@@ -14,9 +14,9 @@ import * as stub from '../../src/lib/demo-data.stub.js';
 
 describe('demo-data.stub (production safety)', () => {
     // ---------------------------------------------------------------
-    // Contract 1: Demo mode is permanently disabled
+    // SPEC Contract 1: isDemoMode() always returns false
     // ---------------------------------------------------------------
-    describe('demo mode is disabled in production', () => {
+    describe('SPEC: demo mode is permanently disabled', () => {
         test('isDemoMode always returns false regardless of state', () => {
             stub.setDemoMode(); // attempt to enable
             expect(stub.isDemoMode()).toBe(false);
@@ -28,9 +28,9 @@ describe('demo-data.stub (production safety)', () => {
     });
 
     // ---------------------------------------------------------------
-    // Contract 2: Data functions return safe defaults for callers
+    // SPEC Contract 2: All data functions return safe defaults: [], null, or {}
     // ---------------------------------------------------------------
-    describe('data functions return safe defaults', () => {
+    describe('SPEC: data functions return safe defaults', () => {
         test('getDemoEvents returns empty array (callers can iterate safely)', async () => {
             const events = await stub.getDemoEvents();
             expect(Array.isArray(events)).toBe(true);
@@ -71,9 +71,9 @@ describe('demo-data.stub (production safety)', () => {
     });
 
     // ---------------------------------------------------------------
-    // Contract 3: Setter functions are safe no-ops
+    // SPEC Contract 3: All setters are true no-ops
     // ---------------------------------------------------------------
-    describe('setter functions cause no side effects', () => {
+    describe('SPEC: setter functions cause no side effects', () => {
         test('setDemoMode does not throw or change state', () => {
             expect(() => stub.setDemoMode()).not.toThrow();
             expect(stub.isDemoMode()).toBe(false);
@@ -101,9 +101,9 @@ describe('demo-data.stub (production safety)', () => {
     });
 
     // ---------------------------------------------------------------
-    // Contract 4: Time functions return real current time
+    // SPEC Contract 4: getCurrentTime() returns real current time
     // ---------------------------------------------------------------
-    describe('time functions use real clock', () => {
+    describe('SPEC: time functions use real clock', () => {
         test('getCurrentTime returns approximately now', () => {
             const now = Date.now();
             const result = stub.getCurrentTime();
@@ -123,9 +123,9 @@ describe('demo-data.stub (production safety)', () => {
     });
 
     // ---------------------------------------------------------------
-    // Contract 5: Interface completeness (all exports exist)
+    // SPEC Contract 5: Exports same interface as real demo-data.js
     // ---------------------------------------------------------------
-    describe('exports match expected interface', () => {
+    describe('SPEC: exports match expected interface', () => {
         const expectedExports = [
             'DEMO_BUILD', 'isDemoMode', 'setDemoMode',
             'getCurrentTime', 'getDemoCurrentTime', 'getDemoCurrentTimeString', 'setDemoCurrentTime',

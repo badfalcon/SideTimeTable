@@ -1,7 +1,12 @@
 import { RELEASE_NOTES, getUnseenReleaseNotes, compareVersions } from '../../src/lib/release-notes.js';
 
 describe('release-notes', () => {
-    describe('RELEASE_NOTES', () => {
+    // ---------------------------------------------------------------
+    // SPEC: Version Ordering
+    // - Entries ordered newest to oldest
+    // - Each entry: { version, date, highlights: { en, ja } }
+    // ---------------------------------------------------------------
+    describe('SPEC: version ordering and entry structure', () => {
         test('is a non-empty array', () => {
             expect(Array.isArray(RELEASE_NOTES)).toBe(true);
             expect(RELEASE_NOTES.length).toBeGreaterThan(0);
@@ -30,7 +35,11 @@ describe('release-notes', () => {
         });
     });
 
-    describe('compareVersions', () => {
+    // ---------------------------------------------------------------
+    // SPEC: compareVersions
+    // - Semver: 1.10.0 > 1.9.0, equal → 0, padded: 1.0 == 1.0.0
+    // ---------------------------------------------------------------
+    describe('SPEC: compareVersions', () => {
         test('returns 0 for equal versions', () => {
             expect(compareVersions('1.0.0', '1.0.0')).toBe(0);
             expect(compareVersions('2.3.4', '2.3.4')).toBe(0);
@@ -59,7 +68,11 @@ describe('release-notes', () => {
         });
     });
 
-    describe('getUnseenReleaseNotes', () => {
+    // ---------------------------------------------------------------
+    // SPEC: getUnseenReleaseNotes(lastSeen, current)
+    // - null → [] (first install), same → [], range → filtered entries
+    // ---------------------------------------------------------------
+    describe('SPEC: getUnseenReleaseNotes', () => {
         test('returns empty array when lastSeenVersion is null (first install)', () => {
             expect(getUnseenReleaseNotes(null, '1.9.0')).toEqual([]);
         });

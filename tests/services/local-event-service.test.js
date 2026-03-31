@@ -42,9 +42,9 @@ describe('LocalEventService', () => {
     });
 
     // ---------------------------------------------------------------
-    // ID generation contract: IDs must be unique
+    // SPEC: ID generation — unique across concurrent calls
     // ---------------------------------------------------------------
-    describe('ID generation', () => {
+    describe('SPEC: ID generation', () => {
         test('generates unique IDs across rapid successive calls', () => {
             const ids = new Set(Array.from({ length: 50 }, () => LocalEventService.generateId()));
             expect(ids.size).toBe(50);
@@ -60,9 +60,11 @@ describe('LocalEventService', () => {
     });
 
     // ---------------------------------------------------------------
-    // Event creation: data should actually persist
+    // SPEC: Create Event
+    // - Non-recurring → localEvents_YYYY-MM-DD, Recurring → recurringEvents
+    // - reminder defaults to true, alarm only for non-recurring with reminder
     // ---------------------------------------------------------------
-    describe('creating events', () => {
+    describe('SPEC: creating events', () => {
         test('non-recurring event is persisted and loadable for the same date', async () => {
             await service.createEvent({
                 title: 'Team Lunch',
@@ -141,9 +143,12 @@ describe('LocalEventService', () => {
     });
 
     // ---------------------------------------------------------------
-    // Event deletion
+    // SPEC: Delete Event
+    // - Regular: remove from date storage, clear alarm
+    // - Recurring "all": remove entire series
+    // - Recurring "this": add exception for this date
     // ---------------------------------------------------------------
-    describe('deleting events', () => {
+    describe('SPEC: deleting events', () => {
         test('deleting a regular event removes it from storage', async () => {
             await service.createEvent({
                 title: 'To Delete',
@@ -228,9 +233,13 @@ describe('LocalEventService', () => {
     });
 
     // ---------------------------------------------------------------
-    // Event updates and type transitions
+    // SPEC: Update Event (Type Transitions)
+    // - Regular→Regular: update in date storage
+    // - Regular→Recurring: remove from date, add to recurring
+    // - Recurring→Recurring: update in recurring storage
+    // - Recurring→Regular: remove from recurring, add to date
     // ---------------------------------------------------------------
-    describe('updating events', () => {
+    describe('SPEC: updating events (type transitions)', () => {
         test('updating a regular event preserves it in date storage', async () => {
             await service.createEvent({
                 title: 'Original Title',
@@ -333,9 +342,11 @@ describe('LocalEventService', () => {
     });
 
     // ---------------------------------------------------------------
-    // Data isolation: recurring instances should not pollute date storage
+    // SPEC: Data Isolation
+    // - Recurring instances (isRecurringInstance: true) are NEVER persisted
+    //   to date storage — computed at load time from recurring definitions
     // ---------------------------------------------------------------
-    describe('data isolation', () => {
+    describe('SPEC: data isolation', () => {
         test('creating a regular event does not include recurring instances in saved data', async () => {
             // First create a recurring event that matches testDate
             await saveRecurringEvents([{

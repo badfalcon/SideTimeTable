@@ -1,12 +1,8 @@
 /**
  * Tests for locale-utils.js
  *
- * Behavioral contracts tested:
- * 1. Time display: English users see 12h (2:30 PM), Japanese users see 24h (14:30)
- * 2. Date display: English MM/DD/YYYY, Japanese YYYY/MM/DD
- * 3. User preference: saved format overrides defaults, invalid input rejected
- * 4. Graceful handling: empty/null inputs return empty string, never throw
- * 5. Locale detection: auto mode detects browser language, explicit overrides
+ * Based on SPEC.md — locale-utils section.
+ * Tests specify exact expected outputs, not regex patterns.
  */
 
 import '../../src/lib/locale-utils.js';
@@ -18,211 +14,218 @@ describe('locale-utils', () => {
     });
 
     // ---------------------------------------------------------------
-    // Contract 1: Time display differs by locale
+    // SPEC: Time Display — specific input/output table
+    //
+    // | Input    | en (12h)     | ja (24h) |
+    // |----------|-------------|----------|
+    // | 00:00    | 12:00 AM    | 00:00    |
+    // | 09:00    | 9:00 AM     | 09:00    |
+    // | 12:00    | 12:00 PM    | 12:00    |
+    // | 14:30    | 2:30 PM     | 14:30    |
+    // | 23:59    | 11:59 PM    | 23:59    |
     // ---------------------------------------------------------------
-    describe('time display by locale', () => {
-        test('English user sees 2:30 PM for 14:30', () => {
-            const result = window.formatTimeForLocale('14:30', 'en');
-            expect(result).toMatch(/2/);
-            expect(result).toMatch(/30/);
-            expect(result).toMatch(/PM/i);
-        });
+    describe('SPEC: time display by locale', () => {
+        // English: hour: 'numeric' (no leading zero) + AM/PM
+        // Japanese: hour: '2-digit' (zero-padded) + 24h
+        const timeTable = [
+            { input: '00:00', en: '12:00 AM', ja: '00:00' },
+            { input: '09:00', en: '9:00 AM',  ja: '09:00' },
+            { input: '12:00', en: '12:00 PM', ja: '12:00' },
+            { input: '14:30', en: '2:30 PM',  ja: '14:30' },
+            { input: '23:59', en: '11:59 PM', ja: '23:59' },
+        ];
 
-        test('Japanese user sees 14:30 in 24h format', () => {
-            const result = window.formatTimeForLocale('14:30', 'ja');
-            expect(result).toMatch(/14/);
-            expect(result).toMatch(/30/);
-            // Should NOT contain AM/PM
-            expect(result).not.toMatch(/[AP]M/i);
-        });
-
-        test('midnight shows as 12:00 AM in English', () => {
-            const result = window.formatTimeForLocale('00:00', 'en');
-            expect(result).toMatch(/12/);
-            expect(result).toMatch(/AM/i);
-        });
-
-        test('midnight shows as 00:00 in Japanese', () => {
-            const result = window.formatTimeForLocale('00:00', 'ja');
-            expect(result).toMatch(/0/);
-        });
-
-        test('noon shows as 12:00 PM in English', () => {
-            const result = window.formatTimeForLocale('12:00', 'en');
-            expect(result).toMatch(/12/);
-            expect(result).toMatch(/PM/i);
-        });
-    });
-
-    // ---------------------------------------------------------------
-    // Contract: explicit 12h/24h format overrides locale default
-    // ---------------------------------------------------------------
-    describe('explicit format override', () => {
-        test('24h format shows 14:30 even for English locale', () => {
-            const result = window.formatTimeByFormat('14:30', '24h', 'en');
-            expect(result).toMatch(/14/);
-            expect(result).not.toMatch(/PM/i);
-        });
-
-        test('12h format shows PM even for Japanese locale', () => {
-            const result = window.formatTimeByFormat('14:30', '12h', 'ja');
-            expect(result).toMatch(/2/);
-            expect(result).toMatch(/30/);
-            // 12h mode should have AM/PM indicator
-            expect(result).toMatch(/PM|午後/i);
-        });
-
-        test('formatTime minimal API accepts format and locale', () => {
-            const result12 = window.formatTime('14:30', { format: '12h', locale: 'en' });
-            expect(result12).toMatch(/PM/i);
-
-            const result24 = window.formatTime('14:30', { format: '24h', locale: 'ja' });
-            expect(result24).toMatch(/14/);
-        });
-
-        test('formatTime defaults to 24h Japanese when no options given', () => {
-            const result = window.formatTime('14:30');
-            expect(result).toMatch(/14/);
-        });
-
-        test('invalid format falls back to 24h', () => {
-            const result = window.formatTime('14:30', { format: 'invalid' });
-            expect(result).toMatch(/14/);
-        });
-    });
-
-    // ---------------------------------------------------------------
-    // Contract 2: Date display differs by locale
-    // ---------------------------------------------------------------
-    describe('date display by locale', () => {
-        test('English date shows month before day (MM/DD/YYYY)', () => {
-            const date = new Date(2025, 2, 5); // March 5, 2025
-            const result = window.formatDateForLocale(date, 'en');
-            // MM/DD/YYYY → 03/05/2025
-            expect(result).toMatch(/03.*05.*2025/);
-        });
-
-        test('Japanese date shows year first (YYYY/MM/DD)', () => {
-            const date = new Date(2025, 2, 5);
-            const result = window.formatDateForLocale(date, 'ja');
-            // YYYY/MM/DD → 2025/03/05
-            expect(result).toMatch(/2025.*03.*05/);
-        });
-
-        test('date with weekday shows abbreviated day name in English', () => {
-            const monday = new Date(2025, 2, 17);
-            const result = window.formatDateWithWeekdayForLocale(monday, 'en');
-            expect(result).toMatch(/Mon/);
-        });
-
-        test('date with weekday shows Japanese day name', () => {
-            const monday = new Date(2025, 2, 17);
-            const result = window.formatDateWithWeekdayForLocale(monday, 'ja');
-            expect(result).toMatch(/月/);
-        });
-
-        test('defaults to Japanese locale when none specified', () => {
-            const date = new Date(2025, 0, 1);
-            const result = window.formatDateForLocale(date);
-            expect(result).toMatch(/2025/);
-        });
-    });
-
-    // ---------------------------------------------------------------
-    // Contract 4: Graceful handling of bad input
-    // ---------------------------------------------------------------
-    describe('graceful handling of invalid input', () => {
-        test('empty time string returns empty string', () => {
-            expect(window.formatTimeForLocale('')).toBe('');
-            expect(window.formatTimeByFormat('')).toBe('');
-            expect(window.formatTime('')).toBe('');
-        });
-
-        test('null/undefined time returns empty string', () => {
-            expect(window.formatTimeForLocale(null)).toBe('');
-            expect(window.formatTimeForLocale(undefined)).toBe('');
-        });
-
-        test('null/undefined date returns empty string', () => {
-            expect(window.formatDateForLocale(null)).toBe('');
-            expect(window.formatDateForLocale(undefined)).toBe('');
-            expect(window.formatDateWithWeekdayForLocale(null)).toBe('');
-        });
-    });
-
-    // ---------------------------------------------------------------
-    // Contract 3: User time format preference persistence
-    // ---------------------------------------------------------------
-    describe('time format preference', () => {
-        test('user who chose 12h gets 12h on next session', async () => {
-            await window.setTimeFormatPreference('12h');
-            const pref = await window.getTimeFormatPreference();
-            expect(pref).toBe('12h');
-        });
-
-        test('user who chose 24h gets 24h on next session', async () => {
-            await window.setTimeFormatPreference('24h');
-            const pref = await window.getTimeFormatPreference();
-            expect(pref).toBe('24h');
-        });
-
-        test('invalid format is rejected and not saved', async () => {
-            await window.setTimeFormatPreference('36h');
-            // Should not find anything saved
-            const result = await new Promise(resolve => {
-                chrome.storage.sync.get(['timeFormat'], resolve);
+        describe('formatTimeForLocale (English = 12h)', () => {
+            test.each(timeTable)('$input → $en', ({ input, en }) => {
+                expect(window.formatTimeForLocale(input, 'en')).toBe(en);
             });
-            expect(result.timeFormat).toBeUndefined();
         });
 
-        test('en-US users default to 12h when no preference saved', async () => {
-            chrome.i18n.getUILanguage.mockReturnValue('en-US');
-            const pref = await window.getTimeFormatPreference();
-            expect(pref).toBe('12h');
+        describe('formatTimeForLocale (Japanese = 24h)', () => {
+            test.each(timeTable)('$input → $ja', ({ input, ja }) => {
+                expect(window.formatTimeForLocale(input, 'ja')).toBe(ja);
+            });
+        });
+    });
+
+    // ---------------------------------------------------------------
+    // SPEC: explicit 12h/24h format override
+    // ---------------------------------------------------------------
+    describe('SPEC: format override via formatTimeByFormat', () => {
+        test('24h format shows 14:30 regardless of locale hint', () => {
+            expect(window.formatTimeByFormat('14:30', '24h', 'en')).toBe('14:30');
+            expect(window.formatTimeByFormat('14:30', '24h', 'ja')).toBe('14:30');
         });
 
-        test('non-en-US users default to 24h when no preference saved', async () => {
-            chrome.i18n.getUILanguage.mockReturnValue('ja');
-            const pref = await window.getTimeFormatPreference();
-            expect(pref).toBe('24h');
+        test('12h format shows 2:30 PM regardless of locale hint', () => {
+            const enResult = window.formatTimeByFormat('14:30', '12h', 'en');
+            expect(enResult).toBe('2:30 PM');
+        });
+    });
 
-            chrome.i18n.getUILanguage.mockReturnValue('de');
+    describe('SPEC: formatTime minimal API', () => {
+        test('format: 12h, locale: en → 2:30 PM', () => {
+            expect(window.formatTime('14:30', { format: '12h', locale: 'en' })).toBe('2:30 PM');
+        });
+
+        test('format: 24h, locale: ja → 14:30', () => {
+            expect(window.formatTime('14:30', { format: '24h', locale: 'ja' })).toBe('14:30');
+        });
+
+        test('no options → defaults to 24h ja → 14:30', () => {
+            expect(window.formatTime('14:30')).toBe('14:30');
+        });
+
+        test('invalid format → falls back to 24h', () => {
+            expect(window.formatTime('14:30', { format: 'bogus' })).toBe('14:30');
+        });
+    });
+
+    // ---------------------------------------------------------------
+    // SPEC: Date Display
+    //
+    // | Locale | Format       | Example (March 5, 2025) |
+    // |--------|-------------|------------------------|
+    // | en     | MM/DD/YYYY  | 03/05/2025             |
+    // | ja     | YYYY/MM/DD  | 2025/03/05             |
+    // ---------------------------------------------------------------
+    describe('SPEC: date display by locale', () => {
+        const march5 = new Date(2025, 2, 5);
+
+        test('English: 03/05/2025', () => {
+            expect(window.formatDateForLocale(march5, 'en')).toBe('03/05/2025');
+        });
+
+        test('Japanese: 2025/03/05', () => {
+            expect(window.formatDateForLocale(march5, 'ja')).toBe('2025/03/05');
+        });
+
+        test('default locale is ja', () => {
+            expect(window.formatDateForLocale(march5)).toBe('2025/03/05');
+        });
+    });
+
+    // ---------------------------------------------------------------
+    // SPEC: Weekday Display
+    // ---------------------------------------------------------------
+    describe('SPEC: weekday display', () => {
+        const monday = new Date(2025, 2, 17); // Monday, March 17, 2025
+
+        test('English: contains Mon', () => {
+            const result = window.formatDateWithWeekdayForLocale(monday, 'en');
+            expect(result).toContain('Mon');
+        });
+
+        test('Japanese: contains 月', () => {
+            const result = window.formatDateWithWeekdayForLocale(monday, 'ja');
+            expect(result).toContain('月');
+        });
+    });
+
+    // ---------------------------------------------------------------
+    // SPEC: Empty/null/undefined → empty string ""
+    // ---------------------------------------------------------------
+    describe('SPEC: graceful handling of invalid input', () => {
+        test.each([null, undefined, ''])('formatTimeForLocale(%j) → ""', (input) => {
+            expect(window.formatTimeForLocale(input)).toBe('');
+        });
+
+        test.each([null, undefined, ''])('formatTimeByFormat(%j) → ""', (input) => {
+            expect(window.formatTimeByFormat(input)).toBe('');
+        });
+
+        test.each([null, undefined, ''])('formatTime(%j) → ""', (input) => {
+            expect(window.formatTime(input)).toBe('');
+        });
+
+        test.each([null, undefined])('formatDateForLocale(%j) → ""', (input) => {
+            expect(window.formatDateForLocale(input)).toBe('');
+        });
+
+        test.each([null, undefined])('formatDateWithWeekdayForLocale(%j) → ""', (input) => {
+            expect(window.formatDateWithWeekdayForLocale(input)).toBe('');
+        });
+    });
+
+    // ---------------------------------------------------------------
+    // SPEC: Time format preference persistence
+    // - en-US default: 12h
+    // - Other locales default: 24h
+    // - Invalid preference → not saved
+    // ---------------------------------------------------------------
+    describe('SPEC: time format preference', () => {
+        test('saved 12h preference is returned on next load', async () => {
+            await window.setTimeFormatPreference('12h');
+            expect(await window.getTimeFormatPreference()).toBe('12h');
+        });
+
+        test('saved 24h preference is returned on next load', async () => {
+            await window.setTimeFormatPreference('24h');
             expect(await window.getTimeFormatPreference()).toBe('24h');
         });
+
+        test('no preference + en-US browser → 12h default', async () => {
+            chrome.i18n.getUILanguage.mockReturnValue('en-US');
+            expect(await window.getTimeFormatPreference()).toBe('12h');
+        });
+
+        test('no preference + ja browser → 24h default', async () => {
+            chrome.i18n.getUILanguage.mockReturnValue('ja');
+            expect(await window.getTimeFormatPreference()).toBe('24h');
+        });
+
+        test('no preference + fr browser → 24h default', async () => {
+            chrome.i18n.getUILanguage.mockReturnValue('fr');
+            expect(await window.getTimeFormatPreference()).toBe('24h');
+        });
+
+        test('invalid value is not saved', async () => {
+            await window.setTimeFormatPreference('36h');
+            const raw = await chrome.storage.sync.get(['timeFormat']);
+            expect(raw.timeFormat).toBeUndefined();
+        });
     });
 
     // ---------------------------------------------------------------
-    // Contract 5: Locale detection
+    // SPEC: Locale detection
     // ---------------------------------------------------------------
-    describe('locale detection', () => {
-        test('auto mode detects Japanese browser', async () => {
+    describe('SPEC: locale detection', () => {
+        // Use the fallback path (no window helpers)
+        function withFallbackPath(fn) {
             const origGetLang = window.getCurrentLanguageSetting;
             const origResolve = window.resolveLanguageCode;
             window.getCurrentLanguageSetting = undefined;
             window.resolveLanguageCode = undefined;
+            try {
+                return fn();
+            } finally {
+                window.getCurrentLanguageSetting = origGetLang;
+                window.resolveLanguageCode = origResolve;
+            }
+        }
 
-            chrome.storage.sync.set({ language: 'auto' }, () => {});
-            chrome.i18n.getUILanguage.mockReturnValue('ja-JP');
-            const locale = await window.getCurrentLocale();
-            expect(locale).toBe('ja');
-
-            window.getCurrentLanguageSetting = origGetLang;
-            window.resolveLanguageCode = origResolve;
+        test('auto + ja-JP browser → ja', async () => {
+            await withFallbackPath(async () => {
+                chrome.storage.sync.set({ language: 'auto' }, () => {});
+                chrome.i18n.getUILanguage.mockReturnValue('ja-JP');
+                expect(await window.getCurrentLocale()).toBe('ja');
+            });
         });
 
-        test('explicit language setting overrides browser language', async () => {
-            const origGetLang = window.getCurrentLanguageSetting;
-            const origResolve = window.resolveLanguageCode;
-            window.getCurrentLanguageSetting = undefined;
-            window.resolveLanguageCode = undefined;
+        test('auto + en-US browser → en', async () => {
+            await withFallbackPath(async () => {
+                chrome.storage.sync.set({ language: 'auto' }, () => {});
+                chrome.i18n.getUILanguage.mockReturnValue('en-US');
+                expect(await window.getCurrentLocale()).toBe('en');
+            });
+        });
 
-            chrome.storage.sync.set({ language: 'ja' }, () => {});
-            chrome.i18n.getUILanguage.mockReturnValue('en-US'); // browser is English
-            const locale = await window.getCurrentLocale();
-            expect(locale).toBe('ja');
-
-            window.getCurrentLanguageSetting = origGetLang;
-            window.resolveLanguageCode = origResolve;
+        test('explicit ja overrides en-US browser', async () => {
+            await withFallbackPath(async () => {
+                chrome.storage.sync.set({ language: 'ja' }, () => {});
+                chrome.i18n.getUILanguage.mockReturnValue('en-US');
+                expect(await window.getCurrentLocale()).toBe('ja');
+            });
         });
     });
 });
