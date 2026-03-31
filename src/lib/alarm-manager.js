@@ -24,7 +24,7 @@ export class AlarmManager {
             // Get reminder minutes from settings if not provided
             if (reminderMinutes === null) {
                 const settings = await chrome.storage.sync.get(['reminderMinutes']);
-                reminderMinutes = settings.reminderMinutes || this.REMINDER_MINUTES;
+                reminderMinutes = settings.reminderMinutes ?? this.REMINDER_MINUTES;
             }
 
             // Validate range: 0-60, otherwise use default
@@ -272,7 +272,7 @@ export class AlarmManager {
             // Get reminder minutes from settings if not provided
             if (reminderMinutes === null) {
                 const settings = await chrome.storage.sync.get(['reminderMinutes']);
-                reminderMinutes = settings.reminderMinutes || this.REMINDER_MINUTES;
+                reminderMinutes = settings.reminderMinutes ?? this.REMINDER_MINUTES;
             }
 
             const alarmName = `${this.GOOGLE_ALARM_PREFIX}${dateStr}_${event.id}`;
