@@ -29,10 +29,10 @@ Main UI displayed in Chrome's side panel:
   - `setup/initial-setup-component.js`: First-time user setup wizard
   - `tutorial/tutorial-component.js`: Interactive tutorial for new users
   - `base/component.js`: Base component class with lifecycle management
-  - `services/`: Service modules for business logic
-    - `date-navigation-service.js`: Date navigation logic
-    - `local-event-service.js`: Local event data operations
-  - `event-element-factory.js`: Factory for creating event DOM elements
+- `services/`: Service modules for business logic
+  - `date-navigation-service.js`: Date navigation logic
+  - `local-event-service.js`: Local event data operations
+- `event-element-factory.js`: Factory for creating event DOM elements
 
 ### Options Page (`src/options/`)
 Extension settings and calendar management:
@@ -49,6 +49,11 @@ Standalone changelog page:
 - `changelog.js`: Changelog display logic with version history rendering
 - `changelog.html`: Changelog page structure
 - `changelog.css`: Changelog page styling
+
+### Services (`src/services/`)
+Shared service modules:
+- `google-calendar-client.js`: Google Calendar API client with multi-calendar support
+- `reminder-sync-service.js`: Reminder synchronization service
 
 ### Utilities (`src/lib/`)
 Shared functions and framework components:
