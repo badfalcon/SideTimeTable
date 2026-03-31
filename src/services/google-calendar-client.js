@@ -101,16 +101,12 @@ export class GoogleCalendarClient {
         const selectedCalendarIds = storageData.selectedCalendars || [];
 
         if (selectedCalendarIds.length === 0) {
-            // Fallback: resolve calendars from API
-            const token = await this._getAuthToken(true);
+            // Fallback: resolve calendars from the calendarList API
             const calendarListUrl = `${CALENDAR_API_BASE}/users/me/calendarList`;
-            const listResponse = await fetch(calendarListUrl, {
-                headers: { Authorization: 'Bearer ' + token }
-            });
+            const listResponse = await this._fetchWithAuth(calendarListUrl);
             if (!listResponse.ok) {
                 const errorBody = await listResponse.text();
                 console.error('[getCalendarEvents] CalendarList API error body:', errorBody);
-                console.error('[getCalendarEvents] Token used:', token.substring(0, 10) + '...');
                 throw new Error(`CalendarList API error: ${listResponse.status} ${listResponse.statusText}`);
             }
             const listData = await listResponse.json();

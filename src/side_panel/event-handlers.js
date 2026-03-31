@@ -174,7 +174,13 @@ export class GoogleEventManager {
 
         const response = await sendMessage(message);
 
-        if (!response || response.error || !response.events || response.events.length === 0) {
+        if (!response) return;
+
+        if (response.error) {
+            throw new Error(response.error);
+        }
+
+        if (!response.events || response.events.length === 0) {
             return;
         }
 
