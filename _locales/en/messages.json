@@ -1,6 +1,6 @@
 {
   "appDesc": {
-    "message": "A side panel extension that shows your today's events.",
+    "message": "Daily schedule management in your side panel. Timetable extension with Google Calendar integration and reminder notifications.",
     "description": "The description of the application"
   },
   "timelineTitle": {

@@ -21,7 +21,19 @@
     "type": "git",
     "url": "git+https://github.com/badfalcon/SideTimeTable.git"
   },
-  "keywords": [],
+  "keywords": [
+    "chrome-extension",
+    "side-panel",
+    "schedule",
+    "calendar",
+    "timetable",
+    "google-calendar",
+    "reminder",
+    "time-management",
+    "productivity",
+    "daily-planner",
+    "dark-mode"
+  ],
   "author": "",
   "license": "Apache-2.0",
   "type": "commonjs",
