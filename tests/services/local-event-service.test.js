@@ -60,6 +60,47 @@ describe('LocalEventService', () => {
     });
 
     // ---------------------------------------------------------------
+    // SPEC: Input Validation (Q8)
+    // - title is required: empty/null/undefined → error
+    // - startTime is required: empty/null/undefined → error
+    // ---------------------------------------------------------------
+    describe('SPEC: input validation (Q8)', () => {
+        test('rejects event with empty title', async () => {
+            await expect(service.createEvent({
+                title: '',
+                startTime: '10:00',
+                endTime: '11:00',
+                recurrence: { type: RECURRENCE_TYPES.NONE }
+            }, testDate)).rejects.toThrow();
+        });
+
+        test('rejects event with null title', async () => {
+            await expect(service.createEvent({
+                title: null,
+                startTime: '10:00',
+                endTime: '11:00',
+                recurrence: { type: RECURRENCE_TYPES.NONE }
+            }, testDate)).rejects.toThrow();
+        });
+
+        test('rejects event with missing startTime', async () => {
+            await expect(service.createEvent({
+                title: 'Test',
+                startTime: '',
+                endTime: '11:00',
+                recurrence: { type: RECURRENCE_TYPES.NONE }
+            }, testDate)).rejects.toThrow();
+        });
+
+        test('rejects event with undefined startTime', async () => {
+            await expect(service.createEvent({
+                title: 'Test',
+                recurrence: { type: RECURRENCE_TYPES.NONE }
+            }, testDate)).rejects.toThrow();
+        });
+    });
+
+    // ---------------------------------------------------------------
     // SPEC: Create Event
     // - Non-recurring → localEvents_YYYY-MM-DD, Recurring → recurringEvents
     // - reminder defaults to true, alarm only for non-recurring with reminder
@@ -314,6 +355,29 @@ describe('LocalEventService', () => {
             // Should appear in date-specific storage
             const dateEvents = await loadLocalEventsForDate(testDate);
             expect(dateEvents.find(e => e.title === 'Now One-off')).toBeDefined();
+        });
+
+        // Q9: returns false when target event not found
+        test('returns false when updating non-existent regular event', async () => {
+            const result = await service.updateEvent({
+                title: 'Ghost',
+                startTime: '10:00',
+                endTime: '11:00',
+                recurrence: { type: RECURRENCE_TYPES.NONE }
+            }, { id: 'nonexistent' }, testDate);
+
+            expect(result).toBe(false);
+        });
+
+        test('returns false when updating non-existent recurring event', async () => {
+            const result = await service.updateEvent({
+                title: 'Ghost',
+                startTime: '10:00',
+                endTime: '11:00',
+                recurrence: { type: RECURRENCE_TYPES.DAILY, startDate: '2025-03-15' }
+            }, { id: 'nonexistent', recurrence: { type: RECURRENCE_TYPES.DAILY } }, testDate);
+
+            expect(result).toBe(false);
         });
 
         test('updating recurring event series changes all future instances', async () => {

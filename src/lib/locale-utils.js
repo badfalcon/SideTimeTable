@@ -80,9 +80,12 @@ async function setTimeFormatPreference(format) {
  */
 function formatTimeForLocale(timeString, locale = 'ja') {
     if (!timeString) return '';
-    
+
     try {
         const [hours, minutes] = timeString.split(':').map(Number);
+        if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+            return '';
+        }
         const date = new Date();
         date.setHours(hours, minutes, 0, 0);
         
@@ -119,6 +122,9 @@ function formatTimeByFormat(timeString, timeFormat = '24h', localeHint = 'ja') {
     if (!timeString) return '';
     try {
         const [hours, minutes] = timeString.split(':').map(Number);
+        if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+            return '';
+        }
         const date = new Date();
         date.setHours(hours, minutes, 0, 0);
 

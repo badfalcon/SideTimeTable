@@ -37,8 +37,19 @@ English uses `hour: 'numeric'` (no leading zero), Japanese uses `hour: '2-digit'
 | en     | Contains `Mon`                   |
 | ja     | Contains `月`                    |
 
-### Edge Cases
+### Input Validation (Q1)
+- Valid range: `"00:00"` 〜 `"23:59"` only
+- `"24:00"` → empty string `""` (invalid, not treated as midnight)
+- `"25:00"`, `"99:99"` → empty string `""` (out of range)
+- `"abc"`, non-HH:MM format → empty string `""`
 - Empty/null/undefined input → empty string `""`
+
+### Unsupported Locales (Q2)
+- `"en"` → 12-hour format
+- `"ja"` → 24-hour format
+- Any other locale (`"fr"`, `"zh"`, etc.) → 24-hour format (international default)
+
+### Storage Defaults
 - No preference saved + en-US browser → `12h`
 - No preference saved + ja browser → `24h`
 - Invalid preference value → not saved
@@ -47,7 +58,7 @@ English uses `hour: 'numeric'` (no leading zero), Japanese uses `hour: '2-digit'
 
 ## localize
 
-### Language Resolution
+### Language Resolution (Q12)
 | Setting | Browser Lang | Result |
 |---------|-------------|--------|
 | `auto`  | `ja` / `ja-JP` | `ja` |
@@ -55,6 +66,14 @@ English uses `hour: 'numeric'` (no leading zero), Japanese uses `hour: '2-digit'
 | `auto`  | `fr-FR`     | `en`   |
 | `ja`    | (any)       | `ja`   |
 | `en`    | (any)       | `en`   |
+
+### Invalid Input Handling
+- `resolveLanguageCode(null)` → `"en"`
+- `resolveLanguageCode(undefined)` → `"en"`
+- `resolveLanguageCode("")` → `"en"`
+- `resolveLanguageCode(123)` → `"en"`
+- `resolveLanguageCode("fr")` → `"en"`
+- Only `"auto"`, `"en"`, `"ja"` are valid inputs; all others fallback to `"en"`
 
 ### Message Lookup Fallback Chain
 1. Cached messages (loaded from `_locales/[lang]/messages.json`)
@@ -83,10 +102,10 @@ English uses `hour: 'numeric'` (no leading zero), Japanese uses `hour: '2-digit'
 - Calculation: `eventStartTime - (reminderMinutes * 60 * 1000)`
 - Midnight event (00:00) with 10min reminder → fires at 23:50 previous day
 
-### When Reminders Are NOT Set
+### When Reminders Are NOT Set (Q3)
 - `event.reminder` is false or missing
 - `event.startTime` is missing
-- Calculated reminder time is in the past (≤ Date.now())
+- Calculated reminder time is in the past (≤ Date.now()) → silently ignored, no log
 - Google all-day events (has `start.date` but no `start.dateTime`)
 
 ### Notification Content
@@ -107,16 +126,25 @@ English uses `hour: 'numeric'` (no leading zero), Japanese uses `hour: '2-digit'
 - `clearGoogleEventReminders(dateStr)` clears ONLY Google alarms for that date
 - Different dates' alarms are unaffected
 
+### reminderMinutes Validation (Q4)
+- Valid range: `0` 〜 `60`
+- Values outside range → use default `5`
+- Negative values → use default `5`
+
 ### Settings Integration
 - When `reminderMinutes` not passed, reads from `chrome.storage.sync`
 - When not in storage either, defaults to 5
+
+### Invalid Date Handling (Q5)
+- Invalid `dateStr` → fallback: calculate reminder from current time instead of event date
+- Alarm is still created (current behavior preserved)
 
 ---
 
 ## settings-storage
 
-### Settings
-- `saveSettings(obj)` → persists to sync storage
+### Settings (Q10)
+- `saveSettings(obj)` → persists to sync storage, **only keys present in `DEFAULT_SETTINGS`** are saved (unknown keys are silently dropped)
 - `loadSettings()` → returns stored values merged over `DEFAULT_SETTINGS`
 - Missing keys get default values
 
@@ -128,8 +156,9 @@ English uses `hour: 'numeric'` (no leading zero), Japanese uses `hour: '2-digit'
 
 ### Calendar Groups
 - Each group: `{ id: string, name: string, calendarIds: string[], collapsed: boolean }`
-- Sanitization rules:
+- Sanitization rules (Q11):
   - Missing `id` (not a string) → group is dropped
+  - Empty string `id` (`""`) → group is dropped
   - `name` not a string → defaults to `"Group"`
   - `name` longer than 50 chars → truncated to 50
   - `calendarIds` not an array → defaults to `[]`
@@ -146,6 +175,11 @@ English uses `hour: 'numeric'` (no leading zero), Japanese uses `hour: '2-digit'
 | Date-specific events | `chrome.storage.local` | `localEvents_YYYY-MM-DD` |
 | Recurring events | `chrome.storage.sync` | `recurringEvents` |
 
+### Save Behavior (Q7)
+- `saveLocalEventsForDate(events, date)` **overwrites** all events for that date (not merge)
+- Callers must load → edit → save to preserve existing events
+- _Future consideration: evaluate merge-based approach_
+
 ### Loading Events for a Date
 Returns: `[...recurringInstances, ...dateSpecificEvents]`
 
@@ -156,6 +190,9 @@ Returns: `[...recurringInstances, ...dateSpecificEvents]`
 | `weekly` | Day of week matches `daysOfWeek` AND week difference % interval === 0 |
 | `monthly` | Day of month matches (with month-end adjustment) AND month difference % interval === 0 |
 | `weekdays` | Monday (1) through Friday (5) |
+
+### Interval Validation (Q6)
+- `interval <= 0` → event is skipped (not displayed for any date)
 
 ### Monthly Edge Case
 - Event on day 31 + target month has 28 days → shows on day 28
@@ -180,6 +217,11 @@ Returns: `[...recurringInstances, ...dateSpecificEvents]`
 
 ## local-event-service
 
+### Input Validation (Q8)
+- `title` is required: empty/null/undefined → error (event not created)
+- `startTime` is required: empty/null/undefined → error (event not created)
+- `endTime`, `description` are optional
+
 ### Create Event
 - Non-recurring → saved to `localEvents_YYYY-MM-DD` in local storage
 - Recurring → saved to `recurringEvents` in sync storage
@@ -193,13 +235,14 @@ Returns: `[...recurringInstances, ...dateSpecificEvents]`
 | Recurring | `"all"` | Remove entire series from recurring storage |
 | Recurring | `"this"` | Add exception for this date |
 
-### Update Event (Type Transitions)
+### Update Event (Type Transitions) (Q9)
 | From | To | Action |
 |------|-----|--------|
 | Regular | Regular | Update in date storage |
 | Regular | Recurring | Remove from date storage, add to recurring storage |
 | Recurring | Recurring | Update in recurring storage |
 | Recurring | Regular | Remove from recurring storage, add to date storage |
+- If the target event is not found in storage → returns `false` (no changes made)
 
 ### Data Isolation
 - Recurring instances (isRecurringInstance: true) are NEVER persisted to date storage

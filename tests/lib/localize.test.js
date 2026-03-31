@@ -50,6 +50,14 @@ describe('localize', () => {
             expect(window.resolveLanguageCode('ja')).toBe('ja');
             expect(window.resolveLanguageCode('en')).toBe('en');
         });
+
+        // Q12: invalid inputs fallback to 'en'
+        test.each([null, undefined, '', 123, 'fr', 'zh', 'de'])(
+            'resolveLanguageCode(%j) → "en" (invalid input fallback)',
+            (input) => {
+                expect(window.resolveLanguageCode(input)).toBe('en');
+            }
+        );
     });
 
     // ---------------------------------------------------------------

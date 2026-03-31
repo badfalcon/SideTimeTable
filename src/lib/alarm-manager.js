@@ -27,6 +27,11 @@ export class AlarmManager {
                 reminderMinutes = settings.reminderMinutes || this.REMINDER_MINUTES;
             }
 
+            // Validate range: 0-60, otherwise use default
+            if (typeof reminderMinutes !== 'number' || reminderMinutes < 0 || reminderMinutes > 60) {
+                reminderMinutes = this.REMINDER_MINUTES;
+            }
+
             const alarmName = `${this.ALARM_PREFIX}${dateStr}_${event.id}`;
             const reminderTime = this.calculateReminderTime(event.startTime, dateStr, reminderMinutes);
 

@@ -13,7 +13,14 @@ import { DEFAULT_SETTINGS } from './constants.js';
  * @returns {Promise} A promise for the save process
  */
 export function saveSettings(settings) {
-    return StorageHelper.set(settings);
+    // Only persist keys present in DEFAULT_SETTINGS (drop unknown keys)
+    const filtered = {};
+    for (const key of Object.keys(settings)) {
+        if (key in DEFAULT_SETTINGS) {
+            filtered[key] = settings[key];
+        }
+    }
+    return StorageHelper.set(filtered);
 }
 
 /**
@@ -70,7 +77,7 @@ export async function loadCalendarGroups() {
 function sanitizeCalendarGroups(raw) {
     if (!Array.isArray(raw)) return [];
     return raw
-        .filter(g => g && typeof g === 'object' && typeof g.id === 'string')
+        .filter(g => g && typeof g === 'object' && typeof g.id === 'string' && g.id !== '')
         .map(g => ({
             id: g.id,
             name: (typeof g.name === 'string' ? g.name : 'Group').slice(0, 50),

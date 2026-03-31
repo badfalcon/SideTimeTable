@@ -121,6 +121,39 @@ describe('event-storage (migration & CRUD)', () => {
     });
 
     // ---------------------------------------------------------------
+    // SPEC: Interval Validation (Q6)
+    // - interval <= 0 → event is skipped (not displayed)
+    // ---------------------------------------------------------------
+    describe('SPEC: interval validation (Q6)', () => {
+        test('daily event with interval=0 is skipped', async () => {
+            await StorageHelper.set({ recurringEvents: [{
+                id: 'r1', title: 'Bad', startTime: '09:00', endTime: '10:00',
+                recurrence: { type: 'daily', startDate: '2025-03-01', interval: 0 }
+            }] });
+            const loaded = await loadLocalEventsForDate(new Date(2025, 2, 15));
+            expect(loaded.find(e => e.id === 'r1')).toBeUndefined();
+        });
+
+        test('weekly event with interval=-1 is skipped', async () => {
+            await StorageHelper.set({ recurringEvents: [{
+                id: 'r2', title: 'Negative', startTime: '09:00', endTime: '10:00',
+                recurrence: { type: 'weekly', startDate: '2025-03-01', interval: -1, daysOfWeek: [6] }
+            }] });
+            const loaded = await loadLocalEventsForDate(new Date(2025, 2, 15));
+            expect(loaded.find(e => e.id === 'r2')).toBeUndefined();
+        });
+
+        test('daily event with interval=1 still works normally', async () => {
+            await StorageHelper.set({ recurringEvents: [{
+                id: 'r3', title: 'Normal', startTime: '09:00', endTime: '10:00',
+                recurrence: { type: 'daily', startDate: '2025-03-01', interval: 1 }
+            }] });
+            const loaded = await loadLocalEventsForDate(new Date(2025, 2, 15));
+            expect(loaded.find(e => e.title === 'Normal')).toBeDefined();
+        });
+    });
+
+    // ---------------------------------------------------------------
     // SPEC: Exceptions
     // - If target date is in exceptions → event does not appear
     // - Adding same exception twice → only stored once

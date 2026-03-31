@@ -123,9 +123,13 @@ describe('locale-utils', () => {
     });
 
     // ---------------------------------------------------------------
-    // SPEC: Empty/null/undefined → empty string ""
+    // SPEC: Input Validation (Q1)
+    // - Valid range: "00:00" 〜 "23:59" only
+    // - "24:00", "25:00" → empty string
+    // - "abc", non-HH:MM → empty string
+    // - Empty/null/undefined → empty string
     // ---------------------------------------------------------------
-    describe('SPEC: graceful handling of invalid input', () => {
+    describe('SPEC: input validation (Q1)', () => {
         test.each([null, undefined, ''])('formatTimeForLocale(%j) → ""', (input) => {
             expect(window.formatTimeForLocale(input)).toBe('');
         });
@@ -144,6 +148,38 @@ describe('locale-utils', () => {
 
         test.each([null, undefined])('formatDateWithWeekdayForLocale(%j) → ""', (input) => {
             expect(window.formatDateWithWeekdayForLocale(input)).toBe('');
+        });
+
+        // Out-of-range times
+        test.each(['24:00', '25:00', '99:99', '-1:00'])('formatTimeForLocale("%s") → ""', (input) => {
+            expect(window.formatTimeForLocale(input)).toBe('');
+        });
+
+        test.each(['24:00', '25:00'])('formatTimeByFormat("%s") → ""', (input) => {
+            expect(window.formatTimeByFormat(input)).toBe('');
+        });
+
+        // Non-HH:MM format
+        test.each(['abc', 'hello'])('formatTimeForLocale("%s") → ""', (input) => {
+            expect(window.formatTimeForLocale(input)).toBe('');
+        });
+    });
+
+    // ---------------------------------------------------------------
+    // SPEC: Unsupported Locales (Q2)
+    // - Unknown locales → 24h format (international default)
+    // ---------------------------------------------------------------
+    describe('SPEC: unsupported locale fallback (Q2)', () => {
+        test('French locale → 24h format (same as ja)', () => {
+            expect(window.formatTimeForLocale('14:30', 'fr')).toBe('14:30');
+        });
+
+        test('Chinese locale → 24h format', () => {
+            expect(window.formatTimeForLocale('14:30', 'zh')).toBe('14:30');
+        });
+
+        test('German locale → 24h format', () => {
+            expect(window.formatTimeForLocale('09:00', 'de')).toBe('09:00');
         });
     });
 

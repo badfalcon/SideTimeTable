@@ -144,6 +144,48 @@ describe('AlarmManager', () => {
             expect(alarmOpts.when).toBe(new Date(year, 5, 15, 11, 45, 0).getTime());
         });
 
+        // Q4: reminderMinutes range validation (0-60)
+        test('reminderMinutes=-5 → falls back to default 5', async () => {
+            await AlarmManager.setReminder(
+                { id: 't1', startTime: '12:00', reminder: true },
+                nextYearDateStr(), -5
+            );
+            const alarmOpts = chrome.alarms.create.mock.calls[0][1];
+            const year = new Date().getFullYear() + 1;
+            // Default 5 → fires at 11:55
+            expect(alarmOpts.when).toBe(new Date(year, 5, 15, 11, 55, 0).getTime());
+        });
+
+        test('reminderMinutes=61 → falls back to default 5', async () => {
+            await AlarmManager.setReminder(
+                { id: 't1', startTime: '12:00', reminder: true },
+                nextYearDateStr(), 61
+            );
+            const alarmOpts = chrome.alarms.create.mock.calls[0][1];
+            const year = new Date().getFullYear() + 1;
+            expect(alarmOpts.when).toBe(new Date(year, 5, 15, 11, 55, 0).getTime());
+        });
+
+        test('reminderMinutes=0 → fires at event start time', async () => {
+            await AlarmManager.setReminder(
+                { id: 't1', startTime: '12:00', reminder: true },
+                nextYearDateStr(), 0
+            );
+            const alarmOpts = chrome.alarms.create.mock.calls[0][1];
+            const year = new Date().getFullYear() + 1;
+            expect(alarmOpts.when).toBe(new Date(year, 5, 15, 12, 0, 0).getTime());
+        });
+
+        test('reminderMinutes=60 → fires 1 hour before', async () => {
+            await AlarmManager.setReminder(
+                { id: 't1', startTime: '12:00', reminder: true },
+                nextYearDateStr(), 60
+            );
+            const alarmOpts = chrome.alarms.create.mock.calls[0][1];
+            const year = new Date().getFullYear() + 1;
+            expect(alarmOpts.when).toBe(new Date(year, 5, 15, 11, 0, 0).getTime());
+        });
+
         test('no storage value → defaults to 5 → alarm at 11:55', async () => {
             await AlarmManager.setReminder(
                 { id: 't1', startTime: '12:00', reminder: true },

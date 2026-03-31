@@ -40,6 +40,16 @@ describe('settings-storage', () => {
             const result = await loadSettings(custom);
             expect(result.myKey).toBe('myValue');
         });
+
+        // Q10: unknown keys are silently dropped on save
+        test('unknown keys are not persisted', async () => {
+            await saveSettings({ openTime: '08:00', unknownKey: 'should be dropped' });
+            const result = await loadSettings();
+            expect(result.openTime).toBe('08:00');
+            // unknownKey should not exist in storage
+            const raw = await chrome.storage.sync.get(['unknownKey']);
+            expect(raw.unknownKey).toBeUndefined();
+        });
     });
 
     // ---------------------------------------------------------------
@@ -113,6 +123,17 @@ describe('settings-storage', () => {
             expect(result[1].name).toBe('OK');
             expect(result[1].calendarIds).toEqual(['c1']); // 42 filtered
             expect(result[1].collapsed).toBe(false); // 'yes' → false
+        });
+
+        // Q11: empty string id is dropped
+        test('drops groups with empty string id', async () => {
+            await saveCalendarGroups([
+                { id: '', name: 'Empty ID', calendarIds: [], collapsed: false },
+                { id: 'valid', name: 'Valid', calendarIds: [], collapsed: false }
+            ]);
+            const result = await loadCalendarGroups();
+            expect(result.length).toBe(1);
+            expect(result[0].id).toBe('valid');
         });
 
         test('truncates long group names', async () => {
