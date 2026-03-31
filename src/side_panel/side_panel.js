@@ -26,7 +26,7 @@ import { migrateEventDataToLocal } from '../lib/event-storage.js';
 import { cleanupObsoleteStorageKeys } from '../lib/storage-cleanup.js';
 import { sendMessage } from '../lib/chrome-messaging.js';
 import { getThemeById, resolveThemeColors } from '../lib/color-themes.js';
-import { setDemoMode } from '../lib/demo-data.js';
+import { setDemoMode, isDemoMode } from '../lib/demo-data.js';
 import { AlarmManager } from '../lib/alarm-manager.js';
 import { StorageHelper } from '../lib/storage-helper.js';
 
@@ -188,7 +188,7 @@ class SidePanelUIController {
         this.timelineComponent = new TimelineComponent({
             showCurrentTimeLine: true,
             onDragCreate: (startTime, endTime) => this._handleAddLocalEvent(startTime, endTime),
-            onCalendarChange: () => this._loadEventsForCurrentDate()
+            onCalendarChange: (changeInfo) => this._handleCalendarToggle(changeInfo)
         });
 
         // The modal components
@@ -465,6 +465,47 @@ class SidePanelUIController {
         }
     }
 
+    /**
+     * Handle calendar toggle with incremental update
+     * Only adds/removes events for the changed calendars instead of full reload
+     * @param {Object} changeInfo - Info about which calendars were added/removed
+     * @param {Array<string>} changeInfo.addedIds - Calendar IDs that were checked
+     * @param {Array<string>} changeInfo.removedIds - Calendar IDs that were unchecked
+     * @private
+     */
+    async _handleCalendarToggle(changeInfo) {
+        if (!changeInfo || isDemoMode()) {
+            return this._loadEventsForCurrentDate();
+        }
+
+        const { addedIds = [], removedIds = [] } = changeInfo;
+
+        if (addedIds.length === 0 && removedIds.length === 0) {
+            return this._loadEventsForCurrentDate();
+        }
+
+        const targetDate = this.dateNavService.getDate();
+
+        // Remove unchecked calendars' events
+        if (removedIds.length > 0) {
+            this.googleEventManager.removeEventsForCalendars(removedIds);
+        }
+
+        // Fetch only newly-added calendars' events
+        if (addedIds.length > 0) {
+            try {
+                await this.googleEventManager.fetchEventsForCalendars(targetDate, addedIds);
+            } catch (error) {
+                console.error('Failed to fetch events for calendars:', error);
+                return this._loadEventsForCurrentDate();
+            }
+        }
+
+        // Recalculate layout
+        if (this.eventLayoutManager) {
+            this.eventLayoutManager.calculateLayout();
+        }
+    }
 
     /**
      * Scroll to appropriate time

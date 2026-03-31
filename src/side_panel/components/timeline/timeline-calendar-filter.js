@@ -662,7 +662,9 @@ export class TimelineCalendarFilter extends Component {
             await saveSelectedCalendars(this.selectedIds);
             this._renderCalendarList();
             if (this.onCalendarChange) {
-                this.onCalendarChange();
+                const addedIds = this.selectedIds.filter(id => !previousIds.includes(id));
+                const removedIds = previousIds.filter(id => !this.selectedIds.includes(id));
+                this.onCalendarChange({ addedIds, removedIds });
             }
         } catch {
             this.selectedIds = previousIds;
@@ -712,7 +714,10 @@ export class TimelineCalendarFilter extends Component {
             // Update group header checkbox states
             this._updateGroupCheckboxStates();
             if (this.onCalendarChange) {
-                this.onCalendarChange();
+                this.onCalendarChange({
+                    addedIds: checked ? [calendarId] : [],
+                    removedIds: checked ? [] : [calendarId]
+                });
             }
         } catch {
             this.selectedIds = previousIds;

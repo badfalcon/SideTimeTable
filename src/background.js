@@ -96,6 +96,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             return true; // Indicates async response
         }
 
+        case "getEventsForCalendars": {
+            const targetDate = request.targetDate ? new Date(request.targetDate) : null;
+            const requestId = request.requestId;
+            const calendarIds = request.calendarIds || [];
+            calendarClient.getCalendarEventsForIds(targetDate, calendarIds)
+                .then(events => sendResponse({ events, requestId }))
+                .catch(error => {
+                    const detail = (error && (error.message || error.toString())) || "Event acquisition error";
+                    sendResponse({ error: detail, errorType: (error && error.name) || undefined, requestId });
+                });
+            return true;
+        }
+
         case "getCalendarList": {
             const reqIdList = request.requestId;
             calendarClient.getCalendarList()
