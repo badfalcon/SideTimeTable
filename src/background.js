@@ -185,7 +185,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             return true; // Indicates async response
 
         case "reloadSideTimeTable":
-            // The side panel reload request just returns a response
+        case "calendarSelectionChanged":
+            // These messages are handled by the side panel; just acknowledge
             sendResponse({success: true});
             return false; // Synchronous response
 

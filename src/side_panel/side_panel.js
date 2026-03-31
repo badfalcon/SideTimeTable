@@ -36,7 +36,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         sendResponse({ success: true });
         location.reload();
     }
-    if (request.action === "calendarSelectionChanged") {
+    else if (request.action === "calendarSelectionChanged") {
         sendResponse({ success: true });
         const controller = window.sidePanelController;
         if (controller) {
