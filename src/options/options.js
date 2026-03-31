@@ -395,10 +395,13 @@ class OptionsPageManager {
         }
     }
 
-    async handleCalendarSelectionChange(selectedCalendarIds) {
+    async handleCalendarSelectionChange(selectedCalendarIds, changeInfo) {
         try {
-            // Reload the side panel to reflect calendar changes
-            this._reloadSidePanel();
+            // Send incremental update to side panel instead of full reload
+            sendMessage({
+                action: 'calendarSelectionChanged',
+                changeInfo: changeInfo || null
+            });
         } catch (error) {
             logError('Calendar selection change', error);
         }
