@@ -2,7 +2,7 @@
 name: release
 description: Prepare a new release — auto-detect version bump, generate bilingual release notes from git history, update all version files, validate, and optionally commit+tag.
 user_invocable: true
-arguments: "[version] — optional semver (e.g. 1.10.0). Omit to auto-detect."
+arguments: "version — optional semver e.g. 1.10.0, omit to auto-detect"
 ---
 
 # Release Preparation Skill
@@ -14,16 +14,29 @@ You are preparing a new release of the SideTimeTable Chrome extension. Follow th
 - If the user provided a version (e.g. `/release 1.10.0`), use it as `NEW_VERSION`.
 - If no version was provided, you will auto-detect in Step 2.
 
-## Step 1: Gather Current State
+## Step 1: Gather Current State & Safety Check
 
 Run these in parallel:
 1. Read `package.json` to get the current version (`CURRENT_VERSION`).
-2. Get the git log since the last tag (or last 30 commits if no tag):
+2. Check the current branch:
    ```bash
-   git tag -l | tail -5
-   git log --format="%s" --no-merges -30
+   git branch --show-current
    ```
-3. Read the first 2 entries of `src/lib/release-notes.js` to understand the existing style.
+3. Get the git log since the last release tag:
+   ```bash
+   git tag -l --sort=-v:refname | head -5
+   ```
+   Then use the latest tag to get commits:
+   ```bash
+   git log LATEST_TAG..HEAD --format="%s" --no-merges
+   ```
+   If no tags exist, fall back to `git log --format="%s" --no-merges -30`.
+4. Read the first 2 entries of `src/lib/release-notes.js` to understand the existing style.
+
+**Branch safety check:** If the current branch is NOT `main`, warn the user:
+> 現在のブランチは `BRANCH_NAME` です。通常リリースは `main` から行います。続行しますか？
+
+If the user says no, abort.
 
 ## Step 2: Determine Version
 
@@ -35,11 +48,9 @@ If `NEW_VERSION` was NOT specified by the user:
 - Default to **patch** if unclear.
 - Calculate `NEW_VERSION` from `CURRENT_VERSION` accordingly.
 
-Present the determined version to the user and ask for confirmation before proceeding:
-> リリースバージョン: CURRENT_VERSION → NEW_VERSION
-> 続行しますか？
+Do NOT ask for confirmation here — present the version together with highlights in Step 3.
 
-## Step 3: Generate Release Highlights
+## Step 3: Generate Release Highlights & Confirm
 
 Analyze the git commits carefully and write user-facing release highlights in **both English and Japanese**.
 
@@ -57,7 +68,10 @@ Analyze the git commits carefully and write user-facing release highlights in **
 - Natural Japanese, not machine-translated. Match the style of existing ja highlights.
 - Keep it concise — Japanese release notes tend to be shorter than English equivalents.
 
-Present the highlights to the user for review before proceeding:
+Present version AND highlights together for a single confirmation:
+
+> **リリース: CURRENT_VERSION → NEW_VERSION**
+>
 > **Highlights (EN):**
 > - highlight 1
 > - highlight 2
@@ -66,17 +80,24 @@ Present the highlights to the user for review before proceeding:
 > - ハイライト1
 > - ハイライト2
 >
-> これでよろしいですか？修正があればお知らせください。
+> バージョンまたはハイライトに修正があればお知らせください。問題なければ「ok」で続行します。
+
+Wait for user approval. If the user requests changes, adjust and re-present.
 
 ## Step 4: Update Files
 
-After user approval, run the existing `prepare-release.js` script with manual highlights and skip-validation:
+After user approval, update files using `prepare-release.js`.
 
+**Important:** If any highlight contains a comma, you must escape it or write the highlights directly to `release-notes.js` instead of using `--highlights-en`/`--highlights-ja` flags (which split on commas).
+
+If highlights are comma-safe:
 ```bash
 npm run prepare-release -- NEW_VERSION --skip-validation \
   --highlights-en "highlight 1,highlight 2" \
   --highlights-ja "ハイライト1,ハイライト2"
 ```
+
+If highlights contain commas: run `prepare-release` with dummy highlights, then manually edit `src/lib/release-notes.js` to set the correct highlight text using the Edit tool.
 
 This updates: `package.json`, `manifest.prod.json`, `manifest.dev.json`, `src/lib/release-notes.js`
 
@@ -111,7 +132,7 @@ git tag NEW_VERSION
 ```
 
 Then show:
-> ✓ Release NEW_VERSION ready!
+> Release NEW_VERSION ready!
 >
 > 次のステップ:
 > - `git push origin main --tags` でリモートにプッシュ
