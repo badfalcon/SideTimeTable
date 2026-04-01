@@ -6,7 +6,7 @@
 
 import { logError } from '../lib/utils.js';
 import { RECURRENCE_TYPES } from '../lib/constants.js';
-import { loadSettings } from '../lib/settings-storage.js';
+import { loadSettings, loadSelectedCalendars } from '../lib/settings-storage.js';
 import { loadLocalEvents, loadLocalEventsForDate } from '../lib/event-storage.js';
 import { sendMessage } from '../lib/chrome-messaging.js';
 import {createTimeOnDate} from '../lib/time-utils.js';
@@ -32,6 +32,7 @@ export class GoogleEventManager {
         this.eventLayoutManager = eventLayoutManager;
         this.lastFetchDate = null; // The last date when the API was called
         this.currentFetchPromise = null; // The currently executing fetch Promise
+        this._toggleVersion = 0; // Version counter for calendar toggle race condition prevention
     }
 
     /**
@@ -157,6 +158,8 @@ export class GoogleEventManager {
     async fetchEventsForCalendars(targetDate, calendarIds) {
         if (!calendarIds || calendarIds.length === 0) return;
 
+        const versionAtStart = ++this._toggleVersion;
+
         const settings = await loadSettings();
         this.useGoogleCalendarColors = settings.useGoogleCalendarColors !== false;
         const isGoogleIntegrated = settings.googleIntegrated === true;
@@ -174,6 +177,9 @@ export class GoogleEventManager {
 
         const response = await sendMessage(message);
 
+        // If another toggle happened while we were fetching, discard this result
+        if (this._toggleVersion !== versionAtStart) return;
+
         if (!response) return;
 
         if (response.error) {
@@ -184,7 +190,15 @@ export class GoogleEventManager {
             return;
         }
 
-        await this._processEvents(response.events);
+        // Filter events against current calendar selection to prevent stale renders
+        const currentSelected = new Set(await loadSelectedCalendars());
+        const filteredEvents = response.events.filter(
+            e => e.calendarId && currentSelected.has(e.calendarId)
+        );
+
+        if (filteredEvents.length === 0) return;
+
+        await this._processEvents(filteredEvents);
     }
 
     /**
