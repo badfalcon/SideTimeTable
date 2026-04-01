@@ -1085,6 +1085,10 @@
     "message": "フォントサイズ",
     "description": "メモのフォントサイズドロップダウンのラベル"
   },
+  "memoFontSizeDefault": {
+    "message": "デフォルト",
+    "description": "デフォルトフォントサイズの横に表示されるラベル"
+  },
   "scrollbarSettings": {
     "message": "スクロールバー",
     "description": "スクロールバー設定カードのタイトル"

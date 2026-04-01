@@ -57,6 +57,9 @@ export const DEFAULT_SETTINGS = {
     thinScrollbar: false // Use thin (narrow) scrollbar in side panel
 };
 
+// Memo font size range (px)
+export const MEMO_FONT_SIZE_RANGE = { min: 10, max: 20 };
+
 // Mapping from color setting keys to CSS variable names
 // Order determines the display order in the settings UI
 export const COLOR_CSS_VARS = {

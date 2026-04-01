@@ -1085,6 +1085,10 @@
     "message": "Font Size",
     "description": "Label for the memo font size dropdown"
   },
+  "memoFontSizeDefault": {
+    "message": "Default",
+    "description": "Default label shown next to the default font size option"
+  },
   "scrollbarSettings": {
     "message": "Scrollbar",
     "description": "Title for the scrollbar settings card"

@@ -221,7 +221,7 @@ class OptionsPageManager {
             // Load the memo settings
             this.memoSettingsCard.updateSettings({
                 memoMarkdown: settings.memoMarkdown || false,
-                memoFontSize: settings.memoFontSize || 13
+                memoFontSize: settings.memoFontSize || DEFAULT_SETTINGS.memoFontSize
             });
 
             // Load the scrollbar settings

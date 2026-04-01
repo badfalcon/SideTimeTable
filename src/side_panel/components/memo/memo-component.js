@@ -5,7 +5,7 @@ import { Component } from '../base/component.js';
 import { StorageHelper } from '../../../lib/storage-helper.js';
 import { isDemoMode, getDemoMemoContent } from '../../../lib/demo-data.js';
 import { loadSettings } from '../../../lib/settings-storage.js';
-import { DEFAULT_SETTINGS } from '../../../lib/constants.js';
+import { DEFAULT_SETTINGS, MEMO_FONT_SIZE_RANGE } from '../../../lib/constants.js';
 
 const DEFAULT_HEIGHT = 150;
 const MIN_HEIGHT = 80;
@@ -175,7 +175,7 @@ export class MemoComponent extends Component {
     }
 
     _applyFontSize(size) {
-        const px = (typeof size === 'number' && size >= 10 && size <= 20)
+        const px = (typeof size === 'number' && size >= MEMO_FONT_SIZE_RANGE.min && size <= MEMO_FONT_SIZE_RANGE.max)
             ? size : DEFAULT_SETTINGS.memoFontSize;
         const value = `${px}px`;
         if (this.textarea) this.textarea.style.fontSize = value;

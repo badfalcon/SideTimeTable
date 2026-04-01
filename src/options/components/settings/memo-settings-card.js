@@ -2,10 +2,7 @@
  * MemoSettingsCard - Memo settings card component
  */
 import { CardComponent } from '../base/card-component.js';
-import { DEFAULT_SETTINGS } from '../../../lib/constants.js';
-
-const FONT_SIZE_MIN = 10;
-const FONT_SIZE_MAX = 20;
+import { DEFAULT_SETTINGS, MEMO_FONT_SIZE_RANGE } from '../../../lib/constants.js';
 
 export class MemoSettingsCard extends CardComponent {
     constructor(onSettingsChange) {
@@ -82,11 +79,12 @@ export class MemoSettingsCard extends CardComponent {
         this.fontSizeSelect.className = 'form-select form-select-sm';
         this.fontSizeSelect.id = 'memo-font-size-select';
 
-        for (let size = FONT_SIZE_MIN; size <= FONT_SIZE_MAX; size++) {
+        const defaultLabel = window.getLocalizedMessage('memoFontSizeDefault') || 'Default';
+        for (let size = MEMO_FONT_SIZE_RANGE.min; size <= MEMO_FONT_SIZE_RANGE.max; size++) {
             const option = document.createElement('option');
             option.value = size;
             option.textContent = size === DEFAULT_SETTINGS.memoFontSize
-                ? `${size}px (Default)`
+                ? `${size}px (${defaultLabel})`
                 : `${size}px`;
             if (size === this.settings.memoFontSize) {
                 option.selected = true;
