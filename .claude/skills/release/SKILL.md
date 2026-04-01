@@ -41,11 +41,10 @@ If the user says no, abort.
 ## Step 2: Determine Version
 
 If `NEW_VERSION` was NOT specified by the user:
-- Analyze the commit messages from Step 1.
-- **major** bump: Breaking changes, fundamental UI overhauls (look for `BREAKING`, `breaking change`, major rewrites)
-- **minor** bump: New features (commits starting with `feat:`, `add:`, `new:`)
-- **patch** bump: Bug fixes, improvements, refactoring only (commits starting with `fix:`, `perf:`, `refactor:`, `chore:`, `style:`, `docs:`)
-- Default to **patch** if unclear.
+- Analyze the commit messages and actual code changes from Step 1.
+- **Default is minor** bump — most releases add features and this project uses `feat:` broadly.
+- **major** bump: Only when there are breaking changes or fundamental UI overhauls that would surprise existing users. Judge by the **content** of changes, not the commit prefix. Examples: complete layout redesign, removal of existing features, data migration required.
+- **patch** bump: Only when there are zero new features — purely bug fixes or trivial improvements.
 - Calculate `NEW_VERSION` from `CURRENT_VERSION` accordingly.
 
 Do NOT ask for confirmation here — present the version together with highlights in Step 3.
