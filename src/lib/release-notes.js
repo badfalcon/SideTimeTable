@@ -6,6 +6,20 @@
  */
 export const RELEASE_NOTES = [
     {
+        version: '1.9.1',
+        date: '2026-03-29',
+        highlights: {
+            en: [
+                'RSVP is back: respond to Google Calendar invitations directly from the side panel',
+                'Bug fixes and stability improvements'
+            ],
+            ja: [
+                '出欠回答が復活：サイドパネルからGoogleカレンダーの招待に直接回答',
+                'バグ修正と安定性の向上'
+            ]
+        }
+    },
+    {
         version: '1.9.0',
         date: '2026-03-28',
         highlights: {

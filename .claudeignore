@@ -1,0 +1,23 @@
+# Build output
+dist/
+
+# Dependencies
+node_modules/
+
+# Vendor libraries (minified, no analysis value)
+src/vendor/bootstrap.min.css
+src/vendor/bootstrap.min.js
+src/vendor/popper.min.js
+
+# Images and assets (scoped to known directories)
+docs/img/
+src/img/
+
+# Source maps
+*.map
+
+# Release artifacts
+*.zip
+
+# IDE config
+.idea/

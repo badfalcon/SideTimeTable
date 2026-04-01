@@ -1241,7 +1241,9 @@ export class CalendarManagementCard extends CardComponent {
         try {
             await saveSelectedCalendars(this.selectedCalendarIds);
             if (this.onCalendarSelectionChange) {
-                this.onCalendarSelectionChange(this.selectedCalendarIds);
+                const addedIds = this.selectedCalendarIds.filter(id => !previousIds.includes(id));
+                const removedIds = previousIds.filter(id => !this.selectedCalendarIds.includes(id));
+                this.onCalendarSelectionChange(this.selectedCalendarIds, { addedIds, removedIds });
             }
             this.render();
         } catch (error) {
@@ -1362,9 +1364,12 @@ export class CalendarManagementCard extends CardComponent {
 
         try {
             await saveSelectedCalendars(this.selectedCalendarIds);
-            // Notify parent via callback
+            // Notify parent via callback with diff info
             if (this.onCalendarSelectionChange) {
-                this.onCalendarSelectionChange(this.selectedCalendarIds);
+                this.onCalendarSelectionChange(this.selectedCalendarIds, {
+                    addedIds: isChecked ? [calendarId] : [],
+                    removedIds: isChecked ? [] : [calendarId]
+                });
             }
             // Update group header checkbox states
             this._updateGroupCheckboxStates();

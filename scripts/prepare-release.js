@@ -83,8 +83,8 @@ function getCurrentVersion() {
 
 function getCommitMessages(currentVersion) {
     try {
-        const tags = execSync('git tag -l "v*"', { cwd: ROOT, encoding: 'utf8' }).trim();
-        const tagName = `v${currentVersion}`;
+        const tags = execSync('git tag -l', { cwd: ROOT, encoding: 'utf8' }).trim();
+        const tagName = currentVersion;
 
         let cmd;
         if (tags.split('\n').includes(tagName)) {
@@ -109,7 +109,7 @@ function getExistingHighlightsForPrompt() {
 
     // Extract first two entries as style examples
     const entries = [];
-    const entryRegex = /\{\s*version:\s*'[^']+',\s*date:\s*'[^']+',\s*highlights:\s*\{[^}]*en:\s*\[[^\]]*\][^}]*ja:\s*\[[^\]]*\]\s*\}\s*\}/gs;
+    const entryRegex = /\{\s*version:\s*'[^']+',\s*date:\s*'[^']+',\s*highlights:\s*\{[^}]*en:\s*\[[^[\]]*][^}]*ja:\s*\[[^[\]]*]\s*}\s*}/gs;
     let match;
     while ((match = entryRegex.exec(content)) !== null && entries.length < 2) {
         entries.push(match[0]);
@@ -133,9 +133,16 @@ async function generateHighlightsWithAI(commits) {
             model: 'claude-haiku-4-5-20251001',
             max_tokens: 1024,
             system: `You are a release notes writer for a Chrome extension called "SideTimeTable" (a side panel calendar/schedule viewer).
-Write user-facing release highlights that are concise and non-technical.
-Output ONLY valid JSON in this exact format: {"en": ["highlight 1", "highlight 2"], "ja": ["ハイライト1", "ハイライト2"]}
-Generate 1-4 highlights. Always include "Bug fixes and stability improvements" / "バグ修正と安定性の向上" as the last item if there are any fix commits.
+
+IMPORTANT RULES:
+- Write from the END USER's perspective. Focus on what users can now DO, not what was changed internally.
+- NEVER mention developer tools, scripts, CI/CD, refactoring, code quality, or internal infrastructure.
+- NEVER use technical terms like "automation", "workflow", "pipeline", "API", "OAuth", "scope".
+- Instead of describing the change, describe the BENEFIT. Example: "RSVP is back: respond to Google Calendar invitations directly from the side panel"
+- Output ONLY valid JSON in this exact format: {"en": ["highlight 1", "highlight 2"], "ja": ["ハイライト1", "ハイライト2"]}
+- Generate 1-4 highlights. Always include "Bug fixes and stability improvements" / "バグ修正と安定性の向上" as the last item if there are any fix commits.
+- If the only changes are developer-facing (scripts, CI, refactoring), return ONLY the bug fixes line.
+
 Match the tone and style of these existing release notes:
 
 ${existingExamples}`,
@@ -149,14 +156,16 @@ ${existingExamples}`,
 
         const text = response.content[0].text.trim();
         // Extract JSON from response (may be wrapped in markdown code blocks)
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        const jsonMatch = text.match(/\{[\s\S]*}/);
         if (!jsonMatch) {
-            throw new Error('No JSON found in API response');
+            console.warn('\x1b[33mWarning: No JSON found in API response. Falling back to keyword-based generation.\x1b[0m');
+            return null;
         }
 
         const parsed = JSON.parse(jsonMatch[0]);
         if (!Array.isArray(parsed.en) || !Array.isArray(parsed.ja) || parsed.en.length === 0 || parsed.ja.length === 0) {
-            throw new Error('Invalid or empty highlights from API');
+            console.warn('\x1b[33mWarning: Invalid or empty highlights from API. Falling back to keyword-based generation.\x1b[0m');
+            return null;
         }
 
         return parsed;
@@ -363,7 +372,7 @@ async function main() {
     // Step 2: Get commit messages
     const commits = getCommitMessages(currentVersion);
     if (commits.length > 0) {
-        console.log(`Found ${commits.length} commit(s) since v${currentVersion}`);
+        console.log(`Found ${commits.length} commit(s) since ${currentVersion}`);
     } else {
         console.log('No commits found (this is OK - default highlights will be used)');
     }
@@ -428,7 +437,7 @@ async function main() {
     console.log('  1. Review changes: git diff');
     console.log('  2. Edit release-notes.js highlights if needed');
     console.log(`  3. Commit: git add -A && git commit -m "Release ${args.version}"`);
-    console.log(`  4. Tag: git tag v${args.version}`);
+    console.log(`  4. Tag: git tag ${args.version}`);
     console.log(`  5. Push: git push origin main --tags`);
 }
 

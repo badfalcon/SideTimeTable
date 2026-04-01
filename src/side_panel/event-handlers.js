@@ -129,6 +129,65 @@ export class GoogleEventManager {
     }
 
     /**
+     * Remove events for specific calendars from DOM and layout manager
+     * @param {Array<string>} calendarIds - The calendar IDs to remove events for
+     */
+    removeEventsForCalendars(calendarIds) {
+        if (!calendarIds || calendarIds.length === 0) return;
+        if (!this.eventLayoutManager || !this.eventLayoutManager.events) return;
+
+        const calendarIdSet = new Set(calendarIds);
+        const eventsToRemove = [...this.eventLayoutManager.events].filter(
+            e => e.type === 'google' && calendarIdSet.has(e.calendarId)
+        );
+
+        for (const event of eventsToRemove) {
+            if (event.element && event.element.parentNode) {
+                event.element.remove();
+            }
+            this.eventLayoutManager.removeEvent(event.id);
+        }
+    }
+
+    /**
+     * Fetch events only for specific calendars and add them to the display
+     * @param {Date} targetDate - The target date
+     * @param {Array<string>} calendarIds - The calendar IDs to fetch events for
+     */
+    async fetchEventsForCalendars(targetDate, calendarIds) {
+        if (!calendarIds || calendarIds.length === 0) return;
+
+        const settings = await loadSettings();
+        this.useGoogleCalendarColors = settings.useGoogleCalendarColors !== false;
+        const isGoogleIntegrated = settings.googleIntegrated === true;
+        if (!isGoogleIntegrated) return;
+
+        const requestId = `req-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        const message = {
+            action: "getEventsForCalendars",
+            requestId,
+            calendarIds
+        };
+        if (targetDate) {
+            message.targetDate = targetDate.toISOString();
+        }
+
+        const response = await sendMessage(message);
+
+        if (!response) return;
+
+        if (response.error) {
+            throw new Error(response.error);
+        }
+
+        if (!response.events || response.events.length === 0) {
+            return;
+        }
+
+        await this._processEvents(response.events);
+    }
+
+    /**
      * Process and display demo events
      * @private
      */
