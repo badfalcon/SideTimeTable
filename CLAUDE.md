@@ -4,103 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-SideTimeTable is a Chrome extension that provides a side panel interface for managing daily events. It integrates with Google Calendar and supports local event management with sophisticated time-based layout algorithms. This is a **Manifest V3** Chrome extension that demonstrates advanced patterns for side panel integration, OAuth2 authentication, and responsive event layout management.
+SideTimeTable is a Chrome extension (Manifest V3) providing a side panel interface for managing daily events with Google Calendar integration. ES6 class-based architecture with webpack+babel build system.
 
-## Key Architecture
+For detailed architecture reference: @.claude/skills/architecture/SKILL.md
 
-This project follows a modular ES6 class-based architecture with clear separation of concerns:
-
-### Core Components
-
-- **Background Service Worker** (`src/background.js`):
-  - Handles Google Calendar API integration and OAuth2 authentication
-  - Manages Chrome Identity API for token management
-  - Provides message-based communication with side panel
-  - Implements keyboard shortcut handling (Ctrl+Shift+S / Cmd+Shift+S)
-  - Functions: `getCalendarList()`, `getCalendarEvents()`, `checkGoogleAuth()`
-  - Manages alarm-based event reminders and notifications
-
-- **Side Panel** (`src/side_panel/`): Main UI displayed in Chrome's side panel
-  - `side_panel.js`: Main controller with `SidePanelUIController` class managing initialization and coordination
-  - `time-manager.js`: Exports `EventLayoutManager` for sophisticated overlap resolution algorithms
-  - `event-handlers.js`: Exports `GoogleEventManager` and `LocalEventManager` for event data management
-  - `side_panel.html`: Bootstrap 5.3.0 based UI with modal dialogs and responsive design
-  - `side_panel.css`: Custom styling with CSS variables for theming
-  - `components/`: Modular component-based UI architecture
-    - `timeline/timeline-component.js`: Main timeline display with integrated event layout
-    - `header/header-component.js`: Date navigation and settings controls
-    - `modals/`: Modal dialog components (Google events, local events, alerts, What's New, review)
-    - `memo/memo-component.js`: Collapsible memo panel at the bottom of the side panel with persistent storage and resizable height
-    - `setup/initial-setup-component.js`: First-time user setup wizard
-    - `tutorial/tutorial-component.js`: Interactive tutorial for new users
-    - `base/component.js`: Base component class with lifecycle management
-
-- **Options Page** (`src/options/`): Extension settings and calendar management
-  - `options.js`: Settings management with component-based architecture
-  - `options.html`: Settings interface with nav-pills sidebar navigation layout
-  - `options.css`: Styling for settings page with Google-style buttons and sidebar nav
-  - `components/`: Component-based settings architecture
-    - `calendar/`: Google integration and calendar management components
-    - `settings/`: Time, color (with color blindness presets), language, shortcut, reminder, and developer settings components
-    - `base/`: Base card and control button components
-
-- **Utilities** (`src/lib/`): Shared functions and framework components
-  - `utils.js`: Core utilities (`generateTimeList`, `loadSettings`, `logError`, event storage, recurring events)
-  - `time-utils.js`: Pure functions for time calculations (`calculateWorkHours`, `isToday`)
-  - `localize.js`: i18n helper functions with Chrome extension API integration
-  - `locale-utils.js`: Locale-aware date/time formatting (12h/24h format support)
-  - `demo-data.js`: Mock data system for development and screenshots
-  - `current-time-line-manager.js`: Dedicated current time indicator management with date-aware visibility
-  - `storage-helper.js`: Chrome storage API wrapper with async/await support
-  - `alarm-manager.js`: Event reminder system using Chrome alarms API
-  - `release-notes.js`: Version history and update highlights for What's New modal
-  - `google-button-helper.js`: Helper utilities for Google-style buttons
-
-### Specialized Systems
-
-**Component-Based Architecture**: Modular UI system with proper lifecycle management:
-- `Component` base class with standardized `createElement()`, `destroy()`, and lifecycle methods
-- `SidePanelComponentManager` for centralized component registration and management
-- Modal system with `ModalComponent` base class for dialog management
-- Proper cleanup and memory management with explicit resource disposal
-
-**Event Layout Engine**: The `EventLayoutManager` class implements sophisticated overlap resolution:
-- Groups overlapping events by time intersection analysis
-- Lane assignment algorithm for optimal horizontal placement with no overlaps
-- Dynamic width calculation with responsive design support
-- Performance optimization through time value caching
-- Supports padding adjustments based on lane density (basic/compact/micro modes)
-- Side-by-side display of duplicate events (e.g., same meeting with multiple participants)
-
-**Current Time Line Management**: Dedicated `CurrentTimeLineManager` system:
-- Single-source-of-truth for current time indicator display
-- Date-aware visibility (only shows on current day)
-- Automatic position updates every minute with efficient DOM manipulation
-- Proper cleanup and duplicate prevention to avoid visual artifacts
-- Integration with timeline component date changes
-
-**Localization System**: Comprehensive i18n support:
-- `_locales/en/`, `_locales/ja/` message files with 400+ localized strings
-- Language detection with auto/manual selection
-- Locale-aware time formatting (12h for English, 24h for Japanese)
-- Demo data localization for consistent experience across languages
-
-**Recurring Events System**: Sophisticated recurring event management:
-- Supports daily, weekly, monthly, and weekdays recurrence patterns
-- Exception handling for modified/deleted instances
-- Seamless integration with local and Google events
-- Stored separately with efficient date-based retrieval
-
-**Reminder and Notification System**: Chrome alarm-based reminders:
-- `AlarmManager` class for centralized alarm management
-- Configurable reminder timing (default: 5 minutes before)
-- Chrome notifications for upcoming events
-- Automatic cleanup of past alarms
-- Integration with both local and recurring events
-
-## Development Commands
-
-**This project uses webpack + babel for building.** ES6 modules are bundled and transformed to CommonJS for Chrome extension compatibility.
+## Commands
 
 **Build commands:**
 ```bash
@@ -117,317 +25,46 @@ npm run lint          # Run ESLint
 npm run build         # Verify production build succeeds
 ```
 
-> **Important:** After modifying any source file (`src/`), always run `npm test` and `npm run lint` to catch regressions before committing. If tests fail, fix the issue before proceeding.
+> **IMPORTANT:** After modifying any source file in `src/`, always run `npm test` and `npm run lint` to catch regressions before committing. If tests fail, fix the issue before proceeding.
 
-**Build system architecture:**
-- **Webpack**: Bundles ES6 modules into CommonJS format
-- **Babel**: Transforms modern JavaScript (ES6+) for compatibility
-- **Entry points**: `background.js`, `side_panel.js`, `options.js`
-- **Output**: `dist/` directory with bundled `.bundle.js` files
-- **Configuration files**:
-  - `webpack.config.js`: Webpack configuration with babel-loader
-  - `babel.config.js`: Babel presets for ES6 → CommonJS transformation
-  - `build-zip.js`: Automated release packaging script
+## Architecture Summary
 
-**IntelliJ IDEA integration:**
-- Pre-configured run configurations in `.idea/runConfigurations/`:
-  - `Build.xml`: Production build
-  - `Dev__Watch_.xml`: Development mode with file watching
-  - `Package__Release_.xml`: Create release zip file
+- **Background Service Worker** (`src/background.js`): Google Calendar API, OAuth2 via Chrome Identity API, message-based communication
+- **Side Panel** (`src/side_panel/`): Main UI with `SidePanelUIController`, `EventLayoutManager`, component-based architecture
+- **Options Page** (`src/options/`): Settings management with component-based architecture
+- **Utilities** (`src/lib/`): Shared functions, time utils, storage helpers, i18n, alarm manager
 
-## Extension Development
+## Chrome Extension Gotchas
 
-**Loading the extension:**
-1. Run `npm install` to install dependencies
-2. Run `npm run build` to build the extension
-3. Open Chrome and navigate to `chrome://extensions/`
-4. Enable "Developer mode"
-5. Click "Load unpacked" and select the project root directory (contains manifest.json)
-
-**Development workflow:**
-1. Run `npm run dev` to start file watching (recommended for active development)
-2. Edit source files in `src/` directory
-3. Webpack automatically rebuilds on file save
-4. Reload extension in Chrome to see changes (click refresh icon or Ctrl+R on extensions page)
-5. Use Developer Tools for debugging (F12 on side panel, or click "service worker" link for background.js)
-
-**Why webpack/babel is needed:**
-- Chrome Extension Manifest V3 service workers do not support ES6 `import`/`export`
-- Webpack bundles all modules and their dependencies into single files
-- Babel transforms ES6+ syntax to CommonJS for compatibility
-- HTML-loaded scripts (`side_panel.js`, `options.js`) are also bundled for consistency
-
-**Google API Setup:**
-- OAuth2 configuration in `manifest.json` with `oauth2.client_id` and `oauth2.scopes`
-- Requires Google Calendar API credentials for production use
-- Current client_id in manifest.json is for development/demo
-- `manifest.sample.json` provides template for OAuth configuration
-- Uses Chrome Identity API for secure token management
+- MV3 service workers do not support ES6 `import`/`export` → webpack bundles all modules to `dist/`
+- Entry points: `background.js`, `side_panel.js`, `options.js` → output as `*.bundle.js`
+- Demo mode: `?demo=true` URL parameter or `localStorage.sideTimeTableDemo=true`
+- OAuth2: configured in `manifest.json` (`oauth2.client_id`), uses Chrome Identity API
 - Scope: `https://www.googleapis.com/auth/calendar.readonly`
+- `manifest.dev.json` / `manifest.prod.json` provide environment-specific configurations
 
-**Demo Mode**:
-- URL parameter: `chrome-extension://[id]/src/side_panel/side_panel.html?demo=true`
-- Or localStorage: `sideTimeTableDemo=true`
-- Provides realistic mock data for development without API access
+## Code Style
 
-## Technical Implementation Details
+- ES modules (`import`/`export`), not CommonJS (`require`)
+- Component base class pattern: `createElement()`, `destroy()` lifecycle
+- CSS variable naming: `--side-calendar-*` (theme details in @.claude/rules/theme-support.md)
+- **No debug logs in production code** — clean console output
+- i18n: `_locales/en/` and `_locales/ja/` with 400+ localized strings, `__MSG_key__` placeholders
+- Time formats: 12h for English, 24h for Japanese
+- Date formats: MM/DD/YYYY (English), YYYY/MM/DD (Japanese)
 
-### Time Management System
-- **24-hour coordinate system**: Events positioned using `top: ${minutes_since_midnight + 30}px` (30px offset for top extension zone)
-- **Responsive width calculation**: Auto-adjusts to side panel width changes via ResizeObserver
-- **Business hours visualization**: Configurable work time highlighting with break time support
-- **Current time indicator**: Managed by `CurrentTimeLineManager` with date-aware visibility
-- **Scroll positioning**: Smart scroll to current time or business hours
-- **Date navigation**: Integrated with header component for seamless date switching
+## Event System
 
-### Event Storage and Management
-- **Google Events**: Fetched via Calendar API with multi-calendar support and color preservation
-- **Local Events**: Stored in Chrome storage with date-scoped keys (`localEvents_YYYY-MM-DD`)
-- **Recurring Events**: Separate storage with pattern definitions and exception handling
-- **Automatic cleanup**: Local events auto-reset at midnight for daily scope
-- **Event filtering**: Skips cancelled events and declined invitations
-- **Overlap detection**: Time intersection algorithm for layout management
-- **Duplicate handling**: Displays duplicate events separately (e.g., same meeting with multiple participants)
-- **Event modals**: Dedicated modal components for Google and local event details
-- **Reminders**: Optional per-event reminders with Chrome alarm integration
+- **24h coordinate system**: `top = minutes_since_midnight + 30px` (30px offset for top extension zone)
+- **Local events**: Chrome storage with date-scoped keys (`localEvents_YYYY-MM-DD`)
+- **EventLayoutManager**: overlap detection → lane assignment → width calculation
+- **Recurring events**: separate storage with daily/weekly/monthly/weekdays patterns and exception handling
+- **Adaptive padding**: basic (10px), compact (8px), micro (6px) based on lane density
 
-### Responsive Design Features
-- **Auto-width adjustment**: ResizeObserver monitors side panel width changes
-- **Lane-based layout**: Events distributed across lanes when overlapping
-- **Adaptive padding**: Adjusts based on lane density (basic: 10px, compact: 8px, micro: 6px)
-- **Minimum width enforcement**: Ensures readability even in narrow panels
-- **Content optimization**: Shows title-only for very narrow events
+## Development Workflow
 
-### Performance Optimizations
-- **Time value caching**: `Map` cache for repeated time calculations
-- **Debounced operations**: 300ms debounce for date navigation and resize events
-- **Efficient DOM updates**: Batch DOM modifications and use `requestAnimationFrame`
-- **Memory management**: Explicit cleanup of event references and listeners
-
-## Key Files for Modification
-
-### Core Functionality
-- `src/side_panel/side_panel.js`: Main UI controller with `SidePanelUIController` class
-- `src/background.js`: Google Calendar integration, OAuth2, and message handling (production-ready, no debug logs)
-- `src/side_panel/time-manager.js`: `EventLayoutManager` for sophisticated event layout algorithms
-- `src/side_panel/event-handlers.js`: Event data management with `GoogleEventManager` and `LocalEventManager`
-- `src/side_panel/components/`: Component-based UI architecture
-  - `timeline/timeline-component.js`: Main timeline display with current time line integration
-  - `header/header-component.js`: Date navigation controls
-  - `modals/google-event-modal.js`: Google Calendar event details display
-  - `modals/local-event-modal.js`: Local event creation and editing
-  - `base/component.js`: Base component class with lifecycle management
-
-### UI and Styling
-- `src/side_panel/side_panel.html`: Main UI structure with Bootstrap components
-- `src/side_panel/side_panel.css`: Custom styling with CSS variables for theming
-- `src/options/options.html`: Settings page interface
-- `src/options/options.css`: Settings page styling
-
-### Configuration and Data
-- `manifest.json`: Extension permissions, OAuth2 config, and Chrome API declarations
-- `_locales/[lang]/messages.json`: Localized strings for UI text (en/ja with 400+ strings)
-- `src/lib/utils.js`: Default settings and utility functions
-- `src/lib/demo-data.js`: Mock data for development and demonstrations
-- `src/lib/current-time-line-manager.js`: Current time indicator management
-- `src/lib/storage-helper.js`: Chrome storage API utilities
-
-### Development Support
-- `manifest.sample.json`: Template for OAuth2 configuration
-- `zip_project.bat` / `zip_project.sh`: Distribution packaging scripts
-- `store-descriptions.md`: Chrome Web Store listing content in multiple languages
-
-## Dependencies and Libraries
-
-### UI Framework
-- **Bootstrap 5.3.0**: Complete UI framework (loaded locally from `src/lib/bootstrap.min.css/js`)
-- **Popper.js**: Tooltip and popover positioning (loaded locally from `src/lib/popper.min.js`)
-- **Font Awesome 6.7.1**: Comprehensive icon library (loaded via CDN)
-
-### Chrome Extension APIs
-- **Storage API**: Settings and local event persistence with sync and local storage
-- **Identity API**: OAuth2 authentication and token management
-- **Side Panel API**: Chrome's native side panel integration
-- **i18n API**: Built-in internationalization support
-- **Runtime API**: Message passing between background and content scripts
-- **Alarms API**: Scheduled event reminders and periodic tasks
-- **Notifications API**: Desktop notifications for event reminders
-- **Context Menus API**: Right-click menu integration for quick access
-
-### External APIs
-- **Google Calendar API v3**: Read-only calendar access with multi-calendar support
-- **OAuth2**: Secure authentication flow with minimal required permissions
-
-## Localization and Internationalization
-
-### Supported Locales
-- **English** (`en`): Primary language with US English variant (`en_US`)
-- **Japanese** (`ja`): Complete translation including cultural adaptations
-- **Auto-detection**: Browser language detection with manual override option
-
-### Localization Features
-- **400+ localized strings**: Comprehensive coverage of all UI text
-- **Cultural adaptations**:
-  - Time formats: 12-hour (English) vs 24-hour (Japanese)
-  - Date formats: MM/DD/YYYY (English) vs YYYY/MM/DD (Japanese)
-  - Time separators: hyphen (-) vs tilde (～) for time ranges
-- **Demo data localization**: Even mock data respects user's language preference
-- **Dynamic language switching**: Runtime language changes with extension reload
-
-### Implementation Details
-- Chrome's native i18n system with `__MSG_key__` placeholders
-- Custom locale utilities for complex formatting needs
-- Graceful fallbacks for missing translations
-- Locale-aware number and date formatting
-
-## Advanced Features
-
-### Event Layout Algorithm
-1. **Time-based grouping**: Events grouped by temporal overlap detection
-2. **Lane assignment**: Greedy algorithm assigns events to minimum lanes
-3. **Width calculation**: Dynamic width based on available space and lane count
-4. **Conflict resolution**: Handles edge cases like zero-duration events
-5. **Visual optimization**: Adjusts padding and gaps based on layout density
-
-### Calendar Management
-- **Multi-calendar support**: Display events from multiple Google Calendars
-- **Calendar search**: Real-time search functionality for large calendar lists
-- **Color preservation**: Maintains Google Calendar colors for visual consistency
-- **Selective visibility**: Per-calendar show/hide toggles
-- **Auto-discovery**: Automatically detects and suggests available calendars
-
-### Accessibility and UX
-- **Keyboard shortcuts**: Configurable hotkeys for side panel access (Ctrl+Shift+S / Cmd+Shift+S)
-- **Screen reader support**: Semantic HTML and ARIA labels
-- **Responsive design**: Adapts to various side panel widths
-- **Error handling**: Graceful degradation with user-friendly error messages
-- **Loading states**: Visual feedback for async operations
-- **First-run experience**: Interactive tutorial and setup wizard for new users
-- **Update notifications**: What's New modal showing version highlights
-- **Context menu**: Quick access to changelog and settings
-
-## Development Best Practices
-
-### Code Organization
-- **ES6 modules**: Clean import/export pattern with explicit dependencies
-- **Component-based architecture**: Modular UI with lifecycle management and single responsibility
-- **Manager classes**: Dedicated classes for event handling, layout, and time management
-- **Pure functions**: Time utilities are side-effect free for testability
-- **Event-driven design**: Loose coupling through Chrome message passing
-- **Production-ready**: No debug logs in production code, clean console output
-
-### Error Handling
-- **Graceful degradation**: App functions even without Google Calendar access
-- **User feedback**: Clear error messages with actionable guidance
-- **Logging**: Comprehensive error logging for debugging
-- **Fallback behaviors**: Demo mode when API access fails
-
-### Security Considerations
-- **Minimal permissions**: Only requests necessary Chrome extension permissions
-- **OAuth2 best practices**: Secure token handling with automatic refresh
-- **Data privacy**: No external data transmission beyond Google APIs
-- **Input validation**: Sanitization of user inputs and API responses
-
-### Performance Guidelines
-- **Lazy loading**: Components initialized only when needed
-- **Memory efficiency**: Explicit cleanup of event listeners and DOM references
-- **Caching strategies**: Time calculations cached for repeated operations
-- **Batch operations**: DOM updates batched to minimize reflows
-
-### Theme Support (Dark/Light Mode)
-This project supports dark and light themes via CSS custom properties and `[data-theme="dark"]` selectors. **All new UI elements must be theme-aware.**
-
-- **Never use hardcoded colors in inline styles or JavaScript.** Always use CSS classes that reference CSS variables.
-- **CSS variable naming convention**: `--side-calendar-*` (defined in `:root` in `side_panel.css`)
-- **Key CSS variables for form elements**:
-  - Background: `--side-calendar-input-bg`, `--side-calendar-textarea-bg`, `--side-calendar-modal-bg`
-  - Borders: `--side-calendar-input-border`, `--side-calendar-textarea-border`, `--side-calendar-border-color`
-  - Text: `inherit` or `--side-calendar-panel-text-color`, `--side-calendar-secondary-text-color`
-  - Subtle backgrounds: `--side-calendar-subtle-bg`, `--side-calendar-subtle-bg-hover`
-  - Buttons: `--side-calendar-btn-secondary-bg`, `--side-calendar-btn-secondary-text`
-- **When adding new UI elements**:
-  1. Define styles in the appropriate CSS file (`side_panel.css` or `options.css`), not as inline `style.cssText`
-  2. Use existing CSS variables for colors, backgrounds, and borders
-  3. Use `color: inherit` for text to respect the parent theme context
-  4. If a new variable is needed, add it to both `:root` (light) and the dark theme override section
-  5. Verify the element looks correct in both light and dark modes
-- **Dark theme overrides**: Colors that need dark-mode-specific values are set via JS (`applyDarkThemeColors` in the settings system) which updates CSS variables at runtime
-- **Existing patterns to follow**: See `input[type="text"]` and `.event-description-input` in `side_panel.css` for form element styling examples
-
-## Additional Project Structure
-
-### Documentation and Assets
-- **`docs/`**: Project website with privacy policy and promotional content
-  - `index.html`: Project landing page with feature showcase
-  - `privacy.html`: Privacy policy for Chrome Web Store compliance
-  - `img/`: Screenshots and promotional images
-  - `style.css`: Website styling
-
-### Reserved Directories
-- **`src/services/`**: Reserved for future service modules (currently empty)
-- **`src/side_panel/components/`**: Component-based UI architecture (active)
-  - `base/`: Base component classes
-  - `timeline/`: Timeline display components
-  - `header/`: Header and navigation components
-  - `modals/`: Modal dialog components
-  - `setup/`: Initial setup wizard
-  - `tutorial/`: Interactive tutorial
-- **`src/options/components/`**: Options page component architecture (active)
-  - `base/`: Base card and control components
-  - `calendar/`: Calendar management components
-  - `settings/`: Various settings card components
-- **`src/changelog/`**: Standalone changelog page with version history
-- **`.idea/`**: IntelliJ IDEA project configuration
-- **`.git/`**: Git version control (excluded from distribution)
-
-### Build System Files
-- **`webpack.config.js`**: Webpack configuration for bundling
-- **`babel.config.js`**: Babel configuration for ES6 → CommonJS transformation
-- **`build-zip.js`**: Automated release package creation script
-- **`package.json`**: npm dependencies and scripts
-- **`dist/`**: Build output directory (gitignored)
-  - `background.bundle.js`: Bundled background service worker
-  - `side_panel.bundle.js`: Bundled side panel script
-  - `options.bundle.js`: Bundled options page script
-
-### Distribution Files
-- **`store-descriptions.md`**: Chrome Web Store listing content in Japanese and English
-- **`README.md`**: Project overview and installation instructions
-- **`LICENSE`**: Apache License 2.0 (referenced in README)
-- **`SideTimeTable-release.zip`**: Auto-generated release package (gitignored)
-
-## Recent Improvements (Latest Updates)
-
-For version-by-version highlights, see `src/lib/release-notes.js`.
-
-### Build System Integration (2025)
-- **Webpack + Babel introduction**: Full build system for ES6 → CommonJS transformation
-- **Automated bundling**: All JavaScript files bundled for consistent module handling
-- **Service worker compatibility**: Background script now works correctly with ES6 imports
-- **Development workflow**: File watching with automatic rebuild on save
-- **Release automation**: `npm run package` creates distribution-ready zip file
-- **IntelliJ IDEA integration**: Pre-configured run configurations for Build, Dev, Package
-
-### UI/UX Improvements
-- **Removed attendance status icons**: Event cards now display only time and title (no ✅❌❓ icons)
-- **Cleaner event display**: Simplified event card design for better readability
-- **First-run experience**: Tutorial and setup wizard for new users
-
-### Current Time Line Management
-- **Resolved duplicate time line issue**: Replaced duplicate implementations with unified `CurrentTimeLineManager`
-- **Date-aware visibility**: Current time line only displays on today's date
-- **Proper lifecycle management**: Automatic cleanup and memory management
-- **Integration**: Seamless integration with timeline component date changes
-
-### Code Quality Improvements
-- **Removed debug logs**: Production-ready code with clean console output
-- **Component lifecycle**: Proper cleanup in destroy methods
-- **Memory management**: Explicit resource disposal and DOM cleanup
-- **Duplicate prevention**: Systematic cleanup of existing elements before creating new ones
-
-### Event Layout Enhancements
-- **Side-by-side display**: Duplicate events (same meeting with multiple participants) now display separately
-- **Lane assignment**: Improved algorithm ensures proper horizontal spacing without overlaps
-- **ResponsiveObserver**: Dynamic width adjustments for optimal layout
-
-This architecture demonstrates modern Chrome extension development with clean separation of concerns, robust error handling, comprehensive internationalization support, production-ready code quality, and a professional build system for maintainable development.
+1. Run `npm run dev` for development (webpack watch mode)
+2. Load extension: `chrome://extensions/` → Developer mode → Load unpacked (project root)
+3. Reload extension in Chrome to see changes
+4. Run `npm test && npm run lint` before committing
+5. Use Developer Tools for debugging (F12 on side panel)
