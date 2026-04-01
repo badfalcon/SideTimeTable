@@ -42,9 +42,10 @@ If the user says no, abort.
 
 If `NEW_VERSION` was NOT specified by the user:
 - Analyze the commit messages and actual code changes from Step 1.
-- **Default is minor** bump — most releases add features and this project uses `feat:` broadly.
-- **major** bump: Only when there are breaking changes or fundamental UI overhauls that would surprise existing users. Judge by the **content** of changes, not the commit prefix. Examples: complete layout redesign, removal of existing features, data migration required.
-- **patch** bump: Only when there are zero new features — purely bug fixes or trivial improvements.
+- Judge by the **impact on end users**, not by commit prefixes (this project uses `feat:` broadly for small additions too).
+- **major** bump: Breaking changes or fundamental UI overhauls that would surprise existing users. Examples: complete layout redesign, removal of existing features, data migration required.
+- **minor** bump: Significant new capabilities that users would notice and seek out. Examples: a whole new panel, a new integration, a major new workflow.
+- **patch** bump (default): Small additions, settings, tweaks, bug fixes, performance improvements. Most releases fall here. Examples: adding a font size option, optimizing an existing feature, fixing a race condition.
 - Calculate `NEW_VERSION` from `CURRENT_VERSION` accordingly.
 
 Do NOT ask for confirmation here — present the version together with highlights in Step 3.
