@@ -2,6 +2,7 @@
  * MemoSettingsCard - Memo settings card component
  */
 import { CardComponent } from '../base/card-component.js';
+import { DEFAULT_SETTINGS, MEMO_FONT_SIZE_RANGE } from '../../../lib/constants.js';
 
 export class MemoSettingsCard extends CardComponent {
     constructor(onSettingsChange) {
@@ -16,9 +17,11 @@ export class MemoSettingsCard extends CardComponent {
 
         this.onSettingsChange = onSettingsChange;
         this.markdownCheckbox = null;
+        this.fontSizeSelect = null;
 
         this.settings = {
-            memoMarkdown: false
+            memoMarkdown: false,
+            memoFontSize: DEFAULT_SETTINGS.memoFontSize
         };
     }
 
@@ -62,11 +65,45 @@ export class MemoSettingsCard extends CardComponent {
         container.appendChild(checkWrapper);
         container.appendChild(helpText);
 
+        // Font size dropdown
+        const fontSizeGroup = document.createElement('div');
+        fontSizeGroup.className = 'mt-3';
+
+        const fontSizeLabel = document.createElement('label');
+        fontSizeLabel.className = 'form-label';
+        fontSizeLabel.htmlFor = 'memo-font-size-select';
+        fontSizeLabel.setAttribute('data-localize', '__MSG_memoFontSizeLabel__');
+        fontSizeLabel.textContent = window.getLocalizedMessage('memoFontSizeLabel') || 'Font Size';
+
+        this.fontSizeSelect = document.createElement('select');
+        this.fontSizeSelect.className = 'form-select form-select-sm';
+        this.fontSizeSelect.id = 'memo-font-size-select';
+
+        const defaultLabel = window.getLocalizedMessage('memoFontSizeDefault') || 'Default';
+        for (let size = MEMO_FONT_SIZE_RANGE.min; size <= MEMO_FONT_SIZE_RANGE.max; size++) {
+            const option = document.createElement('option');
+            option.value = size;
+            option.textContent = size === DEFAULT_SETTINGS.memoFontSize
+                ? `${size}px (${defaultLabel})`
+                : `${size}px`;
+            if (size === this.settings.memoFontSize) {
+                option.selected = true;
+            }
+            this.fontSizeSelect.appendChild(option);
+        }
+
+        fontSizeGroup.appendChild(fontSizeLabel);
+        fontSizeGroup.appendChild(this.fontSizeSelect);
+        container.appendChild(fontSizeGroup);
+
         return container;
     }
 
     _setupEventListeners() {
         this.markdownCheckbox?.addEventListener('change', () => {
+            this._handleSettingsChange();
+        });
+        this.fontSizeSelect?.addEventListener('change', () => {
             this._handleSettingsChange();
         });
     }
@@ -82,7 +119,8 @@ export class MemoSettingsCard extends CardComponent {
 
     getSettings() {
         return {
-            memoMarkdown: this.markdownCheckbox?.checked || false
+            memoMarkdown: this.markdownCheckbox?.checked || false,
+            memoFontSize: parseInt(this.fontSizeSelect?.value, 10) || DEFAULT_SETTINGS.memoFontSize
         };
     }
 
@@ -92,10 +130,13 @@ export class MemoSettingsCard extends CardComponent {
         if (this.markdownCheckbox) {
             this.markdownCheckbox.checked = this.settings.memoMarkdown;
         }
+        if (this.fontSizeSelect) {
+            this.fontSizeSelect.value = this.settings.memoFontSize;
+        }
     }
 
     resetToDefaults() {
-        this.updateSettings({ memoMarkdown: false });
+        this.updateSettings({ memoMarkdown: false, memoFontSize: DEFAULT_SETTINGS.memoFontSize });
         this._handleSettingsChange();
     }
 }
