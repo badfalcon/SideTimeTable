@@ -1081,6 +1081,10 @@
     "message": "有効にすると、編集していないときにメモがMarkdown形式で表示されます。クリックすると編集モードに切り替わります。",
     "description": "Markdownトグルのヘルプテキスト"
   },
+  "memoFontSizeLabel": {
+    "message": "フォントサイズ",
+    "description": "メモのフォントサイズドロップダウンのラベル"
+  },
   "scrollbarSettings": {
     "message": "スクロールバー",
     "description": "スクロールバー設定カードのタイトル"

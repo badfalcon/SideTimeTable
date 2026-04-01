@@ -220,7 +220,8 @@ class OptionsPageManager {
 
             // Load the memo settings
             this.memoSettingsCard.updateSettings({
-                memoMarkdown: settings.memoMarkdown || false
+                memoMarkdown: settings.memoMarkdown || false,
+                memoFontSize: settings.memoFontSize || 13
             });
 
             // Load the scrollbar settings
@@ -454,7 +455,8 @@ class OptionsPageManager {
             const currentSettings = await loadSettings();
             const updatedSettings = {
                 ...currentSettings,
-                memoMarkdown: memoSettings.memoMarkdown
+                memoMarkdown: memoSettings.memoMarkdown,
+                memoFontSize: memoSettings.memoFontSize
             };
 
             await saveSettings(updatedSettings);
