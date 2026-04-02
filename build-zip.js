@@ -43,6 +43,10 @@ archive.file('src/lib/localize.js', { name: 'src/lib/localize.js' });
 archive.file('src/lib/locale-utils.js', { name: 'src/lib/locale-utils.js' });
 archive.glob('*.min.js', { cwd: 'src/lib' }, { prefix: 'src/lib' });
 
+// src/vendor/ - Bootstrap, Popper, etc.
+console.log('  ✓ src/vendor/');
+archive.directory('src/vendor/', 'src/vendor');
+
 // _locales/
 console.log('  ✓ _locales/');
 archive.directory('_locales/', '_locales');
