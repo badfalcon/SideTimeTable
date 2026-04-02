@@ -6,6 +6,18 @@
  */
 export const RELEASE_NOTES = [
     {
+        version: '1.9.3',
+        date: '2026-04-02',
+        highlights: {
+            en: [
+                'Bug fixes and stability improvements'
+            ],
+            ja: [
+                'バグ修正と安定性の向上'
+            ]
+        }
+    },
+    {
         version: '1.9.2',
         date: '2026-04-02',
         highlights: {
