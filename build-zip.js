@@ -35,7 +35,7 @@ archive.directory('dist/', 'dist');
 // src/ - HTML and CSS only
 console.log('  ✓ src/ (HTML, CSS, images, libs)');
 archive.glob('**/*.html', { cwd: 'src' }, { prefix: 'src' });
-archive.glob('**/*.css', { cwd: 'src' }, { prefix: 'src' });
+archive.glob('**/*.css', { cwd: 'src', ignore: ['vendor/**'] }, { prefix: 'src' });
 archive.directory('src/img/', 'src/img');
 
 // src/lib/ - Non-JS files and specific required JS files
