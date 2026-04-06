@@ -5,6 +5,9 @@
     --side-calendar-break-time-color: #bcdcfb;
     --side-calendar-local-event-color: #bbf2b1;
     --side-calendar-google-event-default-color: #fff0b8;
+    --side-calendar-ooo-event-color: #e8e8e8;
+    --side-calendar-ooo-event-text-color: #666666;
+    --side-calendar-ooo-event-stripe-color: rgba(0, 0, 0, 0.06);
     --side-calendar-current-time-line-color: #ff0000;
     /* Computed text colors (auto-set by JS based on background luminance) */
     --side-calendar-timeline-text-color: #000000;
@@ -269,6 +272,25 @@ body {
 
 .google-event {
     /* Background color is set dynamically from Google Calendar API */
+}
+
+.google-event-ooo {
+    background-color: var(--side-calendar-ooo-event-color);
+    color: var(--side-calendar-ooo-event-text-color);
+    background-image: repeating-linear-gradient(
+        135deg,
+        transparent,
+        transparent 4px,
+        var(--side-calendar-ooo-event-stripe-color) 4px,
+        var(--side-calendar-ooo-event-stripe-color) 8px
+    );
+    opacity: 0.85;
+}
+
+[data-theme="dark"] .google-event-ooo {
+    --side-calendar-ooo-event-color: #3a3a3a;
+    --side-calendar-ooo-event-text-color: #aaaaaa;
+    --side-calendar-ooo-event-stripe-color: rgba(255, 255, 255, 0.06);
 }
 
 .local-event {

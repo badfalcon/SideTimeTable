@@ -308,6 +308,25 @@ function _devTeamEvents(today, locale) {
             calendarBackgroundColor: '#FFC107',
             calendarForegroundColor: '#000000',
             htmlLink: 'https://calendar.google.com/calendar/event?eid=demo13'
+        },
+        // 13:00–18:00  Out of office (half-day PTO)
+        {
+            id: 'demo-ooo-1',
+            summary:  T('Out of office', '不在'),
+            description: T('On PTO - back tomorrow', '有休取得中 - 明日戻ります'),
+            location: '',
+            start: { dateTime: _d(today, 13, 0) },
+            end:   { dateTime: _d(today, 18, 0) },
+            eventType: 'outOfOffice',
+            outOfOfficeProperties: {
+                autoDeclineMode: 'declineAllConflictingInvitations',
+                declineMessage: T('I am out of the office and will respond when I return.', '不在のため、戻り次第対応いたします。')
+            },
+            calendarId: 'casey@team.com',
+            calendarName: T('Casey Morgan', '中村 真由美'),
+            calendarBackgroundColor: '#00BCD4',
+            calendarForegroundColor: '#FFFFFF',
+            htmlLink: 'https://calendar.google.com/calendar/event?eid=demo-ooo-1'
         }
     ];
 }

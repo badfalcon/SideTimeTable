@@ -239,8 +239,12 @@ export class GoogleEventManager {
                 switch (event.eventType) {
                     case 'workingLocation':
                     case 'focusTime':
-                    case 'outOfOffice':
                         continue;
+                    case 'outOfOffice': {
+                        const uniqueEvent = { ...event, uniqueId };
+                        await this._createGoogleEventElement(uniqueEvent, { isOutOfOffice: true });
+                        break;
+                    }
                     case 'default': {
                         const uniqueEvent = { ...event, uniqueId };
                         await this._createGoogleEventElement(uniqueEvent);
@@ -259,7 +263,7 @@ export class GoogleEventManager {
      * Create a Google event element
      * @private
      */
-    async _createGoogleEventElement(event) {
+    async _createGoogleEventElement(event, options = {}) {
         // Skip all-day events
         if (event.start.date || event.end.date) {
             return;
@@ -274,11 +278,15 @@ export class GoogleEventManager {
         }
 
         // Create the positioned event element via the factory
+        const cssClass = options.isOutOfOffice
+            ? 'event google-event google-event-ooo'
+            : 'event google-event';
+        const title = event.summary || (options.isOutOfOffice ? window.getLocalizedMessage('outOfOffice') : '');
         const { eventDiv } = EventElementFactory.createEventElement({
             startDate,
             endDate,
-            cssClass: 'event google-event',
-            tooltip: event.summary,
+            cssClass,
+            tooltip: title,
             initialWidth: this.eventLayoutManager.maxWidth
         });
 
@@ -299,14 +307,14 @@ export class GoogleEventManager {
             }
         });
 
-        // Apply the Google colors directly (unless disabled by user setting)
-        if (this.useGoogleCalendarColors && event.calendarBackgroundColor) {
+        // Apply the Google colors directly (unless disabled by user setting or OOO event)
+        if (this.useGoogleCalendarColors && event.calendarBackgroundColor && !options.isOutOfOffice) {
             eventDiv.style.backgroundColor = event.calendarBackgroundColor;
             eventDiv.style.color = event.calendarForegroundColor;
         }
 
         // Set the locale-aware time display asynchronously (with attendee information)
-        await this._setEventContentWithLocale(eventDiv, startDate, event.summary, event);
+        await this._setEventContentWithLocale(eventDiv, startDate, title, event);
 
         this.googleEventsDiv.appendChild(eventDiv);
 
