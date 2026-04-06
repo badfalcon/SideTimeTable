@@ -97,7 +97,7 @@ export class GoogleEventModal extends ModalComponent {
             const titleLink = document.createElement('a');
             titleLink.href = event.htmlLink;
             titleLink.target = '_blank';
-            titleLink.textContent = event.summary || window.getLocalizedMessage('noTitle');
+            titleLink.textContent = event.summary || (event.eventType === 'outOfOffice' ? window.getLocalizedMessage('outOfOffice') : window.getLocalizedMessage('noTitle'));
             titleLink.style.cssText = 'color: inherit; text-decoration: none;';
             titleLink.addEventListener('mouseenter', () => {
                 titleLink.style.textDecoration = 'underline';
@@ -114,7 +114,7 @@ export class GoogleEventModal extends ModalComponent {
                 this.titleElement.appendChild(colorIndicator);
             }
             const titleText = document.createElement('span');
-            titleText.textContent = event.summary || window.getLocalizedMessage('noTitle');
+            titleText.textContent = event.summary || (event.eventType === 'outOfOffice' ? window.getLocalizedMessage('outOfOffice') : window.getLocalizedMessage('noTitle'));
             this.titleElement.appendChild(titleText);
         }
 

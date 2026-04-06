@@ -5,15 +5,16 @@
     --side-calendar-break-time-color: #bcdcfb;
     --side-calendar-local-event-color: #bbf2b1;
     --side-calendar-google-event-default-color: #fff0b8;
-    --side-calendar-ooo-event-color: #e8e8e8;
-    --side-calendar-ooo-event-text-color: #666666;
-    --side-calendar-ooo-event-stripe-color: rgba(0, 0, 0, 0.06);
     --side-calendar-current-time-line-color: #ff0000;
     /* Computed text colors (auto-set by JS based on background luminance) */
     --side-calendar-timeline-text-color: #000000;
     --side-calendar-panel-text-color: #000000;
     --side-calendar-google-event-default-text-color: #000000;
     --side-calendar-local-event-text-color: #000000;
+    /* Out of office event colors */
+    --side-calendar-ooo-event-color: #e8e8e8;
+    --side-calendar-ooo-event-text-color: #666666;
+    --side-calendar-ooo-event-stripe-color: rgba(0, 0, 0, 0.06);
     /* UI chrome colors (borders, shadows, secondary text) */
     --side-calendar-border-color: #ccc;
     --side-calendar-border-color-light: #ddd;
@@ -284,7 +285,6 @@ body {
         var(--side-calendar-ooo-event-stripe-color) 4px,
         var(--side-calendar-ooo-event-stripe-color) 8px
     );
-    opacity: 0.85;
 }
 
 [data-theme="dark"] .google-event-ooo {
