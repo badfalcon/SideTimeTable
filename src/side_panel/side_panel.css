@@ -11,10 +11,6 @@
     --side-calendar-panel-text-color: #000000;
     --side-calendar-google-event-default-text-color: #000000;
     --side-calendar-local-event-text-color: #000000;
-    /* Out of office event colors */
-    --side-calendar-ooo-event-color: #e8e8e8;
-    --side-calendar-ooo-event-text-color: #666666;
-    --side-calendar-ooo-event-stripe-color: rgba(0, 0, 0, 0.06);
     /* UI chrome colors (borders, shadows, secondary text) */
     --side-calendar-border-color: #ccc;
     --side-calendar-border-color-light: #ddd;
@@ -276,21 +272,28 @@ body {
 }
 
 .google-event-ooo {
-    background-color: var(--side-calendar-ooo-event-color);
-    color: var(--side-calendar-ooo-event-text-color);
+    --side-calendar-ooo-color: #9e9e9e;
+    background-color: color-mix(in srgb, var(--side-calendar-ooo-color) 15%, white);
+    color: color-mix(in srgb, var(--side-calendar-ooo-color) 70%, black);
     background-image: repeating-linear-gradient(
         135deg,
         transparent,
         transparent 4px,
-        var(--side-calendar-ooo-event-stripe-color) 4px,
-        var(--side-calendar-ooo-event-stripe-color) 8px
+        color-mix(in srgb, var(--side-calendar-ooo-color) 25%, transparent) 4px,
+        color-mix(in srgb, var(--side-calendar-ooo-color) 25%, transparent) 8px
     );
 }
 
 [data-theme="dark"] .google-event-ooo {
-    --side-calendar-ooo-event-color: #3a3a3a;
-    --side-calendar-ooo-event-text-color: #aaaaaa;
-    --side-calendar-ooo-event-stripe-color: rgba(255, 255, 255, 0.06);
+    background-color: color-mix(in srgb, var(--side-calendar-ooo-color) 15%, black);
+    color: color-mix(in srgb, var(--side-calendar-ooo-color) 70%, white);
+    background-image: repeating-linear-gradient(
+        135deg,
+        transparent,
+        transparent 4px,
+        color-mix(in srgb, var(--side-calendar-ooo-color) 20%, transparent) 4px,
+        color-mix(in srgb, var(--side-calendar-ooo-color) 20%, transparent) 8px
+    );
 }
 
 .local-event {

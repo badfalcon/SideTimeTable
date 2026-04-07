@@ -307,10 +307,14 @@ export class GoogleEventManager {
             }
         });
 
-        // Apply the Google colors directly (unless disabled by user setting or OOO event)
-        if (this.useGoogleCalendarColors && event.calendarBackgroundColor && !options.isOutOfOffice) {
-            eventDiv.style.backgroundColor = event.calendarBackgroundColor;
-            eventDiv.style.color = event.calendarForegroundColor;
+        // Apply the Google colors directly (unless disabled by user setting)
+        if (this.useGoogleCalendarColors && event.calendarBackgroundColor) {
+            if (options.isOutOfOffice) {
+                eventDiv.style.setProperty('--side-calendar-ooo-color', event.calendarBackgroundColor);
+            } else {
+                eventDiv.style.backgroundColor = event.calendarBackgroundColor;
+                eventDiv.style.color = event.calendarForegroundColor;
+            }
         }
 
         // Set the locale-aware time display asynchronously (with attendee information)
