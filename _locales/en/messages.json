@@ -609,6 +609,10 @@
     "message": "No Title",
     "description": "Default text when event has no title"
   },
+  "outOfOffice": {
+    "message": "Out of office",
+    "description": "Label for out of office events from Google Calendar"
+  },
   "noTimeInfo": {
     "message": "No time information",
     "description": "Text when event time information is missing"

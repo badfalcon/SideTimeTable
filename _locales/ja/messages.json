@@ -609,6 +609,10 @@
     "message": "タイトルなし",
     "description": "イベントにタイトルがない場合のデフォルトテキスト"
   },
+  "outOfOffice": {
+    "message": "不在",
+    "description": "Google Calendarの不在予定のラベル"
+  },
   "noTimeInfo": {
     "message": "時刻情報なし",
     "description": "イベントの時刻情報がない場合のテキスト"

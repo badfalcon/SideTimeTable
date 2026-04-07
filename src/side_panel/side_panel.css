@@ -11,6 +11,10 @@
     --side-calendar-panel-text-color: #000000;
     --side-calendar-google-event-default-text-color: #000000;
     --side-calendar-local-event-text-color: #000000;
+    /* Out of office event colors */
+    --side-calendar-ooo-event-color: #e8e8e8;
+    --side-calendar-ooo-event-text-color: #666666;
+    --side-calendar-ooo-event-stripe-color: rgba(0, 0, 0, 0.06);
     /* UI chrome colors (borders, shadows, secondary text) */
     --side-calendar-border-color: #ccc;
     --side-calendar-border-color-light: #ddd;
@@ -269,6 +273,24 @@ body {
 
 .google-event {
     /* Background color is set dynamically from Google Calendar API */
+}
+
+.google-event-ooo {
+    background-color: var(--side-calendar-ooo-event-color);
+    color: var(--side-calendar-ooo-event-text-color);
+    background-image: repeating-linear-gradient(
+        135deg,
+        transparent,
+        transparent 4px,
+        var(--side-calendar-ooo-event-stripe-color) 4px,
+        var(--side-calendar-ooo-event-stripe-color) 8px
+    );
+}
+
+[data-theme="dark"] .google-event-ooo {
+    --side-calendar-ooo-event-color: #3a3a3a;
+    --side-calendar-ooo-event-text-color: #aaaaaa;
+    --side-calendar-ooo-event-stripe-color: rgba(255, 255, 255, 0.06);
 }
 
 .local-event {
