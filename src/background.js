@@ -7,7 +7,7 @@
 
 import { StorageHelper } from './lib/storage-helper.js';
 import { AlarmManager } from './lib/alarm-manager.js';
-import { GoogleCalendarClient } from './services/google-calendar-client.js';
+import { GoogleCalendarClient, AuthenticationError } from './services/google-calendar-client.js';
 import { ReminderSyncService } from './services/reminder-sync-service.js';
 
 // Instantiate services
@@ -91,7 +91,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 .catch(error => {
                     const detail = (error && (error.message || error.toString())) || "Event acquisition error";
                     console.error("Event acquisition error details:", error);
-                    sendResponse({ error: detail, errorType: (error && error.name) || undefined, requestId });
+                    const authExpired = error instanceof AuthenticationError;
+                    sendResponse({ error: detail, errorType: (error && error.name) || undefined, authExpired, requestId });
                 });
             return true; // Indicates async response
         }
@@ -104,7 +105,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 .then(events => sendResponse({ events, requestId }))
                 .catch(error => {
                     const detail = (error && (error.message || error.toString())) || "Event acquisition error";
-                    sendResponse({ error: detail, errorType: (error && error.name) || undefined, requestId });
+                    const authExpired = error instanceof AuthenticationError;
+                    sendResponse({ error: detail, errorType: (error && error.name) || undefined, authExpired, requestId });
                 });
             return true;
         }
@@ -116,7 +118,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 .catch(error => {
                     const detail = (error && (error.message || error.toString())) || "Calendar list acquisition error";
                     console.error("Calendar list acquisition error details:", error);
-                    sendResponse({ error: detail, errorType: (error && error.name) || undefined, requestId: reqIdList });
+                    const authExpired = error instanceof AuthenticationError;
+                    sendResponse({ error: detail, errorType: (error && error.name) || undefined, authExpired, requestId: reqIdList });
                 });
             return true; // Indicates async response
         }

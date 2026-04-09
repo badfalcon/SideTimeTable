@@ -8,6 +8,16 @@ import { StorageHelper } from '../lib/storage-helper.js';
 
 const CALENDAR_API_BASE = 'https://www.googleapis.com/calendar/v3';
 
+/**
+ * Custom error for authentication failures (token expired, revoked, etc.)
+ */
+export class AuthenticationError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = 'AuthenticationError';
+    }
+}
+
 export class GoogleCalendarClient {
 
     /**
@@ -20,8 +30,8 @@ export class GoogleCalendarClient {
         return new Promise((resolve, reject) => {
             chrome.identity.getAuthToken({ interactive }, (token) => {
                 if (chrome.runtime.lastError || !token) {
-                    const error = chrome.runtime.lastError || new Error('Failed to get authentication token');
-                    reject(error);
+                    const original = chrome.runtime.lastError || new Error('Failed to get authentication token');
+                    reject(new AuthenticationError(original.message || String(original)));
                 } else {
                     resolve(token);
                 }
@@ -59,6 +69,9 @@ export class GoogleCalendarClient {
         if (!response.ok) {
             const errorBody = await response.text();
             console.error('CalendarList API error body:', errorBody);
+            if (response.status === 401 || response.status === 403) {
+                throw new AuthenticationError(`CalendarList API error: ${response.status} ${response.statusText}`);
+            }
             throw new Error(`CalendarList API error: ${response.status} ${response.statusText}`);
         }
 
@@ -107,6 +120,9 @@ export class GoogleCalendarClient {
             if (!listResponse.ok) {
                 const errorBody = await listResponse.text();
                 console.error('[getCalendarEvents] CalendarList API error body:', errorBody);
+                if (listResponse.status === 401 || listResponse.status === 403) {
+                    throw new AuthenticationError(`CalendarList API error: ${listResponse.status} ${listResponse.statusText}`);
+                }
                 throw new Error(`CalendarList API error: ${listResponse.status} ${listResponse.statusText}`);
             }
             const listData = await listResponse.json();
@@ -169,6 +185,9 @@ export class GoogleCalendarClient {
         if (!listResponse.ok) {
             const errorBody = await listResponse.text();
             console.error('[_fetchEventsForCalendarIds] CalendarList API error body:', errorBody);
+            if (listResponse.status === 401 || listResponse.status === 403) {
+                throw new AuthenticationError(`CalendarList API error: ${listResponse.status} ${listResponse.statusText}`);
+            }
             throw new Error(`CalendarList API error: ${listResponse.status} ${listResponse.statusText}`);
         }
         const listData = await listResponse.json();

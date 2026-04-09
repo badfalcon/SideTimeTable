@@ -308,6 +308,9 @@ class SidePanelUIController {
             this.eventLayoutManager
         );
 
+        // Set auth expiry callback
+        this.googleEventManager.onAuthExpired = () => this._showAuthExpiredBanner();
+
         // Initialize the local event manager
         this.localEventManager = new LocalEventManager(
             this.timelineComponent.getLocalEventsContainer(),
@@ -819,6 +822,60 @@ class SidePanelUIController {
         this.loadEventsDebounceTimeout = setTimeout(() => {
             this._loadEventsForCurrentDate();
         }, 300);
+    }
+
+    /**
+     * Show auth expired banner at the top of the timeline
+     * @private
+     */
+    _showAuthExpiredBanner() {
+        // Prevent duplicate banners
+        if (document.getElementById('authExpiredBanner')) return;
+
+        const banner = document.createElement('div');
+        banner.id = 'authExpiredBanner';
+        banner.className = 'auth-expired-banner';
+
+        const icon = document.createElement('i');
+        icon.className = 'fa-solid fa-triangle-exclamation';
+        icon.setAttribute('aria-hidden', 'true');
+        banner.appendChild(icon);
+
+        const message = document.createElement('span');
+        message.textContent = window.getLocalizedMessage?.('authExpiredMessage') || 'Google Calendar authorization has expired. Please reconnect.';
+        banner.appendChild(message);
+
+        const reconnectBtn = document.createElement('button');
+        reconnectBtn.className = 'auth-expired-reconnect-btn';
+        reconnectBtn.textContent = window.getLocalizedMessage?.('authExpiredReconnect') || 'Reconnect';
+        reconnectBtn.addEventListener('click', () => this._handleReconnect());
+        banner.appendChild(reconnectBtn);
+
+        const dismissBtn = document.createElement('button');
+        dismissBtn.className = 'auth-expired-dismiss-btn';
+        dismissBtn.setAttribute('aria-label', window.getLocalizedMessage?.('dismissNotification') || 'Dismiss');
+        dismissBtn.innerHTML = '<i class="fa-solid fa-xmark" aria-hidden="true"></i>';
+        dismissBtn.addEventListener('click', () => banner.remove());
+        banner.appendChild(dismissBtn);
+
+        // Insert before the timeline
+        const container = document.getElementById('side-panel-container') || document.body;
+        const timeline = this.timelineComponent?.element;
+        if (timeline) {
+            container.insertBefore(banner, timeline);
+        } else {
+            container.appendChild(banner);
+        }
+    }
+
+    /**
+     * Handle reconnect button click - open settings page
+     * @private
+     */
+    _handleReconnect() {
+        const banner = document.getElementById('authExpiredBanner');
+        if (banner) banner.remove();
+        this._openSettings();
     }
 
     /**

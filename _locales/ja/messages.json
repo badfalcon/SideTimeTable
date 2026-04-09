@@ -1548,5 +1548,13 @@
   "clearSearch": {
     "message": "検索をクリア",
     "description": "検索クリアボタンのアリアラベル"
+  },
+  "authExpiredMessage": {
+    "message": "Googleカレンダーの認証が切れています。設定から再接続してください。",
+    "description": "Googleカレンダー認証トークン期限切れ時のバナーメッセージ"
+  },
+  "authExpiredReconnect": {
+    "message": "設定",
+    "description": "再認証のための設定画面を開くボタンラベル"
   }
 }

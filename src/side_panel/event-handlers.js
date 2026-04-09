@@ -33,6 +33,7 @@ export class GoogleEventManager {
         this.lastFetchDate = null; // The last date when the API was called
         this.currentFetchPromise = null; // The currently executing fetch Promise
         this._toggleVersion = 0; // Version counter for calendar toggle race condition prevention
+        this.onAuthExpired = null; // Callback when authentication expires
     }
 
     /**
@@ -97,6 +98,10 @@ export class GoogleEventManager {
 
                 if (response.error) {
                     logError('Google event fetch', response.error);
+                    if (response.authExpired && this.onAuthExpired) {
+                        this.onAuthExpired();
+                        return;
+                    }
                     const errorDiv = document.createElement('div');
                     errorDiv.className = 'error-message';
                     const rid = response.requestId ? ` [Request ID: ${response.requestId}]` : '';

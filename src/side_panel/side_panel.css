@@ -92,6 +92,83 @@ body {
     position: relative;
 }
 
+/* Auth expired banner */
+.auth-expired-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background-color: #fff3cd;
+    border-bottom: 1px solid #ffc107;
+    color: #664d03;
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+.auth-expired-banner > i {
+    color: #e65100;
+    flex-shrink: 0;
+}
+
+.auth-expired-banner > span {
+    flex: 1;
+    line-height: 1.4;
+}
+
+.auth-expired-reconnect-btn {
+    background-color: #e65100;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.auth-expired-reconnect-btn:hover {
+    background-color: #bf360c;
+}
+
+.auth-expired-dismiss-btn {
+    background: none;
+    border: none;
+    color: #664d03;
+    cursor: pointer;
+    padding: 2px 4px;
+    font-size: 14px;
+    flex-shrink: 0;
+    opacity: 0.7;
+}
+
+.auth-expired-dismiss-btn:hover {
+    opacity: 1;
+}
+
+[data-theme="dark"] .auth-expired-banner {
+    background-color: #3e2723;
+    border-bottom-color: #6d4c41;
+    color: #ffcc80;
+}
+
+[data-theme="dark"] .auth-expired-banner > i {
+    color: #ff8a65;
+}
+
+[data-theme="dark"] .auth-expired-reconnect-btn {
+    background-color: #ff6d00;
+    color: #fff;
+}
+
+[data-theme="dark"] .auth-expired-reconnect-btn:hover {
+    background-color: #ff8f00;
+}
+
+[data-theme="dark"] .auth-expired-dismiss-btn {
+    color: #ffcc80;
+}
+
 .side-time-table {
     position: relative;
     border: 1px solid var(--side-calendar-border-color);
