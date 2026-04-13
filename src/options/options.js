@@ -254,6 +254,15 @@ class OptionsPageManager {
                 this.googleIntegrationCard.updateIntegrationStatus(true);
                 this.calendarManagementCard.show();
                 this.colorSettingsCard.setGoogleCalendarColorsToggleVisible(true);
+            } else {
+                // Token expired or revoked — reflect the actual auth state
+                const settings = await loadSettings();
+                if (settings.googleIntegrated) {
+                    await saveSettings({ ...settings, googleIntegrated: false });
+                }
+                this.googleIntegrationCard.updateIntegrationStatus(false);
+                this.calendarManagementCard.hide();
+                this.colorSettingsCard.setGoogleCalendarColorsToggleVisible(false);
             }
         } catch (error) {
             console.error('Google auth status check error:', error);
@@ -286,6 +295,7 @@ class OptionsPageManager {
                 if (response.success) {
                     this.googleIntegrationCard.updateIntegrationStatus(true);
                     this.calendarManagementCard.show();
+                    this.calendarManagementCard.refreshCalendars();
                     this.colorSettingsCard.setGoogleCalendarColorsToggleVisible(true);
                     // Enable the Google integration
                     const settings = await loadSettings();
