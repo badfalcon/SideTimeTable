@@ -129,6 +129,7 @@ export class MemoComponent extends Component {
         });
         this.addEventListener(this._preview, 'click', (e) => {
             if (e.target.matches('input[type="checkbox"]')) {
+                e.preventDefault();
                 this._toggleCheckbox(e.target);
                 return;
             }
@@ -368,6 +369,7 @@ export class MemoComponent extends Component {
         let checkboxIndex = 0;
         this._preview.querySelectorAll('li > input[type="checkbox"]').forEach(cb => {
             cb.dataset.cbIndex = checkboxIndex++;
+            cb.removeAttribute('disabled');
         });
     }
 
