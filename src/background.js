@@ -79,6 +79,22 @@ if (chrome.commands && chrome.commands.onCommand && chrome.commands.onCommand.ad
     console.warn("chrome.commands API is not available. Please check the commands configuration in manifest.json.");
 }
 
+/**
+ * Build a standardized error response for calendar API failures.
+ * @param {Error} error - The caught error
+ * @param {string} requestId - Optional request ID for correlation
+ * @returns {Object} Error response object
+ */
+function buildCalendarErrorResponse(error, requestId) {
+    const detail = (error && (error.message || error.toString())) || 'Unknown error';
+    return {
+        error: detail,
+        errorType: (error && error.name) || undefined,
+        authExpired: error instanceof AuthenticationError,
+        requestId
+    };
+}
+
 // Message listener
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
@@ -89,10 +105,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             calendarClient.getCalendarEvents(targetDate)
                 .then(events => sendResponse({events, requestId}))
                 .catch(error => {
-                    const detail = (error && (error.message || error.toString())) || "Event acquisition error";
                     console.error("Event acquisition error details:", error);
-                    const authExpired = error instanceof AuthenticationError;
-                    sendResponse({ error: detail, errorType: (error && error.name) || undefined, authExpired, requestId });
+                    sendResponse(buildCalendarErrorResponse(error, requestId));
                 });
             return true; // Indicates async response
         }
@@ -104,9 +118,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             calendarClient.getCalendarEventsForIds(targetDate, calendarIds)
                 .then(events => sendResponse({ events, requestId }))
                 .catch(error => {
-                    const detail = (error && (error.message || error.toString())) || "Event acquisition error";
-                    const authExpired = error instanceof AuthenticationError;
-                    sendResponse({ error: detail, errorType: (error && error.name) || undefined, authExpired, requestId });
+                    sendResponse(buildCalendarErrorResponse(error, requestId));
                 });
             return true;
         }
@@ -116,10 +128,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             calendarClient.getCalendarList()
                 .then(calendars => sendResponse({calendars, requestId: reqIdList}))
                 .catch(error => {
-                    const detail = (error && (error.message || error.toString())) || "Calendar list acquisition error";
                     console.error("Calendar list acquisition error details:", error);
-                    const authExpired = error instanceof AuthenticationError;
-                    sendResponse({ error: detail, errorType: (error && error.name) || undefined, authExpired, requestId: reqIdList });
+                    sendResponse(buildCalendarErrorResponse(error, reqIdList));
                 });
             return true; // Indicates async response
         }

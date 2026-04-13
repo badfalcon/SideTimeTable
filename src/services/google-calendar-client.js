@@ -59,6 +59,24 @@ export class GoogleCalendarClient {
     }
 
     /**
+     * Check an API response and throw an appropriate error if not ok.
+     * Throws AuthenticationError for 401/403, generic Error otherwise.
+     * @param {Response} response - The fetch Response object
+     * @param {string} label - A label for error messages (e.g. 'CalendarList API')
+     * @private
+     */
+    async _checkResponse(response, label) {
+        if (response.ok) return;
+        const errorBody = await response.text();
+        console.error(`${label} error body:`, errorBody);
+        const msg = `${label} error: ${response.status} ${response.statusText}`;
+        if (response.status === 401 || response.status === 403) {
+            throw new AuthenticationError(msg);
+        }
+        throw new Error(msg);
+    }
+
+    /**
      * Get Google Calendar list
      * @returns {Promise<Array>} A promise that returns the calendar list
      */
@@ -66,14 +84,7 @@ export class GoogleCalendarClient {
         const calendarListUrl = `${CALENDAR_API_BASE}/users/me/calendarList`;
 
         const response = await this._fetchWithAuth(calendarListUrl);
-        if (!response.ok) {
-            const errorBody = await response.text();
-            console.error('CalendarList API error body:', errorBody);
-            if (response.status === 401 || response.status === 403) {
-                throw new AuthenticationError(`CalendarList API error: ${response.status} ${response.statusText}`);
-            }
-            throw new Error(`CalendarList API error: ${response.status} ${response.statusText}`);
-        }
+        await this._checkResponse(response, 'CalendarList API');
 
         const listData = await response.json();
         const calendars = (listData.items || [])
@@ -117,14 +128,7 @@ export class GoogleCalendarClient {
             // Fallback: resolve calendars from the calendarList API
             const calendarListUrl = `${CALENDAR_API_BASE}/users/me/calendarList`;
             const listResponse = await this._fetchWithAuth(calendarListUrl);
-            if (!listResponse.ok) {
-                const errorBody = await listResponse.text();
-                console.error('[getCalendarEvents] CalendarList API error body:', errorBody);
-                if (listResponse.status === 401 || listResponse.status === 403) {
-                    throw new AuthenticationError(`CalendarList API error: ${listResponse.status} ${listResponse.statusText}`);
-                }
-                throw new Error(`CalendarList API error: ${listResponse.status} ${listResponse.statusText}`);
-            }
+            await this._checkResponse(listResponse, 'CalendarList API');
             const listData = await listResponse.json();
             const allCalendars = listData.items || [];
             const selectedCalendars = allCalendars.filter(cal => cal.selected);
@@ -182,14 +186,7 @@ export class GoogleCalendarClient {
         const listResponse = await fetch(calendarListUrl, {
             headers: { Authorization: 'Bearer ' + token }
         });
-        if (!listResponse.ok) {
-            const errorBody = await listResponse.text();
-            console.error('[_fetchEventsForCalendarIds] CalendarList API error body:', errorBody);
-            if (listResponse.status === 401 || listResponse.status === 403) {
-                throw new AuthenticationError(`CalendarList API error: ${listResponse.status} ${listResponse.statusText}`);
-            }
-            throw new Error(`CalendarList API error: ${listResponse.status} ${listResponse.statusText}`);
-        }
+        await this._checkResponse(listResponse, 'CalendarList API');
         const listData = await listResponse.json();
 
         // Fetch events from each calendar in parallel
@@ -304,9 +301,7 @@ export class GoogleCalendarClient {
         const url = `${CALENDAR_API_BASE}/calendars/primary/events?timeMin=${startOfDay.toISOString()}&timeMax=${endOfDay.toISOString()}&singleEvents=true&orderBy=startTime`;
 
         const response = await this._fetchWithAuth(url, { _interactive: false });
-        if (!response.ok) {
-            throw new Error(`Primary calendar API error: ${response.status} ${response.statusText}`);
-        }
+        await this._checkResponse(response, 'Primary calendar API');
 
         const data = await response.json();
         const events = data.items || [];

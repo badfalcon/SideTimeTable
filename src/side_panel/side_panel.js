@@ -875,6 +875,9 @@ class SidePanelUIController {
     _handleReconnect() {
         const banner = document.getElementById('authExpiredBanner');
         if (banner) banner.remove();
+        if (this.googleEventManager) {
+            this.googleEventManager._authExpiredKnown = false;
+        }
         this._openSettings();
     }
 
