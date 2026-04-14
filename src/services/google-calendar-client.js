@@ -326,9 +326,19 @@ export class GoogleCalendarClient {
     async checkAuth() {
         try {
             const token = await this._getAuthToken(false);
-            return !!token;
+            if (!token) return false;
+            // Verify the token is actually valid by making a lightweight API call
+            const url = `${CALENDAR_API_BASE}/users/me/calendarList?maxResults=1&fields=kind`;
+            const response = await fetch(url, {
+                headers: { Authorization: 'Bearer ' + token }
+            });
+            if (response.status === 401 || response.status === 403) {
+                // Token is cached but revoked/expired — clear it
+                chrome.identity.removeCachedAuthToken({ token }, () => {});
+                return false;
+            }
+            return response.ok;
         } catch (error) {
-            // Not authenticated — return false rather than rejecting
             return false;
         }
     }
