@@ -33,6 +33,8 @@ export class GoogleEventManager {
         this.lastFetchDate = null; // The last date when the API was called
         this.currentFetchPromise = null; // The currently executing fetch Promise
         this._toggleVersion = 0; // Version counter for calendar toggle race condition prevention
+        this.onAuthExpired = null; // Callback when authentication expires
+        this._authExpiredKnown = false; // Skip fetches after auth failure is detected
     }
 
     /**
@@ -52,7 +54,7 @@ export class GoogleEventManager {
         const isGoogleIntegrated = settings.googleIntegrated === true;
         this.useGoogleCalendarColors = settings.useGoogleCalendarColors !== false;
 
-        if (!isGoogleIntegrated) {
+        if (!isGoogleIntegrated || this._authExpiredKnown) {
             return Promise.resolve();
         }
 
@@ -96,6 +98,11 @@ export class GoogleEventManager {
                 }
 
                 if (response.error) {
+                    if (response.authExpired) {
+                        this._authExpiredKnown = true;
+                        if (this.onAuthExpired) this.onAuthExpired();
+                        return;
+                    }
                     logError('Google event fetch', response.error);
                     const errorDiv = document.createElement('div');
                     errorDiv.className = 'error-message';
@@ -390,6 +397,13 @@ export class GoogleEventManager {
                 eventDiv.appendChild(descLine);
             }
         }
+    }
+
+    /**
+     * Reset auth expired state to allow fetches again after reconnection
+     */
+    resetAuthState() {
+        this._authExpiredKnown = false;
     }
 
     /**

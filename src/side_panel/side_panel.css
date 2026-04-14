@@ -67,6 +67,13 @@
     --side-calendar-modal-btn-text: #495057;
     --side-calendar-modal-btn-hover-bg: #f0f0f0;
     --side-calendar-modal-btn-hover-border: #adb5bd;
+    /* Warning banner */
+    --side-calendar-warning-bg: #fff3cd;
+    --side-calendar-warning-border: #ffc107;
+    --side-calendar-warning-text: #664d03;
+    --side-calendar-warning-icon: #e65100;
+    --side-calendar-warning-btn-bg: #e65100;
+    --side-calendar-warning-btn-hover-bg: #bf360c;
 }
 
 html {
@@ -90,6 +97,60 @@ body {
     height: 100vh;
     overflow: hidden;
     position: relative;
+}
+
+/* Auth expired banner */
+.auth-expired-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background-color: var(--side-calendar-warning-bg);
+    border-bottom: 1px solid var(--side-calendar-warning-border);
+    color: var(--side-calendar-warning-text);
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+.auth-expired-banner > i {
+    color: var(--side-calendar-warning-icon);
+    flex-shrink: 0;
+}
+
+.auth-expired-banner > span {
+    flex: 1;
+    line-height: 1.4;
+}
+
+.auth-expired-reconnect-btn {
+    background-color: var(--side-calendar-warning-btn-bg);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.auth-expired-reconnect-btn:hover {
+    background-color: var(--side-calendar-warning-btn-hover-bg);
+}
+
+.auth-expired-dismiss-btn {
+    background: none;
+    border: none;
+    color: var(--side-calendar-warning-text);
+    cursor: pointer;
+    padding: 2px 4px;
+    font-size: 14px;
+    flex-shrink: 0;
+    opacity: 0.7;
+}
+
+.auth-expired-dismiss-btn:hover {
+    opacity: 1;
 }
 
 .side-time-table {

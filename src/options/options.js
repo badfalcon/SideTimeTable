@@ -160,7 +160,7 @@ class OptionsPageManager {
         await this.componentManager.initializeAll();
 
         // Check Google auth status after components are initialized
-        await this._checkGoogleAuthStatus();
+        await this.checkGoogleAuthStatus();
 
         // Re-execute the localization after the component generation
         if (window.localizeHtmlPageWithLang) {
@@ -237,7 +237,7 @@ class OptionsPageManager {
         }
     }
 
-    async _checkGoogleAuthStatus() {
+    async checkGoogleAuthStatus() {
         // Show demo Google integration state in demo mode
         if (isDemoMode()) {
             this.googleIntegrationCard.updateIntegrationStatus(true);
@@ -254,6 +254,19 @@ class OptionsPageManager {
                 this.googleIntegrationCard.updateIntegrationStatus(true);
                 this.calendarManagementCard.show();
                 this.colorSettingsCard.setGoogleCalendarColorsToggleVisible(true);
+            } else {
+                // Token invalid — check if user was previously connected
+                const settings = await loadSettings();
+                if (settings.googleIntegrated) {
+                    // Was connected but token expired/revoked
+                    const expiredText = window.getLocalizedMessage('authExpiredStatus') || 'Authorization expired';
+                    this.googleIntegrationCard.updateIntegrationStatus(false, expiredText);
+                } else {
+                    // Never connected
+                    this.googleIntegrationCard.updateIntegrationStatus(false);
+                }
+                this.calendarManagementCard.hide();
+                this.colorSettingsCard.setGoogleCalendarColorsToggleVisible(false);
             }
         } catch (error) {
             console.error('Google auth status check error:', error);
@@ -286,6 +299,7 @@ class OptionsPageManager {
                 if (response.success) {
                     this.googleIntegrationCard.updateIntegrationStatus(true);
                     this.calendarManagementCard.show();
+                    this.calendarManagementCard.refreshCalendars();
                     this.colorSettingsCard.setGoogleCalendarColorsToggleVisible(true);
                     // Enable the Google integration
                     const settings = await loadSettings();
@@ -588,4 +602,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initialize the new component-based options page manager
     const optionsPageManager = new OptionsPageManager();
     await optionsPageManager.initialize();
+
+    // Re-check auth status when the tab becomes visible again (throttled)
+    let lastAuthCheck = Date.now();
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            const now = Date.now();
+            if (now - lastAuthCheck > 5 * 60 * 1000) {
+                lastAuthCheck = now;
+                optionsPageManager.checkGoogleAuthStatus();
+            }
+        }
+    });
 });

@@ -1548,5 +1548,17 @@
   "clearSearch": {
     "message": "Clear search",
     "description": "Aria label for the clear search button"
+  },
+  "authExpiredMessage": {
+    "message": "Google Calendar authorization has expired. Please reconnect from Settings.",
+    "description": "Banner message when Google Calendar auth token has expired"
+  },
+  "authExpiredReconnect": {
+    "message": "Reconnect",
+    "description": "Button label to re-authenticate with Google Calendar"
+  },
+  "authExpiredStatus": {
+    "message": "Authorization expired — please reconnect",
+    "description": "Status text shown in settings when Google Calendar auth has expired"
   }
 }
