@@ -1,8 +1,10 @@
 import { AuthenticationError, GoogleCalendarClient } from '../../src/services/google-calendar-client.js';
 
-// ── AuthenticationError ────────────────────────────────────────────
-
-describe('AuthenticationError', () => {
+// ---------------------------------------------------------------
+// SPEC: AuthenticationError
+// - Extends Error, name is "AuthenticationError"
+// ---------------------------------------------------------------
+describe('SPEC: AuthenticationError', () => {
   test('can be distinguished from generic errors via instanceof', () => {
     const authErr = new AuthenticationError('token revoked');
     const genericErr = new Error('network timeout');
@@ -19,9 +21,11 @@ describe('AuthenticationError', () => {
   });
 });
 
-// ── API response error classification ──────────────────────────────
-
-describe('API response error classification', () => {
+// ---------------------------------------------------------------
+// SPEC: API Response Error Classification
+// - 401/403 → AuthenticationError, 500 → generic Error
+// ---------------------------------------------------------------
+describe('SPEC: API response error classification', () => {
   let client;
 
   beforeEach(() => {
@@ -65,9 +69,12 @@ describe('API response error classification', () => {
   });
 });
 
-// ── checkAuth (token validation) ───────────────────────────────────
-
-describe('checkAuth', () => {
+// ---------------------------------------------------------------
+// SPEC: checkAuth()
+// - true when token valid, false on no token / revoked / network failure
+// - Non-interactive mode, clears stale token on revocation
+// ---------------------------------------------------------------
+describe('SPEC: checkAuth', () => {
   let client;
   let originalFetch;
 

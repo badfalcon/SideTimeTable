@@ -327,3 +327,42 @@ Returns: `[...recurringInstances, ...dateSpecificEvents]`
 ### advanceToTodayIfNeeded()
 - Returns `true` and advances ONLY when: user was viewing today AND date has rolled past midnight
 - Returns `false` when: user navigated away from today, OR still viewing today
+
+---
+
+## google-calendar-client
+
+### AuthenticationError
+- Extends `Error` (instanceof check works)
+- `name` property is `"AuthenticationError"` (for serialization across message boundaries)
+
+### API Response Error Classification
+| HTTP Status | Error Type |
+|-------------|-----------|
+| 200-299 | No error |
+| 401 | `AuthenticationError` |
+| 403 | `AuthenticationError` |
+| 500, other | Generic `Error` |
+- Error message includes the API label and HTTP status code
+
+### checkAuth()
+- Returns `true` when token exists AND is valid (API returns 200)
+- Returns `false` when no token exists
+- Returns `false` when token is revoked (API returns 401) → clears cached token
+- Returns `false` on network failure (does not throw)
+- Always uses non-interactive mode (`interactive: false`)
+
+---
+
+## event-handlers (auth expiry)
+
+### Auth Expiry Detection
+- When API response contains `authExpired: true` → calls `onAuthExpired` callback
+- When error is not auth-related (`authExpired: false`) → does NOT call `onAuthExpired`
+
+### Fetch Suppression
+- After auth expiry detected → stops fetching Google events (no API calls)
+- When Google Calendar is not integrated → does not fetch
+
+### Recovery
+- `resetAuthState()` → resumes fetching on next call
