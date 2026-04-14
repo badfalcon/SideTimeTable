@@ -1556,5 +1556,9 @@
   "authExpiredReconnect": {
     "message": "設定",
     "description": "再認証のための設定画面を開くボタンラベル"
+  },
+  "authExpiredStatus": {
+    "message": "認証の有効期限が切れています — 再接続してください",
+    "description": "Googleカレンダー認証が期限切れの場合に設定画面に表示されるステータス"
   }
 }

@@ -255,12 +255,17 @@ class OptionsPageManager {
                 this.calendarManagementCard.show();
                 this.colorSettingsCard.setGoogleCalendarColorsToggleVisible(true);
             } else {
-                // Token expired or revoked — reflect the actual auth state
                 const settings = await loadSettings();
-                if (settings.googleIntegrated) {
+                const wasIntegrated = settings.googleIntegrated === true;
+                if (wasIntegrated) {
+                    // Token expired or revoked — show expired status
                     await saveSettings({ ...settings, googleIntegrated: false });
+                    const expiredText = window.getLocalizedMessage('authExpiredStatus') || 'Authorization expired';
+                    this.googleIntegrationCard.updateIntegrationStatus(false, expiredText);
+                } else {
+                    // Never connected
+                    this.googleIntegrationCard.updateIntegrationStatus(false);
                 }
-                this.googleIntegrationCard.updateIntegrationStatus(false);
                 this.calendarManagementCard.hide();
                 this.colorSettingsCard.setGoogleCalendarColorsToggleVisible(false);
             }
