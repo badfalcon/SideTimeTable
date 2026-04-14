@@ -366,3 +366,74 @@ Returns: `[...recurringInstances, ...dateSpecificEvents]`
 
 ### Recovery
 - `resetAuthState()` → resumes fetching on next call
+
+---
+
+## utils
+
+### getContrastColor(hexColor)
+- Returns `"#000000"` (black) for light backgrounds (luminance > 0.5)
+- Returns `"#ffffff"` (white) for dark backgrounds (luminance ≤ 0.5)
+- Luminance formula: `(0.299 * R + 0.587 * G + 0.114 * B) / 255`
+
+| Input | Expected |
+|-------|----------|
+| `"#ffffff"` (white) | `"#000000"` |
+| `"#000000"` (black) | `"#ffffff"` |
+| `"#ff0000"` (red) | `"#ffffff"` |
+| `"#00ff00"` (green) | `"#000000"` |
+| `"#0000ff"` (blue) | `"#ffffff"` |
+| `"#808080"` (mid-gray) | `"#000000"` (luminance ≈ 0.502) |
+
+### getFormattedDateFromDate(date)
+- Returns `YYYY-MM-DD` format with zero-padded month and day
+- Uses local timezone (not UTC)
+
+| Input | Expected |
+|-------|----------|
+| `new Date(2025, 0, 1)` (Jan 1) | `"2025-01-01"` |
+| `new Date(2025, 11, 31)` (Dec 31) | `"2025-12-31"` |
+| `new Date(2025, 2, 5)` (Mar 5) | `"2025-03-05"` |
+
+### logError(context, error)
+- Logs to `console.error` with format `[context] Error: <error>`
+- Does not throw
+
+---
+
+## reminder-sync-service
+
+### syncAll()
+- Runs `syncLocalEventReminders()` and `syncGoogleEventReminders()` in parallel
+
+### syncLocalEventReminders()
+- Calls `AlarmManager.setDateReminders(todayDateStr)`
+- On error → logs, does not throw
+
+### syncGoogleEventReminders()
+| Condition | Action |
+|-----------|--------|
+| `googleEventReminder` is false | Returns early (no sync) |
+| `googleIntegrated` is false | Returns early (no sync) |
+| Both enabled | Clears old date alarms, fetches primary calendar events, sets reminders |
+- Clears only google alarms NOT matching today's date
+- Also clears stored event data for cleared alarms
+- Records sync timestamp in local storage after success
+- `AuthenticationError` → logs warning, does not throw
+- Other errors → logs error, does not throw
+
+### setupDailySync()
+- Creates alarm named `"daily_reminder_sync"` at next midnight
+- Repeats every 24 hours (`periodInMinutes: 1440`)
+- Clears existing alarm before creating new one
+
+---
+
+## google-calendar-client (respondToEvent)
+
+### respondToEvent(calendarId, eventId, response)
+- Required parameters: `calendarId`, `eventId`, `response` — all must be truthy
+- Missing any → throws `Error("Missing required parameters")`
+- Valid response values: `"accepted"`, `"declined"`, `"tentative"`
+- Invalid response → throws `Error("Invalid response status")`
+- Self attendee not found → throws `Error("Self attendee not found in event")`

@@ -21,26 +21,39 @@ import {
   deleteRecurringEvent,
 } from '../../src/lib/event-storage.js';
 
-describe('getContrastColor', () => {
-  test('returns black for light backgrounds', () => {
-    expect(getContrastColor('#ffffff')).toBe('#000000');
-    expect(getContrastColor('#f0f0f0')).toBe('#000000');
-    expect(getContrastColor('#ffff00')).toBe('#000000'); // yellow
+// ---------------------------------------------------------------
+// SPEC: getContrastColor(hexColor)
+// - "#000000" for light, "#ffffff" for dark
+// - Luminance = (0.299*R + 0.587*G + 0.114*B) / 255
+// ---------------------------------------------------------------
+describe('SPEC: getContrastColor', () => {
+  const specTable = [
+    { input: '#ffffff', expected: '#000000', label: 'white → black' },
+    { input: '#000000', expected: '#ffffff', label: 'black → white' },
+    { input: '#ff0000', expected: '#ffffff', label: 'red → white' },
+    { input: '#00ff00', expected: '#000000', label: 'green → black' },
+    { input: '#0000ff', expected: '#ffffff', label: 'blue → white' },
+    { input: '#808080', expected: '#000000', label: 'mid-gray → black (luminance ≈ 0.502)' },
+  ];
+
+  test.each(specTable)('$input → $expected ($label)', ({ input, expected }) => {
+    expect(getContrastColor(input)).toBe(expected);
   });
 
-  test('returns white for dark backgrounds', () => {
-    expect(getContrastColor('#000000')).toBe('#ffffff');
+  test('returns black for yellow (#ffff00)', () => {
+    expect(getContrastColor('#ffff00')).toBe('#000000');
+  });
+
+  test('returns white for dark theme (#1e1e2e)', () => {
     expect(getContrastColor('#1e1e2e')).toBe('#ffffff');
-    expect(getContrastColor('#333333')).toBe('#ffffff');
-  });
-
-  test('returns black for mid-range color #808080 (luminance > 0.5)', () => {
-    // luminance = (0.299*128 + 0.587*128 + 0.114*128) / 255 ≈ 0.502
-    expect(getContrastColor('#808080')).toBe('#000000');
   });
 });
 
-describe('getFormattedDateFromDate', () => {
+// ---------------------------------------------------------------
+// SPEC: getFormattedDateFromDate(date)
+// - YYYY-MM-DD, zero-padded, local timezone
+// ---------------------------------------------------------------
+describe('SPEC: getFormattedDateFromDate', () => {
   test('formats date as YYYY-MM-DD', () => {
     expect(getFormattedDateFromDate(new Date(2025, 0, 1))).toBe('2025-01-01');
     expect(getFormattedDateFromDate(new Date(2025, 11, 31))).toBe('2025-12-31');
@@ -55,7 +68,10 @@ describe('getFormattedDateFromDate', () => {
   });
 });
 
-describe('logError', () => {
+// ---------------------------------------------------------------
+// SPEC: logError — logs to console.error, does not throw
+// ---------------------------------------------------------------
+describe('SPEC: logError', () => {
   test('logs to console.error with context', () => {
     const spy = jest.spyOn(console, 'error').mockImplementation();
     logError('TestContext', 'something broke');
