@@ -1554,8 +1554,8 @@
     "description": "Googleカレンダー認証トークン期限切れ時のバナーメッセージ"
   },
   "authExpiredReconnect": {
-    "message": "設定",
-    "description": "再認証のための設定画面を開くボタンラベル"
+    "message": "再接続",
+    "description": "Googleカレンダーの再認証ボタンラベル"
   },
   "authExpiredStatus": {
     "message": "認証の有効期限が切れています — 再接続してください",

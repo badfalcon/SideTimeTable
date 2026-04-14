@@ -1554,8 +1554,8 @@
     "description": "Banner message when Google Calendar auth token has expired"
   },
   "authExpiredReconnect": {
-    "message": "Settings",
-    "description": "Button label to open settings for re-authentication"
+    "message": "Reconnect",
+    "description": "Button label to re-authenticate with Google Calendar"
   },
   "authExpiredStatus": {
     "message": "Authorization expired — please reconnect",

@@ -48,7 +48,7 @@ export class GoogleCalendarClient {
      */
     async _fetchWithAuth(url, options = {}) {
         const token = await this._getAuthToken(
-            options._interactive !== undefined ? options._interactive : true
+            options._interactive !== undefined ? options._interactive : false
         );
         const { _interactive, ...fetchOptions } = options;
         const headers = {
@@ -173,7 +173,7 @@ export class GoogleCalendarClient {
     async _fetchEventsForCalendarIds(targetDate, calendarIds) {
         if (!calendarIds || calendarIds.length === 0) return [];
 
-        const token = await this._getAuthToken(true);
+        const token = await this._getAuthToken(false);
 
         // Set the target date range
         const targetDay = targetDate || new Date();

@@ -854,7 +854,7 @@ class SidePanelUIController {
         const reconnectBtn = document.createElement('button');
         reconnectBtn.className = 'auth-expired-reconnect-btn';
         reconnectBtn.textContent = window.getLocalizedMessage?.('authExpiredReconnect') || 'Reconnect';
-        reconnectBtn.addEventListener('click', () => this._handleReconnect());
+        reconnectBtn.addEventListener('click', () => this._handleReconnect(reconnectBtn));
         banner.appendChild(reconnectBtn);
 
         const dismissBtn = document.createElement('button');
@@ -875,16 +875,27 @@ class SidePanelUIController {
     }
 
     /**
-     * Handle reconnect button click - open settings page
+     * Handle reconnect button click - trigger Google auth directly
      * @private
      */
-    _handleReconnect() {
-        const banner = document.getElementById('authExpiredBanner');
-        if (banner) banner.remove();
-        if (this.googleEventManager) {
-            this.googleEventManager.resetAuthState();
+    async _handleReconnect(btn) {
+        if (btn) btn.disabled = true;
+        try {
+            const response = await sendMessage({ action: 'authenticateGoogle' });
+            if (response && response.success) {
+                const banner = document.getElementById('authExpiredBanner');
+                if (banner) banner.remove();
+                if (this.googleEventManager) {
+                    this.googleEventManager.resetAuthState();
+                }
+                await this._loadEventsForCurrentDate();
+            } else {
+                if (btn) btn.disabled = false;
+            }
+        } catch (error) {
+            console.warn('Reconnect failed:', error.message);
+            if (btn) btn.disabled = false;
         }
-        this._openSettings();
     }
 
     /**
