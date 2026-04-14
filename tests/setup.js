@@ -10,36 +10,46 @@ const syncStore = {};
 const localStore = {};
 
 function createStorageArea(store) {
+  function _get(keys) {
+    let result = {};
+    if (keys === null) {
+      Object.assign(result, store);
+    } else if (typeof keys === 'string') {
+      if (keys in store) result[keys] = store[keys];
+    } else if (Array.isArray(keys)) {
+      keys.forEach(k => { if (k in store) result[k] = store[k]; });
+    } else if (typeof keys === 'object') {
+      result = { ...keys };
+      Object.keys(store).forEach(k => { if (k in keys) result[k] = store[k]; });
+    }
+    return result;
+  }
   return {
     get(keys, callback) {
-      let result = {};
-      if (keys === null) {
-        Object.assign(result, store);
-      } else if (typeof keys === 'string') {
-        if (keys in store) result[keys] = store[keys];
-      } else if (Array.isArray(keys)) {
-        keys.forEach(k => { if (k in store) result[k] = store[k]; });
-      } else if (typeof keys === 'object') {
-        result = { ...keys };
-        Object.keys(store).forEach(k => { if (k in keys) result[k] = store[k]; });
-      }
-      callback(result);
+      const result = _get(keys);
+      if (callback) { callback(result); return; }
+      return Promise.resolve(result);
     },
     set(data, callback) {
       Object.assign(store, data);
-      if (callback) callback();
+      if (callback) { callback(); return; }
+      return Promise.resolve();
     },
     remove(keys, callback) {
       const keyList = typeof keys === 'string' ? [keys] : keys;
       keyList.forEach(k => delete store[k]);
-      if (callback) callback();
+      if (callback) { callback(); return; }
+      return Promise.resolve();
     },
     clear(callback) {
       Object.keys(store).forEach(k => delete store[k]);
-      if (callback) callback();
+      if (callback) { callback(); return; }
+      return Promise.resolve();
     },
     getBytesInUse(keys, callback) {
-      callback(JSON.stringify(store).length);
+      const size = JSON.stringify(store).length;
+      if (callback) { callback(size); return; }
+      return Promise.resolve(size);
     },
   };
 }
@@ -66,9 +76,9 @@ global.chrome = {
     getUILanguage: jest.fn(() => 'en'),
   },
   alarms: {
-    create: jest.fn(),
-    clear: jest.fn((name, callback) => { if (callback) callback(true); }),
-    getAll: jest.fn((callback) => callback([])),
+    create: jest.fn(() => Promise.resolve()),
+    clear: jest.fn((name, callback) => { if (callback) { callback(true); return; } return Promise.resolve(true); }),
+    getAll: jest.fn((callback) => { if (callback) { callback([]); return; } return Promise.resolve([]); }),
     onAlarm: { addListener: jest.fn() },
   },
   notifications: {
@@ -79,6 +89,7 @@ global.chrome = {
 };
 
 // Browser API mocks for Node test environment
+global.window = global;
 global.requestAnimationFrame = (cb) => setTimeout(cb, 0);
 global.cancelAnimationFrame = (id) => clearTimeout(id);
 

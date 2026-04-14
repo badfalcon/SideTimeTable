@@ -1,8 +1,10 @@
 import { AuthenticationError, GoogleCalendarClient } from '../../src/services/google-calendar-client.js';
 
-// ── AuthenticationError ────────────────────────────────────────────
-
-describe('AuthenticationError', () => {
+// ---------------------------------------------------------------
+// SPEC: AuthenticationError
+// - Extends Error, name is "AuthenticationError"
+// ---------------------------------------------------------------
+describe('SPEC: AuthenticationError', () => {
   test('can be distinguished from generic errors via instanceof', () => {
     const authErr = new AuthenticationError('token revoked');
     const genericErr = new Error('network timeout');
@@ -19,9 +21,11 @@ describe('AuthenticationError', () => {
   });
 });
 
-// ── API response error classification ──────────────────────────────
-
-describe('API response error classification', () => {
+// ---------------------------------------------------------------
+// SPEC: API Response Error Classification
+// - 401/403 → AuthenticationError, 500 → generic Error
+// ---------------------------------------------------------------
+describe('SPEC: API response error classification', () => {
   let client;
 
   beforeEach(() => {
@@ -65,9 +69,12 @@ describe('API response error classification', () => {
   });
 });
 
-// ── checkAuth (token validation) ───────────────────────────────────
-
-describe('checkAuth', () => {
+// ---------------------------------------------------------------
+// SPEC: checkAuth()
+// - true when token valid, false on no token / revoked / network failure
+// - Non-interactive mode, clears stale token on revocation
+// ---------------------------------------------------------------
+describe('SPEC: checkAuth', () => {
   let client;
   let originalFetch;
 
@@ -133,5 +140,92 @@ describe('checkAuth', () => {
       { interactive: false },
       expect.any(Function)
     );
+  });
+});
+
+// ---------------------------------------------------------------
+// SPEC: respondToEvent(calendarId, eventId, response)
+// - Required parameters: calendarId, eventId, response — all must be truthy
+// - Missing any → throws Error("Missing required parameters")
+// - Valid response values: "accepted", "declined", "tentative"
+// - Invalid response → throws Error("Invalid response status")
+// - Self attendee not found → throws Error("Self attendee not found in event")
+// ---------------------------------------------------------------
+describe('SPEC: respondToEvent', () => {
+  let client;
+  let originalFetch;
+
+  beforeEach(() => {
+    client = new GoogleCalendarClient();
+    originalFetch = global.fetch;
+    chrome.identity.getAuthToken.mockReset();
+    chrome.identity.getAuthToken.mockImplementation((opts, cb) => cb('test-token'));
+  });
+
+  afterEach(() => {
+    global.fetch = originalFetch;
+  });
+
+  describe('parameter validation', () => {
+    test.each([
+      { calendarId: null, eventId: 'e1', response: 'accepted', label: 'missing calendarId' },
+      { calendarId: 'c1', eventId: null, response: 'accepted', label: 'missing eventId' },
+      { calendarId: 'c1', eventId: 'e1', response: null, label: 'missing response' },
+      { calendarId: '', eventId: 'e1', response: 'accepted', label: 'empty calendarId' },
+      { calendarId: 'c1', eventId: '', response: 'accepted', label: 'empty eventId' },
+      { calendarId: 'c1', eventId: 'e1', response: '', label: 'empty response' },
+    ])('throws "Missing required parameters" when $label', async ({ calendarId, eventId, response }) => {
+      await expect(client.respondToEvent(calendarId, eventId, response))
+        .rejects.toThrow('Missing required parameters');
+    });
+  });
+
+  describe('response status validation', () => {
+    test.each(['accepted', 'declined', 'tentative'])(
+      'accepts valid response "%s"', async (status) => {
+        global.fetch = jest.fn()
+          .mockResolvedValueOnce({
+            ok: true,
+            json: () => Promise.resolve({
+              attendees: [{ self: true, responseStatus: 'needsAction' }],
+            }),
+          })
+          .mockResolvedValueOnce({
+            ok: true,
+            json: () => Promise.resolve({ attendees: [{ self: true, responseStatus: status }] }),
+          });
+
+        await expect(client.respondToEvent('cal1', 'evt1', status)).resolves.toBeDefined();
+      }
+    );
+
+    test.each(['maybe', 'yes', 'no', 'ACCEPTED', 'Declined'])(
+      'throws "Invalid response status" for "%s"', async (status) => {
+        await expect(client.respondToEvent('cal1', 'evt1', status))
+          .rejects.toThrow('Invalid response status');
+      }
+    );
+  });
+
+  test('throws when self attendee is not found in event', async () => {
+    global.fetch = jest.fn().mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({
+        attendees: [{ email: 'other@example.com', responseStatus: 'accepted' }],
+      }),
+    });
+
+    await expect(client.respondToEvent('cal1', 'evt1', 'accepted'))
+      .rejects.toThrow('Self attendee not found in event');
+  });
+
+  test('throws when event has no attendees', async () => {
+    global.fetch = jest.fn().mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({}),
+    });
+
+    await expect(client.respondToEvent('cal1', 'evt1', 'accepted'))
+      .rejects.toThrow('Self attendee not found in event');
   });
 });

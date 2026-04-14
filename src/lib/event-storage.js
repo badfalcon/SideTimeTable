@@ -115,6 +115,9 @@ export async function getRecurringEventsForDate(targetDate) {
 
         const { type, startDate, endDate, interval = 1, daysOfWeek = [] } = event.recurrence;
 
+        // Skip events with invalid interval
+        if (interval <= 0) continue;
+
         // Check if target date is within the recurrence range
         if (startDate && targetDateStr < startDate) continue;
         if (endDate && targetDateStr > endDate) continue;

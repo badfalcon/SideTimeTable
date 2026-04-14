@@ -54,8 +54,11 @@ describe('GoogleEventManager — auth expiry behavior', () => {
     jest.clearAllMocks();
   });
 
-  // ── Notification ───────────────────────────────────────────────
-
+  // ---------------------------------------------------------------
+  // SPEC: Auth Expiry Detection
+  // - authExpired: true → calls onAuthExpired
+  // - non-auth error → does NOT call onAuthExpired
+  // ---------------------------------------------------------------
   test('notifies the caller when authentication expires', async () => {
     const manager = createManager();
     mockGoogleIntegrated();
@@ -82,8 +85,11 @@ describe('GoogleEventManager — auth expiry behavior', () => {
     expect(onAuthExpired).not.toHaveBeenCalled();
   });
 
-  // ── Fetch suppression after expiry ─────────────────────────────
-
+  // ---------------------------------------------------------------
+  // SPEC: Fetch Suppression
+  // - After auth expiry → stops fetching
+  // - Not integrated → does not fetch
+  // ---------------------------------------------------------------
   test('stops fetching Google events after auth expiry is detected', async () => {
     const manager = createManager();
     mockGoogleIntegrated();
@@ -107,8 +113,9 @@ describe('GoogleEventManager — auth expiry behavior', () => {
     expect(sendMessage).not.toHaveBeenCalled();
   });
 
-  // ── Recovery after reconnection ────────────────────────────────
-
+  // ---------------------------------------------------------------
+  // SPEC: Recovery — resetAuthState() resumes fetching
+  // ---------------------------------------------------------------
   test('resumes fetching after resetAuthState is called', async () => {
     const manager = createManager();
     mockGoogleIntegrated();

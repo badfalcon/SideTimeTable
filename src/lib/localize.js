@@ -23,7 +23,11 @@ function resolveLanguageCode(languageSetting) {
         const browserLang = chrome.i18n.getUILanguage().toLowerCase();
         return browserLang.startsWith('ja') ? 'ja' : 'en';
     }
-    return languageSetting;
+    // Only 'en' and 'ja' are valid; all others fallback to 'en'
+    if (languageSetting === 'en' || languageSetting === 'ja') {
+        return languageSetting;
+    }
+    return 'en';
 }
 
 // Localize the HTML content (reflecting the language settings)
