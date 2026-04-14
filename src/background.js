@@ -105,7 +105,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             calendarClient.getCalendarEvents(targetDate)
                 .then(events => sendResponse({events, requestId}))
                 .catch(error => {
-                    console.error("Event acquisition error details:", error);
+                    if (error instanceof AuthenticationError) {
+                        console.warn("Event acquisition: auth expired");
+                    } else {
+                        console.error("Event acquisition error details:", error);
+                    }
                     sendResponse(buildCalendarErrorResponse(error, requestId));
                 });
             return true; // Indicates async response
@@ -128,7 +132,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             calendarClient.getCalendarList()
                 .then(calendars => sendResponse({calendars, requestId: reqIdList}))
                 .catch(error => {
-                    console.error("Calendar list acquisition error details:", error);
+                    if (error instanceof AuthenticationError) {
+                        console.warn("Calendar list acquisition: auth expired");
+                    } else {
+                        console.error("Calendar list acquisition error details:", error);
+                    }
                     sendResponse(buildCalendarErrorResponse(error, reqIdList));
                 });
             return true; // Indicates async response
@@ -140,7 +148,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     sendResponse({authenticated: isAuthenticated});
                 })
                 .catch(error => {
-                    console.error("Authentication check error details:", error);
+                    console.warn("Authentication check failed:", error.message);
                     sendResponse(buildCalendarErrorResponse(error));
                 });
             return true; // Indicates async response

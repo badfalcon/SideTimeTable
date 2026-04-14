@@ -68,11 +68,12 @@ export class GoogleCalendarClient {
     async _checkResponse(response, label) {
         if (response.ok) return;
         const errorBody = await response.text();
-        console.error(`${label} error body:`, errorBody);
         const msg = `${label} error: ${response.status} ${response.statusText}`;
         if (response.status === 401 || response.status === 403) {
+            console.warn(`${label} auth error:`, response.status);
             throw new AuthenticationError(msg);
         }
+        console.error(`${label} error body:`, errorBody);
         throw new Error(msg);
     }
 

@@ -98,12 +98,12 @@ export class GoogleEventManager {
                 }
 
                 if (response.error) {
-                    logError('Google event fetch', response.error);
                     if (response.authExpired) {
                         this._authExpiredKnown = true;
                         if (this.onAuthExpired) this.onAuthExpired();
                         return;
                     }
+                    logError('Google event fetch', response.error);
                     const errorDiv = document.createElement('div');
                     errorDiv.className = 'error-message';
                     const rid = response.requestId ? ` [Request ID: ${response.requestId}]` : '';

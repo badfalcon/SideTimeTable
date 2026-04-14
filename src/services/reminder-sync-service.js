@@ -6,6 +6,7 @@
  */
 import { StorageHelper } from '../lib/storage-helper.js';
 import { AlarmManager } from '../lib/alarm-manager.js';
+import { AuthenticationError } from './google-calendar-client.js';
 
 export class ReminderSyncService {
 
@@ -78,8 +79,12 @@ export class ReminderSyncService {
             // Record sync timestamp
             await StorageHelper.setLocal({ lastReminderSyncTime: Date.now() });
         } catch (error) {
-            console.error('[Reminder Sync] ERROR:', error);
-            console.error('[Reminder Sync] Stack trace:', error.stack);
+            if (error instanceof AuthenticationError) {
+                console.warn('[Reminder Sync] Skipped: auth expired');
+            } else {
+                console.error('[Reminder Sync] ERROR:', error);
+                console.error('[Reminder Sync] Stack trace:', error.stack);
+            }
         }
     }
 
