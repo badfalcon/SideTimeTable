@@ -35,6 +35,15 @@ export class GoogleEventManager {
         this._toggleVersion = 0; // Version counter for calendar toggle race condition prevention
         this.onAuthExpired = null; // Callback when authentication expires
         this._authExpiredKnown = false; // Skip fetches after auth failure is detected
+        this.allDayEventsContainer = null; // Container for all-day event chips
+    }
+
+    /**
+     * Set the container for all-day events
+     * @param {HTMLElement} container - The DOM element for displaying all-day event chips
+     */
+    setAllDayEventsContainer(container) {
+        this.allDayEventsContainer = container;
     }
 
     /**
@@ -81,6 +90,9 @@ export class GoogleEventManager {
             .then(async response => {
                 // Clear the previous display
                 this.googleEventsDiv.innerHTML = '';
+                if (this.allDayEventsContainer) {
+                    this.allDayEventsContainer.innerHTML = '';
+                }
 
                 // Remove only the Google events from the layout manager
                 if (this.eventLayoutManager && this.eventLayoutManager.events) {
@@ -142,18 +154,31 @@ export class GoogleEventManager {
      */
     removeEventsForCalendars(calendarIds) {
         if (!calendarIds || calendarIds.length === 0) return;
-        if (!this.eventLayoutManager || !this.eventLayoutManager.events) return;
 
         const calendarIdSet = new Set(calendarIds);
-        const eventsToRemove = [...this.eventLayoutManager.events].filter(
-            e => e.type === 'google' && calendarIdSet.has(e.calendarId)
-        );
 
-        for (const event of eventsToRemove) {
-            if (event.element && event.element.parentNode) {
-                event.element.remove();
+        // Remove timed events from layout manager
+        if (this.eventLayoutManager && this.eventLayoutManager.events) {
+            const eventsToRemove = [...this.eventLayoutManager.events].filter(
+                e => e.type === 'google' && calendarIdSet.has(e.calendarId)
+            );
+
+            for (const event of eventsToRemove) {
+                if (event.element && event.element.parentNode) {
+                    event.element.remove();
+                }
+                this.eventLayoutManager.removeEvent(event.id);
             }
-            this.eventLayoutManager.removeEvent(event.id);
+        }
+
+        // Remove all-day event chips
+        if (this.allDayEventsContainer) {
+            const chips = this.allDayEventsContainer.querySelectorAll('.all-day-event-chip');
+            chips.forEach(chip => {
+                if (calendarIdSet.has(chip.dataset.calendarId)) {
+                    chip.remove();
+                }
+            });
         }
     }
 
@@ -215,6 +240,9 @@ export class GoogleEventManager {
     async _processDemoEvents() {
         // Clear previous display
         this.googleEventsDiv.innerHTML = '';
+        if (this.allDayEventsContainer) {
+            this.allDayEventsContainer.innerHTML = '';
+        }
 
         // Remove only Google events from layout manager
         const events = [...this.eventLayoutManager.events];
@@ -243,18 +271,29 @@ export class GoogleEventManager {
                 const event = events[i];
                 const uniqueId = `${event.id}-${i}`;
 
+                // Route all-day events to the dedicated section
+                const isAllDay = event.start.date || event.end.date;
+
                 switch (event.eventType) {
                     case 'workingLocation':
                     case 'focusTime':
                         continue;
                     case 'outOfOffice': {
                         const uniqueEvent = { ...event, uniqueId };
-                        await this._createGoogleEventElement(uniqueEvent, { isOutOfOffice: true });
+                        if (isAllDay) {
+                            this._createAllDayEventElement(uniqueEvent);
+                        } else {
+                            await this._createGoogleEventElement(uniqueEvent, { isOutOfOffice: true });
+                        }
                         break;
                     }
                     case 'default': {
                         const uniqueEvent = { ...event, uniqueId };
-                        await this._createGoogleEventElement(uniqueEvent);
+                        if (isAllDay) {
+                            this._createAllDayEventElement(uniqueEvent);
+                        } else {
+                            await this._createGoogleEventElement(uniqueEvent);
+                        }
                         break;
                     }
                     default:
@@ -265,6 +304,39 @@ export class GoogleEventManager {
         }
     }
 
+
+    /**
+     * Create an all-day event chip element
+     * @private
+     */
+    _createAllDayEventElement(event) {
+        if (!this.allDayEventsContainer) return;
+
+        const chip = document.createElement('div');
+        chip.className = 'all-day-event-chip';
+        chip.title = event.summary || window.getLocalizedMessage('allDay');
+        chip.textContent = event.summary || window.getLocalizedMessage('allDay');
+
+        if (event.calendarId) {
+            chip.dataset.calendarId = event.calendarId;
+        }
+
+        // Apply Google Calendar colors
+        if (this.useGoogleCalendarColors && event.calendarBackgroundColor) {
+            chip.style.backgroundColor = event.calendarBackgroundColor;
+            chip.style.color = event.calendarForegroundColor || '';
+        }
+
+        // Open modal on click
+        onClickOnly(chip, () => {
+            const sidePanelController = window.sidePanelController;
+            if (sidePanelController && sidePanelController.googleEventModal) {
+                sidePanelController.googleEventModal.showEvent(event);
+            }
+        });
+
+        this.allDayEventsContainer.appendChild(chip);
+    }
 
     /**
      * Create a Google event element
@@ -411,6 +483,8 @@ export class GoogleEventManager {
      */
     destroy() {
         if (this.googleEventsDiv) this.googleEventsDiv.innerHTML = '';
+        if (this.allDayEventsContainer) this.allDayEventsContainer.innerHTML = '';
+        this.allDayEventsContainer = null;
         this.eventLayoutManager = null;
         this.currentFetchPromise = null;
         this.lastFetchDate = null;

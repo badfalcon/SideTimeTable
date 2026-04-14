@@ -153,6 +153,43 @@ body {
     opacity: 1;
 }
 
+/* All-day events section (between header and timeline) */
+.all-day-events-section {
+    flex: 0 0 auto;
+    padding: 4px 8px;
+    background: var(--side-calendar-panel-background-color);
+    border-bottom: 1px solid var(--side-calendar-border-color);
+    max-height: 80px;
+    overflow-y: auto;
+}
+
+.all-day-events-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.all-day-event-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    background: var(--side-calendar-google-event-default-color);
+    color: var(--side-calendar-google-event-default-text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    box-shadow: 0 1px 2px var(--side-calendar-shadow-color);
+    line-height: 1.4;
+}
+
+.all-day-event-chip:hover {
+    opacity: 0.85;
+}
+
 .side-time-table {
     position: relative;
     border: 1px solid var(--side-calendar-border-color);

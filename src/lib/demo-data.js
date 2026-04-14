@@ -42,6 +42,11 @@ function _d(today, h, m) {
     return new Date(today.getFullYear(), today.getMonth(), today.getDate(), h, m).toISOString();
 }
 
+function _dateStr(today, offsetDays = 0) {
+    const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() + offsetDays);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 // ---------------------------------------------------------------------------
 // Scenario registry
 // ---------------------------------------------------------------------------
@@ -327,6 +332,36 @@ function _devTeamEvents(today, locale) {
             calendarBackgroundColor: '#00BCD4',
             calendarForegroundColor: '#FFFFFF',
             htmlLink: 'https://calendar.google.com/calendar/event?eid=demo-ooo-1'
+        },
+        // All-day: Company event
+        {
+            id: 'demo-allday-1',
+            summary: T('Company Anniversary', '創立記念日'),
+            description: T('Annual company celebration day.', '会社の創立記念イベントの日です。'),
+            location: '',
+            start: { date: _dateStr(today) },
+            end:   { date: _dateStr(today, 1) },
+            eventType: 'default',
+            calendarId: 'primary',
+            calendarName: T('My Calendar', 'マイカレンダー'),
+            calendarBackgroundColor: '#3F51B5',
+            calendarForegroundColor: '#FFFFFF',
+            htmlLink: 'https://calendar.google.com/calendar/event?eid=demo-allday-1'
+        },
+        // All-day: Team offsite
+        {
+            id: 'demo-allday-2',
+            summary: T('Team Offsite', 'チーム合宿'),
+            description: T('Two-day team building offsite.', '2日間のチームビルディング合宿。'),
+            location: T('Resort Hotel', 'リゾートホテル'),
+            start: { date: _dateStr(today) },
+            end:   { date: _dateStr(today, 2) },
+            eventType: 'default',
+            calendarId: 'eng-team@team.com',
+            calendarName: T('Engineering', '開発チーム'),
+            calendarBackgroundColor: '#FF5722',
+            calendarForegroundColor: '#FFFFFF',
+            htmlLink: 'https://calendar.google.com/calendar/event?eid=demo-allday-2'
         }
     ];
 }
@@ -568,6 +603,21 @@ function _salesTeamEvents(today, locale) {
             calendarBackgroundColor: '#FFC107',
             calendarForegroundColor: '#000000',
             htmlLink: 'https://calendar.google.com/calendar/event?eid=demo13'
+        },
+        // All-day: Trade show
+        {
+            id: 'demo-allday-1',
+            summary: T('Trade Show', '展示会'),
+            description: T('Annual industry trade show.', '年次業界展示会。'),
+            location: T('Convention Center', 'コンベンションセンター'),
+            start: { date: _dateStr(today) },
+            end:   { date: _dateStr(today, 1) },
+            eventType: 'default',
+            calendarId: 'primary',
+            calendarName: T('My Calendar', 'マイカレンダー'),
+            calendarBackgroundColor: '#3F51B5',
+            calendarForegroundColor: '#FFFFFF',
+            htmlLink: 'https://calendar.google.com/calendar/event?eid=demo-allday-s1'
         }
     ];
 }
@@ -806,6 +856,21 @@ function _managerEvents(today, locale) {
             calendarBackgroundColor: '#FF5722',
             calendarForegroundColor: '#FFFFFF',
             htmlLink: 'https://calendar.google.com/calendar/event?eid=demo13'
+        },
+        // All-day: Performance review period
+        {
+            id: 'demo-allday-1',
+            summary: T('Performance Reviews', '人事評価期間'),
+            description: T('Mid-year performance review period.', '上期人事評価期間です。'),
+            location: '',
+            start: { date: _dateStr(today) },
+            end:   { date: _dateStr(today, 5) },
+            eventType: 'default',
+            calendarId: 'hr@eng.com',
+            calendarName: T('HR Team', '人事部'),
+            calendarBackgroundColor: '#FF5722',
+            calendarForegroundColor: '#FFFFFF',
+            htmlLink: 'https://calendar.google.com/calendar/event?eid=demo-allday-m1'
         }
     ];
 }

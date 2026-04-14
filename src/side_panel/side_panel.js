@@ -16,6 +16,7 @@ import {
     MemoComponent
 } from './components';
 
+import { AllDayEventsComponent } from './components/timeline/all-day-events-component.js';
 import { EventLayoutManager } from './time-manager.js';
 import { GoogleEventManager, LocalEventManager } from './event-handlers.js';
 import { LocalEventService } from './services/local-event-service.js';
@@ -139,6 +140,12 @@ class SidePanelUIController {
             existingHeader.remove();
         }
 
+        // Remove the existing all-day events section
+        const existingAllDay = document.getElementById('allDayEventsSection');
+        if (existingAllDay) {
+            existingAllDay.remove();
+        }
+
         // Remove the existing timetable element
         const existingTimeTable = document.getElementById('sideTimeTable');
         if (existingTimeTable) {
@@ -204,6 +211,9 @@ class SidePanelUIController {
             onCalendarChange: (changeInfo) => this._handleCalendarToggle(changeInfo)
         });
 
+        // The all-day events component (between header and timeline)
+        this.allDayEventsComponent = new AllDayEventsComponent();
+
         // The modal components
         this.localEventModal = new LocalEventModal({
             onSave: (eventData, mode) => this._handleSaveLocalEvent(eventData, mode),
@@ -231,6 +241,7 @@ class SidePanelUIController {
 
         // Register with the component manager
         this.componentManager.register('header', this.headerComponent);
+        this.componentManager.register('allDayEvents', this.allDayEventsComponent);
         this.componentManager.register('timeline', this.timelineComponent);
         this.componentManager.register('localEventModal', this.localEventModal);
         this.componentManager.register('googleEventModal', this.googleEventModal);
@@ -246,6 +257,7 @@ class SidePanelUIController {
         // Add to the DOM
         const container = document.getElementById('side-panel-container') || document.body;
         this.headerComponent.appendTo(container);
+        this.allDayEventsComponent.appendTo(container);
         this.timelineComponent.appendTo(container);
         this.memoComponent.appendTo(container);
         this.localEventModal.appendTo(container);
@@ -283,6 +295,9 @@ class SidePanelUIController {
             // Update the eventLayoutManager of event managers
             if (this.googleEventManager) {
                 this.googleEventManager.eventLayoutManager = this.eventLayoutManager;
+                this.googleEventManager.setAllDayEventsContainer(
+                    this.allDayEventsComponent.getContainer()
+                );
             }
             if (this.localEventManager) {
                 this.localEventManager.eventLayoutManager = this.eventLayoutManager;
@@ -316,6 +331,11 @@ class SidePanelUIController {
 
         // Set auth expiry callback
         this.googleEventManager.onAuthExpired = () => this._showAuthExpiredBanner();
+
+        // Set all-day events container
+        this.googleEventManager.setAllDayEventsContainer(
+            this.allDayEventsComponent.getContainer()
+        );
 
         // Initialize the local event manager
         this.localEventManager = new LocalEventManager(
@@ -454,6 +474,7 @@ class SidePanelUIController {
 
         try {
             // Clear existing events (prevent duplicates)
+            this.allDayEventsComponent.clear();
             this.timelineComponent.clearAllEvents();
             if (this.eventLayoutManager) {
                 this.eventLayoutManager.clearAllEvents();
@@ -475,6 +496,9 @@ class SidePanelUIController {
             if (this.eventLayoutManager) {
                 this.eventLayoutManager.calculateLayout(true);
             }
+
+            // Show/hide the all-day events section
+            this.allDayEventsComponent.updateVisibility();
 
         } catch (error) {
             console.error('Event loading error:', error);
@@ -521,6 +545,9 @@ class SidePanelUIController {
         if (this.eventLayoutManager) {
             this.eventLayoutManager.calculateLayout();
         }
+
+        // Update all-day events visibility
+        this.allDayEventsComponent.updateVisibility();
     }
 
     /**
@@ -570,6 +597,7 @@ class SidePanelUIController {
         const currentDate = this.dateNavService.getDate();
 
         // Immediately remove the old date events
+        this.allDayEventsComponent.clear();
         this.timelineComponent.clearAllEvents();
 
         // Clear the EventLayoutManager state as well
@@ -864,11 +892,11 @@ class SidePanelUIController {
         dismissBtn.addEventListener('click', () => banner.remove());
         banner.appendChild(dismissBtn);
 
-        // Insert before the timeline
+        // Insert before the all-day section (or timeline as fallback)
         const container = document.getElementById('side-panel-container') || document.body;
-        const timeline = this.timelineComponent?.element;
-        if (timeline) {
-            container.insertBefore(banner, timeline);
+        const insertBeforeEl = this.allDayEventsComponent?.element || this.timelineComponent?.element;
+        if (insertBeforeEl) {
+            container.insertBefore(banner, insertBeforeEl);
         } else {
             container.appendChild(banner);
         }
