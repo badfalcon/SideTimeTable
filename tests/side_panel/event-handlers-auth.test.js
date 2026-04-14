@@ -1,8 +1,10 @@
 /**
- * Tests for GoogleEventManager auth-expiry handling
+ * Tests for GoogleEventManager — auth expiry behavior
+ *
+ * These tests describe WHAT the manager does from its callers' perspective,
+ * not HOW it tracks state internally.
  */
 
-// Mock dependencies before importing the module under test
 jest.mock('../../src/lib/settings-storage.js', () => ({
   loadSettings: jest.fn(),
   loadSelectedCalendars: jest.fn(),
@@ -33,39 +35,71 @@ import { GoogleEventManager } from '../../src/side_panel/event-handlers.js';
 import { loadSettings } from '../../src/lib/settings-storage.js';
 import { sendMessage } from '../../src/lib/chrome-messaging.js';
 
-describe('GoogleEventManager auth state', () => {
-  let manager;
-  let mockGoogleEventsDiv;
+function createManager() {
+  return new GoogleEventManager(
+    { innerHTML: '', appendChild: jest.fn() },
+    null
+  );
+}
 
+function mockGoogleIntegrated() {
+  loadSettings.mockResolvedValue({
+    googleIntegrated: true,
+    useGoogleCalendarColors: true,
+  });
+}
+
+describe('GoogleEventManager — auth expiry behavior', () => {
   beforeEach(() => {
-    mockGoogleEventsDiv = {
-      innerHTML: '',
-      appendChild: jest.fn(),
-    };
-    manager = new GoogleEventManager(mockGoogleEventsDiv, null);
     jest.clearAllMocks();
   });
 
-  test('_authExpiredKnown is initially false', () => {
-    expect(manager._authExpiredKnown).toBe(false);
-  });
+  // ── Notification ───────────────────────────────────────────────
 
-  test('resetAuthState() clears the auth expired flag', () => {
-    manager._authExpiredKnown = true;
-    manager.resetAuthState();
-    expect(manager._authExpiredKnown).toBe(false);
-  });
+  test('notifies the caller when authentication expires', async () => {
+    const manager = createManager();
+    mockGoogleIntegrated();
+    sendMessage.mockResolvedValue({ error: 'Token revoked', authExpired: true });
 
-  test('fetchEvents skips API call when _authExpiredKnown is true', async () => {
-    manager._authExpiredKnown = true;
-    loadSettings.mockResolvedValue({ googleIntegrated: true });
+    const onAuthExpired = jest.fn();
+    manager.onAuthExpired = onAuthExpired;
 
     await manager.fetchEvents(new Date());
 
+    expect(onAuthExpired).toHaveBeenCalledTimes(1);
+  });
+
+  test('does not notify when the error is not auth-related', async () => {
+    const manager = createManager();
+    mockGoogleIntegrated();
+    sendMessage.mockResolvedValue({ error: 'Timeout', authExpired: false });
+
+    const onAuthExpired = jest.fn();
+    manager.onAuthExpired = onAuthExpired;
+
+    await manager.fetchEvents(new Date());
+
+    expect(onAuthExpired).not.toHaveBeenCalled();
+  });
+
+  // ── Fetch suppression after expiry ─────────────────────────────
+
+  test('stops fetching Google events after auth expiry is detected', async () => {
+    const manager = createManager();
+    mockGoogleIntegrated();
+    sendMessage.mockResolvedValue({ error: 'Revoked', authExpired: true });
+    manager.onAuthExpired = jest.fn();
+
+    await manager.fetchEvents(new Date());
+    sendMessage.mockClear();
+
+    // Subsequent fetch should not contact the API
+    await manager.fetchEvents(new Date());
     expect(sendMessage).not.toHaveBeenCalled();
   });
 
-  test('fetchEvents skips API call when googleIntegrated is false', async () => {
+  test('does not fetch when Google Calendar is not integrated', async () => {
+    const manager = createManager();
     loadSettings.mockResolvedValue({ googleIntegrated: false });
 
     await manager.fetchEvents(new Date());
@@ -73,81 +107,25 @@ describe('GoogleEventManager auth state', () => {
     expect(sendMessage).not.toHaveBeenCalled();
   });
 
-  test('sets _authExpiredKnown and calls onAuthExpired on auth error', async () => {
-    loadSettings.mockResolvedValue({
-      googleIntegrated: true,
-      useGoogleCalendarColors: true,
-    });
-    sendMessage.mockResolvedValue({
-      error: 'Token revoked',
-      authExpired: true,
-    });
+  // ── Recovery after reconnection ────────────────────────────────
 
-    const onAuthExpired = jest.fn();
-    manager.onAuthExpired = onAuthExpired;
-
-    await manager.fetchEvents(new Date());
-
-    expect(manager._authExpiredKnown).toBe(true);
-    expect(onAuthExpired).toHaveBeenCalledTimes(1);
-  });
-
-  test('does not call onAuthExpired on non-auth errors', async () => {
-    loadSettings.mockResolvedValue({
-      googleIntegrated: true,
-      useGoogleCalendarColors: true,
-    });
-    sendMessage.mockResolvedValue({
-      error: 'Network timeout',
-      authExpired: false,
-    });
-
-    const onAuthExpired = jest.fn();
-    manager.onAuthExpired = onAuthExpired;
-
-    await manager.fetchEvents(new Date());
-
-    expect(manager._authExpiredKnown).toBe(false);
-    expect(onAuthExpired).not.toHaveBeenCalled();
-  });
-
-  test('subsequent fetchEvents are skipped after auth expiry', async () => {
-    loadSettings.mockResolvedValue({
-      googleIntegrated: true,
-      useGoogleCalendarColors: true,
-    });
-    sendMessage.mockResolvedValue({
-      error: 'Token revoked',
-      authExpired: true,
-    });
-    manager.onAuthExpired = jest.fn();
-
-    // First call — detects auth expiry
-    await manager.fetchEvents(new Date());
-    expect(sendMessage).toHaveBeenCalledTimes(1);
-
-    // Second call — should skip entirely
-    await manager.fetchEvents(new Date());
-    expect(sendMessage).toHaveBeenCalledTimes(1); // no new call
-  });
-
-  test('fetchEvents resumes after resetAuthState', async () => {
-    loadSettings.mockResolvedValue({
-      googleIntegrated: true,
-      useGoogleCalendarColors: true,
-    });
+  test('resumes fetching after resetAuthState is called', async () => {
+    const manager = createManager();
+    mockGoogleIntegrated();
     sendMessage
-      .mockResolvedValueOnce({ error: 'Token revoked', authExpired: true })
+      .mockResolvedValueOnce({ error: 'Revoked', authExpired: true })
       .mockResolvedValueOnce({ events: [] });
     manager.onAuthExpired = jest.fn();
 
+    // Auth expires
     await manager.fetchEvents(new Date());
-    expect(manager._authExpiredKnown).toBe(true);
 
+    // User reconnects
     manager.resetAuthState();
-    manager.lastFetchDate = null; // clear dedup guard
+    manager.lastFetchDate = null; // clear same-date dedup
+    sendMessage.mockClear();
 
     await manager.fetchEvents(new Date());
-    expect(sendMessage).toHaveBeenCalledTimes(2);
+    expect(sendMessage).toHaveBeenCalled();
   });
 });

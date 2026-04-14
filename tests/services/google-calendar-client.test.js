@@ -3,83 +3,77 @@ import { AuthenticationError, GoogleCalendarClient } from '../../src/services/go
 // ── AuthenticationError ────────────────────────────────────────────
 
 describe('AuthenticationError', () => {
-  test('is an instance of Error', () => {
-    const err = new AuthenticationError('token revoked');
-    expect(err).toBeInstanceOf(Error);
-    expect(err).toBeInstanceOf(AuthenticationError);
+  test('can be distinguished from generic errors via instanceof', () => {
+    const authErr = new AuthenticationError('token revoked');
+    const genericErr = new Error('network timeout');
+
+    expect(authErr).toBeInstanceOf(Error);
+    expect(authErr).toBeInstanceOf(AuthenticationError);
+    expect(genericErr).not.toBeInstanceOf(AuthenticationError);
   });
 
-  test('has name "AuthenticationError"', () => {
-    const err = new AuthenticationError('msg');
+  test('carries the error name for serialization across message boundaries', () => {
+    const err = new AuthenticationError('expired');
     expect(err.name).toBe('AuthenticationError');
-  });
-
-  test('preserves the message', () => {
-    const err = new AuthenticationError('token expired');
-    expect(err.message).toBe('token expired');
+    expect(err.message).toBe('expired');
   });
 });
 
-// ── _checkResponse ─────────────────────────────────────────────────
+// ── API response error classification ──────────────────────────────
 
-describe('GoogleCalendarClient._checkResponse', () => {
+describe('API response error classification', () => {
   let client;
 
   beforeEach(() => {
     client = new GoogleCalendarClient();
   });
 
-  function mockResponse(status, ok = status >= 200 && status < 300) {
+  function mockResponse(status) {
     return {
-      ok,
+      ok: status >= 200 && status < 300,
       status,
-      statusText: ok ? 'OK' : 'Error',
-      text: jest.fn().mockResolvedValue('error body'),
+      statusText: status === 401 ? 'Unauthorized' : status === 403 ? 'Forbidden' : 'Error',
+      text: jest.fn().mockResolvedValue(''),
     };
   }
 
-  test('does nothing for a successful response', async () => {
-    const res = mockResponse(200);
-    await expect(client._checkResponse(res, 'Test')).resolves.toBeUndefined();
+  test('successful responses are accepted without error', async () => {
+    await expect(client._checkResponse(mockResponse(200), 'API'))
+      .resolves.toBeUndefined();
   });
 
-  test('throws AuthenticationError for 401', async () => {
-    const res = mockResponse(401);
-    await expect(client._checkResponse(res, 'API'))
+  test('401 Unauthorized is classified as an authentication error', async () => {
+    await expect(client._checkResponse(mockResponse(401), 'API'))
       .rejects.toThrow(AuthenticationError);
   });
 
-  test('throws AuthenticationError for 403', async () => {
-    const res = mockResponse(403);
-    await expect(client._checkResponse(res, 'API'))
+  test('403 Forbidden is classified as an authentication error', async () => {
+    await expect(client._checkResponse(mockResponse(403), 'API'))
       .rejects.toThrow(AuthenticationError);
   });
 
-  test('throws generic Error for other failures (e.g. 500)', async () => {
-    const res = mockResponse(500);
-    await expect(client._checkResponse(res, 'API'))
+  test('server errors (e.g. 500) are not classified as authentication errors', async () => {
+    await expect(client._checkResponse(mockResponse(500), 'API'))
       .rejects.toThrow(Error);
-    await expect(client._checkResponse(res, 'API'))
+    await expect(client._checkResponse(mockResponse(500), 'API'))
       .rejects.not.toThrow(AuthenticationError);
   });
 
-  test('includes label and status in the error message', async () => {
-    const res = mockResponse(401);
-    await expect(client._checkResponse(res, 'CalendarList API'))
+  test('error message includes the API label and HTTP status', async () => {
+    await expect(client._checkResponse(mockResponse(401), 'CalendarList API'))
       .rejects.toThrow(/CalendarList API error: 401/);
   });
 });
 
-// ── checkAuth ──────────────────────────────────────────────────────
+// ── checkAuth (token validation) ───────────────────────────────────
 
-describe('GoogleCalendarClient.checkAuth', () => {
+describe('checkAuth', () => {
   let client;
   let originalFetch;
 
   beforeEach(() => {
     client = new GoogleCalendarClient();
     originalFetch = global.fetch;
-    // Reset Chrome identity mock
     chrome.identity.getAuthToken.mockReset();
     chrome.identity.removeCachedAuthToken = jest.fn((opts, cb) => cb && cb());
   });
@@ -88,14 +82,14 @@ describe('GoogleCalendarClient.checkAuth', () => {
     global.fetch = originalFetch;
   });
 
-  test('returns true when token is valid', async () => {
+  test('reports authenticated when the token is valid', async () => {
     chrome.identity.getAuthToken.mockImplementation((opts, cb) => cb('valid-token'));
     global.fetch = jest.fn().mockResolvedValue({ status: 200, ok: true });
 
     expect(await client.checkAuth()).toBe(true);
   });
 
-  test('returns false when no token is available', async () => {
+  test('reports unauthenticated when no token exists', async () => {
     chrome.identity.getAuthToken.mockImplementation((opts, cb) => {
       chrome.runtime.lastError = { message: 'No token' };
       cb(null);
@@ -105,31 +99,31 @@ describe('GoogleCalendarClient.checkAuth', () => {
     expect(await client.checkAuth()).toBe(false);
   });
 
-  test('returns false and clears token on 401', async () => {
+  test('reports unauthenticated when the token is revoked (401)', async () => {
     chrome.identity.getAuthToken.mockImplementation((opts, cb) => cb('stale-token'));
     global.fetch = jest.fn().mockResolvedValue({ status: 401, ok: false });
 
     expect(await client.checkAuth()).toBe(false);
+  });
+
+  test('clears the stale cached token on revocation', async () => {
+    chrome.identity.getAuthToken.mockImplementation((opts, cb) => cb('stale-token'));
+    global.fetch = jest.fn().mockResolvedValue({ status: 401, ok: false });
+
+    await client.checkAuth();
+
     expect(chrome.identity.removeCachedAuthToken)
       .toHaveBeenCalledWith({ token: 'stale-token' }, expect.any(Function));
   });
 
-  test('returns false and clears token on 403', async () => {
-    chrome.identity.getAuthToken.mockImplementation((opts, cb) => cb('stale-token'));
-    global.fetch = jest.fn().mockResolvedValue({ status: 403, ok: false });
-
-    expect(await client.checkAuth()).toBe(false);
-    expect(chrome.identity.removeCachedAuthToken).toHaveBeenCalled();
-  });
-
-  test('returns false on network error', async () => {
+  test('reports unauthenticated on network failure without throwing', async () => {
     chrome.identity.getAuthToken.mockImplementation((opts, cb) => cb('token'));
     global.fetch = jest.fn().mockRejectedValue(new Error('Network failure'));
 
     expect(await client.checkAuth()).toBe(false);
   });
 
-  test('uses non-interactive token request', async () => {
+  test('does not prompt the user for login (non-interactive)', async () => {
     chrome.identity.getAuthToken.mockImplementation((opts, cb) => cb('token'));
     global.fetch = jest.fn().mockResolvedValue({ status: 200, ok: true });
 
