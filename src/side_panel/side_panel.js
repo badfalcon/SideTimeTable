@@ -888,6 +888,10 @@ class SidePanelUIController {
                 if (this.googleEventManager) {
                     this.googleEventManager.resetAuthState();
                 }
+                // Show the calendar filter button and reload events
+                if (this.timelineComponent?.calendarFilter) {
+                    this.timelineComponent.calendarFilter.refreshVisibility();
+                }
                 await this._loadEventsForCurrentDate();
             } else {
                 if (btn) btn.disabled = false;
