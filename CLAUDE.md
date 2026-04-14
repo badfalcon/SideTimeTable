@@ -61,6 +61,10 @@ npm run build         # Verify production build succeeds
 - **Recurring events**: separate storage with daily/weekly/monthly/weekdays patterns and exception handling
 - **Adaptive padding**: basic (10px), compact (8px), micro (6px) based on lane density
 
+## TODO管理
+
+今すぐ対応しない課題（スコープ外のリファクタリング、テスト環境不足で書けないテスト等）を見つけた場合は、`TODO.md` に追記すること。カテゴリ（テスト、リファクタリング等）ごとにチェックリスト形式で記載する。
+
 ## Development Workflow
 
 1. Run `npm run dev` for development (webpack watch mode)
