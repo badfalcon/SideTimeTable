@@ -608,7 +608,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
             const now = Date.now();
-            if (now - lastAuthCheck > 30000) {
+            if (now - lastAuthCheck > 5 * 60 * 1000) {
                 lastAuthCheck = now;
                 optionsPageManager.checkGoogleAuthStatus();
             }
