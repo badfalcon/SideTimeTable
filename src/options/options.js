@@ -602,4 +602,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initialize the new component-based options page manager
     const optionsPageManager = new OptionsPageManager();
     await optionsPageManager.initialize();
+
+    // Re-check auth status when the tab becomes visible again
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            optionsPageManager._checkGoogleAuthStatus();
+        }
+    });
 });
