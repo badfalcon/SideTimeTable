@@ -271,17 +271,14 @@ export class GoogleEventManager {
                 const event = events[i];
                 const uniqueId = `${event.id}-${i}`;
 
-                // Route all-day events to the dedicated section
-                const isAllDay = event.start.date || event.end.date;
-
                 switch (event.eventType) {
                     case 'workingLocation':
                     case 'focusTime':
                         continue;
                     case 'outOfOffice': {
                         const uniqueEvent = { ...event, uniqueId };
-                        if (isAllDay) {
-                            this._createAllDayEventElement(uniqueEvent);
+                        if (event.start.date || event.end.date) {
+                            this._createAllDayEventElement(uniqueEvent, { isOutOfOffice: true });
                         } else {
                             await this._createGoogleEventElement(uniqueEvent, { isOutOfOffice: true });
                         }
@@ -289,7 +286,7 @@ export class GoogleEventManager {
                     }
                     case 'default': {
                         const uniqueEvent = { ...event, uniqueId };
-                        if (isAllDay) {
+                        if (event.start.date || event.end.date) {
                             this._createAllDayEventElement(uniqueEvent);
                         } else {
                             await this._createGoogleEventElement(uniqueEvent);
@@ -309,13 +306,19 @@ export class GoogleEventManager {
      * Create an all-day event chip element
      * @private
      */
-    _createAllDayEventElement(event) {
+    _createAllDayEventElement(event, options = {}) {
         if (!this.allDayEventsContainer) return;
 
         const chip = document.createElement('div');
-        chip.className = 'all-day-event-chip';
-        chip.title = event.summary || window.getLocalizedMessage('allDay');
-        chip.textContent = event.summary || window.getLocalizedMessage('allDay');
+        chip.className = options.isOutOfOffice
+            ? 'all-day-event-chip all-day-event-chip-ooo'
+            : 'all-day-event-chip';
+
+        const title = event.summary || (options.isOutOfOffice
+            ? window.getLocalizedMessage('outOfOffice')
+            : window.getLocalizedMessage('allDay'));
+        chip.title = title;
+        chip.textContent = title;
 
         if (event.calendarId) {
             chip.dataset.calendarId = event.calendarId;

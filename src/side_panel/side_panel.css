@@ -190,6 +190,11 @@ body {
     opacity: 0.85;
 }
 
+.all-day-event-chip-ooo {
+    text-decoration: line-through;
+    font-style: italic;
+}
+
 .side-time-table {
     position: relative;
     border: 1px solid var(--side-calendar-border-color);
