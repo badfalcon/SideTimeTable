@@ -160,7 +160,7 @@ class OptionsPageManager {
         await this.componentManager.initializeAll();
 
         // Check Google auth status after components are initialized
-        await this._checkGoogleAuthStatus();
+        await this.checkGoogleAuthStatus();
 
         // Re-execute the localization after the component generation
         if (window.localizeHtmlPageWithLang) {
@@ -237,7 +237,7 @@ class OptionsPageManager {
         }
     }
 
-    async _checkGoogleAuthStatus() {
+    async checkGoogleAuthStatus() {
         // Show demo Google integration state in demo mode
         if (isDemoMode()) {
             this.googleIntegrationCard.updateIntegrationStatus(true);
@@ -603,10 +603,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     const optionsPageManager = new OptionsPageManager();
     await optionsPageManager.initialize();
 
-    // Re-check auth status when the tab becomes visible again
+    // Re-check auth status when the tab becomes visible again (throttled)
+    let lastAuthCheck = Date.now();
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
-            optionsPageManager._checkGoogleAuthStatus();
+            const now = Date.now();
+            if (now - lastAuthCheck > 30000) {
+                lastAuthCheck = now;
+                optionsPageManager.checkGoogleAuthStatus();
+            }
         }
     });
 });

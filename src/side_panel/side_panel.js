@@ -127,6 +127,12 @@ class SidePanelUIController {
      * @private
      */
     _removeExistingElements() {
+        // Remove the existing auth expired banner
+        const existingBanner = document.getElementById('authExpiredBanner');
+        if (existingBanner) {
+            existingBanner.remove();
+        }
+
         // Remove the existing header element
         const existingHeader = document.getElementById('sideTimeTableHeaderWrapper');
         if (existingHeader) {
@@ -876,7 +882,7 @@ class SidePanelUIController {
         const banner = document.getElementById('authExpiredBanner');
         if (banner) banner.remove();
         if (this.googleEventManager) {
-            this.googleEventManager._authExpiredKnown = false;
+            this.googleEventManager.resetAuthState();
         }
         this._openSettings();
     }

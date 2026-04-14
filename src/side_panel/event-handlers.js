@@ -400,6 +400,13 @@ export class GoogleEventManager {
     }
 
     /**
+     * Reset auth expired state to allow fetches again after reconnection
+     */
+    resetAuthState() {
+        this._authExpiredKnown = false;
+    }
+
+    /**
      * Clean up resources
      */
     destroy() {

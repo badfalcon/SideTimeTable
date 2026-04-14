@@ -140,9 +140,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     sendResponse({authenticated: isAuthenticated});
                 })
                 .catch(error => {
-                    const detail = (error && (error.message || error.toString())) || "Authentication check error";
                     console.error("Authentication check error details:", error);
-                    sendResponse({ error: detail, errorType: (error && error.name) || undefined });
+                    sendResponse(buildCalendarErrorResponse(error));
                 });
             return true; // Indicates async response
 
