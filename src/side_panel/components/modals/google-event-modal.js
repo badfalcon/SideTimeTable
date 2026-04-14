@@ -62,6 +62,11 @@ export class GoogleEventModal extends ModalComponent {
         this.meetElement.className = 'google-event-row google-event-meet';
         content.appendChild(this.meetElement);
 
+        // Out of office information
+        this.oooInfoElement = document.createElement('div');
+        this.oooInfoElement.className = 'google-event-row google-event-ooo-info mb-2';
+        content.appendChild(this.oooInfoElement);
+
         // Save the reference to the modalBody
         this.modalBody = content;
 
@@ -92,7 +97,7 @@ export class GoogleEventModal extends ModalComponent {
             const titleLink = document.createElement('a');
             titleLink.href = event.htmlLink;
             titleLink.target = '_blank';
-            titleLink.textContent = event.summary || window.getLocalizedMessage('noTitle');
+            titleLink.textContent = event.summary || (event.eventType === 'outOfOffice' ? window.getLocalizedMessage('outOfOffice') : window.getLocalizedMessage('noTitle'));
             titleLink.style.cssText = 'color: inherit; text-decoration: none;';
             titleLink.addEventListener('mouseenter', () => {
                 titleLink.style.textDecoration = 'underline';
@@ -109,7 +114,7 @@ export class GoogleEventModal extends ModalComponent {
                 this.titleElement.appendChild(colorIndicator);
             }
             const titleText = document.createElement('span');
-            titleText.textContent = event.summary || window.getLocalizedMessage('noTitle');
+            titleText.textContent = event.summary || (event.eventType === 'outOfOffice' ? window.getLocalizedMessage('outOfOffice') : window.getLocalizedMessage('noTitle'));
             this.titleElement.appendChild(titleText);
         }
 
@@ -128,11 +133,17 @@ export class GoogleEventModal extends ModalComponent {
         // Meet information
         this._setMeetInfo(event);
 
-        // Attendees information
-        this._setAttendeesInfo(event);
+        // Out of office information
+        this._setOutOfOfficeInfo(event);
 
-        // RSVP buttons
-        this._setRsvpButtons(event);
+        // Attendees and RSVP (skip for out-of-office events)
+        if (event.eventType === 'outOfOffice') {
+            if (this.attendeesElement) this.attendeesElement.innerHTML = '';
+            if (this.rsvpContainer) this.rsvpContainer.innerHTML = '';
+        } else {
+            this._setAttendeesInfo(event);
+            this._setRsvpButtons(event);
+        }
 
         this.show();
 
@@ -297,6 +308,26 @@ export class GoogleEventModal extends ModalComponent {
             this.meetElement.appendChild(icon);
             this.meetElement.appendChild(link);
         }
+    }
+
+    /**
+     * Set out of office information
+     * @private
+     */
+    _setOutOfOfficeInfo(event) {
+        this.oooInfoElement.innerHTML = '';
+
+        if (event.eventType !== 'outOfOffice') return;
+
+        const icon = document.createElement('i');
+        icon.className = 'fas fa-plane-departure me-1';
+
+        const text = document.createElement('span');
+        const declineMessage = event.outOfOfficeProperties?.declineMessage;
+        text.textContent = declineMessage || window.getLocalizedMessage('outOfOffice');
+
+        this.oooInfoElement.appendChild(icon);
+        this.oooInfoElement.appendChild(text);
     }
 
     /**

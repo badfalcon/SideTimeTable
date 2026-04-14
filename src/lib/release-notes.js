@@ -6,6 +6,34 @@
  */
 export const RELEASE_NOTES = [
     {
+        version: '1.9.3',
+        date: '2026-04-02',
+        highlights: {
+            en: [
+                'Bug fixes and stability improvements'
+            ],
+            ja: [
+                'バグ修正と安定性の向上'
+            ]
+        }
+    },
+    {
+        version: '1.9.2',
+        date: '2026-04-02',
+        highlights: {
+            en: [
+                'Customize memo font size from the settings page (10px–20px)',
+                'Faster calendar switching: toggling a calendar no longer reloads all events',
+                'Bug fixes and stability improvements'
+            ],
+            ja: [
+                'メモのフォントサイズを設定画面で変更可能に（10px〜20px）',
+                'カレンダー切替を高速化：個別のカレンダーだけを更新',
+                'バグ修正と安定性の向上'
+            ]
+        }
+    },
+    {
         version: '1.9.1',
         date: '2026-03-29',
         highlights: {

@@ -6,7 +6,7 @@
 
 import { logError } from '../lib/utils.js';
 import { RECURRENCE_TYPES } from '../lib/constants.js';
-import { loadSettings } from '../lib/settings-storage.js';
+import { loadSettings, loadSelectedCalendars } from '../lib/settings-storage.js';
 import { loadLocalEvents, loadLocalEventsForDate } from '../lib/event-storage.js';
 import { sendMessage } from '../lib/chrome-messaging.js';
 import {createTimeOnDate} from '../lib/time-utils.js';
@@ -32,6 +32,9 @@ export class GoogleEventManager {
         this.eventLayoutManager = eventLayoutManager;
         this.lastFetchDate = null; // The last date when the API was called
         this.currentFetchPromise = null; // The currently executing fetch Promise
+        this._toggleVersion = 0; // Version counter for calendar toggle race condition prevention
+        this.onAuthExpired = null; // Callback when authentication expires
+        this._authExpiredKnown = false; // Skip fetches after auth failure is detected
     }
 
     /**
@@ -51,7 +54,7 @@ export class GoogleEventManager {
         const isGoogleIntegrated = settings.googleIntegrated === true;
         this.useGoogleCalendarColors = settings.useGoogleCalendarColors !== false;
 
-        if (!isGoogleIntegrated) {
+        if (!isGoogleIntegrated || this._authExpiredKnown) {
             return Promise.resolve();
         }
 
@@ -95,6 +98,11 @@ export class GoogleEventManager {
                 }
 
                 if (response.error) {
+                    if (response.authExpired) {
+                        this._authExpiredKnown = true;
+                        if (this.onAuthExpired) this.onAuthExpired();
+                        return;
+                    }
                     logError('Google event fetch', response.error);
                     const errorDiv = document.createElement('div');
                     errorDiv.className = 'error-message';
@@ -157,6 +165,8 @@ export class GoogleEventManager {
     async fetchEventsForCalendars(targetDate, calendarIds) {
         if (!calendarIds || calendarIds.length === 0) return;
 
+        const versionAtStart = ++this._toggleVersion;
+
         const settings = await loadSettings();
         this.useGoogleCalendarColors = settings.useGoogleCalendarColors !== false;
         const isGoogleIntegrated = settings.googleIntegrated === true;
@@ -174,6 +184,9 @@ export class GoogleEventManager {
 
         const response = await sendMessage(message);
 
+        // If another toggle happened while we were fetching, discard this result
+        if (this._toggleVersion !== versionAtStart) return;
+
         if (!response) return;
 
         if (response.error) {
@@ -184,7 +197,15 @@ export class GoogleEventManager {
             return;
         }
 
-        await this._processEvents(response.events);
+        // Filter events against current calendar selection to prevent stale renders
+        const currentSelected = new Set(await loadSelectedCalendars());
+        const filteredEvents = response.events.filter(
+            e => e.calendarId && currentSelected.has(e.calendarId)
+        );
+
+        if (filteredEvents.length === 0) return;
+
+        await this._processEvents(filteredEvents);
     }
 
     /**
@@ -225,8 +246,12 @@ export class GoogleEventManager {
                 switch (event.eventType) {
                     case 'workingLocation':
                     case 'focusTime':
-                    case 'outOfOffice':
                         continue;
+                    case 'outOfOffice': {
+                        const uniqueEvent = { ...event, uniqueId };
+                        await this._createGoogleEventElement(uniqueEvent, { isOutOfOffice: true });
+                        break;
+                    }
                     case 'default': {
                         const uniqueEvent = { ...event, uniqueId };
                         await this._createGoogleEventElement(uniqueEvent);
@@ -245,7 +270,7 @@ export class GoogleEventManager {
      * Create a Google event element
      * @private
      */
-    async _createGoogleEventElement(event) {
+    async _createGoogleEventElement(event, options = {}) {
         // Skip all-day events
         if (event.start.date || event.end.date) {
             return;
@@ -260,11 +285,15 @@ export class GoogleEventManager {
         }
 
         // Create the positioned event element via the factory
+        const cssClass = options.isOutOfOffice
+            ? 'event google-event google-event-ooo'
+            : 'event google-event';
+        const title = event.summary || (options.isOutOfOffice ? window.getLocalizedMessage('outOfOffice') : '');
         const { eventDiv } = EventElementFactory.createEventElement({
             startDate,
             endDate,
-            cssClass: 'event google-event',
-            tooltip: event.summary,
+            cssClass,
+            tooltip: title,
             initialWidth: this.eventLayoutManager.maxWidth
         });
 
@@ -287,12 +316,16 @@ export class GoogleEventManager {
 
         // Apply the Google colors directly (unless disabled by user setting)
         if (this.useGoogleCalendarColors && event.calendarBackgroundColor) {
-            eventDiv.style.backgroundColor = event.calendarBackgroundColor;
-            eventDiv.style.color = event.calendarForegroundColor;
+            if (options.isOutOfOffice) {
+                eventDiv.style.setProperty('--side-calendar-ooo-color', event.calendarBackgroundColor);
+            } else {
+                eventDiv.style.backgroundColor = event.calendarBackgroundColor;
+                eventDiv.style.color = event.calendarForegroundColor;
+            }
         }
 
         // Set the locale-aware time display asynchronously (with attendee information)
-        await this._setEventContentWithLocale(eventDiv, startDate, event.summary, event);
+        await this._setEventContentWithLocale(eventDiv, startDate, title, event);
 
         this.googleEventsDiv.appendChild(eventDiv);
 
@@ -364,6 +397,13 @@ export class GoogleEventManager {
                 eventDiv.appendChild(descLine);
             }
         }
+    }
+
+    /**
+     * Reset auth expired state to allow fetches again after reconnection
+     */
+    resetAuthState() {
+        this._authExpiredKnown = false;
     }
 
     /**

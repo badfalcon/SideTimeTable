@@ -609,6 +609,10 @@
     "message": "No Title",
     "description": "Default text when event has no title"
   },
+  "outOfOffice": {
+    "message": "Out of office",
+    "description": "Label for out of office events from Google Calendar"
+  },
   "noTimeInfo": {
     "message": "No time information",
     "description": "Text when event time information is missing"
@@ -1081,6 +1085,14 @@
     "message": "When enabled, memo content is rendered as Markdown when not editing. Click the memo to switch to edit mode.",
     "description": "Help text for the Markdown toggle"
   },
+  "memoFontSizeLabel": {
+    "message": "Font Size",
+    "description": "Label for the memo font size dropdown"
+  },
+  "memoFontSizeDefault": {
+    "message": "Default",
+    "description": "Default label shown next to the default font size option"
+  },
   "scrollbarSettings": {
     "message": "Scrollbar",
     "description": "Title for the scrollbar settings card"
@@ -1536,5 +1548,17 @@
   "clearSearch": {
     "message": "Clear search",
     "description": "Aria label for the clear search button"
+  },
+  "authExpiredMessage": {
+    "message": "Google Calendar authorization has expired. Please reconnect from Settings.",
+    "description": "Banner message when Google Calendar auth token has expired"
+  },
+  "authExpiredReconnect": {
+    "message": "Reconnect",
+    "description": "Button label to re-authenticate with Google Calendar"
+  },
+  "authExpiredStatus": {
+    "message": "Authorization expired — please reconnect",
+    "description": "Status text shown in settings when Google Calendar auth has expired"
   }
 }

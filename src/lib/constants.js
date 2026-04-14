@@ -53,8 +53,12 @@ export const DEFAULT_SETTINGS = {
     useGoogleCalendarColors: true, // Use per-calendar colors from Google Calendar API
     colorTheme: 'default', // Active colour-set ID (see color-themes.js)
     memoMarkdown: false, // Enable Markdown rendering in memo panel
+    memoFontSize: 13, // Memo font size in px
     thinScrollbar: false // Use thin (narrow) scrollbar in side panel
 };
+
+// Memo font size range (px)
+export const MEMO_FONT_SIZE_RANGE = { min: 10, max: 20 };
 
 // Mapping from color setting keys to CSS variable names
 // Order determines the display order in the settings UI

@@ -5,6 +5,7 @@ import { Component } from '../base/component.js';
 import { StorageHelper } from '../../../lib/storage-helper.js';
 import { isDemoMode, getDemoMemoContent } from '../../../lib/demo-data.js';
 import { loadSettings } from '../../../lib/settings-storage.js';
+import { DEFAULT_SETTINGS, MEMO_FONT_SIZE_RANGE } from '../../../lib/constants.js';
 
 const DEFAULT_HEIGHT = 150;
 const MIN_HEIGHT = 80;
@@ -128,6 +129,7 @@ export class MemoComponent extends Component {
         });
         this.addEventListener(this._preview, 'click', (e) => {
             if (e.target.matches('input[type="checkbox"]')) {
+                e.preventDefault();
                 this._toggleCheckbox(e.target);
                 return;
             }
@@ -144,6 +146,7 @@ export class MemoComponent extends Component {
             const settings = await loadSettings();
             this._markdownEnabled = settings.memoMarkdown === true;
             this._applyMarkdownMode();
+            this._applyFontSize(settings.memoFontSize);
 
             if (isDemoMode()) {
                 if (this.textarea) {
@@ -170,6 +173,14 @@ export class MemoComponent extends Component {
         } catch (e) {
             // ignore
         }
+    }
+
+    _applyFontSize(size) {
+        const px = (typeof size === 'number' && size >= MEMO_FONT_SIZE_RANGE.min && size <= MEMO_FONT_SIZE_RANGE.max)
+            ? size : DEFAULT_SETTINGS.memoFontSize;
+        const value = `${px}px`;
+        if (this.textarea) this.textarea.style.fontSize = value;
+        if (this._preview) this._preview.style.fontSize = value;
     }
 
     _applyMarkdownMode() {
@@ -358,6 +369,7 @@ export class MemoComponent extends Component {
         let checkboxIndex = 0;
         this._preview.querySelectorAll('li > input[type="checkbox"]').forEach(cb => {
             cb.dataset.cbIndex = checkboxIndex++;
+            cb.removeAttribute('disabled');
         });
     }
 

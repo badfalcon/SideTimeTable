@@ -127,6 +127,12 @@ class SidePanelUIController {
      * @private
      */
     _removeExistingElements() {
+        // Remove the existing auth expired banner
+        const existingBanner = document.getElementById('authExpiredBanner');
+        if (existingBanner) {
+            existingBanner.remove();
+        }
+
         // Remove the existing header element
         const existingHeader = document.getElementById('sideTimeTableHeaderWrapper');
         if (existingHeader) {
@@ -307,6 +313,9 @@ class SidePanelUIController {
             this.timelineComponent.getGoogleEventsContainer(),
             this.eventLayoutManager
         );
+
+        // Set auth expiry callback
+        this.googleEventManager.onAuthExpired = () => this._showAuthExpiredBanner();
 
         // Initialize the local event manager
         this.localEventManager = new LocalEventManager(
@@ -819,6 +828,78 @@ class SidePanelUIController {
         this.loadEventsDebounceTimeout = setTimeout(() => {
             this._loadEventsForCurrentDate();
         }, 300);
+    }
+
+    /**
+     * Show auth expired banner at the top of the timeline
+     * @private
+     */
+    _showAuthExpiredBanner() {
+        // Prevent duplicate banners
+        if (document.getElementById('authExpiredBanner')) return;
+
+        const banner = document.createElement('div');
+        banner.id = 'authExpiredBanner';
+        banner.className = 'auth-expired-banner';
+
+        const icon = document.createElement('i');
+        icon.className = 'fa-solid fa-triangle-exclamation';
+        icon.setAttribute('aria-hidden', 'true');
+        banner.appendChild(icon);
+
+        const message = document.createElement('span');
+        message.textContent = window.getLocalizedMessage?.('authExpiredMessage') || 'Google Calendar authorization has expired. Please reconnect.';
+        banner.appendChild(message);
+
+        const reconnectBtn = document.createElement('button');
+        reconnectBtn.className = 'auth-expired-reconnect-btn';
+        reconnectBtn.textContent = window.getLocalizedMessage?.('authExpiredReconnect') || 'Reconnect';
+        reconnectBtn.addEventListener('click', () => this._handleReconnect(reconnectBtn));
+        banner.appendChild(reconnectBtn);
+
+        const dismissBtn = document.createElement('button');
+        dismissBtn.className = 'auth-expired-dismiss-btn';
+        dismissBtn.setAttribute('aria-label', window.getLocalizedMessage?.('dismissNotification') || 'Dismiss');
+        dismissBtn.innerHTML = '<i class="fa-solid fa-xmark" aria-hidden="true"></i>';
+        dismissBtn.addEventListener('click', () => banner.remove());
+        banner.appendChild(dismissBtn);
+
+        // Insert before the timeline
+        const container = document.getElementById('side-panel-container') || document.body;
+        const timeline = this.timelineComponent?.element;
+        if (timeline) {
+            container.insertBefore(banner, timeline);
+        } else {
+            container.appendChild(banner);
+        }
+    }
+
+    /**
+     * Handle reconnect button click - trigger Google auth directly
+     * @private
+     */
+    async _handleReconnect(btn) {
+        if (btn) btn.disabled = true;
+        try {
+            const response = await sendMessage({ action: 'authenticateGoogle' });
+            if (response && response.success) {
+                const banner = document.getElementById('authExpiredBanner');
+                if (banner) banner.remove();
+                if (this.googleEventManager) {
+                    this.googleEventManager.resetAuthState();
+                }
+                // Show the calendar filter button and reload events
+                if (this.timelineComponent?.calendarFilter) {
+                    this.timelineComponent.calendarFilter.refreshVisibility();
+                }
+                await this._loadEventsForCurrentDate();
+            } else {
+                if (btn) btn.disabled = false;
+            }
+        } catch (error) {
+            console.warn('Reconnect failed:', error.message);
+            if (btn) btn.disabled = false;
+        }
     }
 
     /**
