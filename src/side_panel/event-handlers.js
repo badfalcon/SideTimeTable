@@ -35,6 +35,16 @@ export class GoogleEventManager {
         this._toggleVersion = 0; // Version counter for calendar toggle race condition prevention
         this.onAuthExpired = null; // Callback when authentication expires
         this._authExpiredKnown = false; // Skip fetches after auth failure is detected
+        this.allDayEventsContainer = null; // Container for all-day event chips
+        this._currentTargetDate = null; // The date currently being displayed
+    }
+
+    /**
+     * Set the container for all-day events
+     * @param {HTMLElement} container - The DOM element for displaying all-day event chips
+     */
+    setAllDayEventsContainer(container) {
+        this.allDayEventsContainer = container;
     }
 
     /**
@@ -47,6 +57,7 @@ export class GoogleEventManager {
         if (isDemoMode()) {
             const settings = await loadSettings();
             this.useGoogleCalendarColors = settings.useGoogleCalendarColors !== false;
+            this._currentTargetDate = targetDate || new Date();
             return this._processDemoEvents();
         }
 
@@ -60,6 +71,7 @@ export class GoogleEventManager {
 
         // Check for the duplicate call restriction on the same date
         const targetDay = targetDate || new Date();
+        this._currentTargetDate = targetDay;
         const targetDateStr = targetDay.toDateString(); // Compare by the date string
 
         // If there's a request in progress for the same date, return it (prevent duplicates)
@@ -81,6 +93,9 @@ export class GoogleEventManager {
             .then(async response => {
                 // Clear the previous display
                 this.googleEventsDiv.innerHTML = '';
+                if (this.allDayEventsContainer) {
+                    this.allDayEventsContainer.innerHTML = '';
+                }
 
                 // Remove only the Google events from the layout manager
                 if (this.eventLayoutManager && this.eventLayoutManager.events) {
@@ -142,18 +157,31 @@ export class GoogleEventManager {
      */
     removeEventsForCalendars(calendarIds) {
         if (!calendarIds || calendarIds.length === 0) return;
-        if (!this.eventLayoutManager || !this.eventLayoutManager.events) return;
 
         const calendarIdSet = new Set(calendarIds);
-        const eventsToRemove = [...this.eventLayoutManager.events].filter(
-            e => e.type === 'google' && calendarIdSet.has(e.calendarId)
-        );
 
-        for (const event of eventsToRemove) {
-            if (event.element && event.element.parentNode) {
-                event.element.remove();
+        // Remove timed events from layout manager
+        if (this.eventLayoutManager && this.eventLayoutManager.events) {
+            const eventsToRemove = [...this.eventLayoutManager.events].filter(
+                e => e.type === 'google' && calendarIdSet.has(e.calendarId)
+            );
+
+            for (const event of eventsToRemove) {
+                if (event.element && event.element.parentNode) {
+                    event.element.remove();
+                }
+                this.eventLayoutManager.removeEvent(event.id);
             }
-            this.eventLayoutManager.removeEvent(event.id);
+        }
+
+        // Remove all-day event chips
+        if (this.allDayEventsContainer) {
+            const chips = this.allDayEventsContainer.querySelectorAll('.all-day-event-chip');
+            chips.forEach(chip => {
+                if (calendarIdSet.has(chip.dataset.calendarId)) {
+                    chip.remove();
+                }
+            });
         }
     }
 
@@ -164,6 +192,7 @@ export class GoogleEventManager {
      */
     async fetchEventsForCalendars(targetDate, calendarIds) {
         if (!calendarIds || calendarIds.length === 0) return;
+        if (targetDate) this._currentTargetDate = targetDate;
 
         const versionAtStart = ++this._toggleVersion;
 
@@ -215,6 +244,9 @@ export class GoogleEventManager {
     async _processDemoEvents() {
         // Clear previous display
         this.googleEventsDiv.innerHTML = '';
+        if (this.allDayEventsContainer) {
+            this.allDayEventsContainer.innerHTML = '';
+        }
 
         // Remove only Google events from layout manager
         const events = [...this.eventLayoutManager.events];
@@ -249,15 +281,22 @@ export class GoogleEventManager {
                         continue;
                     case 'outOfOffice': {
                         const uniqueEvent = { ...event, uniqueId };
-                        await this._createGoogleEventElement(uniqueEvent, { isOutOfOffice: true });
+                        if (event.start.date || event.end.date) {
+                            this._createAllDayEventElement(uniqueEvent, { isOutOfOffice: true });
+                        } else {
+                            await this._createGoogleEventElement(uniqueEvent, { isOutOfOffice: true });
+                        }
                         break;
                     }
-                    case 'default': {
+                    default: {
                         const uniqueEvent = { ...event, uniqueId };
-                        await this._createGoogleEventElement(uniqueEvent);
+                        if (event.start.date || event.end.date) {
+                            this._createAllDayEventElement(uniqueEvent);
+                        } else {
+                            await this._createGoogleEventElement(uniqueEvent);
+                        }
                         break;
                     }
-                    default:
                 }
             } catch (error) {
                 console.error(`Error occurred during processing event ${i}:`, error);
@@ -267,11 +306,75 @@ export class GoogleEventManager {
 
 
     /**
+     * Create an all-day event chip element
+     * @private
+     */
+    _createAllDayEventElement(event, options = {}) {
+        if (!this.allDayEventsContainer) return;
+
+        const chip = document.createElement('div');
+        chip.className = options.isOutOfOffice
+            ? 'all-day-event-chip all-day-event-chip-ooo'
+            : 'all-day-event-chip';
+
+        const title = event.summary || (options.isOutOfOffice
+            ? window.getLocalizedMessage('outOfOffice')
+            : window.getLocalizedMessage('allDay'));
+
+        // Calculate day progress for multi-day events (e.g. Day 2/3)
+        let dayCount = 1;
+        let currentDay = 1;
+        if (event.start.date && event.end.date) {
+            const MS_PER_DAY = 24 * 60 * 60 * 1000;
+            const start = new Date(event.start.date + 'T00:00:00');
+            const end = new Date(event.end.date + 'T00:00:00');
+            dayCount = Math.round((end - start) / MS_PER_DAY);
+            if (this._currentTargetDate) {
+                const viewing = new Date(this._currentTargetDate.getFullYear(), this._currentTargetDate.getMonth(), this._currentTargetDate.getDate());
+                currentDay = Math.min(dayCount, Math.max(1, Math.round((viewing - start) / MS_PER_DAY) + 1));
+            }
+        }
+
+        chip.title = title;
+        chip.textContent = title;
+
+        if (dayCount > 1) {
+            const badge = document.createElement('span');
+            badge.className = 'all-day-event-chip-days';
+            const template = window.getLocalizedMessage('multiDayProgress');
+            badge.textContent = template
+                ? template.replace('$1', currentDay).replace('$2', dayCount)
+                : `${currentDay}/${dayCount}`;
+            chip.appendChild(badge);
+        }
+
+        if (event.calendarId) {
+            chip.dataset.calendarId = event.calendarId;
+        }
+
+        // Apply Google Calendar colors
+        if (this.useGoogleCalendarColors && event.calendarBackgroundColor) {
+            chip.style.backgroundColor = event.calendarBackgroundColor;
+            chip.style.color = event.calendarForegroundColor || '';
+        }
+
+        // Open modal on click
+        onClickOnly(chip, () => {
+            const sidePanelController = window.sidePanelController;
+            if (sidePanelController && sidePanelController.googleEventModal) {
+                sidePanelController.googleEventModal.showEvent(event);
+            }
+        });
+
+        this.allDayEventsContainer.appendChild(chip);
+    }
+
+    /**
      * Create a Google event element
      * @private
      */
     async _createGoogleEventElement(event, options = {}) {
-        // Skip all-day events
+        // Safety guard: all-day events are routed to _createAllDayEventElement by _processEvents
         if (event.start.date || event.end.date) {
             return;
         }
@@ -411,6 +514,8 @@ export class GoogleEventManager {
      */
     destroy() {
         if (this.googleEventsDiv) this.googleEventsDiv.innerHTML = '';
+        if (this.allDayEventsContainer) this.allDayEventsContainer.innerHTML = '';
+        this.allDayEventsContainer = null;
         this.eventLayoutManager = null;
         this.currentFetchPromise = null;
         this.lastFetchDate = null;
