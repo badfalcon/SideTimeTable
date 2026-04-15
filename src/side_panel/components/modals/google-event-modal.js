@@ -3,6 +3,7 @@
  */
 import { ModalComponent } from './modal-component.js';
 import { sendMessage } from '../../../lib/chrome-messaging.js';
+import { GoogleEventContentBuilder } from './google-event-content-builder.js';
 
 export class GoogleEventModal extends ModalComponent {
     constructor(options = {}) {
@@ -27,6 +28,9 @@ export class GoogleEventModal extends ModalComponent {
 
         // The currently displayed event
         this.currentEvent = null;
+
+        // Content builder for DOM construction
+        this._contentBuilder = new GoogleEventContentBuilder();
     }
 
     createContent() {
@@ -86,6 +90,46 @@ export class GoogleEventModal extends ModalComponent {
         }
 
         // Title
+        this._setTitle(event);
+
+        // Calendar name
+        this._contentBuilder.setCalendarInfo(this.calendarElement, event);
+
+        // Time information
+        this._contentBuilder.setTimeInfo(this.timeElement, event);
+
+        // Description
+        this._contentBuilder.setDescription(this.descriptionElement, event);
+
+        // Location
+        this._contentBuilder.setLocation(this.locationElement, event);
+
+        // Meet information
+        this._contentBuilder.setMeetInfo(this.meetElement, event);
+
+        // Out of office information
+        this._contentBuilder.setOutOfOfficeInfo(this.oooInfoElement, event);
+
+        // Attendees and RSVP (skip for out-of-office events)
+        if (event.eventType === 'outOfOffice') {
+            if (this.attendeesElement) this.attendeesElement.innerHTML = '';
+            if (this.rsvpContainer) this.rsvpContainer.innerHTML = '';
+        } else {
+            this._setAttendeesInfo(event);
+            this._setRsvpButtons(event);
+        }
+
+        this.show();
+
+        // Apply the localization after showing the modal
+        this._localizeModal();
+    }
+
+    /**
+     * Set event title
+     * @private
+     */
+    _setTitle(event) {
         this.titleElement.innerHTML = '';
         if (event.htmlLink) {
             if (event.calendarBackgroundColor) {
@@ -117,240 +161,10 @@ export class GoogleEventModal extends ModalComponent {
             titleText.textContent = event.summary || (event.eventType === 'outOfOffice' ? window.getLocalizedMessage('outOfOffice') : window.getLocalizedMessage('noTitle'));
             this.titleElement.appendChild(titleText);
         }
-
-        // Calendar name
-        this._setCalendarInfo(event);
-
-        // Time information
-        this._setTimeInfo(event);
-
-        // Description
-        this._setDescription(event);
-
-        // Location
-        this._setLocation(event);
-
-        // Meet information
-        this._setMeetInfo(event);
-
-        // Out of office information
-        this._setOutOfOfficeInfo(event);
-
-        // Attendees and RSVP (skip for out-of-office events)
-        if (event.eventType === 'outOfOffice') {
-            if (this.attendeesElement) this.attendeesElement.innerHTML = '';
-            if (this.rsvpContainer) this.rsvpContainer.innerHTML = '';
-        } else {
-            this._setAttendeesInfo(event);
-            this._setRsvpButtons(event);
-        }
-
-        this.show();
-
-        // Apply the localization after showing the modal
-        this._localizeModal();
     }
 
     /**
-     * Set calendar information
-     * @private
-     */
-    _setCalendarInfo(event) {
-        this.calendarElement.innerHTML = '';
-
-        if (event.calendarName) {
-            const icon = document.createElement('i');
-            icon.className = 'fas fa-calendar me-1';
-
-            const text = document.createElement('span');
-            text.textContent = event.calendarName;
-
-            this.calendarElement.appendChild(icon);
-
-            this.calendarElement.appendChild(text);
-        }
-    }
-
-    /**
-     * Set time information
-     * @private
-     */
-    _setTimeInfo(event) {
-        this.timeElement.innerHTML = '';
-
-        if (event.start && event.end) {
-            const icon = document.createElement('i');
-            icon.className = 'fas fa-clock me-1';
-
-            const timeText = this._formatEventTime(event);
-            const text = document.createElement('span');
-            text.textContent = timeText;
-
-            this.timeElement.appendChild(icon);
-            this.timeElement.appendChild(text);
-        }
-    }
-
-    /**
-     * Format event time
-     * @private
-     */
-    _formatEventTime(event) {
-        try {
-            const start = event.start.dateTime || event.start.date;
-            const end = event.end.dateTime || event.end.date;
-
-            if (!start || !end) {
-                return window.getLocalizedMessage('noTimeInfo');
-            }
-
-            const startDate = new Date(start);
-            const endDate = new Date(end);
-
-            // For all-day events
-            if (event.start.date && event.end.date) {
-                const MS_PER_DAY = 24 * 60 * 60 * 1000;
-                // Parse as local time (not UTC) to avoid off-by-one in negative UTC timezones
-                const localStart = new Date(event.start.date + 'T00:00:00');
-                const localEnd = new Date(event.end.date + 'T00:00:00');
-                const dayCount = Math.round((localEnd - localStart) / MS_PER_DAY);
-                if (dayCount > 1) {
-                    // Show date range: "06/01 – 06/03 (3 days)" / "06/01 〜 06/03（3日間）"
-                    const locale = navigator.language || 'en';
-                    const dateOpts = { month: '2-digit', day: '2-digit' };
-                    // end.date is exclusive in Google Calendar API, so show (end - 1 day) as the last day
-                    const lastDay = new Date(localEnd.getTime() - MS_PER_DAY);
-                    const startStr = localStart.toLocaleDateString(locale, dateOpts);
-                    const endStr = lastDay.toLocaleDateString(locale, dateOpts);
-                    const template = window.getLocalizedMessage('allDayDateRange');
-                    if (template) {
-                        return template.replace('$1', startStr).replace('$2', endStr).replace('$3', dayCount);
-                    }
-                    return `${startStr} – ${endStr} (${dayCount} days)`;
-                }
-                return window.getLocalizedMessage('allDay');
-            }
-
-            // For the timed events - use browser locale
-            const locale = navigator.language || 'en';
-            const timeOptions = { hour: '2-digit', minute: '2-digit' };
-            const startTime = startDate.toLocaleTimeString(locale, timeOptions);
-            const endTime = endDate.toLocaleTimeString(locale, timeOptions);
-            const separator = locale.startsWith('ja') ? ' ～ ' : ' - ';
-
-            return `${startTime}${separator}${endTime}`;
-        } catch (error) {
-            console.warn('Time format error:', error);
-            return window.getLocalizedMessage('timeInfoError');
-        }
-    }
-
-    /**
-     * Set description
-     * @private
-     */
-    _setDescription(event) {
-        this.descriptionElement.innerHTML = '';
-
-        if (event.description) {
-            const icon = document.createElement('i');
-            icon.className = 'fas fa-align-left me-1';
-
-            const text = document.createElement('div');
-            text.className = 'google-event-detail-text';
-
-            // Remove the HTML tags and display text only
-            text.textContent = this._stripHtml(event.description);
-
-            this.descriptionElement.appendChild(icon);
-            this.descriptionElement.appendChild(text);
-        }
-    }
-
-    /**
-     * Set location
-     * @private
-     */
-    _setLocation(event) {
-        this.locationElement.innerHTML = '';
-
-        if (event.location) {
-            const icon = document.createElement('i');
-            icon.className = 'fas fa-map-marker-alt me-1';
-
-            const text = document.createElement('span');
-            text.textContent = event.location;
-
-            this.locationElement.appendChild(icon);
-            this.locationElement.appendChild(text);
-        }
-    }
-
-    /**
-     * Set Meet information
-     * @private
-     */
-    _setMeetInfo(event) {
-        this.meetElement.innerHTML = '';
-
-        // Search for Google Meet URL
-        const meetUrl = this._extractMeetUrl(event);
-
-        if (meetUrl) {
-            const icon = document.createElement('i');
-            icon.className = 'fas fa-video me-1';
-
-            const link = document.createElement('a');
-            link.href = meetUrl;
-            link.target = '_blank';
-            link.setAttribute('data-localize', '__MSG_joinGoogleMeet__');
-            link.textContent = window.getLocalizedMessage('joinGoogleMeet');
-            link.style.cssText = 'color: var(--side-calendar-link-color); text-decoration: none;';
-
-            this.meetElement.appendChild(icon);
-            this.meetElement.appendChild(link);
-        }
-
-        // Search for the other video conference links
-        const otherVideoUrl = this._extractVideoUrl(event);
-        if (otherVideoUrl && !meetUrl) {
-            const icon = document.createElement('i');
-            icon.className = 'fas fa-video me-1';
-
-            const link = document.createElement('a');
-            link.href = otherVideoUrl;
-            link.target = '_blank';
-            link.setAttribute('data-localize', '__MSG_joinVideoConference__');
-            link.textContent = window.getLocalizedMessage('joinVideoConference');
-            link.style.cssText = 'color: var(--side-calendar-link-color); text-decoration: none;';
-
-            this.meetElement.appendChild(icon);
-            this.meetElement.appendChild(link);
-        }
-    }
-
-    /**
-     * Set out of office information
-     * @private
-     */
-    _setOutOfOfficeInfo(event) {
-        this.oooInfoElement.innerHTML = '';
-
-        if (event.eventType !== 'outOfOffice') return;
-
-        const icon = document.createElement('i');
-        icon.className = 'fas fa-plane-departure me-1';
-
-        const text = document.createElement('span');
-        const declineMessage = event.outOfOfficeProperties?.declineMessage;
-        text.textContent = declineMessage || window.getLocalizedMessage('outOfOffice');
-
-        this.oooInfoElement.appendChild(icon);
-        this.oooInfoElement.appendChild(text);
-    }
-
-    /**
-     * Set attendees information
+     * Set attendees information (delegates to content builder, manages element lifecycle)
      * @private
      */
     _setAttendeesInfo(event) {
@@ -361,87 +175,7 @@ export class GoogleEventModal extends ModalComponent {
             this.modalBody.appendChild(this.attendeesElement);
         }
 
-        this.attendeesElement.innerHTML = '';
-
-        // Filter out conference rooms and other resources
-        const realAttendees = (event.attendees || []).filter(attendee => !attendee.resource);
-
-        if (realAttendees.length > 0) {
-            const icon = document.createElement('i');
-            icon.className = 'fas fa-users me-1';
-            icon.style.cssText = 'margin-top: 2px; color: var(--side-calendar-secondary-text-color);';
-
-            const container = document.createElement('div');
-            container.className = 'google-event-detail-text';
-
-            const title = document.createElement('div');
-            title.style.cssText = 'margin-bottom: 5px;';
-
-            // Store attendee count for later use
-            title.dataset.attendeeCount = realAttendees.length;
-
-            // Create a span for the localized text
-            const titleText = document.createElement('span');
-            titleText.setAttribute('data-localize', '__MSG_attendees__');
-            titleText.textContent = window.getLocalizedMessage('attendees');
-
-            // Create a span for the count
-            const countText = document.createTextNode(` (${realAttendees.length})`);
-
-            title.appendChild(titleText);
-            title.appendChild(countText);
-
-            const attendeesList = document.createElement('div');
-
-            realAttendees.forEach(attendee => {
-                const attendeeDiv = document.createElement('div');
-                attendeeDiv.className = 'google-event-attendee-row';
-
-                // The participation status icon
-                const statusIcon = document.createElement('i');
-                switch (attendee.responseStatus) {
-                    case 'accepted':
-                        statusIcon.className = 'fas fa-check-circle attendee-status-accepted';
-                        statusIcon.title = window.getLocalizedMessage('accepted');
-                        break;
-                    case 'declined':
-                        statusIcon.className = 'fas fa-times-circle attendee-status-declined';
-                        statusIcon.title = window.getLocalizedMessage('declined');
-                        break;
-                    case 'tentative':
-                        statusIcon.className = 'fas fa-question-circle attendee-status-tentative';
-                        statusIcon.title = window.getLocalizedMessage('tentative');
-                        break;
-                    default:
-                        statusIcon.className = 'fas fa-circle attendee-status-default';
-                        statusIcon.title = window.getLocalizedMessage('noResponse');
-                }
-                statusIcon.style.cssText = 'margin-right: 8px; font-size: 12px;';
-
-                // The attendee name and email
-                const nameSpan = document.createElement('span');
-                nameSpan.className = 'google-event-attendee-name';
-                nameSpan.textContent = attendee.displayName || attendee.email;
-                if (attendee.organizer) {
-                    nameSpan.textContent += ` (${window.getLocalizedMessage('organizer')})`;
-                    nameSpan.style.fontWeight = 'bold';
-                }
-
-                attendeeDiv.appendChild(statusIcon);
-                attendeeDiv.appendChild(nameSpan);
-                if (attendee.organizer) {
-                    attendeesList.prepend(attendeeDiv);
-                } else {
-                    attendeesList.appendChild(attendeeDiv);
-                }
-            });
-
-            container.appendChild(title);
-            container.appendChild(attendeesList);
-
-            this.attendeesElement.appendChild(icon);
-            this.attendeesElement.appendChild(container);
-        }
+        this._contentBuilder.setAttendeesInfo(this.attendeesElement, event);
     }
 
     /**
@@ -610,65 +344,6 @@ export class GoogleEventModal extends ModalComponent {
         if (type !== 'declined') {
             setTimeout(() => feedback.remove(), 3000);
         }
-    }
-
-    /**
-     * Extract Google Meet URL
-     * @private
-     */
-    _extractMeetUrl(event) {
-        const sources = [
-            event.hangoutLink,
-            event.conferenceData?.entryPoints?.find(ep => ep.entryPointType === 'video')?.uri,
-            event.description,
-            event.location
-        ].filter(Boolean);
-
-        for (const source of sources) {
-            const meetMatch = source.match(/https:\/\/meet\.google\.com\/[a-z-]+/i);
-            if (meetMatch) {
-                return meetMatch[0];
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Extract other video conference URLs
-     * @private
-     */
-    _extractVideoUrl(event) {
-        const sources = [
-            event.description,
-            event.location
-        ].filter(Boolean);
-
-        const videoPatterns = [
-            /https:\/\/.*zoom\.us\/[^\s]+/i,
-            /https:\/\/.*teams\.microsoft\.com\/[^\s]+/i,
-            /https:\/\/.*webex\.com\/[^\s]+/i
-        ];
-
-        for (const source of sources) {
-            for (const pattern of videoPatterns) {
-                const match = source.match(pattern);
-                if (match) {
-                    return match[0];
-                }
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Remove HTML tags
-     * @private
-     */
-    _stripHtml(html) {
-        const doc = new DOMParser().parseFromString(html, 'text/html');
-        return doc.body.textContent || '';
     }
 
     /**

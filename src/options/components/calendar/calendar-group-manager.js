@@ -7,6 +7,7 @@
 
 import { logError } from '../../../lib/utils.js';
 import { saveCalendarGroups } from '../../../lib/settings-storage.js';
+import { GroupModalBuilder } from './group-modal-builder.js';
 
 export class CalendarGroupManager {
     /**
@@ -211,271 +212,20 @@ export class CalendarGroupManager {
         this.closeGroupModal();
         this._isSubmittingGroup = false;
 
-        const allCalendars = this._getAllCalendars();
-        const isEdit = !!editingGroup;
-        const modalTitle = isEdit
-            ? (window.getLocalizedMessage('editGroupTitle') || 'Edit Group')
-            : (window.getLocalizedMessage('createGroupTitle') || 'Create Group');
-        const submitLabel = isEdit
-            ? (window.getLocalizedMessage('saveGroupButton') || 'Save')
-            : (window.getLocalizedMessage('createGroupButton') || 'Create');
-        const existingCalendarIds = isEdit ? new Set(editingGroup.calendarIds) : new Set();
-
-        // Overlay
-        const overlay = document.createElement('div');
-        overlay.className = 'create-group-modal-overlay';
-
-        // Modal container
-        const modal = document.createElement('div');
-        modal.className = 'create-group-modal';
-        modal.setAttribute('role', 'dialog');
-        modal.setAttribute('aria-modal', 'true');
-        modal.setAttribute('aria-label', modalTitle);
-
-        // Header
-        const header = document.createElement('div');
-        header.className = 'create-group-modal-header';
-        const title = document.createElement('h5');
-        title.textContent = modalTitle;
-        const closeBtn = document.createElement('button');
-        closeBtn.type = 'button';
-        closeBtn.className = 'btn-close';
-        closeBtn.setAttribute('aria-label', window.getLocalizedMessage('close') || 'Close');
-        closeBtn.addEventListener('click', () => this.closeGroupModal());
-        header.appendChild(title);
-        header.appendChild(closeBtn);
-
-        // Body
-        const body = document.createElement('div');
-        body.className = 'create-group-modal-body';
-
-        // Group name input
-        const nameLabel = document.createElement('label');
-        nameLabel.className = 'form-label fw-bold';
-        nameLabel.htmlFor = 'create-group-name-input';
-        nameLabel.textContent = window.getLocalizedMessage('groupNameLabel') || 'Group Name';
-        const nameInput = document.createElement('input');
-        nameInput.type = 'text';
-        nameInput.id = 'create-group-name-input';
-        nameInput.className = 'form-control mb-3';
-        nameInput.placeholder = window.getLocalizedMessage('groupNamePlaceholder') || 'Enter group name';
-        nameInput.maxLength = 50;
-        if (isEdit) {
-            nameInput.value = editingGroup.name;
-        }
-
-        body.appendChild(nameLabel);
-        body.appendChild(nameInput);
-
-        // Calendar selection
-        const calLabel = document.createElement('label');
-        calLabel.className = 'form-label fw-bold';
-        calLabel.textContent = window.getLocalizedMessage('selectCalendarsLabel') || 'Select Calendars';
-        body.appendChild(calLabel);
-
-        // Selected calendars chip area
-        const chipArea = document.createElement('div');
-        chipArea.className = 'create-group-modal-chip-area';
-        body.appendChild(chipArea);
-
-        // Search input for calendar filtering
-        const searchInput = document.createElement('input');
-        searchInput.type = 'text';
-        searchInput.className = 'form-control form-control-sm mb-2';
-        searchInput.placeholder = window.getLocalizedMessage('searchCalendars') || 'Search calendars...';
-        searchInput.setAttribute('aria-label', window.getLocalizedMessage('searchCalendars') || 'Search calendars');
-        body.appendChild(searchInput);
-
-        const calList = document.createElement('div');
-        calList.className = 'create-group-modal-calendar-list';
-
-        // Exclude primary calendar
-        const sortedCalendars = allCalendars
-            .filter(c => !c.primary)
-            .sort((a, b) => (a.summary || '').localeCompare(b.summary || ''));
-
-        // Map calendar ID → info for chip rendering
-        const calendarInfoMap = new Map();
-        for (const cal of sortedCalendars) {
-            calendarInfoMap.set(cal.id, { name: cal.summary || cal.id, color: cal.backgroundColor || '' });
-        }
-
-        const checkboxes = [];
-        const calItems = [];
-
-        // Render chip area from current selection
-        const renderChips = () => {
-            chipArea.innerHTML = '';
-            const selectedIds = checkboxes.filter(cb => cb.checked).map(cb => cb.value);
-            if (selectedIds.length === 0) {
-                chipArea.style.display = 'none';
-                return;
-            }
-            chipArea.style.display = '';
-            for (const id of selectedIds) {
-                const info = calendarInfoMap.get(id);
-                if (!info) continue;
-                const chip = document.createElement('span');
-                chip.className = 'create-group-modal-chip';
-
-                if (info.color) {
-                    const dot = document.createElement('span');
-                    dot.className = 'calendar-color-indicator-inline';
-                    dot.style.backgroundColor = info.color;
-                    chip.appendChild(dot);
-                }
-
-                const nameText = document.createElement('span');
-                nameText.textContent = info.name;
-                chip.appendChild(nameText);
-
-                const removeBtn = document.createElement('button');
-                removeBtn.type = 'button';
-                removeBtn.className = 'create-group-modal-chip-remove';
-                removeBtn.setAttribute('aria-label', `${window.getLocalizedMessage('removeCalendar') || 'Remove'} ${info.name}`);
-                removeBtn.innerHTML = '<i class="fas fa-times"></i>';
-                removeBtn.addEventListener('click', () => {
-                    const cb = checkboxes.find(c => c.value === id);
-                    if (cb) {
-                        cb.checked = false;
-                    }
-                    renderChips();
-                });
-                chip.appendChild(removeBtn);
-                chipArea.appendChild(chip);
-            }
-        };
-
-        if (sortedCalendars.length === 0) {
-            const empty = document.createElement('div');
-            empty.className = 'text-muted p-2';
-            empty.textContent = window.getLocalizedMessage('noCalendarsToAdd')
-                || 'No calendars available. Refresh the calendar list first.';
-            calList.appendChild(empty);
-        } else {
-            for (const cal of sortedCalendars) {
-                const wrapper = document.createElement('div');
-                wrapper.className = 'form-check create-group-modal-cal-item';
-
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.className = 'form-check-input';
-                checkbox.id = `create-group-cal-${cal.id}`;
-                checkbox.value = cal.id;
-                if (existingCalendarIds.has(cal.id)) {
-                    checkbox.checked = true;
-                }
-
-                checkbox.addEventListener('change', () => renderChips());
-
-                const label = document.createElement('label');
-                label.className = 'form-check-label';
-                label.htmlFor = checkbox.id;
-
-                const colorDot = document.createElement('span');
-                colorDot.className = 'calendar-color-indicator-inline';
-                if (cal.backgroundColor) {
-                    colorDot.style.backgroundColor = cal.backgroundColor;
-                }
-
-                const nameSpan = document.createElement('span');
-                nameSpan.textContent = cal.summary || cal.id;
-
-                label.appendChild(colorDot);
-                label.appendChild(nameSpan);
-                wrapper.appendChild(checkbox);
-                wrapper.appendChild(label);
-                calList.appendChild(wrapper);
-                checkboxes.push(checkbox);
-                calItems.push({ element: wrapper, name: (cal.summary || cal.id).toLowerCase() });
-            }
-        }
-        body.appendChild(calList);
-
-        // Initial chip render
-        renderChips();
-
-        // Filter calendar items as user types
-        searchInput.addEventListener('input', () => {
-            const term = searchInput.value.toLowerCase().trim();
-            for (const item of calItems) {
-                item.element.style.display = (!term || item.name.includes(term)) ? '' : 'none';
-            }
+        const builder = new GroupModalBuilder();
+        const { overlay, nameInput, keyHandler } = builder.build({
+            editingGroup,
+            allCalendars: this._getAllCalendars(),
+            onClose: () => this.closeGroupModal(),
+            onSubmit: (name, checkboxes, group) => this._submitGroupModal(name, checkboxes, group)
         });
 
-        // Footer
-        const footer = document.createElement('div');
-        footer.className = 'create-group-modal-footer';
-
-        const cancelBtn = document.createElement('button');
-        cancelBtn.type = 'button';
-        cancelBtn.className = 'btn btn-outline-secondary btn-sm';
-        cancelBtn.textContent = window.getLocalizedMessage('cancelButton') || 'Cancel';
-        cancelBtn.addEventListener('click', () => this.closeGroupModal());
-
-        const submitBtn = document.createElement('button');
-        submitBtn.type = 'button';
-        submitBtn.className = 'btn btn-primary btn-sm';
-        submitBtn.textContent = submitLabel;
-        submitBtn.addEventListener('click', () => {
-            this._submitGroupModal(nameInput.value.trim(), checkboxes, editingGroup);
-        });
-
-        footer.appendChild(cancelBtn);
-        footer.appendChild(submitBtn);
-
-        modal.appendChild(header);
-        modal.appendChild(body);
-        modal.appendChild(footer);
-        overlay.appendChild(modal);
-
-        // Keyboard handler: Escape to close + focus trap
-        this._createGroupModalKeyHandler = (e) => {
-            if (e.key === 'Escape') {
-                this.closeGroupModal();
-                return;
-            }
-            if (e.key === 'Tab') {
-                const focusable = Array.from(modal.querySelectorAll(
-                    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-                )).filter(el => el.offsetParent !== null);
-                if (focusable.length === 0) return;
-                const first = focusable[0];
-                const last = focusable[focusable.length - 1];
-                if (e.shiftKey) {
-                    if (document.activeElement === first) {
-                        e.preventDefault();
-                        last.focus();
-                    }
-                } else {
-                    if (document.activeElement === last) {
-                        e.preventDefault();
-                        first.focus();
-                    }
-                }
-            }
-        };
+        this._createGroupModalKeyHandler = keyHandler;
         document.addEventListener('keydown', this._createGroupModalKeyHandler);
-
-        // Click overlay to close
-        overlay.addEventListener('mousedown', (e) => {
-            if (e.target === overlay) {
-                this.closeGroupModal();
-            }
-        });
-
-        // Enter key in name input submits
-        nameInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                this._submitGroupModal(nameInput.value.trim(), checkboxes, editingGroup);
-            }
-        });
 
         this._createGroupModalOverlay = overlay;
         document.body.appendChild(overlay);
 
-        // Focus name input
         setTimeout(() => nameInput.focus(), 0);
     }
 
