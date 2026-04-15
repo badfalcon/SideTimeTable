@@ -41,7 +41,7 @@ import { onClickOnly } from '../../src/side_panel/event-element-factory.js';
 beforeAll(() => {
   global.window = global.window || {};
   global.window.getLocalizedMessage = jest.fn((key) => {
-    const messages = { allDay: 'All day', outOfOffice: 'Out of office', multiDayCount: '$1 days' };
+    const messages = { allDay: 'All day', outOfOffice: 'Out of office', multiDayProgress: 'Day $1/$2' };
     return messages[key] || key;
   });
   global.window.formatTime = jest.fn((t) => t);
@@ -235,7 +235,9 @@ describe('GoogleEventManager — all-day event routing', () => {
     expect(chip.children.length).toBe(0);
   });
 
-  test('multi-day event shows a day count badge', async () => {
+  test('multi-day event shows a day progress badge (Day X/Y)', async () => {
+    // Viewing June 2nd, event spans June 1-3
+    manager._currentTargetDate = new Date(2025, 5, 2);
     await manager._processEvents([allDayEvent({
       start: { date: '2025-06-01' },
       end: { date: '2025-06-04' },  // 3 days (end is exclusive)
@@ -245,7 +247,18 @@ describe('GoogleEventManager — all-day event routing', () => {
     expect(chip.appendChild).toHaveBeenCalledTimes(1);
     const badge = chip.appendChild.mock.calls[0][0];
     expect(badge.className).toBe('all-day-event-chip-days');
-    expect(badge.textContent).toBe('3 days');
+    expect(badge.textContent).toBe('Day 2/3');
+  });
+
+  test('multi-day event on first day shows Day 1/Y', async () => {
+    manager._currentTargetDate = new Date(2025, 5, 1);
+    await manager._processEvents([allDayEvent({
+      start: { date: '2025-06-01' },
+      end: { date: '2025-06-04' },
+    })]);
+
+    const badge = allDayContainer.appendChild.mock.calls[0][0].appendChild.mock.calls[0][0];
+    expect(badge.textContent).toBe('Day 1/3');
   });
 
   // -------------------------------------------------------------------

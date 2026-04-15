@@ -36,6 +36,7 @@ export class GoogleEventManager {
         this.onAuthExpired = null; // Callback when authentication expires
         this._authExpiredKnown = false; // Skip fetches after auth failure is detected
         this.allDayEventsContainer = null; // Container for all-day event chips
+        this._currentTargetDate = null; // The date currently being displayed
     }
 
     /**
@@ -56,6 +57,7 @@ export class GoogleEventManager {
         if (isDemoMode()) {
             const settings = await loadSettings();
             this.useGoogleCalendarColors = settings.useGoogleCalendarColors !== false;
+            this._currentTargetDate = targetDate || new Date();
             return this._processDemoEvents();
         }
 
@@ -69,6 +71,7 @@ export class GoogleEventManager {
 
         // Check for the duplicate call restriction on the same date
         const targetDay = targetDate || new Date();
+        this._currentTargetDate = targetDay;
         const targetDateStr = targetDay.toDateString(); // Compare by the date string
 
         // If there's a request in progress for the same date, return it (prevent duplicates)
@@ -317,12 +320,18 @@ export class GoogleEventManager {
             ? window.getLocalizedMessage('outOfOffice')
             : window.getLocalizedMessage('allDay'));
 
-        // Calculate day count for multi-day events
+        // Calculate day progress for multi-day events (e.g. Day 2/3)
         let dayCount = 1;
+        let currentDay = 1;
         if (event.start.date && event.end.date) {
+            const MS_PER_DAY = 24 * 60 * 60 * 1000;
             const start = new Date(event.start.date + 'T00:00:00');
             const end = new Date(event.end.date + 'T00:00:00');
-            dayCount = Math.round((end - start) / (24 * 60 * 60 * 1000));
+            dayCount = Math.round((end - start) / MS_PER_DAY);
+            if (this._currentTargetDate) {
+                const viewing = new Date(this._currentTargetDate.getFullYear(), this._currentTargetDate.getMonth(), this._currentTargetDate.getDate());
+                currentDay = Math.max(1, Math.round((viewing - start) / MS_PER_DAY) + 1);
+            }
         }
 
         chip.title = title;
@@ -331,8 +340,10 @@ export class GoogleEventManager {
         if (dayCount > 1) {
             const badge = document.createElement('span');
             badge.className = 'all-day-event-chip-days';
-            const daysText = window.getLocalizedMessage('multiDayCount');
-            badge.textContent = daysText ? daysText.replace('$1', dayCount) : `${dayCount}d`;
+            const template = window.getLocalizedMessage('multiDayProgress');
+            badge.textContent = template
+                ? template.replace('$1', currentDay).replace('$2', dayCount)
+                : `${currentDay}/${dayCount}`;
             chip.appendChild(badge);
         }
 

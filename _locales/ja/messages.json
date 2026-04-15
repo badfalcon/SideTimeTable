@@ -621,11 +621,21 @@
     "message": "終日",
     "description": "終日イベントのラベル"
   },
-  "multiDayCount": {
-    "message": "$1日間",
-    "description": "複数日にまたがる終日イベントの日数表示",
+  "multiDayProgress": {
+    "message": "$1/$2日目",
+    "description": "複数日にまたがる終日イベントの進捗表示（例: 2/3日目）",
     "placeholders": {
-      "1": { "content": "$1", "example": "3" }
+      "1": { "content": "$1", "example": "2" },
+      "2": { "content": "$2", "example": "3" }
+    }
+  },
+  "allDayDateRange": {
+    "message": "$1 〜 $2（$3日間）",
+    "description": "モーダルに表示する複数日終日イベントの日付範囲",
+    "placeholders": {
+      "1": { "content": "$1", "example": "06/01" },
+      "2": { "content": "$2", "example": "06/03" },
+      "3": { "content": "$3", "example": "3" }
     }
   },
   "timeInfoError": {

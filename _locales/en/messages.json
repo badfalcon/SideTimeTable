@@ -621,11 +621,21 @@
     "message": "All day",
     "description": "Label for all-day events"
   },
-  "multiDayCount": {
-    "message": "$1 days",
-    "description": "Number of days for multi-day all-day events",
+  "multiDayProgress": {
+    "message": "Day $1/$2",
+    "description": "Day progress for multi-day all-day events (e.g. Day 2/3)",
     "placeholders": {
-      "1": { "content": "$1", "example": "3" }
+      "1": { "content": "$1", "example": "2" },
+      "2": { "content": "$2", "example": "3" }
+    }
+  },
+  "allDayDateRange": {
+    "message": "$1 – $2 ($3 days)",
+    "description": "Date range displayed in modal for multi-day all-day events",
+    "placeholders": {
+      "1": { "content": "$1", "example": "06/01" },
+      "2": { "content": "$2", "example": "06/03" },
+      "3": { "content": "$3", "example": "3" }
     }
   },
   "timeInfoError": {
