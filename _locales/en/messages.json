@@ -621,6 +621,13 @@
     "message": "All day",
     "description": "Label for all-day events"
   },
+  "multiDayCount": {
+    "message": "$1 days",
+    "description": "Number of days for multi-day all-day events",
+    "placeholders": {
+      "1": { "content": "$1", "example": "3" }
+    }
+  },
   "timeInfoError": {
     "message": "Time information error",
     "description": "Error message for time formatting issues"

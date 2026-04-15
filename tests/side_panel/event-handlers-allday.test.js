@@ -41,19 +41,23 @@ import { onClickOnly } from '../../src/side_panel/event-element-factory.js';
 beforeAll(() => {
   global.window = global.window || {};
   global.window.getLocalizedMessage = jest.fn((key) => {
-    const messages = { allDay: 'All day', outOfOffice: 'Out of office' };
+    const messages = { allDay: 'All day', outOfOffice: 'Out of office', multiDayCount: '$1 days' };
     return messages[key] || key;
   });
   global.window.formatTime = jest.fn((t) => t);
   global.document = global.document || {};
-  global.document.createElement = jest.fn(() => ({
-    className: '',
-    title: '',
-    textContent: '',
-    style: {},
-    dataset: {},
-    appendChild: jest.fn(),
-  }));
+  global.document.createElement = jest.fn(() => {
+    const children = [];
+    return {
+      className: '',
+      title: '',
+      textContent: '',
+      style: {},
+      dataset: {},
+      children,
+      appendChild: jest.fn((child) => { children.push(child); return child; }),
+    };
+  });
 });
 
 function createManager() {
@@ -215,6 +219,33 @@ describe('GoogleEventManager — all-day event routing', () => {
     expect(onClickOnly).toHaveBeenCalledTimes(1);
     const chip = onClickOnly.mock.calls[0][0];
     expect(chip).toBe(allDayContainer.appendChild.mock.calls[0][0]);
+  });
+
+  // -------------------------------------------------------------------
+  // SPEC: Multi-day badge
+  // -------------------------------------------------------------------
+
+  test('single-day event does not show a day count badge', async () => {
+    await manager._processEvents([allDayEvent({
+      start: { date: '2025-06-01' },
+      end: { date: '2025-06-02' },  // 1 day (end is exclusive)
+    })]);
+
+    const chip = allDayContainer.appendChild.mock.calls[0][0];
+    expect(chip.children.length).toBe(0);
+  });
+
+  test('multi-day event shows a day count badge', async () => {
+    await manager._processEvents([allDayEvent({
+      start: { date: '2025-06-01' },
+      end: { date: '2025-06-04' },  // 3 days (end is exclusive)
+    })]);
+
+    const chip = allDayContainer.appendChild.mock.calls[0][0];
+    expect(chip.appendChild).toHaveBeenCalledTimes(1);
+    const badge = chip.appendChild.mock.calls[0][0];
+    expect(badge.className).toBe('all-day-event-chip-days');
+    expect(badge.textContent).toBe('3 days');
   });
 
   // -------------------------------------------------------------------

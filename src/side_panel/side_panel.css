@@ -190,6 +190,12 @@ body {
     opacity: 0.85;
 }
 
+.all-day-event-chip-days {
+    margin-left: 4px;
+    font-size: 10px;
+    opacity: 0.7;
+}
+
 .all-day-event-chip-ooo {
     text-decoration: line-through;
     font-style: italic;

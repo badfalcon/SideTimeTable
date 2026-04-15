@@ -316,8 +316,25 @@ export class GoogleEventManager {
         const title = event.summary || (options.isOutOfOffice
             ? window.getLocalizedMessage('outOfOffice')
             : window.getLocalizedMessage('allDay'));
+
+        // Calculate day count for multi-day events
+        let dayCount = 1;
+        if (event.start.date && event.end.date) {
+            const start = new Date(event.start.date + 'T00:00:00');
+            const end = new Date(event.end.date + 'T00:00:00');
+            dayCount = Math.round((end - start) / (24 * 60 * 60 * 1000));
+        }
+
         chip.title = title;
         chip.textContent = title;
+
+        if (dayCount > 1) {
+            const badge = document.createElement('span');
+            badge.className = 'all-day-event-chip-days';
+            const daysText = window.getLocalizedMessage('multiDayCount');
+            badge.textContent = daysText ? daysText.replace('$1', dayCount) : `${dayCount}d`;
+            chip.appendChild(badge);
+        }
 
         if (event.calendarId) {
             chip.dataset.calendarId = event.calendarId;

@@ -621,6 +621,13 @@
     "message": "終日",
     "description": "終日イベントのラベル"
   },
+  "multiDayCount": {
+    "message": "$1日間",
+    "description": "複数日にまたがる終日イベントの日数表示",
+    "placeholders": {
+      "1": { "content": "$1", "example": "3" }
+    }
+  },
   "timeInfoError": {
     "message": "時刻情報エラー",
     "description": "時刻フォーマットエラー時のメッセージ"
