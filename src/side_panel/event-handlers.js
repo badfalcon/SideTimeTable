@@ -284,7 +284,7 @@ export class GoogleEventManager {
                         }
                         break;
                     }
-                    case 'default': {
+                    default: {
                         const uniqueEvent = { ...event, uniqueId };
                         if (event.start.date || event.end.date) {
                             this._createAllDayEventElement(uniqueEvent);
@@ -293,7 +293,6 @@ export class GoogleEventManager {
                         }
                         break;
                     }
-                    default:
                 }
             } catch (error) {
                 console.error(`Error occurred during processing event ${i}:`, error);
