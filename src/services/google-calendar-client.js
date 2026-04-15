@@ -184,9 +184,7 @@ export class GoogleCalendarClient {
 
         // Fetch calendarList once and reuse for color info
         const calendarListUrl = `${CALENDAR_API_BASE}/users/me/calendarList`;
-        const listResponse = await fetch(calendarListUrl, {
-            headers: { Authorization: 'Bearer ' + token }
-        });
+        const listResponse = await this._fetchWithAuth(calendarListUrl, { _interactive: false });
         await this._checkResponse(listResponse, 'CalendarList API');
         const listData = await listResponse.json();
 
@@ -367,9 +365,7 @@ export class GoogleCalendarClient {
 
         // First, get the current event to find the self attendee
         const getRes = await this._fetchWithAuth(eventUrl);
-        if (!getRes.ok) {
-            throw new Error(`Failed to get event: ${getRes.status} ${getRes.statusText}`);
-        }
+        await this._checkResponse(getRes, 'Get Event API');
         const eventData = await getRes.json();
 
         // Update the self attendee's response status
@@ -389,9 +385,7 @@ export class GoogleCalendarClient {
             body: JSON.stringify({ attendees })
         });
 
-        if (!patchRes.ok) {
-            throw new Error(`Failed to update event: ${patchRes.status} ${patchRes.statusText}`);
-        }
+        await this._checkResponse(patchRes, 'Update Event API');
 
         return await patchRes.json();
     }

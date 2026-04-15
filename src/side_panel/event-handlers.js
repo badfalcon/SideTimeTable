@@ -2,21 +2,16 @@
  * SideTimeTable - Event Management Module
  *
  * This file manages the Google Calendar events and the local events.
+ * DOM element creation is delegated to GoogleEventRenderer and LocalEventRenderer.
  */
 
 import { logError } from '../lib/utils.js';
-import { RECURRENCE_TYPES } from '../lib/constants.js';
 import { loadSettings, loadSelectedCalendars } from '../lib/settings-storage.js';
 import { loadLocalEvents, loadLocalEventsForDate } from '../lib/event-storage.js';
 import { sendMessage } from '../lib/chrome-messaging.js';
-import {createTimeOnDate} from '../lib/time-utils.js';
 import {getDemoEvents, getDemoLocalEvents, isDemoMode} from '../lib/demo-data.js';
-import {
-    EVENT_STYLING,
-    onClickOnly,
-    resolveLocaleSettings,
-    EventElementFactory
-} from './event-element-factory.js';
+import { GoogleEventRenderer } from './google-event-renderer.js';
+import { LocalEventRenderer } from './local-event-renderer.js';
 
 /**
  * GoogleEventManager - The Google event management class
@@ -37,6 +32,7 @@ export class GoogleEventManager {
         this._authExpiredKnown = false; // Skip fetches after auth failure is detected
         this.allDayEventsContainer = null; // Container for all-day event chips
         this._currentTargetDate = null; // The date currently being displayed
+        this._renderer = new GoogleEventRenderer();
     }
 
     /**
@@ -270,234 +266,59 @@ export class GoogleEventManager {
      * @private
      */
     async _processEvents(events) {
+        const renderConfig = {
+            useGoogleCalendarColors: this.useGoogleCalendarColors,
+            currentTargetDate: this._currentTargetDate,
+            maxWidth: this.eventLayoutManager ? this.eventLayoutManager.maxWidth : undefined
+        };
+
         for (let i = 0; i < events.length; i++) {
             try {
                 const event = events[i];
                 const uniqueId = `${event.id}-${i}`;
+                const uniqueEvent = { ...event, uniqueId };
 
                 switch (event.eventType) {
                     case 'workingLocation':
                     case 'focusTime':
                         continue;
-                    case 'outOfOffice': {
-                        const uniqueEvent = { ...event, uniqueId };
-                        if (event.start.date || event.end.date) {
-                            this._createAllDayEventElement(uniqueEvent, { isOutOfOffice: true });
-                        } else {
-                            await this._createGoogleEventElement(uniqueEvent, { isOutOfOffice: true });
-                        }
-                        break;
-                    }
+                    case 'outOfOffice':
                     default: {
-                        const uniqueEvent = { ...event, uniqueId };
-                        if (event.start.date || event.end.date) {
-                            this._createAllDayEventElement(uniqueEvent);
+                        const isOOO = event.eventType === 'outOfOffice';
+                        const isAllDay = event.start.date || event.end.date;
+
+                        if (isAllDay) {
+                            const chip = this._renderer.createAllDayEventElement(
+                                uniqueEvent, { isOutOfOffice: isOOO }, renderConfig
+                            );
+                            if (chip && this.allDayEventsContainer) {
+                                this.allDayEventsContainer.appendChild(chip);
+                            }
                         } else {
-                            await this._createGoogleEventElement(uniqueEvent);
+                            const result = await this._renderer.createTimedEventElement(
+                                uniqueEvent, { isOutOfOffice: isOOO }, renderConfig
+                            );
+                            if (result) {
+                                this.googleEventsDiv.appendChild(result.element);
+                                const eventId = uniqueEvent.uniqueId || uniqueEvent.id || `google-${Date.now()}-${Math.random()}`;
+                                if (this.eventLayoutManager && typeof this.eventLayoutManager.registerEvent === 'function') {
+                                    this.eventLayoutManager.registerEvent({
+                                        startTime: result.startTime,
+                                        endTime: result.endTime,
+                                        element: result.element,
+                                        title: event.summary,
+                                        type: 'google',
+                                        id: eventId,
+                                        calendarId: event.calendarId
+                                    });
+                                }
+                            }
                         }
                         break;
                     }
                 }
             } catch (error) {
                 console.error(`Error occurred during processing event ${i}:`, error);
-            }
-        }
-    }
-
-
-    /**
-     * Create an all-day event chip element
-     * @private
-     */
-    _createAllDayEventElement(event, options = {}) {
-        if (!this.allDayEventsContainer) return;
-
-        const chip = document.createElement('div');
-        chip.className = options.isOutOfOffice
-            ? 'all-day-event-chip all-day-event-chip-ooo'
-            : 'all-day-event-chip';
-
-        const title = event.summary || (options.isOutOfOffice
-            ? window.getLocalizedMessage('outOfOffice')
-            : window.getLocalizedMessage('allDay'));
-
-        // Calculate day progress for multi-day events (e.g. Day 2/3)
-        let dayCount = 1;
-        let currentDay = 1;
-        if (event.start.date && event.end.date) {
-            const MS_PER_DAY = 24 * 60 * 60 * 1000;
-            const start = new Date(event.start.date + 'T00:00:00');
-            const end = new Date(event.end.date + 'T00:00:00');
-            dayCount = Math.round((end - start) / MS_PER_DAY);
-            if (this._currentTargetDate) {
-                const viewing = new Date(this._currentTargetDate.getFullYear(), this._currentTargetDate.getMonth(), this._currentTargetDate.getDate());
-                currentDay = Math.min(dayCount, Math.max(1, Math.round((viewing - start) / MS_PER_DAY) + 1));
-            }
-        }
-
-        chip.title = title;
-        chip.textContent = title;
-
-        if (dayCount > 1) {
-            const badge = document.createElement('span');
-            badge.className = 'all-day-event-chip-days';
-            const template = window.getLocalizedMessage('multiDayProgress');
-            badge.textContent = template
-                ? template.replace('$1', currentDay).replace('$2', dayCount)
-                : `${currentDay}/${dayCount}`;
-            chip.appendChild(badge);
-        }
-
-        if (event.calendarId) {
-            chip.dataset.calendarId = event.calendarId;
-        }
-
-        // Apply Google Calendar colors
-        if (this.useGoogleCalendarColors && event.calendarBackgroundColor) {
-            chip.style.backgroundColor = event.calendarBackgroundColor;
-            chip.style.color = event.calendarForegroundColor || '';
-        }
-
-        // Open modal on click
-        onClickOnly(chip, () => {
-            const sidePanelController = window.sidePanelController;
-            if (sidePanelController && sidePanelController.googleEventModal) {
-                sidePanelController.googleEventModal.showEvent(event);
-            }
-        });
-
-        this.allDayEventsContainer.appendChild(chip);
-    }
-
-    /**
-     * Create a Google event element
-     * @private
-     */
-    async _createGoogleEventElement(event, options = {}) {
-        // Safety guard: all-day events are routed to _createAllDayEventElement by _processEvents
-        if (event.start.date || event.end.date) {
-            return;
-        }
-
-        const startDate = new Date(event.start.dateTime || event.start.date);
-        let endDate = new Date(event.end.dateTime || event.end.date);
-
-        // If the start and end times are the same, treat as a default duration appointment
-        if (startDate.getTime() >= endDate.getTime()) {
-            endDate = new Date(startDate.getTime() + EVENT_STYLING.DEFAULT_VALUES.ZERO_DURATION_MINUTES * 60 * 1000);
-        }
-
-        // Create the positioned event element via the factory
-        const cssClass = options.isOutOfOffice
-            ? 'event google-event google-event-ooo'
-            : 'event google-event';
-        const title = event.summary || (options.isOutOfOffice ? window.getLocalizedMessage('outOfOffice') : '');
-        const { eventDiv } = EventElementFactory.createEventElement({
-            startDate,
-            endDate,
-            cssClass,
-            tooltip: title,
-            initialWidth: this.eventLayoutManager.maxWidth
-        });
-
-        // Add time information to data attributes
-        eventDiv.dataset.startTime = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        eventDiv.dataset.endTime = endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-        // Save the event detail data
-        eventDiv.dataset.description = event.description || '';
-        eventDiv.dataset.location = event.location || '';
-        eventDiv.dataset.hangoutLink = event.hangoutLink || '';
-
-        // Add the click event (using the new modal component)
-        onClickOnly(eventDiv, () => {
-            const sidePanelController = window.sidePanelController;
-            if (sidePanelController && sidePanelController.googleEventModal) {
-                sidePanelController.googleEventModal.showEvent(event);
-            }
-        });
-
-        // Apply the Google colors directly (unless disabled by user setting)
-        if (this.useGoogleCalendarColors && event.calendarBackgroundColor) {
-            if (options.isOutOfOffice) {
-                eventDiv.style.setProperty('--side-calendar-ooo-color', event.calendarBackgroundColor);
-            } else {
-                eventDiv.style.backgroundColor = event.calendarBackgroundColor;
-                eventDiv.style.color = event.calendarForegroundColor;
-            }
-        }
-
-        // Set the locale-aware time display asynchronously (with attendee information)
-        await this._setEventContentWithLocale(eventDiv, startDate, title, event);
-
-        this.googleEventsDiv.appendChild(eventDiv);
-
-        // Register with the event layout manager
-        const eventId = event.uniqueId || event.id || `google-${Date.now()}-${Math.random()}`;
-        if (this.eventLayoutManager && typeof this.eventLayoutManager.registerEvent === 'function') {
-            this.eventLayoutManager.registerEvent({
-                startTime: startDate,
-                endTime: endDate,
-                element: eventDiv,
-                title: event.summary,
-                type: 'google',
-                id: eventId,
-                calendarId: event.calendarId
-            });
-        }
-    }
-
-
-    /**
-     * Set event content with locale-aware time display
-     * @param {HTMLElement} eventDiv - The event element
-     * @param {Date} startDate - The start time
-     * @param {string} summary - The event title
-     * @param {Object} event - The full event information
-     * @private
-     */
-    async _setEventContentWithLocale(eventDiv, startDate, summary, event) {
-        const [locale, timeFormat] = await resolveLocaleSettings();
-
-        // Build HH:mm
-        const startHours = String(startDate.getHours()).padStart(2, '0');
-        const startMinutes = String(startDate.getMinutes()).padStart(2, '0');
-        const timeString = `${startHours}:${startMinutes}`;
-
-        const formattedTime = window.formatTime(timeString, { format: timeFormat, locale });
-
-        // Display time and title without attendance status
-        eventDiv.innerHTML = '';
-
-        // Primary line: time + title (via factory)
-        const primaryLine = EventElementFactory.createPrimaryLine(formattedTime, summary);
-        eventDiv.appendChild(primaryLine);
-
-        // Detail lines for larger blocks
-        if (eventDiv.classList.contains('event-detailed')) {
-            if (event.location) {
-                const locationLine = document.createElement('div');
-                locationLine.className = 'event-detail-line';
-                const icon = document.createElement('i');
-                icon.className = 'fa-solid fa-location-dot';
-                icon.setAttribute('aria-hidden', 'true');
-                locationLine.appendChild(icon);
-                const text = document.createElement('span');
-                text.textContent = event.location;
-                locationLine.appendChild(text);
-                eventDiv.appendChild(locationLine);
-            }
-            if (event.description) {
-                const descLine = document.createElement('div');
-                descLine.className = 'event-detail-line';
-                const icon = document.createElement('i');
-                icon.className = 'fa-solid fa-align-left';
-                icon.setAttribute('aria-hidden', 'true');
-                descLine.appendChild(icon);
-                const text = document.createElement('span');
-                text.textContent = event.description.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-                descLine.appendChild(text);
-                eventDiv.appendChild(descLine);
             }
         }
     }
@@ -536,6 +357,7 @@ export class LocalEventManager {
         this.eventLayoutManager = eventLayoutManager;
         this.currentTargetDate = new Date(); // The currently displayed date
         this.onEventClick = null; // The callback for event clicks
+        this._renderer = new LocalEventRenderer();
     }
 
 
@@ -557,14 +379,28 @@ export class LocalEventManager {
 
         this.localEventsDiv.innerHTML = ''; // Clear the previous display
 
+        const renderConfig = {
+            currentTargetDate: this.currentTargetDate,
+            maxWidth: this.eventLayoutManager ? this.eventLayoutManager.maxWidth : undefined,
+            onEventClick: this.onEventClick
+        };
+
         // Use mock data in demo mode
         if (isDemoMode()) {
             const demoEvents = await getDemoLocalEvents();
 
             for (const event of demoEvents) {
                 try {
-                    const eventDiv = await this._createEventDiv(event);
-                    this.localEventsDiv.appendChild(eventDiv);
+                    const result = await this._renderer.createEventElement(event, renderConfig);
+                    this.localEventsDiv.appendChild(result.element);
+                    this.eventLayoutManager.registerEvent({
+                        startTime: result.startTime,
+                        endTime: result.endTime,
+                        element: result.element,
+                        type: 'local',
+                        title: event.title,
+                        id: result.eventId
+                    });
                 } catch (error) {
                     logError('Demo event display', error);
                 }
@@ -579,8 +415,16 @@ export class LocalEventManager {
 
             for (const event of events) {
                 try {
-                    const eventDiv = await this._createEventDiv(event);
-                    this.localEventsDiv.appendChild(eventDiv);
+                    const result = await this._renderer.createEventElement(event, renderConfig);
+                    this.localEventsDiv.appendChild(result.element);
+                    this.eventLayoutManager.registerEvent({
+                        startTime: result.startTime,
+                        endTime: result.endTime,
+                        element: result.element,
+                        type: 'local',
+                        title: event.title,
+                        id: result.eventId
+                    });
                 } catch (error) {
                     logError('Event display', error);
                 }
@@ -588,111 +432,6 @@ export class LocalEventManager {
         } catch (error) {
             logError('Local event loading', error);
         }
-    }
-
-    /**
-     * Create event element
-     * @private
-     */
-    async _createEventDiv(event) {
-        const { title, startTime, endTime } = event;
-
-        // Set the time on the target date
-        const [startHours, startMinutes] = startTime.split(':');
-        const [endHours, endMinutes] = endTime.split(':');
-
-        const startDate = createTimeOnDate(this.currentTargetDate, parseInt(startHours), parseInt(startMinutes));
-        const endDate = createTimeOnDate(this.currentTargetDate, parseInt(endHours), parseInt(endMinutes));
-
-        // Create the positioned event element via the factory
-        const { eventDiv } = EventElementFactory.createEventElement({
-            startDate,
-            endDate,
-            cssClass: 'event local-event',
-            tooltip: event.description ? `${title}\n${event.description}` : title,
-            initialWidth: this.eventLayoutManager.maxWidth
-        });
-
-        // Add time information to data attributes
-        eventDiv.dataset.startTime = startTime;
-        eventDiv.dataset.endTime = endTime;
-
-        // Check if this is a recurring event
-        const isRecurring = event.isRecurringInstance || (event.recurrence && event.recurrence.type !== RECURRENCE_TYPES.NONE);
-
-        // Set locale-aware time display asynchronously
-        await this._setLocalEventContentWithLocale(eventDiv, startTime, endTime, title, isRecurring, event);
-
-        // Setup the edit functionality
-        this._setupEventEdit(eventDiv, event);
-
-        // Register with the event layout manager
-        this.eventLayoutManager.registerEvent({
-            startTime: startDate,
-            endTime: endDate,
-            element: eventDiv,
-            type: 'local',
-            title: title,
-            id: event.id || `local-${title}-${startTime}-${endTime}`
-        });
-
-        return eventDiv;
-    }
-
-    /**
-     * Set local event content with locale-aware time display
-     * @param {HTMLElement} eventDiv - The event element
-     * @param {string} startTime - The start time (HH:mm format)
-     * @param {string} endTime - The end time (HH:mm format)
-     * @param {string} title - The event title
-     * @param {boolean} isRecurring - Whether this is a recurring event
-     * @param {Object} event - The full event object
-     * @private
-     */
-    async _setLocalEventContentWithLocale(eventDiv, startTime, endTime, title, isRecurring = false, event = {}) {
-        const [locale, timeFormat] = await resolveLocaleSettings();
-
-        const formattedStart = window.formatTime(startTime, { format: timeFormat, locale });
-
-        // Clear existing content
-        eventDiv.innerHTML = '';
-
-        // Primary line: time + title (via factory, then prepend recurrence icon if needed)
-        const primaryLine = EventElementFactory.createPrimaryLine(formattedStart, title);
-
-        // Add recurrence indicator if this is a recurring event
-        if (isRecurring) {
-            const icon = document.createElement('i');
-            icon.className = 'fa-solid fa-repeat';
-            icon.style.cssText = 'margin-right: 4px; font-size: 0.85em;';
-            primaryLine.insertBefore(icon, primaryLine.firstChild);
-        }
-
-        eventDiv.appendChild(primaryLine);
-
-        // Detail lines for larger blocks
-        if (eventDiv.classList.contains('event-detailed') && event.description) {
-            const descLine = document.createElement('div');
-            descLine.className = 'event-detail-line';
-            const icon = document.createElement('i');
-            icon.className = 'fa-solid fa-align-left';
-            icon.setAttribute('aria-hidden', 'true');
-            descLine.appendChild(icon);
-            const text = document.createElement('span');
-            text.textContent = event.description;
-            descLine.appendChild(text);
-            eventDiv.appendChild(descLine);
-        }
-    }
-
-    /**
-     * Setup event edit functionality
-     * @private
-     */
-    _setupEventEdit(eventDiv, event) {
-        onClickOnly(eventDiv, () => {
-            if (this.onEventClick) this.onEventClick(event);
-        });
     }
 
     /**

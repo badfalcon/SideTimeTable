@@ -15,8 +15,8 @@
 
 ## リファクタリング（既存コード）
 
-- [ ] `_fetchEventsForCalendarIds()` が `_fetchWithAuth()` を迂回して直接 `fetch()` している — calendarList取得部分は `_fetchWithAuth()` に統一可能
-- [ ] `respondToEvent()` のGET/PATCHレスポンスが `_checkResponse()` を使っていない — 401/403時に `AuthenticationError` にならない
+- [x] `_fetchEventsForCalendarIds()` が `_fetchWithAuth()` を迂回して直接 `fetch()` している — calendarList取得部分は `_fetchWithAuth()` に統一済み
+- [x] `respondToEvent()` のGET/PATCHレスポンスが `_checkResponse()` を使っていない — `_checkResponse()` に統一済み
 
 ## 仕様検討（Q7）
 

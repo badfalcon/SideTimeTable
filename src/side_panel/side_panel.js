@@ -1,5 +1,14 @@
 /**
  * SideTimeTable - Side Panel Timetable Management (Component Version)
+ *
+ * Business logic delegated to service classes:
+ * - EventLoadingService: event loading, debounce, scroll positioning
+ * - ReminderService: reminder sync (manual, auto, post-save)
+ * - ThemeService: color theme, dark mode, scrollbar settings
+ * - AuthService: auth-expired banner and reconnect flow
+ * - OnboardingService: tutorial, initial setup, changelog
+ * - DateNavigationService: current date state (existing)
+ * - LocalEventService: local event CRUD (existing)
  */
 
 import {
@@ -21,15 +30,16 @@ import { EventLayoutManager } from './time-manager.js';
 import { GoogleEventManager, LocalEventManager } from './event-handlers.js';
 import { LocalEventService } from './services/local-event-service.js';
 import { DateNavigationService } from './services/date-navigation-service.js';
+import { EventLoadingService } from './services/event-loading-service.js';
+import { ReminderService } from './services/reminder-service.js';
+import { ThemeService } from './services/theme-service.js';
+import { AuthService } from './services/auth-service.js';
+import { OnboardingService } from './services/onboarding-service.js';
 import { generateTimeList } from '../lib/utils.js';
 import { loadSettings } from '../lib/settings-storage.js';
 import { migrateEventDataToLocal } from '../lib/event-storage.js';
 import { cleanupObsoleteStorageKeys } from '../lib/storage-cleanup.js';
-import { sendMessage } from '../lib/chrome-messaging.js';
-import { getThemeById, resolveThemeColors } from '../lib/color-themes.js';
-import { setDemoMode, isDemoMode } from '../lib/demo-data.js';
-import { AlarmManager } from '../lib/alarm-manager.js';
-import { StorageHelper } from '../lib/storage-helper.js';
+import { setDemoMode } from '../lib/demo-data.js';
 
 // The reload message listener
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -69,11 +79,14 @@ class SidePanelUIController {
         // Services
         this.localEventService = new LocalEventService();
         this.dateNavService = new DateNavigationService();
+        this.eventLoadingService = new EventLoadingService();
+        this.reminderService = new ReminderService();
+        this.themeService = new ThemeService();
+        this.authService = new AuthService();
+        this.onboardingService = new OnboardingService();
 
         // The state management
         this.updateInterval = null;
-        this.loadEventsDebounceTimeout = null;
-        this.loadRequestId = 0; // Tracks the latest load request to prevent stale results
     }
 
     /**
@@ -330,7 +343,11 @@ class SidePanelUIController {
         );
 
         // Set auth expiry callback
-        this.googleEventManager.onAuthExpired = () => this._showAuthExpiredBanner();
+        this.googleEventManager.onAuthExpired = () => {
+            const container = document.getElementById('side-panel-container') || document.body;
+            const insertBeforeEl = this.allDayEventsComponent?.element || this.timelineComponent?.element;
+            this.authService.showAuthExpiredBanner(container, insertBeforeEl, () => this._onReconnectSuccess());
+        };
 
         // Set all-day events container
         this.googleEventManager.setAllDayEventsContainer(
@@ -369,24 +386,9 @@ class SidePanelUIController {
                 );
             }
 
-            // Resolve the active colour theme and apply all CSS variables
-            const themeId = settings.colorTheme || (settings.darkMode ? 'dark' : 'default');
-            const theme = getThemeById(themeId);
-            const { cssVars } = resolveThemeColors(theme);
-
-            for (const [varName, value] of Object.entries(cssVars)) {
-                document.documentElement.style.setProperty(varName, value);
-            }
-
-            // Apply dark mode attribute for CSS overrides
-            if (theme.isDark) {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            } else {
-                document.documentElement.removeAttribute('data-theme');
-            }
-
-            // Apply thin scrollbar setting
-            document.body.classList.toggle('thin-scrollbar', !!settings.thinScrollbar);
+            // Apply theme and scrollbar settings via service
+            await this.themeService.applyTheme(settings);
+            await this.themeService.applyScrollbarSetting(settings);
 
             // Set the current date
             this.headerComponent.setCurrentDate(this.dateNavService.getDate());
@@ -401,7 +403,6 @@ class SidePanelUIController {
      * @private
      */
     _setupEventListeners() {
-        // Localization
         this._setupLocalization();
     }
 
@@ -411,10 +412,7 @@ class SidePanelUIController {
      */
     _setupLocalization() {
         if (window.localizeElementText) {
-            // Initial localization
             window.localizeElementText(document.body);
-
-            // Component localization
             this.componentManager.localizeAll();
         }
     }
@@ -425,168 +423,70 @@ class SidePanelUIController {
      */
     async _loadInitialData() {
         // Auto-sync reminders when side panel opens (throttled to 5 minutes)
-        this._autoSyncReminders();
+        this.reminderService.autoSyncReminders();
 
         // Set initial date to TimelineComponent
         this.timelineComponent.setCurrentDate(this.dateNavService.getDate());
 
         await this._loadEventsForCurrentDate();
-        this._scrollToAppropriateTime();
+        this.eventLoadingService.scrollToAppropriateTime(
+            this.dateNavService.isViewingToday(),
+            this.timelineComponent
+        );
 
         // Show tutorial on first launch, then initial setup, then changelog
-        await this._checkTutorial();
+        await this.onboardingService.startOnboardingFlow(
+            this.tutorialComponent,
+            this.initialSetupComponent,
+            this.whatsNewModal
+        );
 
         // Track panel open and show review popup when conditions are met
         await this.reviewModal.trackOpenAndMaybeShow();
     }
 
-    /**
-     * Check if there are unseen updates and show What's New modal
-     * @private
-     */
-    async _checkForUpdateNotification() {
-        try {
-            const currentVersion = chrome.runtime.getManifest().version;
-            const data = await StorageHelper.get(['lastSeenVersion'], {});
-
-            if (!data.lastSeenVersion) {
-                // First install - store current version without showing modal
-                await StorageHelper.set({ lastSeenVersion: currentVersion });
-                return;
-            }
-
-            if (data.lastSeenVersion !== currentVersion) {
-                this.whatsNewModal.showForVersion(data.lastSeenVersion);
-            }
-        } catch (error) {
-            console.warn('Failed to check for update notification:', error);
-        }
-    }
+    // ── Event loading ────────────────────────────────────────────────
 
     /**
      * Load events for current date
      * @private
      */
     async _loadEventsForCurrentDate() {
-        // Increment request ID and capture it; stale responses from older requests will be discarded
-        const requestId = ++this.loadRequestId;
-        const targetDate = this.dateNavService.getDate();
-
-        try {
-            // Clear existing events (prevent duplicates)
-            this.allDayEventsComponent.clear();
-            this.timelineComponent.clearAllEvents();
-            if (this.eventLayoutManager) {
-                this.eventLayoutManager.clearAllEvents();
-            }
-
-            // Load Google events and local events via Manager classes
-            await Promise.allSettled([
-                this.localEventManager.loadLocalEvents(targetDate),
-                this.googleEventManager.fetchEvents(targetDate)
-            ]);
-
-            // Discard results if a newer request has started
-            if (requestId !== this.loadRequestId) {
-                return;
-            }
-
-            // Calculate layout after all events are loaded
-            // Disable transitions during initial load to prevent visible resize animation
-            if (this.eventLayoutManager) {
-                this.eventLayoutManager.calculateLayout(true);
-            }
-
-            // Show/hide the all-day events section
-            this.allDayEventsComponent.updateVisibility();
-
-        } catch (error) {
-            console.error('Event loading error:', error);
-        }
+        await this.eventLoadingService.loadEventsForDate(
+            this.dateNavService.getDate(),
+            this._getEventDeps()
+        );
     }
 
     /**
      * Handle calendar toggle with incremental update
-     * Only adds/removes events for the changed calendars instead of full reload
-     * @param {Object} changeInfo - Info about which calendars were added/removed
-     * @param {Array<string>} changeInfo.addedIds - Calendar IDs that were checked
-     * @param {Array<string>} changeInfo.removedIds - Calendar IDs that were unchecked
+     * @param {Object} changeInfo
      * @private
      */
     async _handleCalendarToggle(changeInfo) {
-        if (!changeInfo || isDemoMode()) {
-            return this._loadEventsForCurrentDate();
-        }
-
-        const { addedIds = [], removedIds = [] } = changeInfo;
-
-        if (addedIds.length === 0 && removedIds.length === 0) {
-            return this._loadEventsForCurrentDate();
-        }
-
-        const targetDate = this.dateNavService.getDate();
-
-        // Remove unchecked calendars' events
-        if (removedIds.length > 0) {
-            this.googleEventManager.removeEventsForCalendars(removedIds);
-        }
-
-        // Fetch only newly-added calendars' events
-        if (addedIds.length > 0) {
-            try {
-                await this.googleEventManager.fetchEventsForCalendars(targetDate, addedIds);
-            } catch (error) {
-                console.error('Failed to fetch events for calendars:', error);
-                return this._loadEventsForCurrentDate();
-            }
-        }
-
-        // Recalculate layout
-        if (this.eventLayoutManager) {
-            this.eventLayoutManager.calculateLayout();
-        }
-
-        // Update all-day events visibility
-        this.allDayEventsComponent.updateVisibility();
+        await this.eventLoadingService.handleCalendarToggle(
+            changeInfo,
+            this.dateNavService.getDate(),
+            this._getEventDeps(),
+            () => this._loadEventsForCurrentDate()
+        );
     }
 
     /**
-     * Scroll to appropriate time
+     * Get dependencies object for event loading service
      * @private
      */
-    _scrollToAppropriateTime() {
-        if (this.dateNavService.isViewingToday()) {
-            // For today, scroll to current time
-            this.timelineComponent.scrollToCurrentTime();
-        } else {
-            // For other dates, scroll to work start time
-            loadSettings().then(settings => {
-                if (settings.openTime) {
-                    this.timelineComponent.scrollToWorkTime(settings.openTime);
-                }
-            }).catch(console.warn);
-        }
+    _getEventDeps() {
+        return {
+            allDayEventsComponent: this.allDayEventsComponent,
+            timelineComponent: this.timelineComponent,
+            eventLayoutManager: this.eventLayoutManager,
+            localEventManager: this.localEventManager,
+            googleEventManager: this.googleEventManager
+        };
     }
 
-    /**
-     * Start periodic updates
-     * @private
-     */
-    _startPeriodicUpdate() {
-        // Current time lines are auto-updated by each component,
-        // so here we only monitor date changes
-        this.updateInterval = setInterval(() => {
-            // Only auto-advance to today if the user was previously viewing today
-            // This prevents forced switching when the user is intentionally viewing past/future dates
-            if (this.dateNavService.advanceToTodayIfNeeded()) {
-                const currentDate = this.dateNavService.getDate();
-                this.headerComponent.setCurrentDate(currentDate);
-                this.timelineComponent.setCurrentDate(currentDate);
-                this.timelineComponent.setCurrentTimeLineVisible(true);
-                this._loadEventsForCurrentDate();
-            }
-        }, 60000); // Check every minute
-    }
+    // ── Date navigation ──────────────────────────────────────────────
 
     /**
      * Date change handler
@@ -600,7 +500,6 @@ class SidePanelUIController {
         this.allDayEventsComponent.clear();
         this.timelineComponent.clearAllEvents();
 
-        // Clear the EventLayoutManager state as well
         if (this.eventLayoutManager) {
             this.eventLayoutManager.clearAllEvents();
         }
@@ -609,14 +508,19 @@ class SidePanelUIController {
         this.timelineComponent.setCurrentDate(currentDate);
 
         // Reload the events
-        this._debounceLoadEvents();
+        this.eventLoadingService.debounceLoadEvents(() => this._loadEventsForCurrentDate());
 
         // Update the current time line display
         this.timelineComponent.setCurrentTimeLineVisible(this.dateNavService.isViewingToday());
 
         // Adjust the scroll position
-        this._scrollToAppropriateTime();
+        this.eventLoadingService.scrollToAppropriateTime(
+            this.dateNavService.isViewingToday(),
+            this.timelineComponent
+        );
     }
+
+    // ── Local event CRUD ─────────────────────────────────────────────
 
     /**
      * Local event addition handler
@@ -624,14 +528,12 @@ class SidePanelUIController {
      */
     _handleAddLocalEvent(startTime, endTime) {
         if (!startTime) {
-            // Default to current time when called without drag times
             const now = new Date();
             startTime = `${String(now.getHours()).padStart(2, '0')}:${String(Math.floor(now.getMinutes() / 15) * 15).padStart(2, '0')}`;
             const endHour = Math.min(now.getHours() + 1, 23);
             const endMinutes = now.getHours() >= 23 ? 59 : Math.floor(now.getMinutes() / 15) * 15;
             endTime = `${String(endHour).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
         }
-
         this.localEventModal.showCreate(startTime, endTime);
     }
 
@@ -651,9 +553,11 @@ class SidePanelUIController {
             // Reload event display
             await this.localEventManager.loadLocalEvents(this.dateNavService.getDate());
 
-            await this._syncRemindersIfNeeded();
+            await this.reminderService.syncRemindersIfNeeded(
+                this.dateNavService.getDate(),
+                this.dateNavService.getDateString()
+            );
 
-            // Calculate layout after event save/update
             if (this.eventLayoutManager) {
                 this.eventLayoutManager.calculateLayout();
             }
@@ -667,19 +571,18 @@ class SidePanelUIController {
     /**
      * Local event deletion handler
      * @private
-     * @param {Object} event - The event to delete
-     * @param {string} deleteType - 'this' for single instance, 'all' for entire series
      */
     async _handleDeleteLocalEvent(event, deleteType = null) {
         try {
             await this.localEventService.deleteEvent(event, deleteType, this.dateNavService.getDate());
 
-            // Reload event display
             await this.localEventManager.loadLocalEvents(this.dateNavService.getDate());
 
-            await this._syncRemindersIfNeeded();
+            await this.reminderService.syncRemindersIfNeeded(
+                this.dateNavService.getDate(),
+                this.dateNavService.getDateString()
+            );
 
-            // Calculate layout after event save/update
             if (this.eventLayoutManager) {
                 this.eventLayoutManager.calculateLayout();
             }
@@ -698,83 +601,48 @@ class SidePanelUIController {
         // No special processing (modal just closes)
     }
 
-    /**
-     * Get current date string for event storage
-     * @returns {string} Date string in YYYY-MM-DD format
-     * @private
-     */
-    getCurrentDateString() {
-        return this.dateNavService.getDateString();
-    }
+    // ── Reminders ────────────────────────────────────────────────────
 
     /**
-     * Sync reminders for the current date if it's today or in the future.
+     * Handle sync reminders button click
      * @private
      */
-    async _syncRemindersIfNeeded() {
-        try {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            if (this.dateNavService.getDate() >= today) {
-                await AlarmManager.setDateReminders(this.getCurrentDateString());
-            }
-        } catch (error) {
-            console.error('Failed to sync reminders:', error);
+    async _handleSyncReminders() {
+        const result = await this.reminderService.forceSyncReminders();
+        if (result.success) {
+            await this._loadEventsForCurrentDate();
+        } else {
+            this.alertModal.showError('Failed to sync reminders: ' + result.error);
         }
     }
 
+    // ── Auth ─────────────────────────────────────────────────────────
+
     /**
-     * Check if tutorial should be shown on first launch.
-     * Tutorial runs first, then initial setup follows via _onTutorialComplete.
+     * Called after successful Google reconnection
      * @private
      */
-    async _checkTutorial() {
-        try {
-            const shouldShow = await this.tutorialComponent.shouldShow();
-            if (shouldShow) {
-                setTimeout(() => {
-                    this.tutorialComponent.start();
-                }, 500);
-                return;
-            }
-
-            // Tutorial already done, check initial setup
-            await this._checkInitialSetup();
-        } catch (error) {
-            console.warn('Failed to check tutorial state:', error);
-            await this._checkInitialSetup();
+    async _onReconnectSuccess() {
+        if (this.googleEventManager) {
+            this.googleEventManager.resetAuthState();
         }
+        if (this.timelineComponent?.calendarFilter) {
+            this.timelineComponent.calendarFilter.refreshVisibility();
+        }
+        await this._loadEventsForCurrentDate();
     }
+
+    // ── Onboarding ───────────────────────────────────────────────────
 
     /**
      * Called when tutorial is completed; show initial setup next.
      * @private
      */
     _onTutorialComplete() {
-        this._checkInitialSetup();
-    }
-
-    /**
-     * Check if initial setup should be shown and start it if needed.
-     * After setup completes or is skipped, show changelog if applicable.
-     * @private
-     */
-    async _checkInitialSetup() {
-        try {
-            const shouldShowSetup = await this.initialSetupComponent.shouldShow();
-            if (shouldShowSetup) {
-                setTimeout(() => {
-                    this.initialSetupComponent.start();
-                }, 300);
-                // Don't show changelog yet - it will show after page reload
-                return;
-            }
-
-            // Setup not needed (already completed), show changelog if applicable
-            await this._checkForUpdateNotification();
-        } catch (error) {
-            console.warn('Failed to check initial setup state:', error);
-        }
+        this.onboardingService.onTutorialComplete(
+            this.initialSetupComponent,
+            this.whatsNewModal
+        );
     }
 
     /**
@@ -782,8 +650,35 @@ class SidePanelUIController {
      * @private
      */
     _onSetupComplete() {
-        // Reload to apply settings (language, work hours, etc.)
         location.reload();
+    }
+
+    // ── Periodic update ──────────────────────────────────────────────
+
+    /**
+     * Start periodic updates
+     * @private
+     */
+    _startPeriodicUpdate() {
+        this.updateInterval = setInterval(() => {
+            if (this.dateNavService.advanceToTodayIfNeeded()) {
+                const currentDate = this.dateNavService.getDate();
+                this.headerComponent.setCurrentDate(currentDate);
+                this.timelineComponent.setCurrentDate(currentDate);
+                this.timelineComponent.setCurrentTimeLineVisible(true);
+                this._loadEventsForCurrentDate();
+            }
+        }, 60000);
+    }
+
+    // ── Utilities ────────────────────────────────────────────────────
+
+    /**
+     * Get current date string for event storage
+     * @returns {string}
+     */
+    getCurrentDateString() {
+        return this.dateNavService.getDateString();
     }
 
     /**
@@ -795,138 +690,8 @@ class SidePanelUIController {
             chrome.runtime.openOptionsPage();
         } catch (error) {
             console.warn('Failed to display settings screen:', error);
-            // Fallback
             const optionsUrl = chrome.runtime.getURL('src/options/options.html');
             window.open(optionsUrl, '_blank');
-        }
-    }
-
-    /**
-     * Handle sync reminders button click
-     * @private
-     */
-    async _handleSyncReminders() {
-        try {
-            // Send message to background to force sync
-            const response = await sendMessage({ action: 'forceSyncReminders' });
-
-            if (response.success) {
-                // Reload events to reflect any changes
-                await this._loadEventsForCurrentDate();
-
-                // Show success feedback (optional)
-                // You could add a toast notification here if desired
-            } else {
-                console.error('Failed to sync reminders:', response.error);
-                this.alertModal.showError('Failed to sync reminders: ' + (response.error || 'Unknown error'));
-            }
-        } catch (error) {
-            console.error('Sync reminders error:', error);
-            this.alertModal.showError('Failed to sync reminders: ' + error.message);
-        }
-    }
-
-    /**
-     * Auto-sync reminders with throttle (side panel open)
-     * @private
-     */
-    async _autoSyncReminders() {
-        try {
-            // Send message to background to auto-sync with throttle
-            const response = await sendMessage({ action: 'autoSyncReminders' });
-
-            if (!response.success) {
-                console.warn('[Auto Sync] Failed to auto-sync reminders:', response.error);
-            }
-        } catch (error) {
-            console.warn('[Auto Sync] Auto-sync error:', error);
-            // Don't show error to user - this is a background operation
-        }
-    }
-
-    /**
-     * Debounce event loading
-     * @private
-     */
-    _debounceLoadEvents() {
-        if (this.loadEventsDebounceTimeout) {
-            clearTimeout(this.loadEventsDebounceTimeout);
-        }
-
-        this.loadEventsDebounceTimeout = setTimeout(() => {
-            this._loadEventsForCurrentDate();
-        }, 300);
-    }
-
-    /**
-     * Show auth expired banner at the top of the timeline
-     * @private
-     */
-    _showAuthExpiredBanner() {
-        // Prevent duplicate banners
-        if (document.getElementById('authExpiredBanner')) return;
-
-        const banner = document.createElement('div');
-        banner.id = 'authExpiredBanner';
-        banner.className = 'auth-expired-banner';
-
-        const icon = document.createElement('i');
-        icon.className = 'fa-solid fa-triangle-exclamation';
-        icon.setAttribute('aria-hidden', 'true');
-        banner.appendChild(icon);
-
-        const message = document.createElement('span');
-        message.textContent = window.getLocalizedMessage?.('authExpiredMessage') || 'Google Calendar authorization has expired. Please reconnect.';
-        banner.appendChild(message);
-
-        const reconnectBtn = document.createElement('button');
-        reconnectBtn.className = 'auth-expired-reconnect-btn';
-        reconnectBtn.textContent = window.getLocalizedMessage?.('authExpiredReconnect') || 'Reconnect';
-        reconnectBtn.addEventListener('click', () => this._handleReconnect(reconnectBtn));
-        banner.appendChild(reconnectBtn);
-
-        const dismissBtn = document.createElement('button');
-        dismissBtn.className = 'auth-expired-dismiss-btn';
-        dismissBtn.setAttribute('aria-label', window.getLocalizedMessage?.('dismissNotification') || 'Dismiss');
-        dismissBtn.innerHTML = '<i class="fa-solid fa-xmark" aria-hidden="true"></i>';
-        dismissBtn.addEventListener('click', () => banner.remove());
-        banner.appendChild(dismissBtn);
-
-        // Insert before the all-day section (or timeline as fallback)
-        const container = document.getElementById('side-panel-container') || document.body;
-        const insertBeforeEl = this.allDayEventsComponent?.element || this.timelineComponent?.element;
-        if (insertBeforeEl) {
-            container.insertBefore(banner, insertBeforeEl);
-        } else {
-            container.appendChild(banner);
-        }
-    }
-
-    /**
-     * Handle reconnect button click - trigger Google auth directly
-     * @private
-     */
-    async _handleReconnect(btn) {
-        if (btn) btn.disabled = true;
-        try {
-            const response = await sendMessage({ action: 'authenticateGoogle' });
-            if (response && response.success) {
-                const banner = document.getElementById('authExpiredBanner');
-                if (banner) banner.remove();
-                if (this.googleEventManager) {
-                    this.googleEventManager.resetAuthState();
-                }
-                // Show the calendar filter button and reload events
-                if (this.timelineComponent?.calendarFilter) {
-                    this.timelineComponent.calendarFilter.refreshVisibility();
-                }
-                await this._loadEventsForCurrentDate();
-            } else {
-                if (btn) btn.disabled = false;
-            }
-        } catch (error) {
-            console.warn('Reconnect failed:', error.message);
-            if (btn) btn.disabled = false;
         }
     }
 
@@ -946,28 +711,18 @@ class SidePanelUIController {
      * Clean up resources
      */
     destroy() {
-        // Stop periodic updates
         if (this.updateInterval) {
             clearInterval(this.updateInterval);
             this.updateInterval = null;
         }
 
-        // Clear debounce timers
-        if (this.loadEventsDebounceTimeout) {
-            clearTimeout(this.loadEventsDebounceTimeout);
-        }
+        this.eventLoadingService.destroy();
 
-        if (this.debounceTimeout) {
-            clearTimeout(this.debounceTimeout);
-        }
-
-        // Clean up EventLayoutManager
         if (this.eventLayoutManager) {
             this.eventLayoutManager.destroy();
             this.eventLayoutManager = null;
         }
 
-        // Destroy all components
         this.componentManager.destroyAll();
     }
 }
@@ -978,7 +733,6 @@ let isInitialized = false;
 
 // Initialize on DOMContentLoaded
 document.addEventListener('DOMContentLoaded', async () => {
-    // Prevent double initialization
     if (isInitialized) {
         console.warn('Side panel is already initialized');
         return;
@@ -988,13 +742,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         isInitialized = true;
         uiController = new SidePanelUIController();
         await uiController.initialize();
-
-        // Expose for global access
         window.sidePanelController = uiController;
 
     } catch (error) {
         console.error('Side panel initialization failed:', error);
-        isInitialized = false; // Reset on error
+        isInitialized = false;
     }
 });
 
