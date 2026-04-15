@@ -67,7 +67,6 @@ export class SidePanelComponentManager {
                     if (!component.initialized) {
                         component.createElement();
                         component.initialized = true;
-                    } else {
                     }
                 }
             } catch (error) {

@@ -32,6 +32,9 @@ export class LocalEventModal extends ModalComponent {
         // The event being edited
         this.currentEvent = null;
 
+        // Date getter for recurrence (injected to avoid global controller access)
+        this._getCurrentDate = options.getCurrentDate || null;
+
         // Callbacks
         this.onSave = options.onSave || null;
         this.onDelete = options.onDelete || null;
@@ -399,10 +402,9 @@ export class LocalEventModal extends ModalComponent {
      * @private
      */
     _getStartDateForRecurrence() {
-        // Use the current display date from the side panel controller
-        const controller = window.sidePanelController;
-        if (controller && controller.currentDate) {
-            const date = controller.currentDate;
+        // Use injected date getter
+        if (this._getCurrentDate) {
+            const date = this._getCurrentDate();
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const day = String(date.getDate()).padStart(2, '0');

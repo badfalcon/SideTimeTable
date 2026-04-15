@@ -337,7 +337,7 @@ export class GoogleCalendarClient {
                 return false;
             }
             return response.ok;
-        } catch (error) {
+        } catch (_error) {
             return false;
         }
     }

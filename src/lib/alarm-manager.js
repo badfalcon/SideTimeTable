@@ -176,7 +176,7 @@ export class AlarmManager {
                 // Try with the icon first
                 notificationOptions.iconUrl = chrome.runtime.getURL('src/img/icon48.png');
                 await chrome.notifications.create(notificationId, notificationOptions);
-            } catch (iconError) {
+            } catch (_iconError) {
                 // Fallback: Create the notification without the icon
                 delete notificationOptions.iconUrl;
                 await chrome.notifications.create(notificationId, notificationOptions);

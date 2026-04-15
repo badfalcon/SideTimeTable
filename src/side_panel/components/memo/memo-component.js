@@ -150,7 +150,7 @@ export class MemoComponent extends Component {
             }
             this._collapsed = result.memoCollapsed === true;
             this._applyHeight(false);
-        } catch (e) {
+        } catch (_e) {
             // ignore
         }
     }

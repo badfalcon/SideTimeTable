@@ -23,6 +23,7 @@ export class GoogleEventRenderer {
      * @param {Object} config - Configuration from the manager
      * @param {boolean} config.useGoogleCalendarColors - Whether to apply Google Calendar colors
      * @param {Date|null} config.currentTargetDate - The date currently being displayed
+     * @param {Function} [config.onEventClick] - Callback when event is clicked
      * @returns {HTMLElement} The created chip element
      */
     createAllDayEventElement(event, options = {}, config = {}) {
@@ -74,10 +75,7 @@ export class GoogleEventRenderer {
 
         // Open modal on click
         onClickOnly(chip, () => {
-            const sidePanelController = window.sidePanelController;
-            if (sidePanelController && sidePanelController.googleEventModal) {
-                sidePanelController.googleEventModal.showEvent(event);
-            }
+            if (config.onEventClick) config.onEventClick(event);
         });
 
         return chip;
@@ -91,6 +89,7 @@ export class GoogleEventRenderer {
      * @param {Object} config - Configuration from the manager
      * @param {boolean} config.useGoogleCalendarColors - Whether to apply Google Calendar colors
      * @param {number} config.maxWidth - Maximum width for the event element
+     * @param {Function} [config.onEventClick] - Callback when event is clicked
      * @returns {Promise<{element: HTMLElement, startTime: Date, endTime: Date}>}
      */
     async createTimedEventElement(event, options = {}, config = {}) {
@@ -131,10 +130,7 @@ export class GoogleEventRenderer {
 
         // Add the click event
         onClickOnly(eventDiv, () => {
-            const sidePanelController = window.sidePanelController;
-            if (sidePanelController && sidePanelController.googleEventModal) {
-                sidePanelController.googleEventModal.showEvent(event);
-            }
+            if (config.onEventClick) config.onEventClick(event);
         });
 
         // Apply the Google colors directly (unless disabled by user setting)

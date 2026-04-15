@@ -4,13 +4,13 @@
  * The options page using the new component-based architecture
  */
 
-import { generateTimeList, reloadSidePanel, logError } from '../lib/utils.js';
-import { DEFAULT_SETTINGS, COLOR_CSS_VARS } from '../lib/constants.js';
+import { logError } from '../lib/utils.js';
+import { DEFAULT_SETTINGS } from '../lib/constants.js';
 import { loadSettings, saveSettings } from '../lib/settings-storage.js';
 import { sendMessage } from '../lib/chrome-messaging.js';
 import { getThemeById, resolveThemeColors } from '../lib/color-themes.js';
 import { StorageHelper } from '../lib/storage-helper.js';
-import { isDemoMode, setDemoMode, getDemoOptionsSettings, getDemoCalendars, getDemoCalendarGroups, DEMO_BUILD } from '../lib/demo-data.js';
+import { isDemoMode, getDemoOptionsSettings, getDemoCalendars, getDemoCalendarGroups, DEMO_BUILD } from '../lib/demo-data.js';
 import {
     ComponentManager,
     GoogleIntegrationCard,

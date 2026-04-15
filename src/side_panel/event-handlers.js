@@ -269,7 +269,13 @@ export class GoogleEventManager {
         const renderConfig = {
             useGoogleCalendarColors: this.useGoogleCalendarColors,
             currentTargetDate: this._currentTargetDate,
-            maxWidth: this.eventLayoutManager ? this.eventLayoutManager.maxWidth : undefined
+            maxWidth: this.eventLayoutManager ? this.eventLayoutManager.maxWidth : undefined,
+            onEventClick: (event) => {
+                const controller = window.sidePanelController;
+                if (controller && controller.googleEventModal) {
+                    controller.googleEventModal.showEvent(event);
+                }
+            }
         };
 
         for (let i = 0; i < events.length; i++) {
@@ -318,7 +324,7 @@ export class GoogleEventManager {
                     }
                 }
             } catch (error) {
-                console.error(`Error occurred during processing event ${i}:`, error);
+                logError(`Google event processing (index ${i})`, error);
             }
         }
     }
