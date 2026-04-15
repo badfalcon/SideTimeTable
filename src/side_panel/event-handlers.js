@@ -192,6 +192,7 @@ export class GoogleEventManager {
      */
     async fetchEventsForCalendars(targetDate, calendarIds) {
         if (!calendarIds || calendarIds.length === 0) return;
+        if (targetDate) this._currentTargetDate = targetDate;
 
         const versionAtStart = ++this._toggleVersion;
 
@@ -330,7 +331,7 @@ export class GoogleEventManager {
             dayCount = Math.round((end - start) / MS_PER_DAY);
             if (this._currentTargetDate) {
                 const viewing = new Date(this._currentTargetDate.getFullYear(), this._currentTargetDate.getMonth(), this._currentTargetDate.getDate());
-                currentDay = Math.max(1, Math.round((viewing - start) / MS_PER_DAY) + 1);
+                currentDay = Math.min(dayCount, Math.max(1, Math.round((viewing - start) / MS_PER_DAY) + 1));
             }
         }
 

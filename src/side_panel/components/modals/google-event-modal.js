@@ -210,14 +210,17 @@ export class GoogleEventModal extends ModalComponent {
             // For all-day events
             if (event.start.date && event.end.date) {
                 const MS_PER_DAY = 24 * 60 * 60 * 1000;
-                const dayCount = Math.round((endDate - startDate) / MS_PER_DAY);
+                // Parse as local time (not UTC) to avoid off-by-one in negative UTC timezones
+                const localStart = new Date(event.start.date + 'T00:00:00');
+                const localEnd = new Date(event.end.date + 'T00:00:00');
+                const dayCount = Math.round((localEnd - localStart) / MS_PER_DAY);
                 if (dayCount > 1) {
                     // Show date range: "06/01 – 06/03 (3 days)" / "06/01 〜 06/03（3日間）"
                     const locale = navigator.language || 'en';
                     const dateOpts = { month: '2-digit', day: '2-digit' };
                     // end.date is exclusive in Google Calendar API, so show (end - 1 day) as the last day
-                    const lastDay = new Date(endDate.getTime() - MS_PER_DAY);
-                    const startStr = startDate.toLocaleDateString(locale, dateOpts);
+                    const lastDay = new Date(localEnd.getTime() - MS_PER_DAY);
+                    const startStr = localStart.toLocaleDateString(locale, dateOpts);
                     const endStr = lastDay.toLocaleDateString(locale, dateOpts);
                     const template = window.getLocalizedMessage('allDayDateRange');
                     if (template) {
