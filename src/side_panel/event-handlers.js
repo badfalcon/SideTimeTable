@@ -345,7 +345,7 @@ export class GoogleEventManager {
      * @private
      */
     async _createGoogleEventElement(event, options = {}) {
-        // Skip all-day events
+        // Safety guard: all-day events are routed to _createAllDayEventElement by _processEvents
         if (event.start.date || event.end.date) {
             return;
         }
