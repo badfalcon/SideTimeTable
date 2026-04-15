@@ -6,6 +6,24 @@
  */
 export const RELEASE_NOTES = [
     {
+        version: '1.10.0',
+        date: '2026-04-15',
+        highlights: {
+            en: [
+                'All-day and multi-day events now appear at the top of your timeline',
+                'Out-of-office events are displayed with a distinctive style',
+                'A banner alerts you when your Google Calendar connection needs to be refreshed',
+                'Bug fixes and stability improvements'
+            ],
+            ja: [
+                '終日イベント・複数日イベントをタイムラインの上部に表示',
+                '不在（OOO）イベントを視覚的に区別して表示',
+                'Googleカレンダーの接続期限切れを通知バナーでお知らせ',
+                'バグ修正と安定性の向上'
+            ]
+        }
+    },
+    {
         version: '1.9.3',
         date: '2026-04-02',
         highlights: {
