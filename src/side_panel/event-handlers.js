@@ -306,18 +306,7 @@ export class GoogleEventManager {
                             );
                             if (result) {
                                 this.googleEventsDiv.appendChild(result.element);
-                                const eventId = uniqueEvent.uniqueId || uniqueEvent.id || `google-${Date.now()}-${Math.random()}`;
-                                if (this.eventLayoutManager && typeof this.eventLayoutManager.registerEvent === 'function') {
-                                    this.eventLayoutManager.registerEvent({
-                                        startTime: result.startTime,
-                                        endTime: result.endTime,
-                                        element: result.element,
-                                        title: event.summary,
-                                        type: 'google',
-                                        id: eventId,
-                                        calendarId: event.calendarId
-                                    });
-                                }
+                                this._registerGoogleEvent(result, uniqueEvent, event);
                             }
                         }
                         break;
@@ -326,6 +315,25 @@ export class GoogleEventManager {
             } catch (error) {
                 logError(`Google event processing (index ${i})`, error);
             }
+        }
+    }
+
+    /**
+     * Register a Google event with the layout manager
+     * @private
+     */
+    _registerGoogleEvent(result, uniqueEvent, event) {
+        if (this.eventLayoutManager && typeof this.eventLayoutManager.registerEvent === 'function') {
+            const eventId = uniqueEvent.uniqueId || uniqueEvent.id || `google-${Date.now()}-${Math.random()}`;
+            this.eventLayoutManager.registerEvent({
+                startTime: result.startTime,
+                endTime: result.endTime,
+                element: result.element,
+                title: event.summary,
+                type: 'google',
+                id: eventId,
+                calendarId: event.calendarId
+            });
         }
     }
 
@@ -391,52 +399,46 @@ export class LocalEventManager {
             onEventClick: this.onEventClick
         };
 
-        // Use mock data in demo mode
+        // Get events from appropriate source
+        let events;
         if (isDemoMode()) {
-            const demoEvents = await getDemoLocalEvents();
-
-            for (const event of demoEvents) {
-                try {
-                    const result = await this._renderer.createEventElement(event, renderConfig);
-                    this.localEventsDiv.appendChild(result.element);
-                    this.eventLayoutManager.registerEvent({
-                        startTime: result.startTime,
-                        endTime: result.endTime,
-                        element: result.element,
-                        type: 'local',
-                        title: event.title,
-                        id: result.eventId
-                    });
-                } catch (error) {
-                    logError('Demo event display', error);
-                }
+            events = await getDemoLocalEvents();
+        } else {
+            try {
+                events = targetDate ?
+                    await loadLocalEventsForDate(targetDate) :
+                    await loadLocalEvents();
+            } catch (error) {
+                logError('Local event loading', error);
+                return;
             }
-            return;
         }
 
-        try {
-            const events = targetDate ?
-                await loadLocalEventsForDate(targetDate) :
-                await loadLocalEvents();
-
-            for (const event of events) {
-                try {
-                    const result = await this._renderer.createEventElement(event, renderConfig);
-                    this.localEventsDiv.appendChild(result.element);
-                    this.eventLayoutManager.registerEvent({
-                        startTime: result.startTime,
-                        endTime: result.endTime,
-                        element: result.element,
-                        type: 'local',
-                        title: event.title,
-                        id: result.eventId
-                    });
-                } catch (error) {
-                    logError('Event display', error);
-                }
+        for (const event of events) {
+            try {
+                const result = await this._renderer.createEventElement(event, renderConfig);
+                this.localEventsDiv.appendChild(result.element);
+                this._registerLocalEvent(result, event.title);
+            } catch (error) {
+                logError('Event display', error);
             }
-        } catch (error) {
-            logError('Local event loading', error);
+        }
+    }
+
+    /**
+     * Register a local event with the layout manager
+     * @private
+     */
+    _registerLocalEvent(result, title) {
+        if (this.eventLayoutManager && typeof this.eventLayoutManager.registerEvent === 'function') {
+            this.eventLayoutManager.registerEvent({
+                startTime: result.startTime,
+                endTime: result.endTime,
+                element: result.element,
+                type: 'local',
+                title,
+                id: result.eventId
+            });
         }
     }
 

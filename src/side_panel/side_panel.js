@@ -31,14 +31,14 @@ import { GoogleEventManager, LocalEventManager } from './event-handlers.js';
 import { LocalEventService } from './services/local-event-service.js';
 import { DateNavigationService } from './services/date-navigation-service.js';
 import { EventLoadingService } from './services/event-loading-service.js';
-import { ReminderService } from './services/reminder-service.js';
+import { AlarmManager } from '../lib/alarm-manager.js';
 import { ThemeService } from './services/theme-service.js';
-import { AuthService } from './services/auth-service.js';
 import { OnboardingService } from './services/onboarding-service.js';
 import { generateTimeList } from '../lib/utils.js';
 import { loadSettings } from '../lib/settings-storage.js';
 import { migrateEventDataToLocal } from '../lib/event-storage.js';
 import { cleanupObsoleteStorageKeys } from '../lib/storage-cleanup.js';
+import { sendMessage } from '../lib/chrome-messaging.js';
 import { setDemoMode } from '../lib/demo-data.js';
 
 // The reload message listener
@@ -80,9 +80,7 @@ class SidePanelUIController {
         this.localEventService = new LocalEventService();
         this.dateNavService = new DateNavigationService();
         this.eventLoadingService = new EventLoadingService();
-        this.reminderService = new ReminderService();
         this.themeService = new ThemeService();
-        this.authService = new AuthService();
         this.onboardingService = new OnboardingService();
 
         // The state management
@@ -347,7 +345,7 @@ class SidePanelUIController {
         this.googleEventManager.onAuthExpired = () => {
             const container = document.getElementById('side-panel-container') || document.body;
             const insertBeforeEl = this.allDayEventsComponent?.element || this.timelineComponent?.element;
-            this.authService.showAuthExpiredBanner(container, insertBeforeEl, () => this._onReconnectSuccess());
+            this._showAuthExpiredBanner(container, insertBeforeEl);
         };
 
         // Set all-day events container
@@ -424,7 +422,8 @@ class SidePanelUIController {
      */
     async _loadInitialData() {
         // Auto-sync reminders when side panel opens (throttled to 5 minutes)
-        this.reminderService.autoSyncReminders();
+        // Auto-sync reminders with throttle (fire-and-forget)
+        sendMessage({ action: 'autoSyncReminders' }).catch(() => {});
 
         // Set initial date to TimelineComponent
         this.timelineComponent.setCurrentDate(this.dateNavService.getDate());
@@ -554,10 +553,7 @@ class SidePanelUIController {
             // Reload event display
             await this.localEventManager.loadLocalEvents(this.dateNavService.getDate());
 
-            await this.reminderService.syncRemindersIfNeeded(
-                this.dateNavService.getDate(),
-                this.dateNavService.getDateString()
-            );
+            await this._syncRemindersIfNeeded();
 
             if (this.eventLayoutManager) {
                 this.eventLayoutManager.calculateLayout();
@@ -579,10 +575,7 @@ class SidePanelUIController {
 
             await this.localEventManager.loadLocalEvents(this.dateNavService.getDate());
 
-            await this.reminderService.syncRemindersIfNeeded(
-                this.dateNavService.getDate(),
-                this.dateNavService.getDateString()
-            );
+            await this._syncRemindersIfNeeded();
 
             if (this.eventLayoutManager) {
                 this.eventLayoutManager.calculateLayout();
@@ -609,15 +602,95 @@ class SidePanelUIController {
      * @private
      */
     async _handleSyncReminders() {
-        const result = await this.reminderService.forceSyncReminders();
-        if (result.success) {
-            await this._loadEventsForCurrentDate();
-        } else {
-            this.alertModal.showError('Failed to sync reminders: ' + result.error);
+        try {
+            const response = await sendMessage({ action: 'forceSyncReminders' });
+            if (response.success) {
+                await this._loadEventsForCurrentDate();
+            } else {
+                this.alertModal.showError('Failed to sync reminders: ' + (response.error || 'Unknown error'));
+            }
+        } catch (error) {
+            this.alertModal.showError('Failed to sync reminders: ' + error.message);
+        }
+    }
+
+    /**
+     * Sync reminders for the current date if it's today or in the future.
+     * @private
+     */
+    async _syncRemindersIfNeeded() {
+        try {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            if (this.dateNavService.getDate() >= today) {
+                await AlarmManager.setDateReminders(this.dateNavService.getDateString());
+            }
+        } catch (_error) {
+            // Silent — reminder sync is best-effort
         }
     }
 
     // ── Auth ─────────────────────────────────────────────────────────
+
+    /**
+     * Show the auth-expired banner at the top of the timeline.
+     * @private
+     */
+    _showAuthExpiredBanner(container, insertBeforeEl) {
+        if (document.getElementById('authExpiredBanner')) return;
+
+        const banner = document.createElement('div');
+        banner.id = 'authExpiredBanner';
+        banner.className = 'auth-expired-banner';
+
+        const icon = document.createElement('i');
+        icon.className = 'fa-solid fa-triangle-exclamation';
+        icon.setAttribute('aria-hidden', 'true');
+        banner.appendChild(icon);
+
+        const message = document.createElement('span');
+        message.textContent = window.getLocalizedMessage?.('authExpiredMessage') || 'Google Calendar authorization has expired. Please reconnect.';
+        banner.appendChild(message);
+
+        const reconnectBtn = document.createElement('button');
+        reconnectBtn.className = 'auth-expired-reconnect-btn';
+        reconnectBtn.textContent = window.getLocalizedMessage?.('authExpiredReconnect') || 'Reconnect';
+        reconnectBtn.addEventListener('click', () => this._handleReconnect(reconnectBtn));
+        banner.appendChild(reconnectBtn);
+
+        const dismissBtn = document.createElement('button');
+        dismissBtn.className = 'auth-expired-dismiss-btn';
+        dismissBtn.setAttribute('aria-label', window.getLocalizedMessage?.('dismissNotification') || 'Dismiss');
+        dismissBtn.innerHTML = '<i class="fa-solid fa-xmark" aria-hidden="true"></i>';
+        dismissBtn.addEventListener('click', () => banner.remove());
+        banner.appendChild(dismissBtn);
+
+        if (insertBeforeEl) {
+            container.insertBefore(banner, insertBeforeEl);
+        } else {
+            container.appendChild(banner);
+        }
+    }
+
+    /**
+     * Handle reconnect button click
+     * @private
+     */
+    async _handleReconnect(btn) {
+        if (btn) btn.disabled = true;
+        try {
+            const response = await sendMessage({ action: 'authenticateGoogle' });
+            if (response && response.success) {
+                const banner = document.getElementById('authExpiredBanner');
+                if (banner) banner.remove();
+                await this._onReconnectSuccess();
+            } else {
+                if (btn) btn.disabled = false;
+            }
+        } catch (_error) {
+            if (btn) btn.disabled = false;
+        }
+    }
 
     /**
      * Called after successful Google reconnection

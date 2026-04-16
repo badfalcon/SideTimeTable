@@ -21,6 +21,13 @@
 - [ ] `background.js` の21箇所の `console.error/warn` 直接呼出を `logError()` に統一
 - [ ] `StorageHelper` 直接利用とラッパー関数 (`settings-storage.js`, `event-storage.js`) の使い分け基準をドキュメント化、または統一
 
+## リファクタリング（設計改善）
+
+- [ ] `CalendarGroupManager` / `CalendarListRenderer` / `CalendarFilterRenderer` の getter コールバックパターンをメソッドパラメータ直接渡しに変更（暗黙の状態結合を解消）
+- [ ] `EventLoadingService` の DI をメソッドパラメータからコンストラクタ注入に変更（`_getEventDeps()` パターンの解消）
+- [ ] `GoogleEventRenderer` の返り値を統一: all-day (`HTMLElement`) と timed (`{element, startTime, endTime}`) の不整合を解消
+- [ ] `CalendarManagementCard.render()` からフィルタリング・Map構築ロジックを分離
+
 ## 仕様検討（Q7）
 
 - [ ] `saveLocalEventsForDate()` の保存方式を上書き→マージベースに変更するか検討（現状は上書き方式。呼び出し元がload→edit→saveする必要あり）
