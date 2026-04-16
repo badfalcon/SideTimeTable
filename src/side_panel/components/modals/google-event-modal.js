@@ -203,7 +203,7 @@ export class GoogleEventModal extends ModalComponent {
 
         const icon = document.createElement('i');
         icon.className = 'fas fa-reply me-1';
-        icon.style.cssText = 'margin-top: 6px; color: var(--side-calendar-secondary-text-color);';
+        icon.style.cssText = 'color: var(--side-calendar-secondary-text-color);';
 
         const buttonsWrapper = document.createElement('div');
         buttonsWrapper.className = 'google-event-rsvp-wrapper';

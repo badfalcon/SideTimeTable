@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "default_locale": "en",
   "name": "SideTimeTable dev",
-  "version": "1.9.3",
+  "version": "1.10.0",
   "description": "__MSG_appDesc__",
   "permissions": [
     "sidePanel",
