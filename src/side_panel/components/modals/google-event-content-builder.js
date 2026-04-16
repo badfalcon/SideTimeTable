@@ -91,11 +91,23 @@ export class GoogleEventContentBuilder {
             // For the timed events - use browser locale
             const locale = navigator.language || 'en';
             const timeOptions = { hour: '2-digit', minute: '2-digit' };
+            const dateOptions = { year: 'numeric', month: '2-digit', day: '2-digit' };
             const startTime = startDate.toLocaleTimeString(locale, timeOptions);
             const endTime = endDate.toLocaleTimeString(locale, timeOptions);
+            const startDateStr = startDate.toLocaleDateString(locale, dateOptions);
             const separator = locale.startsWith('ja') ? ' ～ ' : ' - ';
 
-            return `${startTime}${separator}${endTime}`;
+            // If the event spans multiple calendar days, show the end date as well
+            const sameDay = startDate.getFullYear() === endDate.getFullYear()
+                && startDate.getMonth() === endDate.getMonth()
+                && startDate.getDate() === endDate.getDate();
+
+            if (sameDay) {
+                return `${startDateStr} ${startTime}${separator}${endTime}`;
+            }
+
+            const endDateStr = endDate.toLocaleDateString(locale, dateOptions);
+            return `${startDateStr} ${startTime}${separator}${endDateStr} ${endTime}`;
         } catch (error) {
             console.warn('Time format error:', error);
             return window.getLocalizedMessage('timeInfoError');
