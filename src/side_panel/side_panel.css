@@ -700,7 +700,7 @@ body {
 /* Google event detail rows (icon + text alignment) */
 .google-event-row {
     display: flex;
-    align-items: flex-start;
+    align-items: baseline;
     gap: 8px;
 }
 
@@ -708,7 +708,6 @@ body {
     width: 16px;
     flex: 0 0 16px;
     text-align: center;
-    margin-top: 2px;
     color: var(--side-calendar-secondary-text-color);
 }
 
@@ -733,7 +732,7 @@ body {
 /* RSVP response buttons */
 .google-event-rsvp {
     display: flex;
-    align-items: flex-start;
+    align-items: baseline;
     gap: 8px;
 }
 
