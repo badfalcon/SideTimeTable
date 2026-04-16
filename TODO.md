@@ -15,8 +15,19 @@
 
 ## リファクタリング（既存コード）
 
-- [ ] `_fetchEventsForCalendarIds()` が `_fetchWithAuth()` を迂回して直接 `fetch()` している — calendarList取得部分は `_fetchWithAuth()` に統一可能
-- [ ] `respondToEvent()` のGET/PATCHレスポンスが `_checkResponse()` を使っていない — 401/403時に `AuthenticationError` にならない
+- [x] `_fetchEventsForCalendarIds()` が `_fetchWithAuth()` を迂回して直接 `fetch()` している — calendarList取得部分は `_fetchWithAuth()` に統一済み
+- [x] `respondToEvent()` のGET/PATCHレスポンスが `_checkResponse()` を使っていない — `_checkResponse()` に統一済み
+- [ ] `localize.js` が `window` グローバルに関数を export している — ES6 module の `export` に移行して明示的な `import` に統一（34ファイルが `window.getLocalizedMessage()` を使用中）
+- [ ] `background.js` の21箇所の `console.error/warn` 直接呼出を `logError()` に統一
+- [ ] `StorageHelper` 直接利用とラッパー関数 (`settings-storage.js`, `event-storage.js`) の使い分け基準をドキュメント化、または統一
+
+## リファクタリング（設計改善）
+
+- [x] `CalendarListRenderer` の getter コールバックパターンをメソッドパラメータ直接渡しに変更済み
+- [x] `EventLoadingService` の DI を `setDeps()` によるコンストラクタ注入に変更済み
+- [x] `GoogleEventRenderer` の返り値を `{ element }` に統一済み
+- [x] `CalendarManagementCard.render()` から `_prepareRenderData()` を抽出済み
+- [ ] `CalendarGroupManager` / `CalendarFilterRenderer` の getter コールバックパターンも同様にメソッドパラメータ直接渡しに変更
 
 ## 仕様検討（Q7）
 
