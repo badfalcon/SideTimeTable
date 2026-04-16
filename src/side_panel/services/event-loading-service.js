@@ -12,24 +12,33 @@ export class EventLoadingService {
     constructor() {
         this._debounceTimeout = null;
         this._requestId = 0;
+        this._deps = null;
     }
 
     /**
-     * Load events for the given date using the provided managers and components.
-     * @param {Date} targetDate
-     * @param {Object} deps - Dependencies
+     * Set the dependencies (components and managers) used by this service.
+     * Called once after components and managers are fully initialized.
+     * @param {Object} deps
      * @param {Object} deps.allDayEventsComponent
      * @param {Object} deps.timelineComponent
      * @param {Object} deps.eventLayoutManager
      * @param {Object} deps.localEventManager
      * @param {Object} deps.googleEventManager
+     */
+    setDeps(deps) {
+        this._deps = deps;
+    }
+
+    /**
+     * Load events for the given date using the injected managers and components.
+     * @param {Date} targetDate
      * @returns {Promise<void>}
      */
-    async loadEventsForDate(targetDate, deps) {
+    async loadEventsForDate(targetDate) {
         const requestId = ++this._requestId;
 
         const { allDayEventsComponent, timelineComponent, eventLayoutManager,
-                localEventManager, googleEventManager } = deps;
+                localEventManager, googleEventManager } = this._deps;
 
         try {
             // Clear existing events
@@ -67,11 +76,10 @@ export class EventLoadingService {
      * Handle calendar toggle with incremental update.
      * @param {Object} changeInfo
      * @param {Date} targetDate
-     * @param {Object} deps
      * @param {Function} fullReloadFn - Fallback full reload function
      * @returns {Promise<void>}
      */
-    async handleCalendarToggle(changeInfo, targetDate, deps, fullReloadFn) {
+    async handleCalendarToggle(changeInfo, targetDate, fullReloadFn) {
         if (!changeInfo || isDemoMode()) {
             return fullReloadFn();
         }
@@ -82,7 +90,7 @@ export class EventLoadingService {
             return fullReloadFn();
         }
 
-        const { googleEventManager, eventLayoutManager, allDayEventsComponent } = deps;
+        const { googleEventManager, eventLayoutManager, allDayEventsComponent } = this._deps;
 
         // Remove unchecked calendars' events
         if (removedIds.length > 0) {

@@ -3,9 +3,7 @@
  *
  * Business logic delegated to service classes:
  * - EventLoadingService: event loading, debounce, scroll positioning
- * - ReminderService: reminder sync (manual, auto, post-save)
  * - ThemeService: color theme, dark mode, scrollbar settings
- * - AuthService: auth-expired banner and reconnect flow
  * - OnboardingService: tutorial, initial setup, changelog
  * - DateNavigationService: current date state (existing)
  * - LocalEventService: local event CRUD (existing)
@@ -319,6 +317,15 @@ class SidePanelUIController {
                     this.localEventModal.showView(event);
                 });
             }
+
+            // Update the event loading service deps with the new layout manager
+            this.eventLoadingService.setDeps({
+                allDayEventsComponent: this.allDayEventsComponent,
+                timelineComponent: this.timelineComponent,
+                eventLayoutManager: this.eventLayoutManager,
+                localEventManager: this.localEventManager,
+                googleEventManager: this.googleEventManager
+            });
         }
     }
 
@@ -362,6 +369,15 @@ class SidePanelUIController {
         // Set the event click callback
         this.localEventManager.setEventClickCallback((event) => {
             this.localEventModal.showView(event);
+        });
+
+        // Inject dependencies into the event loading service
+        this.eventLoadingService.setDeps({
+            allDayEventsComponent: this.allDayEventsComponent,
+            timelineComponent: this.timelineComponent,
+            eventLayoutManager: this.eventLayoutManager,
+            localEventManager: this.localEventManager,
+            googleEventManager: this.googleEventManager
         });
 
         // Load the settings and apply initial configuration
@@ -453,8 +469,7 @@ class SidePanelUIController {
      */
     async _loadEventsForCurrentDate() {
         await this.eventLoadingService.loadEventsForDate(
-            this.dateNavService.getDate(),
-            this._getEventDeps()
+            this.dateNavService.getDate()
         );
     }
 
@@ -467,23 +482,8 @@ class SidePanelUIController {
         await this.eventLoadingService.handleCalendarToggle(
             changeInfo,
             this.dateNavService.getDate(),
-            this._getEventDeps(),
             () => this._loadEventsForCurrentDate()
         );
-    }
-
-    /**
-     * Get dependencies object for event loading service
-     * @private
-     */
-    _getEventDeps() {
-        return {
-            allDayEventsComponent: this.allDayEventsComponent,
-            timelineComponent: this.timelineComponent,
-            eventLayoutManager: this.eventLayoutManager,
-            localEventManager: this.localEventManager,
-            googleEventManager: this.googleEventManager
-        };
     }
 
     // ── Date navigation ──────────────────────────────────────────────

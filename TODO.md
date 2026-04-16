@@ -23,10 +23,11 @@
 
 ## リファクタリング（設計改善）
 
-- [ ] `CalendarGroupManager` / `CalendarListRenderer` / `CalendarFilterRenderer` の getter コールバックパターンをメソッドパラメータ直接渡しに変更（暗黙の状態結合を解消）
-- [ ] `EventLoadingService` の DI をメソッドパラメータからコンストラクタ注入に変更（`_getEventDeps()` パターンの解消）
-- [ ] `GoogleEventRenderer` の返り値を統一: all-day (`HTMLElement`) と timed (`{element, startTime, endTime}`) の不整合を解消
-- [ ] `CalendarManagementCard.render()` からフィルタリング・Map構築ロジックを分離
+- [x] `CalendarListRenderer` の getter コールバックパターンをメソッドパラメータ直接渡しに変更済み
+- [x] `EventLoadingService` の DI を `setDeps()` によるコンストラクタ注入に変更済み
+- [x] `GoogleEventRenderer` の返り値を `{ element }` に統一済み
+- [x] `CalendarManagementCard.render()` から `_prepareRenderData()` を抽出済み
+- [ ] `CalendarGroupManager` / `CalendarFilterRenderer` の getter コールバックパターンも同様にメソッドパラメータ直接渡しに変更
 
 ## 仕様検討（Q7）
 

@@ -294,11 +294,11 @@ export class GoogleEventManager {
                         const isAllDay = event.start.date || event.end.date;
 
                         if (isAllDay) {
-                            const chip = this._renderer.createAllDayEventElement(
+                            const result = this._renderer.createAllDayEventElement(
                                 uniqueEvent, { isOutOfOffice: isOOO }, renderConfig
                             );
-                            if (chip && this.allDayEventsContainer) {
-                                this.allDayEventsContainer.appendChild(chip);
+                            if (result && result.element && this.allDayEventsContainer) {
+                                this.allDayEventsContainer.appendChild(result.element);
                             }
                         } else {
                             const result = await this._renderer.createTimedEventElement(

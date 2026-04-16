@@ -24,7 +24,7 @@ export class GoogleEventRenderer {
      * @param {boolean} config.useGoogleCalendarColors - Whether to apply Google Calendar colors
      * @param {Date|null} config.currentTargetDate - The date currently being displayed
      * @param {Function} [config.onEventClick] - Callback when event is clicked
-     * @returns {HTMLElement} The created chip element
+     * @returns {{element: HTMLElement}} Object wrapping the created chip element
      */
     createAllDayEventElement(event, options = {}, config = {}) {
         const chip = document.createElement('div');
@@ -78,7 +78,7 @@ export class GoogleEventRenderer {
             if (config.onEventClick) config.onEventClick(event);
         });
 
-        return chip;
+        return { element: chip };
     }
 
     /**

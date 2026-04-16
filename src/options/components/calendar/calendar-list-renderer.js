@@ -3,39 +3,20 @@
  *
  * Extracted from CalendarManagementCard to handle all list rendering and search
  * independently from the card UI lifecycle and group management logic.
+ *
+ * All data and DOM elements are passed directly as method parameters —
+ * the renderer holds no references to external state.
  */
 
 export class CalendarListRenderer {
     /**
-     * @param {Object} options
-     * @param {Function} options.getCalendarList - Returns calendarList DOM element
-     * @param {Function} options.getNoCalendarsMsg - Returns noCalendarsMsg DOM element
-     * @param {Function} options.getClearSearchBtn - Returns clearSearchBtn DOM element
-     * @param {Function} options.getSelectedCalendarIds - Returns current selectedCalendarIds
-     * @param {Function} options.getCalendarGroups - Returns current calendarGroups
-     * @param {Function} options.getAllCalendars - Returns all calendars
-     * @param {Function} options.getLoadingIndicator - Returns loading indicator DOM element
-     * @param {Function} options.getRefreshBtn - Returns refresh button DOM element
-     */
-    constructor(options) {
-        this._getCalendarList = options.getCalendarList;
-        this._getNoCalendarsMsg = options.getNoCalendarsMsg;
-        this._getClearSearchBtn = options.getClearSearchBtn;
-        this._getSelectedCalendarIds = options.getSelectedCalendarIds;
-        this._getCalendarGroups = options.getCalendarGroups;
-        this._getAllCalendars = options.getAllCalendars;
-        this._getLoadingIndicator = options.getLoadingIndicator;
-        this._getRefreshBtn = options.getRefreshBtn;
-    }
-
-    /**
      * Create a group section (header + body)
      */
-    createGroupSection(group, calendars, searchTerm) {
+    createGroupSection(group, calendars, searchTerm, selectedCalendarIds, allCalendars, calendarGroups) {
         const section = document.createElement('div');
         section.className = 'calendar-group-section';
 
-        const header = this.createGroupHeader(group, calendars);
+        const header = this.createGroupHeader(group, calendars, allCalendars, selectedCalendarIds);
         section.appendChild(header);
 
         const body = document.createElement('div');
@@ -51,8 +32,8 @@ export class CalendarListRenderer {
         });
 
         sortedCalendars.forEach(calendar => {
-            const isSelected = this._getSelectedCalendarIds().includes(calendar.id);
-            const item = this.createCalendarItem(calendar, isSelected);
+            const isSelected = selectedCalendarIds.includes(calendar.id);
+            const item = this.createCalendarItem(calendar, isSelected, calendarGroups);
             body.appendChild(item);
         });
 
@@ -63,10 +44,7 @@ export class CalendarListRenderer {
     /**
      * Create a group header
      */
-    createGroupHeader(group, _calendarsInGroup) {
-        const allCalendars = this._getAllCalendars();
-        const selectedCalendarIds = this._getSelectedCalendarIds();
-
+    createGroupHeader(group, _calendarsInGroup, allCalendars, selectedCalendarIds) {
         const header = document.createElement('div');
         header.className = 'calendar-group-header';
         header.dataset.groupId = group.id;
@@ -143,7 +121,7 @@ export class CalendarListRenderer {
     /**
      * Create ungrouped section
      */
-    createUngroupedSection(calendars, _searchTerm) {
+    createUngroupedSection(calendars, _searchTerm, selectedCalendarIds, calendarGroups) {
         const section = document.createElement('div');
         section.className = 'calendar-group-section';
 
@@ -177,8 +155,8 @@ export class CalendarListRenderer {
         body.className = 'calendar-group-body';
 
         calendars.forEach(calendar => {
-            const isSelected = this._getSelectedCalendarIds().includes(calendar.id);
-            const item = this.createCalendarItem(calendar, isSelected);
+            const isSelected = selectedCalendarIds.includes(calendar.id);
+            const item = this.createCalendarItem(calendar, isSelected, calendarGroups);
             body.appendChild(item);
         });
 
@@ -189,9 +167,7 @@ export class CalendarListRenderer {
     /**
      * Create calendar item
      */
-    createCalendarItem(calendar, isSelected) {
-        const calendarGroups = this._getCalendarGroups();
-
+    createCalendarItem(calendar, isSelected, calendarGroups) {
         const item = document.createElement('div');
         item.className = 'list-group-item d-flex align-items-center py-2';
         item.dataset.calendarId = calendar.id;
@@ -249,9 +225,7 @@ export class CalendarListRenderer {
     /**
      * Set loading state
      */
-    setLoading(loading) {
-        const loadingIndicator = this._getLoadingIndicator();
-        const refreshBtn = this._getRefreshBtn();
+    setLoading(loading, loadingIndicator, refreshBtn) {
         if (loadingIndicator) {
             loadingIndicator.style.display = loading ? 'block' : 'none';
         }
@@ -263,9 +237,7 @@ export class CalendarListRenderer {
     /**
      * Show empty state
      */
-    showEmptyState() {
-        const calendarList = this._getCalendarList();
-        const noCalendarsMsg = this._getNoCalendarsMsg();
+    showEmptyState(calendarList, noCalendarsMsg) {
         calendarList.innerHTML = '';
         noCalendarsMsg.style.display = 'block';
     }
@@ -273,9 +245,7 @@ export class CalendarListRenderer {
     /**
      * Show no search results
      */
-    showNoSearchResults() {
-        const calendarList = this._getCalendarList();
-        const noCalendarsMsg = this._getNoCalendarsMsg();
+    showNoSearchResults(calendarList, noCalendarsMsg) {
         const noResultsMsg = window.getLocalizedMessage('noSearchResults') || 'No search results found';
         calendarList.innerHTML = '';
         const div = document.createElement('div');
@@ -288,15 +258,14 @@ export class CalendarListRenderer {
     /**
      * Hide empty state
      */
-    hideEmptyState() {
-        this._getNoCalendarsMsg().style.display = 'none';
+    hideEmptyState(noCalendarsMsg) {
+        noCalendarsMsg.style.display = 'none';
     }
 
     /**
      * Update search UI
      */
-    updateSearchUI(searchTerm) {
-        const clearSearchBtn = this._getClearSearchBtn();
+    updateSearchUI(searchTerm, clearSearchBtn) {
         if (clearSearchBtn) {
             clearSearchBtn.style.display = searchTerm ? 'block' : 'none';
         }
@@ -305,9 +274,7 @@ export class CalendarListRenderer {
     /**
      * Show error
      */
-    showError(message) {
-        const calendarList = this._getCalendarList();
-
+    showError(message, calendarList) {
         const errorDiv = document.createElement('div');
         errorDiv.className = 'alert alert-danger alert-dismissible fade show';
 

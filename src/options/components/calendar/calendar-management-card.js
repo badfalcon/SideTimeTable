@@ -57,16 +57,7 @@ export class CalendarManagementCard extends CardComponent {
         });
 
         // Initialize list renderer
-        this._listRenderer = new CalendarListRenderer({
-            getCalendarList: () => this.calendarList,
-            getNoCalendarsMsg: () => this.noCalendarsMsg,
-            getClearSearchBtn: () => this.clearSearchBtn,
-            getSelectedCalendarIds: () => this.selectedCalendarIds,
-            getCalendarGroups: () => this.calendarGroups,
-            getAllCalendars: () => this.allCalendars,
-            getLoadingIndicator: () => this.loadingIndicator,
-            getRefreshBtn: () => this.refreshBtn
-        });
+        this._listRenderer = new CalendarListRenderer();
     }
 
     destroy() {
@@ -338,7 +329,7 @@ export class CalendarManagementCard extends CardComponent {
             this.render();
         } catch (error) {
             logError('Calendar data loading', error);
-            this._listRenderer.showError(window.getLocalizedMessage('calendarLoadError') || 'Failed to load calendar data');
+            this._listRenderer.showError(window.getLocalizedMessage('calendarLoadError') || 'Failed to load calendar data', this.calendarList);
         }
     }
 
@@ -366,7 +357,7 @@ export class CalendarManagementCard extends CardComponent {
      * Refresh calendar list
      */
     async refreshCalendars() {
-        this._listRenderer.setLoading(true);
+        this._listRenderer.setLoading(true, this.loadingIndicator, this.refreshBtn);
 
         try {
             // Load current selections from storage to avoid overwriting with empty state
@@ -398,9 +389,9 @@ export class CalendarManagementCard extends CardComponent {
             }
         } catch (error) {
             logError('Calendar list update', error);
-            this._listRenderer.showError(window.getLocalizedMessage('calendarUpdateError') || `Failed to update calendars: ${error.message || 'Unknown error'}`);
+            this._listRenderer.showError(window.getLocalizedMessage('calendarUpdateError') || `Failed to update calendars: ${error.message || 'Unknown error'}`, this.calendarList);
         } finally {
-            this._listRenderer.setLoading(false);
+            this._listRenderer.setLoading(false, this.loadingIndicator, this.refreshBtn);
         }
     }
 
@@ -411,26 +402,56 @@ export class CalendarManagementCard extends CardComponent {
         this._groupManager.closePopover();
 
         if (!this.allCalendars || this.allCalendars.length === 0) {
-            this._listRenderer.showEmptyState();
+            this._listRenderer.showEmptyState(this.calendarList, this.noCalendarsMsg);
             return;
         }
 
-        // Apply the search filter
         const searchTerm = this.searchInput?.value.toLowerCase().trim() || '';
+        const renderData = this._prepareRenderData(searchTerm);
+
+        if (renderData.filteredCalendars.length === 0 && searchTerm) {
+            this._listRenderer.showNoSearchResults(this.calendarList, this.noCalendarsMsg);
+            return;
+        }
+
+        this._listRenderer.hideEmptyState(this.noCalendarsMsg);
+        this.calendarList.innerHTML = '';
+
+        // Render each group section
+        for (const { group, calendars } of renderData.groupedSections) {
+            const groupSection = this._listRenderer.createGroupSection(
+                group, calendars, searchTerm,
+                this.selectedCalendarIds, this.allCalendars, this.calendarGroups
+            );
+            this.calendarList.appendChild(groupSection);
+        }
+
+        // Render ungrouped calendars
+        if (renderData.ungroupedCalendars.length > 0) {
+            const ungroupedSection = this._listRenderer.createUngroupedSection(
+                renderData.ungroupedCalendars, searchTerm,
+                this.selectedCalendarIds, this.calendarGroups
+            );
+            this.calendarList.appendChild(ungroupedSection);
+        }
+
+        this._listRenderer.updateSearchUI(searchTerm, this.clearSearchBtn);
+    }
+
+    /**
+     * Prepare render data: filter calendars, compute grouped sections and ungrouped list.
+     * @private
+     * @param {string} searchTerm - Lowercased, trimmed search term
+     * @returns {{ filteredCalendars: Array, groupedSections: Array<{group, calendars}>, ungroupedCalendars: Array }}
+     */
+    _prepareRenderData(searchTerm) {
+        // Apply search filter
         const filteredCalendars = searchTerm
             ? this.allCalendars.filter(calendar =>
                 (calendar.summary || '').toLowerCase().includes(searchTerm))
             : this.allCalendars;
 
-        if (filteredCalendars.length === 0 && searchTerm) {
-            this._listRenderer.showNoSearchResults();
-            return;
-        }
-
-        this._listRenderer.hideEmptyState();
-        this.calendarList.innerHTML = '';
-
-        // Build a set of all calendar IDs in groups
+        // Build lookup map
         const calendarIdToCalendar = new Map();
         for (const cal of this.allCalendars) {
             calendarIdToCalendar.set(cal.id, cal);
@@ -438,7 +459,8 @@ export class CalendarManagementCard extends CardComponent {
 
         const filteredIds = new Set(filteredCalendars.map(c => c.id));
 
-        // Render each group
+        // Compute grouped sections
+        const groupedSections = [];
         for (const group of this.calendarGroups) {
             const groupCalendars = group.calendarIds
                 .map(id => calendarIdToCalendar.get(id))
@@ -447,11 +469,10 @@ export class CalendarManagementCard extends CardComponent {
             // Skip groups with no matching calendars during search
             if (searchTerm && groupCalendars.length === 0) continue;
 
-            const groupSection = this._listRenderer.createGroupSection(group, groupCalendars, searchTerm);
-            this.calendarList.appendChild(groupSection);
+            groupedSections.push({ group, calendars: groupCalendars });
         }
 
-        // Render ungrouped calendars
+        // Compute ungrouped calendars
         const groupedIds = new Set();
         for (const group of this.calendarGroups) {
             for (const id of group.calendarIds) {
@@ -467,12 +488,7 @@ export class CalendarManagementCard extends CardComponent {
                 return (a.summary || '').localeCompare(b.summary || '');
             });
 
-        if (ungroupedCalendars.length > 0) {
-            const ungroupedSection = this._listRenderer.createUngroupedSection(ungroupedCalendars, searchTerm);
-            this.calendarList.appendChild(ungroupedSection);
-        }
-
-        this._listRenderer.updateSearchUI(searchTerm);
+        return { filteredCalendars, groupedSections, ungroupedCalendars };
     }
 
     /**
@@ -520,7 +536,7 @@ export class CalendarManagementCard extends CardComponent {
             this.selectedCalendarIds = previousIds;
             this.render();
             logError('Calendar selection save', error);
-            this._listRenderer.showError(window.getLocalizedMessage('calendarSaveError') || 'Failed to save settings');
+            this._listRenderer.showError(window.getLocalizedMessage('calendarSaveError') || 'Failed to save settings', this.calendarList);
         }
     }
 
