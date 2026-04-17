@@ -9,6 +9,7 @@ import { StorageHelper } from './lib/storage-helper.js';
 import { AlarmManager } from './lib/alarm-manager.js';
 import { GoogleCalendarClient, AuthenticationError } from './services/google-calendar-client.js';
 import { ReminderSyncService } from './services/reminder-sync-service.js';
+import { logError, logWarn } from './lib/utils.js';
 
 // Instantiate services
 const calendarClient = new GoogleCalendarClient();
@@ -17,7 +18,7 @@ const reminderSync = new ReminderSyncService(calendarClient);
 // Side panel configuration - opens when clicking the action toolbar icon
 chrome.sidePanel
     .setPanelBehavior({openPanelOnActionClick: true})
-    .catch((error) => console.error("Side panel setup error:", error));
+    .catch((error) => logError('Side panel setup', error));
 
 // Handler for when the extension is installed
 chrome.runtime.onInstalled.addListener(async () => {
@@ -65,18 +66,18 @@ if (chrome.commands && chrome.commands.onCommand && chrome.commands.onCommand.ad
                     if (activeTab) {
                         chrome.sidePanel.open({ tabId: activeTab.id });
                     } else {
-                        console.error("Active tab not found");
+                        logError('Keyboard shortcut handler', 'Active tab not found');
                     }
                 });
                 break;
 
             default:
-                console.warn("Unknown command:", command);
+                logWarn('Keyboard shortcut handler', `Unknown command: ${command}`);
                 break;
         }
     });
 } else {
-    console.warn("chrome.commands API is not available. Please check the commands configuration in manifest.json.");
+    logWarn('Keyboard shortcut handler', 'chrome.commands API is not available. Please check the commands configuration in manifest.json.');
 }
 
 /**
@@ -106,9 +107,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 .then(events => sendResponse({events, requestId}))
                 .catch(error => {
                     if (error instanceof AuthenticationError) {
-                        console.warn("Event acquisition: auth expired");
+                        logWarn('Event acquisition', 'auth expired');
                     } else {
-                        console.error("Event acquisition error details:", error);
+                        logError('Event acquisition', error);
                     }
                     sendResponse(buildCalendarErrorResponse(error, requestId));
                 });
@@ -133,9 +134,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 .then(calendars => sendResponse({calendars, requestId: reqIdList}))
                 .catch(error => {
                     if (error instanceof AuthenticationError) {
-                        console.warn("Calendar list acquisition: auth expired");
+                        logWarn('Calendar list acquisition', 'auth expired');
                     } else {
-                        console.error("Calendar list acquisition error details:", error);
+                        logError('Calendar list acquisition', error);
                     }
                     sendResponse(buildCalendarErrorResponse(error, reqIdList));
                 });
@@ -148,7 +149,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     sendResponse({authenticated: isAuthenticated});
                 })
                 .catch(error => {
-                    console.warn("Authentication check failed:", error.message);
+                    logWarn('Authentication check', error.message);
                     sendResponse(buildCalendarErrorResponse(error));
                 });
             return true; // Indicates async response
@@ -158,7 +159,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             chrome.identity.getAuthToken({interactive: true}, (token) => {
                 if (chrome.runtime.lastError || !token) {
                     const error = chrome.runtime.lastError || new Error("Authentication failed");
-                    console.error("Google authentication error:", error);
+                    logError('Google authentication', error);
                     sendResponse({ success: false, error: error.message });
                     return;
                 }
@@ -171,7 +172,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                         sendResponse({ success: true });
                     })
                     .catch((error) => {
-                        console.error("Calendar list initialization error:", error);
+                        logError('Calendar list initialization', error);
                         // Still return success as authentication worked
                         sendResponse({ success: true });
                     });
@@ -190,7 +191,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 // Remove the cached token
                 chrome.identity.removeCachedAuthToken({ token: token }, () => {
                     if (chrome.runtime.lastError) {
-                        console.error("Token removal error:", chrome.runtime.lastError);
+                        logError('Token removal', chrome.runtime.lastError);
                         sendResponse({ success: false, error: chrome.runtime.lastError.message });
                         return;
                     }
@@ -217,7 +218,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     sendResponse({ success: true });
                 })
                 .catch(error => {
-                    console.error('Failed to update reminder settings:', error);
+                    logError('Reminder settings update', error);
                     sendResponse({ success: false, error: error.message });
                 });
             return true; // Indicates async response
@@ -247,7 +248,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     await chrome.notifications.create('test_reminder', testNotification);
                     sendResponse({ success: true, message: 'Test notification sent' });
                 } catch (error) {
-                    console.error('Failed to send test notification:', error);
+                    logError('Test notification send', error);
                     sendResponse({ success: false, error: error.message });
                 }
             })();
@@ -279,7 +280,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                         settings: settings
                     });
                 } catch (error) {
-                    console.error('Failed to get alarm debug info:', error);
+                    logError('Alarm debug info', error);
                     sendResponse({ success: false, error: error.message });
                 }
             })();
@@ -292,7 +293,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     sendResponse({ success: true, message: 'Reminder sync completed' });
                 })
                 .catch(error => {
-                    console.error('Failed to force sync reminders:', error);
+                    logError('Force sync reminders', error);
                     sendResponse({ success: false, error: error.message });
                 });
             return true; // Indicates async response
@@ -313,7 +314,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                         sendResponse({ success: true, skipped: false, message: 'Reminder sync completed' });
                     }
                 } catch (error) {
-                    console.error('[Auto Sync] Failed to auto-sync reminders:', error);
+                    logError('Auto sync reminders', error);
                     sendResponse({ success: false, error: error.message });
                 }
             })();
@@ -327,14 +328,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     const updatedEvent = await calendarClient.respondToEvent(calendarId, eventId, rsvpResponse);
                     sendResponse({ success: true, event: updatedEvent });
                 } catch (error) {
-                    console.error('Failed to respond to event:', error);
+                    logError('Event response', error);
                     sendResponse({ success: false, error: error.message });
                 }
             })();
             return true; // Indicates async response
 
         default:
-            console.warn("Unknown action:", request.action);
+            logWarn('Message handler', `Unknown action: ${request.action}`);
             sendResponse({error: "Unknown action"});
             return false; // Synchronous response
     }
@@ -360,7 +361,7 @@ chrome.notifications.onClicked.addListener(async (notificationId) => {
                 }
             });
         } catch (e) {
-            console.error('Failed to handle notification click:', e);
+            logError('Notification click', e);
         } finally {
             chrome.notifications.clear(notificationId);
         }
@@ -397,7 +398,7 @@ chrome.notifications.onButtonClicked.addListener(async (notificationId, buttonIn
                 }
             }
         } catch (e) {
-            console.error('Failed to handle notification button click:', e);
+            logError('Notification button click', e);
         } finally {
             // Clear the notification regardless of which button was clicked
             chrome.notifications.clear(notificationId);

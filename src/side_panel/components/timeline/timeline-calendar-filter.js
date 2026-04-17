@@ -40,14 +40,11 @@ export class TimelineCalendarFilter extends Component {
 
         // Renderer delegate
         this.renderer = new CalendarFilterRenderer({
-            getCalendars: () => this.calendars,
-            getSelectedIds: () => this.selectedIds,
-            getCalendarGroups: () => this.calendarGroups,
-            getSearchTerm: () => this.searchTerm,
-            getMessage: (key) => this.getMessage(key),
             onSearchInput: (value) => {
                 this.searchTerm = value;
-                this.renderer.renderCalendarList();
+                this.renderer.renderCalendarList(
+                    this.calendars, this.selectedIds, this.calendarGroups, this.searchTerm
+                );
             },
             onRefreshClick: () => this._refreshCalendars(),
             onCalendarToggle: (calendarId, checked) => this._handleToggle(calendarId, checked),
@@ -336,7 +333,9 @@ export class TimelineCalendarFilter extends Component {
      * @private
      */
     _renderDropdownContent() {
-        const refs = this.renderer.renderDropdownContent(this.dropdown);
+        const refs = this.renderer.renderDropdownContent(
+            this.dropdown, this.searchTerm, this.calendars, this.selectedIds, this.calendarGroups
+        );
         this.searchInput = refs.searchInput;
         this.refreshBtn = refs.refreshBtn;
         this.calendarList = refs.calendarList;
@@ -383,7 +382,9 @@ export class TimelineCalendarFilter extends Component {
 
         try {
             await saveSelectedCalendars(this.selectedIds);
-            this.renderer.renderCalendarList();
+            this.renderer.renderCalendarList(
+                this.calendars, this.selectedIds, this.calendarGroups, this.searchTerm
+            );
             if (this.onCalendarChange) {
                 const addedIds = this.selectedIds.filter(id => !previousIds.includes(id));
                 const removedIds = previousIds.filter(id => !this.selectedIds.includes(id));
@@ -391,7 +392,9 @@ export class TimelineCalendarFilter extends Component {
             }
         } catch {
             this.selectedIds = previousIds;
-            this.renderer.renderCalendarList();
+            this.renderer.renderCalendarList(
+                this.calendars, this.selectedIds, this.calendarGroups, this.searchTerm
+            );
         }
     }
 
@@ -435,7 +438,9 @@ export class TimelineCalendarFilter extends Component {
         try {
             await saveSelectedCalendars(this.selectedIds);
             // Update group header checkbox states
-            this.renderer.updateGroupCheckboxStates(this.calendarList);
+            this.renderer.updateGroupCheckboxStates(
+                this.calendarList, this.calendars, this.selectedIds, this.calendarGroups
+            );
             if (this.onCalendarChange) {
                 this.onCalendarChange({
                     addedIds: checked ? [calendarId] : [],
@@ -444,7 +449,9 @@ export class TimelineCalendarFilter extends Component {
             }
         } catch {
             this.selectedIds = previousIds;
-            this.renderer.renderCalendarList();
+            this.renderer.renderCalendarList(
+                this.calendars, this.selectedIds, this.calendarGroups, this.searchTerm
+            );
         }
     }
 

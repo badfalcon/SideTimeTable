@@ -72,3 +72,12 @@ export async function reloadSidePanel() {
 export function logError(context, error) {
     console.error(`[${context}] Error:`, error);
 }
+
+/**
+ * Log a warning to the console
+ * @param {string} context - The context where the warning occurred
+ * @param {*} message - The warning message or related data
+ */
+export function logWarn(context, message) {
+    console.warn(`[${context}] Warning:`, message);
+}

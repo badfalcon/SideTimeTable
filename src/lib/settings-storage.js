@@ -2,6 +2,12 @@
  * SideTimeTable - Settings Storage
  *
  * Functions for persisting and retrieving extension settings and calendar selections.
+ *
+ * Enforces domain constraints on top of StorageHelper: `saveSettings()` drops
+ * keys absent from `DEFAULT_SETTINGS`, and `loadSettings()` merges defaults for
+ * missing keys. Prefer these wrappers over direct StorageHelper access when
+ * touching settings or calendar selections (see storage-helper.js for the
+ * wrapper vs. direct usage criteria).
  */
 
 import { StorageHelper } from './storage-helper.js';

@@ -2,6 +2,7 @@ import {
   getContrastColor,
   getFormattedDateFromDate,
   logError,
+  logWarn,
 } from '../../src/lib/utils.js';
 
 import { DEFAULT_SETTINGS } from '../../src/lib/constants.js';
@@ -76,6 +77,18 @@ describe('SPEC: logError', () => {
     const spy = jest.spyOn(console, 'error').mockImplementation();
     logError('TestContext', 'something broke');
     expect(spy).toHaveBeenCalledWith('[TestContext] Error:', 'something broke');
+    spy.mockRestore();
+  });
+});
+
+// ---------------------------------------------------------------
+// SPEC: logWarn — logs to console.warn, does not throw
+// ---------------------------------------------------------------
+describe('SPEC: logWarn', () => {
+  test('logs to console.warn with context', () => {
+    const spy = jest.spyOn(console, 'warn').mockImplementation();
+    logWarn('TestContext', 'something odd');
+    expect(spy).toHaveBeenCalledWith('[TestContext] Warning:', 'something odd');
     spy.mockRestore();
   });
 });
