@@ -85,7 +85,10 @@ export class GoogleEventContentBuilder {
                     }
                     return `${startStr} – ${endStr} (${dayCount} days)`;
                 }
-                return window.getLocalizedMessage('allDay');
+                const locale = navigator.language || 'en';
+                const dateOpts = { year: 'numeric', month: '2-digit', day: '2-digit' };
+                const dateStr = localStart.toLocaleDateString(locale, dateOpts);
+                return `${dateStr} ${window.getLocalizedMessage('allDay')}`;
             }
 
             // For the timed events - use browser locale
