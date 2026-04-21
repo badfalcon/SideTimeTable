@@ -352,12 +352,17 @@ export class GoogleEventContentBuilder {
     }
 
     /**
-     * Remove HTML tags
+     * Remove HTML tags while preserving line breaks from <br> and block elements.
+     * Google Calendar stores rich descriptions as HTML, so raw textContent would
+     * collapse all whitespace and drop newlines.
      * @param {string} html - HTML string
-     * @returns {string} Plain text
+     * @returns {string} Plain text with newline characters preserved
      */
     stripHtml(html) {
         const doc = new DOMParser().parseFromString(html, 'text/html');
-        return doc.body.textContent || '';
+        doc.body.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
+        doc.body.querySelectorAll('p, div, li, tr, h1, h2, h3, h4, h5, h6, blockquote, pre')
+            .forEach(el => el.append('\n'));
+        return (doc.body.textContent || '').replace(/\n{3,}/g, '\n\n').replace(/^\n+|\n+$/g, '');
     }
 }
