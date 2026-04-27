@@ -4,6 +4,7 @@
 import { ModalComponent } from './modal-component.js';
 import { sendMessage } from '../../../lib/chrome-messaging.js';
 import { GoogleEventContentBuilder } from './google-event-content-builder.js';
+import { DeclineRecurringDialog } from './decline-recurring-dialog.js';
 
 export class GoogleEventModal extends ModalComponent {
     constructor(options = {}) {
@@ -31,6 +32,9 @@ export class GoogleEventModal extends ModalComponent {
 
         // Content builder for DOM construction
         this._contentBuilder = new GoogleEventContentBuilder();
+
+        // Confirmation dialog for declining a recurring event instance
+        this._declineRecurringDialog = new DeclineRecurringDialog();
     }
 
     createContent() {
@@ -243,7 +247,15 @@ export class GoogleEventModal extends ModalComponent {
             button.appendChild(btnText);
 
             button.addEventListener('click', () => {
-                this._sendRsvpResponse(event, btn.response, btnGroup);
+                if (btn.response === 'declined' && event.recurringEventId) {
+                    this._declineRecurringDialog.show(event, {
+                        onConfirm: () => {
+                            this._sendRsvpResponse(event, btn.response, btnGroup);
+                        }
+                    });
+                } else {
+                    this._sendRsvpResponse(event, btn.response, btnGroup);
+                }
             });
 
             btnGroup.appendChild(button);
@@ -358,6 +370,7 @@ export class GoogleEventModal extends ModalComponent {
      * Cleanup when closing the modal
      */
     hide() {
+        this._declineRecurringDialog.remove();
         super.hide();
         this.currentEvent = null;
     }

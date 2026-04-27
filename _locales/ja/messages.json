@@ -826,6 +826,18 @@
     "message": "すべての予定を削除",
     "description": "すべての予定を削除ボタン"
   },
+  "declineRecurringTitle": {
+    "message": "このイベントを不参加にしますか？",
+    "description": "繰り返しイベント不参加確認ダイアログのタイトル"
+  },
+  "declineRecurringMessage": {
+    "message": "この回のみ不参加になります。今後の予定には影響しません。",
+    "description": "繰り返しイベントの不参加操作のスコープを明示するメッセージ"
+  },
+  "declineThisOccurrence": {
+    "message": "この回のみ不参加",
+    "description": "繰り返しイベントの単一インスタンスを不参加にする確認ボタン"
+  },
   "endDateMustBeLater": {
     "message": "終了日は開始日以降に設定してください",
     "description": "繰り返し終了日が開始日より前の場合のエラー"
