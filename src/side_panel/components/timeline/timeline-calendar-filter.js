@@ -362,14 +362,23 @@ export class TimelineCalendarFilter extends Component {
                 }
             }
         } else {
-            // Find calendar IDs that are in other groups and still selected
+            // Preserve calendars that belong to ANOTHER fully-checked group.
+            // A group is considered fully checked when every one of its valid
+            // members is currently selected. Without this filter, calendars
+            // that happen to be members of an unrelated, only partially-
+            // selected group would leak through when their primary group is
+            // unchecked.
+            const validCalIds = new Set(this.calendars.map(c => c.id));
+            const selectedSet = new Set(this.selectedIds);
             const otherGroupIds = new Set();
             for (const g of this.calendarGroups) {
                 if (g.id === group.id) continue;
-                for (const id of g.calendarIds) {
-                    if (this.selectedIds.includes(id)) {
-                        otherGroupIds.add(id);
-                    }
+                const memberIds = g.calendarIds.filter(id => validCalIds.has(id));
+                if (memberIds.length === 0) continue;
+                const fullyChecked = memberIds.every(id => selectedSet.has(id));
+                if (!fullyChecked) continue;
+                for (const id of memberIds) {
+                    otherGroupIds.add(id);
                 }
             }
 
