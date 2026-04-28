@@ -7,6 +7,7 @@
 
 import { StorageHelper } from './lib/storage-helper.js';
 import { AlarmManager } from './lib/alarm-manager.js';
+import { selectNotificationUrl } from './lib/conference-url-utils.js';
 import { GoogleCalendarClient, AuthenticationError } from './services/google-calendar-client.js';
 import { ReminderSyncService } from './services/reminder-sync-service.js';
 
@@ -377,7 +378,7 @@ chrome.notifications.onButtonClicked.addListener(async (notificationId, buttonIn
                 // Primary button: If Google event with Meet link, open it; otherwise open SideTimeTable
                 if (alarmName.startsWith(AlarmManager.GOOGLE_ALARM_PREFIX)) {
                     const eventData = await AlarmManager.getGoogleEventData(alarmName);
-                    const urlToOpen = eventData?.hangoutLink || eventData?.htmlLink;
+                    const urlToOpen = selectNotificationUrl(eventData);
                     if (urlToOpen) {
                         await chrome.tabs.create({ url: urlToOpen, active: true });
                     } else {
