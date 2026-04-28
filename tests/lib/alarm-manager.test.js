@@ -200,17 +200,20 @@ describe('AlarmManager', () => {
 
     // ---------------------------------------------------------------
     // SPEC: Notification Content
-    // - hangoutLink → "Join Meet" button
-    // - no hangoutLink → "Open SideTimeTable" button
+    // - conferenceType 'meet' → "Join Meet" button
+    // - conferenceType 'video' → "Join video conference" button
+    // - no conference link → "Open SideTimeTable" button
+    // - legacy data with hangoutLink → treated as 'meet'
     // - requireInteraction: true
     // - icon fallback on failure
     // - no notification for missing event data
     // ---------------------------------------------------------------
     describe('SPEC: notification content', () => {
-        test('event with hangoutLink → first button is Join Meet', async () => {
+        test('event with conferenceType=meet → first button is Join Meet', async () => {
             const data = {
                 id: 'g1', title: 'Sync', startTime: '14:00',
-                hangoutLink: 'https://meet.google.com/abc'
+                conferenceUrl: 'https://meet.google.com/abc',
+                conferenceType: 'meet'
             };
             chrome.storage.local.set({
                 'googleEventData_google_event_reminder_2025-03-15_g1': data
@@ -219,18 +222,49 @@ describe('AlarmManager', () => {
             await AlarmManager.showReminderNotification('google_event_reminder_2025-03-15_g1');
 
             const opts = chrome.notifications.create.mock.calls[0][1];
-            expect(opts.buttons[0].title).toMatch(/Join.*Meet|Meet/i);
+            expect(opts.buttons[0].title).toMatch(/joinMeet|Join.*Meet/i);
             expect(opts.requireInteraction).toBe(true);
         });
 
-        test('event without hangoutLink → first button is Open SideTimeTable', async () => {
+        test('event with conferenceType=video → first button is Join video conference', async () => {
+            const data = {
+                id: 'g2', title: 'Zoom call', startTime: '15:00',
+                conferenceUrl: 'https://us02web.zoom.us/j/12345',
+                conferenceType: 'video'
+            };
+            chrome.storage.local.set({
+                'googleEventData_google_event_reminder_2025-03-15_g2': data
+            }, () => {});
+
+            await AlarmManager.showReminderNotification('google_event_reminder_2025-03-15_g2');
+
+            const opts = chrome.notifications.create.mock.calls[0][1];
+            expect(opts.buttons[0].title).toMatch(/joinVideoConference|Join.*video/i);
+        });
+
+        test('legacy data with hangoutLink only → treated as meet', async () => {
+            const data = {
+                id: 'g3', title: 'Old reminder', startTime: '16:00',
+                hangoutLink: 'https://meet.google.com/legacy'
+            };
+            chrome.storage.local.set({
+                'googleEventData_google_event_reminder_2025-03-15_g3': data
+            }, () => {});
+
+            await AlarmManager.showReminderNotification('google_event_reminder_2025-03-15_g3');
+
+            const opts = chrome.notifications.create.mock.calls[0][1];
+            expect(opts.buttons[0].title).toMatch(/joinMeet|Join.*Meet/i);
+        });
+
+        test('event without conference link → first button is Open SideTimeTable', async () => {
             const event = { id: 'e1', title: 'Meeting', startTime: '11:00' };
             chrome.storage.local.set({ 'localEvents_2025-03-15': [event] }, () => {});
 
             await AlarmManager.showReminderNotification('event_reminder_2025-03-15_e1');
 
             const opts = chrome.notifications.create.mock.calls[0][1];
-            expect(opts.buttons[0].title).toMatch(/Open.*SideTimeTable|SideTimeTable/i);
+            expect(opts.buttons[0].title).toMatch(/openSideTimeTable|Open.*SideTimeTable/i);
         });
 
         test('no notification when event data is missing', async () => {
@@ -256,6 +290,76 @@ describe('AlarmManager', () => {
             // Second call should not have iconUrl
             const secondOpts = chrome.notifications.create.mock.calls[1][1];
             expect(secondOpts.iconUrl).toBeUndefined();
+        });
+    });
+
+    // ---------------------------------------------------------------
+    // SPEC: setGoogleEventReminder stores conference URL/type for notifications
+    // - description-only Zoom URL → conferenceType 'video'
+    // - hangoutLink only → conferenceType 'meet'
+    // - both Zoom in description AND hangoutLink → Zoom wins (video)
+    // - no conference link → both fields null
+    // ---------------------------------------------------------------
+    describe('SPEC: setGoogleEventReminder conference URL extraction', () => {
+        const FUTURE_ISO = '2099-06-15T14:00:00Z';
+        const DATE_STR = '2099-06-15';
+
+        async function readSavedPayload(eventId) {
+            const key = `googleEventData_google_event_reminder_${DATE_STR}_${eventId}`;
+            const stored = await chrome.storage.local.get(key);
+            return stored[key];
+        }
+
+        test('description with Zoom URL → conferenceType=video, conferenceUrl=zoom', async () => {
+            await AlarmManager.setGoogleEventReminder({
+                id: 'g-zoom',
+                summary: 'Zoom call',
+                start: { dateTime: FUTURE_ISO },
+                description: 'Join here: https://us02web.zoom.us/j/9999?pwd=abc'
+            }, DATE_STR, 5);
+
+            const payload = await readSavedPayload('g-zoom');
+            expect(payload.conferenceType).toBe('video');
+            expect(payload.conferenceUrl).toBe('https://us02web.zoom.us/j/9999?pwd=abc');
+        });
+
+        test('hangoutLink only → conferenceType=meet, conferenceUrl=meet', async () => {
+            await AlarmManager.setGoogleEventReminder({
+                id: 'g-meet',
+                summary: 'Meet only',
+                start: { dateTime: FUTURE_ISO },
+                hangoutLink: 'https://meet.google.com/abc-defg-hij'
+            }, DATE_STR, 5);
+
+            const payload = await readSavedPayload('g-meet');
+            expect(payload.conferenceType).toBe('meet');
+            expect(payload.conferenceUrl).toBe('https://meet.google.com/abc-defg-hij');
+        });
+
+        test('both Zoom in description and hangoutLink → Zoom wins', async () => {
+            await AlarmManager.setGoogleEventReminder({
+                id: 'g-both',
+                summary: 'Both links',
+                start: { dateTime: FUTURE_ISO },
+                hangoutLink: 'https://meet.google.com/auto-attached',
+                description: 'Real meeting at https://us02web.zoom.us/j/123'
+            }, DATE_STR, 5);
+
+            const payload = await readSavedPayload('g-both');
+            expect(payload.conferenceType).toBe('video');
+            expect(payload.conferenceUrl).toBe('https://us02web.zoom.us/j/123');
+        });
+
+        test('no conference link → conferenceUrl and conferenceType are null', async () => {
+            await AlarmManager.setGoogleEventReminder({
+                id: 'g-bare',
+                summary: 'No link',
+                start: { dateTime: FUTURE_ISO }
+            }, DATE_STR, 5);
+
+            const payload = await readSavedPayload('g-bare');
+            expect(payload.conferenceType).toBeNull();
+            expect(payload.conferenceUrl).toBeNull();
         });
     });
 
