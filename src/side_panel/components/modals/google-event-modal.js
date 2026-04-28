@@ -4,7 +4,6 @@
 import { ModalComponent } from './modal-component.js';
 import { sendMessage } from '../../../lib/chrome-messaging.js';
 import { GoogleEventContentBuilder } from './google-event-content-builder.js';
-import { DeclineRecurringDialog } from './decline-recurring-dialog.js';
 
 export class GoogleEventModal extends ModalComponent {
     constructor(options = {}) {
@@ -32,9 +31,6 @@ export class GoogleEventModal extends ModalComponent {
 
         // Content builder for DOM construction
         this._contentBuilder = new GoogleEventContentBuilder();
-
-        // Confirmation dialog for declining a recurring event instance
-        this._declineRecurringDialog = new DeclineRecurringDialog();
     }
 
     createContent() {
@@ -222,10 +218,16 @@ export class GoogleEventModal extends ModalComponent {
         const btnGroup = document.createElement('div');
         btnGroup.className = 'google-event-rsvp-buttons';
 
+        const isRecurringInstance = !!event.recurringEventId;
         const buttons = [
             { response: 'accepted', icon: 'fa-check', labelKey: 'rsvpAccept', fallback: 'Accept' },
             { response: 'tentative', icon: 'fa-question', labelKey: 'rsvpTentative', fallback: 'Maybe' },
-            { response: 'declined', icon: 'fa-times', labelKey: 'rsvpDecline', fallback: 'Decline' }
+            {
+                response: 'declined',
+                icon: 'fa-times',
+                labelKey: isRecurringInstance ? 'rsvpDeclineThisOccurrence' : 'rsvpDecline',
+                fallback: isRecurringInstance ? 'Decline (this only)' : 'Decline'
+            }
         ];
 
         buttons.forEach(btn => {
@@ -247,15 +249,7 @@ export class GoogleEventModal extends ModalComponent {
             button.appendChild(btnText);
 
             button.addEventListener('click', () => {
-                if (btn.response === 'declined' && event.recurringEventId) {
-                    this._declineRecurringDialog.show(event, {
-                        onConfirm: () => {
-                            this._sendRsvpResponse(event, btn.response, btnGroup);
-                        }
-                    });
-                } else {
-                    this._sendRsvpResponse(event, btn.response, btnGroup);
-                }
+                this._sendRsvpResponse(event, btn.response, btnGroup);
             });
 
             btnGroup.appendChild(button);
@@ -370,7 +364,6 @@ export class GoogleEventModal extends ModalComponent {
      * Cleanup when closing the modal
      */
     hide() {
-        this._declineRecurringDialog.remove();
         super.hide();
         this.currentEvent = null;
     }

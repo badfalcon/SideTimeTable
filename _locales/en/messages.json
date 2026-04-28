@@ -826,18 +826,6 @@
     "message": "Delete all occurrences",
     "description": "Delete all occurrences button"
   },
-  "declineRecurringTitle": {
-    "message": "Decline this event?",
-    "description": "Title for decline recurring event dialog"
-  },
-  "declineRecurringMessage": {
-    "message": "Only this occurrence will be marked as declined. Future occurrences are not affected.",
-    "description": "Message clarifying scope of decline action on recurring event"
-  },
-  "declineThisOccurrence": {
-    "message": "Decline this occurrence",
-    "description": "Confirm button for declining a single recurring event occurrence"
-  },
   "endDateMustBeLater": {
     "message": "End date must be on or after start date",
     "description": "Error when recurrence end date is before start date"
@@ -1149,6 +1137,10 @@
   "rsvpDecline": {
     "message": "Decline",
     "description": "Decline button for event RSVP"
+  },
+  "rsvpDeclineThisOccurrence": {
+    "message": "Decline (this only)",
+    "description": "Decline button for a single occurrence of a recurring event"
   },
   "rsvpTentative": {
     "message": "Maybe",
