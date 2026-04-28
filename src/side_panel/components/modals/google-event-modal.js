@@ -218,10 +218,16 @@ export class GoogleEventModal extends ModalComponent {
         const btnGroup = document.createElement('div');
         btnGroup.className = 'google-event-rsvp-buttons';
 
+        const isRecurringInstance = !!event.recurringEventId;
         const buttons = [
             { response: 'accepted', icon: 'fa-check', labelKey: 'rsvpAccept', fallback: 'Accept' },
             { response: 'tentative', icon: 'fa-question', labelKey: 'rsvpTentative', fallback: 'Maybe' },
-            { response: 'declined', icon: 'fa-times', labelKey: 'rsvpDecline', fallback: 'Decline' }
+            {
+                response: 'declined',
+                icon: 'fa-times',
+                labelKey: isRecurringInstance ? 'rsvpDeclineThisOccurrence' : 'rsvpDecline',
+                fallback: isRecurringInstance ? 'Decline (this only)' : 'Decline'
+            }
         ];
 
         buttons.forEach(btn => {

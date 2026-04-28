@@ -1138,6 +1138,10 @@
     "message": "Decline",
     "description": "Decline button for event RSVP"
   },
+  "rsvpDeclineThisOccurrence": {
+    "message": "Decline (this only)",
+    "description": "Decline button for a single occurrence of a recurring event"
+  },
   "rsvpTentative": {
     "message": "Maybe",
     "description": "Tentative/Maybe button for event RSVP"

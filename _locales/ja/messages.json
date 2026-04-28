@@ -1138,6 +1138,10 @@
     "message": "不参加",
     "description": "出欠回答の不参加ボタン"
   },
+  "rsvpDeclineThisOccurrence": {
+    "message": "不参加（今回のみ）",
+    "description": "繰り返しイベントの単一インスタンスを不参加にするボタン"
+  },
   "rsvpTentative": {
     "message": "未定",
     "description": "出欠回答の未定ボタン"
