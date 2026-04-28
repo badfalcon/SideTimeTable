@@ -170,25 +170,8 @@ export class GoogleEventContentBuilder {
     setMeetInfo(meetElement, event) {
         meetElement.innerHTML = '';
 
-        // Search for Google Meet URL
-        const meetUrl = extractMeetUrl(event);
-
-        if (meetUrl) {
-            const icon = document.createElement('i');
-            icon.className = 'fas fa-video me-1';
-
-            const link = document.createElement('a');
-            link.href = meetUrl;
-            link.target = '_blank';
-            link.setAttribute('data-localize', '__MSG_joinGoogleMeet__');
-            link.textContent = window.getLocalizedMessage('joinGoogleMeet');
-            link.style.cssText = 'color: var(--side-calendar-link-color); text-decoration: none;';
-
-            meetElement.appendChild(icon);
-            meetElement.appendChild(link);
-        }
-
-        // Search for the other video conference links - render alongside Meet when both exist
+        // Render non-Meet video conference link first to match the notification button priority
+        // (a Zoom/Teams/Webex URL pasted in the description is treated as the user's intended room).
         const otherVideoUrl = extractVideoUrl(event);
         if (otherVideoUrl) {
             const icon = document.createElement('i');
@@ -199,6 +182,22 @@ export class GoogleEventContentBuilder {
             link.target = '_blank';
             link.setAttribute('data-localize', '__MSG_joinVideoConference__');
             link.textContent = window.getLocalizedMessage('joinVideoConference');
+            link.style.cssText = 'color: var(--side-calendar-link-color); text-decoration: none;';
+
+            meetElement.appendChild(icon);
+            meetElement.appendChild(link);
+        }
+
+        const meetUrl = extractMeetUrl(event);
+        if (meetUrl) {
+            const icon = document.createElement('i');
+            icon.className = 'fas fa-video me-1';
+
+            const link = document.createElement('a');
+            link.href = meetUrl;
+            link.target = '_blank';
+            link.setAttribute('data-localize', '__MSG_joinGoogleMeet__');
+            link.textContent = window.getLocalizedMessage('joinGoogleMeet');
             link.style.cssText = 'color: var(--side-calendar-link-color); text-decoration: none;';
 
             meetElement.appendChild(icon);

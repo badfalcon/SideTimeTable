@@ -81,6 +81,37 @@ describe('extractVideoUrl', () => {
         expect(extractVideoUrl(event)).toBe('https://zoom.us/j/AAA');
     });
 
+    test('strips trailing sentence punctuation', () => {
+        expect(extractVideoUrl({ description: 'Use https://zoom.us/j/123.' }))
+            .toBe('https://zoom.us/j/123');
+        expect(extractVideoUrl({ description: 'See https://zoom.us/j/456, and reply.' }))
+            .toBe('https://zoom.us/j/456');
+        expect(extractVideoUrl({ description: 'リンク: https://zoom.us/j/789。' }))
+            .toBe('https://zoom.us/j/789');
+        expect(extractVideoUrl({ description: 'click https://zoom.us/j/abc!' }))
+            .toBe('https://zoom.us/j/abc');
+        expect(extractVideoUrl({ description: 'try https://zoom.us/j/qq?' }))
+            .toBe('https://zoom.us/j/qq');
+        expect(extractVideoUrl({ description: 'see https://zoom.us/j/sc;' }))
+            .toBe('https://zoom.us/j/sc');
+        expect(extractVideoUrl({ description: 'リンク https://zoom.us/j/jp、続きあり' }))
+            .toBe('https://zoom.us/j/jp');
+    });
+
+    test('decodes numeric HTML entities', () => {
+        expect(extractVideoUrl({ description: 'https://zoom.us/j/1?pwd=a&#38;b' }))
+            .toBe('https://zoom.us/j/1?pwd=a&b');
+        expect(extractVideoUrl({ description: 'https://zoom.us/j/1?pwd=a&#x26;b' }))
+            .toBe('https://zoom.us/j/1?pwd=a&b');
+        expect(extractVideoUrl({ description: 'https://zoom.us/j/1?pwd=a&#X26;b' }))
+            .toBe('https://zoom.us/j/1?pwd=a&b');
+    });
+
+    test('multi-line description with URL on its own line', () => {
+        const event = { description: 'Agenda:\nhttps://zoom.us/j/777\nSee you there' };
+        expect(extractVideoUrl(event)).toBe('https://zoom.us/j/777');
+    });
+
     test('does not falsely match zoom.usa.example.com', () => {
         // The slash after zoom.us in the regex prevents matching subdomains containing zoom.usa
         expect(extractVideoUrl({ description: 'https://zoom.usa.example.com/foo' })).toBeNull();
