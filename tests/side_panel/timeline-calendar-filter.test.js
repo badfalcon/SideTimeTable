@@ -65,7 +65,7 @@ describe('TimelineCalendarFilter._handleGroupToggle', () => {
 
     await filter._handleGroupToggle(GROUP_A, [], true);
 
-    expect(filter.selectedIds.sort()).toEqual(['cal-x', 'cal-y']);
+    expect([...filter.selectedIds].sort()).toEqual(['cal-x', 'cal-y']);
     expect(onCalendarChange).toHaveBeenCalledWith({
       addedIds: ['cal-x', 'cal-y'],
       removedIds: [],
@@ -93,7 +93,7 @@ describe('TimelineCalendarFilter._handleGroupToggle', () => {
 
     await filter._handleGroupToggle(GROUP_A, [], false);
 
-    expect(filter.selectedIds.sort()).toEqual(['cal-y', 'cal-z']);
+    expect([...filter.selectedIds].sort()).toEqual(['cal-y', 'cal-z']);
     expect(onCalendarChange).toHaveBeenCalledWith({
       addedIds: [],
       removedIds: ['cal-x'],
