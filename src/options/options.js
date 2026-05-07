@@ -10,7 +10,7 @@ import { loadSettings, saveSettings } from '../lib/settings-storage.js';
 import { sendMessage } from '../lib/chrome-messaging.js';
 import { getThemeById, resolveThemeColors } from '../lib/color-themes.js';
 import { StorageHelper } from '../lib/storage-helper.js';
-import { RELEASE_NOTES, compareVersions } from '../lib/release-notes.js';
+import { findPreviousReleaseVersion } from '../lib/release-notes.js';
 import { isDemoMode, getDemoOptionsSettings, getDemoCalendars, getDemoCalendarGroups, DEMO_BUILD } from '../lib/demo-data.js';
 import {
     ComponentManager,
@@ -495,9 +495,7 @@ class OptionsPageManager {
             // as already-seen for the current version and silently does nothing).
             if (!wasEnabled && willEnable) {
                 const currentVersion = chrome.runtime.getManifest().version;
-                const previousVersion = RELEASE_NOTES
-                    .map(entry => entry.version)
-                    .find(v => compareVersions(v, currentVersion) < 0);
+                const previousVersion = findPreviousReleaseVersion(currentVersion);
                 if (previousVersion) {
                     await StorageHelper.set({ lastSeenVersion: previousVersion });
                 }
