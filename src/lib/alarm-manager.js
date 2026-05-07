@@ -3,6 +3,7 @@
  */
 import { STORAGE_KEYS } from './constants.js';
 import { getRecurringEventsForDate } from './event-storage.js';
+import { extractMeetUrl, extractVideoUrl } from './conference-url-utils.js';
 
 export class AlarmManager {
     static ALARM_PREFIX = 'event_reminder_';
@@ -151,8 +152,22 @@ export class AlarmManager {
             // Create the notification
             const notificationId = `reminder_${alarmName}`;
 
-            // Decide buttons dynamically (Join Meet if a Meet link exists)
-            const hasMeetLink = !!(eventData && eventData.hangoutLink);
+            // Decide the primary button label from the conference type.
+            // Legacy compatibility: pre-upgrade reminder data only has `hangoutLink` and no
+            // `conferenceType`, so synthesize 'meet' in that case.
+            let conferenceType = eventData.conferenceType;
+            if (!conferenceType && eventData.hangoutLink) {
+                conferenceType = 'meet';
+            }
+
+            let primaryLabel;
+            if (conferenceType === 'meet') {
+                primaryLabel = chrome.i18n.getMessage('joinMeet') || 'Join Meet';
+            } else if (conferenceType === 'video') {
+                primaryLabel = chrome.i18n.getMessage('joinVideoConference') || 'Join video conference';
+            } else {
+                primaryLabel = chrome.i18n.getMessage('openSideTimeTable') || 'Open SideTimeTable';
+            }
 
             // Create the notification with a fallback for icon issues
             const notificationOptions = {
@@ -160,15 +175,10 @@ export class AlarmManager {
                 title: chrome.i18n.getMessage('eventReminder') || 'Event Reminder',
                 message: chrome.i18n.getMessage('startsInMinutes', [eventData.title, reminderMinutes.toString(), eventData.startTime])
                     || `"${eventData.title}" starts in ${reminderMinutes} minutes (${eventData.startTime})`,
-                buttons: hasMeetLink
-                    ? [
-                        { title: chrome.i18n.getMessage('joinMeet') || 'Join Meet' },
-                        { title: chrome.i18n.getMessage('dismissNotification') || 'Dismiss' }
-                    ]
-                    : [
-                        { title: chrome.i18n.getMessage('openSideTimeTable') || 'Open SideTimeTable' },
-                        { title: chrome.i18n.getMessage('dismissNotification') || 'Dismiss' }
-                    ],
+                buttons: [
+                    { title: primaryLabel },
+                    { title: chrome.i18n.getMessage('dismissNotification') || 'Dismiss' }
+                ],
                 requireInteraction: true
             };
 
@@ -291,7 +301,13 @@ export class AlarmManager {
                 when: reminderTime
             });
 
-            // Store the event data for later retrieval
+            // Store the event data for later retrieval. Prefer non-Meet conference URLs
+            // (Zoom/Teams/Webex pasted into description) over auto-attached hangoutLink.
+            const videoUrl = extractVideoUrl(event);
+            const meetUrl = extractMeetUrl(event);
+            const conferenceUrl = videoUrl || meetUrl || null;
+            const conferenceType = videoUrl ? 'video' : (meetUrl ? 'meet' : null);
+
             const storageKey = `googleEventData_${alarmName}`;
             await chrome.storage.local.set({
                 [storageKey]: {
@@ -300,8 +316,8 @@ export class AlarmManager {
                     startTime: this.formatTimeFromDateTime(event.start.dateTime),
                     dateStr: dateStr,
                     reminderMinutes: reminderMinutes,
-                    // Links for quick navigation (if available)
-                    hangoutLink: event.hangoutLink || null,
+                    conferenceUrl: conferenceUrl,
+                    conferenceType: conferenceType,
                     htmlLink: event.htmlLink || null
                 }
             });

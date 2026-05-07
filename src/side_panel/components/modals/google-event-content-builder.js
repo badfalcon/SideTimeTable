@@ -4,6 +4,8 @@
  * Extracts DOM-building logic from GoogleEventModal into a standalone class.
  * Methods receive DOM elements and event data as parameters, mutating the DOM directly.
  */
+import { extractMeetUrl, extractVideoUrl } from '../../../lib/conference-url-utils.js';
+
 export class GoogleEventContentBuilder {
     /**
      * Set calendar information
@@ -168,9 +170,25 @@ export class GoogleEventContentBuilder {
     setMeetInfo(meetElement, event) {
         meetElement.innerHTML = '';
 
-        // Search for Google Meet URL
-        const meetUrl = this.extractMeetUrl(event);
+        // Render non-Meet video conference link first to match the notification button priority
+        // (a Zoom/Teams/Webex URL pasted in the description is treated as the user's intended room).
+        const otherVideoUrl = extractVideoUrl(event);
+        if (otherVideoUrl) {
+            const icon = document.createElement('i');
+            icon.className = 'fas fa-video me-1';
 
+            const link = document.createElement('a');
+            link.href = otherVideoUrl;
+            link.target = '_blank';
+            link.setAttribute('data-localize', '__MSG_joinVideoConference__');
+            link.textContent = window.getLocalizedMessage('joinVideoConference');
+            link.style.cssText = 'color: var(--side-calendar-link-color); text-decoration: none;';
+
+            meetElement.appendChild(icon);
+            meetElement.appendChild(link);
+        }
+
+        const meetUrl = extractMeetUrl(event);
         if (meetUrl) {
             const icon = document.createElement('i');
             icon.className = 'fas fa-video me-1';
@@ -180,23 +198,6 @@ export class GoogleEventContentBuilder {
             link.target = '_blank';
             link.setAttribute('data-localize', '__MSG_joinGoogleMeet__');
             link.textContent = window.getLocalizedMessage('joinGoogleMeet');
-            link.style.cssText = 'color: var(--side-calendar-link-color); text-decoration: none;';
-
-            meetElement.appendChild(icon);
-            meetElement.appendChild(link);
-        }
-
-        // Search for the other video conference links
-        const otherVideoUrl = this.extractVideoUrl(event);
-        if (otherVideoUrl && !meetUrl) {
-            const icon = document.createElement('i');
-            icon.className = 'fas fa-video me-1';
-
-            const link = document.createElement('a');
-            link.href = otherVideoUrl;
-            link.target = '_blank';
-            link.setAttribute('data-localize', '__MSG_joinVideoConference__');
-            link.textContent = window.getLocalizedMessage('joinVideoConference');
             link.style.cssText = 'color: var(--side-calendar-link-color); text-decoration: none;';
 
             meetElement.appendChild(icon);
@@ -312,58 +313,6 @@ export class GoogleEventContentBuilder {
             attendeesElement.appendChild(icon);
             attendeesElement.appendChild(container);
         }
-    }
-
-    /**
-     * Extract Google Meet URL
-     * @param {Object} event - Google event data
-     * @returns {string|null} Meet URL or null
-     */
-    extractMeetUrl(event) {
-        const sources = [
-            event.hangoutLink,
-            event.conferenceData?.entryPoints?.find(ep => ep.entryPointType === 'video')?.uri,
-            event.description,
-            event.location
-        ].filter(Boolean);
-
-        for (const source of sources) {
-            const meetMatch = source.match(/https:\/\/meet\.google\.com\/[a-z-]+/i);
-            if (meetMatch) {
-                return meetMatch[0];
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Extract other video conference URLs
-     * @param {Object} event - Google event data
-     * @returns {string|null} Video URL or null
-     */
-    extractVideoUrl(event) {
-        const sources = [
-            event.description,
-            event.location
-        ].filter(Boolean);
-
-        const videoPatterns = [
-            /https:\/\/.*zoom\.us\/[^\s]+/i,
-            /https:\/\/.*teams\.microsoft\.com\/[^\s]+/i,
-            /https:\/\/.*webex\.com\/[^\s]+/i
-        ];
-
-        for (const source of sources) {
-            for (const pattern of videoPatterns) {
-                const match = source.match(pattern);
-                if (match) {
-                    return match[0];
-                }
-            }
-        }
-
-        return null;
     }
 
     /**
