@@ -5,6 +5,7 @@ import { ModalComponent } from './modal-component.js';
 import { RELEASE_NOTES, getUnseenReleaseNotes } from '../../../lib/release-notes.js';
 import { StorageHelper } from '../../../lib/storage-helper.js';
 import { saveSettings } from '../../../lib/settings-storage.js';
+import { logError } from '../../../lib/utils.js';
 
 export class WhatsNewModal extends ModalComponent {
     constructor(options = {}) {
@@ -62,15 +63,7 @@ export class WhatsNewModal extends ModalComponent {
         content.appendChild(this.confirmButton);
 
         // Event listeners
-        this.addEventListener(this.confirmButton, 'click', async () => {
-            if (this.dontShowAgainCheckbox?.checked) {
-                try {
-                    await saveSettings({ whatsNewAutoShow: false });
-                } catch (error) {
-                    console.warn('Failed to save whatsNewAutoShow:', error);
-                }
-            }
-            this._markAsSeen();
+        this.addEventListener(this.confirmButton, 'click', () => {
             this.hide();
         });
 
@@ -195,10 +188,19 @@ export class WhatsNewModal extends ModalComponent {
     }
 
     /**
-     * Override hide to also mark as seen
+     * Override hide to persist the "don't show again" choice (if any) and mark the
+     * version as seen. Honors all dismiss paths (confirm button, backdrop, ESC).
+     * Calls super.hide() synchronously first so the modal flips to hidden before
+     * any async writes — this prevents repeated ESC/backdrop events from re-entering.
      */
     hide() {
-        this._markAsSeen();
+        const shouldDisableAutoShow = this.dontShowAgainCheckbox?.checked === true;
         super.hide();
+        if (shouldDisableAutoShow) {
+            saveSettings({ whatsNewAutoShow: false }).catch(error => {
+                logError("What's New auto-show save", error);
+            });
+        }
+        this._markAsSeen();
     }
 }

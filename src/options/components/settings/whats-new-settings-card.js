@@ -82,7 +82,7 @@ export class WhatsNewSettingsCard extends CardComponent {
 
     getSettings() {
         return {
-            whatsNewAutoShow: this.autoShowCheckbox?.checked ?? true
+            whatsNewAutoShow: this.autoShowCheckbox ? this.autoShowCheckbox.checked : true
         };
     }
 

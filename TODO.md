@@ -12,6 +12,7 @@
 - [ ] `current-time-line-manager.js` のテスト（DOM操作が多く jsdom 環境が必要）
 - [ ] `demo-data.js`（実体）のテスト（スタブ版はカバー済み、実体はDOM依存あり）
 - [ ] UIコンポーネント（options/、side_panel/components/）のテスト（DOM・コンポーネントライフサイクルのモックが必要）
+- [ ] `OnboardingService.checkForUpdateNotification()` のテスト（`whatsNewAutoShow=false` 時に `lastSeenVersion` だけ進める分岐の検証含む。`StorageHelper`/`chrome.runtime.getManifest` のモックが必要）
 
 ## リファクタリング（既存コード）
 

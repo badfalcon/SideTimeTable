@@ -239,7 +239,7 @@ class OptionsPageManager {
             // Apply thin scrollbar to options page
             document.body.classList.toggle('thin-scrollbar', !!settings.thinScrollbar);
 
-            // Load the What's New auto-show setting
+            // Load the What's New auto-show setting (default true; demo settings omit this key)
             this.whatsNewSettingsCard.updateSettings({
                 whatsNewAutoShow: settings.whatsNewAutoShow !== false
             });
