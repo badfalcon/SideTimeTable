@@ -766,6 +766,18 @@ body {
     transition: background-color 0.15s, border-color 0.15s, color 0.15s;
 }
 
+.google-event-rsvp-btn-text {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1.15;
+}
+
+.google-event-rsvp-btn-text-sub {
+    font-size: 0.85em;
+    opacity: 0.85;
+}
+
 .google-event-rsvp-btn:hover {
     background-color: var(--side-calendar-modal-btn-hover-bg);
     border-color: var(--side-calendar-modal-btn-hover-border);
