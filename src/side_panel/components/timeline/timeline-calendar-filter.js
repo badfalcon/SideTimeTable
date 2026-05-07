@@ -362,14 +362,20 @@ export class TimelineCalendarFilter extends Component {
                 }
             }
         } else {
-            // Find calendar IDs that are in other groups and still selected
+            // Only preserve calendars whose sibling group is *fully* checked.
+            // A merely "selected" sibling member is not enough: it may itself
+            // be selected only via the group we are unchecking now.
+            const validCalIds = new Set(this.calendars.map(c => c.id));
+            const selectedSet = new Set(this.selectedIds);
             const otherGroupIds = new Set();
             for (const g of this.calendarGroups) {
                 if (g.id === group.id) continue;
-                for (const id of g.calendarIds) {
-                    if (this.selectedIds.includes(id)) {
-                        otherGroupIds.add(id);
-                    }
+                const memberIds = g.calendarIds.filter(id => validCalIds.has(id));
+                if (memberIds.length === 0) continue;
+                const fullyChecked = memberIds.every(id => selectedSet.has(id));
+                if (!fullyChecked) continue;
+                for (const id of memberIds) {
+                    otherGroupIds.add(id);
                 }
             }
 
