@@ -6,6 +6,7 @@
  */
 
 import { StorageHelper } from '../../lib/storage-helper.js';
+import { findPreviousReleaseVersion } from '../../lib/release-notes.js';
 
 export class OnboardingService {
 
@@ -73,17 +74,40 @@ export class OnboardingService {
     async checkForUpdateNotification(whatsNewModal) {
         try {
             const currentVersion = chrome.runtime.getManifest().version;
-            const data = await StorageHelper.get(['lastSeenVersion'], {});
+            const data = await StorageHelper.get(
+                ['lastSeenVersion', 'whatsNewAutoShow', 'initialSetupCompleted'],
+                { whatsNewAutoShow: true }
+            );
 
-            if (!data.lastSeenVersion) {
-                // First install - store current version without showing modal
+            // Brand-new install (setup not yet completed): record version silently,
+            // never show the modal — the user is going through the setup flow instead.
+            if (!data.initialSetupCompleted) {
+                if (!data.lastSeenVersion) {
+                    await StorageHelper.set({ lastSeenVersion: currentVersion });
+                }
+                return;
+            }
+
+            if (data.lastSeenVersion === currentVersion) {
+                return;
+            }
+
+            if (data.whatsNewAutoShow === false) {
+                // User opted out of auto-popup; advance the version pointer silently
                 await StorageHelper.set({ lastSeenVersion: currentVersion });
                 return;
             }
 
-            if (data.lastSeenVersion !== currentVersion) {
-                whatsNewModal.showForVersion(data.lastSeenVersion);
+            // Established user. If lastSeenVersion is missing (e.g., cleared via
+            // DevTools for testing, or a legacy install predating this field),
+            // fall back to the previous release so the current version's notes show.
+            const lastSeenVersion = data.lastSeenVersion || findPreviousReleaseVersion(currentVersion);
+            if (!lastSeenVersion) {
+                await StorageHelper.set({ lastSeenVersion: currentVersion });
+                return;
             }
+
+            whatsNewModal.showForVersion(lastSeenVersion);
         } catch (error) {
             console.warn('Failed to check for update notification:', error);
         }

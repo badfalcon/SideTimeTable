@@ -846,6 +846,26 @@
     "message": "更新情報",
     "description": "右クリックメニューのWhat's New項目"
   },
+  "whatsNewDontShowAgain": {
+    "message": "今後の更新時に表示しない",
+    "description": "What's Newモーダル内で、今後のバージョンアップ時に自動表示を抑止するチェックボックスのラベル"
+  },
+  "whatsNewSettings": {
+    "message": "更新通知",
+    "description": "オプションページのWhat's New自動表示設定カードのタイトル"
+  },
+  "whatsNewSettingsDescription": {
+    "message": "バージョン更新時に「更新情報」モーダルを自動表示するかを設定します。",
+    "description": "オプションページのWhat's New自動表示設定カードのサブタイトル"
+  },
+  "whatsNewAutoShowLabel": {
+    "message": "更新時に「更新情報」を表示する",
+    "description": "バージョン更新時にWhat's Newモーダルを自動表示するトグルのラベル"
+  },
+  "whatsNewAutoShowHelp": {
+    "message": "有効にすると、拡張機能の更新後に新機能のサマリーが自動で表示されます。",
+    "description": "What's New自動表示トグルの補足説明"
+  },
   "changelogTitle": {
     "message": "変更履歴",
     "description": "変更履歴ページのタイトル"

@@ -1018,6 +1018,27 @@ body {
     margin: 12px 0;
 }
 
+.whats-new-dont-show-again {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 12px 0;
+    padding-left: 0;
+    color: inherit;
+}
+
+.whats-new-dont-show-again .form-check-input {
+    float: none;
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.whats-new-dont-show-again .form-check-label {
+    color: inherit;
+    font-size: 0.9em;
+    margin: 0;
+}
+
 .whats-new-confirm-btn {
     display: block;
     width: 100%;
