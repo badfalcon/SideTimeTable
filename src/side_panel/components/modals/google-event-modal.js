@@ -218,6 +218,7 @@ export class GoogleEventModal extends ModalComponent {
         const btnGroup = document.createElement('div');
         btnGroup.className = 'google-event-rsvp-buttons';
 
+        const isRecurringInstance = !!event.recurringEventId;
         const buttons = [
             { response: 'accepted', icon: 'fa-check', labelKey: 'rsvpAccept', fallback: 'Accept' },
             { response: 'tentative', icon: 'fa-question', labelKey: 'rsvpTentative', fallback: 'Maybe' },
@@ -238,8 +239,21 @@ export class GoogleEventModal extends ModalComponent {
             button.appendChild(btnIcon);
 
             const btnText = document.createElement('span');
-            btnText.setAttribute('data-localize', `__MSG_${btn.labelKey}__`);
-            btnText.textContent = window.getLocalizedMessage(btn.labelKey) || btn.fallback;
+            btnText.className = 'google-event-rsvp-btn-text';
+
+            const btnTextMain = document.createElement('span');
+            btnTextMain.setAttribute('data-localize', `__MSG_${btn.labelKey}__`);
+            btnTextMain.textContent = window.getLocalizedMessage(btn.labelKey) || btn.fallback;
+            btnText.appendChild(btnTextMain);
+
+            if (btn.response === 'declined' && isRecurringInstance) {
+                const btnTextSub = document.createElement('span');
+                btnTextSub.className = 'google-event-rsvp-btn-text-sub';
+                btnTextSub.setAttribute('data-localize', '__MSG_rsvpDeclineScope__');
+                btnTextSub.textContent = window.getLocalizedMessage('rsvpDeclineScope') || '(this only)';
+                btnText.appendChild(btnTextSub);
+            }
+
             button.appendChild(btnText);
 
             button.addEventListener('click', () => {

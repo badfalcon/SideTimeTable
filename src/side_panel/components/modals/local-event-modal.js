@@ -198,7 +198,7 @@ export class LocalEventModal extends ModalComponent {
             icon.className = 'fas fa-clock';
 
             const text = document.createElement('span');
-            text.textContent = this._formatViewTime(event.startTime, event.endTime);
+            text.textContent = this._formatViewTime(event.startTime, event.endTime, this._getDisplayDate(event));
 
             this.viewTimeElement.appendChild(icon);
             this.viewTimeElement.appendChild(text);
@@ -260,26 +260,41 @@ export class LocalEventModal extends ModalComponent {
     }
 
     /**
+     * Resolve the display date for the event (recurring instance date or current panel date)
+     * @private
+     */
+    _getDisplayDate(event) {
+        if (event?.instanceDate) {
+            return new Date(event.instanceDate + 'T00:00:00');
+        }
+        if (this._getCurrentDate) {
+            return this._getCurrentDate();
+        }
+        return new Date();
+    }
+
+    /**
      * Format time for view mode display (locale-aware)
      * @private
      */
-    _formatViewTime(startTime, endTime) {
+    _formatViewTime(startTime, endTime, displayDate = new Date()) {
         try {
             const locale = navigator.language || 'en';
-            const today = new Date();
             const timeOptions = { hour: '2-digit', minute: '2-digit' };
+            const dateOptions = { year: 'numeric', month: '2-digit', day: '2-digit' };
 
             const [sh, sm] = startTime.split(':').map(Number);
             const [eh, em] = endTime.split(':').map(Number);
 
-            const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), sh, sm);
-            const endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), eh, em);
+            const startDate = new Date(displayDate.getFullYear(), displayDate.getMonth(), displayDate.getDate(), sh, sm);
+            const endDate = new Date(displayDate.getFullYear(), displayDate.getMonth(), displayDate.getDate(), eh, em);
 
             const startStr = startDate.toLocaleTimeString(locale, timeOptions);
             const endStr = endDate.toLocaleTimeString(locale, timeOptions);
+            const dateStr = startDate.toLocaleDateString(locale, dateOptions);
             const separator = locale.startsWith('ja') ? ' \uff5e ' : ' - ';
 
-            return `${startStr}${separator}${endStr}`;
+            return `${dateStr} ${startStr}${separator}${endStr}`;
         } catch {
             return `${startTime} - ${endTime}`;
         }
