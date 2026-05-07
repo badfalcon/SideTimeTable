@@ -26,6 +26,7 @@ import {
     DemoModeCard,
     StorageCard,
     ExtensionInfoCard,
+    SupportCard,
     ControlButtonsComponent
 } from './components/index.js';
 
@@ -48,6 +49,7 @@ class OptionsPageManager {
         this.demoModeCard = null;
         this.storageCard = null;
         this.extensionInfoCard = null;
+        this.supportCard = null;
         this.controlButtons = null;
     }
 
@@ -106,6 +108,11 @@ class OptionsPageManager {
         this.memoSettingsCard.createElement();
         this.memoSettingsCard.appendTo(tabGeneral);
         this.componentManager.components.set('memoSettings', this.memoSettingsCard);
+
+        this.supportCard = new SupportCard();
+        this.supportCard.createElement();
+        this.supportCard.appendTo(tabGeneral);
+        this.componentManager.components.set('support', this.supportCard);
 
         // --- コントロールボタン (タブ外) ---
         this.controlButtons = new ControlButtonsComponent(this.handleResetSettings.bind(this));

@@ -1577,5 +1577,17 @@
   "authExpiredStatus": {
     "message": "Authorization expired — please reconnect",
     "description": "Status text shown in settings when Google Calendar auth has expired"
+  },
+  "supportCardTitle": {
+    "message": "Support Development",
+    "description": "Title for the support/sponsor card on the options page"
+  },
+  "supportCardSubtitle": {
+    "message": "If you find this extension useful, you can support its ongoing development.",
+    "description": "Subtitle for the support/sponsor card on the options page"
+  },
+  "supportSponsorButton": {
+    "message": "Sponsor on GitHub",
+    "description": "Label for the GitHub Sponsors link button"
   }
 }

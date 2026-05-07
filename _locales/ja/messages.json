@@ -1577,5 +1577,17 @@
   "authExpiredStatus": {
     "message": "認証の有効期限が切れています — 再接続してください",
     "description": "Googleカレンダー認証が期限切れの場合に設定画面に表示されるステータス"
+  },
+  "supportCardTitle": {
+    "message": "開発を支援する",
+    "description": "設定画面のサポート／スポンサーカードのタイトル"
+  },
+  "supportCardSubtitle": {
+    "message": "この拡張機能が役立っている場合、開発の継続を支援していただけます。",
+    "description": "設定画面のサポート／スポンサーカードのサブタイトル"
+  },
+  "supportSponsorButton": {
+    "message": "GitHub でスポンサーになる",
+    "description": "GitHub Sponsors リンクボタンのラベル"
   }
 }
