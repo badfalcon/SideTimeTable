@@ -370,6 +370,18 @@ export function getUnseenReleaseNotes(lastSeenVersion, currentVersion) {
 }
 
 /**
+ * Find the release version immediately before the given version.
+ * Useful for setting `lastSeenVersion` so the next call to `getUnseenReleaseNotes`
+ * surfaces only the current version's notes.
+ * @param {string} currentVersion - The current extension version
+ * @returns {string|null} The previous release version, or null if none exists
+ */
+export function findPreviousReleaseVersion(currentVersion) {
+    const prev = RELEASE_NOTES.find(entry => compareVersions(entry.version, currentVersion) < 0);
+    return prev ? prev.version : null;
+}
+
+/**
  * Compare two semver version strings.
  * @param {string} a - Version string (e.g. '1.7.0')
  * @param {string} b - Version string (e.g. '1.6.1')

@@ -846,6 +846,26 @@
     "message": "What's New",
     "description": "Context menu item for What's New"
   },
+  "whatsNewDontShowAgain": {
+    "message": "Don't show this again on updates",
+    "description": "Checkbox label inside What's New modal to opt out of auto-display on future version updates"
+  },
+  "whatsNewSettings": {
+    "message": "Update Notifications",
+    "description": "Title of the What's New auto-show settings card on the options page"
+  },
+  "whatsNewSettingsDescription": {
+    "message": "Control whether the What's New modal appears on version updates.",
+    "description": "Subtitle of the What's New auto-show settings card on the options page"
+  },
+  "whatsNewAutoShowLabel": {
+    "message": "Show What's New on updates",
+    "description": "Toggle label for enabling the What's New modal on version updates"
+  },
+  "whatsNewAutoShowHelp": {
+    "message": "When enabled, a summary of new features is shown automatically after the extension updates.",
+    "description": "Help text for the What's New auto-show toggle"
+  },
   "changelogTitle": {
     "message": "Changelog",
     "description": "Title of the Changelog page"

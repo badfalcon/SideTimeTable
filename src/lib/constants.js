@@ -54,7 +54,8 @@ export const DEFAULT_SETTINGS = {
     colorTheme: 'default', // Active colour-set ID (see color-themes.js)
     memoMarkdown: false, // Enable Markdown rendering in memo panel
     memoFontSize: 13, // Memo font size in px
-    thinScrollbar: false // Use thin (narrow) scrollbar in side panel
+    thinScrollbar: false, // Use thin (narrow) scrollbar in side panel
+    whatsNewAutoShow: true // Auto-show What's New modal on version updates
 };
 
 // Memo font size range (px)
