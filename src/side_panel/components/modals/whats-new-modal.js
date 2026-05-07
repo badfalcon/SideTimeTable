@@ -4,6 +4,7 @@
 import { ModalComponent } from './modal-component.js';
 import { RELEASE_NOTES, getUnseenReleaseNotes } from '../../../lib/release-notes.js';
 import { StorageHelper } from '../../../lib/storage-helper.js';
+import { saveSettings } from '../../../lib/settings-storage.js';
 
 export class WhatsNewModal extends ModalComponent {
     constructor(options = {}) {
@@ -15,6 +16,7 @@ export class WhatsNewModal extends ModalComponent {
 
         this.contentContainer = null;
         this.confirmButton = null;
+        this.dontShowAgainCheckbox = null;
     }
 
     createContent() {
@@ -33,6 +35,25 @@ export class WhatsNewModal extends ModalComponent {
         this.contentContainer.className = 'whats-new-notes';
         content.appendChild(this.contentContainer);
 
+        // "Don't show again" checkbox
+        const dontShowWrapper = document.createElement('div');
+        dontShowWrapper.className = 'form-check whats-new-dont-show-again';
+
+        this.dontShowAgainCheckbox = document.createElement('input');
+        this.dontShowAgainCheckbox.type = 'checkbox';
+        this.dontShowAgainCheckbox.className = 'form-check-input';
+        this.dontShowAgainCheckbox.id = 'whatsNewDontShowAgainToggle';
+
+        const dontShowLabel = document.createElement('label');
+        dontShowLabel.className = 'form-check-label';
+        dontShowLabel.htmlFor = 'whatsNewDontShowAgainToggle';
+        dontShowLabel.setAttribute('data-localize', '__MSG_whatsNewDontShowAgain__');
+        dontShowLabel.textContent = window.getLocalizedMessage('whatsNewDontShowAgain') || "Don't show this again on updates";
+
+        dontShowWrapper.appendChild(this.dontShowAgainCheckbox);
+        dontShowWrapper.appendChild(dontShowLabel);
+        content.appendChild(dontShowWrapper);
+
         // Confirm button
         this.confirmButton = document.createElement('button');
         this.confirmButton.className = 'btn btn-primary whats-new-confirm-btn';
@@ -41,7 +62,14 @@ export class WhatsNewModal extends ModalComponent {
         content.appendChild(this.confirmButton);
 
         // Event listeners
-        this.addEventListener(this.confirmButton, 'click', () => {
+        this.addEventListener(this.confirmButton, 'click', async () => {
+            if (this.dontShowAgainCheckbox?.checked) {
+                try {
+                    await saveSettings({ whatsNewAutoShow: false });
+                } catch (error) {
+                    console.warn('Failed to save whatsNewAutoShow:', error);
+                }
+            }
             this._markAsSeen();
             this.hide();
         });
@@ -63,6 +91,9 @@ export class WhatsNewModal extends ModalComponent {
             return;
         }
 
+        if (this.dontShowAgainCheckbox) {
+            this.dontShowAgainCheckbox.checked = false;
+        }
         const lang = await this._resolveLanguage();
         this._renderNotes(unseenNotes, lang);
         this.show();
@@ -127,6 +158,9 @@ export class WhatsNewModal extends ModalComponent {
      * Show the modal with all release notes (for browsing history)
      */
     async showAll() {
+        if (this.dontShowAgainCheckbox) {
+            this.dontShowAgainCheckbox.checked = false;
+        }
         const lang = await this._resolveLanguage();
         this._renderNotes(RELEASE_NOTES, lang);
         this.show();

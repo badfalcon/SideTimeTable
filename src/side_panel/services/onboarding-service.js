@@ -73,7 +73,10 @@ export class OnboardingService {
     async checkForUpdateNotification(whatsNewModal) {
         try {
             const currentVersion = chrome.runtime.getManifest().version;
-            const data = await StorageHelper.get(['lastSeenVersion'], {});
+            const data = await StorageHelper.get(
+                ['lastSeenVersion', 'whatsNewAutoShow'],
+                { whatsNewAutoShow: true }
+            );
 
             if (!data.lastSeenVersion) {
                 // First install - store current version without showing modal
@@ -81,9 +84,17 @@ export class OnboardingService {
                 return;
             }
 
-            if (data.lastSeenVersion !== currentVersion) {
-                whatsNewModal.showForVersion(data.lastSeenVersion);
+            if (data.lastSeenVersion === currentVersion) {
+                return;
             }
+
+            if (data.whatsNewAutoShow === false) {
+                // User opted out of auto-popup; advance the version pointer silently
+                await StorageHelper.set({ lastSeenVersion: currentVersion });
+                return;
+            }
+
+            whatsNewModal.showForVersion(data.lastSeenVersion);
         } catch (error) {
             console.warn('Failed to check for update notification:', error);
         }

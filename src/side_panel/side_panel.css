@@ -1008,6 +1008,16 @@ body {
     margin: 12px 0;
 }
 
+.whats-new-dont-show-again {
+    margin: 12px 0;
+    color: inherit;
+}
+
+.whats-new-dont-show-again .form-check-label {
+    color: inherit;
+    font-size: 0.9em;
+}
+
 .whats-new-confirm-btn {
     display: block;
     width: 100%;

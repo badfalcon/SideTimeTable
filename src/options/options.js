@@ -22,6 +22,7 @@ import {
     ReminderSettingsCard,
     MemoSettingsCard,
     ScrollbarSettingsCard,
+    WhatsNewSettingsCard,
     ReminderDebugCard,
     DemoModeCard,
     StorageCard,
@@ -44,6 +45,7 @@ class OptionsPageManager {
         this.reminderSettingsCard = null;
         this.memoSettingsCard = null;
         this.scrollbarSettingsCard = null;
+        this.whatsNewSettingsCard = null;
         this.reminderDebugCard = null;
         this.demoModeCard = null;
         this.storageCard = null;
@@ -106,6 +108,11 @@ class OptionsPageManager {
         this.memoSettingsCard.createElement();
         this.memoSettingsCard.appendTo(tabGeneral);
         this.componentManager.components.set('memoSettings', this.memoSettingsCard);
+
+        this.whatsNewSettingsCard = new WhatsNewSettingsCard(this.handleWhatsNewSettingsChange.bind(this));
+        this.whatsNewSettingsCard.createElement();
+        this.whatsNewSettingsCard.appendTo(tabGeneral);
+        this.componentManager.components.set('whatsNewSettings', this.whatsNewSettingsCard);
 
         // --- コントロールボタン (タブ外) ---
         this.controlButtons = new ControlButtonsComponent(this.handleResetSettings.bind(this));
@@ -231,6 +238,11 @@ class OptionsPageManager {
 
             // Apply thin scrollbar to options page
             document.body.classList.toggle('thin-scrollbar', !!settings.thinScrollbar);
+
+            // Load the What's New auto-show setting
+            this.whatsNewSettingsCard.updateSettings({
+                whatsNewAutoShow: settings.whatsNewAutoShow !== false
+            });
 
         } catch (error) {
             console.error('Settings loading error:', error);
@@ -464,6 +476,20 @@ class OptionsPageManager {
         }
     }
 
+    async handleWhatsNewSettingsChange(whatsNewSettings) {
+        try {
+            const currentSettings = await loadSettings();
+            const updatedSettings = {
+                ...currentSettings,
+                whatsNewAutoShow: whatsNewSettings.whatsNewAutoShow
+            };
+
+            await saveSettings(updatedSettings);
+        } catch (error) {
+            logError('What\'s New settings save', error);
+        }
+    }
+
     async handleMemoSettingsChange(memoSettings) {
         try {
             const currentSettings = await loadSettings();
@@ -499,6 +525,7 @@ class OptionsPageManager {
             this.memoSettingsCard.resetToDefaults();
             this.scrollbarSettingsCard.resetToDefaults();
             document.body.classList.remove('thin-scrollbar');
+            this.whatsNewSettingsCard.resetToDefaults();
 
             // Reset CSS variables via theme system
             const defaultTheme = getThemeById('default');
