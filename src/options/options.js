@@ -10,6 +10,7 @@ import { loadSettings, saveSettings } from '../lib/settings-storage.js';
 import { sendMessage } from '../lib/chrome-messaging.js';
 import { getThemeById, resolveThemeColors } from '../lib/color-themes.js';
 import { StorageHelper } from '../lib/storage-helper.js';
+import { RELEASE_NOTES, compareVersions } from '../lib/release-notes.js';
 import { isDemoMode, getDemoOptionsSettings, getDemoCalendars, getDemoCalendarGroups, DEMO_BUILD } from '../lib/demo-data.js';
 import {
     ComponentManager,
@@ -479,14 +480,30 @@ class OptionsPageManager {
     async handleWhatsNewSettingsChange(whatsNewSettings) {
         try {
             const currentSettings = await loadSettings();
+            const wasEnabled = currentSettings.whatsNewAutoShow !== false;
+            const willEnable = whatsNewSettings.whatsNewAutoShow === true;
+
             const updatedSettings = {
                 ...currentSettings,
-                whatsNewAutoShow: whatsNewSettings.whatsNewAutoShow
+                whatsNewAutoShow: willEnable
             };
 
             await saveSettings(updatedSettings);
+
+            // OFF → ON: rewind lastSeenVersion to the previous release so the modal
+            // appears again on the next side panel load (otherwise it stays marked
+            // as already-seen for the current version and silently does nothing).
+            if (!wasEnabled && willEnable) {
+                const currentVersion = chrome.runtime.getManifest().version;
+                const previousVersion = RELEASE_NOTES
+                    .map(entry => entry.version)
+                    .find(v => compareVersions(v, currentVersion) < 0);
+                if (previousVersion) {
+                    await StorageHelper.set({ lastSeenVersion: previousVersion });
+                }
+            }
         } catch (error) {
-            logError('What\'s New settings save', error);
+            logError("What's New settings save", error);
         }
     }
 
