@@ -6,6 +6,24 @@
  */
 export const RELEASE_NOTES = [
     {
+        version: '1.10.1',
+        date: '2026-05-07',
+        highlights: {
+            en: [
+                'Open Zoom, Teams, and Webex meeting links directly from notifications',
+                'See which occurrences are affected when declining a recurring event',
+                'Optionally hide the What\'s New popup for future releases',
+                'Bug fixes and stability improvements'
+            ],
+            ja: [
+                '通知からZoom・Teams・Webexの会議URLを直接開けるように',
+                '定期イベントの不参加時に対象範囲をボタン上で確認可能に',
+                '更新情報モーダルを「次回から表示しない」設定で非表示に',
+                'バグ修正と安定性の向上'
+            ]
+        }
+    },
+    {
         version: '1.10.0',
         date: '2026-04-15',
         highlights: {
