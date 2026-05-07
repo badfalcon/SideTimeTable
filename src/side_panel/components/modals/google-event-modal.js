@@ -310,21 +310,10 @@ export class GoogleEventModal extends ModalComponent {
                     this._setAttendeesInfo(this.currentEvent);
                 }
 
-                // If declined, close modal after a brief delay (event will be removed from timeline)
-                if (response === 'declined') {
-                    this._showRsvpFeedback(window.getLocalizedMessage('rsvpDeclinedFeedback') || 'Declined. Event will be hidden.', 'declined');
-                    setTimeout(() => {
-                        this.hide();
-                        if (this.onRsvpResponse) {
-                            this.onRsvpResponse(response, event);
-                        }
-                    }, 1200);
-                } else {
-                    this._showRsvpFeedback(window.getLocalizedMessage('rsvpSuccessFeedback') || 'Response sent.', 'success');
-                    // Notify parent to refresh events
-                    if (this.onRsvpResponse) {
-                        this.onRsvpResponse(response, event);
-                    }
+                this._showRsvpFeedback(window.getLocalizedMessage('rsvpSuccessFeedback') || 'Response sent.', 'success');
+                // Notify parent to refresh events (declined events remain visible but faded)
+                if (this.onRsvpResponse) {
+                    this.onRsvpResponse(response, event);
                 }
             } else {
                 console.error('RSVP response failed:', result?.error);
@@ -354,10 +343,7 @@ export class GoogleEventModal extends ModalComponent {
         feedback.textContent = message;
         this.rsvpContainer.appendChild(feedback);
 
-        // Auto-remove after delay (unless declined, which closes modal)
-        if (type !== 'declined') {
-            setTimeout(() => feedback.remove(), 3000);
-        }
+        setTimeout(() => feedback.remove(), 3000);
     }
 
     /**

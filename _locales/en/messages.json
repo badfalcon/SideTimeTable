@@ -1150,10 +1150,6 @@
     "message": "Response sent.",
     "description": "Feedback message when RSVP response is sent successfully"
   },
-  "rsvpDeclinedFeedback": {
-    "message": "Declined. Event will be hidden.",
-    "description": "Feedback message when user declines an event"
-  },
   "rsvpErrorFeedback": {
     "message": "Failed to send response.",
     "description": "Feedback message when RSVP response fails"

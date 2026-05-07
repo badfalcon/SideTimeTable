@@ -244,13 +244,7 @@ export class GoogleCalendarClient {
                             return;
                         }
 
-                        // Skip the declined events
-                        if (event.attendees && event.attendees.some(attendee =>
-                            attendee.self && attendee.responseStatus === 'declined'
-                        )) {
-                            return;
-                        }
-
+                        // Declined events are kept and rendered with a faded style
                         const calendarInfo = calendarColors[event.calendarId];
                         if (calendarInfo) {
                             event.calendarBackgroundColor = calendarInfo.backgroundColor;
@@ -266,18 +260,9 @@ export class GoogleCalendarClient {
             return allEvents;
         } catch (colorError) {
             console.warn('Calendar color information acquisition error:', colorError);
-            // Return the events even without color information (excluding the cancelled and declined events)
+            // Return the events even without color information (excluding cancelled events; declined events remain and are rendered faded)
             const merged = resultsPerCalendar.flatMap(r =>
-                (r.events || []).filter(event => {
-                    // Exclude the cancelled events
-                    if (event.status === 'cancelled') {
-                        return false;
-                    }
-                    // Exclude the declined events
-                    return !(event.attendees && event.attendees.some(attendee =>
-                        attendee.self && attendee.responseStatus === 'declined'
-                    ));
-                })
+                (r.events || []).filter(event => event.status !== 'cancelled')
             );
             return merged;
         }
