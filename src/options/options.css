@@ -63,6 +63,20 @@ body[data-theme="dark"] {
     color: #fff;
 }
 
+[data-theme="dark"] #support-card .btn-outline-danger {
+    color: #ff6b7a;
+    border-color: #ff6b7a;
+}
+
+[data-theme="dark"] #support-card .btn-outline-danger:hover {
+    background-color: #ff6b7a;
+    color: #1a1a2e;
+}
+
+[data-theme="dark"] #support-card .text-danger {
+    color: #ff6b7a !important;
+}
+
 [data-theme="dark"] .border {
     border-color: #444 !important;
 }
