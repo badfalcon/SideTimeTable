@@ -13,12 +13,6 @@ import {
     EventElementFactory
 } from './event-element-factory.js';
 
-function isDeclinedByUser(event) {
-    return Array.isArray(event.attendees) && event.attendees.some(
-        attendee => attendee.self && attendee.responseStatus === 'declined'
-    );
-}
-
 export class GoogleEventRenderer {
 
     /**
@@ -37,9 +31,6 @@ export class GoogleEventRenderer {
         chip.className = options.isOutOfOffice
             ? 'all-day-event-chip all-day-event-chip-ooo'
             : 'all-day-event-chip';
-        if (isDeclinedByUser(event)) {
-            chip.classList.add('all-day-event-chip-declined');
-        }
 
         const title = event.summary || (options.isOutOfOffice
             ? window.getLocalizedMessage('outOfOffice')
@@ -116,12 +107,9 @@ export class GoogleEventRenderer {
         }
 
         // Create the positioned event element via the factory
-        let cssClass = options.isOutOfOffice
+        const cssClass = options.isOutOfOffice
             ? 'event google-event google-event-ooo'
             : 'event google-event';
-        if (isDeclinedByUser(event)) {
-            cssClass += ' google-event-declined';
-        }
         const title = event.summary || (options.isOutOfOffice ? window.getLocalizedMessage('outOfOffice') : '');
         const { eventDiv } = EventElementFactory.createEventElement({
             startDate,
