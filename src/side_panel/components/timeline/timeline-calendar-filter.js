@@ -282,49 +282,7 @@ export class TimelineCalendarFilter extends Component {
         loading.textContent = this.getMessage('calendarFilterLoading');
         this.dropdown.appendChild(loading);
 
-        try {
-            const requestId = `filter-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-            const [response, selectedIds, groups] = await Promise.all([
-                sendMessage({ action: 'getCalendarList', requestId }),
-                loadSelectedCalendars(),
-                isDemoMode() ? getDemoCalendarGroups() : loadCalendarGroups()
-            ]);
-
-            // Bail out if dropdown was closed while fetching
-            if (!this.isOpen) return;
-
-            if (response.error || !response.calendars) {
-                this.dropdown.innerHTML = '';
-                this.refreshBtn = null;
-                this.searchInput = null;
-                this.calendarList = null;
-                const errorEl = document.createElement('div');
-                errorEl.className = 'timeline-calendar-filter-status';
-                errorEl.setAttribute('role', 'status');
-                errorEl.textContent = this.getMessage('calendarFilterError');
-                this.dropdown.appendChild(errorEl);
-                return;
-            }
-
-            this.calendars = response.calendars;
-            this.selectedIds = selectedIds;
-            this.calendarGroups = Array.isArray(groups) ? groups : [];
-
-            // Ensure primary calendar is always included in selection
-            const primary = this.calendars.find(c => c.primary);
-            if (primary && !this.selectedIds.includes(primary.id)) {
-                this.selectedIds.unshift(primary.id);
-                try {
-                    await saveSelectedCalendars(this.selectedIds);
-                } catch {
-                    // Non-critical: primary will be re-added on next open
-                }
-            }
-
-            if (!this.isOpen) return;
-            this.hasFetched = true;
-            this._renderDropdownContent();
-        } catch {
+        const showError = () => {
             this.dropdown.innerHTML = '';
             this.refreshBtn = null;
             this.searchInput = null;
@@ -334,6 +292,51 @@ export class TimelineCalendarFilter extends Component {
             errorEl.setAttribute('role', 'status');
             errorEl.textContent = this.getMessage('calendarFilterError');
             this.dropdown.appendChild(errorEl);
+        };
+
+        try {
+            const requestId = `filter-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+            const response = await sendMessage({ action: 'getCalendarList', requestId });
+
+            // Bail out if dropdown was closed while fetching
+            if (!this.isOpen) return;
+
+            if (response.error || !response.calendars) {
+                showError();
+                return;
+            }
+
+            // Apply the calendar/selection state through the op queue so a
+            // concurrent toggle's in-flight save cannot be observed
+            // half-written (which would desync the rendered checkboxes).
+            await this._enqueue(async () => {
+                const [selectedIds, groups] = await Promise.all([
+                    loadSelectedCalendars(),
+                    isDemoMode() ? getDemoCalendarGroups() : loadCalendarGroups()
+                ]);
+                if (!this.isOpen) return;
+
+                this.calendars = response.calendars;
+                this.selectedIds = selectedIds;
+                this.calendarGroups = Array.isArray(groups) ? groups : [];
+
+                // Ensure primary calendar is always included in selection
+                const primary = this.calendars.find(c => c.primary);
+                if (primary && !this.selectedIds.includes(primary.id)) {
+                    this.selectedIds.unshift(primary.id);
+                    try {
+                        await saveSelectedCalendars(this.selectedIds);
+                    } catch {
+                        // Non-critical: primary will be re-added on next open
+                    }
+                }
+
+                if (!this.isOpen) return;
+                this.hasFetched = true;
+                this._renderDropdownContent();
+            });
+        } catch {
+            showError();
         }
     }
 

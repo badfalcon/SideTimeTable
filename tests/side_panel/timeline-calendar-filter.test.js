@@ -34,7 +34,8 @@ beforeAll(() => {
 });
 
 import { TimelineCalendarFilter } from '../../src/side_panel/components/timeline/timeline-calendar-filter.js';
-import { saveSelectedCalendars } from '../../src/lib/settings-storage.js';
+import { saveSelectedCalendars, loadSelectedCalendars, loadCalendarGroups } from '../../src/lib/settings-storage.js';
+import { sendMessage } from '../../src/lib/chrome-messaging.js';
 
 const CAL_X = { id: 'cal-x', summary: 'X', primary: false };
 const CAL_Y = { id: 'cal-y', summary: 'Y', primary: false };
@@ -198,5 +199,39 @@ describe('TimelineCalendarFilter — concurrent toggle serialization', () => {
     await p;
 
     expect(saveSelectedCalendars).not.toHaveBeenCalled();
+  });
+
+  test('_fetchCalendars reloads only after a queued toggle save completes', async () => {
+    // A refresh fired during a toggle must not read storage mid-write.
+    const order = [];
+    saveSelectedCalendars.mockImplementation(() => {
+      order.push('save');
+      return Promise.resolve();
+    });
+    loadSelectedCalendars.mockImplementation(() => {
+      order.push('load');
+      return Promise.resolve(['cal-x']);
+    });
+    loadCalendarGroups.mockResolvedValue([]);
+    sendMessage.mockResolvedValue({ calendars: [CAL_X] });
+
+    const filter = new TimelineCalendarFilter({});
+    filter.calendars = [CAL_X];
+    filter.selectedIds = [];
+    filter.calendarGroups = [];
+    filter.isOpen = true;
+    filter.dropdown = { innerHTML: '', appendChild: jest.fn() };
+    filter.renderer = {
+      renderCalendarList: jest.fn(),
+      updateGroupCheckboxStates: jest.fn(),
+      renderDropdownContent: jest.fn(() => ({})),
+    };
+
+    const pToggle = filter._handleToggle('cal-x', true);
+    const pFetch = filter._fetchCalendars();
+    await Promise.all([pToggle, pFetch]);
+
+    expect(order.indexOf('save')).toBeGreaterThanOrEqual(0);
+    expect(order.indexOf('load')).toBeGreaterThan(order.indexOf('save'));
   });
 });
