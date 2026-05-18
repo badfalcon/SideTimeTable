@@ -186,4 +186,17 @@ describe('TimelineCalendarFilter — concurrent toggle serialization', () => {
     const lastSaved = saveSelectedCalendars.mock.calls.at(-1)[0];
     expect([...lastSaved].sort()).toEqual(['cal-x', 'cal-y', 'cal-z']);
   });
+
+  test('a toggle queued before destroy never persists a post-destroy state', async () => {
+    // destroy() clears selectedIds; a queued task that still ran would
+    // overwrite the stored selection with [].
+    const { filter } = buildFilter({ selectedIds: ['cal-x'], groups: [] });
+    filter.renderer = { renderCalendarList: jest.fn(), updateGroupCheckboxStates: jest.fn() };
+
+    const p = filter._handleToggle('cal-y', true);
+    filter.destroy();
+    await p;
+
+    expect(saveSelectedCalendars).not.toHaveBeenCalled();
+  });
 });

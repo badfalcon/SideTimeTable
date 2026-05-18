@@ -42,6 +42,7 @@ export class TimelineCalendarFilter extends Component {
         // not interleave their save/rollback steps, which would produce
         // out-of-order storage writes or a rollback clobbering a later change.
         this._opQueue = Promise.resolve();
+        this._destroyed = false;
 
         // Renderer delegate
         this.renderer = new CalendarFilterRenderer({
@@ -356,7 +357,11 @@ export class TimelineCalendarFilter extends Component {
      * @private
      */
     _enqueue(taskFn) {
-        const result = this._opQueue.then(taskFn, taskFn);
+        // Skip a queued task entirely once destroyed: its post-destroy state
+        // (selectedIds === [], renderer === null) would otherwise persist an
+        // empty selection and crash on the renderer.
+        const guarded = () => (this._destroyed ? undefined : taskFn());
+        const result = this._opQueue.then(guarded, guarded);
         // Keep the chain alive even if a task throws.
         this._opQueue = result.then(() => {}, () => {});
         return result;
@@ -415,6 +420,7 @@ export class TimelineCalendarFilter extends Component {
 
             try {
                 await saveSelectedCalendars(this.selectedIds);
+                if (this._destroyed) return;
                 this.renderer.renderCalendarList(
                     this.calendars, this.selectedIds, this.calendarGroups, this.searchTerm
                 );
@@ -425,7 +431,7 @@ export class TimelineCalendarFilter extends Component {
                 }
             } catch {
                 this.selectedIds = previousIds;
-                this.renderer.renderCalendarList(
+                this.renderer?.renderCalendarList(
                     this.calendars, this.selectedIds, this.calendarGroups, this.searchTerm
                 );
             }
@@ -473,6 +479,7 @@ export class TimelineCalendarFilter extends Component {
 
             try {
                 await saveSelectedCalendars(this.selectedIds);
+                if (this._destroyed) return;
                 // Update group header checkbox states
                 this.renderer.updateGroupCheckboxStates(
                     this.calendarList, this.calendars, this.selectedIds, this.calendarGroups
@@ -485,7 +492,7 @@ export class TimelineCalendarFilter extends Component {
                 }
             } catch {
                 this.selectedIds = previousIds;
-                this.renderer.renderCalendarList(
+                this.renderer?.renderCalendarList(
                     this.calendars, this.selectedIds, this.calendarGroups, this.searchTerm
                 );
             }
@@ -503,6 +510,8 @@ export class TimelineCalendarFilter extends Component {
      * Clean up resources
      */
     destroy() {
+        this._destroyed = true;
+        this.isOpen = false;
         if (this._rafId) {
             window.cancelAnimationFrame(this._rafId);
             this._rafId = null;
