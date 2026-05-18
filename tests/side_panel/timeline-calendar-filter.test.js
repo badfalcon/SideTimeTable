@@ -137,3 +137,53 @@ describe('TimelineCalendarFilter._handleGroupToggle', () => {
     expect(onCalendarChange).not.toHaveBeenCalled();
   });
 });
+
+describe('TimelineCalendarFilter — concurrent toggle serialization', () => {
+  beforeEach(() => {
+    saveSelectedCalendars.mockClear();
+    saveSelectedCalendars.mockResolvedValue(undefined);
+  });
+
+  test('rapid concurrent single toggles end in a consistent state', async () => {
+    const { filter } = buildFilter({ selectedIds: [], groups: [] });
+    filter.renderer = { renderCalendarList: jest.fn(), updateGroupCheckboxStates: jest.fn() };
+
+    // Fire both toggles before either save resolves.
+    const p1 = filter._handleToggle('cal-x', true);
+    const p2 = filter._handleToggle('cal-y', true);
+    await Promise.all([p1, p2]);
+
+    expect([...filter.selectedIds].sort()).toEqual(['cal-x', 'cal-y']);
+    // The final persisted snapshot must contain both calendars — i.e. the
+    // second save did not race ahead of (or get clobbered by) the first.
+    const lastSaved = saveSelectedCalendars.mock.calls.at(-1)[0];
+    expect([...lastSaved].sort()).toEqual(['cal-x', 'cal-y']);
+  });
+
+  test('a failed earlier save does not clobber a later toggle', async () => {
+    saveSelectedCalendars
+      .mockRejectedValueOnce(new Error('boom'))   // first queued op fails
+      .mockResolvedValue(undefined);              // later ops succeed
+    const { filter } = buildFilter({ selectedIds: [], groups: [] });
+    filter.renderer = { renderCalendarList: jest.fn(), updateGroupCheckboxStates: jest.fn() };
+
+    const p1 = filter._handleToggle('cal-x', true);
+    const p2 = filter._handleToggle('cal-y', true);
+    await Promise.all([p1, p2]);
+
+    // First op rolled back (cal-x dropped); second op still applied (cal-y kept).
+    expect(filter.selectedIds).toEqual(['cal-y']);
+  });
+
+  test('concurrent group toggles serialize without losing members', async () => {
+    const { filter } = buildFilter({ selectedIds: [] });
+
+    const p1 = filter._handleGroupToggle(GROUP_A, [], true);
+    const p2 = filter._handleGroupToggle(GROUP_B, [], true);
+    await Promise.all([p1, p2]);
+
+    expect([...filter.selectedIds].sort()).toEqual(['cal-x', 'cal-y', 'cal-z']);
+    const lastSaved = saveSelectedCalendars.mock.calls.at(-1)[0];
+    expect([...lastSaved].sort()).toEqual(['cal-x', 'cal-y', 'cal-z']);
+  });
+});
