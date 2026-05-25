@@ -30,11 +30,15 @@ chrome.runtime.onInstalled.addListener(async () => {
     await reminderSync.syncAll();
 
     // Create context menu for "Changelog"
+    // removeAll first: onInstalled also fires on update, where the menu already
+    // exists and re-creating the same id would throw a "duplicate id" error.
     if (chrome.contextMenus) {
-        chrome.contextMenus.create({
-            id: 'changelog',
-            title: chrome.i18n.getMessage('changelogContextMenu') || 'Changelog',
-            contexts: ['action']
+        chrome.contextMenus.removeAll(() => {
+            chrome.contextMenus.create({
+                id: 'changelog',
+                title: chrome.i18n.getMessage('changelogContextMenu') || 'Changelog',
+                contexts: ['action']
+            });
         });
     }
 });
