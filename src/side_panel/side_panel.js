@@ -26,12 +26,12 @@ import {
 import { AllDayEventsComponent } from './components/timeline/all-day-events-component.js';
 import { EventLayoutManager } from './time-manager.js';
 import { GoogleEventManager, LocalEventManager } from './event-handlers.js';
-import { LocalEventService } from './services/local-event-service.js';
-import { DateNavigationService } from './services/date-navigation-service.js';
-import { EventLoadingService } from './services/event-loading-service.js';
+import { LocalEventService } from '../services/local-event-service.js';
+import { DateNavigationService } from '../services/date-navigation-service.js';
+import { EventLoadingService } from '../services/event-loading-service.js';
 import { AlarmManager } from '../lib/alarm-manager.js';
-import { ThemeService } from './services/theme-service.js';
-import { OnboardingService } from './services/onboarding-service.js';
+import { ThemeService } from '../services/theme-service.js';
+import { OnboardingService } from '../services/onboarding-service.js';
 import { generateTimeList } from '../lib/utils.js';
 import { loadSettings } from '../lib/settings-storage.js';
 import { migrateEventDataToLocal } from '../lib/event-storage.js';

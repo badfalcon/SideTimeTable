@@ -5,8 +5,8 @@
  * Eliminates duplicated date logic previously spread across SidePanelUIController
  * and HeaderComponent.
  */
-import { getFormattedDateFromDate } from '../../lib/utils.js';
-import { isToday } from '../../lib/time-utils.js';
+import { getFormattedDateFromDate } from '../lib/utils.js';
+import { isToday } from '../lib/time-utils.js';
 
 export class DateNavigationService {
     constructor() {

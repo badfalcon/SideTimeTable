@@ -5,14 +5,14 @@
  * DOM-free: only handles data persistence and alarm management.
  */
 
-import { RECURRENCE_TYPES } from '../../lib/constants.js';
+import { RECURRENCE_TYPES } from '../lib/constants.js';
 import {
     loadLocalEventsForDate, saveLocalEventsForDate,
     loadRecurringEvents, saveRecurringEvents,
     addRecurringEventException, deleteRecurringEvent
-} from '../../lib/event-storage.js';
-import { getFormattedDateFromDate } from '../../lib/utils.js';
-import { AlarmManager } from '../../lib/alarm-manager.js';
+} from '../lib/event-storage.js';
+import { getFormattedDateFromDate } from '../lib/utils.js';
+import { AlarmManager } from '../lib/alarm-manager.js';
 
 export class LocalEventService {
     /**
