@@ -6,6 +6,20 @@
  */
 export const RELEASE_NOTES = [
     {
+        version: '1.10.2',
+        date: '2026-05-25',
+        highlights: {
+            en: [
+                'Fixed calendar and panel toggles that could get stuck in an in-between state',
+                'Bug fixes and stability improvements'
+            ],
+            ja: [
+                'カレンダーフィルターやパネルのトグルが中途半端な状態になる不具合を修正',
+                'バグ修正と安定性の向上'
+            ]
+        }
+    },
+    {
         version: '1.10.1',
         date: '2026-05-07',
         highlights: {
