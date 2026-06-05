@@ -10,6 +10,11 @@ export class AlarmManager {
     static GOOGLE_ALARM_PREFIX = 'google_event_reminder_';
     static REMINDER_MINUTES = 5;
 
+    // Google Calendar eventTypes that are status markers rather than meetings.
+    // These should never trigger a reminder notification (e.g. an out-of-office
+    // block is not something the user needs to be reminded to "attend").
+    static NON_MEETING_EVENT_TYPES = ['outOfOffice', 'focusTime', 'workingLocation'];
+
     /**
      * Set a reminder for an event
      * @param {Object} event The event object with id, title, startTime
@@ -276,6 +281,13 @@ export class AlarmManager {
     static async setGoogleEventReminder(event, dateStr, reminderMinutes = null) {
         if (!event.start || !event.start.dateTime) {
             return; // Skip all-day events
+        }
+
+        // Skip non-meeting event types (out-of-office, focus time, working
+        // location). These are status markers, not meetings, so a reminder
+        // notification makes no sense and confuses the user.
+        if (this.NON_MEETING_EVENT_TYPES.includes(event.eventType)) {
+            return;
         }
 
         try {

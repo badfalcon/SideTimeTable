@@ -90,6 +90,19 @@ describe('AlarmManager', () => {
             await AlarmManager.setGoogleEventReminder({ id: 'g1' }, '2030-03-15', 5);
             expect(chrome.alarms.create).not.toHaveBeenCalled();
         });
+
+        test.each(['outOfOffice', 'focusTime', 'workingLocation'])(
+            'non-meeting eventType "%s" is skipped even when timed',
+            async (eventType) => {
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                await AlarmManager.setGoogleEventReminder(
+                    { id: 'g1', summary: 'OOO', eventType, start: { dateTime: tomorrow.toISOString() } },
+                    '2030-03-15', 5
+                );
+                expect(chrome.alarms.create).not.toHaveBeenCalled();
+            }
+        );
     });
 
     // ---------------------------------------------------------------
