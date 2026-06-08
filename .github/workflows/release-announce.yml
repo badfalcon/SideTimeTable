@@ -1,4 +1,4 @@
-name: Release Announcement
+name: Release Announcement (X / LinkedIn / Reddit)
 
 on:
   release:
@@ -8,11 +8,11 @@ permissions:
   contents: read
 
 jobs:
-  # ① Claude で告知文を生成し、下書きを保存・表示
+  # ① Claude で媒体別の告知文(JSON)を生成し、下書きを保存・表示
   generate:
     runs-on: ubuntu-latest
     steps:
-      - name: Generate announcement text
+      - name: Generate announcement texts
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           # ↓ リリース情報は env 経由で渡す（安全のため。run内に直接書かない）
@@ -20,8 +20,15 @@ jobs:
           RELEASE_URL:   ${{ github.event.release.html_url }}
           RELEASE_NOTES: ${{ github.event.release.body }}
         run: |
-          # Claude へのお願い文（プロンプト）を組み立て
-          PROMPT="あなたは開発者の広報担当です。次のリリース情報から、X(旧Twitter)向けの告知文を日本語で140字以内で作ってください。絵文字は1〜2個まで。URLやリンクは本文に含めないでください。本文だけを出力し、前置きや説明は書かないでください。
+          set -euo pipefail
+
+          # Claude へのお願い文（プロンプト）。媒体別に最適化した JSON を1回で生成させる
+          PROMPT="あなたは開発者の広報担当です。次のリリース情報から、X(旧Twitter)・LinkedIn・Reddit 向けの告知文を日本語で作成してください。
+
+          出力は次のキーを持つ生のJSONのみ。コードフェンスや前置き・説明は一切書かないでください。
+          - \"x\": X向け本文。全角140字以内（XはCJKを2カウントするため）。URLやリンクは含めない。絵文字は1〜2個まで。
+          - \"linkedin\": LinkedIn向け本文。プロフェッショナルな数文。URLは含めなくてよい（別途リンクを記事として添付します）。
+          - \"reddit_title\": Reddit投稿のタイトル。300字以内。URLは含めない。
 
           製品/リリース名: ${RELEASE_NAME}
           リリースノート:
@@ -34,25 +41,49 @@ jobs:
             messages: [{ role: "user", content: $p }]
           }')
 
-          # API 呼び出し
           RES=$(curl -s https://api.anthropic.com/v1/messages \
             -H "x-api-key: $ANTHROPIC_API_KEY" \
             -H "anthropic-version: 2023-06-01" \
             -H "Content-Type: application/json" \
             -d "$BODY")
 
-          # 生成された文面を取り出してファイルに保存
-          echo "$RES" | jq -r '.content[0].text' > message.txt
+          # 生成テキストを取り出す
+          echo "$RES" | jq -r '.content[0].text' > raw.txt
 
-          # リンクは別行に保存（X はURL課金が高いので、投稿時は本文と分ける）
+          # コードフェンスや前置きが混じっても頑健に JSON を抽出・検証して各ファイルへ保存
+          python3 - <<'PY'
+          import json, re, sys
+          raw = open('raw.txt', encoding='utf-8').read()
+          m = re.search(r'\{.*\}', raw, re.S)
+          if not m:
+              sys.exit("Claude応答からJSONを抽出できませんでした")
+          obj = json.loads(m.group(0))
+          for key, fn in (('x', 'x.txt'), ('linkedin', 'linkedin.txt'), ('reddit_title', 'reddit_title.txt')):
+              val = (obj.get(key) or '').strip()
+              if not val:
+                  sys.exit(f"空のフィールド: {key}")
+              with open(fn, 'w', encoding='utf-8') as f:
+                  f.write(val)
+          PY
+
+          # リンクは別ファイルに保存（X は本文に含めない方針）
           echo "$RELEASE_URL" > link.txt
 
           # 承認画面の前に内容を確認できるよう、サマリーに表示
           {
             echo "## 📝 生成された告知文（承認前に確認してください）"
             echo ""
+            echo "### X"
             echo '```'
-            cat message.txt
+            cat x.txt
+            echo '```'
+            echo "### LinkedIn"
+            echo '```'
+            cat linkedin.txt
+            echo '```'
+            echo "### Reddit (title)"
+            echo '```'
+            cat reddit_title.txt
             echo '```'
             echo ""
             echo "リンク: $RELEASE_URL"
@@ -65,26 +96,183 @@ jobs:
         with:
           name: announcement
           path: |
-            message.txt
+            x.txt
+            linkedin.txt
+            reddit_title.txt
             link.txt
 
-  # ② 承認後にだけ動く投稿ジョブ
+  # ② 承認後にだけ動く投稿ジョブ。各媒体は独立ステップ（1つ失敗しても他は続行）
   post:
     needs: generate
     runs-on: ubuntu-latest
     environment: announce   # ← この行で「承認待ち」になる（事前準備Aの環境名と一致）
     steps:
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
       - name: Download draft
         uses: actions/download-artifact@v4
         with:
           name: announcement
 
-      - name: Post
+      # --- X (Twitter) : OAuth 1.0a user context ---
+      - name: Post to X
+        id: x
+        continue-on-error: true
+        env:
+          X_CONSUMER_KEY:    ${{ secrets.X_CONSUMER_KEY }}
+          X_CONSUMER_SECRET: ${{ secrets.X_CONSUMER_SECRET }}
+          X_ACCESS_TOKEN:    ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_SECRET:   ${{ secrets.X_ACCESS_SECRET }}
         run: |
-          MESSAGE=$(cat message.txt)
+          node <<'EOF'
+          const crypto = require('crypto');
+          const https = require('https');
+          const fs = require('fs');
+
+          const ck = process.env.X_CONSUMER_KEY;
+          const cs = process.env.X_CONSUMER_SECRET;
+          const tok = process.env.X_ACCESS_TOKEN;
+          const toks = process.env.X_ACCESS_SECRET;
+          const text = fs.readFileSync('x.txt', 'utf8').trim();
+
+          // RFC3986 percent-encoding
+          const pe = s => encodeURIComponent(s).replace(/[!*'()]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase());
+
+          const url = 'https://api.twitter.com/2/tweets';
+          const oauth = {
+            oauth_consumer_key: ck,
+            oauth_nonce: crypto.randomBytes(16).toString('hex'),
+            oauth_signature_method: 'HMAC-SHA1',
+            oauth_timestamp: Math.floor(Date.now() / 1000).toString(),
+            oauth_token: tok,
+            oauth_version: '1.0',
+          };
+          // JSON body は署名対象外。oauth_* のみで署名ベース文字列を作る
+          const paramStr = Object.keys(oauth).sort().map(k => pe(k) + '=' + pe(oauth[k])).join('&');
+          const base = 'POST&' + pe(url) + '&' + pe(paramStr);
+          const signingKey = pe(cs) + '&' + pe(toks);
+          oauth.oauth_signature = crypto.createHmac('sha1', signingKey).update(base).digest('base64');
+          const authHeader = 'OAuth ' + Object.keys(oauth).sort().map(k => pe(k) + '="' + pe(oauth[k]) + '"').join(', ');
+
+          const body = JSON.stringify({ text });
+          const req = https.request(url, {
+            method: 'POST',
+            headers: {
+              'Authorization': authHeader,
+              'Content-Type': 'application/json',
+              'Content-Length': Buffer.byteLength(body),
+            },
+          }, res => {
+            let data = '';
+            res.on('data', d => data += d);
+            res.on('end', () => {
+              console.log('X status:', res.statusCode, data);
+              process.exit(res.statusCode >= 200 && res.statusCode < 300 ? 0 : 1);
+            });
+          });
+          req.on('error', e => { console.error(e); process.exit(1); });
+          req.write(body);
+          req.end();
+          EOF
+
+      # --- LinkedIn : 個人プロフィールへ Posts API で投稿 ---
+      - name: Post to LinkedIn
+        id: linkedin
+        continue-on-error: true
+        env:
+          TOKEN:            ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
+          PERSON_ID:        ${{ secrets.LINKEDIN_PERSON_ID }}
+          LINKEDIN_VERSION: "202506"   # YYYYMM。sunset されたら新しい月次へ更新
+          RELEASE_NAME:     ${{ github.event.release.name }}
+        run: |
+          set -euo pipefail
+          TEXT=$(cat linkedin.txt)
           LINK=$(cat link.txt)
-          echo "▼ 投稿する文面:"
-          echo "$MESSAGE"
-          echo "▼ リンク: $LINK"
-          # ↓↓↓ まずはここまでで「生成→承認→確認」が動きます。
-          # 実際のSNS投稿は、release告知how-to末尾のセクションを参照して差し込みます。
+          TITLE="${RELEASE_NAME:-SideTimeTable}"
+
+          BODY=$(jq -n \
+            --arg author "urn:li:person:$PERSON_ID" \
+            --arg text "$TEXT" \
+            --arg link "$LINK" \
+            --arg title "$TITLE" '{
+              author: $author,
+              commentary: $text,
+              visibility: "PUBLIC",
+              distribution: { feedDistribution: "MAIN_FEED", targetEntities: [], thirdPartyDistributionChannels: [] },
+              content: { article: { source: $link, title: $title } },
+              lifecycleState: "PUBLISHED",
+              isReshareDisabledByAuthor: false
+            }')
+
+          HTTP=$(curl -s -o resp.txt -w '%{http_code}' -X POST https://api.linkedin.com/rest/posts \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "LinkedIn-Version: $LINKEDIN_VERSION" \
+            -H "X-Restli-Protocol-Version: 2.0.0" \
+            -H "Content-Type: application/json" \
+            -d "$BODY")
+          echo "LinkedIn HTTP $HTTP"
+          cat resp.txt || true
+          case "$HTTP" in
+            200|201) echo "LinkedIn post OK" ;;
+            *) echo "LinkedIn post failed"; exit 1 ;;
+          esac
+
+      # --- Reddit : 自分のプロフィール(u_/)へリンク投稿 ---
+      - name: Post to Reddit
+        id: reddit
+        continue-on-error: true
+        env:
+          CID:     ${{ secrets.REDDIT_CLIENT_ID }}
+          CSECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
+          RUSER:   ${{ secrets.REDDIT_USERNAME }}
+          RPASS:   ${{ secrets.REDDIT_PASSWORD }}
+        run: |
+          set -euo pipefail
+          UA="SideTimeTable-release-bot/1.0 by $RUSER"
+
+          # password grant で短命トークンを取得
+          TOKEN=$(curl -s -X POST https://www.reddit.com/api/v1/access_token \
+            -A "$UA" \
+            -u "$CID:$CSECRET" \
+            --data-urlencode "grant_type=password" \
+            --data-urlencode "username=$RUSER" \
+            --data-urlencode "password=$RPASS" | jq -r '.access_token // empty')
+          [ -n "$TOKEN" ] || { echo "Reddit token exchange failed"; exit 1; }
+
+          TITLE=$(cat reddit_title.txt)
+          LINK=$(cat link.txt)
+
+          RESP=$(curl -s -X POST https://oauth.reddit.com/api/submit \
+            -A "$UA" \
+            -H "Authorization: bearer $TOKEN" \
+            --data-urlencode "api_type=json" \
+            --data-urlencode "sr=u_$RUSER" \
+            --data-urlencode "kind=link" \
+            --data-urlencode "title=$TITLE" \
+            --data-urlencode "url=$LINK")
+          echo "$RESP"
+          # エラーが無く、投稿URLが返ったことを確認
+          echo "$RESP" | jq -e '(.json.errors == []) and (.json.data.url != null)' >/dev/null \
+            || { echo "Reddit submit failed"; exit 1; }
+
+      # --- 結果集計：各媒体の成否を Summary に出し、1つでも失敗なら run を赤くする ---
+      - name: Summarize results
+        if: always()
+        run: |
+          X='${{ steps.x.outcome }}'
+          L='${{ steps.linkedin.outcome }}'
+          R='${{ steps.reddit.outcome }}'
+          icon() { [ "$1" = "success" ] && echo "✅" || echo "❌"; }
+          {
+            echo "## 投稿結果"
+            echo "- X: $(icon "$X") ($X)"
+            echo "- LinkedIn: $(icon "$L") ($L)"
+            echo "- Reddit: $(icon "$R") ($R)"
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$X" != "success" ] || [ "$L" != "success" ] || [ "$R" != "success" ]; then
+            echo "1つ以上の媒体で投稿に失敗しました"
+            exit 1
+          fi
