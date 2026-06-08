@@ -88,6 +88,12 @@ jobs:
             echo ""
             echo "リンク: $RELEASE_URL"
             echo ""
+            echo "### ⏰ 推奨投稿時間（JST・目安）"
+            echo "承認＝投稿なので、ストア公開を確認のうえ下記の時間帯に Approve するのが目安です。"
+            echo "- **X**: 平日 火〜木。昼 12時前後 / 夜 20〜23時"
+            echo "- **LinkedIn**: 平日 火〜木の午後（15〜18時）。週末は避ける"
+            echo "- **Reddit**: 米国中心のため US東部の朝＝JST 21〜23時頃 or 週末（日本語投稿は反応薄め）"
+            echo ""
             echo "内容がOKなら post ジョブを **Approve**、ダメなら **Reject** してください。"
           } >> "$GITHUB_STEP_SUMMARY"
 
