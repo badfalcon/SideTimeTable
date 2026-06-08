@@ -1,0 +1,90 @@
+name: Release Announcement
+
+on:
+  release:
+    types: [published]   # リリースを「公開」したときに発火
+
+permissions:
+  contents: read
+
+jobs:
+  # ① Claude で告知文を生成し、下書きを保存・表示
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate announcement text
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # ↓ リリース情報は env 経由で渡す（安全のため。run内に直接書かない）
+          RELEASE_NAME:  ${{ github.event.release.name }}
+          RELEASE_URL:   ${{ github.event.release.html_url }}
+          RELEASE_NOTES: ${{ github.event.release.body }}
+        run: |
+          # Claude へのお願い文（プロンプト）を組み立て
+          PROMPT="あなたは開発者の広報担当です。次のリリース情報から、X(旧Twitter)向けの告知文を日本語で140字以内で作ってください。絵文字は1〜2個まで。URLやリンクは本文に含めないでください。本文だけを出力し、前置きや説明は書かないでください。
+
+          製品/リリース名: ${RELEASE_NAME}
+          リリースノート:
+          ${RELEASE_NOTES}"
+
+          # Anthropic Messages API へのリクエストを jq で安全に組み立て
+          BODY=$(jq -n --arg p "$PROMPT" '{
+            model: "claude-sonnet-4-6",
+            max_tokens: 1024,
+            messages: [{ role: "user", content: $p }]
+          }')
+
+          # API 呼び出し
+          RES=$(curl -s https://api.anthropic.com/v1/messages \
+            -H "x-api-key: $ANTHROPIC_API_KEY" \
+            -H "anthropic-version: 2023-06-01" \
+            -H "Content-Type: application/json" \
+            -d "$BODY")
+
+          # 生成された文面を取り出してファイルに保存
+          echo "$RES" | jq -r '.content[0].text' > message.txt
+
+          # リンクは別行に保存（X はURL課金が高いので、投稿時は本文と分ける）
+          echo "$RELEASE_URL" > link.txt
+
+          # 承認画面の前に内容を確認できるよう、サマリーに表示
+          {
+            echo "## 📝 生成された告知文（承認前に確認してください）"
+            echo ""
+            echo '```'
+            cat message.txt
+            echo '```'
+            echo ""
+            echo "リンク: $RELEASE_URL"
+            echo ""
+            echo "内容がOKなら post ジョブを **Approve**、ダメなら **Reject** してください。"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload draft
+        uses: actions/upload-artifact@v4
+        with:
+          name: announcement
+          path: |
+            message.txt
+            link.txt
+
+  # ② 承認後にだけ動く投稿ジョブ
+  post:
+    needs: generate
+    runs-on: ubuntu-latest
+    environment: announce   # ← この行で「承認待ち」になる（事前準備Aの環境名と一致）
+    steps:
+      - name: Download draft
+        uses: actions/download-artifact@v4
+        with:
+          name: announcement
+
+      - name: Post
+        run: |
+          MESSAGE=$(cat message.txt)
+          LINK=$(cat link.txt)
+          echo "▼ 投稿する文面:"
+          echo "$MESSAGE"
+          echo "▼ リンク: $LINK"
+          # ↓↓↓ まずはここまでで「生成→承認→確認」が動きます。
+          # 実際のSNS投稿は、release告知how-to末尾のセクションを参照して差し込みます。
