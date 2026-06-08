@@ -127,6 +127,12 @@ jobs:
           X_ACCESS_TOKEN:    ${{ secrets.X_ACCESS_TOKEN }}
           X_ACCESS_SECRET:   ${{ secrets.X_ACCESS_SECRET }}
         run: |
+          set -euo pipefail
+          if [ -z "${X_CONSUMER_KEY:-}" ]; then
+            echo "result=skipped" >> "$GITHUB_OUTPUT"
+            echo "X: secret 未設定のためスキップ"
+            exit 0
+          fi
           node <<'EOF'
           const crypto = require('crypto');
           const https = require('https');
@@ -177,6 +183,7 @@ jobs:
           req.write(body);
           req.end();
           EOF
+          echo "result=posted" >> "$GITHUB_OUTPUT"
 
       # --- LinkedIn : 個人プロフィールへ Posts API で投稿 ---
       - name: Post to LinkedIn
@@ -185,11 +192,25 @@ jobs:
         env:
           TOKEN:            ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
           PERSON_ID:        ${{ secrets.LINKEDIN_PERSON_ID }}
-          LINKEDIN_VERSION: "202506"   # YYYYMM。sunset されたら新しい月次へ更新
+          LINKEDIN_VERSION: "202605"   # YYYYMM。各版はリリースから約1年で sunset → 定期更新
           RELEASE_NAME:     ${{ github.event.release.name }}
         run: |
           set -euo pipefail
-          TEXT=$(cat linkedin.txt)
+          if [ -z "${TOKEN:-}" ]; then
+            echo "result=skipped" >> "$GITHUB_OUTPUT"
+            echo "LinkedIn: secret 未設定のためスキップ"
+            exit 0
+          fi
+          # commentary は LinkedIn の "Little Text" 形式。予約文字をバックスラッシュで
+          # エスケープしないと 422 になり、特に括弧があると以降が黙って欠落する。
+          # （article.title / source は Little Text ではないのでエスケープ不要）
+          python3 - <<'PY' > linkedin_escaped.txt
+          import sys
+          reserved = set('\\|{}@[]()<>#*_~')
+          s = open('linkedin.txt', encoding='utf-8').read()
+          sys.stdout.write(''.join('\\' + c if c in reserved else c for c in s))
+          PY
+          TEXT=$(cat linkedin_escaped.txt)
           LINK=$(cat link.txt)
           TITLE="${RELEASE_NAME:-SideTimeTable}"
 
@@ -219,6 +240,7 @@ jobs:
             200|201) echo "LinkedIn post OK" ;;
             *) echo "LinkedIn post failed"; exit 1 ;;
           esac
+          echo "result=posted" >> "$GITHUB_OUTPUT"
 
       # --- Reddit : 自分のプロフィール(u_/)へリンク投稿 ---
       - name: Post to Reddit
@@ -231,6 +253,11 @@ jobs:
           RPASS:   ${{ secrets.REDDIT_PASSWORD }}
         run: |
           set -euo pipefail
+          if [ -z "${CID:-}" ]; then
+            echo "result=skipped" >> "$GITHUB_OUTPUT"
+            echo "Reddit: secret 未設定のためスキップ"
+            exit 0
+          fi
           UA="SideTimeTable-release-bot/1.0 by $RUSER"
 
           # password grant で短命トークンを取得
@@ -257,22 +284,43 @@ jobs:
           # エラーが無く、投稿URLが返ったことを確認
           echo "$RESP" | jq -e '(.json.errors == []) and (.json.data.url != null)' >/dev/null \
             || { echo "Reddit submit failed"; exit 1; }
+          echo "result=posted" >> "$GITHUB_OUTPUT"
 
-      # --- 結果集計：各媒体の成否を Summary に出し、1つでも失敗なら run を赤くする ---
+      # --- 結果集計 ---
+      # 各媒体について outcome(success/failure) と result(posted/skipped) を組み合わせ、
+      #   投稿成功=✅ / 秘密未設定スキップ=⏭️ / 失敗=❌ を表示。
+      # ❌（=秘密が設定済みなのに投稿失敗）が1つでもあれば run を赤くする。
+      # 未設定スキップでは赤くしない（媒体を段階的に追加できるようにするため）。
       - name: Summarize results
         if: always()
+        env:
+          X_OUTCOME: ${{ steps.x.outcome }}
+          X_RESULT:  ${{ steps.x.outputs.result }}
+          L_OUTCOME: ${{ steps.linkedin.outcome }}
+          L_RESULT:  ${{ steps.linkedin.outputs.result }}
+          R_OUTCOME: ${{ steps.reddit.outcome }}
+          R_RESULT:  ${{ steps.reddit.outputs.result }}
         run: |
-          X='${{ steps.x.outcome }}'
-          L='${{ steps.linkedin.outcome }}'
-          R='${{ steps.reddit.outcome }}'
-          icon() { [ "$1" = "success" ] && echo "✅" || echo "❌"; }
+          set -uo pipefail
+          FAILED=0
+          line() {
+            # $1=媒体名 $2=outcome $3=result
+            if [ "$2" = "success" ] && [ "$3" = "skipped" ]; then
+              echo "- $1: ⏭️ skipped（secret 未設定）"
+            elif [ "$2" = "success" ]; then
+              echo "- $1: ✅ posted"
+            else
+              echo "- $1: ❌ failed"
+              FAILED=1
+            fi
+          }
           {
             echo "## 投稿結果"
-            echo "- X: $(icon "$X") ($X)"
-            echo "- LinkedIn: $(icon "$L") ($L)"
-            echo "- Reddit: $(icon "$R") ($R)"
+            line "X"        "$X_OUTCOME" "$X_RESULT"
+            line "LinkedIn" "$L_OUTCOME" "$L_RESULT"
+            line "Reddit"   "$R_OUTCOME" "$R_RESULT"
           } >> "$GITHUB_STEP_SUMMARY"
-          if [ "$X" != "success" ] || [ "$L" != "success" ] || [ "$R" != "success" ]; then
+          if [ "$FAILED" -ne 0 ]; then
             echo "1つ以上の媒体で投稿に失敗しました"
             exit 1
           fi
