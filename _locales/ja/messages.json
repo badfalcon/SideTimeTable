@@ -746,6 +746,34 @@
     "message": "1時間",
     "description": "1時間のリマインダーオプション"
   },
+  "reminderSyncIntervalLabel": {
+    "message": "Googleカレンダーの変更を確認する頻度:",
+    "description": "リマインダー同期間隔設定のラベル"
+  },
+  "reminderSyncIntervalHelp": {
+    "message": "新しく追加・変更されたGoogleカレンダーの予定を確認し、リマインダーを最新に保つ頻度です。",
+    "description": "リマインダー同期間隔設定のヘルプテキスト"
+  },
+  "syncInterval15Min": {
+    "message": "15分ごと",
+    "description": "同期間隔オプション: 15分"
+  },
+  "syncInterval30Min": {
+    "message": "30分ごと",
+    "description": "同期間隔オプション: 30分"
+  },
+  "syncInterval60Min": {
+    "message": "1時間ごと",
+    "description": "同期間隔オプション: 1時間"
+  },
+  "syncInterval120Min": {
+    "message": "2時間ごと",
+    "description": "同期間隔オプション: 2時間"
+  },
+  "syncInterval360Min": {
+    "message": "6時間ごと",
+    "description": "同期間隔オプション: 6時間"
+  },
   "syncReminders": {
     "message": "予定を同期",
     "description": "リマインダー同期ボタンのツールチップ"

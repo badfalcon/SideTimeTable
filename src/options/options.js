@@ -223,7 +223,8 @@ class OptionsPageManager {
             // Load the reminder settings
             this.reminderSettingsCard.updateSettings({
                 googleEventReminder: settings.googleEventReminder || false,
-                reminderMinutes: settings.reminderMinutes || 5
+                reminderMinutes: settings.reminderMinutes || 5,
+                reminderSyncInterval: settings.reminderSyncInterval || DEFAULT_SETTINGS.reminderSyncInterval
             });
 
             // Load the memo settings
@@ -442,7 +443,8 @@ class OptionsPageManager {
             const updatedSettings = {
                 ...currentSettings,
                 googleEventReminder: reminderSettings.googleEventReminder,
-                reminderMinutes: reminderSettings.reminderMinutes
+                reminderMinutes: reminderSettings.reminderMinutes,
+                reminderSyncInterval: reminderSettings.reminderSyncInterval
             };
 
             await saveSettings(updatedSettings);

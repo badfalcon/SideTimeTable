@@ -95,14 +95,35 @@ export class ReminderSyncService {
      * Without this, reminders are only a snapshot taken at midnight / browser
      * start / when the side panel is opened, so events created during the day
      * silently get no notification.
+     *
+     * The interval is user-configurable via the `reminderSyncInterval` setting
+     * (minutes); it is clamped to chrome.alarms' minimum and a sane default.
      */
-    static PERIODIC_SYNC_MINUTES = 30;
+    static DEFAULT_SYNC_MINUTES = 60;
+    static MIN_SYNC_MINUTES = 15;
+
+    /**
+     * Resolve the configured sync interval in minutes, clamped to a safe range.
+     * @returns {Promise<number>}
+     */
+    async getSyncIntervalMinutes() {
+        const { reminderSyncInterval } = await StorageHelper.get(
+            ['reminderSyncInterval'],
+            { reminderSyncInterval: ReminderSyncService.DEFAULT_SYNC_MINUTES }
+        );
+        const value = Number(reminderSyncInterval);
+        if (!Number.isFinite(value) || value < ReminderSyncService.MIN_SYNC_MINUTES) {
+            return ReminderSyncService.DEFAULT_SYNC_MINUTES;
+        }
+        return value;
+    }
 
     async setupPeriodicSync() {
         try {
-            await chrome.alarms.create('periodic_reminder_sync', {
-                periodInMinutes: ReminderSyncService.PERIODIC_SYNC_MINUTES
-            });
+            const periodInMinutes = await this.getSyncIntervalMinutes();
+            // Re-create so a changed interval takes effect immediately.
+            await chrome.alarms.clear('periodic_reminder_sync');
+            await chrome.alarms.create('periodic_reminder_sync', { periodInMinutes });
         } catch (error) {
             console.error('Failed to setup periodic reminder sync:', error);
         }

@@ -234,4 +234,55 @@ describe('ReminderSyncService', () => {
             await expect(service.setupDailySync()).resolves.toBeUndefined();
         });
     });
+
+    // ---------------------------------------------------------------
+    // SPEC: setupPeriodicSync
+    // - Creates "periodic_reminder_sync" alarm using configured interval
+    // - Defaults to 60 minutes when unset
+    // - Clamps invalid / too-small values to the default
+    // ---------------------------------------------------------------
+    describe('SPEC: setupPeriodicSync', () => {
+        test('defaults to 60 minutes when no setting stored', async () => {
+            await service.setupPeriodicSync();
+
+            expect(chrome.alarms.clear).toHaveBeenCalledWith('periodic_reminder_sync');
+            expect(chrome.alarms.create).toHaveBeenCalledWith(
+                'periodic_reminder_sync',
+                { periodInMinutes: 60 }
+            );
+        });
+
+        test('uses the configured reminderSyncInterval', async () => {
+            chrome.storage.sync.set({ reminderSyncInterval: 30 }, () => {});
+
+            await service.setupPeriodicSync();
+
+            expect(chrome.alarms.create).toHaveBeenCalledWith(
+                'periodic_reminder_sync',
+                { periodInMinutes: 30 }
+            );
+        });
+
+        test('clamps values below the minimum to the default', async () => {
+            chrome.storage.sync.set({ reminderSyncInterval: 1 }, () => {});
+
+            await service.setupPeriodicSync();
+
+            expect(chrome.alarms.create).toHaveBeenCalledWith(
+                'periodic_reminder_sync',
+                { periodInMinutes: 60 }
+            );
+        });
+
+        test('falls back to default for non-numeric values', async () => {
+            chrome.storage.sync.set({ reminderSyncInterval: 'oops' }, () => {});
+
+            expect(await service.getSyncIntervalMinutes()).toBe(60);
+        });
+
+        test('does not throw on error', async () => {
+            chrome.alarms.create.mockRejectedValueOnce(new Error('fail'));
+            await expect(service.setupPeriodicSync()).resolves.toBeUndefined();
+        });
+    });
 });
