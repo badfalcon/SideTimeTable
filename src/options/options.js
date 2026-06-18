@@ -223,7 +223,8 @@ class OptionsPageManager {
             // Load the reminder settings
             this.reminderSettingsCard.updateSettings({
                 googleEventReminder: settings.googleEventReminder || false,
-                reminderMinutes: settings.reminderMinutes || 5
+                reminderMinutes: settings.reminderMinutes || 5,
+                reminderSyncInterval: settings.reminderSyncInterval || DEFAULT_SETTINGS.reminderSyncInterval
             });
 
             // Load the memo settings
@@ -442,7 +443,8 @@ class OptionsPageManager {
             const updatedSettings = {
                 ...currentSettings,
                 googleEventReminder: reminderSettings.googleEventReminder,
-                reminderMinutes: reminderSettings.reminderMinutes
+                reminderMinutes: reminderSettings.reminderMinutes,
+                reminderSyncInterval: reminderSettings.reminderSyncInterval
             };
 
             await saveSettings(updatedSettings);
@@ -549,6 +551,17 @@ class OptionsPageManager {
                 document.documentElement.style.setProperty(varName, value);
             }
             document.documentElement.removeAttribute('data-theme');
+
+            // Notify the background to apply the default reminder settings
+            // (re-create the periodic sync alarm at the default interval).
+            sendMessage({
+                action: 'updateReminderSettings',
+                settings: {
+                    googleEventReminder: DEFAULT_SETTINGS.googleEventReminder,
+                    reminderMinutes: DEFAULT_SETTINGS.reminderMinutes,
+                    reminderSyncInterval: DEFAULT_SETTINGS.reminderSyncInterval
+                }
+            });
 
             // Reload the side panel
             this._reloadSidePanel();

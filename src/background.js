@@ -26,6 +26,10 @@ chrome.runtime.onInstalled.addListener(async () => {
     // Set up daily alarm for Google event reminder sync (runs at 00:00 every day)
     await reminderSync.setupDailySync();
 
+    // Set up recurring intra-day sync so events added/changed during the day
+    // still get reminders without needing the side panel to be opened.
+    await reminderSync.setupPeriodicSync();
+
     // Initial sync on install
     await reminderSync.syncAll();
 
@@ -55,6 +59,11 @@ if (chrome.contextMenus) {
 
 // Handler for when the browser/profile starts
 chrome.runtime.onStartup.addListener(async () => {
+    // Defensively re-create the sync alarms in case they were lost (alarms do
+    // not always survive across restarts / crashes), then sync immediately.
+    await reminderSync.setupDailySync();
+    await reminderSync.setupPeriodicSync();
+
     // Sync reminders on startup
     await reminderSync.syncAll();
 });
@@ -217,8 +226,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             return false; // Synchronous response
 
         case "updateReminderSettings":
-            // Handle reminder settings update
-            reminderSync.syncGoogleEventReminders()
+            // Handle reminder settings update. Force-recreate the periodic sync
+            // alarm so a changed sync interval takes effect immediately, then sync.
+            reminderSync.setupPeriodicSync({ force: true })
+                .then(() => reminderSync.syncGoogleEventReminders())
                 .then(() => {
                     sendResponse({ success: true });
                 })
@@ -348,7 +359,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 // Alarm listener for event reminders and periodic sync
 chrome.alarms.onAlarm.addListener(async (alarm) => {
-    if (alarm.name === 'daily_reminder_sync') {
+    if (alarm.name === 'daily_reminder_sync' || alarm.name === 'periodic_reminder_sync') {
         await reminderSync.syncAll();
     } else if (alarm.name.startsWith(AlarmManager.ALARM_PREFIX) || alarm.name.startsWith(AlarmManager.GOOGLE_ALARM_PREFIX)) {
         await AlarmManager.showReminderNotification(alarm.name);
