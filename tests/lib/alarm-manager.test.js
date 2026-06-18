@@ -280,6 +280,47 @@ describe('AlarmManager', () => {
             expect(opts.buttons[0].title).toMatch(/openSideTimeTable|Open.*SideTimeTable/i);
         });
 
+        // The minutes shown in the message are passed to i18n getMessage as the
+        // 2nd placeholder. The test i18n mock echoes the key, so we assert on the
+        // arguments handed to getMessage instead of the rendered string.
+        function startsInMinutesArg() {
+            const call = chrome.i18n.getMessage.mock.calls.find(c => c[0] === 'startsInMinutes');
+            return call ? call[1][1] : null;
+        }
+
+        test('late-delivered alarm shows real remaining minutes, not configured value', async () => {
+            // Configured for 5 min before, but the alarm is delivered late so the
+            // event actually starts in ~2 minutes. The notification must reflect 2.
+            const startMs = Date.now() + 2 * 60_000;
+            const data = {
+                id: 'g-late', title: 'Delayed', startTime: '14:00',
+                reminderMinutes: 5,
+                startTimestamp: startMs
+            };
+            chrome.storage.local.set({
+                'googleEventData_google_event_reminder_2099-01-01_g-late': data
+            }, () => {});
+
+            await AlarmManager.showReminderNotification('google_event_reminder_2099-01-01_g-late');
+
+            expect(startsInMinutesArg()).toBe('2');
+        });
+
+        test('local event remaining minutes derived from alarm date + startTime', async () => {
+            // No reminderMinutes stored on local events; remaining time is
+            // reconstructed from the alarm-name date and the event startTime.
+            const future = new Date(Date.now() + 10 * 60_000);
+            const ds = `${future.getFullYear()}-${String(future.getMonth() + 1).padStart(2, '0')}-${String(future.getDate()).padStart(2, '0')}`;
+            const startTime = `${String(future.getHours()).padStart(2, '0')}:${String(future.getMinutes()).padStart(2, '0')}`;
+            const event = { id: 'loc1', title: 'Local', startTime };
+            chrome.storage.local.set({ [`localEvents_${ds}`]: [event] }, () => {});
+
+            await AlarmManager.showReminderNotification(`event_reminder_${ds}_loc1`);
+
+            // ~10 minutes remaining (allow rounding to 9 or 10)
+            expect(['9', '10']).toContain(startsInMinutesArg());
+        });
+
         test('no notification when event data is missing', async () => {
             await AlarmManager.showReminderNotification('event_reminder_2025-03-15_ghost');
             expect(chrome.notifications.create).not.toHaveBeenCalled();
@@ -361,6 +402,17 @@ describe('AlarmManager', () => {
             const payload = await readSavedPayload('g-both');
             expect(payload.conferenceType).toBe('video');
             expect(payload.conferenceUrl).toBe('https://us02web.zoom.us/j/123');
+        });
+
+        test('stores absolute startTimestamp for accurate remaining-time display', async () => {
+            await AlarmManager.setGoogleEventReminder({
+                id: 'g-ts',
+                summary: 'Timestamped',
+                start: { dateTime: FUTURE_ISO }
+            }, DATE_STR, 5);
+
+            const payload = await readSavedPayload('g-ts');
+            expect(payload.startTimestamp).toBe(new Date(FUTURE_ISO).getTime());
         });
 
         test('no conference link → conferenceUrl and conferenceType are null', async () => {

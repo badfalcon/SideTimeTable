@@ -89,6 +89,26 @@ export class ReminderSyncService {
     }
 
     /**
+     * Set up a recurring intra-day sync so reminders pick up Google Calendar
+     * events that were added or rescheduled after the last sync.
+     *
+     * Without this, reminders are only a snapshot taken at midnight / browser
+     * start / when the side panel is opened, so events created during the day
+     * silently get no notification.
+     */
+    static PERIODIC_SYNC_MINUTES = 30;
+
+    async setupPeriodicSync() {
+        try {
+            await chrome.alarms.create('periodic_reminder_sync', {
+                periodInMinutes: ReminderSyncService.PERIODIC_SYNC_MINUTES
+            });
+        } catch (error) {
+            console.error('Failed to setup periodic reminder sync:', error);
+        }
+    }
+
+    /**
      * Set up daily alarm for Google event reminder sync
      */
     async setupDailySync() {

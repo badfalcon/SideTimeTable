@@ -151,8 +151,20 @@ export class AlarmManager {
                 return;
             }
 
-            // Get reminder minutes (from eventData or settings)
-            const reminderMinutes = eventData.reminderMinutes || this.REMINDER_MINUTES;
+            // Determine the minutes to display in the notification.
+            //
+            // Chrome MV3 can deliver alarms several minutes late (battery saver,
+            // device sleep, service-worker throttling). Showing the statically
+            // configured value ("in 5 minutes") would then be wrong by exactly
+            // that delay — the user's "time is off by a few minutes" symptom.
+            // Recompute the real remaining time from the event's start instead.
+            // This also fixes local-event notifications, which never persisted
+            // reminderMinutes and used to fall back to a hard-coded 5.
+            let reminderMinutes = eventData.reminderMinutes || this.REMINDER_MINUTES;
+            const startMs = this.resolveStartTimestamp(eventData, alarmName);
+            if (startMs !== null) {
+                reminderMinutes = Math.max(0, Math.round((startMs - Date.now()) / 60000));
+            }
 
             // Create the notification
             const notificationId = `reminder_${alarmName}`;
@@ -326,6 +338,9 @@ export class AlarmManager {
                     id: event.id,
                     title: event.summary || 'No title',
                     startTime: this.formatTimeFromDateTime(event.start.dateTime),
+                    // Absolute start timestamp so the notification can compute the
+                    // real remaining time at fire time (Chrome may deliver the alarm late).
+                    startTimestamp: new Date(event.start.dateTime).getTime(),
                     dateStr: dateStr,
                     reminderMinutes: reminderMinutes,
                     conferenceUrl: conferenceUrl,
@@ -353,6 +368,42 @@ export class AlarmManager {
             console.error('Error calculating Google event reminder time:', error);
             return Date.now() + (reminderMinutes * 60 * 1000); // Fallback: specified minutes from now
         }
+    }
+
+    /**
+     * Resolve the absolute start timestamp (ms) for a stored reminder so the
+     * notification can show the real remaining time at fire time.
+     *
+     * - Google events persist `startTimestamp` directly.
+     * - Local/recurring events only store `startTime` (HH:mm); the date is
+     *   reconstructed from the alarm name (which embeds YYYY-MM-DD).
+     *
+     * @param {Object} eventData The stored event data
+     * @param {string} alarmName The alarm name (contains the date)
+     * @returns {number|null} The start timestamp in ms, or null if unresolvable
+     */
+    static resolveStartTimestamp(eventData, alarmName) {
+        if (typeof eventData.startTimestamp === 'number' && Number.isFinite(eventData.startTimestamp)) {
+            return eventData.startTimestamp;
+        }
+
+        if (!eventData.startTime || typeof alarmName !== 'string') {
+            return null;
+        }
+
+        const prefix = alarmName.startsWith(this.GOOGLE_ALARM_PREFIX)
+            ? this.GOOGLE_ALARM_PREFIX
+            : this.ALARM_PREFIX;
+        const dateStr = alarmName.replace(prefix, '').split('_')[0];
+
+        const [year, month, day] = dateStr.split('-').map(Number);
+        const [hours, minutes] = eventData.startTime.split(':').map(Number);
+
+        if ([year, month, day, hours, minutes].some(n => !Number.isFinite(n))) {
+            return null;
+        }
+
+        return new Date(year, month - 1, day, hours, minutes, 0).getTime();
     }
 
     /**
