@@ -91,6 +91,20 @@
       }
     }
   },
+  "startsInOneMinute": {
+    "message": "$EVENT_TITLE$ starts in 1 minute ($START_TIME$)",
+    "description": "Notification message for event reminder when one minute remains",
+    "placeholders": {
+      "event_title": {
+        "content": "$1",
+        "example": "Meeting"
+      },
+      "start_time": {
+        "content": "$2",
+        "example": "14:30"
+      }
+    }
+  },
   "openSideTimeTable": {
     "message": "Open SideTimeTable",
     "description": "Notification button text to open side panel"

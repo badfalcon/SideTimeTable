@@ -187,14 +187,22 @@ export class AlarmManager {
                 primaryLabel = chrome.i18n.getMessage('openSideTimeTable') || 'Open SideTimeTable';
             }
 
+            // Pick a grammatically correct message for the remaining time.
             // When the event is already starting (delivered late, or a
-            // remind-at-start-time reminder), "starts in 0 minutes" reads wrong;
-            // use a dedicated "starting now" message instead.
-            const message = reminderMinutes <= 0
-                ? (chrome.i18n.getMessage('eventStartingNow', [eventData.title, eventData.startTime])
-                    || `"${eventData.title}" is starting now (${eventData.startTime})`)
-                : (chrome.i18n.getMessage('startsInMinutes', [eventData.title, reminderMinutes.toString(), eventData.startTime])
-                    || `"${eventData.title}" starts in ${reminderMinutes} minutes (${eventData.startTime})`);
+            // remind-at-start-time reminder), "starts in 0 minutes" reads wrong,
+            // so use a dedicated "starting now" message; "1 minute" gets its own
+            // singular form (the recompute makes a value of 1 common).
+            let message;
+            if (reminderMinutes <= 0) {
+                message = chrome.i18n.getMessage('eventStartingNow', [eventData.title, eventData.startTime])
+                    || `"${eventData.title}" is starting now (${eventData.startTime})`;
+            } else if (reminderMinutes === 1) {
+                message = chrome.i18n.getMessage('startsInOneMinute', [eventData.title, eventData.startTime])
+                    || `"${eventData.title}" starts in 1 minute (${eventData.startTime})`;
+            } else {
+                message = chrome.i18n.getMessage('startsInMinutes', [eventData.title, reminderMinutes.toString(), eventData.startTime])
+                    || `"${eventData.title}" starts in ${reminderMinutes} minutes (${eventData.startTime})`;
+            }
 
             // Create the notification with a fallback for icon issues
             const notificationOptions = {
@@ -326,10 +334,10 @@ export class AlarmManager {
                 return;
             }
 
-            // Clear the existing alarm if any
-            await chrome.alarms.clear(alarmName);
-
-            // Create a new alarm
+            // chrome.alarms.create overwrites any existing alarm with the same
+            // name, so create directly. Clearing first would briefly leave the
+            // reminder absent, and a late delivery landing in that gap would be
+            // lost.
             await chrome.alarms.create(alarmName, {
                 when: reminderTime
             });
@@ -439,14 +447,35 @@ export class AlarmManager {
      */
     static async setGoogleEventReminders(events, dateStr) {
         try {
-            // Clear existing Google event reminders for this date first
-            await this.clearGoogleEventReminders(dateStr);
+            // Only timed events get reminders (all-day events are skipped).
+            const timedEvents = events.filter(e => e.start && e.start.dateTime);
 
-            // Set new reminders
-            for (const event of events) {
-                if (event.start && event.start.dateTime) {
-                    await this.setGoogleEventReminder(event, dateStr);
-                }
+            // Alarm names we intend to keep / (re)create on this sync.
+            const keepNames = new Set(
+                timedEvents.map(e => `${this.GOOGLE_ALARM_PREFIX}${dateStr}_${e.id}`)
+            );
+
+            // Clear ONLY today's Google reminders whose event no longer exists
+            // (deleted / cancelled / declined since the last sync). We must NOT
+            // wipe-and-recreate everything: a reminder that is due but not yet
+            // delivered (Chrome can deliver alarms late) would be cleared and
+            // then skipped on recreate (reminderTime <= now), silently losing
+            // the notification.
+            const alarms = await chrome.alarms.getAll();
+            const stale = alarms.filter(alarm =>
+                alarm.name.includes(`${this.GOOGLE_ALARM_PREFIX}${dateStr}_`) &&
+                !keepNames.has(alarm.name)
+            );
+            for (const alarm of stale) {
+                await chrome.alarms.clear(alarm.name);
+                await chrome.storage.local.remove(`googleEventData_${alarm.name}`);
+            }
+
+            // (Re)create reminders for current events. setGoogleEventReminder
+            // overwrites the same-named alarm, so a still-valid reminder is
+            // never absent.
+            for (const event of timedEvents) {
+                await this.setGoogleEventReminder(event, dateStr);
             }
         } catch (error) {
             console.error('Failed to set Google event reminders:', error);

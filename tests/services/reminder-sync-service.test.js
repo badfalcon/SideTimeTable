@@ -280,6 +280,52 @@ describe('ReminderSyncService', () => {
             expect(await service.getSyncIntervalMinutes()).toBe(60);
         });
 
+        test('does NOT recreate when an alarm with the same cadence exists', async () => {
+            chrome.alarms.get.mockImplementation((name, cb) => {
+                const alarm = { name: 'periodic_reminder_sync', periodInMinutes: 60 };
+                if (cb) { cb(alarm); return; }
+                return Promise.resolve(alarm);
+            });
+
+            await service.setupPeriodicSync();
+
+            // Idempotent: leave the existing countdown intact.
+            expect(chrome.alarms.create).not.toHaveBeenCalled();
+            expect(chrome.alarms.clear).not.toHaveBeenCalled();
+        });
+
+        test('recreates when the existing alarm cadence differs', async () => {
+            chrome.alarms.get.mockImplementation((name, cb) => {
+                const alarm = { name: 'periodic_reminder_sync', periodInMinutes: 30 };
+                if (cb) { cb(alarm); return; }
+                return Promise.resolve(alarm);
+            });
+            // Setting now wants 60.
+
+            await service.setupPeriodicSync();
+
+            expect(chrome.alarms.create).toHaveBeenCalledWith(
+                'periodic_reminder_sync',
+                { periodInMinutes: 60 }
+            );
+        });
+
+        test('force recreates even when a matching alarm exists', async () => {
+            chrome.alarms.get.mockImplementation((name, cb) => {
+                const alarm = { name: 'periodic_reminder_sync', periodInMinutes: 60 };
+                if (cb) { cb(alarm); return; }
+                return Promise.resolve(alarm);
+            });
+
+            await service.setupPeriodicSync({ force: true });
+
+            expect(chrome.alarms.clear).toHaveBeenCalledWith('periodic_reminder_sync');
+            expect(chrome.alarms.create).toHaveBeenCalledWith(
+                'periodic_reminder_sync',
+                { periodInMinutes: 60 }
+            );
+        });
+
         test('does not throw on error', async () => {
             chrome.alarms.create.mockRejectedValueOnce(new Error('fail'));
             await expect(service.setupPeriodicSync()).resolves.toBeUndefined();

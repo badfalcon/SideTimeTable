@@ -91,6 +91,20 @@
       }
     }
   },
+  "startsInOneMinute": {
+    "message": "「$EVENT_TITLE$」があと1分で開始されます（$START_TIME$）",
+    "description": "残り1分のイベントリマインダーの通知メッセージ",
+    "placeholders": {
+      "event_title": {
+        "content": "$1",
+        "example": "会議"
+      },
+      "start_time": {
+        "content": "$2",
+        "example": "14:30"
+      }
+    }
+  },
   "openSideTimeTable": {
     "message": "SideTimeTableを開く",
     "description": "サイドパネルを開く通知ボタンのテキスト"

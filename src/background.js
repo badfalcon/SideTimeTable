@@ -226,9 +226,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             return false; // Synchronous response
 
         case "updateReminderSettings":
-            // Handle reminder settings update. Re-create the periodic sync alarm
-            // first so a changed sync interval takes effect immediately, then sync.
-            reminderSync.setupPeriodicSync()
+            // Handle reminder settings update. Force-recreate the periodic sync
+            // alarm so a changed sync interval takes effect immediately, then sync.
+            reminderSync.setupPeriodicSync({ force: true })
                 .then(() => reminderSync.syncGoogleEventReminders())
                 .then(() => {
                     sendResponse({ success: true });

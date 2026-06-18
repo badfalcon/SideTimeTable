@@ -341,6 +341,24 @@ describe('AlarmManager', () => {
             expect(chrome.notifications.create).toHaveBeenCalledTimes(1);
         });
 
+        test('1 minute remaining → uses singular message, not plural', async () => {
+            const data = {
+                id: 'g-one', title: 'One', startTime: '14:00',
+                reminderMinutes: 5,
+                startTimestamp: Date.now() + 60_000
+            };
+            chrome.storage.local.set({
+                'googleEventData_google_event_reminder_2099-01-01_g-one': data
+            }, () => {});
+
+            await AlarmManager.showReminderNotification('google_event_reminder_2099-01-01_g-one');
+
+            const singularCall = chrome.i18n.getMessage.mock.calls.find(c => c[0] === 'startsInOneMinute');
+            const pluralCall = chrome.i18n.getMessage.mock.calls.find(c => c[0] === 'startsInMinutes');
+            expect(singularCall).toBeDefined();
+            expect(pluralCall).toBeUndefined();
+        });
+
         test('no notification when event data is missing', async () => {
             await AlarmManager.showReminderNotification('event_reminder_2025-03-15_ghost');
             expect(chrome.notifications.create).not.toHaveBeenCalled();
@@ -536,7 +554,6 @@ describe('AlarmManager', () => {
 
         test('setGoogleEventReminders skips all-day events', async () => {
             const spy = jest.spyOn(AlarmManager, 'setGoogleEventReminder').mockResolvedValue();
-            jest.spyOn(AlarmManager, 'clearGoogleEventReminders').mockResolvedValue();
 
             await AlarmManager.setGoogleEventReminders([
                 { id: 'g1', start: { dateTime: '2030-03-15T10:00:00Z' } },
@@ -545,6 +562,31 @@ describe('AlarmManager', () => {
             ], '2030-03-15');
 
             expect(spy).toHaveBeenCalledTimes(2);
+            spy.mockRestore();
+        });
+
+        test('setGoogleEventReminders clears only alarms for events no longer present', async () => {
+            // Selective clear: a still-present event's reminder must NOT be wiped
+            // (a due-but-late reminder would otherwise be lost); only removed
+            // events and non-Google alarms are left untouched/cleared respectively.
+            const spy = jest.spyOn(AlarmManager, 'setGoogleEventReminder').mockResolvedValue();
+            chrome.alarms.getAll.mockImplementation((cb) => {
+                const list = [
+                    { name: 'google_event_reminder_2030-03-15_g1' },    // still present → keep
+                    { name: 'google_event_reminder_2030-03-15_gone' },  // removed → clear
+                    { name: 'event_reminder_2030-03-15_local' },        // not Google → untouched
+                ];
+                if (cb) { cb(list); return; }
+                return Promise.resolve(list);
+            });
+
+            await AlarmManager.setGoogleEventReminders([
+                { id: 'g1', start: { dateTime: '2030-03-15T10:00:00Z' } },
+            ], '2030-03-15');
+
+            expect(chrome.alarms.clear).toHaveBeenCalledWith('google_event_reminder_2030-03-15_gone');
+            expect(chrome.alarms.clear).not.toHaveBeenCalledWith('google_event_reminder_2030-03-15_g1');
+            expect(chrome.alarms.clear).not.toHaveBeenCalledWith('event_reminder_2030-03-15_local');
             spy.mockRestore();
         });
 

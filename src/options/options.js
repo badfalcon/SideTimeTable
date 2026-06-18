@@ -552,6 +552,17 @@ class OptionsPageManager {
             }
             document.documentElement.removeAttribute('data-theme');
 
+            // Notify the background to apply the default reminder settings
+            // (re-create the periodic sync alarm at the default interval).
+            sendMessage({
+                action: 'updateReminderSettings',
+                settings: {
+                    googleEventReminder: DEFAULT_SETTINGS.googleEventReminder,
+                    reminderMinutes: DEFAULT_SETTINGS.reminderMinutes,
+                    reminderSyncInterval: DEFAULT_SETTINGS.reminderSyncInterval
+                }
+            });
+
             // Reload the side panel
             this._reloadSidePanel();
 
