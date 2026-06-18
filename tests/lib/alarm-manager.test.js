@@ -514,7 +514,7 @@ describe('AlarmManager', () => {
     // ---------------------------------------------------------------
     // SPEC: Date Scoping
     // - clearDateReminders only clears alarms for that date
-    // - clearGoogleEventReminders only clears Google alarms
+    // - setGoogleEventReminders selectively clears only removed events' alarms
     // ---------------------------------------------------------------
     describe('SPEC: date scoping', () => {
         test('clearDateReminders only affects specified date', async () => {
@@ -532,24 +532,6 @@ describe('AlarmManager', () => {
 
             // 2 cleared (15th), not 1 (16th)
             expect(chrome.alarms.clear).toHaveBeenCalledTimes(2);
-        });
-
-        test('clearGoogleEventReminders only clears google_ prefixed alarms', async () => {
-            chrome.alarms.getAll.mockImplementation((cb) => {
-                const list = [
-                    { name: 'google_event_reminder_2025-03-15_g1' },
-                    { name: 'event_reminder_2025-03-15_local1' },
-                ];
-                if (cb) { cb(list); return; }
-                return Promise.resolve(list);
-            });
-
-            await AlarmManager.clearGoogleEventReminders('2025-03-15');
-
-            expect(chrome.alarms.clear).toHaveBeenCalledTimes(1);
-            expect(chrome.alarms.clear).toHaveBeenCalledWith(
-                'google_event_reminder_2025-03-15_g1'
-            );
         });
 
         test('setGoogleEventReminders skips all-day events', async () => {

@@ -57,8 +57,20 @@ export class ReminderSyncService {
                 reminderMinutes: 5
             });
 
-            if (!settings.googleEventReminder) return;
-            if (!settings.googleIntegrated) return;
+            // Feature disabled (or Google disconnected) → remove any previously
+            // scheduled Google reminders across all dates so stale notifications
+            // don't keep firing after the user turns the feature off or resets.
+            if (!settings.googleEventReminder || !settings.googleIntegrated) {
+                const existing = await chrome.alarms.getAll();
+                const googleReminders = existing.filter(alarm =>
+                    alarm.name.startsWith(AlarmManager.GOOGLE_ALARM_PREFIX)
+                );
+                for (const alarm of googleReminders) {
+                    await chrome.alarms.clear(alarm.name);
+                    await chrome.storage.local.remove(`googleEventData_${alarm.name}`);
+                }
+                return;
+            }
 
             const today = new Date();
             const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;

@@ -104,6 +104,30 @@ describe('ReminderSyncService', () => {
             expect(mockCalendarClient.getPrimaryCalendarEvents).not.toHaveBeenCalled();
         });
 
+        test('clears previously-set Google reminders when feature is disabled', async () => {
+            chrome.storage.sync.set({
+                googleEventReminder: false,
+                googleIntegrated: true,
+            }, () => {});
+
+            chrome.alarms.getAll.mockImplementation((cb) => {
+                const list = [
+                    { name: 'google_event_reminder_2030-03-15_g1' },
+                    { name: 'google_event_reminder_2030-03-16_g2' },
+                    { name: 'event_reminder_2030-03-15_local' }, // local → untouched
+                ];
+                if (cb) { cb(list); return; }
+                return Promise.resolve(list);
+            });
+
+            await service.syncGoogleEventReminders();
+
+            expect(chrome.alarms.clear).toHaveBeenCalledWith('google_event_reminder_2030-03-15_g1');
+            expect(chrome.alarms.clear).toHaveBeenCalledWith('google_event_reminder_2030-03-16_g2');
+            expect(chrome.alarms.clear).not.toHaveBeenCalledWith('event_reminder_2030-03-15_local');
+            expect(mockCalendarClient.getPrimaryCalendarEvents).not.toHaveBeenCalled();
+        });
+
         test('fetches and sets reminders when both enabled', async () => {
             chrome.storage.sync.set({
                 googleEventReminder: true,

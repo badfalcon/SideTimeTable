@@ -483,28 +483,6 @@ export class AlarmManager {
     }
 
     /**
-     * Clear all Google event reminders for a specific date
-     * @param {string} dateStr The date string (YYYY-MM-DD)
-     */
-    static async clearGoogleEventReminders(dateStr) {
-        try {
-            const alarms = await chrome.alarms.getAll();
-            const googleAlarms = alarms.filter(alarm =>
-                alarm.name.includes(`${this.GOOGLE_ALARM_PREFIX}${dateStr}_`)
-            );
-
-            for (const alarm of googleAlarms) {
-                await chrome.alarms.clear(alarm.name);
-                // Also clear the stored event data
-                const storageKey = `googleEventData_${alarm.name}`;
-                await chrome.storage.local.remove(storageKey);
-            }
-        } catch (error) {
-            console.error('Failed to clear Google event reminders:', error);
-        }
-    }
-
-    /**
      * Get Google event data from storage
      * @param {string} alarmName The alarm name
      * @returns {Object|null} The event data
