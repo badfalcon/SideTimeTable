@@ -77,6 +77,20 @@
       }
     }
   },
+  "eventStartingNow": {
+    "message": "$EVENT_TITLE$ is starting now ($START_TIME$)",
+    "description": "Notification message when the event is starting now",
+    "placeholders": {
+      "event_title": {
+        "content": "$1",
+        "example": "Meeting"
+      },
+      "start_time": {
+        "content": "$2",
+        "example": "14:30"
+      }
+    }
+  },
   "openSideTimeTable": {
     "message": "Open SideTimeTable",
     "description": "Notification button text to open side panel"

@@ -10,6 +10,12 @@ import { AuthenticationError } from './google-calendar-client.js';
 
 export class ReminderSyncService {
 
+    // Intra-day sync interval bounds (minutes). Values below the minimum (e.g.
+    // legacy/corrupt data) fall back to the default rather than hammering the
+    // service worker.
+    static DEFAULT_SYNC_MINUTES = 60;
+    static MIN_SYNC_MINUTES = 15;
+
     /**
      * @param {import('./google-calendar-client.js').GoogleCalendarClient} calendarClient
      */
@@ -97,13 +103,12 @@ export class ReminderSyncService {
      * silently get no notification.
      *
      * The interval is user-configurable via the `reminderSyncInterval` setting
-     * (minutes); it is clamped to chrome.alarms' minimum and a sane default.
+     * (minutes); invalid or sub-minimum values fall back to the default.
      */
-    static DEFAULT_SYNC_MINUTES = 60;
-    static MIN_SYNC_MINUTES = 15;
 
     /**
-     * Resolve the configured sync interval in minutes, clamped to a safe range.
+     * Resolve the configured sync interval in minutes, falling back to the
+     * default for invalid or sub-minimum values.
      * @returns {Promise<number>}
      */
     async getSyncIntervalMinutes() {

@@ -160,7 +160,8 @@ export class AlarmManager {
             // Recompute the real remaining time from the event's start instead.
             // This also fixes local-event notifications, which never persisted
             // reminderMinutes and used to fall back to a hard-coded 5.
-            let reminderMinutes = eventData.reminderMinutes || this.REMINDER_MINUTES;
+            // Use ?? so an explicit 0 ("remind at start time") is preserved.
+            let reminderMinutes = eventData.reminderMinutes ?? this.REMINDER_MINUTES;
             const startMs = this.resolveStartTimestamp(eventData, alarmName);
             if (startMs !== null) {
                 reminderMinutes = Math.max(0, Math.round((startMs - Date.now()) / 60000));
@@ -186,12 +187,20 @@ export class AlarmManager {
                 primaryLabel = chrome.i18n.getMessage('openSideTimeTable') || 'Open SideTimeTable';
             }
 
+            // When the event is already starting (delivered late, or a
+            // remind-at-start-time reminder), "starts in 0 minutes" reads wrong;
+            // use a dedicated "starting now" message instead.
+            const message = reminderMinutes <= 0
+                ? (chrome.i18n.getMessage('eventStartingNow', [eventData.title, eventData.startTime])
+                    || `"${eventData.title}" is starting now (${eventData.startTime})`)
+                : (chrome.i18n.getMessage('startsInMinutes', [eventData.title, reminderMinutes.toString(), eventData.startTime])
+                    || `"${eventData.title}" starts in ${reminderMinutes} minutes (${eventData.startTime})`);
+
             // Create the notification with a fallback for icon issues
             const notificationOptions = {
                 type: 'basic',
                 title: chrome.i18n.getMessage('eventReminder') || 'Event Reminder',
-                message: chrome.i18n.getMessage('startsInMinutes', [eventData.title, reminderMinutes.toString(), eventData.startTime])
-                    || `"${eventData.title}" starts in ${reminderMinutes} minutes (${eventData.startTime})`,
+                message: message,
                 buttons: [
                     { title: primaryLabel },
                     { title: chrome.i18n.getMessage('dismissNotification') || 'Dismiss' }

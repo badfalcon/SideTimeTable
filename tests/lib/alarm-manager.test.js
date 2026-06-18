@@ -321,6 +321,26 @@ describe('AlarmManager', () => {
             expect(['9', '10']).toContain(startsInMinutesArg());
         });
 
+        test('event already starting → uses "starting now" message, not "0 minutes"', async () => {
+            // Alarm delivered late: the event start is already in the past.
+            const data = {
+                id: 'g-now', title: 'Now', startTime: '14:00',
+                reminderMinutes: 5,
+                startTimestamp: Date.now() - 30_000
+            };
+            chrome.storage.local.set({
+                'googleEventData_google_event_reminder_2099-01-01_g-now': data
+            }, () => {});
+
+            await AlarmManager.showReminderNotification('google_event_reminder_2099-01-01_g-now');
+
+            const startsInCall = chrome.i18n.getMessage.mock.calls.find(c => c[0] === 'startsInMinutes');
+            const startingNowCall = chrome.i18n.getMessage.mock.calls.find(c => c[0] === 'eventStartingNow');
+            expect(startsInCall).toBeUndefined();
+            expect(startingNowCall).toBeDefined();
+            expect(chrome.notifications.create).toHaveBeenCalledTimes(1);
+        });
+
         test('no notification when event data is missing', async () => {
             await AlarmManager.showReminderNotification('event_reminder_2025-03-15_ghost');
             expect(chrome.notifications.create).not.toHaveBeenCalled();
