@@ -11,6 +11,7 @@
 const fs = require('fs');
 const path = require('path');
 const { loadPlaywright } = require('./pw');
+const { CANVAS_W, CANVAS_H, TABSTRIP_H, TOOLBAR_H, SP_HEADER_H, PANEL_W, CONTENT_H, PANEL_H } = require('./geometry');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const ICON = path.join(ROOT, 'src', 'img', 'icon32.png');
@@ -109,9 +110,9 @@ function pageHtml({ theme, tabTitle, url, pageImg, panelImg }, rawDir) {
       </div>` : '';
     return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
       * { margin:0; padding:0; box-sizing:border-box; }
-      body { width:1280px; height:800px; overflow:hidden;
+      body { width:${CANVAS_W}px; height:${CANVAS_H}px; overflow:hidden;
              font-family:'Noto Sans CJK JP','Noto Sans JP','Hiragino Sans','Yu Gothic UI',system-ui,sans-serif; }
-      .tabstrip { height:40px; background:${t.tabstrip}; display:flex; align-items:flex-end; padding:0 8px; }
+      .tabstrip { height:${TABSTRIP_H}px; background:${t.tabstrip}; display:flex; align-items:flex-end; padding:0 8px; }
       .tab { height:34px; width:248px; background:${t.tab}; border-radius:10px 10px 0 0;
              display:flex; align-items:center; gap:8px; padding:0 12px; margin-left:8px; }
       .tab img { width:16px; height:16px; }
@@ -121,7 +122,7 @@ function pageHtml({ theme, tabTitle, url, pageImg, panelImg }, rawDir) {
       .newtab::after { content:''; width:2px; height:12px; background:${t.icon}; position:absolute; }
       .winctl { margin-left:auto; display:flex; gap:18px; align-items:center; padding:0 10px 8px 0; }
       .winctl span { width:10px; height:10px; border-radius:50%; background:${t.icon}; opacity:.55; }
-      .toolbar { height:44px; background:${t.toolbar}; border-bottom:1px solid ${t.border};
+      .toolbar { height:${TOOLBAR_H}px; background:${t.toolbar}; border-bottom:1px solid ${t.border};
                  display:flex; align-items:center; gap:6px; padding:0 10px; }
       .i { display:inline-flex; width:20px; height:20px; }
       .i svg { width:100%; height:100%; }
@@ -132,16 +133,17 @@ function pageHtml({ theme, tabTitle, url, pageImg, panelImg }, rawDir) {
                  display:flex; align-items:center; gap:8px; padding:0 14px; margin:0 6px; }
       .omnibox .i { width:14px; height:14px; }
       .omnibox span { font-size:12.5px; color:${t.subtext}; }
-      .content { height:716px; display:flex; }
-      .page { flex:1; height:716px; overflow:hidden; }
+      .content { height:${CONTENT_H}px; display:flex; }
+      .page { flex:1; height:${CONTENT_H}px; overflow:hidden; }
       .page img { display:block; width:100%; height:100%; }
-      .sidepanel { width:384px; border-left:1px solid ${t.border}; display:flex; flex-direction:column; }
-      .sp-header { height:36px; background:${t.panelHeader}; border-bottom:1px solid ${t.border};
+      /* divider drawn as a shadow so the ${PANEL_W}px capture keeps every pixel column */
+      .sidepanel { width:${PANEL_W}px; box-shadow:-1px 0 0 ${t.border}; display:flex; flex-direction:column; }
+      .sp-header { height:${SP_HEADER_H}px; background:${t.panelHeader}; border-bottom:1px solid ${t.border};
                    display:flex; align-items:center; gap:8px; padding:0 12px; }
       .sp-icon { width:16px; height:16px; }
       .sp-title { font-size:12px; font-weight:600; color:${t.text}; }
       .sp-actions { margin-left:auto; display:flex; gap:12px; align-items:center; }
-      .sp-img { display:block; width:384px; height:680px; }
+      .sp-img { display:block; width:${PANEL_W}px; height:${PANEL_H}px; }
     </style></head><body>
       <div class="tabstrip">
         <div class="tab"><img src="${icon}" alt=""><span>${tabTitle}</span></div>
@@ -179,7 +181,7 @@ async function compose(lang, { rawDir, outDir }) {
     fs.mkdirSync(outDir, { recursive: true });
     const browser = await chromium.launch({ headless: true, channel: 'chromium' });
     try {
-        const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+        const page = await browser.newPage({ viewport: { width: CANVAS_W, height: CANVAS_H } });
         for (const shot of shots) {
             await page.setContent(pageHtml(shot, rawDir), { waitUntil: 'load' });
             await page.waitForTimeout(300);

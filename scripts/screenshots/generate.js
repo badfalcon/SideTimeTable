@@ -26,6 +26,7 @@ const os = require('os');
 const path = require('path');
 const http = require('http');
 const { execSync } = require('child_process');
+const { loadPlaywright } = require('./pw');
 const { capture } = require('./capture');
 const { compose } = require('./compose');
 
@@ -49,9 +50,15 @@ function parseArgs(argv) {
             case '--skip-build':
                 result.skipBuild = true;
                 break;
-            case '--out':
-                result.outDir = path.resolve(args[++i]);
+            case '--out': {
+                const out = args[++i];
+                if (!out) {
+                    console.error('--out requires a directory argument');
+                    process.exit(1);
+                }
+                result.outDir = path.resolve(out);
                 break;
+            }
             default:
                 console.error(`Unknown option: ${args[i]}`);
                 process.exit(1);
@@ -71,15 +78,20 @@ function serveDocs() {
         '.ico': 'image/x-icon',
     };
     const server = http.createServer((req, res) => {
-        const rel = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
-        const file = path.join(DOCS, rel === '/' ? 'index.html' : rel);
-        // keep requests inside docs/
-        if (!file.startsWith(DOCS + path.sep) || !fs.existsSync(file) || !fs.statSync(file).isFile()) {
-            res.writeHead(404).end('not found');
-            return;
+        // a throw here would be an uncaughtException and kill the whole run
+        try {
+            const rel = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
+            const file = path.join(DOCS, rel === '/' ? 'index.html' : rel);
+            // keep requests inside docs/
+            if (!file.startsWith(DOCS + path.sep) || !fs.existsSync(file) || !fs.statSync(file).isFile()) {
+                res.writeHead(404).end('not found');
+                return;
+            }
+            res.writeHead(200, { 'Content-Type': mime[path.extname(file)] || 'application/octet-stream' });
+            res.end(fs.readFileSync(file));
+        } catch {
+            res.writeHead(400).end('bad request');
         }
-        res.writeHead(200, { 'Content-Type': mime[path.extname(file)] || 'application/octet-stream' });
-        res.end(fs.readFileSync(file));
     });
     return new Promise((resolve) => {
         server.listen(0, '127.0.0.1', () => {
@@ -92,9 +104,15 @@ function serveDocs() {
 async function main() {
     const { langs, skipBuild, outDir } = parseArgs(process.argv);
 
+    // fail fast on a missing Playwright before spending time on the build
+    loadPlaywright();
+
     if (!skipBuild) {
         console.log('Building extension with demo data...');
         execSync('npx webpack --mode development --env demo', { cwd: ROOT, stdio: 'inherit' });
+    } else if (!fs.existsSync(path.join(ROOT, 'manifest.json')) || !fs.existsSync(path.join(ROOT, 'dist', 'side_panel.bundle.js'))) {
+        console.error('--skip-build requires an existing build (manifest.json + dist/). Run `npm run screenshots` without --skip-build first.');
+        process.exit(1);
     }
 
     const rawDir = fs.mkdtempSync(path.join(os.tmpdir(), 'stt-screenshot-raw-'));

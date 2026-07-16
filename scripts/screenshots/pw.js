@@ -5,7 +5,8 @@
  * heavy). This resolver tries, in order:
  *   1. A locally installed `playwright` (npm i -D playwright)
  *   2. A globally installed `playwright` (npm i -g playwright)
- * and exits with setup instructions if neither is available.
+ * and throws with setup instructions if neither is available (throwing lets
+ * callers' finally blocks clean up, unlike process.exit).
  */
 
 const path = require('path');
@@ -21,13 +22,11 @@ function loadPlaywright() {
         return require(path.join(globalRoot, 'playwright'));
     } catch { /* not installed globally either */ }
 
-    console.error(
-        'Playwright is required to generate screenshots.\n' +
-        'Install it with:\n' +
+    throw new Error(
+        'Playwright is required to generate screenshots. Install it with:\n' +
         '  npm install -D playwright\n' +
-        '  npx playwright install chromium\n'
+        '  npx playwright install chromium'
     );
-    process.exit(1);
 }
 
 module.exports = { loadPlaywright };

@@ -45,6 +45,9 @@ npm run screenshots -- --out <dir>    # 出力先を変更
 
 - Font Awesome は `@fortawesome/fontawesome-free` (devDependency) から
   ローカル配信されるため、オフライン環境でも撮影可能
-- 実行後の `dist/` はデモデータ入りの開発ビルドになる。リリース作業前に
-  `npm run build` で本番ビルドに戻すこと
-- デモの日付は実行日になるため、再生成すると画像の日付表示が変わる
+- 実行後の `dist/` と `manifest.json` はデモデータ入りの開発ビルドになる。
+  リリース作業前に `npm run build` で本番ビルドに戻すこと
+  (build-zip.js 側にも dev マニフェスト検出ガードあり)
+- ページ内の時刻は Playwright Clock API で固定 (capture.js の `FIXED_DATE` /
+  `FIXED_TIME`) しているため、UI が変わらない限り再生成しても日付表示は
+  変わらない
