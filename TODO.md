@@ -34,6 +34,10 @@
 - [x] `CalendarManagementCard.render()` から `_prepareRenderData()` を抽出済み
 - [x] `CalendarGroupManager` / `CalendarFilterRenderer` の getter コールバックパターンも同様にメソッドパラメータ直接渡しに変更済み
 
+## ランディングページ
+
+- [ ] 英語版のSEO対応: 現状の多言語化はクライアントサイド置換のため、クローラーやSNSのリンクプレビューには日本語しか見えない（英語圏の検索に英訳が寄与しない）。英語ユーザー獲得を狙うなら、辞書（`docs/i18n.js`）から静的な言語別ページ（`docs/en/index.html` 等）を生成し `hreflang` 相互リンクを張る方式への移行を検討する。
+
 ## 仕様検討（Q7）
 
 - [ ] `saveLocalEventsForDate()` の保存方式を上書き→マージベースに変更するか検討（現状は上書き方式。呼び出し元がload→edit→saveする必要あり）

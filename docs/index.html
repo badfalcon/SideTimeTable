@@ -6,6 +6,25 @@
     <meta name="google-site-verification" content="rgiL3Ol-PjR-hGIsGjED3tzl9cmJ_rhJG6g6RhFOzOc" />
     <meta name="description" data-i18n-content="index.description" content="SideTimeTable - ChromeのサイドパネルにGoogleカレンダーとローカルイベントをタイムライン表示するChrome拡張機能">
     <title data-i18n="index.title">SideTimeTable - サイドパネルで今日を管理する</title>
+    <script>
+    // 初回ペイント前に言語を確定し、英語時は適用完了まで非表示にして
+    // 日本語→英語のちらつきを防ぐ（本適用は i18n.js が行う）
+    (function () {
+        try {
+            var saved = localStorage.getItem('sideTimeTableLang');
+            var lang = (saved === 'ja' || saved === 'en') ? saved
+                : ((navigator.language || '').toLowerCase().indexOf('ja') === 0 ? 'ja' : 'en');
+            document.documentElement.lang = lang;
+            if (lang === 'en') {
+                document.documentElement.classList.add('i18n-pending');
+                // i18n.js が読み込めなかった場合でもページが出るように保険
+                setTimeout(function () {
+                    document.documentElement.classList.remove('i18n-pending');
+                }, 1000);
+            }
+        } catch (e) { /* 日本語マークアップのまま表示 */ }
+    })();
+    </script>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="img/icon128.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -92,7 +111,7 @@
                     <div class="pm-header">
                         <div class="pm-date">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-                            <span data-i18n="mock.date">2025年1月15日 (水)</span>
+                            <span data-i18n="mock.date">2025/01/15 (水)</span>
                         </div>
                         <div class="pm-nav">
                             <button class="pm-btn">‹</button>
@@ -102,34 +121,34 @@
                     <div class="pm-body">
                         <div class="pm-timeline">
                             <div class="tl-row">
-                                <span class="tl-time">9:00</span>
+                                <span class="tl-time" data-i18n="mock.t1">9:00</span>
                                 <div class="tl-event ev-indigo">
                                     <span class="ev-name" data-i18n="mock.ev1Name">チームミーティング</span>
                                     <span class="ev-dur" data-i18n="mock.ev1Dur">09:00〜10:00</span>
                                 </div>
                             </div>
                             <div class="tl-row tl-row--sm">
-                                <span class="tl-time">10:00</span>
+                                <span class="tl-time" data-i18n="mock.t2">10:00</span>
                                 <div class="tl-event ev-emerald">
                                     <span class="ev-name" data-i18n="mock.ev2Name">コードレビュー</span>
                                     <span class="ev-dur" data-i18n="mock.ev2Dur">10:30〜11:00</span>
                                 </div>
                             </div>
                             <div class="tl-row tl-row--now">
-                                <span class="tl-time tl-time--now">13:20</span>
+                                <span class="tl-time tl-time--now" data-i18n="mock.t3">13:20</span>
                                 <div class="now-line">
                                     <span class="now-dot"></span>
                                 </div>
                             </div>
                             <div class="tl-row">
-                                <span class="tl-time">14:00</span>
+                                <span class="tl-time" data-i18n="mock.t4">14:00</span>
                                 <div class="tl-event ev-violet">
                                     <span class="ev-name" data-i18n="mock.ev3Name">1on1ミーティング</span>
                                     <span class="ev-dur" data-i18n="mock.ev3Dur">14:00〜14:45</span>
                                 </div>
                             </div>
                             <div class="tl-row tl-row--sm">
-                                <span class="tl-time">16:00</span>
+                                <span class="tl-time" data-i18n="mock.t5">16:00</span>
                                 <div class="tl-event ev-amber">
                                     <span class="ev-name" data-i18n="mock.ev4Name">週次振り返り</span>
                                     <span class="ev-dur" data-i18n="mock.ev4Dur">16:00〜17:00</span>
@@ -215,13 +234,13 @@
         </div>
         <div class="shots-grid">
             <div class="shot-wrap anim-up">
-                <img src="img/image_1.png" alt="SideTimeTableの画面1" class="shot-img" loading="lazy" data-i18n-src="shots.img1" data-i18n-alt="shots.alt1">
+                <img src="img/image_1.png" alt="SideTimeTableの画面1" class="shot-img" loading="lazy" data-i18n-src data-i18n-alt="shots.alt1">
             </div>
             <div class="shot-wrap anim-up" style="animation-delay:.1s">
-                <img src="img/image_2.png" alt="SideTimeTableの画面2" class="shot-img" loading="lazy" data-i18n-src="shots.img2" data-i18n-alt="shots.alt2">
+                <img src="img/image_2.png" alt="SideTimeTableの画面2" class="shot-img" loading="lazy" data-i18n-src data-i18n-alt="shots.alt2">
             </div>
             <div class="shot-wrap anim-up" style="animation-delay:.2s">
-                <img src="img/image_3.png" alt="SideTimeTableの画面3" class="shot-img" loading="lazy" data-i18n-src="shots.img3" data-i18n-alt="shots.alt3">
+                <img src="img/image_3.png" alt="SideTimeTableの画面3" class="shot-img" loading="lazy" data-i18n-src data-i18n-alt="shots.alt3">
             </div>
         </div>
     </div>

@@ -49,6 +49,11 @@ html {
     scroll-padding-top: var(--nav-h);
 }
 
+/* 英語表示の適用が終わるまで非表示（head内スニペットが付与、i18n.jsが除去） */
+.i18n-pending body {
+    visibility: hidden;
+}
+
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Yu Gothic', sans-serif;
     background: var(--clr-bg);
@@ -478,12 +483,14 @@ button { cursor: pointer; background: none; border: none; font: inherit; }
 }
 
 .tl-time {
-    width: 36px;
+    /* 42px: 英語の12時間表記ラベル（例 "1:20 PM"）が折り返さない幅 */
+    width: 42px;
     flex-shrink: 0;
     font-size: 0.6rem;
     color: var(--clr-sub);
     padding-top: 8px;
     text-align: right;
+    white-space: nowrap;
     font-feature-settings: "tnum";
 }
 
@@ -1060,11 +1067,15 @@ button { cursor: pointer; background: none; border: none; font: inherit; }
     }
 }
 
-@media (max-width: 768px) {
+/* 800px以下: 言語スイッチャー追加後、英語のリンクテキストが769〜783pxで
+   収まらずCTAがはみ出すため、ナビリンクはここで畳む */
+@media (max-width: 800px) {
     .nav-links {
         display: none;
     }
+}
 
+@media (max-width: 768px) {
     .features-grid,
     .shots-grid {
         grid-template-columns: 1fr;
@@ -1083,6 +1094,12 @@ button { cursor: pointer; background: none; border: none; font: inherit; }
 
     .hero-title {
         font-size: 2.2rem;
+    }
+
+    /* 英語の説明文は行が長く、固定<br>と自然折り返しが混ざって
+       ガタつくため、狭い画面では<br>を無効化して流し込みにする */
+    html[lang="en"] .hero-desc br {
+        display: none;
     }
 
     .dev-card {

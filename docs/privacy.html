@@ -6,6 +6,25 @@
     <meta name="google-site-verification" content="rgiL3Ol-PjR-hGIsGjED3tzl9cmJ_rhJG6g6RhFOzOc" />
     <meta name="description" data-i18n-content="privacy.description" content="SideTimeTable プライバシーポリシー">
     <title data-i18n="privacy.title">プライバシーポリシー - SideTimeTable</title>
+    <script>
+    // 初回ペイント前に言語を確定し、英語時は適用完了まで非表示にして
+    // 日本語→英語のちらつきを防ぐ（本適用は i18n.js が行う）
+    (function () {
+        try {
+            var saved = localStorage.getItem('sideTimeTableLang');
+            var lang = (saved === 'ja' || saved === 'en') ? saved
+                : ((navigator.language || '').toLowerCase().indexOf('ja') === 0 ? 'ja' : 'en');
+            document.documentElement.lang = lang;
+            if (lang === 'en') {
+                document.documentElement.classList.add('i18n-pending');
+                // i18n.js が読み込めなかった場合でもページが出るように保険
+                setTimeout(function () {
+                    document.documentElement.classList.remove('i18n-pending');
+                }, 1000);
+            }
+        } catch (e) { /* 日本語マークアップのまま表示 */ }
+    })();
+    </script>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="img/icon128.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
