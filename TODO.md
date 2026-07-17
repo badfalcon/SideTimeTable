@@ -14,6 +14,10 @@
 - [ ] UIコンポーネント（options/、side_panel/components/）のテスト（DOM・コンポーネントライフサイクルのモックが必要）
 - [ ] `OnboardingService.checkForUpdateNotification()` のテスト（`whatsNewAutoShow=false` 時に `lastSeenVersion` だけ進める分岐の検証含む。`StorageHelper`/`chrome.runtime.getManifest` のモックが必要）
 
+## ビルド・パッケージング
+
+- [ ] `build-zip.js` がリリースzipに `docs/` ディレクトリ全体（ランディングページ+スクリーンショットPNG 約770KB）を同梱している — 拡張機能は実行時に読み込まないため、除外するか同梱理由を明記する
+
 ## リファクタリング（既存コード）
 
 - [x] `_fetchEventsForCalendarIds()` が `_fetchWithAuth()` を迂回して直接 `fetch()` している — calendarList取得部分は `_fetchWithAuth()` に統一済み

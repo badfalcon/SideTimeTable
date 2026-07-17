@@ -16,6 +16,7 @@ npm install           # Install dependencies (required once)
 npm run build         # Production build (output to dist/)
 npm run dev           # Development mode with file watching
 npm run package       # Create release zip file (builds + packages)
+npm run screenshots   # Regenerate landing page / web store screenshots (docs/img/, requires Playwright — see scripts/screenshots/README.md)
 ```
 
 **Quality checks (must run after any code change):**
