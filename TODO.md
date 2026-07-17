@@ -36,7 +36,7 @@
 
 ## ランディングページ
 
-- [ ] 英語版のSEO対応: 現状の多言語化はクライアントサイド置換のため、クローラーやSNSのリンクプレビューには日本語しか見えない（英語圏の検索に英訳が寄与しない）。英語ユーザー獲得を狙うなら、辞書（`docs/i18n.js`）から静的な言語別ページ（`docs/en/index.html` 等）を生成し `hreflang` 相互リンクを張る方式への移行を検討する。
+- [x] 英語版のSEO対応: `npm run build:landing`（`scripts/build-landing-en.js`）で静的な英語ページ（`docs/en/`）を生成し、`hreflang` 相互リンク・canonical・OGP・JSON-LD・`sitemap.xml`・`robots.txt` を追加済み。**文言や `docs/i18n.js` を変更したら `npm run build:landing` で `docs/en/` を再生成すること**。
 
 ## 仕様検討（Q7）
 

@@ -6,14 +6,31 @@
     <meta name="google-site-verification" content="rgiL3Ol-PjR-hGIsGjED3tzl9cmJ_rhJG6g6RhFOzOc" />
     <meta name="description" data-i18n-content="privacy.description" content="SideTimeTable プライバシーポリシー">
     <title data-i18n="privacy.title">プライバシーポリシー - SideTimeTable</title>
+    <link rel="canonical" href="https://sidetimetable.com/privacy.html">
+    <link rel="alternate" hreflang="ja" href="https://sidetimetable.com/privacy.html">
+    <link rel="alternate" hreflang="en" href="https://sidetimetable.com/en/privacy.html">
+    <link rel="alternate" hreflang="x-default" href="https://sidetimetable.com/privacy.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="SideTimeTable">
+    <meta property="og:title" data-i18n-content="privacy.title" content="プライバシーポリシー - SideTimeTable">
+    <meta property="og:description" data-i18n-content="privacy.description" content="SideTimeTable プライバシーポリシー">
+    <meta property="og:url" content="https://sidetimetable.com/privacy.html">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:locale:alternate" content="en_US">
     <script>
     // 初回ペイント前に言語を確定し、英語時は適用完了まで非表示にして
     // 日本語→英語のちらつきを防ぐ（本適用は i18n.js が行う）
+    // ?lang=ja|en の明示指定にも対応（指定は保存され、以降のページにも効く）
     (function () {
         try {
+            var qs = new URLSearchParams(location.search).get('lang');
             var saved = localStorage.getItem('sideTimeTableLang');
-            var lang = (saved === 'ja' || saved === 'en') ? saved
+            var lang = (qs === 'ja' || qs === 'en') ? qs
+                : (saved === 'ja' || saved === 'en') ? saved
                 : ((navigator.language || '').toLowerCase().indexOf('ja') === 0 ? 'ja' : 'en');
+            if (qs === 'ja' || qs === 'en') {
+                localStorage.setItem('sideTimeTableLang', qs);
+            }
             document.documentElement.lang = lang;
             if (lang === 'en') {
                 document.documentElement.classList.add('i18n-pending');

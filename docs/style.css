@@ -154,9 +154,11 @@ button { cursor: pointer; background: none; border: none; font: inherit; }
     flex-shrink: 0;
 }
 
-.lang-switch button {
+.lang-switch button,
+.lang-switch a {
     border: none;
     background: transparent;
+    text-decoration: none;
     color: var(--clr-muted);
     font-family: inherit;
     font-size: 0.78rem;
@@ -169,11 +171,13 @@ button { cursor: pointer; background: none; border: none; font: inherit; }
                 background var(--dur) var(--ease);
 }
 
-.lang-switch button:hover {
+.lang-switch button:hover,
+.lang-switch a:hover {
     color: var(--clr-text);
 }
 
-.lang-switch button.active {
+.lang-switch button.active,
+.lang-switch a.active {
     background: var(--clr-card);
     color: var(--clr-text);
 }
@@ -1127,7 +1131,8 @@ button { cursor: pointer; background: none; border: none; font: inherit; }
         margin-right: 10px;
     }
 
-    .lang-switch button {
+    .lang-switch button,
+    .lang-switch a {
         padding: 5px 9px;
         font-size: 0.72rem;
     }
