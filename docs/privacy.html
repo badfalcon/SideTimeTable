@@ -9,44 +9,43 @@
     <link rel="canonical" href="https://sidetimetable.com/privacy.html">
     <link rel="alternate" hreflang="ja" href="https://sidetimetable.com/privacy.html">
     <link rel="alternate" hreflang="en" href="https://sidetimetable.com/en/privacy.html">
-    <link rel="alternate" hreflang="x-default" href="https://sidetimetable.com/privacy.html">
+    <link rel="alternate" hreflang="x-default" href="https://sidetimetable.com/en/privacy.html">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="SideTimeTable">
     <meta property="og:title" data-i18n-content="privacy.title" content="プライバシーポリシー - SideTimeTable">
     <meta property="og:description" data-i18n-content="privacy.description" content="SideTimeTable プライバシーポリシー">
     <meta property="og:url" content="https://sidetimetable.com/privacy.html">
+    <meta property="og:image" content="https://sidetimetable.com/img/image_1.png">
     <meta property="og:locale" content="ja_JP">
     <meta property="og:locale:alternate" content="en_US">
+    <meta name="twitter:card" content="summary_large_image">
     <script>
-    // 初回ペイント前に言語を確定し、英語時は適用完了まで非表示にして
-    // 日本語→英語のちらつきを防ぐ（本適用は i18n.js が行う）
-    // ?lang=ja|en の明示指定にも対応（指定は保存され、以降のページにも効く）
+    // このページは日本語版。英語版は静的な /en/privacy.html に用意されており、
+    // 非日本語ブラウザの訪問者は初回ペイント前にそちらへ送る。
+    // ?lang=ja で日本語のまま留まり、選択は localStorage に記憶される。
+    // ストレージが使えない環境でも navigator.language での判定は機能する。
     (function () {
-        try {
-            var qs = new URLSearchParams(location.search).get('lang');
-            var saved = localStorage.getItem('sideTimeTableLang');
-            var lang = (qs === 'ja' || qs === 'en') ? qs
-                : (saved === 'ja' || saved === 'en') ? saved
-                : ((navigator.language || '').toLowerCase().indexOf('ja') === 0 ? 'ja' : 'en');
-            if (qs === 'ja' || qs === 'en') {
-                localStorage.setItem('sideTimeTableLang', qs);
-            }
-            document.documentElement.lang = lang;
-            if (lang === 'en') {
-                document.documentElement.classList.add('i18n-pending');
-                // i18n.js が読み込めなかった場合でもページが出るように保険
-                setTimeout(function () {
-                    document.documentElement.classList.remove('i18n-pending');
-                }, 1000);
-            }
-        } catch (e) { /* 日本語マークアップのまま表示 */ }
+        var TARGET = 'en/privacy.html';
+        var qs = null;
+        try { qs = new URLSearchParams(location.search).get('lang'); } catch (e) {}
+        if (qs === 'en') { location.replace(TARGET); return; }
+        if (qs === 'ja') {
+            try { localStorage.setItem('sideTimeTableLang', 'ja'); } catch (e) {}
+            return;
+        }
+        var saved = null;
+        try { saved = localStorage.getItem('sideTimeTableLang'); } catch (e) {}
+        if (saved === 'ja') return;
+        if (saved === 'en') { location.replace(TARGET); return; }
+        if ((navigator.language || '').toLowerCase().indexOf('ja') !== 0) {
+            location.replace(TARGET);
+        }
     })();
     </script>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="img/icon128.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="i18n.js" defer></script>
 </head>
 <body>
 
@@ -64,8 +63,8 @@
             <a href="privacy.html" aria-current="page" data-i18n="nav.privacy">プライバシー</a>
         </div>
         <div class="lang-switch" role="group" aria-label="Language">
-            <button type="button" data-lang="ja" aria-pressed="true">日本語</button>
-            <button type="button" data-lang="en" aria-pressed="false">EN</button>
+            <a href="privacy.html" class="active" aria-current="page">日本語</a>
+            <a href="en/privacy.html">EN</a>
         </div>
         <a href="https://chrome.google.com/webstore/detail/sidetimetable/pnknjjpncnciijkpdfgfiikmhlmamaid"
            target="_blank" rel="noopener" class="nav-cta" data-i18n="nav.cta">

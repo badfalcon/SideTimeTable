@@ -9,7 +9,7 @@
     <link rel="canonical" href="https://sidetimetable.com/">
     <link rel="alternate" hreflang="ja" href="https://sidetimetable.com/">
     <link rel="alternate" hreflang="en" href="https://sidetimetable.com/en/">
-    <link rel="alternate" hreflang="x-default" href="https://sidetimetable.com/">
+    <link rel="alternate" hreflang="x-default" href="https://sidetimetable.com/en/">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="SideTimeTable">
     <meta property="og:title" data-i18n-content="index.title" content="SideTimeTable - サイドパネルで今日を管理する">
@@ -32,35 +32,32 @@
     }
     </script>
     <script>
-    // 初回ペイント前に言語を確定し、英語時は適用完了まで非表示にして
-    // 日本語→英語のちらつきを防ぐ（本適用は i18n.js が行う）
-    // ?lang=ja|en の明示指定にも対応（指定は保存され、以降のページにも効く）
+    // このページは日本語版。英語版は静的な /en/ に用意されており、
+    // 非日本語ブラウザの訪問者は初回ペイント前にそちらへ送る。
+    // ?lang=ja で日本語のまま留まり、選択は localStorage に記憶される。
+    // ストレージが使えない環境でも navigator.language での判定は機能する。
     (function () {
-        try {
-            var qs = new URLSearchParams(location.search).get('lang');
-            var saved = localStorage.getItem('sideTimeTableLang');
-            var lang = (qs === 'ja' || qs === 'en') ? qs
-                : (saved === 'ja' || saved === 'en') ? saved
-                : ((navigator.language || '').toLowerCase().indexOf('ja') === 0 ? 'ja' : 'en');
-            if (qs === 'ja' || qs === 'en') {
-                localStorage.setItem('sideTimeTableLang', qs);
-            }
-            document.documentElement.lang = lang;
-            if (lang === 'en') {
-                document.documentElement.classList.add('i18n-pending');
-                // i18n.js が読み込めなかった場合でもページが出るように保険
-                setTimeout(function () {
-                    document.documentElement.classList.remove('i18n-pending');
-                }, 1000);
-            }
-        } catch (e) { /* 日本語マークアップのまま表示 */ }
+        var TARGET = 'en/';
+        var qs = null;
+        try { qs = new URLSearchParams(location.search).get('lang'); } catch (e) {}
+        if (qs === 'en') { location.replace(TARGET); return; }
+        if (qs === 'ja') {
+            try { localStorage.setItem('sideTimeTableLang', 'ja'); } catch (e) {}
+            return;
+        }
+        var saved = null;
+        try { saved = localStorage.getItem('sideTimeTableLang'); } catch (e) {}
+        if (saved === 'ja') return;
+        if (saved === 'en') { location.replace(TARGET); return; }
+        if ((navigator.language || '').toLowerCase().indexOf('ja') !== 0) {
+            location.replace(TARGET);
+        }
     })();
     </script>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="img/icon128.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="i18n.js" defer></script>
 </head>
 <body>
 
@@ -78,8 +75,8 @@
             <a href="privacy.html" data-i18n="nav.privacy">プライバシー</a>
         </div>
         <div class="lang-switch" role="group" aria-label="Language">
-            <button type="button" data-lang="ja" aria-pressed="true">日本語</button>
-            <button type="button" data-lang="en" aria-pressed="false">EN</button>
+            <a href="index.html" class="active" aria-current="page">日本語</a>
+            <a href="en/">EN</a>
         </div>
         <a href="https://chrome.google.com/webstore/detail/sidetimetable/pnknjjpncnciijkpdfgfiikmhlmamaid"
            target="_blank" rel="noopener" class="nav-cta" data-i18n="nav.cta">
@@ -142,7 +139,7 @@
                     <div class="pm-header">
                         <div class="pm-date">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-                            <span data-i18n="mock.date">2025/01/15 (水)</span>
+                            <span data-i18n="mock.date">2025/01/15(水)</span>
                         </div>
                         <div class="pm-nav">
                             <button class="pm-btn">‹</button>
@@ -372,7 +369,10 @@ document.querySelectorAll('.anim-up').forEach(el => observer.observe(el));
 // アンカーリンクのスクロール：lazy画像のロード完了を待ってから移動
 document.querySelectorAll('a[href^="#"]').forEach(link => {
     link.addEventListener('click', e => {
-        const target = document.querySelector(link.getAttribute('href'));
+        const hash = link.getAttribute('href');
+        // "#"（ブランドロゴ等）は querySelector('#') が例外になるので除外
+        if (hash.length <= 1) return;
+        const target = document.querySelector(hash);
         if (!target) return;
         e.preventDefault();
 

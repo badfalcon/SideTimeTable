@@ -49,11 +49,6 @@ html {
     scroll-padding-top: var(--nav-h);
 }
 
-/* 英語表示の適用が終わるまで非表示（head内スニペットが付与、i18n.jsが除去） */
-.i18n-pending body {
-    visibility: hidden;
-}
-
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Yu Gothic', sans-serif;
     background: var(--clr-bg);

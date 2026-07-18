@@ -1,142 +1,164 @@
 /**
  * build-landing-en.js - Generate the static English landing pages (docs/en/).
  *
- * The root pages (docs/index.html, docs/privacy.html) ship in Japanese and
- * switch language client-side via docs/i18n.js, but crawlers and link
- * unfurlers do not run JavaScript. This script renders each page in a real
- * browser with an English locale (so i18n.js applies the English strings),
- * strips the runtime i18n machinery, fixes relative paths, and writes the
- * result to docs/en/ as fully static English HTML for SEO / sharing.
+ * The root pages (docs/index.html, docs/privacy.html) ship in Japanese, carry
+ * data-i18n* annotations, and redirect non-Japanese visitors to /en/. This
+ * script renders each root page in a browser (with a ja-JP locale so the
+ * redirect no-ops), applies the English dictionary from landing-en-data.js
+ * via DOM APIs, rewrites SEO tags and relative paths, and writes fully static
+ * English pages to docs/en/ plus docs/sitemap.xml.
  *
- * Run after changing landing page copy or docs/i18n.js:
+ * Run after editing landing copy (root pages) or scripts/landing-en-data.js:
  *   npm run build:landing
  *
- * Requires Playwright (same setup as npm run screenshots — see
- * scripts/screenshots/README.md).
+ * Requires Playwright (same setup as npm run screenshots).
  */
+
+'use strict';
 
 const fs = require('fs');
 const path = require('path');
 const { loadPlaywright } = require('./screenshots/pw');
+const { SITE, HTML_KEYS, EN, PAGES } = require('./landing-en-data');
 
 const DOCS_DIR = path.join(__dirname, '..', 'docs');
 const OUT_DIR = path.join(DOCS_DIR, 'en');
-const SITE = 'https://sidetimetable.com';
 
-const PAGES = [
-    {
-        src: 'index.html',
-        jaUrl: `${SITE}/`,
-        enUrl: `${SITE}/en/`,
-        jaSwitchHref: '../index.html?lang=ja',
-        enSwitchHref: 'index.html'
-    },
-    {
-        src: 'privacy.html',
-        jaUrl: `${SITE}/privacy.html`,
-        enUrl: `${SITE}/en/privacy.html`,
-        jaSwitchHref: '../privacy.html?lang=ja',
-        enSwitchHref: 'privacy.html'
+/**
+ * Runs IN THE BROWSER. Turns the Japanese root DOM into the English page:
+ * applies the dictionary, strips i18n bookkeeping, rewrites SEO tags and
+ * relative paths, converts the switcher to cross-language links, and makes
+ * all content visible (no reliance on the entrance-animation observer).
+ */
+function applyEnglish(cfg) {
+    var EN = cfg.EN, enUrl = cfg.enUrl, ogImage = cfg.ogImage, jaBackHref = cfg.jaBackHref;
+    var htmlKeys = {};
+    cfg.HTML_KEYS.forEach(function (k) { htmlKeys[k] = true; });
+    var has = function (k) { return Object.prototype.hasOwnProperty.call(EN, k); };
+
+    // 1. Apply English text / attributes for every annotated element.
+    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+        var key = el.getAttribute('data-i18n');
+        if (!has(key)) return; // leave Japanese; the staleness test guards this
+        if (htmlKeys[key]) { el.innerHTML = EN[key]; } else { el.textContent = EN[key]; }
+    });
+    document.querySelectorAll('[data-i18n-alt]').forEach(function (el) {
+        var key = el.getAttribute('data-i18n-alt');
+        if (has(key)) el.setAttribute('alt', EN[key]);
+    });
+    document.querySelectorAll('[data-i18n-content]').forEach(function (el) {
+        var key = el.getAttribute('data-i18n-content');
+        if (has(key)) el.setAttribute('content', EN[key]);
+    });
+    document.querySelectorAll('[data-i18n-src]').forEach(function (el) {
+        var src = el.getAttribute('src');
+        if (src) el.setAttribute('src', src.replace(/\.(png|jpe?g|webp)(\?.*)?$/i, '_en.$1$2'));
+    });
+
+    // 2. Strip all data-i18n* bookkeeping attributes.
+    Array.prototype.forEach.call(document.querySelectorAll('*'), function (el) {
+        Array.prototype.slice.call(el.attributes).forEach(function (a) {
+            if (a.name.indexOf('data-i18n') === 0) el.removeAttribute(a.name);
+        });
+    });
+
+    // 3. Remove the root redirect snippet (identified by the storage key).
+    Array.prototype.forEach.call(document.querySelectorAll('head script:not([src])'), function (s) {
+        if (s.textContent.indexOf('sideTimeTableLang') !== -1) s.remove();
+    });
+
+    // 4. Make every animated section visible without JavaScript.
+    document.querySelectorAll('.anim-up').forEach(function (el) { el.classList.add('in-view'); });
+
+    // 5. Language switcher → links between the ja/en versions.
+    document.querySelectorAll('.lang-switch').forEach(function (sw) {
+        sw.innerHTML = '<a href="' + jaBackHref + '">日本語</a>'
+            + '<a href="index.html" class="active" aria-current="page">EN</a>';
+    });
+
+    // 6. Fix relative asset paths for the /en/ subdirectory.
+    document.querySelectorAll('link[rel="stylesheet"], link[rel="icon"]').forEach(function (l) {
+        var href = l.getAttribute('href');
+        if (href && href.indexOf('//') === -1) l.setAttribute('href', '../' + href);
+    });
+    document.querySelectorAll('img').forEach(function (img) {
+        var src = img.getAttribute('src');
+        if (src && src.indexOf('img/') === 0) img.setAttribute('src', '../' + src);
+    });
+
+    // 7. Rewrite SEO tags via DOM APIs (immune to markup serialization drift).
+    var set = function (sel, attr, val) {
+        var el = document.querySelector(sel);
+        if (el) el.setAttribute(attr, val);
+    };
+    set('link[rel="canonical"]', 'href', enUrl);
+    set('meta[property="og:url"]', 'content', enUrl);
+    set('meta[property="og:image"]', 'content', ogImage);
+    set('meta[property="og:locale"]', 'content', 'en_US');
+    set('meta[property="og:locale:alternate"]', 'content', 'ja_JP');
+    var ld = document.querySelector('script[type="application/ld+json"]');
+    if (ld) {
+        try {
+            var data = JSON.parse(ld.textContent);
+            data.url = enUrl;
+            data.inLanguage = 'en';
+            ld.textContent = '\n        ' + JSON.stringify(data, null, 8).replace(/\n/g, '\n        ') + '\n    ';
+        } catch (e) { /* leave as-is if unparseable */ }
     }
-];
 
-/** In-browser cleanup: strip runtime i18n machinery and fix relative paths. */
-function transformDom({ jaSwitchHref, enSwitchHref }) {
-    // Remove the pre-paint language snippet (identified by its storage key)
-    document.querySelectorAll('head script:not([src])').forEach((s) => {
-        if (s.textContent.includes('sideTimeTableLang')) s.remove();
-    });
+    // 8. Persist the English choice so the root redirect keeps sending the
+    //    visitor here on subsequent visits.
+    var save = document.createElement('script');
+    save.textContent = "try{localStorage.setItem('sideTimeTableLang','en')}catch(e){}";
+    document.head.insertBefore(save, document.head.firstChild);
 
-    // Remove the runtime i18n script — this page is permanently English
-    document.querySelectorAll('script[src="i18n.js"]').forEach((s) => s.remove());
-
-    // Drop all data-i18n* bookkeeping attributes
-    document.querySelectorAll('*').forEach((el) => {
-        [...el.attributes]
-            .filter((a) => a.name.startsWith('data-i18n'))
-            .forEach((a) => el.removeAttribute(a.name));
-    });
-
-    // Language switcher: JS toggle → plain links between the ja/en pages
-    document.querySelectorAll('.lang-switch').forEach((sw) => {
-        sw.innerHTML =
-            `<a href="${jaSwitchHref}">日本語</a>` +
-            `<a href="${enSwitchHref}" class="active" aria-current="page">EN</a>`;
-    });
-
-    // Fix root-relative asset paths for the en/ subdirectory
-    document.querySelectorAll('link[rel="stylesheet"], link[rel="icon"]').forEach((l) => {
-        const href = l.getAttribute('href');
-        if (href && !href.includes('//')) l.setAttribute('href', '../' + href);
-    });
-    document.querySelectorAll('img').forEach((img) => {
-        const src = img.getAttribute('src');
-        if (src && src.startsWith('img/')) img.setAttribute('src', '../' + src);
-    });
+    document.documentElement.setAttribute('lang', 'en');
+    document.documentElement.removeAttribute('class');
 }
 
 async function buildPage(browser, pageDef) {
-    // en-US locale makes the head snippet + i18n.js apply English
-    const context = await browser.newContext({ locale: 'en-US' });
+    // ja-JP locale so the root redirect snippet no-ops and the page stays put.
+    const context = await browser.newContext({ locale: 'ja-JP' });
     const page = await context.newPage();
-    await page.goto('file://' + path.join(DOCS_DIR, pageDef.src));
-    // The head snippet stamps lang="en" before i18n.js runs, so wait for an
-    // actually translated node instead of the lang attribute
-    await page.waitForFunction(
-        () => document.querySelector('.nav-cta')?.textContent.trim() === 'Add to Chrome'
-    );
-
-    await page.evaluate(transformDom, {
-        jaSwitchHref: pageDef.jaSwitchHref,
-        enSwitchHref: pageDef.enSwitchHref
+    await page.goto('file://' + path.join(DOCS_DIR, pageDef.src), { waitUntil: 'load' });
+    await page.evaluate(applyEnglish, {
+        EN,
+        HTML_KEYS,
+        enUrl: pageDef.enUrl,
+        ogImage: pageDef.ogImage,
+        jaBackHref: pageDef.jaBackHref
     });
-
-    let html = await page.evaluate(() => document.documentElement.outerHTML);
+    const html = await page.evaluate(() => document.documentElement.outerHTML);
     await context.close();
-
-    // Canonical / OG / JSON-LD point at the English URL and locale
-    html = html
-        .replaceAll(`<link rel="canonical" href="${pageDef.jaUrl}">`,
-            `<link rel="canonical" href="${pageDef.enUrl}">`)
-        .replaceAll(`<meta property="og:url" content="${pageDef.jaUrl}">`,
-            `<meta property="og:url" content="${pageDef.enUrl}">`)
-        .replaceAll('<meta property="og:locale" content="ja_JP">',
-            '<meta property="og:locale" content="en_US">')
-        .replaceAll('<meta property="og:locale:alternate" content="en_US">',
-            '<meta property="og:locale:alternate" content="ja_JP">')
-        .replaceAll(`"url": "${pageDef.jaUrl}"`, `"url": "${pageDef.enUrl}"`)
-        .replaceAll('"inLanguage": "ja"', '"inLanguage": "en"');
 
     const banner = '<!-- Generated by scripts/build-landing-en.js from ../'
         + pageDef.src + ' — do not edit directly. Run: npm run build:landing -->\n';
-    const output = '<!DOCTYPE html>\n' + banner + html + '\n';
-
-    const outPath = path.join(OUT_DIR, pageDef.src);
-    fs.writeFileSync(outPath, output);
-    console.log(`Generated ${path.relative(process.cwd(), outPath)}`);
+    fs.writeFileSync(path.join(OUT_DIR, pageDef.src), '<!DOCTYPE html>\n' + banner + html + '\n');
+    console.log(`Generated ${path.relative(process.cwd(), path.join(OUT_DIR, pageDef.src))}`);
 }
 
-/** sitemap.xml with hreflang alternates for every ja/en page pair. */
+/** sitemap.xml with hreflang alternates (x-default → English) and lastmod. */
 function buildSitemap() {
-    const entries = PAGES.flatMap((p) => [
-        { loc: p.jaUrl, ja: p.jaUrl, en: p.enUrl },
-        { loc: p.enUrl, ja: p.jaUrl, en: p.enUrl }
-    ]);
+    const isoDate = (file) => fs.statSync(file).mtime.toISOString().slice(0, 10);
+    const entries = PAGES.flatMap((p) => {
+        const lastmod = isoDate(path.join(DOCS_DIR, p.src));
+        return [p.jaUrl, p.enUrl].map((loc) => ({ loc, ja: p.jaUrl, en: p.enUrl, lastmod }));
+    });
     const urls = entries.map((e) => [
         '    <url>',
         `        <loc>${e.loc}</loc>`,
+        `        <lastmod>${e.lastmod}</lastmod>`,
         `        <xhtml:link rel="alternate" hreflang="ja" href="${e.ja}"/>`,
         `        <xhtml:link rel="alternate" hreflang="en" href="${e.en}"/>`,
-        `        <xhtml:link rel="alternate" hreflang="x-default" href="${e.ja}"/>`,
+        `        <xhtml:link rel="alternate" hreflang="x-default" href="${e.en}"/>`,
         '    </url>'
     ].join('\n')).join('\n');
     const xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
         + '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n'
         + '        xmlns:xhtml="http://www.w3.org/1999/xhtml">\n'
         + urls + '\n</urlset>\n';
-    const outPath = path.join(DOCS_DIR, 'sitemap.xml');
-    fs.writeFileSync(outPath, xml);
-    console.log(`Generated ${path.relative(process.cwd(), outPath)}`);
+    fs.writeFileSync(path.join(DOCS_DIR, 'sitemap.xml'), xml);
+    console.log(`Generated ${path.relative(process.cwd(), path.join(DOCS_DIR, 'sitemap.xml'))}`);
 }
 
 (async () => {

@@ -36,7 +36,7 @@
 
 ## ランディングページ
 
-- [x] 英語版のSEO対応: `npm run build:landing`（`scripts/build-landing-en.js`）で静的な英語ページ（`docs/en/`）を生成し、`hreflang` 相互リンク・canonical・OGP・JSON-LD・`sitemap.xml`・`robots.txt` を追加済み。**文言や `docs/i18n.js` を変更したら `npm run build:landing` で `docs/en/` を再生成すること**。
+- [x] 英語版のSEO対応: `npm run build:landing`（`scripts/build-landing-en.js`）で静的な英語ページ（`docs/en/`）を生成し、`hreflang` 相互リンク・canonical・OGP・JSON-LD・`sitemap.xml`・`robots.txt` を追加済み。ルートは日本語専用で非日本語ブラウザは `/en/` へリダイレクトする方式（ランタイム言語切替は廃止）。**文言（ルートの日本語）や `scripts/landing-en-data.js`（英語辞書）を変更したら `npm run build:landing` で `docs/en/` を再生成すること**（`tests/docs/landing-en.test.js` が再生成忘れを検知する）。
 
 ## 仕様検討（Q7）
 
