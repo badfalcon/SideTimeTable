@@ -62,11 +62,9 @@ archive.directory('src/vendor/', 'src/vendor');
 console.log('  ✓ _locales/');
 archive.directory('_locales/', '_locales');
 
-// docs/ (if needed)
-if (fs.existsSync('docs')) {
-  console.log('  ✓ docs/');
-  archive.directory('docs/', 'docs');
-}
+// docs/ is the public landing site (HTML pages, screenshots, sitemap) and is
+// never loaded by the extension at runtime, so it is intentionally excluded
+// from the store package to keep the upload small and the review surface clean.
 
 console.log('\n⏳ Compressing...');
 archive.finalize();

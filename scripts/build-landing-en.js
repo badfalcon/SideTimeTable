@@ -31,7 +31,8 @@ const OUT_DIR = path.join(DOCS_DIR, 'en');
  * all content visible (no reliance on the entrance-animation observer).
  */
 function applyEnglish(cfg) {
-    var EN = cfg.EN, enUrl = cfg.enUrl, ogImage = cfg.ogImage, jaBackHref = cfg.jaBackHref;
+    var EN = cfg.EN, enUrl = cfg.enUrl, ogImage = cfg.ogImage;
+    var jaBackHref = cfg.jaBackHref, enSelfHref = cfg.enSelfHref;
     var htmlKeys = {};
     cfg.HTML_KEYS.forEach(function (k) { htmlKeys[k] = true; });
     var has = function (k) { return Object.prototype.hasOwnProperty.call(EN, k); };
@@ -70,10 +71,10 @@ function applyEnglish(cfg) {
     // 4. Make every animated section visible without JavaScript.
     document.querySelectorAll('.anim-up').forEach(function (el) { el.classList.add('in-view'); });
 
-    // 5. Language switcher → links between the ja/en versions.
+    // 5. Language switcher → links between the ja/en versions (EN = current page).
     document.querySelectorAll('.lang-switch').forEach(function (sw) {
         sw.innerHTML = '<a href="' + jaBackHref + '">日本語</a>'
-            + '<a href="index.html" class="active" aria-current="page">EN</a>';
+            + '<a href="' + enSelfHref + '" class="active" aria-current="page">EN</a>';
     });
 
     // 6. Fix relative asset paths for the /en/ subdirectory.
@@ -126,7 +127,8 @@ async function buildPage(browser, pageDef) {
         HTML_KEYS,
         enUrl: pageDef.enUrl,
         ogImage: pageDef.ogImage,
-        jaBackHref: pageDef.jaBackHref
+        jaBackHref: pageDef.jaBackHref,
+        enSelfHref: pageDef.src
     });
     const html = await page.evaluate(() => document.documentElement.outerHTML);
     await context.close();

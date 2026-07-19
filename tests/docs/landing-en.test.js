@@ -75,11 +75,30 @@ describe('generated English landing pages (docs/en/)', () => {
                 expect(out).toContain(`content="${page.ogImage}"`);
                 expect(out).toContain('name="twitter:card"');
             });
+
+            test('the active EN switcher link points at this page, not the home page', () => {
+                // Regression guard: en/privacy.html once linked EN → index.html
+                expect(out).toContain(`<a href="${page.src}" class="active" aria-current="page">EN</a>`);
+            });
         });
     }
 
     test('HTML_KEYS are all real dictionary entries', () => {
         expect(HTML_KEYS.every((k) => k in EN)).toBe(true);
+    });
+
+    test('both root redirect snippets share identical logic (only the target differs)', () => {
+        // The snippet is hand-copied into each root page; guard against the two
+        // drifting apart (a logic fix applied to one page but not the other).
+        const snippet = (html) => {
+            const m = html.match(/<script>([\s\S]*?var TARGET[\s\S]*?)<\/script>/);
+            return m ? m[1].replace(/var TARGET = '[^']*';/, "var TARGET = '<T>';") : null;
+        };
+        const index = snippet(read('index.html'));
+        const privacy = snippet(read('privacy.html'));
+        expect(index).not.toBeNull();
+        expect(privacy).not.toBeNull();
+        expect(index).toBe(privacy);
     });
 
     test('sitemap.xml lists both languages with x-default → English', () => {
