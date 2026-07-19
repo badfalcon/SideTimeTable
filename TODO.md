@@ -16,7 +16,7 @@
 
 ## ビルド・パッケージング
 
-- [ ] `build-zip.js` がリリースzipに `docs/` ディレクトリ全体（ランディングページ+スクリーンショットPNG 約770KB）を同梱している — 拡張機能は実行時に読み込まないため、除外するか同梱理由を明記する
+- [x] `build-zip.js` がリリースzipに `docs/` ディレクトリ全体を同梱していた問題 — 拡張機能は実行時に読み込まないため、リリースzipから除外済み
 
 ## リファクタリング（既存コード）
 
@@ -33,6 +33,10 @@
 - [x] `GoogleEventRenderer` の返り値を `{ element }` に統一済み
 - [x] `CalendarManagementCard.render()` から `_prepareRenderData()` を抽出済み
 - [x] `CalendarGroupManager` / `CalendarFilterRenderer` の getter コールバックパターンも同様にメソッドパラメータ直接渡しに変更済み
+
+## ランディングページ
+
+- [x] 英語版のSEO対応: `npm run build:landing`（`scripts/build-landing-en.js`）で静的な英語ページ（`docs/en/`）を生成し、`hreflang` 相互リンク・canonical・OGP・JSON-LD・`sitemap.xml`・`robots.txt` を追加済み。ルートは日本語専用で非日本語ブラウザは `/en/` へリダイレクトする方式（ランタイム言語切替は廃止）。**文言（ルートの日本語）や `scripts/landing-en-data.js`（英語辞書）を変更したら `npm run build:landing` で `docs/en/` を再生成すること**（`tests/docs/landing-en.test.js` が再生成忘れを検知する）。
 
 ## 仕様検討（Q7）
 

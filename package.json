@@ -16,7 +16,8 @@
     "lint:fix": "eslint src/ --fix",
     "prepare-release": "node scripts/prepare-release.js",
     "validate-version": "node scripts/validate-version.js",
-    "screenshots": "node scripts/screenshots/generate.js"
+    "screenshots": "node scripts/screenshots/generate.js",
+    "build:landing": "node scripts/build-landing-en.js"
   },
   "repository": {
     "type": "git",
