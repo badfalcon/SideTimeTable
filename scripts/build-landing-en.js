@@ -77,6 +77,13 @@ function applyEnglish(cfg) {
             + '<a href="' + enSelfHref + '" class="active" aria-current="page">EN</a>';
     });
 
+    // 5b. Point links to the English home page at its canonical directory form
+    //     (index.html → ./) so crawlers do not see a duplicate /en/index.html.
+    //     Same-page "#..." anchors are untouched, preserving smooth scrolling.
+    document.querySelectorAll('a[href^="index.html"]').forEach(function (a) {
+        a.setAttribute('href', a.getAttribute('href').replace(/^index\.html/, './'));
+    });
+
     // 6. Fix relative asset paths for the /en/ subdirectory.
     document.querySelectorAll('link[rel="stylesheet"], link[rel="icon"]').forEach(function (l) {
         var href = l.getAttribute('href');
@@ -128,7 +135,7 @@ async function buildPage(browser, pageDef) {
         enUrl: pageDef.enUrl,
         ogImage: pageDef.ogImage,
         jaBackHref: pageDef.jaBackHref,
-        enSelfHref: pageDef.src
+        enSelfHref: pageDef.enSelfHref
     });
     const html = await page.evaluate(() => document.documentElement.outerHTML);
     await context.close();

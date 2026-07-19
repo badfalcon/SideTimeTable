@@ -78,7 +78,13 @@ describe('generated English landing pages (docs/en/)', () => {
 
             test('the active EN switcher link points at this page, not the home page', () => {
                 // Regression guard: en/privacy.html once linked EN → index.html
-                expect(out).toContain(`<a href="${page.src}" class="active" aria-current="page">EN</a>`);
+                expect(out).toContain(`<a href="${page.enSelfHref}" class="active" aria-current="page">EN</a>`);
+            });
+
+            test('internal links use the canonical directory form (no /en/index.html)', () => {
+                // Home-page links must be ./ or ./#..., never index.html, so
+                // crawlers do not index a duplicate of the /en/ canonical.
+                expect(out).not.toMatch(/href="index\.html/);
             });
         });
     }

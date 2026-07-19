@@ -133,20 +133,25 @@ const EN = {
 // One entry per root page. jaUrl/enUrl use the canonical directory form for the
 // homepage. jaBackHref is the English page's link back to the Japanese page
 // (?lang=ja tells the root snippet to stay Japanese and remember the choice).
+// enSelfHref: the English page's own address in canonical (directory) form —
+// './' for the home page so internal links match the /en/ canonical rather
+// than producing a duplicate /en/index.html.
 const PAGES = [
     {
         src: 'index.html',
         jaUrl: `${SITE}/`,
         enUrl: `${SITE}/en/`,
         ogImage: `${SITE}/img/image_1_en.png`,
-        jaBackHref: '../index.html?lang=ja'
+        jaBackHref: '../index.html?lang=ja',
+        enSelfHref: './'
     },
     {
         src: 'privacy.html',
         jaUrl: `${SITE}/privacy.html`,
         enUrl: `${SITE}/en/privacy.html`,
         ogImage: `${SITE}/img/image_1_en.png`,
-        jaBackHref: '../privacy.html?lang=ja'
+        jaBackHref: '../privacy.html?lang=ja',
+        enSelfHref: 'privacy.html'
     }
 ];
 
