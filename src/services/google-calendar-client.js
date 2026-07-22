@@ -5,6 +5,7 @@
  * authentication, calendar listing, event fetching, and RSVP.
  */
 import { StorageHelper } from '../lib/storage-helper.js';
+import { isWritableCalendar } from '../lib/google-event-utils.js';
 
 const CALENDAR_API_BASE = 'https://www.googleapis.com/calendar/v3';
 
@@ -227,6 +228,9 @@ export class GoogleCalendarClient {
             const ownedCalendarIds = new Set(
                 (listData.items || []).filter(cal => cal.accessRole === 'owner').map(cal => cal.id)
             );
+            const writableCalendarIds = new Set(
+                (listData.items || []).filter(isWritableCalendar).map(cal => cal.id)
+            );
             listData.items?.forEach(cal => {
                 calendarColors[cal.id] = {
                     backgroundColor: cal.backgroundColor,
@@ -259,6 +263,7 @@ export class GoogleCalendarClient {
                             event.calendarName = calendarInfo.summary;
                         }
                         event.isOwnedCalendar = ownedCalendarIds.has(event.calendarId);
+                        event.isWritableCalendar = writableCalendarIds.has(event.calendarId);
                         allEvents.push(event);
                     });
                 }
@@ -420,5 +425,56 @@ export class GoogleCalendarClient {
         await this._checkResponse(res, 'Insert Event API');
 
         return await res.json();
+    }
+
+    /**
+     * Partially update an event on a Google Calendar (events.patch).
+     * Only the fields present in `patchResource` are changed; omitted fields
+     * keep their current values (so callers must send explicit '' to clear
+     * a text field).
+     * @param {string} calendarId - The calendar the event lives on
+     * @param {string} eventId - The event to update
+     * @param {Object} patchResource - The fields to change, in Google Calendar API format
+     * @returns {Promise<Object>} The updated event object
+     */
+    async patchEvent(calendarId, eventId, patchResource) {
+        if (!calendarId || !eventId || !patchResource) {
+            throw new Error('Missing required parameters');
+        }
+
+        const eventUrl = `${CALENDAR_API_BASE}/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`;
+
+        const res = await this._fetchWithAuth(eventUrl, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(patchResource)
+        });
+
+        await this._checkResponse(res, 'Update Event API');
+
+        return await res.json();
+    }
+
+    /**
+     * Delete an event from a Google Calendar (events.delete).
+     * The API responds 204 No Content, so the body is never parsed.
+     * @param {string} calendarId - The calendar the event lives on
+     * @param {string} eventId - The event to delete
+     * @returns {Promise<void>}
+     */
+    async deleteEvent(calendarId, eventId) {
+        if (!calendarId || !eventId) {
+            throw new Error('Missing required parameters');
+        }
+
+        const eventUrl = `${CALENDAR_API_BASE}/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`;
+
+        const res = await this._fetchWithAuth(eventUrl, {
+            method: 'DELETE'
+        });
+
+        await this._checkResponse(res, 'Delete Event API');
     }
 }

@@ -358,3 +358,167 @@ describe('SPEC: createEvent', () => {
       .rejects.toThrow(/Insert Event API error: 500/);
   });
 });
+
+// ---------------------------------------------------------------
+// SPEC: patchEvent(calendarId, eventId, patchResource)
+// - PATCHes to /calendars/{id}/events/{eventId} with a JSON body
+// - Requires calendarId, eventId and a patch resource
+// - 401/403 → AuthenticationError, others → generic Error
+// ---------------------------------------------------------------
+describe('SPEC: patchEvent', () => {
+  let client;
+  let originalFetch;
+
+  beforeEach(() => {
+    client = new GoogleCalendarClient();
+    originalFetch = global.fetch;
+    chrome.identity.getAuthToken.mockReset();
+    chrome.identity.getAuthToken.mockImplementation((opts, cb) => cb('test-token'));
+  });
+
+  afterEach(() => {
+    global.fetch = originalFetch;
+  });
+
+  const patchBody = () => ({
+    summary: 'Renamed sync',
+    start: { dateTime: '2026-07-23T09:00:00+09:00' },
+    end: { dateTime: '2026-07-23T10:00:00+09:00' },
+    description: '',
+    location: 'Room B',
+  });
+
+  describe('parameter validation', () => {
+    test.each([
+      { calendarId: null, eventId: 'e1', resource: {}, label: 'missing calendarId' },
+      { calendarId: 'c1', eventId: null, resource: {}, label: 'missing eventId' },
+      { calendarId: 'c1', eventId: 'e1', resource: null, label: 'missing resource' },
+      { calendarId: '', eventId: 'e1', resource: {}, label: 'empty calendarId' },
+      { calendarId: 'c1', eventId: '', resource: {}, label: 'empty eventId' },
+    ])('throws "Missing required parameters" when $label', async ({ calendarId, eventId, resource }) => {
+      await expect(client.patchEvent(calendarId, eventId, resource))
+        .rejects.toThrow('Missing required parameters');
+    });
+  });
+
+  test('PATCHes the resource to the target event URL', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ id: 'evt1', summary: 'Renamed sync' }),
+    });
+
+    const resource = patchBody();
+    const result = await client.patchEvent('work@example.com', 'evt/1', resource);
+
+    expect(result).toEqual({ id: 'evt1', summary: 'Renamed sync' });
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+
+    const [url, options] = global.fetch.mock.calls[0];
+    expect(url).toBe('https://www.googleapis.com/calendar/v3/calendars/work%40example.com/events/evt%2F1');
+    expect(options.method).toBe('PATCH');
+    expect(options.headers['Content-Type']).toBe('application/json');
+    expect(options.headers.Authorization).toBe('Bearer test-token');
+    expect(JSON.parse(options.body)).toEqual(resource);
+  });
+
+  test('classifies a 403 response as an authentication error', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 403,
+      statusText: 'Forbidden',
+      text: () => Promise.resolve(''),
+    });
+
+    await expect(client.patchEvent('cal1', 'evt1', patchBody()))
+      .rejects.toThrow(AuthenticationError);
+  });
+
+  test('classifies a 500 response as a generic error', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      statusText: 'Server Error',
+      text: () => Promise.resolve(''),
+    });
+
+    await expect(client.patchEvent('cal1', 'evt1', patchBody()))
+      .rejects.toThrow(/Update Event API error: 500/);
+  });
+});
+
+// ---------------------------------------------------------------
+// SPEC: deleteEvent(calendarId, eventId)
+// - DELETEs /calendars/{id}/events/{eventId}
+// - The API returns 204 No Content — the response body is never parsed
+// - Requires calendarId and eventId
+// - 401/403 → AuthenticationError, others → generic Error
+// ---------------------------------------------------------------
+describe('SPEC: deleteEvent', () => {
+  let client;
+  let originalFetch;
+
+  beforeEach(() => {
+    client = new GoogleCalendarClient();
+    originalFetch = global.fetch;
+    chrome.identity.getAuthToken.mockReset();
+    chrome.identity.getAuthToken.mockImplementation((opts, cb) => cb('test-token'));
+  });
+
+  afterEach(() => {
+    global.fetch = originalFetch;
+  });
+
+  describe('parameter validation', () => {
+    test.each([
+      { calendarId: null, eventId: 'e1', label: 'missing calendarId' },
+      { calendarId: 'c1', eventId: null, label: 'missing eventId' },
+      { calendarId: '', eventId: 'e1', label: 'empty calendarId' },
+      { calendarId: 'c1', eventId: '', label: 'empty eventId' },
+    ])('throws "Missing required parameters" when $label', async ({ calendarId, eventId }) => {
+      await expect(client.deleteEvent(calendarId, eventId))
+        .rejects.toThrow('Missing required parameters');
+    });
+  });
+
+  test('DELETEs the target event URL and tolerates a 204 empty body', async () => {
+    // No json() on the mock: parsing the body of a 204 would throw
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 204,
+      statusText: 'No Content',
+    });
+
+    await expect(client.deleteEvent('work@example.com', 'evt/1')).resolves.toBeUndefined();
+
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+    const [url, options] = global.fetch.mock.calls[0];
+    expect(url).toBe('https://www.googleapis.com/calendar/v3/calendars/work%40example.com/events/evt%2F1');
+    expect(options.method).toBe('DELETE');
+    expect(options.headers.Authorization).toBe('Bearer test-token');
+  });
+
+  test('classifies a 403 response as an authentication error', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 403,
+      statusText: 'Forbidden',
+      text: () => Promise.resolve(''),
+    });
+
+    await expect(client.deleteEvent('cal1', 'evt1'))
+      .rejects.toThrow(AuthenticationError);
+  });
+
+  test('classifies a 500 response as a generic error', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      statusText: 'Server Error',
+      text: () => Promise.resolve(''),
+    });
+
+    await expect(client.deleteEvent('cal1', 'evt1'))
+      .rejects.toThrow(/Delete Event API error: 500/);
+  });
+});

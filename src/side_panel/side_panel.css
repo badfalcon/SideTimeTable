@@ -739,7 +739,8 @@ body {
     border-color: var(--side-calendar-modal-btn-hover-border);
 }
 
-#saveEventButton {
+#saveEventButton,
+#googleEditSaveButton {
     background-color: var(--side-calendar-success-badge-bg);
     border-color: var(--side-calendar-success-badge-border);
     color: var(--side-calendar-success-badge-text);
@@ -747,58 +748,99 @@ body {
 
 /* Save/delete hover: intentionally hardcoded semantic colors with dark overrides below */
 #saveEventButton:hover,
-#saveEventButton:focus {
+#saveEventButton:focus,
+#googleEditSaveButton:hover,
+#googleEditSaveButton:focus {
     background-color: #c8e6c9;
     border-color: #388e3c;
 }
 
-#deleteEventButton {
+#deleteEventButton,
+#googleEventDeleteButton,
+#googleEventConfirmDeleteButton {
     background-color: #fce4ec;
     border-color: #ef5350;
     color: #c62828;
 }
 
 #deleteEventButton:hover,
-#deleteEventButton:focus {
+#deleteEventButton:focus,
+#googleEventDeleteButton:hover,
+#googleEventDeleteButton:focus,
+#googleEventConfirmDeleteButton:hover,
+#googleEventConfirmDeleteButton:focus {
     background-color: #f8bbd0;
     border-color: #e53935;
 }
 
-#cancelEventButton {
+#cancelEventButton,
+#googleEditCancelButton,
+#googleEventCancelDeleteButton {
     background-color: var(--side-calendar-modal-btn-bg);
     border-color: var(--side-calendar-modal-btn-border);
     color: var(--side-calendar-modal-btn-text);
 }
 
 #cancelEventButton:hover,
-#cancelEventButton:focus {
+#cancelEventButton:focus,
+#googleEditCancelButton:hover,
+#googleEditCancelButton:focus,
+#googleEventCancelDeleteButton:hover,
+#googleEventCancelDeleteButton:focus {
     background-color: var(--side-calendar-modal-btn-hover-bg);
     border-color: var(--side-calendar-modal-btn-hover-border);
 }
 
 /* Local event modal buttons - dark mode (semantic save/delete keep explicit overrides) */
-[data-theme="dark"] #saveEventButton {
-    background-color: #1b3a2a;
-    border-color: #4caf50;
-    color: #81c784;
-}
 
-[data-theme="dark"] #saveEventButton:hover,
-[data-theme="dark"] #saveEventButton:focus {
-    background-color: #245a38;
-    border-color: #66bb6a;
-}
-
-[data-theme="dark"] #deleteEventButton {
+[data-theme="dark"] #deleteEventButton,
+[data-theme="dark"] #googleEventDeleteButton,
+[data-theme="dark"] #googleEventConfirmDeleteButton {
     background-color: #3a1a1a;
     border-color: #ef5350;
     color: #ef9a9a;
 }
 
 [data-theme="dark"] #deleteEventButton:hover,
-[data-theme="dark"] #deleteEventButton:focus {
+[data-theme="dark"] #deleteEventButton:focus,
+[data-theme="dark"] #googleEventDeleteButton:hover,
+[data-theme="dark"] #googleEventDeleteButton:focus,
+[data-theme="dark"] #googleEventConfirmDeleteButton:hover,
+[data-theme="dark"] #googleEventConfirmDeleteButton:focus {
     background-color: #4a2020;
     border-color: #f44336;
+}
+
+[data-theme="dark"] #saveEventButton,
+[data-theme="dark"] #googleEditSaveButton {
+    background-color: #1b3a2a;
+    border-color: #4caf50;
+    color: #81c784;
+}
+
+[data-theme="dark"] #saveEventButton:hover,
+[data-theme="dark"] #saveEventButton:focus,
+[data-theme="dark"] #googleEditSaveButton:hover,
+[data-theme="dark"] #googleEditSaveButton:focus {
+    background-color: #245a38;
+    border-color: #66bb6a;
+}
+
+/* Inline delete confirmation in the Google event modal */
+.google-event-delete-confirm span {
+    align-self: center;
+    font-size: 0.9em;
+}
+
+/* Modal error message (semantic color, dark override below) */
+.modal-content .error-message {
+    color: #c62828;
+    font-size: 0.9em;
+    margin-top: 5px;
+}
+
+[data-theme="dark"] .modal-content .error-message {
+    color: #ef9a9a;
 }
 
 

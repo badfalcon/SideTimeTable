@@ -370,6 +370,46 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             })();
             return true; // Indicates async response
 
+        case "updateEvent":
+            // Partially update an event on a Google Calendar (events.patch)
+            (async () => {
+                try {
+                    const { calendarId, eventId, event } = request;
+                    const updatedEvent = await calendarClient.patchEvent(calendarId, eventId, event);
+                    // The reminder lead time may have changed — resync alarms
+                    reminderSync.syncAll().catch(() => {});
+                    sendResponse({ success: true, event: updatedEvent });
+                } catch (error) {
+                    if (error instanceof AuthenticationError) {
+                        logWarn('Event update', 'auth expired');
+                    } else {
+                        logError('Event update', error);
+                    }
+                    sendResponse({ ...buildCalendarErrorResponse(error, request.requestId), success: false });
+                }
+            })();
+            return true; // Indicates async response
+
+        case "deleteEvent":
+            // Delete an event from a Google Calendar (events.delete)
+            (async () => {
+                try {
+                    const { calendarId, eventId } = request;
+                    await calendarClient.deleteEvent(calendarId, eventId);
+                    // Clear any reminder alarm still scheduled for the deleted event
+                    reminderSync.syncAll().catch(() => {});
+                    sendResponse({ success: true });
+                } catch (error) {
+                    if (error instanceof AuthenticationError) {
+                        logWarn('Event deletion', 'auth expired');
+                    } else {
+                        logError('Event deletion', error);
+                    }
+                    sendResponse({ ...buildCalendarErrorResponse(error, request.requestId), success: false });
+                }
+            })();
+            return true; // Indicates async response
+
         default:
             logWarn('Message handler', `Unknown action: ${request.action}`);
             sendResponse({error: "Unknown action"});

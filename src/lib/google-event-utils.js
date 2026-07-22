@@ -59,9 +59,15 @@ export function filterWritableCalendars(calendars, selectedIds = null) {
  *   (generated when omitted; injectable for tests)
  * @param {number|string|null} [fields.reminderMinutes] - Popup reminder lead time in
  *   minutes; blank/null uses the calendar's default reminders
+ * @param {Object} [options]
+ * @param {boolean} [options.forPatch=false] - Build a body for events.patch
+ *   instead of events.insert. PATCH leaves omitted fields unchanged, so this
+ *   mode emits explicit '' for blank description/location (clearing them),
+ *   maps a blank reminder to {useDefault: true} (reverting to the calendar
+ *   default), and never emits conferenceData (Meet is not editable).
  * @returns {Object} A Google Calendar event resource ({summary, start, end, ...})
  */
-export function buildGoogleEventResource({ summary, description, location, date, startTime, endTime, addMeet, meetRequestId, reminderMinutes }) {
+export function buildGoogleEventResource({ summary, description, location, date, startTime, endTime, addMeet, meetRequestId, reminderMinutes }, { forPatch = false } = {}) {
     const resource = {
         summary: (summary || '').trim(),
         start: { dateTime: buildRfc3339DateTime(date, startTime) },
@@ -69,16 +75,16 @@ export function buildGoogleEventResource({ summary, description, location, date,
     };
 
     const trimmedDescription = (description || '').trim();
-    if (trimmedDescription) {
+    if (trimmedDescription || forPatch) {
         resource.description = trimmedDescription;
     }
 
     const trimmedLocation = (location || '').trim();
-    if (trimmedLocation) {
+    if (trimmedLocation || forPatch) {
         resource.location = trimmedLocation;
     }
 
-    if (addMeet) {
+    if (addMeet && !forPatch) {
         const requestId = meetRequestId
             || `meet-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
         resource.conferenceData = {
@@ -89,8 +95,8 @@ export function buildGoogleEventResource({ summary, description, location, date,
         };
     }
 
-    // Blank/null → omit reminders so the calendar's default applies.
-    if (reminderMinutes !== undefined && reminderMinutes !== null && reminderMinutes !== '') {
+    const hasReminder = reminderMinutes !== undefined && reminderMinutes !== null && reminderMinutes !== '';
+    if (hasReminder) {
         const minutes = Number(reminderMinutes);
         if (Number.isFinite(minutes) && minutes >= 0) {
             resource.reminders = {
@@ -98,7 +104,31 @@ export function buildGoogleEventResource({ summary, description, location, date,
                 overrides: [{ method: 'popup', minutes }]
             };
         }
+    } else if (forPatch) {
+        // Insert can just omit reminders, but PATCH must explicitly revert to
+        // the calendar default or a previous override would stick.
+        resource.reminders = { useDefault: true };
     }
 
     return resource;
+}
+
+/**
+ * Extract a local "HH:MM" wall-clock time from an RFC3339 dateTime string,
+ * for prefilling time inputs when editing an event.
+ *
+ * @param {string|null|undefined} dateTimeString - e.g. "2026-07-23T09:05:00+09:00";
+ *   falsy for all-day events (which have start.date instead of start.dateTime)
+ * @returns {string} "HH:MM" in the local timezone, or '' when absent/unparseable
+ */
+export function extractTimeHHMM(dateTimeString) {
+    if (!dateTimeString) {
+        return '';
+    }
+    const parsed = new Date(dateTimeString);
+    if (Number.isNaN(parsed.getTime())) {
+        return '';
+    }
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${pad(parsed.getHours())}:${pad(parsed.getMinutes())}`;
 }

@@ -1705,5 +1705,21 @@
   "googleEventCreateFailed": {
     "message": "Failed to create Google event",
     "description": "Error message shown when creating a Google Calendar event fails"
+  },
+  "googleEventUpdateFailed": {
+    "message": "Failed to update Google event",
+    "description": "Error message shown when updating a Google Calendar event fails"
+  },
+  "googleEventDeleteFailed": {
+    "message": "Failed to delete Google event",
+    "description": "Error message shown when deleting a Google Calendar event fails"
+  },
+  "googleDeleteConfirm": {
+    "message": "Delete this event?",
+    "description": "Inline confirmation prompt before deleting a Google Calendar event"
+  },
+  "confirmDelete": {
+    "message": "Delete",
+    "description": "Button that confirms the deletion of a Google Calendar event"
   }
 }

@@ -234,7 +234,9 @@ class SidePanelUIController {
         });
 
         this.googleEventModal = new GoogleEventModal({
-            onRsvpResponse: () => this._loadEventsForCurrentDate()
+            onRsvpResponse: () => this._loadEventsForCurrentDate(),
+            onSaveEdit: (calendarId, eventId, patch) => this._handleUpdateGoogleEvent(calendarId, eventId, patch),
+            onDelete: (calendarId, eventId) => this._handleDeleteGoogleEvent(calendarId, eventId)
         });
 
         this.alertModal = new AlertModal();
@@ -551,8 +553,9 @@ class SidePanelUIController {
 
     /**
      * Fetch the list of Google calendars the user can write to (owner/writer).
-     * Returns an empty array when not authenticated, in demo mode, or on error,
-     * which disables the Google save destination in the create modal.
+     * Returns an empty array when the Google integration is disabled, not
+     * authenticated, in demo mode, or on error, which disables the Google save
+     * destination in the create modal.
      * @returns {Promise<Array<{id: string, summary: string, primary: boolean}>>}
      * @private
      */
@@ -563,6 +566,15 @@ class SidePanelUIController {
         }
 
         try {
+            // Require the integration to be enabled, not just an available token:
+            // the timeline only renders Google events when googleIntegrated is on
+            // (GoogleEventManager.fetchEvents), so offering a Google save
+            // destination without it would create events that never display.
+            const settings = await loadSettings();
+            if (settings.googleIntegrated !== true) {
+                return [];
+            }
+
             const auth = await sendMessage({ action: 'checkGoogleAuth' });
             if (!auth || !auth.authenticated) {
                 return [];
@@ -613,6 +625,73 @@ class SidePanelUIController {
             return true;
         } catch (error) {
             console.error('Google event save error:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Google event update handler (events.patch). Returns whether the update
+     * succeeded so the modal can stay open (preserving input) on failure.
+     * @returns {Promise<boolean>}
+     * @private
+     */
+    async _handleUpdateGoogleEvent(calendarId, eventId, patchResource) {
+        try {
+            const requestId = `update-evt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+            const response = await sendMessage({
+                action: 'updateEvent',
+                calendarId,
+                eventId,
+                event: patchResource,
+                requestId
+            });
+
+            if (!response || !response.success) {
+                if (response && response.authExpired && this.googleEventManager) {
+                    this.googleEventManager.onAuthExpired?.();
+                }
+                console.error('Google event update failed:', (response && response.error) || 'Unknown error');
+                return false;
+            }
+
+            // Reload events so the updated Google event is redrawn
+            await this._loadEventsForCurrentDate();
+            return true;
+        } catch (error) {
+            console.error('Google event update error:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Google event delete handler (events.delete). Returns whether the
+     * deletion succeeded so the modal can stay open on failure.
+     * @returns {Promise<boolean>}
+     * @private
+     */
+    async _handleDeleteGoogleEvent(calendarId, eventId) {
+        try {
+            const requestId = `delete-evt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+            const response = await sendMessage({
+                action: 'deleteEvent',
+                calendarId,
+                eventId,
+                requestId
+            });
+
+            if (!response || !response.success) {
+                if (response && response.authExpired && this.googleEventManager) {
+                    this.googleEventManager.onAuthExpired?.();
+                }
+                console.error('Google event delete failed:', (response && response.error) || 'Unknown error');
+                return false;
+            }
+
+            // Reload events so the deleted Google event disappears
+            await this._loadEventsForCurrentDate();
+            return true;
+        } catch (error) {
+            console.error('Google event delete error:', error);
             return false;
         }
     }

@@ -2,6 +2,7 @@ import {
   isWritableCalendar,
   filterWritableCalendars,
   buildGoogleEventResource,
+  extractTimeHHMM,
 } from '../../src/lib/google-event-utils.js';
 
 // ---------------------------------------------------------------
@@ -219,5 +220,120 @@ describe('buildGoogleEventResource', () => {
       });
       expect(r).not.toHaveProperty('reminders');
     });
+  });
+});
+
+// ---------------------------------------------------------------
+// SPEC: buildGoogleEventResource — forPatch mode (events.patch body)
+// - PATCH leaves omitted fields unchanged, so cleared text fields must be
+//   sent as explicit '' and blank reminders as {useDefault: true}
+// - Meet (conferenceData) is never emitted — not editable
+// - Create mode (no options / forPatch:false) must be byte-for-byte unchanged
+// ---------------------------------------------------------------
+describe('buildGoogleEventResource forPatch', () => {
+  const date = new Date(2026, 6, 23); // 2026-07-23 local
+
+  const base = { summary: 'Sync', date, startTime: '09:00', endTime: '10:00' };
+
+  test('emits summary and start/end like create mode', () => {
+    const r = buildGoogleEventResource(base, { forPatch: true });
+    expect(r.summary).toBe('Sync');
+    expect(r.start.dateTime).toMatch(/^2026-07-23T09:00:00/);
+    expect(r.end.dateTime).toMatch(/^2026-07-23T10:00:00/);
+  });
+
+  test.each([
+    { description: undefined, label: 'undefined' },
+    { description: '', label: 'empty' },
+    { description: '   ', label: 'blank' },
+  ])('emits explicit empty description when $label (so PATCH clears it)', ({ description }) => {
+    const r = buildGoogleEventResource({ ...base, description }, { forPatch: true });
+    expect(r).toHaveProperty('description', '');
+  });
+
+  test.each([
+    { location: undefined, label: 'undefined' },
+    { location: '', label: 'empty' },
+    { location: '  ', label: 'blank' },
+  ])('emits explicit empty location when $label (so PATCH clears it)', ({ location }) => {
+    const r = buildGoogleEventResource({ ...base, location }, { forPatch: true });
+    expect(r).toHaveProperty('location', '');
+  });
+
+  test('keeps trimmed non-blank description and location', () => {
+    const r = buildGoogleEventResource(
+      { ...base, description: ' notes ', location: ' Room B ' },
+      { forPatch: true }
+    );
+    expect(r.description).toBe('notes');
+    expect(r.location).toBe('Room B');
+  });
+
+  test.each([undefined, null, ''])(
+    'blank reminder (%s) reverts to the calendar default', (reminderMinutes) => {
+      const r = buildGoogleEventResource({ ...base, reminderMinutes }, { forPatch: true });
+      expect(r.reminders).toEqual({ useDefault: true });
+    }
+  );
+
+  test('numeric reminder sets a popup override', () => {
+    const r = buildGoogleEventResource({ ...base, reminderMinutes: '15' }, { forPatch: true });
+    expect(r.reminders).toEqual({
+      useDefault: false,
+      overrides: [{ method: 'popup', minutes: 15 }],
+    });
+  });
+
+  test('never emits conferenceData even when addMeet is set', () => {
+    const r = buildGoogleEventResource({ ...base, addMeet: true }, { forPatch: true });
+    expect(r).not.toHaveProperty('conferenceData');
+  });
+
+  describe('create-mode regression (forPatch omitted or false)', () => {
+    test.each([[undefined], [{ forPatch: false }], [{}]])(
+      'blank description/location are omitted with options %p', (options) => {
+        const r = options === undefined
+          ? buildGoogleEventResource({ ...base, description: '', location: ' ' })
+          : buildGoogleEventResource({ ...base, description: '', location: ' ' }, options);
+        expect(r).not.toHaveProperty('description');
+        expect(r).not.toHaveProperty('location');
+      }
+    );
+
+    test('blank reminder is omitted (calendar default applies implicitly)', () => {
+      const r = buildGoogleEventResource({ ...base, reminderMinutes: '' });
+      expect(r).not.toHaveProperty('reminders');
+    });
+
+    test('addMeet still emits conferenceData', () => {
+      const r = buildGoogleEventResource({ ...base, addMeet: true, meetRequestId: 'm1' });
+      expect(r.conferenceData.createRequest.requestId).toBe('m1');
+    });
+  });
+});
+
+// ---------------------------------------------------------------
+// SPEC: extractTimeHHMM
+// - RFC3339 dateTime -> local "HH:MM" (zero-padded)
+// - falsy input / invalid date -> '' (all-day events have no dateTime)
+// ---------------------------------------------------------------
+describe('extractTimeHHMM', () => {
+  test('extracts a zero-padded local time from an RFC3339 string', () => {
+    // Construct via a local Date so the expectation is timezone-independent
+    const local = new Date(2026, 6, 23, 9, 5);
+    expect(extractTimeHHMM(local.toISOString())).toBe('09:05');
+  });
+
+  test('handles afternoon times', () => {
+    const local = new Date(2026, 6, 23, 23, 45);
+    expect(extractTimeHHMM(local.toISOString())).toBe('23:45');
+  });
+
+  test.each([[null], [undefined], ['']])('returns empty string for %p', (input) => {
+    expect(extractTimeHHMM(input)).toBe('');
+  });
+
+  test('returns empty string for an unparseable value', () => {
+    expect(extractTimeHHMM('not-a-date')).toBe('');
   });
 });

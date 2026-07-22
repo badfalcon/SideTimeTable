@@ -4,6 +4,11 @@
 import { ModalComponent } from './modal-component.js';
 import { sendMessage } from '../../../lib/chrome-messaging.js';
 import { GoogleEventContentBuilder } from './google-event-content-builder.js';
+import { GoogleEventEditFormBuilder } from './google-event-edit-form-builder.js';
+import { buildGoogleEventResource, extractTimeHHMM } from '../../../lib/google-event-utils.js';
+
+// Event types that must never be edited or deleted from the panel
+const NON_EDITABLE_EVENT_TYPES = ['outOfOffice', 'focusTime', 'workingLocation'];
 
 export class GoogleEventModal extends ModalComponent {
     constructor(options = {}) {
@@ -20,59 +25,94 @@ export class GoogleEventModal extends ModalComponent {
         this.locationElement = null;
         this.meetElement = null;
 
+        // View/edit containers
+        this.viewContent = null;
+        this.editContent = null;
+        this.viewButtons = null;
+        this.editButton = null;
+        this.deleteButton = null;
+        this.deleteConfirmRow = null;
+
         // RSVP elements
         this.rsvpContainer = null;
 
         // Callback for when RSVP response is sent
         this.onRsvpResponse = options.onRsvpResponse || null;
 
+        // Callbacks for edit/delete. Both return Promise<boolean> so the
+        // modal can stay open (preserving input) on failure.
+        this.onSaveEdit = options.onSaveEdit || null;
+        this.onDelete = options.onDelete || null;
+
         // The currently displayed event
         this.currentEvent = null;
 
         // Content builder for DOM construction
         this._contentBuilder = new GoogleEventContentBuilder();
+
+        // Edit form builder
+        this._editFormBuilder = new GoogleEventEditFormBuilder(this);
+
+        // Re-entry guards for async actions
+        this._submittingEdit = false;
+        this._deletingEvent = false;
     }
 
     createContent() {
         const content = document.createElement('div');
 
+        // ── View mode ────────────────────────────────────────────────
+        this.viewContent = document.createElement('div');
+
         // Event title
         this.titleElement = document.createElement('h2');
         this.titleElement.className = 'google-event-title';
-        content.appendChild(this.titleElement);
+        this.viewContent.appendChild(this.titleElement);
 
         // Calendar name
         this.calendarElement = document.createElement('div');
         this.calendarElement.className = 'google-event-row google-event-calendar mb-2';
-        content.appendChild(this.calendarElement);
+        this.viewContent.appendChild(this.calendarElement);
 
         // Event time
         this.timeElement = document.createElement('div');
         this.timeElement.className = 'google-event-row google-event-time mb-2';
-        content.appendChild(this.timeElement);
+        this.viewContent.appendChild(this.timeElement);
 
         // Description
         this.descriptionElement = document.createElement('div');
         this.descriptionElement.className = 'google-event-row google-event-description mb-2';
-        content.appendChild(this.descriptionElement);
+        this.viewContent.appendChild(this.descriptionElement);
 
         // Location
         this.locationElement = document.createElement('div');
         this.locationElement.className = 'google-event-row google-event-location mb-2';
-        content.appendChild(this.locationElement);
+        this.viewContent.appendChild(this.locationElement);
 
         // Meet information
         this.meetElement = document.createElement('div');
         this.meetElement.className = 'google-event-row google-event-meet';
-        content.appendChild(this.meetElement);
+        this.viewContent.appendChild(this.meetElement);
 
         // Out of office information
         this.oooInfoElement = document.createElement('div');
         this.oooInfoElement.className = 'google-event-row google-event-ooo-info mb-2';
-        content.appendChild(this.oooInfoElement);
+        this.viewContent.appendChild(this.oooInfoElement);
 
-        // Save the reference to the modalBody
-        this.modalBody = content;
+        content.appendChild(this.viewContent);
+
+        // ── Edit mode (hidden until the Edit button is pressed) ──────
+        this.editContent = document.createElement('div');
+        this.editContent.style.display = 'none';
+        this._editFormBuilder.buildEditContent(this.editContent, {
+            onSave: () => this._handleSaveEdit(),
+            onCancel: () => this._showViewMode()
+        });
+        content.appendChild(this.editContent);
+
+        // Attendees/RSVP (created lazily) must land inside viewContent so
+        // they are hidden together with the rest of the view mode.
+        this.modalBody = this.viewContent;
 
         return content;
     }
@@ -119,10 +159,279 @@ export class GoogleEventModal extends ModalComponent {
             this._setRsvpButtons(event);
         }
 
+        // Edit/Delete actions (hidden when the event is not editable)
+        this._setEditDeleteButtons(event);
+
+        // Always open in view mode with a clean state
+        this._showViewMode();
+
         this.show();
 
         // Apply the localization after showing the modal
         this._localizeModal();
+    }
+
+    /**
+     * Whether the event can be edited/deleted from the panel:
+     * a timed, non-recurring event on a writable (owner/writer) calendar.
+     * Unlike RSVP this does not require the user to be an attendee.
+     * @param {Object} event
+     * @returns {boolean}
+     * @private
+     */
+    _isEditableEvent(event) {
+        return !!(
+            event &&
+            event.isWritableCalendar &&
+            event.id &&
+            event.calendarId &&
+            event.start?.dateTime &&
+            !event.recurringEventId &&
+            !event.recurrence &&
+            !NON_EDITABLE_EVENT_TYPES.includes(event.eventType)
+        );
+    }
+
+    /**
+     * Build (once) and toggle the view-mode Edit/Delete button bar.
+     * @param {Object} event
+     * @private
+     */
+    _setEditDeleteButtons(event) {
+        if (!this.viewButtons) {
+            this.viewButtons = document.createElement('div');
+            this.viewButtons.className = 'modal-buttons';
+
+            this.editButton = document.createElement('button');
+            this.editButton.type = 'button';
+            this.editButton.id = 'googleEventEditButton';
+            this.editButton.className = 'btn btn-primary';
+            this.editButton.setAttribute('data-localize', '__MSG_editEvent__');
+            this.editButton.textContent = window.getLocalizedMessage('editEvent') || 'Edit';
+            this.addEventListener(this.editButton, 'click', () => this._showEditMode());
+
+            this.deleteButton = document.createElement('button');
+            this.deleteButton.type = 'button';
+            this.deleteButton.id = 'googleEventDeleteButton';
+            this.deleteButton.className = 'btn btn-danger';
+            this.deleteButton.setAttribute('data-localize', '__MSG_delete__');
+            this.deleteButton.textContent = window.getLocalizedMessage('delete') || 'Delete';
+            this.addEventListener(this.deleteButton, 'click', () => this._showDeleteConfirm(true));
+
+            this.viewButtons.appendChild(this.editButton);
+            this.viewButtons.appendChild(this.deleteButton);
+
+            // Inline two-step delete confirmation (hidden by default)
+            this.deleteConfirmRow = document.createElement('div');
+            this.deleteConfirmRow.className = 'modal-buttons google-event-delete-confirm';
+            this.deleteConfirmRow.style.display = 'none';
+
+            const confirmText = document.createElement('span');
+            confirmText.setAttribute('data-localize', '__MSG_googleDeleteConfirm__');
+            confirmText.textContent = window.getLocalizedMessage('googleDeleteConfirm') || 'Delete this event?';
+
+            this.confirmDeleteButton = document.createElement('button');
+            this.confirmDeleteButton.type = 'button';
+            this.confirmDeleteButton.id = 'googleEventConfirmDeleteButton';
+            this.confirmDeleteButton.className = 'btn btn-danger';
+            this.confirmDeleteButton.setAttribute('data-localize', '__MSG_confirmDelete__');
+            this.confirmDeleteButton.textContent = window.getLocalizedMessage('confirmDelete') || 'Delete';
+            this.addEventListener(this.confirmDeleteButton, 'click', () => this._handleDeleteConfirmed());
+
+            this.cancelDeleteButton = document.createElement('button');
+            this.cancelDeleteButton.type = 'button';
+            this.cancelDeleteButton.id = 'googleEventCancelDeleteButton';
+            this.cancelDeleteButton.className = 'btn btn-secondary';
+            this.cancelDeleteButton.setAttribute('data-localize', '__MSG_cancel__');
+            this.cancelDeleteButton.textContent = window.getLocalizedMessage('cancel') || 'Cancel';
+            this.addEventListener(this.cancelDeleteButton, 'click', () => this._showDeleteConfirm(false));
+
+            this.deleteConfirmRow.appendChild(confirmText);
+            this.deleteConfirmRow.appendChild(this.confirmDeleteButton);
+            this.deleteConfirmRow.appendChild(this.cancelDeleteButton);
+
+            this.viewContent.appendChild(this.viewButtons);
+            this.viewContent.appendChild(this.deleteConfirmRow);
+        }
+
+        const editable = this._isEditableEvent(event);
+        this.viewButtons.style.display = editable ? '' : 'none';
+        this._showDeleteConfirm(false);
+    }
+
+    /**
+     * Toggle between the action bar and the inline delete confirmation.
+     * @param {boolean} confirming
+     * @private
+     */
+    _showDeleteConfirm(confirming) {
+        if (!this.viewButtons) return;
+        const editable = this._isEditableEvent(this.currentEvent);
+        this.viewButtons.style.display = confirming || !editable ? 'none' : '';
+        this.deleteConfirmRow.style.display = confirming ? '' : 'none';
+    }
+
+    /**
+     * Switch to view mode and clear transient edit state.
+     * @private
+     */
+    _showViewMode() {
+        this._clearError();
+        this.viewContent.style.display = '';
+        this.editContent.style.display = 'none';
+        this._showDeleteConfirm(false);
+    }
+
+    /**
+     * Switch to edit mode, prefilled from the current event.
+     * @private
+     */
+    _showEditMode() {
+        const event = this.currentEvent;
+        if (!this._isEditableEvent(event)) {
+            return;
+        }
+
+        this._clearError();
+        this._editFormBuilder.populate(
+            event,
+            extractTimeHHMM(event.start.dateTime),
+            extractTimeHHMM(event.end?.dateTime)
+        );
+
+        this.viewContent.style.display = 'none';
+        this.editContent.style.display = '';
+        this._localizeModal();
+    }
+
+    /**
+     * Validate the edit form and delegate the update to the controller.
+     * Keeps the modal open (with an error message) on failure so the
+     * user's input is not lost.
+     * @private
+     */
+    async _handleSaveEdit() {
+        if (this._submittingEdit) {
+            return;
+        }
+        const event = this.currentEvent;
+        if (!event) {
+            return;
+        }
+
+        this._clearError();
+        const values = this._editFormBuilder.getValues();
+
+        if (!values.summary.trim()) {
+            this._showError(window.getLocalizedMessage('pleaseEnterTitle') || 'Please enter a title');
+            return;
+        }
+        if (!values.startTime) {
+            this._showError(window.getLocalizedMessage('pleaseEnterStartTime') || 'Please enter a start time');
+            return;
+        }
+        if (!values.endTime) {
+            this._showError(window.getLocalizedMessage('pleaseEnterEndTime') || 'Please enter an end time');
+            return;
+        }
+        // Zero-padded "HH:MM" strings compare correctly lexicographically
+        if (values.endTime <= values.startTime) {
+            this._showError(window.getLocalizedMessage('endTimeMustBeLater') || 'End time must be later than start time');
+            return;
+        }
+
+        // Patch on the event's own date — the panel may be viewing another day
+        const patchResource = buildGoogleEventResource({
+            summary: values.summary,
+            description: values.description,
+            location: values.location,
+            date: new Date(event.start.dateTime),
+            startTime: values.startTime,
+            endTime: values.endTime,
+            reminderMinutes: values.reminderMinutes
+        }, { forPatch: true });
+
+        if (!this.onSaveEdit) {
+            this.hide();
+            return;
+        }
+
+        this._submittingEdit = true;
+        this._editFormBuilder.saveButton.disabled = true;
+        let succeeded;
+        try {
+            succeeded = await this.onSaveEdit(event.calendarId, event.id, patchResource);
+        } catch (error) {
+            console.error('Google event update error:', error);
+            succeeded = false;
+        } finally {
+            this._submittingEdit = false;
+            this._editFormBuilder.saveButton.disabled = false;
+        }
+
+        if (succeeded) {
+            this.hide();
+        } else {
+            this._showError(window.getLocalizedMessage('googleEventUpdateFailed') || 'Failed to update Google event');
+        }
+    }
+
+    /**
+     * Delete the current event after the inline confirmation.
+     * @private
+     */
+    async _handleDeleteConfirmed() {
+        if (this._deletingEvent) {
+            return;
+        }
+        const event = this.currentEvent;
+        if (!event || !this.onDelete) {
+            return;
+        }
+
+        this._clearError();
+        this._deletingEvent = true;
+        this.confirmDeleteButton.disabled = true;
+        let succeeded;
+        try {
+            succeeded = await this.onDelete(event.calendarId, event.id);
+        } catch (error) {
+            console.error('Google event delete error:', error);
+            succeeded = false;
+        } finally {
+            this._deletingEvent = false;
+            this.confirmDeleteButton.disabled = false;
+        }
+
+        if (succeeded) {
+            this.hide();
+        } else {
+            this._showDeleteConfirm(false);
+            this._showError(window.getLocalizedMessage('googleEventDeleteFailed') || 'Failed to delete Google event');
+        }
+    }
+
+    /**
+     * Display an error message at the bottom of the modal.
+     * @param {string} message
+     * @private
+     */
+    _showError(message) {
+        this._clearError();
+
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-message';
+        errorDiv.textContent = message;
+
+        this.modalContent.appendChild(errorDiv);
+    }
+
+    /**
+     * Remove any displayed error message.
+     * @private
+     */
+    _clearError() {
+        this.modalContent?.querySelector('.error-message')?.remove();
     }
 
     /**
