@@ -2,13 +2,13 @@
 
 # Node.js
 node_modules/
-package-lock.json
 
 # Build output
 dist/
 
 # Release packages
 SideTimeTable-release.zip
+SideTimeTable-release/
 
 # Source maps
 *.map
@@ -19,3 +19,6 @@ coverage/
 # claude local settings
 /.claude/settings.local.json
 /.claude/statusline.py
+
+# IDE MCP server config (per-machine)
+/.mcp.json

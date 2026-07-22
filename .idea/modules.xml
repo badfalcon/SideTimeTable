@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/SideCalendar.iml" filepath="$PROJECT_DIR$/SideCalendar.iml" />
+      <module fileurl="file://$PROJECT_DIR$/SideTimeTable.iml" filepath="$PROJECT_DIR$/SideTimeTable.iml" />
     </modules>
   </component>
 </project>
