@@ -56,6 +56,35 @@ export function parseTimeString(timeString) {
 }
 
 /**
+ * Build an RFC3339 date-time string (with local timezone offset) for a given
+ * date and "HH:MM" time. Suitable for the Google Calendar API `dateTime` field.
+ *
+ * Note: for a wall-clock time that does not exist due to a DST spring-forward
+ * gap (a ~1h window on the transition day), the emitted offset is the
+ * post-transition one; such inputs are effectively unreachable from the UI.
+ *
+ * @param {Date} date - The base date (year/month/day are used)
+ * @param {string} timeString - The time in "HH:MM" format
+ * @returns {string} An RFC3339 string, e.g. "2026-07-22T09:30:00+09:00"
+ * @throws {Error} If the time string is invalid
+ */
+export function buildRfc3339DateTime(date, timeString) {
+    const { hour, minute } = parseTimeString(timeString);
+    const local = createTimeOnDate(date, hour, minute);
+
+    const pad = (n) => String(n).padStart(2, '0');
+
+    // getTimezoneOffset returns minutes behind UTC (positive when local is west of UTC)
+    const offsetMinutes = -local.getTimezoneOffset();
+    const sign = offsetMinutes >= 0 ? '+' : '-';
+    const absOffset = Math.abs(offsetMinutes);
+    const offset = `${sign}${pad(Math.floor(absOffset / 60))}:${pad(absOffset % 60)}`;
+
+    return `${local.getFullYear()}-${pad(local.getMonth() + 1)}-${pad(local.getDate())}` +
+        `T${pad(hour)}:${pad(minute)}:00${offset}`;
+}
+
+/**
  * Determine if the specified date is today
  *
  * @param {Date} date - The date to check

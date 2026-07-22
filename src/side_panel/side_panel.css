@@ -582,6 +582,145 @@ body {
     font-family: inherit;
 }
 
+/* Save destination segmented control (Local / Google) */
+.event-source-toggle {
+    display: none; /* Shown via JS when writable Google calendars exist */
+    gap: 4px;
+    margin: 6px 0 16px;
+    padding: 3px;
+    border: 1px solid var(--side-calendar-input-border);
+    border-radius: 8px;
+    background: var(--side-calendar-subtle-bg);
+}
+
+.event-source-toggle .event-source-btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 0;
+    padding: 7px 10px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--side-calendar-secondary-text-color);
+    font-size: 0.9em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s, box-shadow 0.15s;
+}
+
+.event-source-toggle .event-source-btn:hover:not(.active) {
+    background: var(--side-calendar-subtle-bg-hover);
+    color: inherit;
+}
+
+.event-source-toggle .event-source-btn.active {
+    background: var(--side-calendar-modal-bg);
+    /* accent-hover is darker (#0056b3) → meets WCAG AA (4.5:1) on white */
+    color: var(--side-calendar-accent-hover-color);
+    /* accent border delineates the selected pill in both themes (a dark
+       drop-shadow is invisible on the dark surface, so the border carries it) */
+    border-color: var(--side-calendar-accent-color);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.event-source-toggle .event-source-btn:focus-visible {
+    outline: 2px solid var(--side-calendar-accent-color);
+    outline-offset: 1px;
+}
+
+/* Google "advanced settings" accordion */
+.google-advanced {
+    margin: 6px 0 4px;
+}
+
+.google-advanced .accordion-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    margin: 0;
+    padding: 10px 2px;
+    background: transparent;
+    border: none;
+    border-top: 1px solid var(--side-calendar-border-color);
+    border-radius: 0;
+    color: inherit;
+    font-weight: 600;
+    font-size: 0.92em;
+    cursor: pointer;
+}
+
+.google-advanced .accordion-chevron {
+    font-size: 0.8em;
+    opacity: 0.7;
+    transition: transform 0.15s ease;
+}
+
+.google-advanced .accordion-toggle[aria-expanded="true"] .accordion-chevron {
+    transform: rotate(90deg);
+}
+
+.google-advanced .accordion-toggle:focus-visible {
+    outline: 2px solid var(--side-calendar-accent-color);
+    outline-offset: 1px;
+}
+
+.google-advanced .accordion-body {
+    padding-top: 2px;
+}
+
+/* Hint when writable Google calendars exist but none are displayed */
+.google-destination-hint {
+    margin: 4px 0 10px;
+    padding: 6px 10px;
+    border-radius: 5px;
+    background: var(--side-calendar-subtle-bg);
+    color: var(--side-calendar-secondary-text-color);
+    font-size: 0.85em;
+    line-height: 1.4;
+}
+
+/* Muted note in the Google edit form about fields it does not cover */
+.google-edit-note {
+    margin: 8px 0 0;
+    color: var(--side-calendar-secondary-text-color);
+    font-size: 0.82em;
+}
+
+/* Google Meet toggle row */
+.google-meet-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0 15px;
+}
+
+.google-meet-row input[type="checkbox"] {
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.google-meet-row label {
+    margin: 0;
+    font-weight: normal;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Google event target-calendar picker (matches text input metrics) */
+.modal-content select.event-form-select {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid var(--side-calendar-input-border);
+    border-radius: 5px;
+    background-color: var(--side-calendar-input-bg);
+    color: inherit;
+}
+
 .modal-content button {
     margin-top: 10px;
     padding: 10px 20px;
@@ -618,7 +757,8 @@ body {
     border-color: var(--side-calendar-modal-btn-hover-border);
 }
 
-#saveEventButton {
+#saveEventButton,
+#googleEditSaveButton {
     background-color: var(--side-calendar-success-badge-bg);
     border-color: var(--side-calendar-success-badge-border);
     color: var(--side-calendar-success-badge-text);
@@ -626,58 +766,99 @@ body {
 
 /* Save/delete hover: intentionally hardcoded semantic colors with dark overrides below */
 #saveEventButton:hover,
-#saveEventButton:focus {
+#saveEventButton:focus,
+#googleEditSaveButton:hover,
+#googleEditSaveButton:focus {
     background-color: #c8e6c9;
     border-color: #388e3c;
 }
 
-#deleteEventButton {
+#deleteEventButton,
+#googleEventDeleteButton,
+#googleEventConfirmDeleteButton {
     background-color: #fce4ec;
     border-color: #ef5350;
     color: #c62828;
 }
 
 #deleteEventButton:hover,
-#deleteEventButton:focus {
+#deleteEventButton:focus,
+#googleEventDeleteButton:hover,
+#googleEventDeleteButton:focus,
+#googleEventConfirmDeleteButton:hover,
+#googleEventConfirmDeleteButton:focus {
     background-color: #f8bbd0;
     border-color: #e53935;
 }
 
-#cancelEventButton {
+#cancelEventButton,
+#googleEditCancelButton,
+#googleEventCancelDeleteButton {
     background-color: var(--side-calendar-modal-btn-bg);
     border-color: var(--side-calendar-modal-btn-border);
     color: var(--side-calendar-modal-btn-text);
 }
 
 #cancelEventButton:hover,
-#cancelEventButton:focus {
+#cancelEventButton:focus,
+#googleEditCancelButton:hover,
+#googleEditCancelButton:focus,
+#googleEventCancelDeleteButton:hover,
+#googleEventCancelDeleteButton:focus {
     background-color: var(--side-calendar-modal-btn-hover-bg);
     border-color: var(--side-calendar-modal-btn-hover-border);
 }
 
 /* Local event modal buttons - dark mode (semantic save/delete keep explicit overrides) */
-[data-theme="dark"] #saveEventButton {
-    background-color: #1b3a2a;
-    border-color: #4caf50;
-    color: #81c784;
-}
 
-[data-theme="dark"] #saveEventButton:hover,
-[data-theme="dark"] #saveEventButton:focus {
-    background-color: #245a38;
-    border-color: #66bb6a;
-}
-
-[data-theme="dark"] #deleteEventButton {
+[data-theme="dark"] #deleteEventButton,
+[data-theme="dark"] #googleEventDeleteButton,
+[data-theme="dark"] #googleEventConfirmDeleteButton {
     background-color: #3a1a1a;
     border-color: #ef5350;
     color: #ef9a9a;
 }
 
 [data-theme="dark"] #deleteEventButton:hover,
-[data-theme="dark"] #deleteEventButton:focus {
+[data-theme="dark"] #deleteEventButton:focus,
+[data-theme="dark"] #googleEventDeleteButton:hover,
+[data-theme="dark"] #googleEventDeleteButton:focus,
+[data-theme="dark"] #googleEventConfirmDeleteButton:hover,
+[data-theme="dark"] #googleEventConfirmDeleteButton:focus {
     background-color: #4a2020;
     border-color: #f44336;
+}
+
+[data-theme="dark"] #saveEventButton,
+[data-theme="dark"] #googleEditSaveButton {
+    background-color: #1b3a2a;
+    border-color: #4caf50;
+    color: #81c784;
+}
+
+[data-theme="dark"] #saveEventButton:hover,
+[data-theme="dark"] #saveEventButton:focus,
+[data-theme="dark"] #googleEditSaveButton:hover,
+[data-theme="dark"] #googleEditSaveButton:focus {
+    background-color: #245a38;
+    border-color: #66bb6a;
+}
+
+/* Inline delete confirmation in the Google event modal */
+.google-event-delete-confirm span {
+    align-self: center;
+    font-size: 0.9em;
+}
+
+/* Modal error message (semantic color, dark override below) */
+.modal-content .error-message {
+    color: #c62828;
+    font-size: 0.9em;
+    margin-top: 5px;
+}
+
+[data-theme="dark"] .modal-content .error-message {
+    color: #ef9a9a;
 }
 
 

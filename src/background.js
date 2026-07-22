@@ -110,6 +110,44 @@ function buildCalendarErrorResponse(error, requestId) {
     };
 }
 
+/**
+ * Error response for event write operations (insert/patch/delete).
+ * Unlike reads, a 403 on a write usually means permission denied on that
+ * specific event (e.g. forbiddenForNonOrganizer) — NOT an expired grant —
+ * so it must not trigger the re-authentication banner.
+ * @param {Error} error - The caught error (may carry a `status` from _checkResponse)
+ * @param {string} requestId - Optional request ID for correlation
+ * @returns {Object} Error response object with success: false
+ */
+function buildWriteErrorResponse(error, requestId) {
+    const response = { ...buildCalendarErrorResponse(error, requestId), success: false };
+    if (error && error.status === 403) {
+        response.authExpired = false;
+    }
+    return response;
+}
+
+/**
+ * Validate the shape of an event-write request before touching the API.
+ * The UI always sends well-formed requests; this guards the message surface.
+ * @param {Object} request
+ * @param {boolean} [needsEventId=false]
+ * @param {boolean} [needsEvent=false]
+ * @returns {string|null} An error string, or null when valid
+ */
+function validateWriteRequest(request, needsEventId = false, needsEvent = false) {
+    if (request.calendarId !== undefined && request.calendarId !== null && typeof request.calendarId !== 'string') {
+        return 'Invalid calendarId';
+    }
+    if (needsEventId && typeof request.eventId !== 'string') {
+        return 'Invalid eventId';
+    }
+    if (needsEvent && (typeof request.event !== 'object' || request.event === null || Array.isArray(request.event))) {
+        return 'Invalid event';
+    }
+    return null;
+}
+
 // Message listener
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
@@ -346,6 +384,81 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 } catch (error) {
                     logError('Event response', error);
                     sendResponse({ success: false, error: error.message });
+                }
+            })();
+            return true; // Indicates async response
+
+        case "createEvent":
+            // Create a new event on a Google Calendar
+            (async () => {
+                const invalid = validateWriteRequest(request, false, true);
+                if (invalid) {
+                    sendResponse({ success: false, error: invalid });
+                    return;
+                }
+                try {
+                    const { calendarId, event } = request;
+                    const createdEvent = await calendarClient.createEvent(calendarId, event);
+                    // Ensure the new event gets a reminder alarm if reminders are enabled
+                    reminderSync.syncAll().catch(() => {});
+                    sendResponse({ success: true, event: createdEvent });
+                } catch (error) {
+                    if (error instanceof AuthenticationError) {
+                        logWarn('Event creation', 'auth error');
+                    } else {
+                        logError('Event creation', error);
+                    }
+                    sendResponse(buildWriteErrorResponse(error, request.requestId));
+                }
+            })();
+            return true; // Indicates async response
+
+        case "updateEvent":
+            // Partially update an event on a Google Calendar (events.patch)
+            (async () => {
+                const invalid = validateWriteRequest(request, true, true);
+                if (invalid) {
+                    sendResponse({ success: false, error: invalid });
+                    return;
+                }
+                try {
+                    const { calendarId, eventId, event } = request;
+                    const updatedEvent = await calendarClient.patchEvent(calendarId, eventId, event);
+                    // The reminder lead time may have changed — resync alarms
+                    reminderSync.syncAll().catch(() => {});
+                    sendResponse({ success: true, event: updatedEvent });
+                } catch (error) {
+                    if (error instanceof AuthenticationError) {
+                        logWarn('Event update', 'auth error');
+                    } else {
+                        logError('Event update', error);
+                    }
+                    sendResponse(buildWriteErrorResponse(error, request.requestId));
+                }
+            })();
+            return true; // Indicates async response
+
+        case "deleteEvent":
+            // Delete an event from a Google Calendar (events.delete)
+            (async () => {
+                const invalid = validateWriteRequest(request, true, false);
+                if (invalid) {
+                    sendResponse({ success: false, error: invalid });
+                    return;
+                }
+                try {
+                    const { calendarId, eventId } = request;
+                    await calendarClient.deleteEvent(calendarId, eventId);
+                    // Clear any reminder alarm still scheduled for the deleted event
+                    reminderSync.syncAll().catch(() => {});
+                    sendResponse({ success: true });
+                } catch (error) {
+                    if (error instanceof AuthenticationError) {
+                        logWarn('Event deletion', 'auth error');
+                    } else {
+                        logError('Event deletion', error);
+                    }
+                    sendResponse(buildWriteErrorResponse(error, request.requestId));
                 }
             })();
             return true; // Indicates async response
