@@ -12,6 +12,7 @@ import { sendMessage } from '../lib/chrome-messaging.js';
 import {getDemoEvents, getDemoLocalEvents, isDemoMode} from '../lib/demo-data.js';
 import { GoogleEventRenderer } from './google-event-renderer.js';
 import { LocalEventRenderer } from './local-event-renderer.js';
+import { EVENT_STYLING, EventElementFactory, onClickOnly, resolveLocaleSettings } from './event-element-factory.js';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
