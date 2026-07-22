@@ -38,16 +38,19 @@ export class TimelineCalendarFilter extends Component {
         this._rafId = null;
         this._isFetching = false;
 
+        // Serializes selection mutations: rapid or bulk (group) toggles must
+        // not interleave their save/rollback steps, which would produce
+        // out-of-order storage writes or a rollback clobbering a later change.
+        this._opQueue = Promise.resolve();
+        this._destroyed = false;
+
         // Renderer delegate
         this.renderer = new CalendarFilterRenderer({
-            getCalendars: () => this.calendars,
-            getSelectedIds: () => this.selectedIds,
-            getCalendarGroups: () => this.calendarGroups,
-            getSearchTerm: () => this.searchTerm,
-            getMessage: (key) => this.getMessage(key),
             onSearchInput: (value) => {
                 this.searchTerm = value;
-                this.renderer.renderCalendarList();
+                this.renderer.renderCalendarList(
+                    this.calendars, this.selectedIds, this.calendarGroups, this.searchTerm
+                );
             },
             onRefreshClick: () => this._refreshCalendars(),
             onCalendarToggle: (calendarId, checked) => this._handleToggle(calendarId, checked),
@@ -210,32 +213,35 @@ export class TimelineCalendarFilter extends Component {
             if (!this.isOpen) return;
             this._focusDropdown();
         } else {
-            // Refresh selected state and groups each time
+            // Refresh selected state and groups each time. Run through the
+            // op queue so the reload observes a settled state rather than
+            // racing a toggle's in-flight save.
             this._isFetching = true;
             try {
-                const [selectedIds, groups] = await Promise.all([
-                    loadSelectedCalendars(),
-                    isDemoMode() ? getDemoCalendarGroups() : loadCalendarGroups()
-                ]);
-                if (!this.isOpen) return;
-                this.selectedIds = selectedIds;
-                this.calendarGroups = Array.isArray(groups) ? groups : [];
-                // Ensure primary calendar stays in selection
-                const primary = this.calendars.find(c => c.primary);
-                if (primary && !this.selectedIds.includes(primary.id)) {
-                    this.selectedIds.unshift(primary.id);
-                    try {
-                        await saveSelectedCalendars(this.selectedIds);
-                    } catch {
-                        // Non-critical: primary will be re-added on next open
+                await this._enqueue(async () => {
+                    const [selectedIds, groups] = await Promise.all([
+                        loadSelectedCalendars(),
+                        isDemoMode() ? getDemoCalendarGroups() : loadCalendarGroups()
+                    ]);
+                    if (!this.isOpen) return;
+                    this.selectedIds = selectedIds;
+                    this.calendarGroups = Array.isArray(groups) ? groups : [];
+                    // Ensure primary calendar stays in selection
+                    const primary = this.calendars.find(c => c.primary);
+                    if (primary && !this.selectedIds.includes(primary.id)) {
+                        this.selectedIds.unshift(primary.id);
+                        try {
+                            await saveSelectedCalendars(this.selectedIds);
+                        } catch {
+                            // Non-critical: primary will be re-added on next open
+                        }
                     }
-                }
-                if (!this.isOpen) return;
-                this._renderDropdownContent();
-                this._focusDropdown();
+                    if (!this.isOpen) return;
+                    this._renderDropdownContent();
+                    this._focusDropdown();
+                });
             } catch {
-                if (!this.isOpen) return;
-                this._renderDropdownContent();
+                if (this.isOpen) this._renderDropdownContent();
             } finally {
                 this._isFetching = false;
             }
@@ -276,49 +282,7 @@ export class TimelineCalendarFilter extends Component {
         loading.textContent = this.getMessage('calendarFilterLoading');
         this.dropdown.appendChild(loading);
 
-        try {
-            const requestId = `filter-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-            const [response, selectedIds, groups] = await Promise.all([
-                sendMessage({ action: 'getCalendarList', requestId }),
-                loadSelectedCalendars(),
-                isDemoMode() ? getDemoCalendarGroups() : loadCalendarGroups()
-            ]);
-
-            // Bail out if dropdown was closed while fetching
-            if (!this.isOpen) return;
-
-            if (response.error || !response.calendars) {
-                this.dropdown.innerHTML = '';
-                this.refreshBtn = null;
-                this.searchInput = null;
-                this.calendarList = null;
-                const errorEl = document.createElement('div');
-                errorEl.className = 'timeline-calendar-filter-status';
-                errorEl.setAttribute('role', 'status');
-                errorEl.textContent = this.getMessage('calendarFilterError');
-                this.dropdown.appendChild(errorEl);
-                return;
-            }
-
-            this.calendars = response.calendars;
-            this.selectedIds = selectedIds;
-            this.calendarGroups = Array.isArray(groups) ? groups : [];
-
-            // Ensure primary calendar is always included in selection
-            const primary = this.calendars.find(c => c.primary);
-            if (primary && !this.selectedIds.includes(primary.id)) {
-                this.selectedIds.unshift(primary.id);
-                try {
-                    await saveSelectedCalendars(this.selectedIds);
-                } catch {
-                    // Non-critical: primary will be re-added on next open
-                }
-            }
-
-            if (!this.isOpen) return;
-            this.hasFetched = true;
-            this._renderDropdownContent();
-        } catch {
+        const showError = () => {
             this.dropdown.innerHTML = '';
             this.refreshBtn = null;
             this.searchInput = null;
@@ -328,6 +292,51 @@ export class TimelineCalendarFilter extends Component {
             errorEl.setAttribute('role', 'status');
             errorEl.textContent = this.getMessage('calendarFilterError');
             this.dropdown.appendChild(errorEl);
+        };
+
+        try {
+            const requestId = `filter-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+            const response = await sendMessage({ action: 'getCalendarList', requestId });
+
+            // Bail out if dropdown was closed while fetching
+            if (!this.isOpen) return;
+
+            if (response.error || !response.calendars) {
+                showError();
+                return;
+            }
+
+            // Apply the calendar/selection state through the op queue so a
+            // concurrent toggle's in-flight save cannot be observed
+            // half-written (which would desync the rendered checkboxes).
+            await this._enqueue(async () => {
+                const [selectedIds, groups] = await Promise.all([
+                    loadSelectedCalendars(),
+                    isDemoMode() ? getDemoCalendarGroups() : loadCalendarGroups()
+                ]);
+                if (!this.isOpen) return;
+
+                this.calendars = response.calendars;
+                this.selectedIds = selectedIds;
+                this.calendarGroups = Array.isArray(groups) ? groups : [];
+
+                // Ensure primary calendar is always included in selection
+                const primary = this.calendars.find(c => c.primary);
+                if (primary && !this.selectedIds.includes(primary.id)) {
+                    this.selectedIds.unshift(primary.id);
+                    try {
+                        await saveSelectedCalendars(this.selectedIds);
+                    } catch {
+                        // Non-critical: primary will be re-added on next open
+                    }
+                }
+
+                if (!this.isOpen) return;
+                this.hasFetched = true;
+                this._renderDropdownContent();
+            });
+        } catch {
+            showError();
         }
     }
 
@@ -336,10 +345,29 @@ export class TimelineCalendarFilter extends Component {
      * @private
      */
     _renderDropdownContent() {
-        const refs = this.renderer.renderDropdownContent(this.dropdown);
+        const refs = this.renderer.renderDropdownContent(
+            this.dropdown, this.searchTerm, this.calendars, this.selectedIds, this.calendarGroups
+        );
         this.searchInput = refs.searchInput;
         this.refreshBtn = refs.refreshBtn;
         this.calendarList = refs.calendarList;
+    }
+
+    /**
+     * Run a selection-mutating task serially. Tasks are chained so concurrent
+     * toggles cannot interleave their compute/save/rollback steps; each task
+     * therefore observes the fully-settled state of the one before it.
+     * @private
+     */
+    _enqueue(taskFn) {
+        // Skip a queued task entirely once destroyed: its post-destroy state
+        // (selectedIds === [], renderer === null) would otherwise persist an
+        // empty selection and crash on the renderer.
+        const guarded = () => (this._destroyed ? undefined : taskFn());
+        const result = this._opQueue.then(guarded, guarded);
+        // Keep the chain alive even if a task throws.
+        this._opQueue = result.then(() => {}, () => {});
+        return result;
     }
 
     /**
@@ -349,50 +377,68 @@ export class TimelineCalendarFilter extends Component {
     async _handleGroupToggle(group, _calendars, checked) {
         if (group.calendarIds.length === 0) return;
 
-        const previousIds = [...this.selectedIds];
-        const primaryId = this.calendars.find(c => c.primary)?.id;
-        // Use full group membership (not the filtered view) for toggling
-        const fullGroupCalIds = new Set(group.calendarIds);
+        return this._enqueue(async () => {
+            // Snapshot inside the queued task so it reflects any prior toggle.
+            const previousIds = [...this.selectedIds];
+            const primaryId = this.calendars.find(c => c.primary)?.id;
+            // Use full group membership (not the filtered view) for toggling
+            const fullGroupCalIds = new Set(group.calendarIds);
+            let nextIds;
 
-        if (checked) {
-            const validCalIds = new Set(this.calendars.map(c => c.id));
-            for (const calId of group.calendarIds) {
-                if (validCalIds.has(calId) && !this.selectedIds.includes(calId)) {
-                    this.selectedIds.push(calId);
+            if (checked) {
+                nextIds = [...this.selectedIds];
+                const validCalIds = new Set(this.calendars.map(c => c.id));
+                for (const calId of group.calendarIds) {
+                    if (validCalIds.has(calId) && !nextIds.includes(calId)) {
+                        nextIds.push(calId);
+                    }
                 }
-            }
-        } else {
-            // Find calendar IDs that are in other groups and still selected
-            const otherGroupIds = new Set();
-            for (const g of this.calendarGroups) {
-                if (g.id === group.id) continue;
-                for (const id of g.calendarIds) {
-                    if (this.selectedIds.includes(id)) {
+            } else {
+                // Only preserve calendars whose sibling group is *fully* checked.
+                // A merely "selected" sibling member is not enough: it may itself
+                // be selected only via the group we are unchecking now.
+                const validCalIds = new Set(this.calendars.map(c => c.id));
+                const selectedSet = new Set(this.selectedIds);
+                const otherGroupIds = new Set();
+                for (const g of this.calendarGroups) {
+                    if (g.id === group.id) continue;
+                    const memberIds = g.calendarIds.filter(id => validCalIds.has(id));
+                    if (memberIds.length === 0) continue;
+                    const fullyChecked = memberIds.every(id => selectedSet.has(id));
+                    if (!fullyChecked) continue;
+                    for (const id of memberIds) {
                         otherGroupIds.add(id);
                     }
                 }
+
+                nextIds = this.selectedIds.filter(id => {
+                    if (id === primaryId) return true;
+                    if (!fullGroupCalIds.has(id)) return true;
+                    if (otherGroupIds.has(id)) return true;
+                    return false;
+                });
             }
 
-            this.selectedIds = this.selectedIds.filter(id => {
-                if (id === primaryId) return true;
-                if (!fullGroupCalIds.has(id)) return true;
-                if (otherGroupIds.has(id)) return true;
-                return false;
-            });
-        }
+            this.selectedIds = nextIds;
 
-        try {
-            await saveSelectedCalendars(this.selectedIds);
-            this.renderer.renderCalendarList();
-            if (this.onCalendarChange) {
-                const addedIds = this.selectedIds.filter(id => !previousIds.includes(id));
-                const removedIds = previousIds.filter(id => !this.selectedIds.includes(id));
-                this.onCalendarChange({ addedIds, removedIds });
+            try {
+                await saveSelectedCalendars(this.selectedIds);
+                if (this._destroyed) return;
+                this.renderer.renderCalendarList(
+                    this.calendars, this.selectedIds, this.calendarGroups, this.searchTerm
+                );
+                if (this.onCalendarChange) {
+                    const addedIds = this.selectedIds.filter(id => !previousIds.includes(id));
+                    const removedIds = previousIds.filter(id => !this.selectedIds.includes(id));
+                    this.onCalendarChange({ addedIds, removedIds });
+                }
+            } catch {
+                this.selectedIds = previousIds;
+                this.renderer?.renderCalendarList(
+                    this.calendars, this.selectedIds, this.calendarGroups, this.searchTerm
+                );
             }
-        } catch {
-            this.selectedIds = previousIds;
-            this.renderer.renderCalendarList();
-        }
+        });
     }
 
     /**
@@ -422,30 +468,38 @@ export class TimelineCalendarFilter extends Component {
      * @private
      */
     async _handleToggle(calendarId, checked) {
-        const previousIds = [...this.selectedIds];
+        return this._enqueue(async () => {
+            // Snapshot inside the queued task so it reflects any prior toggle.
+            const previousIds = [...this.selectedIds];
 
-        if (checked) {
-            if (!this.selectedIds.includes(calendarId)) {
-                this.selectedIds.push(calendarId);
+            if (checked) {
+                this.selectedIds = this.selectedIds.includes(calendarId)
+                    ? [...this.selectedIds]
+                    : [...this.selectedIds, calendarId];
+            } else {
+                this.selectedIds = this.selectedIds.filter(id => id !== calendarId);
             }
-        } else {
-            this.selectedIds = this.selectedIds.filter(id => id !== calendarId);
-        }
 
-        try {
-            await saveSelectedCalendars(this.selectedIds);
-            // Update group header checkbox states
-            this.renderer.updateGroupCheckboxStates(this.calendarList);
-            if (this.onCalendarChange) {
-                this.onCalendarChange({
-                    addedIds: checked ? [calendarId] : [],
-                    removedIds: checked ? [] : [calendarId]
-                });
+            try {
+                await saveSelectedCalendars(this.selectedIds);
+                if (this._destroyed) return;
+                // Update group header checkbox states
+                this.renderer.updateGroupCheckboxStates(
+                    this.calendarList, this.calendars, this.selectedIds, this.calendarGroups
+                );
+                if (this.onCalendarChange) {
+                    this.onCalendarChange({
+                        addedIds: checked ? [calendarId] : [],
+                        removedIds: checked ? [] : [calendarId]
+                    });
+                }
+            } catch {
+                this.selectedIds = previousIds;
+                this.renderer?.renderCalendarList(
+                    this.calendars, this.selectedIds, this.calendarGroups, this.searchTerm
+                );
             }
-        } catch {
-            this.selectedIds = previousIds;
-            this.renderer.renderCalendarList();
-        }
+        });
     }
 
     /**
@@ -459,6 +513,8 @@ export class TimelineCalendarFilter extends Component {
      * Clean up resources
      */
     destroy() {
+        this._destroyed = true;
+        this.isOpen = false;
         if (this._rafId) {
             window.cancelAnimationFrame(this._rafId);
             this._rafId = null;

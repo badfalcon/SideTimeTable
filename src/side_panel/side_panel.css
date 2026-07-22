@@ -766,6 +766,18 @@ body {
     transition: background-color 0.15s, border-color 0.15s, color 0.15s;
 }
 
+.google-event-rsvp-btn-text {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1.15;
+}
+
+.google-event-rsvp-btn-text-sub {
+    font-size: 0.85em;
+    opacity: 0.85;
+}
+
 .google-event-rsvp-btn:hover {
     background-color: var(--side-calendar-modal-btn-hover-bg);
     border-color: var(--side-calendar-modal-btn-hover-border);
@@ -994,6 +1006,27 @@ body {
     border: none;
     border-top: 1px solid var(--side-calendar-border-color-lighter);
     margin: 12px 0;
+}
+
+.whats-new-dont-show-again {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 12px 0;
+    padding-left: 0;
+    color: inherit;
+}
+
+.whats-new-dont-show-again .form-check-input {
+    float: none;
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.whats-new-dont-show-again .form-check-label {
+    color: inherit;
+    font-size: 0.9em;
+    margin: 0;
 }
 
 .whats-new-confirm-btn {

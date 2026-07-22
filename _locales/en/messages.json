@@ -77,6 +77,34 @@
       }
     }
   },
+  "eventStartingNow": {
+    "message": "$EVENT_TITLE$ is starting now ($START_TIME$)",
+    "description": "Notification message when the event is starting now",
+    "placeholders": {
+      "event_title": {
+        "content": "$1",
+        "example": "Meeting"
+      },
+      "start_time": {
+        "content": "$2",
+        "example": "14:30"
+      }
+    }
+  },
+  "startsInOneMinute": {
+    "message": "$EVENT_TITLE$ starts in 1 minute ($START_TIME$)",
+    "description": "Notification message for event reminder when one minute remains",
+    "placeholders": {
+      "event_title": {
+        "content": "$1",
+        "example": "Meeting"
+      },
+      "start_time": {
+        "content": "$2",
+        "example": "14:30"
+      }
+    }
+  },
   "openSideTimeTable": {
     "message": "Open SideTimeTable",
     "description": "Notification button text to open side panel"
@@ -746,6 +774,34 @@
     "message": "1 hour",
     "description": "1 hour reminder option"
   },
+  "reminderSyncIntervalLabel": {
+    "message": "Check Google Calendar for changes:",
+    "description": "Label for the reminder sync interval setting"
+  },
+  "reminderSyncIntervalHelp": {
+    "message": "How often to look for newly added or rescheduled Google Calendar events so their reminders stay up to date.",
+    "description": "Help text for the reminder sync interval setting"
+  },
+  "syncInterval15Min": {
+    "message": "Every 15 minutes",
+    "description": "Sync interval option: 15 minutes"
+  },
+  "syncInterval30Min": {
+    "message": "Every 30 minutes",
+    "description": "Sync interval option: 30 minutes"
+  },
+  "syncInterval60Min": {
+    "message": "Every hour",
+    "description": "Sync interval option: 1 hour"
+  },
+  "syncInterval120Min": {
+    "message": "Every 2 hours",
+    "description": "Sync interval option: 2 hours"
+  },
+  "syncInterval360Min": {
+    "message": "Every 6 hours",
+    "description": "Sync interval option: 6 hours"
+  },
   "syncReminders": {
     "message": "Sync Reminders",
     "description": "Tooltip for sync reminders button"
@@ -845,6 +901,26 @@
   "whatsNewContextMenu": {
     "message": "What's New",
     "description": "Context menu item for What's New"
+  },
+  "whatsNewDontShowAgain": {
+    "message": "Don't show this again on updates",
+    "description": "Checkbox label inside What's New modal to opt out of auto-display on future version updates"
+  },
+  "whatsNewSettings": {
+    "message": "Update Notifications",
+    "description": "Title of the What's New auto-show settings card on the options page"
+  },
+  "whatsNewSettingsDescription": {
+    "message": "Control whether the What's New modal appears on version updates.",
+    "description": "Subtitle of the What's New auto-show settings card on the options page"
+  },
+  "whatsNewAutoShowLabel": {
+    "message": "Show What's New on updates",
+    "description": "Toggle label for enabling the What's New modal on version updates"
+  },
+  "whatsNewAutoShowHelp": {
+    "message": "When enabled, a summary of new features is shown automatically after the extension updates.",
+    "description": "Help text for the What's New auto-show toggle"
   },
   "changelogTitle": {
     "message": "Changelog",
@@ -1137,6 +1213,10 @@
   "rsvpDecline": {
     "message": "Decline",
     "description": "Decline button for event RSVP"
+  },
+  "rsvpDeclineScope": {
+    "message": "(this only)",
+    "description": "Sub-label appended below the Decline button on a recurring event instance to clarify scope"
   },
   "rsvpTentative": {
     "message": "Maybe",

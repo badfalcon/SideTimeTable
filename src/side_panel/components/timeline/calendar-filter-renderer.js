@@ -4,27 +4,21 @@
  * Extracted from TimelineCalendarFilter to separate rendering concerns
  * (dropdown content, calendar list, group sections, calendar items)
  * from the main component's lifecycle and data-fetching logic.
+ *
+ * All data is passed directly as method parameters — the renderer holds
+ * no references to external state. Event callbacks are retained as an
+ * observer hook from the parent component.
  */
 
 export class CalendarFilterRenderer {
     /**
      * @param {Object} options
-     * @param {Function} options.getCalendars - Returns full calendars array
-     * @param {Function} options.getSelectedIds - Returns current selectedIds array
-     * @param {Function} options.getCalendarGroups - Returns current calendarGroups array
-     * @param {Function} options.getSearchTerm - Returns current search term string
-     * @param {Function} options.getMessage - i18n message lookup (key => string)
      * @param {Function} options.onSearchInput - Called when search input changes (value)
      * @param {Function} options.onRefreshClick - Called when refresh button is clicked
      * @param {Function} options.onCalendarToggle - Called when a single calendar is toggled (calendarId, checked)
      * @param {Function} options.onGroupToggle - Called when a group checkbox is toggled (group, calendars, checked)
      */
     constructor(options) {
-        this._getCalendars = options.getCalendars;
-        this._getSelectedIds = options.getSelectedIds;
-        this._getCalendarGroups = options.getCalendarGroups;
-        this._getSearchTerm = options.getSearchTerm;
-        this._getMessage = options.getMessage;
         this._onSearchInput = options.onSearchInput;
         this._onRefreshClick = options.onRefreshClick;
         this._onCalendarToggle = options.onCalendarToggle;
@@ -44,9 +38,13 @@ export class CalendarFilterRenderer {
      * Render the full dropdown content (toolbar + calendar list) into the
      * given container. Returns references to key DOM nodes.
      * @param {HTMLElement} dropdown - The dropdown container element
+     * @param {string} searchTerm - Current search term value
+     * @param {Array} calendars - Full calendars array
+     * @param {Array<string>} selectedIds - Current selectedIds array
+     * @param {Array} calendarGroups - Current calendarGroups array
      * @returns {{ searchInput: HTMLElement, refreshBtn: HTMLElement, calendarList: HTMLElement }}
      */
-    renderDropdownContent(dropdown) {
+    renderDropdownContent(dropdown, searchTerm, calendars, selectedIds, calendarGroups) {
         dropdown.innerHTML = '';
 
         // Toolbar: search + refresh
@@ -56,9 +54,9 @@ export class CalendarFilterRenderer {
         this.searchInput = document.createElement('input');
         this.searchInput.type = 'text';
         this.searchInput.className = 'timeline-calendar-filter-search';
-        this.searchInput.placeholder = this._getMessage('calendarFilterSearchPlaceholder');
-        this.searchInput.setAttribute('aria-label', this._getMessage('calendarFilterSearchPlaceholder'));
-        this.searchInput.value = this._getSearchTerm();
+        this.searchInput.placeholder = window.getLocalizedMessage('calendarFilterSearchPlaceholder');
+        this.searchInput.setAttribute('aria-label', window.getLocalizedMessage('calendarFilterSearchPlaceholder'));
+        this.searchInput.value = searchTerm;
         this.searchInput.addEventListener('input', () => {
             this._onSearchInput(this.searchInput.value);
         });
@@ -66,8 +64,8 @@ export class CalendarFilterRenderer {
         this.refreshBtn = document.createElement('button');
         this.refreshBtn.type = 'button';
         this.refreshBtn.className = 'timeline-calendar-filter-refresh-btn';
-        this.refreshBtn.title = this._getMessage('calendarFilterRefreshTooltip');
-        this.refreshBtn.setAttribute('aria-label', this._getMessage('calendarFilterRefreshTooltip'));
+        this.refreshBtn.title = window.getLocalizedMessage('calendarFilterRefreshTooltip');
+        this.refreshBtn.setAttribute('aria-label', window.getLocalizedMessage('calendarFilterRefreshTooltip'));
         this.refreshBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i>';
         this.refreshBtn.addEventListener('click', () => {
             this._onRefreshClick();
@@ -82,7 +80,7 @@ export class CalendarFilterRenderer {
         this.calendarList.className = 'timeline-calendar-filter-list';
         dropdown.appendChild(this.calendarList);
 
-        this.renderCalendarList();
+        this.renderCalendarList(calendars, selectedIds, calendarGroups, searchTerm);
 
         return {
             searchInput: this.searchInput,
@@ -95,24 +93,20 @@ export class CalendarFilterRenderer {
      * Render (or re-render) the calendar list inside the existing
      * calendarList container.
      */
-    renderCalendarList() {
+    renderCalendarList(calendars, selectedIds, calendarGroups, searchTerm) {
         if (!this.calendarList) return;
         this.calendarList.innerHTML = '';
-
-        const calendars = this._getCalendars();
-        const selectedIds = this._getSelectedIds();
-        const calendarGroups = this._getCalendarGroups();
 
         if (!calendars || calendars.length === 0) {
             const empty = document.createElement('div');
             empty.className = 'timeline-calendar-filter-status';
-            empty.textContent = this._getMessage('noCalendarsAvailable');
+            empty.textContent = window.getLocalizedMessage('noCalendarsAvailable');
             this.calendarList.appendChild(empty);
             return;
         }
 
         // Filter by search term
-        const term = this._getSearchTerm().toLowerCase().trim();
+        const term = (searchTerm || '').toLowerCase().trim();
         const filtered = term
             ? calendars.filter(c => (c.summary || '').toLowerCase().includes(term))
             : calendars;
@@ -120,7 +114,7 @@ export class CalendarFilterRenderer {
         if (filtered.length === 0) {
             const noResult = document.createElement('div');
             noResult.className = 'timeline-calendar-filter-status';
-            noResult.textContent = this._getMessage('noCalendarsAvailable');
+            noResult.textContent = window.getLocalizedMessage('noCalendarsAvailable');
             this.calendarList.appendChild(noResult);
             return;
         }
@@ -137,7 +131,7 @@ export class CalendarFilterRenderer {
 
                 if (term && groupCalendars.length === 0) continue;
 
-                this._renderGroupSection(group, groupCalendars, calendars, selectedIds, calendarGroups);
+                this._renderGroupSection(group, groupCalendars, calendars, selectedIds);
             }
 
             // Ungrouped
@@ -176,13 +170,13 @@ export class CalendarFilterRenderer {
     /**
      * Update group header checkbox states without re-rendering the whole list.
      * @param {HTMLElement} calendarList - The calendar list container
+     * @param {Array} calendars - Full calendars array
+     * @param {Array<string>} selectedIds - Current selectedIds array
+     * @param {Array} calendarGroups - Current calendarGroups array
      */
-    updateGroupCheckboxStates(calendarList) {
-        const calendarGroups = this._getCalendarGroups();
+    updateGroupCheckboxStates(calendarList, calendars, selectedIds, calendarGroups) {
         if (!calendarList || calendarGroups.length === 0) return;
 
-        const calendars = this._getCalendars();
-        const selectedIds = this._getSelectedIds();
         const calendarMap = new Map(calendars.map(c => [c.id, c]));
 
         for (const group of calendarGroups) {
@@ -218,7 +212,7 @@ export class CalendarFilterRenderer {
      * Render a group section in the filter dropdown
      * @private
      */
-    _renderGroupSection(group, calendars, allCalendars, selectedIds, _calendarGroups) {
+    _renderGroupSection(group, calendars, allCalendars, selectedIds) {
         // Group header
         const header = document.createElement('div');
         header.className = 'timeline-calendar-filter-group-header';
@@ -318,7 +312,7 @@ export class CalendarFilterRenderer {
 
         const nameSpan = document.createElement('span');
         nameSpan.className = 'group-name';
-        nameSpan.textContent = this._getMessage('ungrouped') || 'Ungrouped';
+        nameSpan.textContent = window.getLocalizedMessage('ungrouped') || 'Ungrouped';
 
         const collapseIcon = document.createElement('i');
         collapseIcon.className = 'fa-solid fa-chevron-down group-collapse-icon';

@@ -154,6 +154,57 @@ describe('GoogleEventManager — all-day event routing', () => {
     expect(chip.textContent).toBe('Out of office');
   });
 
+  test('full-day outOfOffice event with dateTime (00:00→24:00) is routed to the all-day container', async () => {
+    // Google Calendar's OOO UI uses time ranges; "out for the day" comes back
+    // as a timed event spanning local midnight to midnight.
+    const start = new Date(2025, 5, 1, 0, 0, 0);
+    const end = new Date(2025, 5, 2, 0, 0, 0);
+    await manager._processEvents([{
+      id: 'ooo-fullday',
+      summary: 'Out of office',
+      start: { dateTime: start.toISOString() },
+      end: { dateTime: end.toISOString() },
+      eventType: 'outOfOffice',
+      calendarId: 'primary',
+    }]);
+
+    expect(allDayContainer.appendChild).toHaveBeenCalledTimes(1);
+    const chip = allDayContainer.appendChild.mock.calls[0][0];
+    expect(chip.className).toBe('all-day-event-chip all-day-event-chip-ooo');
+  });
+
+  test('partial-day outOfOffice event with dateTime stays in the timed timeline', async () => {
+    // 13:00–18:00 OOO should NOT become a chip.
+    const start = new Date(2025, 5, 1, 13, 0, 0);
+    const end = new Date(2025, 5, 1, 18, 0, 0);
+    await manager._processEvents([{
+      id: 'ooo-partial',
+      summary: 'Out of office',
+      start: { dateTime: start.toISOString() },
+      end: { dateTime: end.toISOString() },
+      eventType: 'outOfOffice',
+      calendarId: 'primary',
+    }]);
+
+    expect(allDayContainer.appendChild).not.toHaveBeenCalled();
+  });
+
+  test('full-day non-OOO event with dateTime stays in the timed timeline', async () => {
+    // Only OOO gets the dateTime→all-day promotion; a regular 24h event remains timed.
+    const start = new Date(2025, 5, 1, 0, 0, 0);
+    const end = new Date(2025, 5, 2, 0, 0, 0);
+    await manager._processEvents([{
+      id: 'long-default',
+      summary: 'Long task',
+      start: { dateTime: start.toISOString() },
+      end: { dateTime: end.toISOString() },
+      eventType: 'default',
+      calendarId: 'primary',
+    }]);
+
+    expect(allDayContainer.appendChild).not.toHaveBeenCalled();
+  });
+
   test('timed event does NOT create a chip in the all-day container', async () => {
     await manager._processEvents([timedEvent()]);
 

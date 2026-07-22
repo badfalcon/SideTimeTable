@@ -15,3 +15,7 @@ SideTimeTable-release.zip
 
 # Test coverage
 coverage/
+
+# claude local settings
+/.claude/settings.local.json
+/.claude/statusline.py

@@ -42,18 +42,14 @@ export class CalendarManagementCard extends CardComponent {
 
         // Initialize group manager
         this._groupManager = new CalendarGroupManager({
-            getCalendarGroups: () => this.calendarGroups,
             setCalendarGroups: (groups) => { this.calendarGroups = groups; },
-            getSelectedCalendarIds: () => this.selectedCalendarIds,
             setSelectedCalendarIds: (ids) => { this.selectedCalendarIds = ids; },
-            getAllCalendars: () => this.allCalendars,
             onGroupsChanged: () => this.render(),
             onSelectionChanged: (ids, diff) => {
                 if (this.onCalendarSelectionChange) {
                     this.onCalendarSelectionChange(ids, diff);
                 }
-            },
-            getAddGroupBtn: () => this.addGroupBtn
+            }
         });
 
         // Initialize list renderer
@@ -236,7 +232,7 @@ export class CalendarManagementCard extends CardComponent {
         this.clearSearchBtn?.addEventListener('click', () => this._clearSearch());
 
         // Add group button
-        this.addGroupBtn?.addEventListener('click', () => this._groupManager.handleAddGroup());
+        this.addGroupBtn?.addEventListener('click', () => this._groupManager.handleAddGroup(this.allCalendars));
 
         // Handle the calendar checkbox using event delegation
         this.calendarList?.addEventListener('change', (e) => {
@@ -247,7 +243,10 @@ export class CalendarManagementCard extends CardComponent {
             if (groupHeader) {
                 const groupId = groupHeader.dataset.groupId;
                 if (groupId) {
-                    this._groupManager.handleGroupToggle(groupId, target.checked);
+                    this._groupManager.handleGroupToggle(
+                        groupId, target.checked,
+                        this.calendarGroups, this.selectedCalendarIds, this.allCalendars
+                    );
                 }
                 return;
             }
@@ -264,7 +263,9 @@ export class CalendarManagementCard extends CardComponent {
             if (collapseIcon) {
                 const groupHeader = collapseIcon.closest('.calendar-group-header');
                 if (groupHeader) {
-                    this._groupManager.handleGroupCollapse(groupHeader.dataset.groupId, this.calendarList);
+                    this._groupManager.handleGroupCollapse(
+                        groupHeader.dataset.groupId, this.calendarList, this.calendarGroups
+                    );
                 }
                 return;
             }
@@ -272,7 +273,9 @@ export class CalendarManagementCard extends CardComponent {
             // Group name click (also collapse/expand, unless clicking checkbox or actions)
             const groupHeader = e.target.closest('.calendar-group-header');
             if (groupHeader && !e.target.closest('input') && !e.target.closest('.group-actions')) {
-                this._groupManager.handleGroupCollapse(groupHeader.dataset.groupId, this.calendarList);
+                this._groupManager.handleGroupCollapse(
+                    groupHeader.dataset.groupId, this.calendarList, this.calendarGroups
+                );
                 return;
             }
 
@@ -280,7 +283,9 @@ export class CalendarManagementCard extends CardComponent {
             const editBtn = e.target.closest('[data-group-edit]');
             if (editBtn) {
                 e.stopPropagation();
-                this._groupManager.handleStartRenameGroup(editBtn.dataset.groupEdit);
+                this._groupManager.handleStartRenameGroup(
+                    editBtn.dataset.groupEdit, this.calendarGroups, this.allCalendars
+                );
                 return;
             }
 
@@ -288,7 +293,7 @@ export class CalendarManagementCard extends CardComponent {
             const deleteBtn = e.target.closest('[data-group-delete]');
             if (deleteBtn) {
                 e.stopPropagation();
-                this._groupManager.handleDeleteGroup(deleteBtn.dataset.groupDelete);
+                this._groupManager.handleDeleteGroup(deleteBtn.dataset.groupDelete, this.calendarGroups);
                 return;
             }
 
@@ -298,7 +303,10 @@ export class CalendarManagementCard extends CardComponent {
                 e.stopPropagation();
                 const calendarItem = assignBtn.closest('[data-calendar-id]');
                 if (calendarItem) {
-                    this._groupManager.showGroupAssignPopover(calendarItem.dataset.calendarId, assignBtn);
+                    this._groupManager.showGroupAssignPopover(
+                        calendarItem.dataset.calendarId, assignBtn,
+                        this.calendarGroups, this.allCalendars
+                    );
                 }
             }
         });
@@ -309,7 +317,9 @@ export class CalendarManagementCard extends CardComponent {
                 const groupHeader = e.target.closest('.calendar-group-header');
                 if (groupHeader && e.target === groupHeader) {
                     e.preventDefault();
-                    this._groupManager.handleGroupCollapse(groupHeader.dataset.groupId, this.calendarList);
+                    this._groupManager.handleGroupCollapse(
+                        groupHeader.dataset.groupId, this.calendarList, this.calendarGroups
+                    );
                 }
             }
         });

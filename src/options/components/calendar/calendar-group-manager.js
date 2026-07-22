@@ -3,6 +3,10 @@
  *
  * Extracted from CalendarManagementCard to handle all group-related business
  * logic independently from the card UI lifecycle.
+ *
+ * Read-side state (calendarGroups, selectedCalendarIds, allCalendars) is
+ * passed directly to methods as parameters. The manager only retains
+ * setter/event callbacks for propagating mutations back to the parent.
  */
 
 import { logError } from '../../../lib/utils.js';
@@ -11,24 +15,16 @@ import { saveCalendarGroups, saveSelectedCalendars } from '../../../lib/settings
 export class CalendarGroupManager {
     /**
      * @param {Object} options
-     * @param {Function} options.getCalendarGroups - Returns current calendarGroups array
-     * @param {Function} options.setCalendarGroups - Sets calendarGroups array
-     * @param {Function} options.getSelectedCalendarIds - Returns current selectedCalendarIds
-     * @param {Function} options.setSelectedCalendarIds - Sets selectedCalendarIds
-     * @param {Function} options.getAllCalendars - Returns all calendars
+     * @param {Function} options.setCalendarGroups - Sets calendarGroups array on the parent
+     * @param {Function} options.setSelectedCalendarIds - Sets selectedCalendarIds on the parent
      * @param {Function} options.onGroupsChanged - Called after group changes (triggers render)
      * @param {Function} options.onSelectionChanged - Called after selection changes with diff
-     * @param {Function} options.getAddGroupBtn - Returns add group button element
      */
     constructor(options) {
-        this._getCalendarGroups = options.getCalendarGroups;
         this._setCalendarGroups = options.setCalendarGroups;
-        this._getSelectedCalendarIds = options.getSelectedCalendarIds;
         this._setSelectedCalendarIds = options.setSelectedCalendarIds;
-        this._getAllCalendars = options.getAllCalendars;
         this._onGroupsChanged = options.onGroupsChanged;
         this._onSelectionChanged = options.onSelectionChanged;
-        this._getAddGroupBtn = options.getAddGroupBtn;
 
         // Active popover reference
         this._activePopover = null;
@@ -58,10 +54,8 @@ export class CalendarGroupManager {
     /**
      * Show group assignment popover for a calendar
      */
-    showGroupAssignPopover(calendarId, anchorElement) {
+    showGroupAssignPopover(calendarId, anchorElement, calendarGroups, allCalendars) {
         this.closePopover();
-
-        const calendarGroups = this._getCalendarGroups();
 
         const popover = document.createElement('div');
         popover.className = 'calendar-group-assign-popover';
@@ -82,7 +76,7 @@ export class CalendarGroupManager {
                 checkbox.id = `assign-${calendarId}-${group.id}`;
                 checkbox.checked = group.calendarIds.includes(calendarId);
                 checkbox.addEventListener('change', () => {
-                    this._handleCalendarGroupAssignment(calendarId, group.id, checkbox.checked);
+                    this._handleCalendarGroupAssignment(calendarId, group.id, checkbox.checked, calendarGroups, allCalendars);
                 });
 
                 const label = document.createElement('label');
@@ -156,17 +150,14 @@ export class CalendarGroupManager {
     /**
      * Handle calendar group assignment change
      */
-    async handleCalendarGroupAssignment(calendarId, groupId, assigned) {
-        return this._handleCalendarGroupAssignment(calendarId, groupId, assigned);
+    async handleCalendarGroupAssignment(calendarId, groupId, assigned, calendarGroups, allCalendars) {
+        return this._handleCalendarGroupAssignment(calendarId, groupId, assigned, calendarGroups, allCalendars);
     }
 
     /**
      * @private
      */
-    async _handleCalendarGroupAssignment(calendarId, groupId, assigned) {
-        const allCalendars = this._getAllCalendars();
-        const calendarGroups = this._getCalendarGroups();
-
+    async _handleCalendarGroupAssignment(calendarId, groupId, assigned, calendarGroups, allCalendars) {
         const primaryCalendar = allCalendars.find(c => c.primary);
         if (primaryCalendar && primaryCalendar.id === calendarId) return;
         const group = calendarGroups.find(g => g.id === groupId);
@@ -197,15 +188,17 @@ export class CalendarGroupManager {
     /**
      * Handle adding a new group — opens modal
      */
-    handleAddGroup() {
-        this.showGroupModal(null);
+    handleAddGroup(allCalendars) {
+        this.showGroupModal(null, allCalendars);
     }
 
     /**
      * Show the group modal for create or edit
      * @param {Object|null} editingGroup - existing group to edit, or null for create
+     * @param {Array} allCalendars - All available calendars
+     * @param {Array} calendarGroups - Current calendar groups
      */
-    showGroupModal(editingGroup) {
+    showGroupModal(editingGroup, allCalendars, calendarGroups) {
         this._groupModalTrigger = document.activeElement;
         this.closePopover();
         this.closeGroupModal();
@@ -213,9 +206,9 @@ export class CalendarGroupManager {
 
         const { overlay, nameInput, keyHandler } = this._buildGroupModal(
             editingGroup,
-            this._getAllCalendars(),
+            allCalendars,
             () => this.closeGroupModal(),
-            (name, checkboxes, group) => this._submitGroupModal(name, checkboxes, group)
+            (name, checkboxes, group) => this._submitGroupModal(name, checkboxes, group, calendarGroups)
         );
 
         this._createGroupModalKeyHandler = keyHandler;
@@ -231,11 +224,10 @@ export class CalendarGroupManager {
      * Submit the group modal (create or edit)
      * @private
      */
-    async _submitGroupModal(name, checkboxes, editingGroup) {
+    async _submitGroupModal(name, checkboxes, editingGroup, calendarGroups) {
         if (this._isSubmittingGroup) return;
         this._isSubmittingGroup = true;
 
-        const calendarGroups = this._getCalendarGroups();
         const groupName = name || (window.getLocalizedMessage('newGroupName') || 'New Group');
         const selectedCalIds = checkboxes
             .filter(cb => cb.checked)
@@ -299,11 +291,6 @@ export class CalendarGroupManager {
             this._groupModalTrigger = null;
             if (trigger && trigger.isConnected) {
                 trigger.focus();
-            } else {
-                const addGroupBtn = this._getAddGroupBtn();
-                if (addGroupBtn && addGroupBtn.isConnected) {
-                    addGroupBtn.focus();
-                }
             }
         }
     }
@@ -311,17 +298,17 @@ export class CalendarGroupManager {
     /**
      * Handle deleting a group
      */
-    async handleDeleteGroup(groupId) {
+    async handleDeleteGroup(groupId, calendarGroups) {
         const confirmMsg = window.getLocalizedMessage('deleteGroupConfirm')
             || 'Delete this group? Calendars will be moved to Ungrouped.';
         if (!confirm(confirmMsg)) return;
 
-        const calendarGroups = this._getCalendarGroups();
         const previousGroups = [...calendarGroups];
-        this._setCalendarGroups(calendarGroups.filter(g => g.id !== groupId));
+        const nextGroups = calendarGroups.filter(g => g.id !== groupId);
+        this._setCalendarGroups(nextGroups);
 
         try {
-            await saveCalendarGroups(this._getCalendarGroups());
+            await saveCalendarGroups(nextGroups);
             this._onGroupsChanged();
         } catch (error) {
             this._setCalendarGroups(previousGroups);
@@ -332,52 +319,49 @@ export class CalendarGroupManager {
     /**
      * Open edit modal for a group
      */
-    handleStartRenameGroup(groupId) {
-        const group = this._getCalendarGroups().find(g => g.id === groupId);
+    handleStartRenameGroup(groupId, calendarGroups, allCalendars) {
+        const group = calendarGroups.find(g => g.id === groupId);
         if (!group) return;
-        this.showGroupModal(group);
+        this.showGroupModal(group, allCalendars, calendarGroups);
     }
 
     /**
      * Handle group toggle (select/deselect all calendars in group)
      */
-    async handleGroupToggle(groupId, isChecked) {
-        const calendarGroups = this._getCalendarGroups();
-        const selectedCalendarIds = [...this._getSelectedCalendarIds()];
-        const allCalendars = this._getAllCalendars();
-
+    async handleGroupToggle(groupId, isChecked, calendarGroups, selectedCalendarIds, allCalendars) {
         const group = calendarGroups.find(g => g.id === groupId);
         if (!group || group.calendarIds.length === 0) return;
 
         const previousIds = [...selectedCalendarIds];
+        const nextIds = [...selectedCalendarIds];
         const primaryId = allCalendars.find(c => c.primary)?.id;
 
         if (isChecked) {
             const allCalendarIds = new Set(allCalendars.map(c => c.id));
             for (const calId of group.calendarIds) {
-                if (allCalendarIds.has(calId) && !selectedCalendarIds.includes(calId)) {
-                    selectedCalendarIds.push(calId);
+                if (allCalendarIds.has(calId) && !nextIds.includes(calId)) {
+                    nextIds.push(calId);
                 }
             }
         } else {
-            const otherGroupSelectedIds = this._getOtherGroupSelectedIds(groupId);
-            const filtered = selectedCalendarIds.filter(id => {
+            const otherGroupSelectedIds = this._getOtherGroupSelectedIds(groupId, calendarGroups, nextIds);
+            const filtered = nextIds.filter(id => {
                 if (id === primaryId) return true;
                 if (!group.calendarIds.includes(id)) return true;
                 if (otherGroupSelectedIds.has(id)) return true;
                 return false;
             });
-            selectedCalendarIds.length = 0;
-            selectedCalendarIds.push(...filtered);
+            nextIds.length = 0;
+            nextIds.push(...filtered);
         }
 
-        this._setSelectedCalendarIds(selectedCalendarIds);
+        this._setSelectedCalendarIds(nextIds);
 
         try {
-            await saveSelectedCalendars(selectedCalendarIds);
-            const addedIds = selectedCalendarIds.filter(id => !previousIds.includes(id));
-            const removedIds = previousIds.filter(id => !selectedCalendarIds.includes(id));
-            this._onSelectionChanged(selectedCalendarIds, { addedIds, removedIds });
+            await saveSelectedCalendars(nextIds);
+            const addedIds = nextIds.filter(id => !previousIds.includes(id));
+            const removedIds = previousIds.filter(id => !nextIds.includes(id));
+            this._onSelectionChanged(nextIds, { addedIds, removedIds });
             this._onGroupsChanged();
         } catch (error) {
             this._setSelectedCalendarIds(previousIds);
@@ -390,9 +374,7 @@ export class CalendarGroupManager {
      * Get calendar IDs that are selected and belong to other active groups
      * @private
      */
-    _getOtherGroupSelectedIds(excludeGroupId) {
-        const calendarGroups = this._getCalendarGroups();
-        const selectedCalendarIds = this._getSelectedCalendarIds();
+    _getOtherGroupSelectedIds(excludeGroupId, calendarGroups, selectedCalendarIds) {
         const ids = new Set();
         for (const group of calendarGroups) {
             if (group.id === excludeGroupId) continue;
@@ -409,8 +391,9 @@ export class CalendarGroupManager {
      * Handle group collapse/expand
      * @param {string} groupId
      * @param {HTMLElement} calendarList - The calendar list DOM element
+     * @param {Array} calendarGroups - Current calendar groups
      */
-    async handleGroupCollapse(groupId, calendarList) {
+    async handleGroupCollapse(groupId, calendarList, calendarGroups) {
         if (groupId === '__ungrouped__') {
             const header = calendarList.querySelector('.calendar-group-header[data-group-id="__ungrouped__"]');
             if (header) {
@@ -424,7 +407,6 @@ export class CalendarGroupManager {
             return;
         }
 
-        const calendarGroups = this._getCalendarGroups();
         const group = calendarGroups.find(g => g.id === groupId);
         if (!group) return;
 
@@ -440,20 +422,20 @@ export class CalendarGroupManager {
             header.setAttribute('aria-expanded', group.collapsed ? 'false' : 'true');
         }
 
-        this._debouncedSaveGroups();
+        this._debouncedSaveGroups(calendarGroups);
     }
 
     /**
      * Debounced save for calendar groups (used for collapse state)
      * @private
      */
-    _debouncedSaveGroups() {
+    _debouncedSaveGroups(calendarGroups) {
         if (this._collapseSaveTimer) {
             clearTimeout(this._collapseSaveTimer);
         }
         this._collapseSaveTimer = setTimeout(async () => {
             try {
-                await saveCalendarGroups(this._getCalendarGroups());
+                await saveCalendarGroups(calendarGroups);
             } catch (error) {
                 logError('Group save (debounced)', error);
             }

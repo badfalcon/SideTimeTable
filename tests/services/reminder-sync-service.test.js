@@ -104,6 +104,30 @@ describe('ReminderSyncService', () => {
             expect(mockCalendarClient.getPrimaryCalendarEvents).not.toHaveBeenCalled();
         });
 
+        test('clears previously-set Google reminders when feature is disabled', async () => {
+            chrome.storage.sync.set({
+                googleEventReminder: false,
+                googleIntegrated: true,
+            }, () => {});
+
+            chrome.alarms.getAll.mockImplementation((cb) => {
+                const list = [
+                    { name: 'google_event_reminder_2030-03-15_g1' },
+                    { name: 'google_event_reminder_2030-03-16_g2' },
+                    { name: 'event_reminder_2030-03-15_local' }, // local → untouched
+                ];
+                if (cb) { cb(list); return; }
+                return Promise.resolve(list);
+            });
+
+            await service.syncGoogleEventReminders();
+
+            expect(chrome.alarms.clear).toHaveBeenCalledWith('google_event_reminder_2030-03-15_g1');
+            expect(chrome.alarms.clear).toHaveBeenCalledWith('google_event_reminder_2030-03-16_g2');
+            expect(chrome.alarms.clear).not.toHaveBeenCalledWith('event_reminder_2030-03-15_local');
+            expect(mockCalendarClient.getPrimaryCalendarEvents).not.toHaveBeenCalled();
+        });
+
         test('fetches and sets reminders when both enabled', async () => {
             chrome.storage.sync.set({
                 googleEventReminder: true,
@@ -232,6 +256,103 @@ describe('ReminderSyncService', () => {
         test('does not throw on error', async () => {
             chrome.alarms.clear.mockRejectedValueOnce(new Error('fail'));
             await expect(service.setupDailySync()).resolves.toBeUndefined();
+        });
+    });
+
+    // ---------------------------------------------------------------
+    // SPEC: setupPeriodicSync
+    // - Creates "periodic_reminder_sync" alarm using configured interval
+    // - Defaults to 60 minutes when unset
+    // - Clamps invalid / too-small values to the default
+    // ---------------------------------------------------------------
+    describe('SPEC: setupPeriodicSync', () => {
+        test('defaults to 60 minutes when no setting stored', async () => {
+            await service.setupPeriodicSync();
+
+            expect(chrome.alarms.clear).toHaveBeenCalledWith('periodic_reminder_sync');
+            expect(chrome.alarms.create).toHaveBeenCalledWith(
+                'periodic_reminder_sync',
+                { periodInMinutes: 60 }
+            );
+        });
+
+        test('uses the configured reminderSyncInterval', async () => {
+            chrome.storage.sync.set({ reminderSyncInterval: 30 }, () => {});
+
+            await service.setupPeriodicSync();
+
+            expect(chrome.alarms.create).toHaveBeenCalledWith(
+                'periodic_reminder_sync',
+                { periodInMinutes: 30 }
+            );
+        });
+
+        test('clamps values below the minimum to the default', async () => {
+            chrome.storage.sync.set({ reminderSyncInterval: 1 }, () => {});
+
+            await service.setupPeriodicSync();
+
+            expect(chrome.alarms.create).toHaveBeenCalledWith(
+                'periodic_reminder_sync',
+                { periodInMinutes: 60 }
+            );
+        });
+
+        test('falls back to default for non-numeric values', async () => {
+            chrome.storage.sync.set({ reminderSyncInterval: 'oops' }, () => {});
+
+            expect(await service.getSyncIntervalMinutes()).toBe(60);
+        });
+
+        test('does NOT recreate when an alarm with the same cadence exists', async () => {
+            chrome.alarms.get.mockImplementation((name, cb) => {
+                const alarm = { name: 'periodic_reminder_sync', periodInMinutes: 60 };
+                if (cb) { cb(alarm); return; }
+                return Promise.resolve(alarm);
+            });
+
+            await service.setupPeriodicSync();
+
+            // Idempotent: leave the existing countdown intact.
+            expect(chrome.alarms.create).not.toHaveBeenCalled();
+            expect(chrome.alarms.clear).not.toHaveBeenCalled();
+        });
+
+        test('recreates when the existing alarm cadence differs', async () => {
+            chrome.alarms.get.mockImplementation((name, cb) => {
+                const alarm = { name: 'periodic_reminder_sync', periodInMinutes: 30 };
+                if (cb) { cb(alarm); return; }
+                return Promise.resolve(alarm);
+            });
+            // Setting now wants 60.
+
+            await service.setupPeriodicSync();
+
+            expect(chrome.alarms.create).toHaveBeenCalledWith(
+                'periodic_reminder_sync',
+                { periodInMinutes: 60 }
+            );
+        });
+
+        test('force recreates even when a matching alarm exists', async () => {
+            chrome.alarms.get.mockImplementation((name, cb) => {
+                const alarm = { name: 'periodic_reminder_sync', periodInMinutes: 60 };
+                if (cb) { cb(alarm); return; }
+                return Promise.resolve(alarm);
+            });
+
+            await service.setupPeriodicSync({ force: true });
+
+            expect(chrome.alarms.clear).toHaveBeenCalledWith('periodic_reminder_sync');
+            expect(chrome.alarms.create).toHaveBeenCalledWith(
+                'periodic_reminder_sync',
+                { periodInMinutes: 60 }
+            );
+        });
+
+        test('does not throw on error', async () => {
+            chrome.alarms.create.mockRejectedValueOnce(new Error('fail'));
+            await expect(service.setupPeriodicSync()).resolves.toBeUndefined();
         });
     });
 });
