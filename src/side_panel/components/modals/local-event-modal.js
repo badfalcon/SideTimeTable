@@ -424,6 +424,12 @@ export class LocalEventModal extends ModalComponent {
      * @private
      */
     async _handleSaveGoogle() {
+        // Re-entry guard: the title's Enter-key handler routes through _handleSave
+        // too, so a disabled save button alone cannot prevent a double submit.
+        if (this._submittingGoogle) {
+            return;
+        }
+
         const date = this._getCurrentDate ? this._getCurrentDate() : new Date();
         const calendarId = this.formBuilder.calendarSelect?.value || 'primary';
 
@@ -442,12 +448,14 @@ export class LocalEventModal extends ModalComponent {
         }
 
         // Keep the modal open until the create succeeds, so the user does not
-        // lose their input on a network/API failure. Guard against double submit.
+        // lose their input on a network/API failure.
+        this._submittingGoogle = true;
         this._setSaving(true);
         let succeeded;
         try {
             succeeded = await this.onSaveGoogle(eventResource, calendarId);
         } finally {
+            this._submittingGoogle = false;
             this._setSaving(false);
         }
 
