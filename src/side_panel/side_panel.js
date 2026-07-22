@@ -354,6 +354,7 @@ class SidePanelUIController {
 
         // Set auth expiry callback
         this.googleEventManager.onAuthExpired = () => {
+            this._invalidateWritableCalendarsCache();
             const container = document.getElementById('side-panel-container') || document.body;
             const insertBeforeEl = this.allDayEventsComponent?.element || this.timelineComponent?.element;
             this._showAuthExpiredBanner(container, insertBeforeEl);
@@ -483,6 +484,8 @@ class SidePanelUIController {
      * @private
      */
     async _handleCalendarToggle(changeInfo) {
+        // The displayed-calendar set feeds the create modal's Google destination
+        this._invalidateWritableCalendarsCache();
         await this.eventLoadingService.handleCalendarToggle(
             changeInfo,
             this.dateNavService.getDate(),
@@ -545,24 +548,37 @@ class SidePanelUIController {
         // Enrich with the Google save destination once writable calendars resolve.
         // A token guards against a stale fetch applying to a later modal open.
         const token = (this._addEventToken = (this._addEventToken || 0) + 1);
-        const writableCalendars = await this._getWritableCalendars();
+        const { writable, hiddenWritable } = await this._getWritableCalendars();
         if (token === this._addEventToken) {
-            this.localEventModal.setGoogleAvailability(writableCalendars);
+            this.localEventModal.setGoogleAvailability(writable, { hiddenWritable });
         }
     }
 
     /**
-     * Fetch the list of Google calendars the user can write to (owner/writer).
-     * Returns an empty array when the Google integration is disabled, not
-     * authenticated, in demo mode, or on error, which disables the Google save
-     * destination in the create modal.
-     * @returns {Promise<Array<{id: string, summary: string, primary: boolean}>>}
+     * Fetch the Google calendars the user can write to (owner/writer),
+     * restricted to those currently displayed on the timeline.
+     * `hiddenWritable` reports the "writable calendars exist but none are
+     * displayed" case so the modal can explain why Google saving is absent.
+     *
+     * The result is cached briefly — the calendar list changes rarely, and
+     * without a cache every "+" click costs a live Google API round-trip.
+     * The cache is invalidated on calendar-selection changes and expires on
+     * its own so auth/list changes are picked up quickly.
+     * @returns {Promise<{writable: Array, hiddenWritable: boolean}>}
      * @private
      */
     async _getWritableCalendars() {
+        const NONE = { writable: [], hiddenWritable: false };
+
         // Google event creation is not supported in demo mode
         if (isDemoMode()) {
-            return [];
+            return NONE;
+        }
+
+        const CACHE_TTL_MS = 60 * 1000;
+        if (this._writableCalendarsCache &&
+            Date.now() - this._writableCalendarsCache.ts < CACHE_TTL_MS) {
+            return this._writableCalendarsCache.result;
         }
 
         try {
@@ -572,28 +588,41 @@ class SidePanelUIController {
             // destination without it would create events that never display.
             const settings = await loadSettings();
             if (settings.googleIntegrated !== true) {
-                return [];
+                return NONE;
             }
 
-            const auth = await sendMessage({ action: 'checkGoogleAuth' });
-            if (!auth || !auth.authenticated) {
-                return [];
-            }
-
+            // No auth pre-flight: getCalendarList itself fails with an auth
+            // error when unauthenticated, which the catch below maps to NONE.
             const requestId = `create-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
             const response = await sendMessage({ action: 'getCalendarList', requestId });
             if (!response || response.error || !Array.isArray(response.calendars)) {
-                return [];
+                return NONE;
             }
 
             // Only offer calendars that are both writable AND currently displayed,
             // so a newly created event is guaranteed to appear on the timeline
             // (fetchEvents renders only selectedCalendars).
             const selectedIds = await loadSelectedCalendars();
-            return filterWritableCalendars(response.calendars, selectedIds);
+            const writable = filterWritableCalendars(response.calendars, selectedIds);
+            const result = {
+                writable,
+                hiddenWritable: writable.length === 0 &&
+                    filterWritableCalendars(response.calendars).length > 0
+            };
+
+            this._writableCalendarsCache = { result, ts: Date.now() };
+            return result;
         } catch {
-            return [];
+            return NONE;
         }
+    }
+
+    /**
+     * Drop the cached writable-calendar list (selection or auth changed).
+     * @private
+     */
+    _invalidateWritableCalendarsCache() {
+        this._writableCalendarsCache = null;
     }
 
     /**

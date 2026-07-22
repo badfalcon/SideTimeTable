@@ -138,6 +138,16 @@ export class GoogleEventEditFormBuilder {
         });
         parentElement.appendChild(this.reminderSelect);
 
+        // The form deliberately edits a subset (no Meet toggle, calendar move,
+        // guests, recurrence) — tell the user where the rest lives instead of
+        // silently omitting it.
+        const editNote = document.createElement('div');
+        editNote.className = 'google-edit-note';
+        editNote.setAttribute('data-localize', '__MSG_googleEditOtherFields__');
+        editNote.textContent = window.getLocalizedMessage('googleEditOtherFields')
+            || 'Other fields can be edited in Google Calendar.';
+        parentElement.appendChild(editNote);
+
         // Button bar
         const buttonGroup = document.createElement('div');
         buttonGroup.className = 'modal-buttons';

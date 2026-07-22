@@ -1691,7 +1691,7 @@
     "description": "Googleイベント作成時のリマインダー/通知セレクトのラベル"
   },
   "reminderDefault": {
-    "message": "カレンダーの既定",
+    "message": "カレンダーのデフォルト",
     "description": "カレンダーの既定リマインダーをそのまま使うリマインダー選択肢"
   },
   "minutesBeforeUnit": {
@@ -1703,23 +1703,31 @@
     "description": "カレンダー選択でユーザーのメインカレンダーを示す接尾語"
   },
   "googleEventCreateFailed": {
-    "message": "Googleイベントの作成に失敗しました",
+    "message": "Googleイベントの作成に失敗しました。時間をおいて再試行してください。",
     "description": "Googleカレンダーイベントの作成に失敗した際のエラーメッセージ"
   },
   "googleEventUpdateFailed": {
-    "message": "Googleイベントの更新に失敗しました",
+    "message": "Googleイベントの更新に失敗しました。時間をおいて再試行してください。",
     "description": "Googleカレンダーイベントの更新に失敗した際のエラーメッセージ"
   },
   "googleEventDeleteFailed": {
-    "message": "Googleイベントの削除に失敗しました",
+    "message": "Googleイベントの削除に失敗しました。時間をおいて再試行してください。",
     "description": "Googleカレンダーイベントの削除に失敗した際のエラーメッセージ"
   },
   "googleDeleteConfirm": {
-    "message": "このイベントを削除しますか？",
+    "message": "このイベントをGoogleカレンダーから削除しますか？この操作は取り消せません。",
     "description": "Googleカレンダーイベント削除前のインライン確認メッセージ"
   },
   "confirmDelete": {
     "message": "削除する",
     "description": "Googleカレンダーイベントの削除を確定するボタン"
+  },
+  "googleDestinationHidden": {
+    "message": "Googleに保存するには、保存先にできるカレンダーをカレンダーフィルターで表示してください。",
+    "description": "書き込み可能なGoogleカレンダーが全て非表示のときに作成モーダルに表示されるヒント"
+  },
+  "googleEditOtherFields": {
+    "message": "その他の項目はGoogleカレンダーで編集できます。",
+    "description": "Googleイベント編集フォームで編集できない項目についての補足"
   }
 }

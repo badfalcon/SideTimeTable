@@ -491,12 +491,15 @@ export class LocalEventModal extends ModalComponent {
      * Enable or disable the Google save destination on an already-open create
      * modal (used when writable calendars resolve asynchronously after open).
      * @param {Array} writableCalendars
+     * @param {Object} [options]
+     * @param {boolean} [options.hiddenWritable] - Writable calendars exist but
+     *   none are displayed on the timeline; shows an explanatory hint
      */
-    setGoogleAvailability(writableCalendars) {
+    setGoogleAvailability(writableCalendars, options = {}) {
         if (this.mode !== 'create' || !this.formBuilder) {
             return;
         }
-        this.formBuilder.setGoogleAvailability(writableCalendars);
+        this.formBuilder.setGoogleAvailability(writableCalendars, options);
     }
 
     /**

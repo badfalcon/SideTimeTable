@@ -1695,7 +1695,7 @@
     "description": "Reminder option that leaves the calendar's default reminders in place"
   },
   "minutesBeforeUnit": {
-    "message": " min before",
+    "message": " minutes before",
     "description": "Suffix appended to a number of minutes for a reminder option, e.g. '10 min before'"
   },
   "primaryCalendar": {
@@ -1703,23 +1703,31 @@
     "description": "Suffix marking the user's primary Google calendar in the calendar picker"
   },
   "googleEventCreateFailed": {
-    "message": "Failed to create Google event",
+    "message": "Failed to create Google event. Please try again.",
     "description": "Error message shown when creating a Google Calendar event fails"
   },
   "googleEventUpdateFailed": {
-    "message": "Failed to update Google event",
+    "message": "Failed to update Google event. Please try again.",
     "description": "Error message shown when updating a Google Calendar event fails"
   },
   "googleEventDeleteFailed": {
-    "message": "Failed to delete Google event",
+    "message": "Failed to delete Google event. Please try again.",
     "description": "Error message shown when deleting a Google Calendar event fails"
   },
   "googleDeleteConfirm": {
-    "message": "Delete this event?",
+    "message": "Delete this event from Google Calendar? This can't be undone.",
     "description": "Inline confirmation prompt before deleting a Google Calendar event"
   },
   "confirmDelete": {
     "message": "Delete",
     "description": "Button that confirms the deletion of a Google Calendar event"
+  },
+  "googleDestinationHidden": {
+    "message": "To save to Google, show a writable calendar in the calendar filter first.",
+    "description": "Hint shown in the create modal when writable Google calendars exist but none are displayed"
+  },
+  "googleEditOtherFields": {
+    "message": "Other fields can be edited in Google Calendar.",
+    "description": "Muted note in the Google event edit form about fields it does not cover"
   }
 }

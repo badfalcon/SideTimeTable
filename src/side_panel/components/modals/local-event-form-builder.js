@@ -36,6 +36,7 @@ export class LocalEventFormBuilder {
         this.sourceToggle = null;
         this.sourceLocalBtn = null;
         this.sourceGoogleBtn = null;
+        this.googleHiddenHint = null;
         this.currentSource = 'local';
 
         // Google-only fields
@@ -100,6 +101,17 @@ export class LocalEventFormBuilder {
         toggle.appendChild(this.sourceGoogleBtn);
         parentElement.appendChild(toggle);
         this.sourceToggle = toggle;
+
+        // Hint shown when writable Google calendars exist but none are
+        // displayed on the timeline (the toggle would otherwise vanish with
+        // no explanation of why Google saving is unavailable).
+        this.googleHiddenHint = document.createElement('div');
+        this.googleHiddenHint.className = 'google-destination-hint';
+        this.googleHiddenHint.style.display = 'none';
+        this.googleHiddenHint.setAttribute('data-localize', '__MSG_googleDestinationHidden__');
+        this.googleHiddenHint.textContent = window.getLocalizedMessage('googleDestinationHidden')
+            || 'To save to Google, show a writable calendar in the calendar filter first.';
+        parentElement.appendChild(this.googleHiddenHint);
     }
 
     /**
@@ -252,13 +264,19 @@ export class LocalEventFormBuilder {
     /**
      * Enable or disable the Google save destination and populate its calendar list.
      * @param {Array<{id: string, summary: string, primary: boolean}>} calendars - Writable calendars (empty disables Google)
+     * @param {Object} [options]
+     * @param {boolean} [options.hiddenWritable] - Writable calendars exist but
+     *   none are displayed; show the explanatory hint instead of the toggle
      */
-    setGoogleAvailability(calendars) {
+    setGoogleAvailability(calendars, { hiddenWritable = false } = {}) {
         const writable = Array.isArray(calendars) ? calendars : [];
         const available = writable.length > 0;
 
         if (this.sourceToggle) {
             this.sourceToggle.style.display = available ? 'flex' : 'none';
+        }
+        if (this.googleHiddenHint) {
+            this.googleHiddenHint.style.display = !available && hiddenWritable ? '' : 'none';
         }
 
         if (available) {
