@@ -42,6 +42,11 @@ function _d(today, h, m) {
     return new Date(today.getFullYear(), today.getMonth(), today.getDate(), h, m).toISOString();
 }
 
+function _dateStr(today, offsetDays = 0) {
+    const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() + offsetDays);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 // ---------------------------------------------------------------------------
 // Scenario registry
 // ---------------------------------------------------------------------------
@@ -308,6 +313,55 @@ function _devTeamEvents(today, locale) {
             calendarBackgroundColor: '#FFC107',
             calendarForegroundColor: '#000000',
             htmlLink: 'https://calendar.google.com/calendar/event?eid=demo13'
+        },
+        // 13:00–18:00  Out of office (half-day PTO)
+        {
+            id: 'demo-ooo-1',
+            summary:  T('Out of office', '不在'),
+            description: T('On PTO - back tomorrow', '有休取得中 - 明日戻ります'),
+            location: '',
+            start: { dateTime: _d(today, 13, 0) },
+            end:   { dateTime: _d(today, 18, 0) },
+            eventType: 'outOfOffice',
+            outOfOfficeProperties: {
+                autoDeclineMode: 'declineAllConflictingInvitations',
+                declineMessage: T('I am out of the office and will respond when I return.', '不在のため、戻り次第対応いたします。')
+            },
+            calendarId: 'casey@team.com',
+            calendarName: T('Casey Morgan', '中村 真由美'),
+            calendarBackgroundColor: '#00BCD4',
+            calendarForegroundColor: '#FFFFFF',
+            htmlLink: 'https://calendar.google.com/calendar/event?eid=demo-ooo-1'
+        },
+        // All-day: Company event
+        {
+            id: 'demo-allday-1',
+            summary: T('Company Anniversary', '創立記念日'),
+            description: T('Annual company celebration day.', '会社の創立記念イベントの日です。'),
+            location: '',
+            start: { date: _dateStr(today) },
+            end:   { date: _dateStr(today, 1) },
+            eventType: 'default',
+            calendarId: 'primary',
+            calendarName: T('My Calendar', 'マイカレンダー'),
+            calendarBackgroundColor: '#3F51B5',
+            calendarForegroundColor: '#FFFFFF',
+            htmlLink: 'https://calendar.google.com/calendar/event?eid=demo-allday-1'
+        },
+        // All-day: Team offsite
+        {
+            id: 'demo-allday-2',
+            summary: T('Team Offsite', 'チーム合宿'),
+            description: T('Two-day team building offsite.', '2日間のチームビルディング合宿。'),
+            location: T('Resort Hotel', 'リゾートホテル'),
+            start: { date: _dateStr(today) },
+            end:   { date: _dateStr(today, 2) },
+            eventType: 'default',
+            calendarId: 'eng-team@team.com',
+            calendarName: T('Engineering', '開発チーム'),
+            calendarBackgroundColor: '#FF5722',
+            calendarForegroundColor: '#FFFFFF',
+            htmlLink: 'https://calendar.google.com/calendar/event?eid=demo-allday-2'
         }
     ];
 }
@@ -549,6 +603,21 @@ function _salesTeamEvents(today, locale) {
             calendarBackgroundColor: '#FFC107',
             calendarForegroundColor: '#000000',
             htmlLink: 'https://calendar.google.com/calendar/event?eid=demo13'
+        },
+        // All-day: Trade show
+        {
+            id: 'demo-allday-1',
+            summary: T('Trade Show', '展示会'),
+            description: T('Annual industry trade show.', '年次業界展示会。'),
+            location: T('Convention Center', 'コンベンションセンター'),
+            start: { date: _dateStr(today) },
+            end:   { date: _dateStr(today, 1) },
+            eventType: 'default',
+            calendarId: 'primary',
+            calendarName: T('My Calendar', 'マイカレンダー'),
+            calendarBackgroundColor: '#3F51B5',
+            calendarForegroundColor: '#FFFFFF',
+            htmlLink: 'https://calendar.google.com/calendar/event?eid=demo-allday-s1'
         }
     ];
 }
@@ -787,6 +856,21 @@ function _managerEvents(today, locale) {
             calendarBackgroundColor: '#FF5722',
             calendarForegroundColor: '#FFFFFF',
             htmlLink: 'https://calendar.google.com/calendar/event?eid=demo13'
+        },
+        // All-day: Performance review period
+        {
+            id: 'demo-allday-1',
+            summary: T('Performance Reviews', '人事評価期間'),
+            description: T('Mid-year performance review period.', '上期人事評価期間です。'),
+            location: '',
+            start: { date: _dateStr(today) },
+            end:   { date: _dateStr(today, 5) },
+            eventType: 'default',
+            calendarId: 'hr@eng.com',
+            calendarName: T('HR Team', '人事部'),
+            calendarBackgroundColor: '#FF5722',
+            calendarForegroundColor: '#FFFFFF',
+            htmlLink: 'https://calendar.google.com/calendar/event?eid=demo-allday-m1'
         }
     ];
 }
@@ -925,6 +1009,56 @@ const _DEMO_SELECTED_CALENDARS = {
     sales_team: ['primary', 'mike@sales.com', 'tom@sales.com', 'lisa@sales.com', 'emma@sales.com', 'mkt@sales.com'],
     manager:    ['primary', 'alex@eng.com', 'riley@eng.com', 'morgan@eng.com', 'jamie@eng.com', 'hr@eng.com', 'company@eng.com']
 };
+
+const _DEMO_CALENDAR_GROUPS = {
+    dev_team: [
+        {
+            id: 'group_demo_members',
+            name: 'Team Members',
+            calendarIds: ['jordan@team.com', 'sam@team.com', 'jamie@team.com', 'casey@team.com'],
+            collapsed: false
+        },
+        {
+            id: 'group_demo_shared',
+            name: 'Shared Calendars',
+            calendarIds: ['eng-team@team.com', 'product@team.com', 'research@team.com'],
+            collapsed: false
+        }
+    ],
+    sales_team: [
+        {
+            id: 'group_demo_sales',
+            name: 'Sales Team',
+            calendarIds: ['mike@sales.com', 'tom@sales.com', 'lisa@sales.com', 'emma@sales.com'],
+            collapsed: false
+        },
+        {
+            id: 'group_demo_mkt',
+            name: 'Marketing',
+            calendarIds: ['mkt@sales.com'],
+            collapsed: false
+        }
+    ],
+    manager: [
+        {
+            id: 'group_demo_eng',
+            name: 'Engineering',
+            calendarIds: ['alex@eng.com', 'riley@eng.com', 'morgan@eng.com', 'jamie@eng.com'],
+            collapsed: false
+        },
+        {
+            id: 'group_demo_org',
+            name: 'Organization',
+            calendarIds: ['hr@eng.com', 'company@eng.com'],
+            collapsed: false
+        }
+    ]
+};
+
+export function getDemoCalendarGroups() {
+    const scenario = getDemoScenario();
+    return _DEMO_CALENDAR_GROUPS[scenario] || _DEMO_CALENDAR_GROUPS.dev_team;
+}
 
 export function getDemoOptionsSettings() {
     const scenario = getDemoScenario();

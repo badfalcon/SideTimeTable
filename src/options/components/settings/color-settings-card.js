@@ -62,6 +62,7 @@ export class ColorSettingsCard extends CardComponent {
         const card = document.createElement('button');
         card.type = 'button';
         card.className = 'theme-card w-100 p-2 border rounded text-center';
+        card.dataset.themeId = theme.id;
         card.style.cssText = `
             cursor: pointer;
             transition: box-shadow 0.15s, border-color 0.15s;
@@ -81,7 +82,7 @@ export class ColorSettingsCard extends CardComponent {
                 height: 14px;
                 border-radius: 50%;
                 background-color: ${theme.palette[role]};
-                border: 1px solid rgba(128,128,128,0.3);
+                border: 1px solid var(--side-calendar-border-color-light, #ddd);
             `;
             dot.title = role;
             swatchRow.appendChild(dot);

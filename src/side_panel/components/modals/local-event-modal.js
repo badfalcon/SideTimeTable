@@ -32,6 +32,9 @@ export class LocalEventModal extends ModalComponent {
         // The event being edited
         this.currentEvent = null;
 
+        // Date getter for recurrence (injected to avoid global controller access)
+        this._getCurrentDate = options.getCurrentDate || null;
+
         // Callbacks
         this.onSave = options.onSave || null;
         this.onDelete = options.onDelete || null;
@@ -195,7 +198,7 @@ export class LocalEventModal extends ModalComponent {
             icon.className = 'fas fa-clock';
 
             const text = document.createElement('span');
-            text.textContent = this._formatViewTime(event.startTime, event.endTime);
+            text.textContent = this._formatViewTime(event.startTime, event.endTime, this._getDisplayDate(event));
 
             this.viewTimeElement.appendChild(icon);
             this.viewTimeElement.appendChild(text);
@@ -257,28 +260,45 @@ export class LocalEventModal extends ModalComponent {
     }
 
     /**
+     * Resolve the display date for the event (recurring instance date or current panel date)
+     * @private
+     */
+    _getDisplayDate(event) {
+        if (event?.instanceDate) {
+            return new Date(event.instanceDate + 'T00:00:00');
+        }
+        if (this._getCurrentDate) {
+            return this._getCurrentDate();
+        }
+        return new Date();
+    }
+
+    /**
      * Format time for view mode display (locale-aware)
      * @private
      */
-    _formatViewTime(startTime, endTime) {
+    _formatViewTime(startTime, endTime, displayDate = new Date()) {
+        let dateStr = '';
         try {
             const locale = navigator.language || 'en';
-            const today = new Date();
+            const localeHint = locale.startsWith('ja') ? 'ja' : 'en';
             const timeOptions = { hour: '2-digit', minute: '2-digit' };
+
+            dateStr = window.formatDateForLocale(displayDate, localeHint);
 
             const [sh, sm] = startTime.split(':').map(Number);
             const [eh, em] = endTime.split(':').map(Number);
 
-            const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), sh, sm);
-            const endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), eh, em);
+            const startDate = new Date(displayDate.getFullYear(), displayDate.getMonth(), displayDate.getDate(), sh, sm);
+            const endDate = new Date(displayDate.getFullYear(), displayDate.getMonth(), displayDate.getDate(), eh, em);
 
             const startStr = startDate.toLocaleTimeString(locale, timeOptions);
             const endStr = endDate.toLocaleTimeString(locale, timeOptions);
-            const separator = locale.startsWith('ja') ? ' \uff5e ' : ' - ';
+            const separator = localeHint === 'ja' ? ' \uff5e ' : ' - ';
 
-            return `${startStr}${separator}${endStr}`;
+            return `${dateStr} ${startStr}${separator}${endStr}`;
         } catch {
-            return `${startTime} - ${endTime}`;
+            return dateStr ? `${dateStr} ${startTime} - ${endTime}` : `${startTime} - ${endTime}`;
         }
     }
 
@@ -399,10 +419,9 @@ export class LocalEventModal extends ModalComponent {
      * @private
      */
     _getStartDateForRecurrence() {
-        // Use the current display date from the side panel controller
-        const controller = window.sidePanelController;
-        if (controller && controller.currentDate) {
-            const date = controller.currentDate;
+        // Use injected date getter
+        if (this._getCurrentDate) {
+            const date = this._getCurrentDate();
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const day = String(date.getDate()).padStart(2, '0');

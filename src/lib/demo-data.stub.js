@@ -28,6 +28,8 @@ export async function getDemoLocalEvents()   { return []; }
 export async function getDemoMemoContent()   { return null; }
 export async function getDemoCalendars()     { return []; }
 
+export function getDemoCalendarGroups() { return []; }
+
 export function getDemoOptionsSettings() {
     return {};
 }

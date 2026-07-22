@@ -77,6 +77,34 @@
       }
     }
   },
+  "eventStartingNow": {
+    "message": "まもなく「$EVENT_TITLE$」が始まります（$START_TIME$）",
+    "description": "イベントがまもなく開始するときの通知メッセージ",
+    "placeholders": {
+      "event_title": {
+        "content": "$1",
+        "example": "会議"
+      },
+      "start_time": {
+        "content": "$2",
+        "example": "14:30"
+      }
+    }
+  },
+  "startsInOneMinute": {
+    "message": "「$EVENT_TITLE$」があと1分で開始されます（$START_TIME$）",
+    "description": "残り1分のイベントリマインダーの通知メッセージ",
+    "placeholders": {
+      "event_title": {
+        "content": "$1",
+        "example": "会議"
+      },
+      "start_time": {
+        "content": "$2",
+        "example": "14:30"
+      }
+    }
+  },
   "openSideTimeTable": {
     "message": "SideTimeTableを開く",
     "description": "サイドパネルを開く通知ボタンのテキスト"
@@ -609,6 +637,10 @@
     "message": "タイトルなし",
     "description": "イベントにタイトルがない場合のデフォルトテキスト"
   },
+  "outOfOffice": {
+    "message": "不在",
+    "description": "Google Calendarの不在予定のラベル"
+  },
   "noTimeInfo": {
     "message": "時刻情報なし",
     "description": "イベントの時刻情報がない場合のテキスト"
@@ -616,6 +648,23 @@
   "allDay": {
     "message": "終日",
     "description": "終日イベントのラベル"
+  },
+  "multiDayProgress": {
+    "message": "$1/$2日目",
+    "description": "複数日にまたがる終日イベントの進捗表示（例: 2/3日目）",
+    "placeholders": {
+      "1": { "content": "$1", "example": "2" },
+      "2": { "content": "$2", "example": "3" }
+    }
+  },
+  "allDayDateRange": {
+    "message": "$1 〜 $2（$3日間）",
+    "description": "モーダルに表示する複数日終日イベントの日付範囲",
+    "placeholders": {
+      "1": { "content": "$1", "example": "06/01" },
+      "2": { "content": "$2", "example": "06/03" },
+      "3": { "content": "$3", "example": "3" }
+    }
   },
   "timeInfoError": {
     "message": "時刻情報エラー",
@@ -725,6 +774,34 @@
     "message": "1時間",
     "description": "1時間のリマインダーオプション"
   },
+  "reminderSyncIntervalLabel": {
+    "message": "Googleカレンダーの変更を確認する頻度:",
+    "description": "リマインダー同期間隔設定のラベル"
+  },
+  "reminderSyncIntervalHelp": {
+    "message": "新しく追加・変更されたGoogleカレンダーの予定を確認し、リマインダーを最新に保つ頻度です。",
+    "description": "リマインダー同期間隔設定のヘルプテキスト"
+  },
+  "syncInterval15Min": {
+    "message": "15分ごと",
+    "description": "同期間隔オプション: 15分"
+  },
+  "syncInterval30Min": {
+    "message": "30分ごと",
+    "description": "同期間隔オプション: 30分"
+  },
+  "syncInterval60Min": {
+    "message": "1時間ごと",
+    "description": "同期間隔オプション: 1時間"
+  },
+  "syncInterval120Min": {
+    "message": "2時間ごと",
+    "description": "同期間隔オプション: 2時間"
+  },
+  "syncInterval360Min": {
+    "message": "6時間ごと",
+    "description": "同期間隔オプション: 6時間"
+  },
   "syncReminders": {
     "message": "予定を同期",
     "description": "リマインダー同期ボタンのツールチップ"
@@ -824,6 +901,26 @@
   "whatsNewContextMenu": {
     "message": "更新情報",
     "description": "右クリックメニューのWhat's New項目"
+  },
+  "whatsNewDontShowAgain": {
+    "message": "今後の更新時に表示しない",
+    "description": "What's Newモーダル内で、今後のバージョンアップ時に自動表示を抑止するチェックボックスのラベル"
+  },
+  "whatsNewSettings": {
+    "message": "更新通知",
+    "description": "オプションページのWhat's New自動表示設定カードのタイトル"
+  },
+  "whatsNewSettingsDescription": {
+    "message": "バージョン更新時に「更新情報」モーダルを自動表示するかを設定します。",
+    "description": "オプションページのWhat's New自動表示設定カードのサブタイトル"
+  },
+  "whatsNewAutoShowLabel": {
+    "message": "更新時に「更新情報」を表示する",
+    "description": "バージョン更新時にWhat's Newモーダルを自動表示するトグルのラベル"
+  },
+  "whatsNewAutoShowHelp": {
+    "message": "有効にすると、拡張機能の更新後に新機能のサマリーが自動で表示されます。",
+    "description": "What's New自動表示トグルの補足説明"
   },
   "changelogTitle": {
     "message": "変更履歴",
@@ -1081,6 +1178,30 @@
     "message": "有効にすると、編集していないときにメモがMarkdown形式で表示されます。クリックすると編集モードに切り替わります。",
     "description": "Markdownトグルのヘルプテキスト"
   },
+  "memoFontSizeLabel": {
+    "message": "フォントサイズ",
+    "description": "メモのフォントサイズドロップダウンのラベル"
+  },
+  "memoFontSizeDefault": {
+    "message": "デフォルト",
+    "description": "デフォルトフォントサイズの横に表示されるラベル"
+  },
+  "scrollbarSettings": {
+    "message": "スクロールバー",
+    "description": "スクロールバー設定カードのタイトル"
+  },
+  "scrollbarSettingsDescription": {
+    "message": "スクロールバーの外観を設定します。",
+    "description": "スクロールバー設定カードの説明文"
+  },
+  "thinScrollbarLabel": {
+    "message": "細いスクロールバーを使用する",
+    "description": "細いスクロールバーのトグルラベル"
+  },
+  "thinScrollbarHelp": {
+    "message": "サイドパネルのスクロールバーを細く表示して、すっきりした見た目にします。",
+    "description": "細いスクロールバーのヘルプテキスト"
+  },
   "rsvpLabel": {
     "message": "出欠の回答",
     "description": "出欠回答ボタンのラベル"
@@ -1092,6 +1213,10 @@
   "rsvpDecline": {
     "message": "不参加",
     "description": "出欠回答の不参加ボタン"
+  },
+  "rsvpDeclineScope": {
+    "message": "（今回のみ）",
+    "description": "繰り返しイベントインスタンスの不参加ボタン下に表示されるスコープ補足ラベル"
   },
   "rsvpTentative": {
     "message": "未定",
@@ -1444,5 +1569,133 @@
   "saved": {
     "message": "保存しました！",
     "description": "保存後の確認テキスト"
+  },
+  "calendarFilterTooltip": {
+    "message": "カレンダーを絞り込む",
+    "description": "タイムライン内のカレンダーフィルターボタンのツールチップ"
+  },
+  "calendarFilterLoading": {
+    "message": "カレンダーを読み込み中...",
+    "description": "カレンダーフィルターのドロップダウンに表示される読み込みメッセージ"
+  },
+  "calendarFilterError": {
+    "message": "カレンダーの読み込みに失敗しました",
+    "description": "カレンダーフィルターのドロップダウンに表示されるエラーメッセージ"
+  },
+  "noCalendarsAvailable": {
+    "message": "カレンダーが見つかりません",
+    "description": "フィルターでカレンダーが見つからない場合のメッセージ"
+  },
+  "calendarFilterSearchPlaceholder": {
+    "message": "検索",
+    "description": "カレンダーフィルターの検索入力のプレースホルダーテキスト"
+  },
+  "calendarFilterRefreshTooltip": {
+    "message": "カレンダー一覧を更新",
+    "description": "カレンダーフィルターの更新ボタンのツールチップ"
+  },
+  "addGroup": {
+    "message": "グループを追加",
+    "description": "カレンダーグループ追加ボタンのラベル"
+  },
+  "newGroupName": {
+    "message": "新しいグループ",
+    "description": "新規作成されたカレンダーグループのデフォルト名"
+  },
+  "ungrouped": {
+    "message": "未分類",
+    "description": "どのグループにも属さないカレンダーのラベル"
+  },
+  "deleteGroupConfirm": {
+    "message": "このグループを削除しますか？カレンダーは未分類に移動されます。",
+    "description": "カレンダーグループ削除時の確認メッセージ"
+  },
+  "groupNamePlaceholder": {
+    "message": "グループ名を入力",
+    "description": "グループ名入力のプレースホルダー"
+  },
+  "editGroup": {
+    "message": "編集",
+    "description": "カレンダーグループ名を編集するツールチップ"
+  },
+  "deleteGroup": {
+    "message": "削除",
+    "description": "カレンダーグループを削除するツールチップ"
+  },
+  "assignToGroups": {
+    "message": "グループに追加",
+    "description": "カレンダーをグループに割り当てるツールチップ"
+  },
+  "noGroupsAvailable": {
+    "message": "グループがありません",
+    "description": "割り当て可能なグループがない場合のメッセージ"
+  },
+  "createGroupTitle": {
+    "message": "グループを作成",
+    "description": "グループ作成モーダルのタイトル"
+  },
+  "editGroupTitle": {
+    "message": "グループを編集",
+    "description": "グループ編集モーダルのタイトル"
+  },
+  "groupNameLabel": {
+    "message": "グループ名",
+    "description": "グループ作成モーダルのグループ名ラベル"
+  },
+  "selectCalendarsLabel": {
+    "message": "カレンダーを選択",
+    "description": "グループ作成モーダルのカレンダー選択セクションラベル"
+  },
+  "createGroupButton": {
+    "message": "作成",
+    "description": "グループを作成するボタンのラベル"
+  },
+  "saveGroupButton": {
+    "message": "保存",
+    "description": "グループの変更を保存するボタンのラベル"
+  },
+  "cancelButton": {
+    "message": "キャンセル",
+    "description": "モーダルをキャンセルして閉じるボタンのラベル"
+  },
+  "noCalendarsToAdd": {
+    "message": "カレンダーがありません。先にカレンダーリストを更新してください。",
+    "description": "グループ作成モーダルでカレンダーがない場合のメッセージ"
+  },
+  "removeCalendar": {
+    "message": "削除",
+    "description": "グループ選択からカレンダーを削除するボタンのアリアラベル接頭辞"
+  },
+  "errorLabel": {
+    "message": "エラー",
+    "description": "エラーメッセージのラベル接頭辞"
+  },
+  "calendarLoadError": {
+    "message": "カレンダーデータの読み込みに失敗しました",
+    "description": "カレンダーデータの読み込み失敗時のエラーメッセージ"
+  },
+  "calendarUpdateError": {
+    "message": "カレンダーの更新に失敗しました",
+    "description": "カレンダー更新失敗時のエラーメッセージ"
+  },
+  "calendarSaveError": {
+    "message": "設定の保存に失敗しました",
+    "description": "カレンダー設定の保存失敗時のエラーメッセージ"
+  },
+  "clearSearch": {
+    "message": "検索をクリア",
+    "description": "検索クリアボタンのアリアラベル"
+  },
+  "authExpiredMessage": {
+    "message": "Googleカレンダーの認証が切れています。設定から再接続してください。",
+    "description": "Googleカレンダー認証トークン期限切れ時のバナーメッセージ"
+  },
+  "authExpiredReconnect": {
+    "message": "再接続",
+    "description": "Googleカレンダーの再認証ボタンラベル"
+  },
+  "authExpiredStatus": {
+    "message": "認証の有効期限が切れています — 再接続してください",
+    "description": "Googleカレンダー認証が期限切れの場合に設定画面に表示されるステータス"
   }
 }

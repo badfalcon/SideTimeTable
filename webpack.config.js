@@ -1,16 +1,40 @@
+const fs = require('fs');
 const path = require('path');
 const webpack = require('webpack');
 
+class CopyManifestPlugin {
+  constructor(env) {
+    this.source = path.resolve(__dirname, `manifest.${env}.json`);
+    this.dest = path.resolve(__dirname, 'manifest.json');
+  }
+
+  apply(compiler) {
+    const copyManifest = () => {
+      if (!fs.existsSync(this.source)) {
+        throw new Error(`Manifest not found: ${this.source}`);
+      }
+      fs.copyFileSync(this.source, this.dest);
+    };
+
+    compiler.hooks.beforeRun.tap('CopyManifestPlugin', copyManifest);
+    compiler.hooks.watchRun.tap('CopyManifestPlugin', copyManifest);
+  }
+}
+
 module.exports = (env = {}, argv) => {
   const isDemo = !!env.demo;
+  const manifestEnv = argv.mode === 'production' ? 'prod' : 'dev';
 
-  const plugins = isDemo ? [] : [
-    // Replace demo-data.js with a no-op stub in production builds.
-    // Pass --env demo to include real demo data (e.g. npm run dev).
-    new webpack.NormalModuleReplacementPlugin(
-      /[\\/]demo-data\.js$/,
-      path.resolve(__dirname, 'src/lib/demo-data.stub.js')
-    )
+  const plugins = [
+    new CopyManifestPlugin(manifestEnv),
+    ...(isDemo ? [] : [
+      // Replace demo-data.js with a no-op stub in production builds.
+      // Pass --env demo to include real demo data (e.g. npm run dev).
+      new webpack.NormalModuleReplacementPlugin(
+        /[\\/]demo-data\.js$/,
+        path.resolve(__dirname, 'src/lib/demo-data.stub.js')
+      )
+    ])
   ];
 
   return {

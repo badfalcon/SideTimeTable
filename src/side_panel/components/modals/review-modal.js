@@ -109,7 +109,7 @@ export class ReviewModal extends ModalComponent {
         try {
             const storeUrl = `https://chromewebstore.google.com/detail/sidetimetable/${(chrome.runtime.id)}`;
             await chrome.tabs.create({ url: storeUrl });
-        } catch (e) {
+        } catch (_e) {
             // Ignore errors opening the tab (e.g. in side panel context)
         }
         await this._updateState('reviewed');
@@ -276,7 +276,7 @@ export class ReviewModal extends ModalComponent {
                     this.show();
                 }
             }
-        } catch (error) {
+        } catch (_error) {
             // Silently ignore errors to avoid disrupting main UI
         }
     }

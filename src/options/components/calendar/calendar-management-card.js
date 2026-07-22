@@ -1,10 +1,15 @@
 /**
- * CalendarManagementCard - The calendar management card component
+ * CalendarManagementCard - The calendar management card component with group support
+ *
+ * Group CRUD and modal logic delegated to CalendarGroupManager.
+ * List rendering and UI state delegated to CalendarListRenderer.
  */
 import { CardComponent } from '../base/card-component.js';
 import { logError } from '../../../lib/utils.js';
-import { loadSelectedCalendars, saveSelectedCalendars } from '../../../lib/settings-storage.js';
+import { loadSelectedCalendars, saveSelectedCalendars, loadCalendarGroups } from '../../../lib/settings-storage.js';
 import { sendMessage } from '../../../lib/chrome-messaging.js';
+import { CalendarGroupManager } from './calendar-group-manager.js';
+import { CalendarListRenderer } from './calendar-list-renderer.js';
 
 export class CalendarManagementCard extends CardComponent {
     constructor(onCalendarSelectionChange) {
@@ -22,6 +27,7 @@ export class CalendarManagementCard extends CardComponent {
         this.onCalendarSelectionChange = onCalendarSelectionChange;
         this.availableCalendars = {};
         this.selectedCalendarIds = [];
+        this.calendarGroups = [];
         this.hasAutoFetched = false;
         this.allCalendars = [];
 
@@ -32,6 +38,27 @@ export class CalendarManagementCard extends CardComponent {
         this.noCalendarsMsg = null;
         this.searchInput = null;
         this.clearSearchBtn = null;
+        this.addGroupBtn = null;
+
+        // Initialize group manager
+        this._groupManager = new CalendarGroupManager({
+            setCalendarGroups: (groups) => { this.calendarGroups = groups; },
+            setSelectedCalendarIds: (ids) => { this.selectedCalendarIds = ids; },
+            onGroupsChanged: () => this.render(),
+            onSelectionChanged: (ids, diff) => {
+                if (this.onCalendarSelectionChange) {
+                    this.onCalendarSelectionChange(ids, diff);
+                }
+            }
+        });
+
+        // Initialize list renderer
+        this._listRenderer = new CalendarListRenderer();
+    }
+
+    destroy() {
+        this._groupManager.destroy();
+        super.destroy();
     }
 
     createElement() {
@@ -44,6 +71,10 @@ export class CalendarManagementCard extends CardComponent {
         // The search field
         const searchDiv = this._createSearchSection();
         this.addContent(searchDiv);
+
+        // The group control section
+        const groupControlDiv = this._createGroupControlSection();
+        this.addContent(groupControlDiv);
 
         // The calendar list container
         const listContainer = this._createListContainer();
@@ -76,11 +107,14 @@ export class CalendarManagementCard extends CardComponent {
         this.loadingIndicator.id = 'calendar-loading-indicator';
         this.loadingIndicator.className = 'ms-2';
         this.loadingIndicator.style.display = 'none';
-        this.loadingIndicator.innerHTML = `
-            <div class="spinner-border spinner-border-sm text-primary" role="status">
-                <span class="visually-hidden">${window.getLocalizedMessage('screenReaderLoading') || 'Loading...'}</span>
-            </div>
-        `;
+        const spinner = document.createElement('div');
+        spinner.className = 'spinner-border spinner-border-sm text-primary';
+        spinner.setAttribute('role', 'status');
+        const srSpan = document.createElement('span');
+        srSpan.className = 'visually-hidden';
+        srSpan.textContent = window.getLocalizedMessage('screenReaderLoading') || 'Loading...';
+        spinner.appendChild(srSpan);
+        this.loadingIndicator.appendChild(spinner);
 
         controlsDiv.appendChild(this.refreshBtn);
         controlsDiv.appendChild(this.loadingIndicator);
@@ -102,7 +136,7 @@ export class CalendarManagementCard extends CardComponent {
         // The search icon
         const iconSpan = document.createElement('span');
         iconSpan.className = 'input-group-text';
-        iconSpan.innerHTML = '<i class="fas fa-search text-muted"></i>';
+        iconSpan.innerHTML = '<i class="fas fa-search text-muted" aria-hidden="true"></i>';
 
         // The search input field
         this.searchInput = document.createElement('input');
@@ -110,6 +144,7 @@ export class CalendarManagementCard extends CardComponent {
         this.searchInput.id = 'calendar-search';
         this.searchInput.className = 'form-control';
         this.searchInput.placeholder = window.getLocalizedMessage('searchCalendars') || 'Search calendars...';
+        this.searchInput.setAttribute('aria-label', window.getLocalizedMessage('searchCalendars') || 'Search calendars');
         this.searchInput.setAttribute('data-localize-placeholder', '__MSG_searchCalendars__');
 
         // The clear button
@@ -118,6 +153,7 @@ export class CalendarManagementCard extends CardComponent {
         this.clearSearchBtn.className = 'btn btn-outline-secondary';
         this.clearSearchBtn.type = 'button';
         this.clearSearchBtn.style.display = 'none';
+        this.clearSearchBtn.setAttribute('aria-label', window.getLocalizedMessage('clearSearch') || 'Clear search');
         this.clearSearchBtn.innerHTML = '<i class="fas fa-times"></i>';
 
         inputGroup.appendChild(iconSpan);
@@ -126,6 +162,29 @@ export class CalendarManagementCard extends CardComponent {
         searchDiv.appendChild(inputGroup);
 
         return searchDiv;
+    }
+
+    /**
+     * Create the group control section
+     * @private
+     */
+    _createGroupControlSection() {
+        const div = document.createElement('div');
+        div.className = 'mb-3';
+
+        this.addGroupBtn = document.createElement('button');
+        this.addGroupBtn.className = 'btn btn-outline-secondary btn-sm';
+        this.addGroupBtn.type = 'button';
+        const addGroupIcon = document.createElement('i');
+        addGroupIcon.className = 'fas fa-folder-plus me-1';
+        const addGroupLabel = document.createElement('span');
+        addGroupLabel.setAttribute('data-localize', '__MSG_addGroup__');
+        addGroupLabel.textContent = window.getLocalizedMessage('addGroup') || 'Add Group';
+        this.addGroupBtn.appendChild(addGroupIcon);
+        this.addGroupBtn.appendChild(addGroupLabel);
+
+        div.appendChild(this.addGroupBtn);
+        return div;
     }
 
     /**
@@ -163,7 +222,7 @@ export class CalendarManagementCard extends CardComponent {
         this.refreshBtn?.addEventListener('click', () => this.refreshCalendars());
 
         // The search functionality
-        this.searchInput?.addEventListener('input', (e) => this._handleSearch(e.target.value));
+        this.searchInput?.addEventListener('input', () => this.render());
         this.searchInput?.addEventListener('keyup', (e) => {
             if (e.key === 'Escape') {
                 this._clearSearch();
@@ -172,10 +231,96 @@ export class CalendarManagementCard extends CardComponent {
 
         this.clearSearchBtn?.addEventListener('click', () => this._clearSearch());
 
+        // Add group button
+        this.addGroupBtn?.addEventListener('click', () => this._groupManager.handleAddGroup(this.allCalendars));
+
         // Handle the calendar checkbox using event delegation
         this.calendarList?.addEventListener('change', (e) => {
-            if (e.target.type === 'checkbox') {
+            const target = e.target;
+            if (target.type !== 'checkbox') return;
+
+            const groupHeader = target.closest('.calendar-group-header');
+            if (groupHeader) {
+                const groupId = groupHeader.dataset.groupId;
+                if (groupId) {
+                    this._groupManager.handleGroupToggle(
+                        groupId, target.checked,
+                        this.calendarGroups, this.selectedCalendarIds, this.allCalendars
+                    );
+                }
+                return;
+            }
+
+            const calendarItem = target.closest('[data-calendar-id]');
+            if (calendarItem) {
                 this._handleCalendarToggle(e);
+            }
+        });
+
+        // Handle group header clicks (collapse/expand)
+        this.calendarList?.addEventListener('click', (e) => {
+            const collapseIcon = e.target.closest('.group-collapse-icon');
+            if (collapseIcon) {
+                const groupHeader = collapseIcon.closest('.calendar-group-header');
+                if (groupHeader) {
+                    this._groupManager.handleGroupCollapse(
+                        groupHeader.dataset.groupId, this.calendarList, this.calendarGroups
+                    );
+                }
+                return;
+            }
+
+            // Group name click (also collapse/expand, unless clicking checkbox or actions)
+            const groupHeader = e.target.closest('.calendar-group-header');
+            if (groupHeader && !e.target.closest('input') && !e.target.closest('.group-actions')) {
+                this._groupManager.handleGroupCollapse(
+                    groupHeader.dataset.groupId, this.calendarList, this.calendarGroups
+                );
+                return;
+            }
+
+            // Edit group name
+            const editBtn = e.target.closest('[data-group-edit]');
+            if (editBtn) {
+                e.stopPropagation();
+                this._groupManager.handleStartRenameGroup(
+                    editBtn.dataset.groupEdit, this.calendarGroups, this.allCalendars
+                );
+                return;
+            }
+
+            // Delete group
+            const deleteBtn = e.target.closest('[data-group-delete]');
+            if (deleteBtn) {
+                e.stopPropagation();
+                this._groupManager.handleDeleteGroup(deleteBtn.dataset.groupDelete, this.calendarGroups);
+                return;
+            }
+
+            // Group assign button
+            const assignBtn = e.target.closest('.calendar-group-assign-btn');
+            if (assignBtn) {
+                e.stopPropagation();
+                const calendarItem = assignBtn.closest('[data-calendar-id]');
+                if (calendarItem) {
+                    this._groupManager.showGroupAssignPopover(
+                        calendarItem.dataset.calendarId, assignBtn,
+                        this.calendarGroups, this.allCalendars
+                    );
+                }
+            }
+        });
+
+        // Keyboard support for group headers
+        this.calendarList?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                const groupHeader = e.target.closest('.calendar-group-header');
+                if (groupHeader && e.target === groupHeader) {
+                    e.preventDefault();
+                    this._groupManager.handleGroupCollapse(
+                        groupHeader.dataset.groupId, this.calendarList, this.calendarGroups
+                    );
+                }
             }
         });
     }
@@ -185,11 +330,16 @@ export class CalendarManagementCard extends CardComponent {
      */
     async loadData() {
         try {
-            this.selectedCalendarIds = this._validateSelectedIds(await loadSelectedCalendars());
+            const [selectedIds, groups] = await Promise.all([
+                loadSelectedCalendars(),
+                loadCalendarGroups()
+            ]);
+            this.selectedCalendarIds = this._validateSelectedIds(selectedIds);
+            this.calendarGroups = Array.isArray(groups) ? groups : [];
             this.render();
         } catch (error) {
             logError('Calendar data loading', error);
-            this._showError('Failed to load calendar data');
+            this._listRenderer.showError(window.getLocalizedMessage('calendarLoadError') || 'Failed to load calendar data', this.calendarList);
         }
     }
 
@@ -217,9 +367,15 @@ export class CalendarManagementCard extends CardComponent {
      * Refresh calendar list
      */
     async refreshCalendars() {
-        this._setLoading(true);
+        this._listRenderer.setLoading(true, this.loadingIndicator, this.refreshBtn);
 
         try {
+            // Load current selections from storage to avoid overwriting with empty state
+            if (this.selectedCalendarIds.length === 0) {
+                const storedIds = await loadSelectedCalendars();
+                this.selectedCalendarIds = this._validateSelectedIds(storedIds);
+            }
+
             const requestId = `req-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
             const response = await sendMessage({action: 'getCalendarList', requestId});
 
@@ -232,15 +388,7 @@ export class CalendarManagementCard extends CardComponent {
             if (response.calendars) {
                 this.allCalendars = response.calendars;
 
-                // Auto-select the primary calendar only (if not selected)
-                if (this.selectedCalendarIds.length === 0) {
-                    const primaryCalendar = response.calendars.find(cal => cal.primary);
-                    if (primaryCalendar) {
-                        this.selectedCalendarIds = [primaryCalendar.id];
-                    }
-                }
-
-                // Add the primary calendar if not included in selection
+                // Ensure the primary calendar is always included in selection
                 const primaryCalendar = response.calendars.find(cal => cal.primary);
                 if (primaryCalendar && !this.selectedCalendarIds.includes(primaryCalendar.id)) {
                     this.selectedCalendarIds.unshift(primaryCalendar.id);
@@ -251,109 +399,106 @@ export class CalendarManagementCard extends CardComponent {
             }
         } catch (error) {
             logError('Calendar list update', error);
-            this._showError(`Failed to update calendars: ${error.message || 'Unknown error'}`);
+            this._listRenderer.showError(window.getLocalizedMessage('calendarUpdateError') || `Failed to update calendars: ${error.message || 'Unknown error'}`, this.calendarList);
         } finally {
-            this._setLoading(false);
+            this._listRenderer.setLoading(false, this.loadingIndicator, this.refreshBtn);
         }
     }
 
     /**
-     * Render calendar list
+     * Render calendar list with group support
      */
     render() {
+        this._groupManager.closePopover();
+
         if (!this.allCalendars || this.allCalendars.length === 0) {
-            this._showEmptyState();
+            this._listRenderer.showEmptyState(this.calendarList, this.noCalendarsMsg);
             return;
         }
 
-        // Apply the search filter
         const searchTerm = this.searchInput?.value.toLowerCase().trim() || '';
-        const filteredCalendars = searchTerm
-            ? this.allCalendars.filter(calendar =>
-                calendar.summary.toLowerCase().includes(searchTerm))
-            : this.allCalendars;
+        const renderData = this._prepareRenderData(searchTerm);
 
-        // Sort the calendars (primary first)
-        const sortedCalendars = [...filteredCalendars].sort((a, b) => {
-            if (a.primary && !b.primary) return -1;
-            if (!a.primary && b.primary) return 1;
-            return a.summary.localeCompare(b.summary, 'ja');
-        });
-
-        if (sortedCalendars.length === 0 && searchTerm) {
-            this._showNoSearchResults();
+        if (renderData.filteredCalendars.length === 0 && searchTerm) {
+            this._listRenderer.showNoSearchResults(this.calendarList, this.noCalendarsMsg);
             return;
         }
 
-        this._hideEmptyState();
+        this._listRenderer.hideEmptyState(this.noCalendarsMsg);
         this.calendarList.innerHTML = '';
 
-        sortedCalendars.forEach(calendar => {
-            const isSelected = this.selectedCalendarIds.includes(calendar.id);
-            const item = this._createCalendarItem(calendar, isSelected);
-            this.calendarList.appendChild(item);
-        });
+        // Render each group section
+        for (const { group, calendars } of renderData.groupedSections) {
+            const groupSection = this._listRenderer.createGroupSection(
+                group, calendars, searchTerm,
+                this.selectedCalendarIds, this.allCalendars, this.calendarGroups
+            );
+            this.calendarList.appendChild(groupSection);
+        }
 
-        this._updateSearchUI(searchTerm);
+        // Render ungrouped calendars
+        if (renderData.ungroupedCalendars.length > 0) {
+            const ungroupedSection = this._listRenderer.createUngroupedSection(
+                renderData.ungroupedCalendars, searchTerm,
+                this.selectedCalendarIds, this.calendarGroups
+            );
+            this.calendarList.appendChild(ungroupedSection);
+        }
+
+        this._listRenderer.updateSearchUI(searchTerm, this.clearSearchBtn);
     }
 
     /**
-     * Create calendar item
+     * Prepare render data: filter calendars, compute grouped sections and ungrouped list.
      * @private
+     * @param {string} searchTerm - Lowercased, trimmed search term
+     * @returns {{ filteredCalendars: Array, groupedSections: Array<{group, calendars}>, ungroupedCalendars: Array }}
      */
-    _createCalendarItem(calendar, isSelected) {
-        const item = document.createElement('div');
-        item.className = 'list-group-item d-flex align-items-center py-2';
-        item.dataset.calendarId = calendar.id;
+    _prepareRenderData(searchTerm) {
+        // Apply search filter
+        const filteredCalendars = searchTerm
+            ? this.allCalendars.filter(calendar =>
+                (calendar.summary || '').toLowerCase().includes(searchTerm))
+            : this.allCalendars;
 
-        // The checkbox
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.className = 'form-check-input me-3';
-        checkbox.checked = isSelected;
-
-        if (calendar.primary) {
-            checkbox.disabled = true;
-            checkbox.checked = true;
+        // Build lookup map
+        const calendarIdToCalendar = new Map();
+        for (const cal of this.allCalendars) {
+            calendarIdToCalendar.set(cal.id, cal);
         }
 
-        // The calendar information
-        const info = document.createElement('div');
-        info.className = 'flex-grow-1';
+        const filteredIds = new Set(filteredCalendars.map(c => c.id));
 
-        const name = document.createElement('div');
-        name.className = 'fw-bold';
-        name.textContent = calendar.summary;
-        if (calendar.primary) {
-            name.classList.add('text-primary');
+        // Compute grouped sections
+        const groupedSections = [];
+        for (const group of this.calendarGroups) {
+            const groupCalendars = group.calendarIds
+                .map(id => calendarIdToCalendar.get(id))
+                .filter(cal => cal && filteredIds.has(cal.id));
+
+            // Skip groups with no matching calendars during search
+            if (searchTerm && groupCalendars.length === 0) continue;
+
+            groupedSections.push({ group, calendars: groupCalendars });
         }
 
-        info.appendChild(name);
+        // Compute ungrouped calendars
+        const groupedIds = new Set();
+        for (const group of this.calendarGroups) {
+            for (const id of group.calendarIds) {
+                groupedIds.add(id);
+            }
+        }
 
-        // The color indicator
-        const colorIndicator = document.createElement('div');
-        colorIndicator.className = 'me-2';
-        colorIndicator.style.cssText = `
-            width: 12px;
-            height: 12px;
-            background-color: ${calendar.backgroundColor || '#ccc'};
-            border-radius: 50%;
-            border: 1px solid #ddd;
-        `;
+        const ungroupedCalendars = filteredCalendars
+            .filter(cal => !groupedIds.has(cal.id))
+            .sort((a, b) => {
+                if (a.primary && !b.primary) return -1;
+                if (!a.primary && b.primary) return 1;
+                return (a.summary || '').localeCompare(b.summary || '');
+            });
 
-        item.appendChild(checkbox);
-        item.appendChild(info);
-        item.appendChild(colorIndicator);
-
-        return item;
-    }
-
-    /**
-     * Handle search
-     * @private
-     */
-    _handleSearch(searchTerm) {
-        this.render();
+        return { filteredCalendars, groupedSections, ungroupedCalendars };
     }
 
     /**
@@ -375,6 +520,7 @@ export class CalendarManagementCard extends CardComponent {
         const calendarId = event.target.closest('[data-calendar-id]')?.dataset.calendarId;
         if (!calendarId) return;
 
+        const previousIds = [...this.selectedCalendarIds];
         const isChecked = event.target.checked;
 
         if (isChecked) {
@@ -387,80 +533,55 @@ export class CalendarManagementCard extends CardComponent {
 
         try {
             await saveSelectedCalendars(this.selectedCalendarIds);
-            // Notify parent via callback
+            // Notify parent via callback with diff info
             if (this.onCalendarSelectionChange) {
-                this.onCalendarSelectionChange(this.selectedCalendarIds);
+                this.onCalendarSelectionChange(this.selectedCalendarIds, {
+                    addedIds: isChecked ? [calendarId] : [],
+                    removedIds: isChecked ? [] : [calendarId]
+                });
             }
+            // Update group header checkbox states
+            this._updateGroupCheckboxStates();
         } catch (error) {
+            this.selectedCalendarIds = previousIds;
+            this.render();
             logError('Calendar selection save', error);
-            this._showError('Failed to save settings');
+            this._listRenderer.showError(window.getLocalizedMessage('calendarSaveError') || 'Failed to save settings', this.calendarList);
         }
     }
 
     /**
-     * Set loading state
+     * Update group header checkbox states without full re-render
      * @private
      */
-    _setLoading(loading) {
-        if (this.loadingIndicator) {
-            this.loadingIndicator.style.display = loading ? 'block' : 'none';
+    _updateGroupCheckboxStates() {
+        const calendarIdToCalendar = new Map();
+        for (const cal of this.allCalendars) {
+            calendarIdToCalendar.set(cal.id, cal);
         }
-        if (this.refreshBtn) {
-            this.refreshBtn.disabled = loading;
-        }
-    }
 
-    /**
-     * Show empty state
-     * @private
-     */
-    _showEmptyState() {
-        this.calendarList.innerHTML = '';
-        this.noCalendarsMsg.style.display = 'block';
-    }
+        for (const group of this.calendarGroups) {
+            const header = this.calendarList.querySelector(`.calendar-group-header[data-group-id="${CSS.escape(group.id)}"]`);
+            if (!header) continue;
 
-    /**
-     * Show no search results
-     * @private
-     */
-    _showNoSearchResults() {
-        const noResultsMsg = window.getLocalizedMessage('noSearchResults') || 'No search results found';
-        this.calendarList.innerHTML = `<div class="text-muted text-center p-3">${noResultsMsg}</div>`;
-        this.noCalendarsMsg.style.display = 'none';
-    }
+            const checkbox = header.querySelector('input[type="checkbox"]');
+            if (!checkbox) continue;
 
-    /**
-     * Hide empty state
-     * @private
-     */
-    _hideEmptyState() {
-        this.noCalendarsMsg.style.display = 'none';
-    }
+            const validCalendars = group.calendarIds.filter(id => calendarIdToCalendar.has(id));
+            const selectedCount = validCalendars.filter(id => this.selectedCalendarIds.includes(id)).length;
 
-    /**
-     * Update search UI
-     * @private
-     */
-    _updateSearchUI(searchTerm) {
-        if (this.clearSearchBtn) {
-            this.clearSearchBtn.style.display = searchTerm ? 'block' : 'none';
-        }
-    }
-
-    /**
-     * Show error
-     * @private
-     */
-    _showError(message) {
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'alert alert-danger alert-dismissible fade show';
-        errorDiv.innerHTML = `
-            <strong>Error:</strong> ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
-
-        if (this.calendarList?.parentElement) {
-            this.calendarList.parentElement.insertBefore(errorDiv, this.calendarList);
+            checkbox.indeterminate = false;
+            if (selectedCount === 0) {
+                checkbox.checked = false;
+                checkbox.setAttribute('aria-checked', 'false');
+            } else if (selectedCount === validCalendars.length) {
+                checkbox.checked = true;
+                checkbox.setAttribute('aria-checked', 'true');
+            } else {
+                checkbox.checked = false;
+                checkbox.indeterminate = true;
+                checkbox.setAttribute('aria-checked', 'mixed');
+            }
         }
     }
 
@@ -469,6 +590,6 @@ export class CalendarManagementCard extends CardComponent {
      * @private
      */
     _validateSelectedIds(ids) {
-        return Array.isArray(ids) ? ids : [];
+        return Array.isArray(ids) ? ids.filter(id => typeof id === 'string') : [];
     }
 }

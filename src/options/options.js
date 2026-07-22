@@ -4,13 +4,14 @@
  * The options page using the new component-based architecture
  */
 
-import { generateTimeList, reloadSidePanel, logError } from '../lib/utils.js';
-import { DEFAULT_SETTINGS, COLOR_CSS_VARS } from '../lib/constants.js';
+import { logError } from '../lib/utils.js';
+import { DEFAULT_SETTINGS } from '../lib/constants.js';
 import { loadSettings, saveSettings } from '../lib/settings-storage.js';
 import { sendMessage } from '../lib/chrome-messaging.js';
 import { getThemeById, resolveThemeColors } from '../lib/color-themes.js';
 import { StorageHelper } from '../lib/storage-helper.js';
-import { isDemoMode, setDemoMode, getDemoOptionsSettings, getDemoCalendars, DEMO_BUILD } from '../lib/demo-data.js';
+import { findPreviousReleaseVersion } from '../lib/release-notes.js';
+import { isDemoMode, getDemoOptionsSettings, getDemoCalendars, getDemoCalendarGroups, DEMO_BUILD } from '../lib/demo-data.js';
 import {
     ComponentManager,
     GoogleIntegrationCard,
@@ -23,6 +24,8 @@ import {
     ShortcutSettingsCard,
     ReminderSettingsCard,
     MemoSettingsCard,
+    ScrollbarSettingsCard,
+    WhatsNewSettingsCard,
     ReminderDebugCard,
     DemoModeCard,
     StorageCard,
@@ -46,6 +49,8 @@ class OptionsPageManager {
         this.shortcutSettingsCard = null;
         this.reminderSettingsCard = null;
         this.memoSettingsCard = null;
+        this.scrollbarSettingsCard = null;
+        this.whatsNewSettingsCard = null;
         this.reminderDebugCard = null;
         this.demoModeCard = null;
         this.storageCard = null;
@@ -98,6 +103,11 @@ class OptionsPageManager {
         this.colorSettingsCard.appendTo(tabDisplay);
         this.componentManager.components.set('colorSettings', this.colorSettingsCard);
 
+        this.scrollbarSettingsCard = new ScrollbarSettingsCard(this.handleScrollbarSettingsChange.bind(this));
+        this.scrollbarSettingsCard.createElement();
+        this.scrollbarSettingsCard.appendTo(tabDisplay);
+        this.componentManager.components.set('scrollbarSettings', this.scrollbarSettingsCard);
+
         // --- General タブ ---
         this.languageSettingsCard = new LanguageSettingsCard(this.handleLanguageSettingsChange.bind(this));
         this.languageSettingsCard.createElement();
@@ -113,6 +123,11 @@ class OptionsPageManager {
         this.memoSettingsCard.createElement();
         this.memoSettingsCard.appendTo(tabGeneral);
         this.componentManager.components.set('memoSettings', this.memoSettingsCard);
+
+        this.whatsNewSettingsCard = new WhatsNewSettingsCard(this.handleWhatsNewSettingsChange.bind(this));
+        this.whatsNewSettingsCard.createElement();
+        this.whatsNewSettingsCard.appendTo(tabGeneral);
+        this.componentManager.components.set('whatsNewSettings', this.whatsNewSettingsCard);
 
         // --- コントロールボタン (タブ外) ---
         this.controlButtons = new ControlButtonsComponent(this.handleResetSettings.bind(this));
@@ -168,7 +183,7 @@ class OptionsPageManager {
 
         // Check Google and Outlook auth status after components are initialized
         await Promise.all([
-            this._checkGoogleAuthStatus(),
+            this.checkGoogleAuthStatus(),
             this._checkOutlookAuthStatus()
         ]);
 
@@ -225,12 +240,27 @@ class OptionsPageManager {
             // Load the reminder settings
             this.reminderSettingsCard.updateSettings({
                 googleEventReminder: settings.googleEventReminder || false,
-                reminderMinutes: settings.reminderMinutes || 5
+                reminderMinutes: settings.reminderMinutes || 5,
+                reminderSyncInterval: settings.reminderSyncInterval || DEFAULT_SETTINGS.reminderSyncInterval
             });
 
             // Load the memo settings
             this.memoSettingsCard.updateSettings({
-                memoMarkdown: settings.memoMarkdown || false
+                memoMarkdown: settings.memoMarkdown || false,
+                memoFontSize: settings.memoFontSize || DEFAULT_SETTINGS.memoFontSize
+            });
+
+            // Load the scrollbar settings
+            this.scrollbarSettingsCard.updateSettings({
+                thinScrollbar: settings.thinScrollbar || false
+            });
+
+            // Apply thin scrollbar to options page
+            document.body.classList.toggle('thin-scrollbar', !!settings.thinScrollbar);
+
+            // Load the What's New auto-show setting (default true; demo settings omit this key)
+            this.whatsNewSettingsCard.updateSettings({
+                whatsNewAutoShow: settings.whatsNewAutoShow !== false
             });
 
         } catch (error) {
@@ -238,7 +268,7 @@ class OptionsPageManager {
         }
     }
 
-    async _checkGoogleAuthStatus() {
+    async checkGoogleAuthStatus() {
         // Show demo Google integration state in demo mode
         if (isDemoMode()) {
             this.googleIntegrationCard.updateIntegrationStatus(true);
@@ -255,6 +285,19 @@ class OptionsPageManager {
                 this.googleIntegrationCard.updateIntegrationStatus(true);
                 this.calendarManagementCard.show();
                 this.colorSettingsCard.setGoogleCalendarColorsToggleVisible(true);
+            } else {
+                // Token invalid — check if user was previously connected
+                const settings = await loadSettings();
+                if (settings.googleIntegrated) {
+                    // Was connected but token expired/revoked
+                    const expiredText = window.getLocalizedMessage('authExpiredStatus') || 'Authorization expired';
+                    this.googleIntegrationCard.updateIntegrationStatus(false, expiredText);
+                } else {
+                    // Never connected
+                    this.googleIntegrationCard.updateIntegrationStatus(false);
+                }
+                this.calendarManagementCard.hide();
+                this.colorSettingsCard.setGoogleCalendarColorsToggleVisible(false);
             }
         } catch (error) {
             console.error('Google auth status check error:', error);
@@ -270,6 +313,7 @@ class OptionsPageManager {
         const demoSettings = getDemoOptionsSettings();
         this.calendarManagementCard.allCalendars = demoCalendars;
         this.calendarManagementCard.selectedCalendarIds = demoSettings.selectedCalendars;
+        this.calendarManagementCard.calendarGroups = getDemoCalendarGroups();
         this.calendarManagementCard.hasAutoFetched = true;
         this.calendarManagementCard.show();
         this.calendarManagementCard.render();
@@ -349,6 +393,7 @@ class OptionsPageManager {
                 if (response.success) {
                     this.googleIntegrationCard.updateIntegrationStatus(true);
                     this.calendarManagementCard.show();
+                    this.calendarManagementCard.refreshCalendars();
                     this.colorSettingsCard.setGoogleCalendarColorsToggleVisible(true);
                     // Enable the Google integration
                     const settings = await loadSettings();
@@ -459,10 +504,13 @@ class OptionsPageManager {
         }
     }
 
-    async handleCalendarSelectionChange(_selectedCalendarIds) {
+    async handleCalendarSelectionChange(selectedCalendarIds, changeInfo) {
         try {
-            // Reload the side panel to reflect calendar changes
-            this._reloadSidePanel();
+            // Send incremental update to side panel instead of full reload
+            sendMessage({
+                action: 'calendarSelectionChanged',
+                changeInfo: changeInfo || null
+            });
         } catch (error) {
             logError('Calendar selection change', error);
         }
@@ -475,7 +523,8 @@ class OptionsPageManager {
             const updatedSettings = {
                 ...currentSettings,
                 googleEventReminder: reminderSettings.googleEventReminder,
-                reminderMinutes: reminderSettings.reminderMinutes
+                reminderMinutes: reminderSettings.reminderMinutes,
+                reminderSyncInterval: reminderSettings.reminderSyncInterval
             };
 
             await saveSettings(updatedSettings);
@@ -491,12 +540,60 @@ class OptionsPageManager {
         }
     }
 
+    async handleScrollbarSettingsChange(scrollbarSettings) {
+        try {
+            const currentSettings = await loadSettings();
+            const updatedSettings = {
+                ...currentSettings,
+                thinScrollbar: scrollbarSettings.thinScrollbar
+            };
+
+            await saveSettings(updatedSettings);
+
+            // Apply to options page as preview
+            document.body.classList.toggle('thin-scrollbar', scrollbarSettings.thinScrollbar);
+
+            this._reloadSidePanel();
+        } catch (error) {
+            logError('Scrollbar settings save', error);
+        }
+    }
+
+    async handleWhatsNewSettingsChange(whatsNewSettings) {
+        try {
+            const currentSettings = await loadSettings();
+            const wasEnabled = currentSettings.whatsNewAutoShow !== false;
+            const willEnable = whatsNewSettings.whatsNewAutoShow === true;
+
+            const updatedSettings = {
+                ...currentSettings,
+                whatsNewAutoShow: willEnable
+            };
+
+            await saveSettings(updatedSettings);
+
+            // OFF → ON: rewind lastSeenVersion to the previous release so the modal
+            // appears again on the next side panel load (otherwise it stays marked
+            // as already-seen for the current version and silently does nothing).
+            if (!wasEnabled && willEnable) {
+                const currentVersion = chrome.runtime.getManifest().version;
+                const previousVersion = findPreviousReleaseVersion(currentVersion);
+                if (previousVersion) {
+                    await StorageHelper.set({ lastSeenVersion: previousVersion });
+                }
+            }
+        } catch (error) {
+            logError("What's New settings save", error);
+        }
+    }
+
     async handleMemoSettingsChange(memoSettings) {
         try {
             const currentSettings = await loadSettings();
             const updatedSettings = {
                 ...currentSettings,
-                memoMarkdown: memoSettings.memoMarkdown
+                memoMarkdown: memoSettings.memoMarkdown,
+                memoFontSize: memoSettings.memoFontSize
             };
 
             await saveSettings(updatedSettings);
@@ -525,6 +622,9 @@ class OptionsPageManager {
             this.languageSettingsCard.resetToDefaults();
             this.reminderSettingsCard.resetToDefaults();
             this.memoSettingsCard.resetToDefaults();
+            this.scrollbarSettingsCard.resetToDefaults();
+            document.body.classList.remove('thin-scrollbar');
+            this.whatsNewSettingsCard.resetToDefaults();
 
             // Reset CSS variables via theme system
             const defaultTheme = getThemeById('default');
@@ -533,6 +633,17 @@ class OptionsPageManager {
                 document.documentElement.style.setProperty(varName, value);
             }
             document.documentElement.removeAttribute('data-theme');
+
+            // Notify the background to apply the default reminder settings
+            // (re-create the periodic sync alarm at the default interval).
+            sendMessage({
+                action: 'updateReminderSettings',
+                settings: {
+                    googleEventReminder: DEFAULT_SETTINGS.googleEventReminder,
+                    reminderMinutes: DEFAULT_SETTINGS.reminderMinutes,
+                    reminderSyncInterval: DEFAULT_SETTINGS.reminderSyncInterval
+                }
+            });
 
             // Reload the side panel
             this._reloadSidePanel();
@@ -628,4 +739,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initialize the new component-based options page manager
     const optionsPageManager = new OptionsPageManager();
     await optionsPageManager.initialize();
+
+    // Re-check auth status when the tab becomes visible again (throttled)
+    let lastAuthCheck = Date.now();
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            const now = Date.now();
+            if (now - lastAuthCheck > 5 * 60 * 1000) {
+                lastAuthCheck = now;
+                optionsPageManager.checkGoogleAuthStatus();
+            }
+        }
+    });
 });

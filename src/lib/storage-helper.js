@@ -1,8 +1,22 @@
 /**
  * StorageHelper - Chrome storage operations wrapper
  *
- * This class provides a standardized interface for Chrome storage operations,
- * eliminating code duplication and providing consistent error handling.
+ * Provides a standardized Promise-based interface for chrome.storage.sync and
+ * chrome.storage.local operations, eliminating callback-based code duplication.
+ *
+ * ## 使い分け基準
+ *
+ * - **ドメインモデルの永続化** → `settings-storage.js` / `event-storage.js`
+ *   のラッパー関数を使うこと。これらは `DEFAULT_SETTINGS` フィルタや
+ *   `localEvents_YYYY-MM-DD` スコープ、recurring/date-specific の分離といった
+ *   ドメイン不変条件を enforce する。
+ *
+ * - **Ad-hoc な UI 状態やフラグ**（memo content、tutorial 表示フラグ、
+ *   `lastSeenVersion`、`lastReminderSyncTime` 等）→ StorageHelper を直接
+ *   利用してよい。ドメイン制約がないため wrapper 化しても抽象化メリットが薄い。
+ *
+ * 判断に迷う場合は「複数箇所で同じキーの読み書きがあるか」「保存時に
+ * キー検証や型変換が必要か」を基準にラッパー化を検討する。
  */
 
 export class StorageHelper {

@@ -29,6 +29,9 @@ export class LocalEventService {
      * @param {Date} currentDate - The date to associate the event with
      */
     async createEvent(eventData, currentDate) {
+        if (!eventData.title || !eventData.startTime) {
+            throw new Error('title and startTime are required');
+        }
         const isRecurring = eventData.recurrence && eventData.recurrence.type !== RECURRENCE_TYPES.NONE;
 
         const newEvent = {
@@ -68,9 +71,9 @@ export class LocalEventService {
         const isRecurring = eventData.recurrence && eventData.recurrence.type !== RECURRENCE_TYPES.NONE;
 
         if (currentEvent.isRecurringInstance || currentEvent.recurrence) {
-            await this._editRecurringEvent(eventData, currentEvent, isRecurring, currentDate);
+            return await this._editRecurringEvent(eventData, currentEvent, isRecurring, currentDate);
         } else {
-            await this._editDateSpecificEvent(eventData, currentEvent, isRecurring, currentDate);
+            return await this._editDateSpecificEvent(eventData, currentEvent, isRecurring, currentDate);
         }
     }
 
@@ -113,7 +116,7 @@ export class LocalEventService {
         const eventId = currentEvent.originalId || currentEvent.id;
         const eventIndex = recurringEvents.findIndex(e => e.id === eventId);
 
-        if (eventIndex === -1) return;
+        if (eventIndex === -1) return false;
 
         recurringEvents[eventIndex] = {
             ...recurringEvents[eventIndex],
@@ -155,7 +158,7 @@ export class LocalEventService {
         const nonRecurringEvents = localEvents.filter(e => !e.isRecurringInstance);
         const eventIndex = nonRecurringEvents.findIndex(e => e.id === currentEvent.id);
 
-        if (eventIndex === -1) return;
+        if (eventIndex === -1) return false;
 
         const existingEvent = nonRecurringEvents[eventIndex];
         const dateStr = getFormattedDateFromDate(currentDate);

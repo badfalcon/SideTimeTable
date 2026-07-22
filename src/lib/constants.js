@@ -52,11 +52,18 @@ export const DEFAULT_SETTINGS = {
     language: 'auto', // Language setting (auto/en/ja)
     googleEventReminder: false, // Automatic reminder for Google events
     reminderMinutes: 5, // Reminder time in minutes before event starts
+    reminderSyncInterval: 60, // How often (minutes) to re-sync Google reminders during the day
     darkMode: false, // Dark mode theme (legacy, kept for migration)
     useGoogleCalendarColors: true, // Use per-calendar colors from Google Calendar API
     colorTheme: 'default', // Active colour-set ID (see color-themes.js)
-    memoMarkdown: false // Enable Markdown rendering in memo panel
+    memoMarkdown: false, // Enable Markdown rendering in memo panel
+    memoFontSize: 13, // Memo font size in px
+    thinScrollbar: false, // Use thin (narrow) scrollbar in side panel
+    whatsNewAutoShow: true // Auto-show What's New modal on version updates
 };
+
+// Memo font size range (px)
+export const MEMO_FONT_SIZE_RANGE = { min: 10, max: 20 };
 
 // Mapping from color setting keys to CSS variable names
 // Order determines the display order in the settings UI
@@ -82,7 +89,8 @@ export const VALID_SYNC_KEYS = new Set([
     'lastSeenVersion',
     'initialSetupCompleted',
     'tutorialCompleted',
-    'timeFormat'
+    'timeFormat',
+    'calendarGroups'
 ]);
 
 // Valid local storage keys (exact match)

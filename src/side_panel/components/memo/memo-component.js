@@ -5,32 +5,17 @@ import { Component } from '../base/component.js';
 import { StorageHelper } from '../../../lib/storage-helper.js';
 import { isDemoMode, getDemoMemoContent } from '../../../lib/demo-data.js';
 import { loadSettings } from '../../../lib/settings-storage.js';
+import { DEFAULT_SETTINGS, MEMO_FONT_SIZE_RANGE } from '../../../lib/constants.js';
+import { MemoEditor } from './memo-editor.js';
 
 const DEFAULT_HEIGHT = 150;
 const MIN_HEIGHT = 80;
 const MAX_HEIGHT_RATIO = 0.8;
 const AUTO_EXPAND_THRESHOLD = 10;
 const COLLAPSED_HEIGHT_FALLBACK = 34;
-const SAVE_DEBOUNCE_DELAY = 300;
 const ANIM_DURATION = 420;
 const ICON_CLASS_DOWN = 'fas fa-chevron-down memo-toggle-icon';
 const ICON_CLASS_UP = 'fas fa-chevron-up memo-toggle-icon';
-
-// Lazy-loaded markdown renderer (only loaded when markdown is enabled)
-let _renderer = null;
-
-async function getMarkdownRenderer() {
-    if (!_renderer) {
-        const [{ Marked }, DOMPurify] = await Promise.all([
-            import(/* webpackChunkName: "markdown" */ 'marked'),
-            import(/* webpackChunkName: "markdown" */ 'dompurify')
-        ]);
-        const purify = DOMPurify.default || DOMPurify;
-        const marked = new Marked({ breaks: true, gfm: true });
-        _renderer = (text) => purify.sanitize(marked.parse(text));
-    }
-    return _renderer;
-}
 
 export class MemoComponent extends Component {
     constructor(options = {}) {
@@ -50,10 +35,9 @@ export class MemoComponent extends Component {
         this._collapsedHeight = null; // cached to avoid reflow on every mousemove
         this._collapsedClipPath = null; // cached when valid DOM measurement available
         this._timeline = null; // cached reference to .side-time-table
-        this._saveDebounceTimer = null;
         this._collapsed = false;
         this._panelHeight = DEFAULT_HEIGHT;
-        this._markdownEnabled = false;
+        this._editor = null;
 
         // Drag state
         this._dragStartY = 0;
@@ -97,6 +81,9 @@ export class MemoComponent extends Component {
         this._preview.id = 'memoPreview';
         this._preview.className = 'memo-hidden';
 
+        // Create the editor delegate for markdown editing logic
+        this._editor = new MemoEditor(this.textarea, this._preview);
+
         body.appendChild(this.textarea);
         body.appendChild(this._preview);
         wrapper.appendChild(this._dragHandle);
@@ -111,10 +98,22 @@ export class MemoComponent extends Component {
         this._loadState();
 
         this.addEventListener(this._toggleBtn, 'click', () => this._toggleCollapse());
-        this.addEventListener(this.textarea, 'input', () => this._onInput());
-        this.addEventListener(this.textarea, 'blur', () => this._switchToPreview());
+        this.addEventListener(this.textarea, 'input', () => {
+            this._editor._tabTrapped = true;
+            this._editor.onInput();
+        });
+        this.addEventListener(this.textarea, 'keydown', (e) => this._editor.onKeyDown(e));
+        this.addEventListener(this.textarea, 'blur', () => {
+            this._editor._tabTrapped = false;
+            this._editor.switchToPreview();
+        });
         this.addEventListener(this._preview, 'click', (e) => {
-            if (!e.target.closest('a')) this._switchToEdit();
+            if (e.target.matches('input[type="checkbox"]')) {
+                e.preventDefault();
+                this._editor.toggleCheckbox(e.target);
+                return;
+            }
+            if (!e.target.closest('a')) this._editor.switchToEdit();
         });
         this._setupDragHandle();
 
@@ -125,14 +124,15 @@ export class MemoComponent extends Component {
         try {
             // Load markdown setting
             const settings = await loadSettings();
-            this._markdownEnabled = settings.memoMarkdown === true;
+            this._editor.markdownEnabled = settings.memoMarkdown === true;
             this._applyMarkdownMode();
+            this._applyFontSize(settings.memoFontSize);
 
             if (isDemoMode()) {
                 if (this.textarea) {
                     this.textarea.value = await getDemoMemoContent();
-                    if (this._markdownEnabled) {
-                        this._renderMarkdown(this.textarea.value);
+                    if (this._editor.markdownEnabled) {
+                        this._editor.renderMarkdown(this.textarea.value);
                     }
                 }
                 this._applyHeight(false);
@@ -141,8 +141,8 @@ export class MemoComponent extends Component {
             const result = await StorageHelper.getLocal(['memoContent', 'memoCollapsed', 'memoHeight']);
             if (this.textarea && result.memoContent !== undefined) {
                 this.textarea.value = result.memoContent;
-                if (this._markdownEnabled) {
-                    this._renderMarkdown(result.memoContent);
+                if (this._editor.markdownEnabled) {
+                    this._editor.renderMarkdown(result.memoContent);
                 }
             }
             if (result.memoHeight) {
@@ -150,15 +150,23 @@ export class MemoComponent extends Component {
             }
             this._collapsed = result.memoCollapsed === true;
             this._applyHeight(false);
-        } catch (e) {
+        } catch (_e) {
             // ignore
         }
     }
 
+    _applyFontSize(size) {
+        const px = (typeof size === 'number' && size >= MEMO_FONT_SIZE_RANGE.min && size <= MEMO_FONT_SIZE_RANGE.max)
+            ? size : DEFAULT_SETTINGS.memoFontSize;
+        const value = `${px}px`;
+        if (this.textarea) this.textarea.style.fontSize = value;
+        if (this._preview) this._preview.style.fontSize = value;
+    }
+
     _applyMarkdownMode() {
         if (!this.textarea || !this._preview) return;
-        if (this._markdownEnabled) {
-            this._switchToPreview();
+        if (this._editor.markdownEnabled) {
+            this._editor.switchToPreview();
         } else {
             this._preview.classList.add('memo-hidden');
             this.textarea.classList.remove('memo-hidden');
@@ -301,51 +309,6 @@ export class MemoComponent extends Component {
         });
     }
 
-    _switchToPreview() {
-        if (!this.textarea || !this._preview || !this._markdownEnabled) return;
-        this._renderMarkdown(this.textarea.value);
-        this.textarea.classList.add('memo-hidden');
-        this._preview.classList.remove('memo-hidden');
-    }
-
-    _switchToEdit() {
-        if (!this.textarea || !this._preview || !this._markdownEnabled) return;
-        this._preview.classList.add('memo-hidden');
-        this.textarea.classList.remove('memo-hidden');
-        this.textarea.focus();
-        this.textarea.selectionStart = this.textarea.selectionEnd = this.textarea.value.length;
-    }
-
-    async _renderMarkdown(text) {
-        if (!this._preview) return;
-        if (!text || !text.trim()) {
-            this._preview.textContent = '';
-            const placeholder = document.createElement('span');
-            placeholder.className = 'memo-preview-placeholder';
-            placeholder.textContent = this.textarea.placeholder;
-            this._preview.appendChild(placeholder);
-            return;
-        }
-        const render = await getMarkdownRenderer();
-        this._preview.innerHTML = render(text);
-        // Open links in new tab
-        this._preview.querySelectorAll('a').forEach(a => {
-            a.setAttribute('target', '_blank');
-            a.setAttribute('rel', 'noopener noreferrer');
-        });
-    }
-
-    _onInput() {
-        if (this._saveDebounceTimer) {
-            clearTimeout(this._saveDebounceTimer);
-        }
-        this._saveDebounceTimer = setTimeout(() => {
-            const text = this.textarea ? this.textarea.value : '';
-            StorageHelper.setLocal({ memoContent: text }).catch(() => {});
-            this._saveDebounceTimer = null;
-        }, SAVE_DEBOUNCE_DELAY);
-    }
-
     appendTo(parent) {
         if (parent && typeof parent.appendChild === 'function') {
             parent.appendChild(this._spacer);
@@ -354,9 +317,8 @@ export class MemoComponent extends Component {
     }
 
     destroy() {
-        if (this._saveDebounceTimer) {
-            clearTimeout(this._saveDebounceTimer);
-            this._saveDebounceTimer = null;
+        if (this._editor) {
+            this._editor.destroy();
         }
         document.removeEventListener('mousemove', this._onDragMove);
         document.removeEventListener('mouseup', this._onDragEnd);
