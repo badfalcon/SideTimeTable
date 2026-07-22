@@ -309,4 +309,11 @@ describe('buildRfc3339DateTime', () => {
   test('throws on an invalid time string', () => {
     expect(() => buildRfc3339DateTime(new Date(2026, 6, 22), '25:00')).toThrow();
   });
+
+  test('round-trips: parsing the string yields the intended local instant', () => {
+    // Independent of the implementation's offset formula — a copied sign bug
+    // in the offset would fail this even though the string-format tests pass.
+    const result = buildRfc3339DateTime(new Date(2026, 6, 22), '09:30');
+    expect(new Date(result).getTime()).toBe(new Date(2026, 6, 22, 9, 30).getTime());
+  });
 });

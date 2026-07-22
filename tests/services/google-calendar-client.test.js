@@ -445,6 +445,32 @@ describe('SPEC: patchEvent', () => {
     await expect(client.patchEvent('cal1', 'evt1', patchBody()))
       .rejects.toThrow(/Update Event API error: 500/);
   });
+
+  test('errors carry the HTTP status (used to tell 403 permission-denied from auth expiry)', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 403,
+      statusText: 'Forbidden',
+      text: () => Promise.resolve(''),
+    });
+
+    await expect(client.patchEvent('cal1', 'evt1', patchBody()))
+      .rejects.toMatchObject({ status: 403 });
+  });
+
+  test('an empty patch object is accepted and sent as-is (no-op update)', () => {
+    // Spec-pin: validation only rejects a missing resource, not an empty one.
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ id: 'evt1' }),
+    });
+
+    return client.patchEvent('cal1', 'evt1', {}).then(() => {
+      const [, options] = global.fetch.mock.calls[0];
+      expect(options.body).toBe('{}');
+    });
+  });
 });
 
 // ---------------------------------------------------------------
@@ -520,5 +546,68 @@ describe('SPEC: deleteEvent', () => {
 
     await expect(client.deleteEvent('cal1', 'evt1'))
       .rejects.toThrow(/Delete Event API error: 500/);
+  });
+
+  test.each([404, 410])(
+    'treats %i (event already deleted elsewhere) as success', async (status) => {
+      // The user wanted the event gone and it is — reporting failure would
+      // leave a phantom event on the timeline and invite retries.
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: false,
+        status,
+        statusText: status === 404 ? 'Not Found' : 'Gone',
+        text: () => Promise.resolve(''),
+      });
+
+      await expect(client.deleteEvent('cal1', 'evt1')).resolves.toBeUndefined();
+    }
+  );
+});
+
+// ---------------------------------------------------------------
+// SPEC: getCalendarList
+// - Maps each calendar to {id, summary, primary, accessRole, colors}.
+//   accessRole is load-bearing: the entire writable-calendar feature
+//   (create destination picker, edit/delete gating) filters on it.
+// - Calendars with accessRole 'none' (or missing) are dropped.
+// ---------------------------------------------------------------
+describe('SPEC: getCalendarList', () => {
+  let client;
+  let originalFetch;
+
+  beforeEach(() => {
+    resetChromeStorage();
+    client = new GoogleCalendarClient();
+    originalFetch = global.fetch;
+    chrome.identity.getAuthToken.mockReset();
+    chrome.identity.getAuthToken.mockImplementation((opts, cb) => cb('test-token'));
+  });
+
+  afterEach(() => {
+    global.fetch = originalFetch;
+  });
+
+  test('maps accessRole through for each calendar and drops inaccessible ones', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({
+        items: [
+          { id: 'own@x.com', summary: 'Mine', primary: true, accessRole: 'owner', backgroundColor: '#a', foregroundColor: '#b' },
+          { id: 'team@x.com', summary: 'Team', accessRole: 'writer' },
+          { id: 'holidays@x.com', summary: 'Holidays', accessRole: 'reader' },
+          { id: 'hidden@x.com', summary: 'Hidden', accessRole: 'none' },
+          { id: 'broken@x.com', summary: 'Broken' },
+        ],
+      }),
+    });
+
+    const calendars = await client.getCalendarList();
+
+    expect(calendars).toEqual([
+      { id: 'own@x.com', summary: 'Mine', primary: true, accessRole: 'owner', backgroundColor: '#a', foregroundColor: '#b' },
+      { id: 'team@x.com', summary: 'Team', primary: false, accessRole: 'writer', backgroundColor: undefined, foregroundColor: undefined },
+      { id: 'holidays@x.com', summary: 'Holidays', primary: false, accessRole: 'reader', backgroundColor: undefined, foregroundColor: undefined },
+    ]);
   });
 });

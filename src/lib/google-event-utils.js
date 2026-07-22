@@ -5,7 +5,10 @@
  * and the side panel controller (writable-calendar filtering). Keeping these
  * pure makes the create-event path unit-testable without a DOM.
  */
-import { buildRfc3339DateTime } from './time-utils.js';
+import { buildRfc3339DateTime, isSameDay } from './time-utils.js';
+
+// Event types that must never be edited or deleted from the panel
+const NON_EDITABLE_EVENT_TYPES = ['outOfOffice', 'focusTime', 'workingLocation'];
 
 /**
  * Whether a calendar can have events written to it.
@@ -39,6 +42,51 @@ export function filterWritableCalendars(calendars, selectedIds = null) {
 }
 
 /**
+ * Whether a Google event can be edited/deleted from the panel.
+ *
+ * Requires ALL of:
+ * - a writable (owner/writer) calendar (`isWritableCalendar` flag stamped at fetch)
+ * - id + calendarId (needed to address the PATCH/DELETE)
+ * - a timed event (`start.dateTime` and `end.dateTime`; excludes all-day and
+ *   endTimeUnspecified events)
+ * - start and end on the same local calendar date (the edit form only exposes
+ *   HH:MM inputs, so a cross-midnight event could never be saved — don't offer it)
+ * - not part of a recurring series (instance or master)
+ * - a plain event type (not out-of-office / focus time / working location)
+ * - the user may actually modify it: the event is organized by the calendar it
+ *   sits on (`organizer.self`) or guests are allowed to modify
+ *   (`guestsCanModify`). Received invites fail this and would 403 on save.
+ *
+ * @param {Object} event - Event as fetched by the panel (API shape + panel flags)
+ * @returns {boolean}
+ */
+export function isEditableGoogleEvent(event) {
+    if (!(
+        event &&
+        event.isWritableCalendar &&
+        event.id &&
+        event.calendarId &&
+        event.start?.dateTime &&
+        event.end?.dateTime &&
+        !event.recurringEventId &&
+        !event.recurrence &&
+        !NON_EDITABLE_EVENT_TYPES.includes(event.eventType)
+    )) {
+        return false;
+    }
+
+    const start = new Date(event.start.dateTime);
+    const end = new Date(event.end.dateTime);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || !isSameDay(start, end)) {
+        return false;
+    }
+
+    // organizer.self is true when the event is organized by the calendar this
+    // copy sits on (own events, shared-calendar events); false on invite copies.
+    return event.organizer?.self === true || event.guestsCanModify === true;
+}
+
+/**
  * Build a Google Calendar API event resource from form fields.
  * Optional fields (description, location) are omitted when blank so the
  * request body stays minimal.
@@ -57,14 +105,18 @@ export function filterWritableCalendars(calendars, selectedIds = null) {
  * @param {boolean} [fields.addMeet] - Attach a Google Meet conference
  * @param {string} [fields.meetRequestId] - Unique id for the Meet create request
  *   (generated when omitted; injectable for tests)
- * @param {number|string|null} [fields.reminderMinutes] - Popup reminder lead time in
- *   minutes; blank/null uses the calendar's default reminders
+ * @param {number|string|null} [fields.reminderMinutes] - Popup reminder lead time
+ *   in minutes. Insert mode: blank/null/undefined omits `reminders` (calendar
+ *   default applies). Patch mode: `undefined` omits `reminders` entirely so the
+ *   event's existing reminders (including email or multiple overrides) are left
+ *   untouched — pass it ONLY when the user actually changed the selection;
+ *   blank/null reverts explicitly to {useDefault: true}. A non-numeric or
+ *   negative value is ignored (treated as "no change") in both modes.
  * @param {Object} [options]
  * @param {boolean} [options.forPatch=false] - Build a body for events.patch
  *   instead of events.insert. PATCH leaves omitted fields unchanged, so this
- *   mode emits explicit '' for blank description/location (clearing them),
- *   maps a blank reminder to {useDefault: true} (reverting to the calendar
- *   default), and never emits conferenceData (Meet is not editable).
+ *   mode emits explicit '' for blank description/location (clearing them)
+ *   and never emits conferenceData (Meet is not editable).
  * @returns {Object} A Google Calendar event resource ({summary, start, end, ...})
  */
 export function buildGoogleEventResource({ summary, description, location, date, startTime, endTime, addMeet, meetRequestId, reminderMinutes }, { forPatch = false } = {}) {
@@ -95,8 +147,7 @@ export function buildGoogleEventResource({ summary, description, location, date,
         };
     }
 
-    const hasReminder = reminderMinutes !== undefined && reminderMinutes !== null && reminderMinutes !== '';
-    if (hasReminder) {
+    if (reminderMinutes !== undefined && reminderMinutes !== null && reminderMinutes !== '') {
         const minutes = Number(reminderMinutes);
         if (Number.isFinite(minutes) && minutes >= 0) {
             resource.reminders = {
@@ -104,9 +155,11 @@ export function buildGoogleEventResource({ summary, description, location, date,
                 overrides: [{ method: 'popup', minutes }]
             };
         }
-    } else if (forPatch) {
-        // Insert can just omit reminders, but PATCH must explicitly revert to
-        // the calendar default or a previous override would stick.
+        // Non-numeric/negative: fall through without touching reminders.
+    } else if (forPatch && reminderMinutes !== undefined) {
+        // Explicit blank in patch mode reverts to the calendar default.
+        // (undefined means "not changed" — omit so existing overrides,
+        // including email or multiple reminders, are preserved.)
         resource.reminders = { useDefault: true };
     }
 

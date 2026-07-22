@@ -103,7 +103,7 @@ export class LocalEventFormBuilder {
     }
 
     /**
-     * Build Google-only fields (target calendar picker + location). Hidden
+     * Build Google-only fields (target calendar picker + Meet toggle). Hidden
      * unless the save destination is Google.
      * @param {HTMLElement} parentElement
      * @private
@@ -389,7 +389,7 @@ export class LocalEventFormBuilder {
         timeRow.appendChild(endGroup);
         parentElement.appendChild(timeRow);
 
-        // Google-only fields (target calendar + location)
+        // Google-only fields (target calendar + Meet toggle)
         this._buildGoogleFields(parentElement);
 
         // Description textarea

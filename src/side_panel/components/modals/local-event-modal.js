@@ -644,6 +644,8 @@ export class LocalEventModal extends ModalComponent {
         const errorDiv = document.createElement('div');
         errorDiv.className = 'error-message';
         errorDiv.style.cssText = 'color: red; font-size: 0.9em; margin-top: 5px;';
+        // Announce the failure to screen readers when it is inserted
+        errorDiv.setAttribute('role', 'alert');
         errorDiv.textContent = message;
 
         this.modalContent.appendChild(errorDiv);

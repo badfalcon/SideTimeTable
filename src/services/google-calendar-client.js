@@ -68,14 +68,19 @@ export class GoogleCalendarClient {
      */
     async _checkResponse(response, label) {
         if (response.ok) return;
-        const errorBody = await response.text();
+        // Do not log the response body: Google error bodies can echo submitted
+        // event fields (PII) and must not reach the production console.
         const msg = `${label} error: ${response.status} ${response.statusText}`;
         if (response.status === 401 || response.status === 403) {
             console.warn(`${label} auth error:`, response.status);
-            throw new AuthenticationError(msg);
+            const authError = new AuthenticationError(msg);
+            authError.status = response.status;
+            throw authError;
         }
-        console.error(`${label} error body:`, errorBody);
-        throw new Error(msg);
+        console.error(`${label} error:`, response.status, response.statusText);
+        const error = new Error(msg);
+        error.status = response.status;
+        throw error;
     }
 
     /**
@@ -474,6 +479,12 @@ export class GoogleCalendarClient {
         const res = await this._fetchWithAuth(eventUrl, {
             method: 'DELETE'
         });
+
+        // 404/410 mean the event is already gone (deleted in another client) —
+        // that is the outcome the user wanted, so treat it as success.
+        if (res.status === 404 || res.status === 410) {
+            return;
+        }
 
         await this._checkResponse(res, 'Delete Event API');
     }

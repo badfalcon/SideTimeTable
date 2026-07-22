@@ -21,6 +21,11 @@ export class GoogleEventEditFormBuilder {
         this.reminderSelect = null;
         this.saveButton = null;
         this.cancelButton = null;
+
+        // Select value at populate() time, to detect an actual user change
+        // (an unchanged reminder must NOT be patched, or it would clobber
+        // email/multiple overrides the select cannot represent).
+        this.initialReminderValue = '';
     }
 
     /**
@@ -175,6 +180,7 @@ export class GoogleEventEditFormBuilder {
         this.descriptionInput.value = event.description || '';
         this.locationInput.value = event.location || '';
         this._populateReminder(event.reminders);
+        this.initialReminderValue = this.reminderSelect.value;
     }
 
     /**
@@ -205,6 +211,14 @@ export class GoogleEventEditFormBuilder {
             this.reminderSelect.appendChild(custom);
         }
         this.reminderSelect.value = value;
+    }
+
+    /**
+     * Whether the user changed the reminder selection since populate().
+     * @returns {boolean}
+     */
+    isReminderChanged() {
+        return this.reminderSelect.value !== this.initialReminderValue;
     }
 
     /**

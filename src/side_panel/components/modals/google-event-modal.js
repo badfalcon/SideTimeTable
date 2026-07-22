@@ -5,10 +5,7 @@ import { ModalComponent } from './modal-component.js';
 import { sendMessage } from '../../../lib/chrome-messaging.js';
 import { GoogleEventContentBuilder } from './google-event-content-builder.js';
 import { GoogleEventEditFormBuilder } from './google-event-edit-form-builder.js';
-import { buildGoogleEventResource, extractTimeHHMM } from '../../../lib/google-event-utils.js';
-
-// Event types that must never be edited or deleted from the panel
-const NON_EDITABLE_EVENT_TYPES = ['outOfOffice', 'focusTime', 'workingLocation'];
+import { buildGoogleEventResource, extractTimeHHMM, isEditableGoogleEvent } from '../../../lib/google-event-utils.js';
 
 export class GoogleEventModal extends ModalComponent {
     constructor(options = {}) {
@@ -106,13 +103,31 @@ export class GoogleEventModal extends ModalComponent {
         this.editContent.style.display = 'none';
         this._editFormBuilder.buildEditContent(this.editContent, {
             onSave: () => this._handleSaveEdit(),
-            onCancel: () => this._showViewMode()
+            onCancel: () => this._showViewMode({ returnFocus: true })
         });
         content.appendChild(this.editContent);
 
         // Attendees/RSVP (created lazily) must land inside viewContent so
         // they are hidden together with the rest of the view mode.
         this.modalBody = this.viewContent;
+
+        // Escape backs out of sub-states (edit form, delete confirmation)
+        // instead of closing the whole modal and discarding input. Capture
+        // phase so this runs before ModalComponent's close-on-Escape.
+        this.addEventListener(document, 'keydown', (e) => {
+            if (e.key !== 'Escape' || !this.isVisible()) {
+                return;
+            }
+            if (this.deleteConfirmRow && this.deleteConfirmRow.style.display !== 'none') {
+                e.preventDefault();
+                e.stopPropagation();
+                this._showDeleteConfirm(false);
+            } else if (this.editContent.style.display !== 'none') {
+                e.preventDefault();
+                e.stopPropagation();
+                this._showViewMode({ returnFocus: true });
+            }
+        }, true);
 
         return content;
     }
@@ -172,24 +187,14 @@ export class GoogleEventModal extends ModalComponent {
     }
 
     /**
-     * Whether the event can be edited/deleted from the panel:
-     * a timed, non-recurring event on a writable (owner/writer) calendar.
-     * Unlike RSVP this does not require the user to be an attendee.
+     * Whether the event can be edited/deleted from the panel.
+     * Delegates to the pure, unit-tested predicate in google-event-utils.
      * @param {Object} event
      * @returns {boolean}
      * @private
      */
     _isEditableEvent(event) {
-        return !!(
-            event &&
-            event.isWritableCalendar &&
-            event.id &&
-            event.calendarId &&
-            event.start?.dateTime &&
-            !event.recurringEventId &&
-            !event.recurrence &&
-            !NON_EDITABLE_EVENT_TYPES.includes(event.eventType)
-        );
+        return isEditableGoogleEvent(event);
     }
 
     /**
@@ -227,6 +232,7 @@ export class GoogleEventModal extends ModalComponent {
             this.deleteConfirmRow.style.display = 'none';
 
             const confirmText = document.createElement('span');
+            confirmText.id = 'googleDeleteConfirmText';
             confirmText.setAttribute('data-localize', '__MSG_googleDeleteConfirm__');
             confirmText.textContent = window.getLocalizedMessage('googleDeleteConfirm') || 'Delete this event?';
 
@@ -235,6 +241,9 @@ export class GoogleEventModal extends ModalComponent {
             this.confirmDeleteButton.id = 'googleEventConfirmDeleteButton';
             this.confirmDeleteButton.className = 'btn btn-danger';
             this.confirmDeleteButton.setAttribute('data-localize', '__MSG_confirmDelete__');
+            // Focus lands on these buttons when the confirm row opens; the
+            // describedby makes screen readers announce the question with them.
+            this.confirmDeleteButton.setAttribute('aria-describedby', 'googleDeleteConfirmText');
             this.confirmDeleteButton.textContent = window.getLocalizedMessage('confirmDelete') || 'Delete';
             this.addEventListener(this.confirmDeleteButton, 'click', () => this._handleDeleteConfirmed());
 
@@ -243,6 +252,7 @@ export class GoogleEventModal extends ModalComponent {
             this.cancelDeleteButton.id = 'googleEventCancelDeleteButton';
             this.cancelDeleteButton.className = 'btn btn-secondary';
             this.cancelDeleteButton.setAttribute('data-localize', '__MSG_cancel__');
+            this.cancelDeleteButton.setAttribute('aria-describedby', 'googleDeleteConfirmText');
             this.cancelDeleteButton.textContent = window.getLocalizedMessage('cancel') || 'Cancel';
             this.addEventListener(this.cancelDeleteButton, 'click', () => this._showDeleteConfirm(false));
 
@@ -261,25 +271,43 @@ export class GoogleEventModal extends ModalComponent {
 
     /**
      * Toggle between the action bar and the inline delete confirmation.
+     * Moves keyboard focus with the state change: into the confirmation
+     * (on its non-destructive Cancel) when opening, back to the Delete
+     * button when dismissing.
      * @param {boolean} confirming
      * @private
      */
     _showDeleteConfirm(confirming) {
         if (!this.viewButtons) return;
+        const wasConfirming = this.deleteConfirmRow.style.display !== 'none';
         const editable = this._isEditableEvent(this.currentEvent);
         this.viewButtons.style.display = confirming || !editable ? 'none' : '';
         this.deleteConfirmRow.style.display = confirming ? '' : 'none';
+
+        if (confirming) {
+            this.cancelDeleteButton?.focus();
+        } else if (wasConfirming && editable) {
+            this.deleteButton?.focus();
+        }
     }
 
     /**
      * Switch to view mode and clear transient edit state.
+     * @param {Object} [options]
+     * @param {boolean} [options.returnFocus=false] - Focus the Edit button
+     *   (used when backing out of edit mode, so keyboard focus is not lost
+     *   inside the now-hidden form)
      * @private
      */
-    _showViewMode() {
+    _showViewMode({ returnFocus = false } = {}) {
         this._clearError();
         this.viewContent.style.display = '';
         this.editContent.style.display = 'none';
         this._showDeleteConfirm(false);
+
+        if (returnFocus) {
+            this.editButton?.focus();
+        }
     }
 
     /**
@@ -302,6 +330,9 @@ export class GoogleEventModal extends ModalComponent {
         this.viewContent.style.display = 'none';
         this.editContent.style.display = '';
         this._localizeModal();
+
+        // Move focus into the form (the Edit button that opened it is now hidden)
+        setTimeout(() => this._editFormBuilder.titleInput?.focus(), 0);
     }
 
     /**
@@ -340,7 +371,10 @@ export class GoogleEventModal extends ModalComponent {
             return;
         }
 
-        // Patch on the event's own date — the panel may be viewing another day
+        // Patch on the event's own date — the panel may be viewing another day.
+        // Only include reminders when the user actually changed the selection:
+        // an unchanged select must not clobber overrides it cannot represent
+        // (email reminders, multiple overrides).
         const patchResource = buildGoogleEventResource({
             summary: values.summary,
             description: values.description,
@@ -348,7 +382,7 @@ export class GoogleEventModal extends ModalComponent {
             date: new Date(event.start.dateTime),
             startTime: values.startTime,
             endTime: values.endTime,
-            reminderMinutes: values.reminderMinutes
+            reminderMinutes: this._editFormBuilder.isReminderChanged() ? values.reminderMinutes : undefined
         }, { forPatch: true });
 
         if (!this.onSaveEdit) {
@@ -421,6 +455,8 @@ export class GoogleEventModal extends ModalComponent {
 
         const errorDiv = document.createElement('div');
         errorDiv.className = 'error-message';
+        // Announce the failure to screen readers when it is inserted
+        errorDiv.setAttribute('role', 'alert');
         errorDiv.textContent = message;
 
         this.modalContent.appendChild(errorDiv);
@@ -686,7 +722,20 @@ export class GoogleEventModal extends ModalComponent {
     }
 
     /**
-     * Apply localization to modal elements
+     * Place initial focus inside the dialog. The base implementation would
+     * match the (hidden) edit form's title input, which is a no-op; in view
+     * mode focus the Edit button when present, otherwise the close button.
      * @private
      */
+    _focusFirstInput() {
+        setTimeout(() => {
+            if (this.editContent && this.editContent.style.display !== 'none') {
+                this._editFormBuilder.titleInput?.focus();
+            } else if (this.viewButtons && this.viewButtons.style.display !== 'none') {
+                this.editButton?.focus();
+            } else {
+                this.closeButton?.focus();
+            }
+        }, 100);
+    }
 }

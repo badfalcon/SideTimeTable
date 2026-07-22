@@ -3,7 +3,9 @@ import {
   filterWritableCalendars,
   buildGoogleEventResource,
   extractTimeHHMM,
+  isEditableGoogleEvent,
 } from '../../src/lib/google-event-utils.js';
+import { buildRfc3339DateTime as buildRfc3339DateTimeForTest } from '../../src/lib/time-utils.js';
 
 // ---------------------------------------------------------------
 // SPEC: isWritableCalendar / filterWritableCalendars
@@ -226,7 +228,10 @@ describe('buildGoogleEventResource', () => {
 // ---------------------------------------------------------------
 // SPEC: buildGoogleEventResource — forPatch mode (events.patch body)
 // - PATCH leaves omitted fields unchanged, so cleared text fields must be
-//   sent as explicit '' and blank reminders as {useDefault: true}
+//   sent as explicit ''
+// - reminders: undefined = "not changed" → omitted entirely (preserves email/
+//   multiple overrides the select cannot represent); null/'' = explicit revert
+//   to {useDefault: true}; invalid values are ignored (no change)
 // - Meet (conferenceData) is never emitted — not editable
 // - Create mode (no options / forPatch:false) must be byte-for-byte unchanged
 // ---------------------------------------------------------------
@@ -269,8 +274,15 @@ describe('buildGoogleEventResource forPatch', () => {
     expect(r.location).toBe('Room B');
   });
 
-  test.each([undefined, null, ''])(
-    'blank reminder (%s) reverts to the calendar default', (reminderMinutes) => {
+  test('undefined reminder means "not changed" and omits reminders entirely', () => {
+    // Sending {useDefault:true} here would clobber email/multiple overrides
+    // that the reminder select cannot represent.
+    const r = buildGoogleEventResource({ ...base, reminderMinutes: undefined }, { forPatch: true });
+    expect(r).not.toHaveProperty('reminders');
+  });
+
+  test.each([null, ''])(
+    'explicit blank reminder (%s) reverts to the calendar default', (reminderMinutes) => {
       const r = buildGoogleEventResource({ ...base, reminderMinutes }, { forPatch: true });
       expect(r.reminders).toEqual({ useDefault: true });
     }
@@ -283,6 +295,13 @@ describe('buildGoogleEventResource forPatch', () => {
       overrides: [{ method: 'popup', minutes: 15 }],
     });
   });
+
+  test.each(['soon', '-5'])(
+    'invalid reminder value (%s) is ignored — no reminders change is sent', (reminderMinutes) => {
+      const r = buildGoogleEventResource({ ...base, reminderMinutes }, { forPatch: true });
+      expect(r).not.toHaveProperty('reminders');
+    }
+  );
 
   test('never emits conferenceData even when addMeet is set', () => {
     const r = buildGoogleEventResource({ ...base, addMeet: true }, { forPatch: true });
@@ -335,5 +354,105 @@ describe('extractTimeHHMM', () => {
 
   test('returns empty string for an unparseable value', () => {
     expect(extractTimeHHMM('not-a-date')).toBe('');
+  });
+});
+
+// ---------------------------------------------------------------
+// SPEC: isEditableGoogleEvent
+// Gates the destructive edit/delete UI. Requires: writable calendar,
+// id + calendarId, timed same-day event, non-recurring, plain event type,
+// and modification rights (organizer.self or guestsCanModify).
+// ---------------------------------------------------------------
+describe('isEditableGoogleEvent', () => {
+  // Build dateTimes in the machine's LOCAL timezone (same as the panel's
+  // rendering) so same-day/cross-midnight assertions hold in any test TZ.
+  const local = (y, m, d, hhmm) => buildRfc3339DateTimeForTest(new Date(y, m - 1, d), hhmm);
+
+  const editable = () => ({
+    id: 'evt1',
+    calendarId: 'cal1',
+    isWritableCalendar: true,
+    start: { dateTime: local(2026, 7, 23, '09:00') },
+    end: { dateTime: local(2026, 7, 23, '10:00') },
+    organizer: { self: true },
+  });
+
+  test('a timed, same-day, self-organized event on a writable calendar is editable', () => {
+    expect(isEditableGoogleEvent(editable())).toBe(true);
+  });
+
+  test('guestsCanModify grants editability even when not the organizer', () => {
+    const e = { ...editable(), organizer: { self: false }, guestsCanModify: true };
+    expect(isEditableGoogleEvent(e)).toBe(true);
+  });
+
+  test('a received invite (organizer not self, no guestsCanModify) is NOT editable', () => {
+    // Saving such an event would 403 (forbiddenForNonOrganizer) — the UI
+    // must not offer edit/delete for it.
+    const e = { ...editable(), organizer: { self: false } };
+    expect(isEditableGoogleEvent(e)).toBe(false);
+  });
+
+  test('missing organizer info fails safe (not editable)', () => {
+    const e = editable();
+    delete e.organizer;
+    expect(isEditableGoogleEvent(e)).toBe(false);
+  });
+
+  test('null event is not editable', () => {
+    expect(isEditableGoogleEvent(null)).toBe(false);
+  });
+
+  test('an event on a read-only calendar is not editable', () => {
+    expect(isEditableGoogleEvent({ ...editable(), isWritableCalendar: false })).toBe(false);
+  });
+
+  test.each(['id', 'calendarId'])('missing %s is not editable', (key) => {
+    const e = editable();
+    delete e[key];
+    expect(isEditableGoogleEvent(e)).toBe(false);
+  });
+
+  test('all-day events (start.date, no dateTime) are not editable', () => {
+    const e = editable();
+    e.start = { date: '2026-07-23' };
+    e.end = { date: '2026-07-24' };
+    expect(isEditableGoogleEvent(e)).toBe(false);
+  });
+
+  test('events without end.dateTime (endTimeUnspecified) are not editable', () => {
+    const e = editable();
+    delete e.end;
+    expect(isEditableGoogleEvent(e)).toBe(false);
+  });
+
+  test('cross-midnight events are not editable (HH:MM form could never save them)', () => {
+    const e = editable();
+    e.start = { dateTime: local(2026, 7, 23, '23:00') };
+    e.end = { dateTime: local(2026, 7, 24, '01:00') };
+    expect(isEditableGoogleEvent(e)).toBe(false);
+  });
+
+  test('events ending exactly at midnight of the next day are not editable', () => {
+    const e = editable();
+    e.start = { dateTime: local(2026, 7, 23, '22:00') };
+    e.end = { dateTime: local(2026, 7, 24, '00:00') };
+    expect(isEditableGoogleEvent(e)).toBe(false);
+  });
+
+  test.each([
+    ['recurring instance', { recurringEventId: 'master1' }],
+    ['recurring master', { recurrence: ['RRULE:FREQ=DAILY'] }],
+    ['out of office', { eventType: 'outOfOffice' }],
+    ['focus time', { eventType: 'focusTime' }],
+    ['working location', { eventType: 'workingLocation' }],
+  ])('%s is not editable', (_label, extra) => {
+    expect(isEditableGoogleEvent({ ...editable(), ...extra })).toBe(false);
+  });
+
+  test('unparseable dateTimes are not editable', () => {
+    const e = editable();
+    e.start = { dateTime: 'garbage' };
+    expect(isEditableGoogleEvent(e)).toBe(false);
   });
 });
