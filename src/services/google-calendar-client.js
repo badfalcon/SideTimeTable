@@ -8,6 +8,16 @@ import { StorageHelper } from '../lib/storage-helper.js';
 
 const CALENDAR_API_BASE = 'https://www.googleapis.com/calendar/v3';
 
+/**
+ * Custom error for authentication failures (token expired, revoked, etc.)
+ */
+export class AuthenticationError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = 'AuthenticationError';
+    }
+}
+
 export class GoogleCalendarClient {
 
     /**
@@ -20,8 +30,8 @@ export class GoogleCalendarClient {
         return new Promise((resolve, reject) => {
             chrome.identity.getAuthToken({ interactive }, (token) => {
                 if (chrome.runtime.lastError || !token) {
-                    const error = chrome.runtime.lastError || new Error('Failed to get authentication token');
-                    reject(error);
+                    const original = chrome.runtime.lastError || new Error('Failed to get authentication token');
+                    reject(new AuthenticationError(original.message || String(original)));
                 } else {
                     resolve(token);
                 }
@@ -38,7 +48,7 @@ export class GoogleCalendarClient {
      */
     async _fetchWithAuth(url, options = {}) {
         const token = await this._getAuthToken(
-            options._interactive !== undefined ? options._interactive : true
+            options._interactive !== undefined ? options._interactive : false
         );
         const { _interactive, ...fetchOptions } = options;
         const headers = {
@@ -49,6 +59,25 @@ export class GoogleCalendarClient {
     }
 
     /**
+     * Check an API response and throw an appropriate error if not ok.
+     * Throws AuthenticationError for 401/403, generic Error otherwise.
+     * @param {Response} response - The fetch Response object
+     * @param {string} label - A label for error messages (e.g. 'CalendarList API')
+     * @private
+     */
+    async _checkResponse(response, label) {
+        if (response.ok) return;
+        const errorBody = await response.text();
+        const msg = `${label} error: ${response.status} ${response.statusText}`;
+        if (response.status === 401 || response.status === 403) {
+            console.warn(`${label} auth error:`, response.status);
+            throw new AuthenticationError(msg);
+        }
+        console.error(`${label} error body:`, errorBody);
+        throw new Error(msg);
+    }
+
+    /**
      * Get Google Calendar list
      * @returns {Promise<Array>} A promise that returns the calendar list
      */
@@ -56,11 +85,7 @@ export class GoogleCalendarClient {
         const calendarListUrl = `${CALENDAR_API_BASE}/users/me/calendarList`;
 
         const response = await this._fetchWithAuth(calendarListUrl);
-        if (!response.ok) {
-            const errorBody = await response.text();
-            console.error('CalendarList API error body:', errorBody);
-            throw new Error(`CalendarList API error: ${response.status} ${response.statusText}`);
-        }
+        await this._checkResponse(response, 'CalendarList API');
 
         const listData = await response.json();
         const calendars = (listData.items || [])
@@ -98,34 +123,14 @@ export class GoogleCalendarClient {
     async getCalendarEvents(targetDate = null) {
         // Get the list of the selected calendars
         const storageData = await StorageHelper.get(['selectedCalendars'], { selectedCalendars: [] });
-
-        const token = await this._getAuthToken(true);
-
-        // Set the target date range
-        const targetDay = targetDate || new Date();
-        const startOfDay = new Date(targetDay);
-        startOfDay.setHours(0, 0, 0, 0);
-        const endOfDay = new Date(targetDay);
-        endOfDay.setHours(23, 59, 59, 999);
-
         const selectedCalendarIds = storageData.selectedCalendars || [];
 
-        // Fetch calendarList once and reuse for both calendar selection and color info
-        const calendarListUrl = `${CALENDAR_API_BASE}/users/me/calendarList`;
-        const listResponse = await fetch(calendarListUrl, {
-            headers: { Authorization: 'Bearer ' + token }
-        });
-        if (!listResponse.ok) {
-            const errorBody = await listResponse.text();
-            console.error('[getCalendarEvents] CalendarList API error body:', errorBody);
-            console.error('[getCalendarEvents] Token used:', token.substring(0, 10) + '...');
-            throw new Error(`CalendarList API error: ${listResponse.status} ${listResponse.statusText}`);
-        }
-        const listData = await listResponse.json();
-
-        let calendarsToFetch;
-
         if (selectedCalendarIds.length === 0) {
+            // Fallback: resolve calendars from the calendarList API
+            const calendarListUrl = `${CALENDAR_API_BASE}/users/me/calendarList`;
+            const listResponse = await this._fetchWithAuth(calendarListUrl);
+            await this._checkResponse(listResponse, 'CalendarList API');
+            const listData = await listResponse.json();
             const allCalendars = listData.items || [];
             const selectedCalendars = allCalendars.filter(cal => cal.selected);
             const accessibleCalendars = selectedCalendars.filter(cal => cal.accessRole && cal.accessRole !== 'none');
@@ -137,27 +142,64 @@ export class GoogleCalendarClient {
                 calendarsToReturn.unshift(primaryCalendar);
             }
 
-            if (calendarsToReturn.length === 0) {
-                calendarsToFetch = [{ id: 'primary' }];
-            } else {
-                calendarsToFetch = calendarsToReturn.map(c => ({ id: c.id }));
-            }
-        } else {
-            calendarsToFetch = selectedCalendarIds.map(id => ({ id }));
+            const resolvedIds = calendarsToReturn.length === 0
+                ? ['primary']
+                : calendarsToReturn.map(c => c.id);
+
+            return this._fetchEventsForCalendarIds(targetDate, resolvedIds);
         }
+
+        return this._fetchEventsForCalendarIds(targetDate, selectedCalendarIds);
+    }
+
+    /**
+     * Get events from specific Google Calendars by their IDs
+     * @param {Date|null} targetDate - The target date (today if omitted)
+     * @param {Array<string>} calendarIds - The calendar IDs to fetch events from
+     * @returns {Promise<Array>} A promise that returns an array of events
+     */
+    async getCalendarEventsForIds(targetDate, calendarIds) {
+        if (!calendarIds || calendarIds.length === 0) return [];
+        return this._fetchEventsForCalendarIds(targetDate, calendarIds);
+    }
+
+    /**
+     * Core logic: fetch events for the given calendar IDs
+     * @param {Date|null} targetDate - The target date (today if omitted)
+     * @param {Array<string>} calendarIds - The calendar IDs to fetch events from
+     * @returns {Promise<Array>} A promise that returns an array of events
+     * @private
+     */
+    async _fetchEventsForCalendarIds(targetDate, calendarIds) {
+        if (!calendarIds || calendarIds.length === 0) return [];
+
+        const token = await this._getAuthToken(false);
+
+        // Set the target date range
+        const targetDay = targetDate || new Date();
+        const startOfDay = new Date(targetDay);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(targetDay);
+        endOfDay.setHours(23, 59, 59, 999);
+
+        // Fetch calendarList once and reuse for color info
+        const calendarListUrl = `${CALENDAR_API_BASE}/users/me/calendarList`;
+        const listResponse = await this._fetchWithAuth(calendarListUrl, { _interactive: false });
+        await this._checkResponse(listResponse, 'CalendarList API');
+        const listData = await listResponse.json();
 
         // Fetch events from each calendar in parallel
         const baseUrl = `${CALENDAR_API_BASE}/calendars`;
 
-        const fetches = calendarsToFetch.map(cal => {
-            const url = `${baseUrl}/${encodeURIComponent(cal.id)}/events?timeMin=${startOfDay.toISOString()}&timeMax=${endOfDay.toISOString()}&singleEvents=true&orderBy=startTime`;
+        const fetches = calendarIds.map(calId => {
+            const url = `${baseUrl}/${encodeURIComponent(calId)}/events?timeMin=${startOfDay.toISOString()}&timeMax=${endOfDay.toISOString()}&singleEvents=true&orderBy=startTime`;
             return fetch(url, {
                 headers: { Authorization: 'Bearer ' + token }
             })
             .then(res => {
                 if (!res.ok) {
                     // For individual calendar errors, just log and skip
-                    console.warn(`Failed to get calendar(${cal.id}): ${res.status} ${res.statusText}`);
+                    console.warn(`Failed to get calendar(${calId}): ${res.status} ${res.statusText}`);
                     return { items: [] };
                 }
                 return res.json();
@@ -166,13 +208,13 @@ export class GoogleCalendarClient {
                 // Add the calendar ID to each event
                 const events = data.items || [];
                 events.forEach(event => {
-                    event.calendarId = cal.id;
+                    event.calendarId = calId;
                 });
-                return { calendarId: cal.id, events };
+                return { calendarId: calId, events };
             })
             .catch(err => {
-                console.warn(`Skip exception when getting calendar(${cal.id}):`, err);
-                return { calendarId: cal.id, events: [] };
+                console.warn(`Skip exception when getting calendar(${calId}):`, err);
+                return { calendarId: calId, events: [] };
             });
         });
 
@@ -258,9 +300,7 @@ export class GoogleCalendarClient {
         const url = `${CALENDAR_API_BASE}/calendars/primary/events?timeMin=${startOfDay.toISOString()}&timeMax=${endOfDay.toISOString()}&singleEvents=true&orderBy=startTime`;
 
         const response = await this._fetchWithAuth(url, { _interactive: false });
-        if (!response.ok) {
-            throw new Error(`Primary calendar API error: ${response.status} ${response.statusText}`);
-        }
+        await this._checkResponse(response, 'Primary calendar API');
 
         const data = await response.json();
         const events = data.items || [];
@@ -285,9 +325,19 @@ export class GoogleCalendarClient {
     async checkAuth() {
         try {
             const token = await this._getAuthToken(false);
-            return !!token;
-        } catch (error) {
-            // Not authenticated — return false rather than rejecting
+            if (!token) return false;
+            // Verify the token is actually valid by making a lightweight API call
+            const url = `${CALENDAR_API_BASE}/users/me/calendarList?maxResults=1&fields=kind`;
+            const response = await fetch(url, {
+                headers: { Authorization: 'Bearer ' + token }
+            });
+            if (response.status === 401 || response.status === 403) {
+                // Token is cached but revoked/expired — clear it
+                chrome.identity.removeCachedAuthToken({ token }, () => {});
+                return false;
+            }
+            return response.ok;
+        } catch (_error) {
             return false;
         }
     }
@@ -315,9 +365,7 @@ export class GoogleCalendarClient {
 
         // First, get the current event to find the self attendee
         const getRes = await this._fetchWithAuth(eventUrl);
-        if (!getRes.ok) {
-            throw new Error(`Failed to get event: ${getRes.status} ${getRes.statusText}`);
-        }
+        await this._checkResponse(getRes, 'Get Event API');
         const eventData = await getRes.json();
 
         // Update the self attendee's response status
@@ -337,9 +385,7 @@ export class GoogleCalendarClient {
             body: JSON.stringify({ attendees })
         });
 
-        if (!patchRes.ok) {
-            throw new Error(`Failed to update event: ${patchRes.status} ${patchRes.statusText}`);
-        }
+        await this._checkResponse(patchRes, 'Update Event API');
 
         return await patchRes.json();
     }

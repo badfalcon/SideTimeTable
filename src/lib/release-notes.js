@@ -6,6 +6,84 @@
  */
 export const RELEASE_NOTES = [
     {
+        version: '1.10.2',
+        date: '2026-05-25',
+        highlights: {
+            en: [
+                'Fixed calendar and panel toggles that could get stuck in an in-between state',
+                'Bug fixes and stability improvements'
+            ],
+            ja: [
+                'カレンダーフィルターやパネルのトグルが中途半端な状態になる不具合を修正',
+                'バグ修正と安定性の向上'
+            ]
+        }
+    },
+    {
+        version: '1.10.1',
+        date: '2026-05-07',
+        highlights: {
+            en: [
+                'Open Zoom, Teams, and Webex meeting links directly from notifications',
+                'See which occurrences are affected when declining a recurring event',
+                'Optionally hide the What\'s New popup for future releases',
+                'Bug fixes and stability improvements'
+            ],
+            ja: [
+                '通知からZoom・Teams・Webexの会議URLを直接開けるように',
+                '定期イベントの不参加時に対象範囲をボタン上で確認可能に',
+                '更新情報モーダルを「次回から表示しない」設定で非表示に',
+                'バグ修正と安定性の向上'
+            ]
+        }
+    },
+    {
+        version: '1.10.0',
+        date: '2026-04-15',
+        highlights: {
+            en: [
+                'All-day and multi-day events now appear at the top of your timeline',
+                'Out-of-office events are displayed with a distinctive style',
+                'A banner alerts you when your Google Calendar connection needs to be refreshed',
+                'Bug fixes and stability improvements'
+            ],
+            ja: [
+                '終日イベント・複数日イベントをタイムラインの上部に表示',
+                '不在（OOO）イベントを視覚的に区別して表示',
+                'Googleカレンダーの接続期限切れを通知バナーでお知らせ',
+                'バグ修正と安定性の向上'
+            ]
+        }
+    },
+    {
+        version: '1.9.3',
+        date: '2026-04-02',
+        highlights: {
+            en: [
+                'Bug fixes and stability improvements'
+            ],
+            ja: [
+                'バグ修正と安定性の向上'
+            ]
+        }
+    },
+    {
+        version: '1.9.2',
+        date: '2026-04-02',
+        highlights: {
+            en: [
+                'Customize memo font size from the settings page (10px–20px)',
+                'Faster calendar switching: toggling a calendar no longer reloads all events',
+                'Bug fixes and stability improvements'
+            ],
+            ja: [
+                'メモのフォントサイズを設定画面で変更可能に（10px〜20px）',
+                'カレンダー切替を高速化：個別のカレンダーだけを更新',
+                'バグ修正と安定性の向上'
+            ]
+        }
+    },
+    {
         version: '1.9.1',
         date: '2026-03-29',
         highlights: {
@@ -321,6 +399,18 @@ export function getUnseenReleaseNotes(lastSeenVersion, currentVersion) {
         return compareVersions(entry.version, lastSeenVersion) > 0 &&
                compareVersions(entry.version, currentVersion) <= 0;
     });
+}
+
+/**
+ * Find the release version immediately before the given version.
+ * Useful for setting `lastSeenVersion` so the next call to `getUnseenReleaseNotes`
+ * surfaces only the current version's notes.
+ * @param {string} currentVersion - The current extension version
+ * @returns {string|null} The previous release version, or null if none exists
+ */
+export function findPreviousReleaseVersion(currentVersion) {
+    const prev = RELEASE_NOTES.find(entry => compareVersions(entry.version, currentVersion) < 0);
+    return prev ? prev.version : null;
 }
 
 /**

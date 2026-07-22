@@ -16,6 +16,8 @@ npm install           # Install dependencies (required once)
 npm run build         # Production build (output to dist/)
 npm run dev           # Development mode with file watching
 npm run package       # Create release zip file (builds + packages)
+npm run screenshots   # Regenerate landing page / web store screenshots (docs/img/, requires Playwright — see scripts/screenshots/README.md)
+npm run build:landing # Regenerate static English landing pages (docs/en/) + sitemap.xml — run after changing landing page copy or scripts/landing-en-data.js (requires Playwright; a Jest test guards against forgetting)
 ```
 
 **Quality checks (must run after any code change):**
@@ -60,6 +62,10 @@ npm run build         # Verify production build succeeds
 - **EventLayoutManager**: overlap detection → lane assignment → width calculation
 - **Recurring events**: separate storage with daily/weekly/monthly/weekdays patterns and exception handling
 - **Adaptive padding**: basic (10px), compact (8px), micro (6px) based on lane density
+
+## TODO管理
+
+今すぐ対応しない課題（スコープ外のリファクタリング、テスト環境不足で書けないテスト等）を見つけた場合は、`TODO.md` に追記すること。カテゴリ（テスト、リファクタリング等）ごとにチェックリスト形式で記載する。
 
 ## Development Workflow
 

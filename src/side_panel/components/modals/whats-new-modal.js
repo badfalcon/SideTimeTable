@@ -4,6 +4,8 @@
 import { ModalComponent } from './modal-component.js';
 import { RELEASE_NOTES, getUnseenReleaseNotes } from '../../../lib/release-notes.js';
 import { StorageHelper } from '../../../lib/storage-helper.js';
+import { saveSettings } from '../../../lib/settings-storage.js';
+import { logError } from '../../../lib/utils.js';
 
 export class WhatsNewModal extends ModalComponent {
     constructor(options = {}) {
@@ -15,6 +17,7 @@ export class WhatsNewModal extends ModalComponent {
 
         this.contentContainer = null;
         this.confirmButton = null;
+        this.dontShowAgainCheckbox = null;
     }
 
     createContent() {
@@ -33,6 +36,25 @@ export class WhatsNewModal extends ModalComponent {
         this.contentContainer.className = 'whats-new-notes';
         content.appendChild(this.contentContainer);
 
+        // "Don't show again" checkbox
+        const dontShowWrapper = document.createElement('div');
+        dontShowWrapper.className = 'form-check whats-new-dont-show-again';
+
+        this.dontShowAgainCheckbox = document.createElement('input');
+        this.dontShowAgainCheckbox.type = 'checkbox';
+        this.dontShowAgainCheckbox.className = 'form-check-input';
+        this.dontShowAgainCheckbox.id = 'whatsNewDontShowAgainToggle';
+
+        const dontShowLabel = document.createElement('label');
+        dontShowLabel.className = 'form-check-label';
+        dontShowLabel.htmlFor = 'whatsNewDontShowAgainToggle';
+        dontShowLabel.setAttribute('data-localize', '__MSG_whatsNewDontShowAgain__');
+        dontShowLabel.textContent = window.getLocalizedMessage('whatsNewDontShowAgain') || "Don't show this again on updates";
+
+        dontShowWrapper.appendChild(this.dontShowAgainCheckbox);
+        dontShowWrapper.appendChild(dontShowLabel);
+        content.appendChild(dontShowWrapper);
+
         // Confirm button
         this.confirmButton = document.createElement('button');
         this.confirmButton.className = 'btn btn-primary whats-new-confirm-btn';
@@ -42,7 +64,6 @@ export class WhatsNewModal extends ModalComponent {
 
         // Event listeners
         this.addEventListener(this.confirmButton, 'click', () => {
-            this._markAsSeen();
             this.hide();
         });
 
@@ -63,6 +84,9 @@ export class WhatsNewModal extends ModalComponent {
             return;
         }
 
+        if (this.dontShowAgainCheckbox) {
+            this.dontShowAgainCheckbox.checked = false;
+        }
         const lang = await this._resolveLanguage();
         this._renderNotes(unseenNotes, lang);
         this.show();
@@ -127,6 +151,9 @@ export class WhatsNewModal extends ModalComponent {
      * Show the modal with all release notes (for browsing history)
      */
     async showAll() {
+        if (this.dontShowAgainCheckbox) {
+            this.dontShowAgainCheckbox.checked = false;
+        }
         const lang = await this._resolveLanguage();
         this._renderNotes(RELEASE_NOTES, lang);
         this.show();
@@ -161,10 +188,19 @@ export class WhatsNewModal extends ModalComponent {
     }
 
     /**
-     * Override hide to also mark as seen
+     * Override hide to persist the "don't show again" choice (if any) and mark the
+     * version as seen. Honors all dismiss paths (confirm button, backdrop, ESC).
+     * Calls super.hide() synchronously first so the modal flips to hidden before
+     * any async writes — this prevents repeated ESC/backdrop events from re-entering.
      */
     hide() {
-        this._markAsSeen();
+        const shouldDisableAutoShow = this.dontShowAgainCheckbox?.checked === true;
         super.hide();
+        if (shouldDisableAutoShow) {
+            saveSettings({ whatsNewAutoShow: false }).catch(error => {
+                logError("What's New auto-show save", error);
+            });
+        }
+        this._markAsSeen();
     }
 }

@@ -169,7 +169,7 @@ export class ShortcutSettingsCard extends CardComponent {
                 // Fallback: open directly
                 window.open(shortcutsUrl, '_blank');
             }
-        } catch (error) {
+        } catch (_error) {
             // Final fallback: copy to clipboard
             this._copyToClipboard(shortcutsUrl);
             this._showUrlCopiedNotification();

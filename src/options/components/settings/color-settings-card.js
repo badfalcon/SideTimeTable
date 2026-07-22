@@ -62,6 +62,7 @@ export class ColorSettingsCard extends CardComponent {
         const card = document.createElement('button');
         card.type = 'button';
         card.className = 'theme-card w-100 p-2 border rounded text-center';
+        card.dataset.themeId = theme.id;
         card.style.cssText = `
             cursor: pointer;
             transition: box-shadow 0.15s, border-color 0.15s;
