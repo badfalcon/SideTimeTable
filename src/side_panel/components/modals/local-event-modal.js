@@ -5,7 +5,7 @@ import { ModalComponent } from './modal-component.js';
 import { RECURRENCE_TYPES } from '../../../lib/constants.js';
 import { LocalEventFormBuilder } from './local-event-form-builder.js';
 import { DeleteRecurringDialog } from './delete-recurring-dialog.js';
-import { buildRfc3339DateTime } from '../../../lib/time-utils.js';
+import { buildGoogleEventResource } from '../../../lib/google-event-utils.js';
 
 export class LocalEventModal extends ModalComponent {
     constructor(options = {}) {
@@ -423,31 +423,62 @@ export class LocalEventModal extends ModalComponent {
      * Build the Google event resource and delegate creation to the controller.
      * @private
      */
-    _handleSaveGoogle() {
+    async _handleSaveGoogle() {
         const date = this._getCurrentDate ? this._getCurrentDate() : new Date();
         const calendarId = this.formBuilder.calendarSelect?.value || 'primary';
 
-        const eventResource = {
-            summary: this.titleInput.value.trim(),
-            start: { dateTime: buildRfc3339DateTime(date, this.startTimeInput.value) },
-            end: { dateTime: buildRfc3339DateTime(date, this.endTimeInput.value) }
-        };
+        const eventResource = buildGoogleEventResource({
+            summary: this.titleInput.value,
+            description: this.descriptionInput.value,
+            location: this.formBuilder.locationInput?.value,
+            date,
+            startTime: this.startTimeInput.value,
+            endTime: this.endTimeInput.value
+        });
 
-        const description = this.descriptionInput.value.trim();
-        if (description) {
-            eventResource.description = description;
+        if (!this.onSaveGoogle) {
+            this.hide();
+            return;
         }
 
-        const location = this.formBuilder.locationInput?.value.trim();
-        if (location) {
-            eventResource.location = location;
+        // Keep the modal open until the create succeeds, so the user does not
+        // lose their input on a network/API failure. Guard against double submit.
+        this._setSaving(true);
+        let succeeded;
+        try {
+            succeeded = await this.onSaveGoogle(eventResource, calendarId);
+        } finally {
+            this._setSaving(false);
         }
 
-        if (this.onSaveGoogle) {
-            this.onSaveGoogle(eventResource, calendarId);
+        if (succeeded) {
+            this.hide();
+        } else {
+            this._showError(window.getLocalizedMessage('googleEventCreateFailed') || 'Failed to create Google event');
         }
+    }
 
-        this.hide();
+    /**
+     * Toggle the saving state (disables the save button to prevent double submit).
+     * @param {boolean} saving
+     * @private
+     */
+    _setSaving(saving) {
+        if (this.saveButton) {
+            this.saveButton.disabled = saving;
+        }
+    }
+
+    /**
+     * Enable or disable the Google save destination on an already-open create
+     * modal (used when writable calendars resolve asynchronously after open).
+     * @param {Array} writableCalendars
+     */
+    setGoogleAvailability(writableCalendars) {
+        if (this.mode !== 'create' || !this.formBuilder) {
+            return;
+        }
+        this.formBuilder.setGoogleAvailability(writableCalendars);
     }
 
     /**

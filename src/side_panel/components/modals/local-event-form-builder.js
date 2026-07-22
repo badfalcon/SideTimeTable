@@ -57,7 +57,11 @@ export class LocalEventFormBuilder {
     _buildSourceToggle(parentElement) {
         const toggle = document.createElement('div');
         toggle.className = 'event-source-toggle';
-        toggle.setAttribute('role', 'radiogroup');
+        // Two mutually exclusive toggle buttons (Tab reaches both, Enter/Space
+        // activates). We deliberately use role=group + aria-pressed rather than
+        // radiogroup/radio, which would promise arrow-key navigation we don't wire.
+        toggle.setAttribute('role', 'group');
+        toggle.setAttribute('data-localize-aria-label', '__MSG_saveDestination__');
         toggle.setAttribute('aria-label', window.getLocalizedMessage('saveDestination') || 'Save destination');
 
         const makeButton = (source, msgKey, fallback, iconClass) => {
@@ -65,8 +69,7 @@ export class LocalEventFormBuilder {
             btn.type = 'button';
             btn.className = 'event-source-btn';
             btn.dataset.source = source;
-            btn.setAttribute('role', 'radio');
-            btn.setAttribute('aria-checked', 'false');
+            btn.setAttribute('aria-pressed', 'false');
 
             const icon = document.createElement('i');
             icon.className = iconClass;
@@ -171,11 +174,11 @@ export class LocalEventFormBuilder {
 
         if (this.sourceLocalBtn) {
             this.sourceLocalBtn.classList.toggle('active', !isGoogle);
-            this.sourceLocalBtn.setAttribute('aria-checked', String(!isGoogle));
+            this.sourceLocalBtn.setAttribute('aria-pressed', String(!isGoogle));
         }
         if (this.sourceGoogleBtn) {
             this.sourceGoogleBtn.classList.toggle('active', isGoogle);
-            this.sourceGoogleBtn.setAttribute('aria-checked', String(isGoogle));
+            this.sourceGoogleBtn.setAttribute('aria-pressed', String(isGoogle));
         }
 
         if (this.googleFields) {

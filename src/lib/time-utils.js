@@ -59,6 +59,10 @@ export function parseTimeString(timeString) {
  * Build an RFC3339 date-time string (with local timezone offset) for a given
  * date and "HH:MM" time. Suitable for the Google Calendar API `dateTime` field.
  *
+ * Note: for a wall-clock time that does not exist due to a DST spring-forward
+ * gap (a ~1h window on the transition day), the emitted offset is the
+ * post-transition one; such inputs are effectively unreachable from the UI.
+ *
  * @param {Date} date - The base date (year/month/day are used)
  * @param {string} timeString - The time in "HH:MM" format
  * @returns {string} An RFC3339 string, e.g. "2026-07-22T09:30:00+09:00"

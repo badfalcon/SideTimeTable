@@ -33,11 +33,12 @@ import { AlarmManager } from '../lib/alarm-manager.js';
 import { ThemeService } from './services/theme-service.js';
 import { OnboardingService } from './services/onboarding-service.js';
 import { generateTimeList } from '../lib/utils.js';
-import { loadSettings } from '../lib/settings-storage.js';
+import { loadSettings, loadSelectedCalendars } from '../lib/settings-storage.js';
 import { migrateEventDataToLocal } from '../lib/event-storage.js';
 import { cleanupObsoleteStorageKeys } from '../lib/storage-cleanup.js';
 import { sendMessage } from '../lib/chrome-messaging.js';
 import { setDemoMode, isDemoMode } from '../lib/demo-data.js';
+import { filterWritableCalendars } from '../lib/google-event-utils.js';
 
 // The reload message listener
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -536,8 +537,16 @@ class SidePanelUIController {
             endTime = `${String(endHour).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
         }
 
+        // Open immediately in local mode so the modal never waits on the network.
+        this.localEventModal.showCreate(startTime, endTime);
+
+        // Enrich with the Google save destination once writable calendars resolve.
+        // A token guards against a stale fetch applying to a later modal open.
+        const token = (this._addEventToken = (this._addEventToken || 0) + 1);
         const writableCalendars = await this._getWritableCalendars();
-        this.localEventModal.showCreate(startTime, endTime, writableCalendars);
+        if (token === this._addEventToken) {
+            this.localEventModal.setGoogleAvailability(writableCalendars);
+        }
     }
 
     /**
@@ -565,44 +574,46 @@ class SidePanelUIController {
                 return [];
             }
 
-            return response.calendars.filter(
-                cal => cal.accessRole === 'owner' || cal.accessRole === 'writer'
-            );
+            // Only offer calendars that are both writable AND currently displayed,
+            // so a newly created event is guaranteed to appear on the timeline
+            // (fetchEvents renders only selectedCalendars).
+            const selectedIds = await loadSelectedCalendars();
+            return filterWritableCalendars(response.calendars, selectedIds);
         } catch {
             return [];
         }
     }
 
     /**
-     * Google event save handler
+     * Google event save handler. Returns whether creation succeeded so the
+     * modal can stay open (preserving the user's input) on failure.
+     * @returns {Promise<boolean>}
      * @private
      */
     async _handleSaveGoogleEvent(eventResource, calendarId) {
         try {
+            const requestId = `create-evt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
             const response = await sendMessage({
                 action: 'createEvent',
                 calendarId,
-                event: eventResource
+                event: eventResource,
+                requestId
             });
 
             if (!response || !response.success) {
                 if (response && response.authExpired && this.googleEventManager) {
                     this.googleEventManager.onAuthExpired?.();
                 }
-                const detail = (response && response.error) || 'Unknown error';
-                this.alertModal.showError(
-                    (window.getLocalizedMessage('googleEventCreateFailed') || 'Failed to create Google event') + ': ' + detail
-                );
-                return;
+                console.error('Google event create failed:', (response && response.error) || 'Unknown error');
+                return false;
             }
 
             // Reload events so the newly created Google event appears
             await this._loadEventsForCurrentDate();
+            return true;
         } catch (error) {
             console.error('Google event save error:', error);
-            this.alertModal.showError(
-                (window.getLocalizedMessage('googleEventCreateFailed') || 'Failed to create Google event') + ': ' + error.message
-            );
+            return false;
         }
     }
 

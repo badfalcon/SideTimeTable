@@ -611,13 +611,18 @@ body {
     transition: background-color 0.15s, color 0.15s, box-shadow 0.15s;
 }
 
-.event-source-toggle .event-source-btn:hover {
+.event-source-toggle .event-source-btn:hover:not(.active) {
+    background: var(--side-calendar-subtle-bg-hover);
     color: inherit;
 }
 
 .event-source-toggle .event-source-btn.active {
     background: var(--side-calendar-modal-bg);
-    color: var(--side-calendar-accent-color);
+    /* accent-hover is darker (#0056b3) → meets WCAG AA (4.5:1) on white */
+    color: var(--side-calendar-accent-hover-color);
+    /* accent border delineates the selected pill in both themes (a dark
+       drop-shadow is invisible on the dark surface, so the border carries it) */
+    border-color: var(--side-calendar-accent-color);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
