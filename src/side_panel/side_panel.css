@@ -631,6 +631,47 @@ body {
     outline-offset: 1px;
 }
 
+/* Google "advanced settings" accordion */
+.google-advanced {
+    margin: 6px 0 4px;
+}
+
+.google-advanced .accordion-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    margin: 0;
+    padding: 10px 2px;
+    background: transparent;
+    border: none;
+    border-top: 1px solid var(--side-calendar-border-color);
+    border-radius: 0;
+    color: inherit;
+    font-weight: 600;
+    font-size: 0.92em;
+    cursor: pointer;
+}
+
+.google-advanced .accordion-chevron {
+    font-size: 0.8em;
+    opacity: 0.7;
+    transition: transform 0.15s ease;
+}
+
+.google-advanced .accordion-toggle[aria-expanded="true"] .accordion-chevron {
+    transform: rotate(90deg);
+}
+
+.google-advanced .accordion-toggle:focus-visible {
+    outline: 2px solid var(--side-calendar-accent-color);
+    outline-offset: 1px;
+}
+
+.google-advanced .accordion-body {
+    padding-top: 2px;
+}
+
 /* Google Meet toggle row */
 .google-meet-row {
     display: flex;

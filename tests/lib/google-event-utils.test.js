@@ -185,4 +185,39 @@ describe('buildGoogleEventResource', () => {
       expect(r.conferenceData.createRequest.requestId.length).toBeGreaterThan(0);
     });
   });
+
+  describe('reminders', () => {
+    test('omits reminders for blank/null/undefined (use calendar default)', () => {
+      for (const reminderMinutes of ['', null, undefined]) {
+        const r = buildGoogleEventResource({
+          summary: 'X', date, startTime: '10:00', endTime: '11:00', reminderMinutes,
+        });
+        expect(r).not.toHaveProperty('reminders');
+      }
+    });
+
+    test('sets a popup override for a numeric lead time', () => {
+      const r = buildGoogleEventResource({
+        summary: 'X', date, startTime: '10:00', endTime: '11:00', reminderMinutes: '10',
+      });
+      expect(r.reminders).toEqual({
+        useDefault: false,
+        overrides: [{ method: 'popup', minutes: 10 }],
+      });
+    });
+
+    test('accepts 0 minutes (at start time)', () => {
+      const r = buildGoogleEventResource({
+        summary: 'X', date, startTime: '10:00', endTime: '11:00', reminderMinutes: 0,
+      });
+      expect(r.reminders.overrides[0].minutes).toBe(0);
+    });
+
+    test('ignores a non-numeric reminder value', () => {
+      const r = buildGoogleEventResource({
+        summary: 'X', date, startTime: '10:00', endTime: '11:00', reminderMinutes: 'soon',
+      });
+      expect(r).not.toHaveProperty('reminders');
+    });
+  });
 });

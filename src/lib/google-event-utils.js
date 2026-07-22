@@ -57,9 +57,11 @@ export function filterWritableCalendars(calendars, selectedIds = null) {
  * @param {boolean} [fields.addMeet] - Attach a Google Meet conference
  * @param {string} [fields.meetRequestId] - Unique id for the Meet create request
  *   (generated when omitted; injectable for tests)
+ * @param {number|string|null} [fields.reminderMinutes] - Popup reminder lead time in
+ *   minutes; blank/null uses the calendar's default reminders
  * @returns {Object} A Google Calendar event resource ({summary, start, end, ...})
  */
-export function buildGoogleEventResource({ summary, description, location, date, startTime, endTime, addMeet, meetRequestId }) {
+export function buildGoogleEventResource({ summary, description, location, date, startTime, endTime, addMeet, meetRequestId, reminderMinutes }) {
     const resource = {
         summary: (summary || '').trim(),
         start: { dateTime: buildRfc3339DateTime(date, startTime) },
@@ -85,6 +87,17 @@ export function buildGoogleEventResource({ summary, description, location, date,
                 conferenceSolutionKey: { type: 'hangoutsMeet' }
             }
         };
+    }
+
+    // Blank/null → omit reminders so the calendar's default applies.
+    if (reminderMinutes !== undefined && reminderMinutes !== null && reminderMinutes !== '') {
+        const minutes = Number(reminderMinutes);
+        if (Number.isFinite(minutes) && minutes >= 0) {
+            resource.reminders = {
+                useDefault: false,
+                overrides: [{ method: 'popup', minutes }]
+            };
+        }
     }
 
     return resource;

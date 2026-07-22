@@ -440,7 +440,8 @@ export class LocalEventModal extends ModalComponent {
             date,
             startTime: this.startTimeInput.value,
             endTime: this.endTimeInput.value,
-            addMeet: !!this.formBuilder.meetCheckbox?.checked
+            addMeet: !!this.formBuilder.meetCheckbox?.checked,
+            reminderMinutes: this.formBuilder.reminderSelect?.value
         });
 
         if (!this.onSaveGoogle) {

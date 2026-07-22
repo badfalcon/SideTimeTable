@@ -1682,6 +1682,22 @@
     "message": "Add Google Meet",
     "description": "Checkbox label to attach a Google Meet video conference to a new event"
   },
+  "advancedSettings": {
+    "message": "Advanced settings",
+    "description": "Header of the collapsible advanced fields accordion when creating a Google event"
+  },
+  "notification": {
+    "message": "Notification",
+    "description": "Label for the reminder/notification select when creating a Google event"
+  },
+  "reminderDefault": {
+    "message": "Calendar default",
+    "description": "Reminder option that leaves the calendar's default reminders in place"
+  },
+  "minutesBeforeUnit": {
+    "message": " min before",
+    "description": "Suffix appended to a number of minutes for a reminder option, e.g. '10 min before'"
+  },
   "primaryCalendar": {
     "message": "Primary",
     "description": "Suffix marking the user's primary Google calendar in the calendar picker"

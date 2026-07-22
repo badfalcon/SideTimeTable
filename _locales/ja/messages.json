@@ -1682,6 +1682,22 @@
     "message": "Google Meet を追加",
     "description": "新規イベントにGoogle Meetビデオ会議を追加するチェックボックスのラベル"
   },
+  "advancedSettings": {
+    "message": "詳細設定",
+    "description": "Googleイベント作成時の詳細フィールドを折りたたむアコーディオンの見出し"
+  },
+  "notification": {
+    "message": "通知",
+    "description": "Googleイベント作成時のリマインダー/通知セレクトのラベル"
+  },
+  "reminderDefault": {
+    "message": "カレンダーの既定",
+    "description": "カレンダーの既定リマインダーをそのまま使うリマインダー選択肢"
+  },
+  "minutesBeforeUnit": {
+    "message": "分前",
+    "description": "リマインダー選択肢で分数の後ろに付ける接尾語（例: 10分前）"
+  },
   "primaryCalendar": {
     "message": "メイン",
     "description": "カレンダー選択でユーザーのメインカレンダーを示す接尾語"

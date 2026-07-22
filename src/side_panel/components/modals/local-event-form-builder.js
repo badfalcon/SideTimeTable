@@ -44,6 +44,12 @@ export class LocalEventFormBuilder {
         this.locationInput = null;
         this.meetCheckbox = null;
 
+        // Google advanced (accordion) fields
+        this.googleAdvanced = null;
+        this.advancedToggle = null;
+        this.advancedBody = null;
+        this.reminderSelect = null;
+
         // Containers toggled by save destination
         this.reminderContainer = null;
         this.recurrenceSection = null;
@@ -119,18 +125,6 @@ export class LocalEventFormBuilder {
         this.calendarSelect.className = 'event-form-select';
         container.appendChild(this.calendarSelect);
 
-        // Location input
-        const locationLabel = document.createElement('label');
-        locationLabel.htmlFor = 'googleEventLocation';
-        locationLabel.setAttribute('data-localize', '__MSG_eventLocation__');
-        locationLabel.textContent = window.getLocalizedMessage('eventLocation') || 'Location';
-        container.appendChild(locationLabel);
-
-        this.locationInput = document.createElement('input');
-        this.locationInput.type = 'text';
-        this.locationInput.id = 'googleEventLocation';
-        container.appendChild(this.locationInput);
-
         // Google Meet toggle
         const meetRow = document.createElement('div');
         meetRow.className = 'google-meet-row';
@@ -155,6 +149,104 @@ export class LocalEventFormBuilder {
 
         parentElement.appendChild(container);
         this.googleFields = container;
+    }
+
+    /**
+     * Build the collapsible "Advanced settings" accordion for Google events
+     * (location, reminder). Hidden unless the save destination is Google;
+     * collapsed by default. Extra detail fields (colour, guests, …) go here.
+     * @param {HTMLElement} parentElement
+     * @private
+     */
+    _buildGoogleAdvanced(parentElement) {
+        const container = document.createElement('div');
+        container.className = 'google-advanced';
+        container.style.display = 'none'; // toggled with the Google destination
+
+        // Accordion header (button)
+        const toggle = document.createElement('button');
+        toggle.type = 'button';
+        toggle.className = 'accordion-toggle';
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.setAttribute('aria-controls', 'googleAdvancedBody');
+
+        const chevron = document.createElement('i');
+        chevron.className = 'fas fa-chevron-right accordion-chevron';
+        chevron.setAttribute('aria-hidden', 'true');
+
+        const toggleLabel = document.createElement('span');
+        toggleLabel.setAttribute('data-localize', '__MSG_advancedSettings__');
+        toggleLabel.textContent = window.getLocalizedMessage('advancedSettings') || 'Advanced settings';
+
+        toggle.appendChild(chevron);
+        toggle.appendChild(toggleLabel);
+        container.appendChild(toggle);
+
+        // Accordion body
+        const body = document.createElement('div');
+        body.className = 'accordion-body';
+        body.id = 'googleAdvancedBody';
+        body.hidden = true;
+
+        // Location
+        const locationLabel = document.createElement('label');
+        locationLabel.htmlFor = 'googleEventLocation';
+        locationLabel.setAttribute('data-localize', '__MSG_eventLocation__');
+        locationLabel.textContent = window.getLocalizedMessage('eventLocation') || 'Location';
+        body.appendChild(locationLabel);
+
+        this.locationInput = document.createElement('input');
+        this.locationInput.type = 'text';
+        this.locationInput.id = 'googleEventLocation';
+        body.appendChild(this.locationInput);
+
+        // Notification (reminder)
+        const reminderLabel = document.createElement('label');
+        reminderLabel.htmlFor = 'googleEventReminder';
+        reminderLabel.setAttribute('data-localize', '__MSG_notification__');
+        reminderLabel.textContent = window.getLocalizedMessage('notification') || 'Notification';
+        body.appendChild(reminderLabel);
+
+        this.reminderSelect = document.createElement('select');
+        this.reminderSelect.id = 'googleEventReminder';
+        this.reminderSelect.className = 'event-form-select';
+
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.setAttribute('data-localize', '__MSG_reminderDefault__');
+        defaultOption.textContent = window.getLocalizedMessage('reminderDefault') || 'Calendar default';
+        this.reminderSelect.appendChild(defaultOption);
+
+        const unit = window.getLocalizedMessage('minutesBeforeUnit') || ' min before';
+        [5, 10, 15, 30, 60].forEach(minutes => {
+            const option = document.createElement('option');
+            option.value = String(minutes);
+            option.textContent = `${minutes}${unit}`;
+            this.reminderSelect.appendChild(option);
+        });
+        body.appendChild(this.reminderSelect);
+
+        container.appendChild(body);
+        parentElement.appendChild(container);
+
+        this.googleAdvanced = container;
+        this.advancedToggle = toggle;
+        this.advancedBody = body;
+
+        this.modal.addEventListener(toggle, 'click', () => this.setAdvancedExpanded());
+    }
+
+    /**
+     * Expand/collapse the advanced accordion.
+     * @param {boolean} [expanded] - Explicit state; toggles when omitted
+     */
+    setAdvancedExpanded(expanded) {
+        if (!this.advancedToggle) return;
+        const next = typeof expanded === 'boolean'
+            ? expanded
+            : this.advancedToggle.getAttribute('aria-expanded') !== 'true';
+        this.advancedToggle.setAttribute('aria-expanded', String(next));
+        this.advancedBody.hidden = !next;
     }
 
     /**
@@ -206,6 +298,9 @@ export class LocalEventFormBuilder {
 
         if (this.googleFields) {
             this.googleFields.style.display = isGoogle ? '' : 'none';
+        }
+        if (this.googleAdvanced) {
+            this.googleAdvanced.style.display = isGoogle ? '' : 'none';
         }
         // Local-only fields are hidden when creating a Google event
         if (this.reminderContainer) {
@@ -332,8 +427,11 @@ export class LocalEventFormBuilder {
         parentElement.appendChild(reminderContainer);
         this.reminderContainer = reminderContainer;
 
-        // Recurrence section
+        // Recurrence section (local only)
         this.buildRecurrenceSection(parentElement);
+
+        // Google advanced settings accordion (Google only)
+        this._buildGoogleAdvanced(parentElement);
 
         // Button group
         const buttonGroup = document.createElement('div');
@@ -681,6 +779,8 @@ export class LocalEventFormBuilder {
         // Reset Google-only fields and save destination
         if (this.locationInput) this.locationInput.value = '';
         if (this.meetCheckbox) this.meetCheckbox.checked = false;
+        if (this.reminderSelect) this.reminderSelect.value = '';
+        this.setAdvancedExpanded(false); // collapse the accordion
         this.setSource('local');
 
         // Reset recurrence
