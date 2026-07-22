@@ -5,6 +5,7 @@ import {
   isSameDay,
   calculateTimeDifference,
   calculateWorkHours,
+  buildRfc3339DateTime,
 } from '../../src/lib/time-utils.js';
 
 describe('createTimeOnDate', () => {
@@ -268,5 +269,44 @@ describe('calculateWorkHours', () => {
 
   test('throws when time strings are invalid', () => {
     expect(() => calculateWorkHours(date, 'invalid', '17:00')).toThrow();
+  });
+});
+
+describe('buildRfc3339DateTime', () => {
+  // Reconstruct the expected timezone offset from a real Date so the test is
+  // independent of the machine/CI timezone.
+  function expectedOffset(date) {
+    const offsetMinutes = -date.getTimezoneOffset();
+    const sign = offsetMinutes >= 0 ? '+' : '-';
+    const abs = Math.abs(offsetMinutes);
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${sign}${pad(Math.floor(abs / 60))}:${pad(abs % 60)}`;
+  }
+
+  test('produces an RFC3339 date-time string for the given date and time', () => {
+    const date = new Date(2026, 6, 22); // July 22, 2026
+    const result = buildRfc3339DateTime(date, '09:30');
+    const offset = expectedOffset(new Date(2026, 6, 22, 9, 30));
+
+    expect(result).toBe(`2026-07-22T09:30:00${offset}`);
+  });
+
+  test('zero-pads single-digit month, day, hour and minute', () => {
+    const date = new Date(2026, 0, 5); // January 5, 2026
+    const result = buildRfc3339DateTime(date, '08:05');
+    const offset = expectedOffset(new Date(2026, 0, 5, 8, 5));
+
+    expect(result).toBe(`2026-01-05T08:05:00${offset}`);
+  });
+
+  test('uses the year/month/day of the base date, not its time', () => {
+    const date = new Date(2026, 6, 22, 23, 59, 59);
+    const result = buildRfc3339DateTime(date, '00:00');
+
+    expect(result.startsWith('2026-07-22T00:00:00')).toBe(true);
+  });
+
+  test('throws on an invalid time string', () => {
+    expect(() => buildRfc3339DateTime(new Date(2026, 6, 22), '25:00')).toThrow();
   });
 });

@@ -1657,5 +1657,29 @@
   "authExpiredStatus": {
     "message": "認証の有効期限が切れています — 再接続してください",
     "description": "Googleカレンダー認証が期限切れの場合に設定画面に表示されるステータス"
+  },
+  "destinationLocal": {
+    "message": "ローカル",
+    "description": "保存先トグルのローカルイベント選択肢"
+  },
+  "destinationGoogle": {
+    "message": "Google",
+    "description": "保存先トグルのGoogleカレンダーイベント選択肢"
+  },
+  "targetCalendar": {
+    "message": "カレンダー",
+    "description": "Googleイベント作成時の作成先カレンダー選択ラベル"
+  },
+  "eventLocation": {
+    "message": "場所",
+    "description": "Googleイベント作成時の場所フィールドラベル"
+  },
+  "primaryCalendar": {
+    "message": "メイン",
+    "description": "カレンダー選択でユーザーのメインカレンダーを示す接尾語"
+  },
+  "googleEventCreateFailed": {
+    "message": "Googleイベントの作成に失敗しました",
+    "description": "Googleカレンダーイベントの作成に失敗した際のエラーメッセージ"
   }
 }

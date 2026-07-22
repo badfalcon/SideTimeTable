@@ -5,6 +5,7 @@ import { ModalComponent } from './modal-component.js';
 import { RECURRENCE_TYPES } from '../../../lib/constants.js';
 import { LocalEventFormBuilder } from './local-event-form-builder.js';
 import { DeleteRecurringDialog } from './delete-recurring-dialog.js';
+import { buildRfc3339DateTime } from '../../../lib/time-utils.js';
 
 export class LocalEventModal extends ModalComponent {
     constructor(options = {}) {
@@ -37,6 +38,7 @@ export class LocalEventModal extends ModalComponent {
 
         // Callbacks
         this.onSave = options.onSave || null;
+        this.onSaveGoogle = options.onSaveGoogle || null;
         this.onDelete = options.onDelete || null;
         this.onCancel = options.onCancel || null;
         this.onDeleteSeries = options.onDeleteSeries || null;
@@ -347,6 +349,12 @@ export class LocalEventModal extends ModalComponent {
             return;
         }
 
+        // Google event creation path (create mode only)
+        if (this.mode === 'create' && this.formBuilder.getSource() === 'google') {
+            this._handleSaveGoogle();
+            return;
+        }
+
         const recurrenceType = this.recurrenceSelect.value;
         let recurrence = null;
 
@@ -409,6 +417,37 @@ export class LocalEventModal extends ModalComponent {
             // Create mode: close the modal
             this.hide();
         }
+    }
+
+    /**
+     * Build the Google event resource and delegate creation to the controller.
+     * @private
+     */
+    _handleSaveGoogle() {
+        const date = this._getCurrentDate ? this._getCurrentDate() : new Date();
+        const calendarId = this.formBuilder.calendarSelect?.value || 'primary';
+
+        const eventResource = {
+            summary: this.titleInput.value.trim(),
+            start: { dateTime: buildRfc3339DateTime(date, this.startTimeInput.value) },
+            end: { dateTime: buildRfc3339DateTime(date, this.endTimeInput.value) }
+        };
+
+        const description = this.descriptionInput.value.trim();
+        if (description) {
+            eventResource.description = description;
+        }
+
+        const location = this.formBuilder.locationInput?.value.trim();
+        if (location) {
+            eventResource.location = location;
+        }
+
+        if (this.onSaveGoogle) {
+            this.onSaveGoogle(eventResource, calendarId);
+        }
+
+        this.hide();
     }
 
     /**
@@ -577,7 +616,7 @@ export class LocalEventModal extends ModalComponent {
      * @param {string} defaultStartTime Default start time
      * @param {string} defaultEndTime Default end time
      */
-    showCreate(defaultStartTime = '', defaultEndTime = '') {
+    showCreate(defaultStartTime = '', defaultEndTime = '', writableCalendars = []) {
         this.mode = 'create';
         this.currentEvent = null;
 
@@ -592,6 +631,9 @@ export class LocalEventModal extends ModalComponent {
 
         // Reset form via formBuilder
         this.formBuilder.resetForCreate(defaultStartTime, defaultEndTime);
+
+        // Enable/disable the Google save destination based on writable calendars
+        this.formBuilder.setGoogleAvailability(writableCalendars);
 
         // Adjust the button display
         this.deleteButton.style.display = 'none';
@@ -629,6 +671,9 @@ export class LocalEventModal extends ModalComponent {
         // Show edit content, hide view content
         this.viewContent.style.display = 'none';
         this.editContent.style.display = '';
+
+        // Editing is always a local event: hide the Google save destination toggle
+        this.formBuilder.setGoogleAvailability([]);
 
         // Populate form via formBuilder
         this.formBuilder.populateForm(event);

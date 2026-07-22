@@ -1657,5 +1657,29 @@
   "authExpiredStatus": {
     "message": "Authorization expired — please reconnect",
     "description": "Status text shown in settings when Google Calendar auth has expired"
+  },
+  "destinationLocal": {
+    "message": "Local",
+    "description": "Save-destination toggle option for a local event"
+  },
+  "destinationGoogle": {
+    "message": "Google",
+    "description": "Save-destination toggle option for a Google Calendar event"
+  },
+  "targetCalendar": {
+    "message": "Calendar",
+    "description": "Label for the target calendar picker when creating a Google event"
+  },
+  "eventLocation": {
+    "message": "Location",
+    "description": "Label for the location field when creating a Google event"
+  },
+  "primaryCalendar": {
+    "message": "Primary",
+    "description": "Suffix marking the user's primary Google calendar in the calendar picker"
+  },
+  "googleEventCreateFailed": {
+    "message": "Failed to create Google event",
+    "description": "Error message shown when creating a Google Calendar event fails"
   }
 }

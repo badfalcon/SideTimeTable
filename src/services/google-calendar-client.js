@@ -94,6 +94,7 @@ export class GoogleCalendarClient {
                 id: cal.id,
                 summary: cal.summary,
                 primary: cal.primary || false,
+                accessRole: cal.accessRole,
                 backgroundColor: cal.backgroundColor,
                 foregroundColor: cal.foregroundColor
             }));
@@ -388,5 +389,33 @@ export class GoogleCalendarClient {
         await this._checkResponse(patchRes, 'Update Event API');
 
         return await patchRes.json();
+    }
+
+    /**
+     * Create a new event on a Google Calendar (events.insert)
+     * @param {string} calendarId - The target calendar ID (defaults to 'primary')
+     * @param {Object} eventResource - The event resource in Google Calendar API format
+     *   (must contain summary, start and end)
+     * @returns {Promise<Object>} The created event object
+     */
+    async createEvent(calendarId, eventResource) {
+        if (!eventResource || !eventResource.summary || !eventResource.start || !eventResource.end) {
+            throw new Error('Missing required parameters');
+        }
+
+        const targetCalendarId = calendarId || 'primary';
+        const eventsUrl = `${CALENDAR_API_BASE}/calendars/${encodeURIComponent(targetCalendarId)}/events`;
+
+        const res = await this._fetchWithAuth(eventsUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(eventResource)
+        });
+
+        await this._checkResponse(res, 'Insert Event API');
+
+        return await res.json();
     }
 }

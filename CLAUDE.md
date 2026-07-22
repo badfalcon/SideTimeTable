@@ -42,7 +42,7 @@ npm run build         # Verify production build succeeds
 - Entry points: `background.js`, `side_panel.js`, `options.js` → output as `*.bundle.js`
 - Demo mode: `?demo=true` URL parameter or `localStorage.sideTimeTableDemo=true`
 - OAuth2: configured in `manifest.json` (`oauth2.client_id`), uses Chrome Identity API
-- Scope: `https://www.googleapis.com/auth/calendar.readonly`
+- Scopes: `https://www.googleapis.com/auth/calendar.events` (read/write events) and `https://www.googleapis.com/auth/calendar.calendarlist.readonly`
 - `manifest.dev.json` / `manifest.prod.json` provide environment-specific configurations
 
 ## Code Style

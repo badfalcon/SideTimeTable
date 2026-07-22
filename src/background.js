@@ -350,6 +350,26 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             })();
             return true; // Indicates async response
 
+        case "createEvent":
+            // Create a new event on a Google Calendar
+            (async () => {
+                try {
+                    const { calendarId, event } = request;
+                    const createdEvent = await calendarClient.createEvent(calendarId, event);
+                    // Ensure the new event gets a reminder alarm if reminders are enabled
+                    reminderSync.syncAll().catch(() => {});
+                    sendResponse({ success: true, event: createdEvent });
+                } catch (error) {
+                    if (error instanceof AuthenticationError) {
+                        logWarn('Event creation', 'auth expired');
+                    } else {
+                        logError('Event creation', error);
+                    }
+                    sendResponse({ ...buildCalendarErrorResponse(error, request.requestId), success: false });
+                }
+            })();
+            return true; // Indicates async response
+
         default:
             logWarn('Message handler', `Unknown action: ${request.action}`);
             sendResponse({error: "Unknown action"});

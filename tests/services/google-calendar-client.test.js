@@ -229,3 +229,103 @@ describe('SPEC: respondToEvent', () => {
       .rejects.toThrow('Self attendee not found in event');
   });
 });
+
+// ---------------------------------------------------------------
+// SPEC: createEvent
+// - POSTs to /calendars/{id}/events with a JSON body
+// - Requires summary, start and end
+// - Defaults to the 'primary' calendar when no id is given
+// - 401/403 → AuthenticationError
+// ---------------------------------------------------------------
+describe('SPEC: createEvent', () => {
+  let client;
+  let originalFetch;
+
+  beforeEach(() => {
+    client = new GoogleCalendarClient();
+    originalFetch = global.fetch;
+    chrome.identity.getAuthToken.mockReset();
+    chrome.identity.getAuthToken.mockImplementation((opts, cb) => cb('test-token'));
+  });
+
+  afterEach(() => {
+    global.fetch = originalFetch;
+  });
+
+  const validResource = () => ({
+    summary: 'Team sync',
+    start: { dateTime: '2026-07-22T09:00:00+09:00' },
+    end: { dateTime: '2026-07-22T10:00:00+09:00' },
+  });
+
+  describe('parameter validation', () => {
+    test.each([
+      { resource: null, label: 'null resource' },
+      { resource: {}, label: 'empty resource' },
+      { resource: { start: {}, end: {} }, label: 'missing summary' },
+      { resource: { summary: 'x', end: {} }, label: 'missing start' },
+      { resource: { summary: 'x', start: {} }, label: 'missing end' },
+    ])('throws "Missing required parameters" when $label', async ({ resource }) => {
+      await expect(client.createEvent('cal1', resource))
+        .rejects.toThrow('Missing required parameters');
+    });
+  });
+
+  test('POSTs the event resource to the target calendar', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ id: 'new-evt', htmlLink: 'https://cal' }),
+    });
+
+    const resource = validResource();
+    const result = await client.createEvent('work@example.com', resource);
+
+    expect(result).toEqual({ id: 'new-evt', htmlLink: 'https://cal' });
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+
+    const [url, options] = global.fetch.mock.calls[0];
+    expect(url).toBe('https://www.googleapis.com/calendar/v3/calendars/work%40example.com/events');
+    expect(options.method).toBe('POST');
+    expect(options.headers['Content-Type']).toBe('application/json');
+    expect(options.headers.Authorization).toBe('Bearer test-token');
+    expect(JSON.parse(options.body)).toEqual(resource);
+  });
+
+  test('defaults to the primary calendar when no calendarId is given', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ id: 'new-evt' }),
+    });
+
+    await client.createEvent(null, validResource());
+
+    const [url] = global.fetch.mock.calls[0];
+    expect(url).toBe('https://www.googleapis.com/calendar/v3/calendars/primary/events');
+  });
+
+  test('classifies a 403 response as an authentication error', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 403,
+      statusText: 'Forbidden',
+      text: () => Promise.resolve(''),
+    });
+
+    await expect(client.createEvent('cal1', validResource()))
+      .rejects.toThrow(AuthenticationError);
+  });
+
+  test('classifies a 500 response as a generic error', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      statusText: 'Server Error',
+      text: () => Promise.resolve(''),
+    });
+
+    await expect(client.createEvent('cal1', validResource()))
+      .rejects.toThrow(/Insert Event API error: 500/);
+  });
+});

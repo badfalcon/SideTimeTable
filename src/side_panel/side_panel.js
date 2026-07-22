@@ -37,7 +37,7 @@ import { loadSettings } from '../lib/settings-storage.js';
 import { migrateEventDataToLocal } from '../lib/event-storage.js';
 import { cleanupObsoleteStorageKeys } from '../lib/storage-cleanup.js';
 import { sendMessage } from '../lib/chrome-messaging.js';
-import { setDemoMode } from '../lib/demo-data.js';
+import { setDemoMode, isDemoMode } from '../lib/demo-data.js';
 
 // The reload message listener
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -226,6 +226,7 @@ class SidePanelUIController {
         // The modal components
         this.localEventModal = new LocalEventModal({
             onSave: (eventData, mode) => this._handleSaveLocalEvent(eventData, mode),
+            onSaveGoogle: (eventResource, calendarId) => this._handleSaveGoogleEvent(eventResource, calendarId),
             onDelete: (event) => this._handleDeleteLocalEvent(event),
             onCancel: () => this._handleCancelLocalEvent(),
             getCurrentDate: () => this.dateNavService.getDate()
@@ -526,7 +527,7 @@ class SidePanelUIController {
      * Local event addition handler
      * @private
      */
-    _handleAddLocalEvent(startTime, endTime) {
+    async _handleAddLocalEvent(startTime, endTime) {
         if (!startTime) {
             const now = new Date();
             startTime = `${String(now.getHours()).padStart(2, '0')}:${String(Math.floor(now.getMinutes() / 15) * 15).padStart(2, '0')}`;
@@ -534,7 +535,75 @@ class SidePanelUIController {
             const endMinutes = now.getHours() >= 23 ? 59 : Math.floor(now.getMinutes() / 15) * 15;
             endTime = `${String(endHour).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
         }
-        this.localEventModal.showCreate(startTime, endTime);
+
+        const writableCalendars = await this._getWritableCalendars();
+        this.localEventModal.showCreate(startTime, endTime, writableCalendars);
+    }
+
+    /**
+     * Fetch the list of Google calendars the user can write to (owner/writer).
+     * Returns an empty array when not authenticated, in demo mode, or on error,
+     * which disables the Google save destination in the create modal.
+     * @returns {Promise<Array<{id: string, summary: string, primary: boolean}>>}
+     * @private
+     */
+    async _getWritableCalendars() {
+        // Google event creation is not supported in demo mode
+        if (isDemoMode()) {
+            return [];
+        }
+
+        try {
+            const auth = await sendMessage({ action: 'checkGoogleAuth' });
+            if (!auth || !auth.authenticated) {
+                return [];
+            }
+
+            const requestId = `create-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+            const response = await sendMessage({ action: 'getCalendarList', requestId });
+            if (!response || response.error || !Array.isArray(response.calendars)) {
+                return [];
+            }
+
+            return response.calendars.filter(
+                cal => cal.accessRole === 'owner' || cal.accessRole === 'writer'
+            );
+        } catch {
+            return [];
+        }
+    }
+
+    /**
+     * Google event save handler
+     * @private
+     */
+    async _handleSaveGoogleEvent(eventResource, calendarId) {
+        try {
+            const response = await sendMessage({
+                action: 'createEvent',
+                calendarId,
+                event: eventResource
+            });
+
+            if (!response || !response.success) {
+                if (response && response.authExpired && this.googleEventManager) {
+                    this.googleEventManager.onAuthExpired?.();
+                }
+                const detail = (response && response.error) || 'Unknown error';
+                this.alertModal.showError(
+                    (window.getLocalizedMessage('googleEventCreateFailed') || 'Failed to create Google event') + ': ' + detail
+                );
+                return;
+            }
+
+            // Reload events so the newly created Google event appears
+            await this._loadEventsForCurrentDate();
+        } catch (error) {
+            console.error('Google event save error:', error);
+            this.alertModal.showError(
+                (window.getLocalizedMessage('googleEventCreateFailed') || 'Failed to create Google event') + ': ' + error.message
+            );
+        }
     }
 
     /**

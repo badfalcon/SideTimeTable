@@ -31,6 +31,157 @@ export class LocalEventFormBuilder {
         this.endDateInput = null;
         this.noEndDateCheckbox = null;
         this.endDateSection = null;
+
+        // Save destination (local / google) elements
+        this.sourceToggle = null;
+        this.sourceLocalBtn = null;
+        this.sourceGoogleBtn = null;
+        this.currentSource = 'local';
+
+        // Google-only fields
+        this.googleFields = null;
+        this.calendarSelect = null;
+        this.locationInput = null;
+
+        // Containers toggled by save destination
+        this.reminderContainer = null;
+        this.recurrenceSection = null;
+    }
+
+    /**
+     * Build the save-destination toggle (Local / Google). Hidden until a
+     * Google calendar list is provided via setGoogleAvailability().
+     * @param {HTMLElement} parentElement
+     * @private
+     */
+    _buildSourceToggle(parentElement) {
+        const toggle = document.createElement('div');
+        toggle.className = 'event-source-toggle';
+        toggle.style.cssText = 'display: none; gap: 6px; margin: 4px 0 10px;';
+
+        const makeButton = (source, msgKey, fallback) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn btn-secondary event-source-btn';
+            btn.dataset.source = source;
+            btn.style.cssText = 'flex: 1; padding: 6px;';
+            btn.setAttribute('data-localize', `__MSG_${msgKey}__`);
+            btn.textContent = window.getLocalizedMessage(msgKey) || fallback;
+            this.modal.addEventListener(btn, 'click', () => this.setSource(source));
+            return btn;
+        };
+
+        this.sourceLocalBtn = makeButton('local', 'destinationLocal', 'Local');
+        this.sourceGoogleBtn = makeButton('google', 'destinationGoogle', 'Google');
+
+        toggle.appendChild(this.sourceLocalBtn);
+        toggle.appendChild(this.sourceGoogleBtn);
+        parentElement.appendChild(toggle);
+        this.sourceToggle = toggle;
+    }
+
+    /**
+     * Build Google-only fields (target calendar picker + location). Hidden
+     * unless the save destination is Google.
+     * @param {HTMLElement} parentElement
+     * @private
+     */
+    _buildGoogleFields(parentElement) {
+        const container = document.createElement('div');
+        container.className = 'google-event-fields';
+        container.style.cssText = 'display: none;';
+
+        // Target calendar picker
+        const calendarLabel = document.createElement('label');
+        calendarLabel.htmlFor = 'googleEventCalendar';
+        calendarLabel.setAttribute('data-localize', '__MSG_targetCalendar__');
+        calendarLabel.textContent = window.getLocalizedMessage('targetCalendar') || 'Calendar';
+        container.appendChild(calendarLabel);
+
+        this.calendarSelect = document.createElement('select');
+        this.calendarSelect.id = 'googleEventCalendar';
+        this.calendarSelect.style.cssText = 'width: 100%; padding: 6px; margin-bottom: 8px; border: 1px solid var(--side-calendar-input-border); border-radius: 4px; background: var(--side-calendar-input-bg); color: inherit;';
+        container.appendChild(this.calendarSelect);
+
+        // Location input
+        const locationLabel = document.createElement('label');
+        locationLabel.htmlFor = 'googleEventLocation';
+        locationLabel.setAttribute('data-localize', '__MSG_eventLocation__');
+        locationLabel.textContent = window.getLocalizedMessage('eventLocation') || 'Location';
+        container.appendChild(locationLabel);
+
+        this.locationInput = document.createElement('input');
+        this.locationInput.type = 'text';
+        this.locationInput.id = 'googleEventLocation';
+        container.appendChild(this.locationInput);
+
+        parentElement.appendChild(container);
+        this.googleFields = container;
+    }
+
+    /**
+     * Enable or disable the Google save destination and populate its calendar list.
+     * @param {Array<{id: string, summary: string, primary: boolean}>} calendars - Writable calendars (empty disables Google)
+     */
+    setGoogleAvailability(calendars) {
+        const writable = Array.isArray(calendars) ? calendars : [];
+        const available = writable.length > 0;
+
+        if (this.sourceToggle) {
+            this.sourceToggle.style.display = available ? 'flex' : 'none';
+        }
+
+        if (available) {
+            this.calendarSelect.innerHTML = '';
+            writable.forEach(cal => {
+                const option = document.createElement('option');
+                option.value = cal.id;
+                option.textContent = cal.primary
+                    ? `${cal.summary} (${window.getLocalizedMessage('primaryCalendar') || 'Primary'})`
+                    : cal.summary;
+                this.calendarSelect.appendChild(option);
+            });
+            const primary = writable.find(cal => cal.primary);
+            this.calendarSelect.value = primary ? primary.id : writable[0].id;
+        }
+
+        // Always reset to local when (re)configuring
+        this.setSource('local');
+    }
+
+    /**
+     * Switch the active save destination and update field visibility.
+     * @param {string} source - 'local' or 'google'
+     */
+    setSource(source) {
+        this.currentSource = source === 'google' ? 'google' : 'local';
+        const isGoogle = this.currentSource === 'google';
+
+        if (this.sourceLocalBtn) {
+            this.sourceLocalBtn.classList.toggle('active', !isGoogle);
+        }
+        if (this.sourceGoogleBtn) {
+            this.sourceGoogleBtn.classList.toggle('active', isGoogle);
+        }
+
+        if (this.googleFields) {
+            this.googleFields.style.display = isGoogle ? '' : 'none';
+        }
+        // Local-only fields are hidden when creating a Google event
+        if (this.reminderContainer) {
+            this.reminderContainer.style.display = isGoogle ? 'none' : '';
+        }
+        if (this.recurrenceSection) {
+            this.recurrenceSection.style.display = isGoogle ? 'none' : '';
+        }
+    }
+
+    /**
+     * Get the currently selected save destination.
+     * @returns {string} 'local' or 'google'
+     */
+    getSource() {
+        return this.currentSource;
     }
 
     /**
@@ -44,6 +195,9 @@ export class LocalEventFormBuilder {
         this.editTitleElement.setAttribute('data-localize', '__MSG_eventDialogTitle__');
         this.editTitleElement.textContent = window.getLocalizedMessage('eventDialogTitle');
         parentElement.appendChild(this.editTitleElement);
+
+        // Save destination toggle (Local / Google) - only shown when Google is available
+        this._buildSourceToggle(parentElement);
 
         // Title input
         const titleLabel = document.createElement('label');
@@ -100,6 +254,9 @@ export class LocalEventFormBuilder {
         timeRow.appendChild(endGroup);
         parentElement.appendChild(timeRow);
 
+        // Google-only fields (target calendar + location)
+        this._buildGoogleFields(parentElement);
+
         // Description textarea
         const descriptionLabel = document.createElement('label');
         descriptionLabel.htmlFor = 'eventDescription';
@@ -133,6 +290,7 @@ export class LocalEventFormBuilder {
         reminderContainer.appendChild(this.reminderCheckbox);
         reminderContainer.appendChild(reminderLabel);
         parentElement.appendChild(reminderContainer);
+        this.reminderContainer = reminderContainer;
 
         // Recurrence section
         this.buildRecurrenceSection(parentElement);
@@ -179,6 +337,7 @@ export class LocalEventFormBuilder {
         const recurrenceSection = document.createElement('div');
         recurrenceSection.className = 'recurrence-section';
         recurrenceSection.style.cssText = 'margin: 15px 0; padding: 10px; background: var(--side-calendar-subtle-bg); border-radius: 5px;';
+        this.recurrenceSection = recurrenceSection;
 
         // Recurrence label and select
         const recurrenceLabel = document.createElement('label');
@@ -478,6 +637,10 @@ export class LocalEventFormBuilder {
         this.startTimeInput.value = defaultStartTime;
         this.endTimeInput.value = defaultEndTime;
         this.reminderCheckbox.checked = true;
+
+        // Reset Google-only fields and save destination
+        if (this.locationInput) this.locationInput.value = '';
+        this.setSource('local');
 
         // Reset recurrence
         this.recurrenceSelect.value = RECURRENCE_TYPES.NONE;
