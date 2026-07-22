@@ -1658,6 +1658,10 @@
     "message": "Authorization expired — please reconnect",
     "description": "Status text shown in settings when Google Calendar auth has expired"
   },
+  "saveDestination": {
+    "message": "Save destination",
+    "description": "Accessible label for the local/Google save-destination toggle"
+  },
   "destinationLocal": {
     "message": "Local",
     "description": "Save-destination toggle option for a local event"

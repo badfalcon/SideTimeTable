@@ -582,6 +582,61 @@ body {
     font-family: inherit;
 }
 
+/* Save destination segmented control (Local / Google) */
+.event-source-toggle {
+    display: none; /* Shown via JS when writable Google calendars exist */
+    gap: 4px;
+    margin: 6px 0 16px;
+    padding: 3px;
+    border: 1px solid var(--side-calendar-input-border);
+    border-radius: 8px;
+    background: var(--side-calendar-subtle-bg);
+}
+
+.event-source-toggle .event-source-btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 0;
+    padding: 7px 10px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--side-calendar-secondary-text-color);
+    font-size: 0.9em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s, box-shadow 0.15s;
+}
+
+.event-source-toggle .event-source-btn:hover {
+    color: inherit;
+}
+
+.event-source-toggle .event-source-btn.active {
+    background: var(--side-calendar-modal-bg);
+    color: var(--side-calendar-accent-color);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.event-source-toggle .event-source-btn:focus-visible {
+    outline: 2px solid var(--side-calendar-accent-color);
+    outline-offset: 1px;
+}
+
+/* Google event target-calendar picker (matches text input metrics) */
+.modal-content select.event-form-select {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid var(--side-calendar-input-border);
+    border-radius: 5px;
+    background-color: var(--side-calendar-input-bg);
+    color: inherit;
+}
+
 .modal-content button {
     margin-top: 10px;
     padding: 10px 20px;

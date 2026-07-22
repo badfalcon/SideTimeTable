@@ -1658,6 +1658,10 @@
     "message": "認証の有効期限が切れています — 再接続してください",
     "description": "Googleカレンダー認証が期限切れの場合に設定画面に表示されるステータス"
   },
+  "saveDestination": {
+    "message": "保存先",
+    "description": "ローカル/Google 保存先トグルのアクセシビリティラベル"
+  },
   "destinationLocal": {
     "message": "ローカル",
     "description": "保存先トグルのローカルイベント選択肢"

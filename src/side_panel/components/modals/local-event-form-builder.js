@@ -57,22 +57,34 @@ export class LocalEventFormBuilder {
     _buildSourceToggle(parentElement) {
         const toggle = document.createElement('div');
         toggle.className = 'event-source-toggle';
-        toggle.style.cssText = 'display: none; gap: 6px; margin: 4px 0 10px;';
+        toggle.setAttribute('role', 'radiogroup');
+        toggle.setAttribute('aria-label', window.getLocalizedMessage('saveDestination') || 'Save destination');
 
-        const makeButton = (source, msgKey, fallback) => {
+        const makeButton = (source, msgKey, fallback, iconClass) => {
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'btn btn-secondary event-source-btn';
+            btn.className = 'event-source-btn';
             btn.dataset.source = source;
-            btn.style.cssText = 'flex: 1; padding: 6px;';
-            btn.setAttribute('data-localize', `__MSG_${msgKey}__`);
-            btn.textContent = window.getLocalizedMessage(msgKey) || fallback;
+            btn.setAttribute('role', 'radio');
+            btn.setAttribute('aria-checked', 'false');
+
+            const icon = document.createElement('i');
+            icon.className = iconClass;
+            icon.setAttribute('aria-hidden', 'true');
+
+            const label = document.createElement('span');
+            label.setAttribute('data-localize', `__MSG_${msgKey}__`);
+            label.textContent = window.getLocalizedMessage(msgKey) || fallback;
+
+            btn.appendChild(icon);
+            btn.appendChild(label);
             this.modal.addEventListener(btn, 'click', () => this.setSource(source));
             return btn;
         };
 
-        this.sourceLocalBtn = makeButton('local', 'destinationLocal', 'Local');
-        this.sourceGoogleBtn = makeButton('google', 'destinationGoogle', 'Google');
+        // Local = stored on this device; Google = written to Google Calendar
+        this.sourceLocalBtn = makeButton('local', 'destinationLocal', 'Local', 'fas fa-laptop');
+        this.sourceGoogleBtn = makeButton('google', 'destinationGoogle', 'Google', 'fab fa-google');
 
         toggle.appendChild(this.sourceLocalBtn);
         toggle.appendChild(this.sourceGoogleBtn);
@@ -100,7 +112,7 @@ export class LocalEventFormBuilder {
 
         this.calendarSelect = document.createElement('select');
         this.calendarSelect.id = 'googleEventCalendar';
-        this.calendarSelect.style.cssText = 'width: 100%; padding: 6px; margin-bottom: 8px; border: 1px solid var(--side-calendar-input-border); border-radius: 4px; background: var(--side-calendar-input-bg); color: inherit;';
+        this.calendarSelect.className = 'event-form-select';
         container.appendChild(this.calendarSelect);
 
         // Location input
@@ -159,9 +171,11 @@ export class LocalEventFormBuilder {
 
         if (this.sourceLocalBtn) {
             this.sourceLocalBtn.classList.toggle('active', !isGoogle);
+            this.sourceLocalBtn.setAttribute('aria-checked', String(!isGoogle));
         }
         if (this.sourceGoogleBtn) {
             this.sourceGoogleBtn.classList.toggle('active', isGoogle);
+            this.sourceGoogleBtn.setAttribute('aria-checked', String(isGoogle));
         }
 
         if (this.googleFields) {
