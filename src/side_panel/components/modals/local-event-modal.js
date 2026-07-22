@@ -454,6 +454,12 @@ export class LocalEventModal extends ModalComponent {
         let succeeded;
         try {
             succeeded = await this.onSaveGoogle(eventResource, calendarId);
+        } catch (error) {
+            // The controller handler already catches and returns a boolean, so
+            // this is defensive: never let a rejection escape as an unhandled
+            // promise and skip the failure message.
+            console.error('Google event save error:', error);
+            succeeded = false;
         } finally {
             this._submittingGoogle = false;
             this._setSaving(false);
