@@ -4,8 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="google-site-verification" content="rgiL3Ol-PjR-hGIsGjED3tzl9cmJ_rhJG6g6RhFOzOc" />
-    <meta name="description" content="SideTimeTable プライバシーポリシー">
-    <title>プライバシーポリシー - SideTimeTable</title>
+    <meta name="description" data-i18n-content="privacy.description" content="SideTimeTable プライバシーポリシー">
+    <title data-i18n="privacy.title">プライバシーポリシー - SideTimeTable</title>
+    <link rel="canonical" href="https://sidetimetable.com/privacy.html">
+    <link rel="alternate" hreflang="ja" href="https://sidetimetable.com/privacy.html">
+    <link rel="alternate" hreflang="en" href="https://sidetimetable.com/en/privacy.html">
+    <link rel="alternate" hreflang="x-default" href="https://sidetimetable.com/en/privacy.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="SideTimeTable">
+    <meta property="og:title" data-i18n-content="privacy.title" content="プライバシーポリシー - SideTimeTable">
+    <meta property="og:description" data-i18n-content="privacy.description" content="SideTimeTable プライバシーポリシー">
+    <meta property="og:url" content="https://sidetimetable.com/privacy.html">
+    <meta property="og:image" content="https://sidetimetable.com/img/image_1.png">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:locale:alternate" content="en_US">
+    <meta name="twitter:card" content="summary_large_image">
+    <script>
+    // このページは日本語版。英語版は静的な /en/ 配下に用意されており、
+    // 非日本語ブラウザの訪問者は初回ペイント前にそちらへ送る。
+    // ?lang=ja で日本語のまま留まり、選択は localStorage に記憶される。
+    // ストレージが使えない環境でも navigator.language での判定は機能する。
+    (function () {
+        var TARGET = 'en/privacy.html';
+        var qs = null;
+        try { qs = new URLSearchParams(location.search).get('lang'); } catch (e) {}
+        if (qs === 'en') { location.replace(TARGET); return; }
+        if (qs === 'ja') {
+            try { localStorage.setItem('sideTimeTableLang', 'ja'); } catch (e) {}
+            return;
+        }
+        var saved = null;
+        try { saved = localStorage.getItem('sideTimeTableLang'); } catch (e) {}
+        if (saved === 'ja') return;
+        if (saved === 'en') { location.replace(TARGET); return; }
+        if ((navigator.language || '').toLowerCase().indexOf('ja') !== 0) {
+            location.replace(TARGET);
+        }
+    })();
+    </script>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="img/icon128.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,13 +57,17 @@
             <span>SideTimeTable</span>
         </a>
         <div class="nav-links">
-            <a href="index.html#features">機能</a>
-            <a href="index.html#screenshots">スクショ</a>
-            <a href="index.html#install">インストール</a>
-            <a href="privacy.html" aria-current="page">プライバシー</a>
+            <a href="index.html#features" data-i18n="nav.features">機能</a>
+            <a href="index.html#screenshots" data-i18n="nav.screenshots">スクショ</a>
+            <a href="index.html#install" data-i18n="nav.install">インストール</a>
+            <a href="privacy.html" aria-current="page" data-i18n="nav.privacy">プライバシー</a>
+        </div>
+        <div class="lang-switch" role="group" aria-label="Language">
+            <a href="privacy.html" class="active" aria-current="page">日本語</a>
+            <a href="en/privacy.html">EN</a>
         </div>
         <a href="https://chrome.google.com/webstore/detail/sidetimetable/pnknjjpncnciijkpdfgfiikmhlmamaid"
-           target="_blank" rel="noopener" class="nav-cta">
+           target="_blank" rel="noopener" class="nav-cta" data-i18n="nav.cta">
             無料で追加
         </a>
     </div>
@@ -41,8 +81,8 @@
     </div>
     <div class="page-hero-inner">
         <span class="section-tag">Legal</span>
-        <h1 class="page-hero-title">プライバシーポリシー</h1>
-        <p class="page-hero-sub">SideTimeTable のプライバシーに関する方針</p>
+        <h1 class="page-hero-title" data-i18n="privacy.heroTitle">プライバシーポリシー</h1>
+        <p class="page-hero-sub" data-i18n="privacy.heroSub">SideTimeTable のプライバシーに関する方針</p>
     </div>
 </div>
 
@@ -50,7 +90,7 @@
 <main class="prose-wrap">
     <article class="prose-card">
 
-        <p class="prose-lead">
+        <p class="prose-lead" data-i18n="privacy.lead">
             このプライバシーポリシーは、SideTimeTable の拡張機能および関連サービスにおけるプライバシーに関する方針を説明しています。
         </p>
 
@@ -59,8 +99,8 @@
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             </div>
             <div class="prose-section-body">
-                <h2>情報の収集</h2>
-                <p>SideTimeTable は、ユーザーの個人情報を収集しません。この拡張機能は、Google カレンダーとの同期に必要な最低限の情報にアクセスしますが、これらのデータはユーザーのローカル環境で処理され、外部に送信されることはありません。</p>
+                <h2 data-i18n="privacy.collectTitle">情報の収集</h2>
+                <p data-i18n="privacy.collectDesc">SideTimeTable は、ユーザーの個人情報を収集しません。この拡張機能は、Google カレンダーとの同期に必要な最低限の情報にアクセスしますが、これらのデータはユーザーのローカル環境で処理され、外部に送信されることはありません。</p>
             </div>
         </section>
 
@@ -69,15 +109,15 @@
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
             </div>
             <div class="prose-section-body">
-                <h2>Google ユーザーデータへのアクセス</h2>
-                <p>SideTimeTable は、Google カレンダーとの同期のために Google ユーザーデータにアクセスします。アクセスするデータには以下が含まれます。</p>
+                <h2 data-i18n="privacy.accessTitle">Google ユーザーデータへのアクセス</h2>
+                <p data-i18n="privacy.accessDesc">SideTimeTable は、Google カレンダーとの同期のために Google ユーザーデータにアクセスします。アクセスするデータには以下が含まれます。</p>
                 <ul>
-                    <li>カレンダーイベントのタイトル・日時・場所</li>
-                    <li>参加者情報</li>
-                    <li>Google Meet のリンク</li>
-                    <li>カレンダーの一覧情報（読み取り専用）</li>
+                    <li data-i18n="privacy.accessItem1">カレンダーイベントのタイトル・日時・場所</li>
+                    <li data-i18n="privacy.accessItem2">参加者情報</li>
+                    <li data-i18n="privacy.accessItem3">Google Meet のリンク</li>
+                    <li data-i18n="privacy.accessItem4">カレンダーの一覧情報（読み取り専用）</li>
                 </ul>
-                <p>また、出欠回答（RSVP）機能のために、カレンダーイベントへの書き込みアクセス権を使用します。書き込みは出欠ステータスの更新のみに限定されます。</p>
+                <p data-i18n="privacy.accessNote">また、出欠回答（RSVP）機能のために、カレンダーイベントへの書き込みアクセス権を使用します。書き込みは出欠ステータスの更新のみに限定されます。</p>
             </div>
         </section>
 
@@ -86,8 +126,8 @@
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
             </div>
             <div class="prose-section-body">
-                <h2>Google ユーザーデータの保持と削除</h2>
-                <p>SideTimeTable は、Google ユーザーデータをローカル環境にのみ保持し、外部サーバーに保存することはありません。ユーザーが拡張機能をアンインストールするか、Google アカウントとの同期を解除した場合、すべての Google ユーザーデータはローカル環境から削除されます。</p>
+                <h2 data-i18n="privacy.retentionTitle">Google ユーザーデータの保持と削除</h2>
+                <p data-i18n="privacy.retentionDesc">SideTimeTable は、Google ユーザーデータをローカル環境にのみ保持し、外部サーバーに保存することはありません。ユーザーが拡張機能をアンインストールするか、Google アカウントとの同期を解除した場合、すべての Google ユーザーデータはローカル環境から削除されます。</p>
             </div>
         </section>
 
@@ -96,8 +136,8 @@
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             </div>
             <div class="prose-section-body">
-                <h2>情報の使用</h2>
-                <p>収集された情報は、拡張機能の提供および機能改善のためにのみ使用されます。情報は匿名化され、個人を特定することはありません。</p>
+                <h2 data-i18n="privacy.useTitle">情報の使用</h2>
+                <p data-i18n="privacy.useDesc">収集された情報は、拡張機能の提供および機能改善のためにのみ使用されます。情報は匿名化され、個人を特定することはありません。</p>
             </div>
         </section>
 
@@ -106,8 +146,8 @@
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             </div>
             <div class="prose-section-body">
-                <h2>情報の共有</h2>
-                <p>SideTimeTable は、ユーザーの情報を第三者と共有することはありません。また、販売や貸与も行いません。</p>
+                <h2 data-i18n="privacy.shareTitle">情報の共有</h2>
+                <p data-i18n="privacy.shareDesc">SideTimeTable は、ユーザーの情報を第三者と共有することはありません。また、販売や貸与も行いません。</p>
             </div>
         </section>
 
@@ -116,8 +156,8 @@
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             </div>
             <div class="prose-section-body">
-                <h2>情報の保護</h2>
-                <p>ユーザーのプライバシーを保護するために、厳格なセキュリティ対策を講じています。この拡張機能は、ユーザーのデータをローカル環境に保存し、外部サーバーへの転送を行いません。</p>
+                <h2 data-i18n="privacy.protectTitle">情報の保護</h2>
+                <p data-i18n="privacy.protectDesc">ユーザーのプライバシーを保護するために、厳格なセキュリティ対策を講じています。この拡張機能は、ユーザーのデータをローカル環境に保存し、外部サーバーへの転送を行いません。</p>
             </div>
         </section>
 
@@ -126,8 +166,8 @@
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             </div>
             <div class="prose-section-body">
-                <h2>お問い合わせ</h2>
-                <p>プライバシーに関するご質問やご不明点がある場合は、下記のメールアドレスまでお気軽にご連絡ください。</p>
+                <h2 data-i18n="privacy.contactTitle">お問い合わせ</h2>
+                <p data-i18n="privacy.contactDesc">プライバシーに関するご質問やご不明点がある場合は、下記のメールアドレスまでお気軽にご連絡ください。</p>
                 <a href="mailto:badfalcon610@gmail.com" class="prose-mail">badfalcon610@gmail.com</a>
             </div>
         </section>
@@ -137,15 +177,15 @@
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             </div>
             <div class="prose-section-body">
-                <h2>プライバシーポリシーの変更</h2>
-                <p>このプライバシーポリシーは、必要に応じて変更されることがあります。変更があった場合には、本ページ上でお知らせいたします。</p>
+                <h2 data-i18n="privacy.changesTitle">プライバシーポリシーの変更</h2>
+                <p data-i18n="privacy.changesDesc">このプライバシーポリシーは、必要に応じて変更されることがあります。変更があった場合には、本ページ上でお知らせいたします。</p>
             </div>
         </section>
 
     </article>
 
     <div class="prose-back">
-        <a href="index.html" class="btn-ghost">← トップページへ戻る</a>
+        <a href="index.html" class="btn-ghost" data-i18n="privacy.back">← トップページへ戻る</a>
     </div>
 </main>
 
@@ -158,10 +198,10 @@
                 <span>SideTimeTable</span>
             </div>
             <nav class="footer-nav">
-                <a href="index.html#features">機能</a>
-                <a href="index.html#screenshots">スクリーンショット</a>
-                <a href="index.html#install">インストール</a>
-                <a href="privacy.html">プライバシーポリシー</a>
+                <a href="index.html#features" data-i18n="footer.features">機能</a>
+                <a href="index.html#screenshots" data-i18n="footer.screenshots">スクリーンショット</a>
+                <a href="index.html#install" data-i18n="footer.install">インストール</a>
+                <a href="privacy.html" data-i18n="footer.privacy">プライバシーポリシー</a>
             </nav>
         </div>
         <div class="footer-bottom">

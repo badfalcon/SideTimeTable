@@ -13,6 +13,35 @@ import {getDemoEvents, getDemoLocalEvents, isDemoMode} from '../lib/demo-data.js
 import { GoogleEventRenderer } from './google-event-renderer.js';
 import { LocalEventRenderer } from './local-event-renderer.js';
 
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+/**
+ * Detect events that should be rendered as all-day chips.
+ *
+ * Returns true for the standard date-only format, and for OOO events that
+ * Google Calendar returns with dateTime but which span a full day starting
+ * at local midnight (Google's OOO UI uses time ranges, so "out for the day"
+ * comes back as 00:00 → 24:00 timed events).
+ *
+ * @param {Object} event
+ * @returns {boolean}
+ */
+export function isAllDayLikeEvent(event) {
+    if (!event || !event.start || !event.end) return false;
+    if (event.start.date || event.end.date) return true;
+
+    if (event.eventType === 'outOfOffice' && event.start.dateTime && event.end.dateTime) {
+        const start = new Date(event.start.dateTime);
+        const end = new Date(event.end.dateTime);
+        if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return false;
+        const startsAtLocalMidnight =
+            start.getHours() === 0 && start.getMinutes() === 0 && start.getSeconds() === 0;
+        return startsAtLocalMidnight && (end.getTime() - start.getTime()) >= MS_PER_DAY;
+    }
+
+    return false;
+}
+
 /**
  * GoogleEventManager - The Google event management class
  */
@@ -291,7 +320,7 @@ export class GoogleEventManager {
                     case 'outOfOffice':
                     default: {
                         const isOOO = event.eventType === 'outOfOffice';
-                        const isAllDay = event.start.date || event.end.date;
+                        const isAllDay = isAllDayLikeEvent(event);
 
                         if (isAllDay) {
                             const result = this._renderer.createAllDayEventElement(

@@ -2,6 +2,13 @@
  * SideTimeTable - Event Storage
  *
  * Functions for persisting and retrieving local and recurring events.
+ *
+ * Enforces domain constraints on top of StorageHelper: local events are scoped
+ * by `localEvents_YYYY-MM-DD` keys, recurring events stay in sync storage for
+ * cross-device synchronization, and `loadLocalEventsForDate()` transparently
+ * merges recurring instances with date-specific entries. Prefer these wrappers
+ * over direct StorageHelper access for event data (see storage-helper.js for
+ * the wrapper vs. direct usage criteria).
  */
 
 import { StorageHelper } from './storage-helper.js';

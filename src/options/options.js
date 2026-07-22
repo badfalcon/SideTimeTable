@@ -10,6 +10,7 @@ import { loadSettings, saveSettings } from '../lib/settings-storage.js';
 import { sendMessage } from '../lib/chrome-messaging.js';
 import { getThemeById, resolveThemeColors } from '../lib/color-themes.js';
 import { StorageHelper } from '../lib/storage-helper.js';
+import { findPreviousReleaseVersion } from '../lib/release-notes.js';
 import { isDemoMode, getDemoOptionsSettings, getDemoCalendars, getDemoCalendarGroups, DEMO_BUILD } from '../lib/demo-data.js';
 import {
     ComponentManager,
@@ -22,6 +23,7 @@ import {
     ReminderSettingsCard,
     MemoSettingsCard,
     ScrollbarSettingsCard,
+    WhatsNewSettingsCard,
     ReminderDebugCard,
     DemoModeCard,
     StorageCard,
@@ -45,6 +47,7 @@ class OptionsPageManager {
         this.reminderSettingsCard = null;
         this.memoSettingsCard = null;
         this.scrollbarSettingsCard = null;
+        this.whatsNewSettingsCard = null;
         this.reminderDebugCard = null;
         this.demoModeCard = null;
         this.storageCard = null;
@@ -108,6 +111,11 @@ class OptionsPageManager {
         this.memoSettingsCard.createElement();
         this.memoSettingsCard.appendTo(tabGeneral);
         this.componentManager.components.set('memoSettings', this.memoSettingsCard);
+
+        this.whatsNewSettingsCard = new WhatsNewSettingsCard(this.handleWhatsNewSettingsChange.bind(this));
+        this.whatsNewSettingsCard.createElement();
+        this.whatsNewSettingsCard.appendTo(tabGeneral);
+        this.componentManager.components.set('whatsNewSettings', this.whatsNewSettingsCard);
 
         this.supportCard = new SupportCard();
         this.supportCard.createElement();
@@ -222,7 +230,8 @@ class OptionsPageManager {
             // Load the reminder settings
             this.reminderSettingsCard.updateSettings({
                 googleEventReminder: settings.googleEventReminder || false,
-                reminderMinutes: settings.reminderMinutes || 5
+                reminderMinutes: settings.reminderMinutes || 5,
+                reminderSyncInterval: settings.reminderSyncInterval || DEFAULT_SETTINGS.reminderSyncInterval
             });
 
             // Load the memo settings
@@ -238,6 +247,11 @@ class OptionsPageManager {
 
             // Apply thin scrollbar to options page
             document.body.classList.toggle('thin-scrollbar', !!settings.thinScrollbar);
+
+            // Load the What's New auto-show setting (default true; demo settings omit this key)
+            this.whatsNewSettingsCard.updateSettings({
+                whatsNewAutoShow: settings.whatsNewAutoShow !== false
+            });
 
         } catch (error) {
             console.error('Settings loading error:', error);
@@ -436,7 +450,8 @@ class OptionsPageManager {
             const updatedSettings = {
                 ...currentSettings,
                 googleEventReminder: reminderSettings.googleEventReminder,
-                reminderMinutes: reminderSettings.reminderMinutes
+                reminderMinutes: reminderSettings.reminderMinutes,
+                reminderSyncInterval: reminderSettings.reminderSyncInterval
             };
 
             await saveSettings(updatedSettings);
@@ -468,6 +483,34 @@ class OptionsPageManager {
             this._reloadSidePanel();
         } catch (error) {
             logError('Scrollbar settings save', error);
+        }
+    }
+
+    async handleWhatsNewSettingsChange(whatsNewSettings) {
+        try {
+            const currentSettings = await loadSettings();
+            const wasEnabled = currentSettings.whatsNewAutoShow !== false;
+            const willEnable = whatsNewSettings.whatsNewAutoShow === true;
+
+            const updatedSettings = {
+                ...currentSettings,
+                whatsNewAutoShow: willEnable
+            };
+
+            await saveSettings(updatedSettings);
+
+            // OFF → ON: rewind lastSeenVersion to the previous release so the modal
+            // appears again on the next side panel load (otherwise it stays marked
+            // as already-seen for the current version and silently does nothing).
+            if (!wasEnabled && willEnable) {
+                const currentVersion = chrome.runtime.getManifest().version;
+                const previousVersion = findPreviousReleaseVersion(currentVersion);
+                if (previousVersion) {
+                    await StorageHelper.set({ lastSeenVersion: previousVersion });
+                }
+            }
+        } catch (error) {
+            logError("What's New settings save", error);
         }
     }
 
@@ -506,6 +549,7 @@ class OptionsPageManager {
             this.memoSettingsCard.resetToDefaults();
             this.scrollbarSettingsCard.resetToDefaults();
             document.body.classList.remove('thin-scrollbar');
+            this.whatsNewSettingsCard.resetToDefaults();
 
             // Reset CSS variables via theme system
             const defaultTheme = getThemeById('default');
@@ -514,6 +558,17 @@ class OptionsPageManager {
                 document.documentElement.style.setProperty(varName, value);
             }
             document.documentElement.removeAttribute('data-theme');
+
+            // Notify the background to apply the default reminder settings
+            // (re-create the periodic sync alarm at the default interval).
+            sendMessage({
+                action: 'updateReminderSettings',
+                settings: {
+                    googleEventReminder: DEFAULT_SETTINGS.googleEventReminder,
+                    reminderMinutes: DEFAULT_SETTINGS.reminderMinutes,
+                    reminderSyncInterval: DEFAULT_SETTINGS.reminderSyncInterval
+                }
+            });
 
             // Reload the side panel
             this._reloadSidePanel();

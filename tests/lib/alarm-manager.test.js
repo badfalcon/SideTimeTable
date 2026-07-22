@@ -90,6 +90,19 @@ describe('AlarmManager', () => {
             await AlarmManager.setGoogleEventReminder({ id: 'g1' }, '2030-03-15', 5);
             expect(chrome.alarms.create).not.toHaveBeenCalled();
         });
+
+        test.each(['outOfOffice', 'focusTime', 'workingLocation'])(
+            'non-meeting eventType "%s" is skipped even when timed',
+            async (eventType) => {
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                await AlarmManager.setGoogleEventReminder(
+                    { id: 'g1', summary: 'OOO', eventType, start: { dateTime: tomorrow.toISOString() } },
+                    '2030-03-15', 5
+                );
+                expect(chrome.alarms.create).not.toHaveBeenCalled();
+            }
+        );
     });
 
     // ---------------------------------------------------------------
@@ -200,17 +213,20 @@ describe('AlarmManager', () => {
 
     // ---------------------------------------------------------------
     // SPEC: Notification Content
-    // - hangoutLink → "Join Meet" button
-    // - no hangoutLink → "Open SideTimeTable" button
+    // - conferenceType 'meet' → "Join Meet" button
+    // - conferenceType 'video' → "Join video conference" button
+    // - no conference link → "Open SideTimeTable" button
+    // - legacy data with hangoutLink → treated as 'meet'
     // - requireInteraction: true
     // - icon fallback on failure
     // - no notification for missing event data
     // ---------------------------------------------------------------
     describe('SPEC: notification content', () => {
-        test('event with hangoutLink → first button is Join Meet', async () => {
+        test('event with conferenceType=meet → first button is Join Meet', async () => {
             const data = {
                 id: 'g1', title: 'Sync', startTime: '14:00',
-                hangoutLink: 'https://meet.google.com/abc'
+                conferenceUrl: 'https://meet.google.com/abc',
+                conferenceType: 'meet'
             };
             chrome.storage.local.set({
                 'googleEventData_google_event_reminder_2025-03-15_g1': data
@@ -219,18 +235,128 @@ describe('AlarmManager', () => {
             await AlarmManager.showReminderNotification('google_event_reminder_2025-03-15_g1');
 
             const opts = chrome.notifications.create.mock.calls[0][1];
-            expect(opts.buttons[0].title).toMatch(/Join.*Meet|Meet/i);
+            expect(opts.buttons[0].title).toMatch(/joinMeet|Join.*Meet/i);
             expect(opts.requireInteraction).toBe(true);
         });
 
-        test('event without hangoutLink → first button is Open SideTimeTable', async () => {
+        test('event with conferenceType=video → first button is Join video conference', async () => {
+            const data = {
+                id: 'g2', title: 'Zoom call', startTime: '15:00',
+                conferenceUrl: 'https://us02web.zoom.us/j/12345',
+                conferenceType: 'video'
+            };
+            chrome.storage.local.set({
+                'googleEventData_google_event_reminder_2025-03-15_g2': data
+            }, () => {});
+
+            await AlarmManager.showReminderNotification('google_event_reminder_2025-03-15_g2');
+
+            const opts = chrome.notifications.create.mock.calls[0][1];
+            expect(opts.buttons[0].title).toMatch(/joinVideoConference|Join.*video/i);
+        });
+
+        test('legacy data with hangoutLink only → treated as meet', async () => {
+            const data = {
+                id: 'g3', title: 'Old reminder', startTime: '16:00',
+                hangoutLink: 'https://meet.google.com/legacy'
+            };
+            chrome.storage.local.set({
+                'googleEventData_google_event_reminder_2025-03-15_g3': data
+            }, () => {});
+
+            await AlarmManager.showReminderNotification('google_event_reminder_2025-03-15_g3');
+
+            const opts = chrome.notifications.create.mock.calls[0][1];
+            expect(opts.buttons[0].title).toMatch(/joinMeet|Join.*Meet/i);
+        });
+
+        test('event without conference link → first button is Open SideTimeTable', async () => {
             const event = { id: 'e1', title: 'Meeting', startTime: '11:00' };
             chrome.storage.local.set({ 'localEvents_2025-03-15': [event] }, () => {});
 
             await AlarmManager.showReminderNotification('event_reminder_2025-03-15_e1');
 
             const opts = chrome.notifications.create.mock.calls[0][1];
-            expect(opts.buttons[0].title).toMatch(/Open.*SideTimeTable|SideTimeTable/i);
+            expect(opts.buttons[0].title).toMatch(/openSideTimeTable|Open.*SideTimeTable/i);
+        });
+
+        // The minutes shown in the message are passed to i18n getMessage as the
+        // 2nd placeholder. The test i18n mock echoes the key, so we assert on the
+        // arguments handed to getMessage instead of the rendered string.
+        function startsInMinutesArg() {
+            const call = chrome.i18n.getMessage.mock.calls.find(c => c[0] === 'startsInMinutes');
+            return call ? call[1][1] : null;
+        }
+
+        test('late-delivered alarm shows real remaining minutes, not configured value', async () => {
+            // Configured for 5 min before, but the alarm is delivered late so the
+            // event actually starts in ~2 minutes. The notification must reflect 2.
+            const startMs = Date.now() + 2 * 60_000;
+            const data = {
+                id: 'g-late', title: 'Delayed', startTime: '14:00',
+                reminderMinutes: 5,
+                startTimestamp: startMs
+            };
+            chrome.storage.local.set({
+                'googleEventData_google_event_reminder_2099-01-01_g-late': data
+            }, () => {});
+
+            await AlarmManager.showReminderNotification('google_event_reminder_2099-01-01_g-late');
+
+            expect(startsInMinutesArg()).toBe('2');
+        });
+
+        test('local event remaining minutes derived from alarm date + startTime', async () => {
+            // No reminderMinutes stored on local events; remaining time is
+            // reconstructed from the alarm-name date and the event startTime.
+            const future = new Date(Date.now() + 10 * 60_000);
+            const ds = `${future.getFullYear()}-${String(future.getMonth() + 1).padStart(2, '0')}-${String(future.getDate()).padStart(2, '0')}`;
+            const startTime = `${String(future.getHours()).padStart(2, '0')}:${String(future.getMinutes()).padStart(2, '0')}`;
+            const event = { id: 'loc1', title: 'Local', startTime };
+            chrome.storage.local.set({ [`localEvents_${ds}`]: [event] }, () => {});
+
+            await AlarmManager.showReminderNotification(`event_reminder_${ds}_loc1`);
+
+            // ~10 minutes remaining (allow rounding to 9 or 10)
+            expect(['9', '10']).toContain(startsInMinutesArg());
+        });
+
+        test('event already starting → uses "starting now" message, not "0 minutes"', async () => {
+            // Alarm delivered late: the event start is already in the past.
+            const data = {
+                id: 'g-now', title: 'Now', startTime: '14:00',
+                reminderMinutes: 5,
+                startTimestamp: Date.now() - 30_000
+            };
+            chrome.storage.local.set({
+                'googleEventData_google_event_reminder_2099-01-01_g-now': data
+            }, () => {});
+
+            await AlarmManager.showReminderNotification('google_event_reminder_2099-01-01_g-now');
+
+            const startsInCall = chrome.i18n.getMessage.mock.calls.find(c => c[0] === 'startsInMinutes');
+            const startingNowCall = chrome.i18n.getMessage.mock.calls.find(c => c[0] === 'eventStartingNow');
+            expect(startsInCall).toBeUndefined();
+            expect(startingNowCall).toBeDefined();
+            expect(chrome.notifications.create).toHaveBeenCalledTimes(1);
+        });
+
+        test('1 minute remaining → uses singular message, not plural', async () => {
+            const data = {
+                id: 'g-one', title: 'One', startTime: '14:00',
+                reminderMinutes: 5,
+                startTimestamp: Date.now() + 60_000
+            };
+            chrome.storage.local.set({
+                'googleEventData_google_event_reminder_2099-01-01_g-one': data
+            }, () => {});
+
+            await AlarmManager.showReminderNotification('google_event_reminder_2099-01-01_g-one');
+
+            const singularCall = chrome.i18n.getMessage.mock.calls.find(c => c[0] === 'startsInOneMinute');
+            const pluralCall = chrome.i18n.getMessage.mock.calls.find(c => c[0] === 'startsInMinutes');
+            expect(singularCall).toBeDefined();
+            expect(pluralCall).toBeUndefined();
         });
 
         test('no notification when event data is missing', async () => {
@@ -256,6 +382,87 @@ describe('AlarmManager', () => {
             // Second call should not have iconUrl
             const secondOpts = chrome.notifications.create.mock.calls[1][1];
             expect(secondOpts.iconUrl).toBeUndefined();
+        });
+    });
+
+    // ---------------------------------------------------------------
+    // SPEC: setGoogleEventReminder stores conference URL/type for notifications
+    // - description-only Zoom URL → conferenceType 'video'
+    // - hangoutLink only → conferenceType 'meet'
+    // - both Zoom in description AND hangoutLink → Zoom wins (video)
+    // - no conference link → both fields null
+    // ---------------------------------------------------------------
+    describe('SPEC: setGoogleEventReminder conference URL extraction', () => {
+        const FUTURE_ISO = '2099-06-15T14:00:00Z';
+        const DATE_STR = '2099-06-15';
+
+        async function readSavedPayload(eventId) {
+            const key = `googleEventData_google_event_reminder_${DATE_STR}_${eventId}`;
+            const stored = await chrome.storage.local.get(key);
+            return stored[key];
+        }
+
+        test('description with Zoom URL → conferenceType=video, conferenceUrl=zoom', async () => {
+            await AlarmManager.setGoogleEventReminder({
+                id: 'g-zoom',
+                summary: 'Zoom call',
+                start: { dateTime: FUTURE_ISO },
+                description: 'Join here: https://us02web.zoom.us/j/9999?pwd=abc'
+            }, DATE_STR, 5);
+
+            const payload = await readSavedPayload('g-zoom');
+            expect(payload.conferenceType).toBe('video');
+            expect(payload.conferenceUrl).toBe('https://us02web.zoom.us/j/9999?pwd=abc');
+        });
+
+        test('hangoutLink only → conferenceType=meet, conferenceUrl=meet', async () => {
+            await AlarmManager.setGoogleEventReminder({
+                id: 'g-meet',
+                summary: 'Meet only',
+                start: { dateTime: FUTURE_ISO },
+                hangoutLink: 'https://meet.google.com/abc-defg-hij'
+            }, DATE_STR, 5);
+
+            const payload = await readSavedPayload('g-meet');
+            expect(payload.conferenceType).toBe('meet');
+            expect(payload.conferenceUrl).toBe('https://meet.google.com/abc-defg-hij');
+        });
+
+        test('both Zoom in description and hangoutLink → Zoom wins', async () => {
+            await AlarmManager.setGoogleEventReminder({
+                id: 'g-both',
+                summary: 'Both links',
+                start: { dateTime: FUTURE_ISO },
+                hangoutLink: 'https://meet.google.com/auto-attached',
+                description: 'Real meeting at https://us02web.zoom.us/j/123'
+            }, DATE_STR, 5);
+
+            const payload = await readSavedPayload('g-both');
+            expect(payload.conferenceType).toBe('video');
+            expect(payload.conferenceUrl).toBe('https://us02web.zoom.us/j/123');
+        });
+
+        test('stores absolute startTimestamp for accurate remaining-time display', async () => {
+            await AlarmManager.setGoogleEventReminder({
+                id: 'g-ts',
+                summary: 'Timestamped',
+                start: { dateTime: FUTURE_ISO }
+            }, DATE_STR, 5);
+
+            const payload = await readSavedPayload('g-ts');
+            expect(payload.startTimestamp).toBe(new Date(FUTURE_ISO).getTime());
+        });
+
+        test('no conference link → conferenceUrl and conferenceType are null', async () => {
+            await AlarmManager.setGoogleEventReminder({
+                id: 'g-bare',
+                summary: 'No link',
+                start: { dateTime: FUTURE_ISO }
+            }, DATE_STR, 5);
+
+            const payload = await readSavedPayload('g-bare');
+            expect(payload.conferenceType).toBeNull();
+            expect(payload.conferenceUrl).toBeNull();
         });
     });
 
@@ -307,7 +514,7 @@ describe('AlarmManager', () => {
     // ---------------------------------------------------------------
     // SPEC: Date Scoping
     // - clearDateReminders only clears alarms for that date
-    // - clearGoogleEventReminders only clears Google alarms
+    // - setGoogleEventReminders selectively clears only removed events' alarms
     // ---------------------------------------------------------------
     describe('SPEC: date scoping', () => {
         test('clearDateReminders only affects specified date', async () => {
@@ -327,27 +534,8 @@ describe('AlarmManager', () => {
             expect(chrome.alarms.clear).toHaveBeenCalledTimes(2);
         });
 
-        test('clearGoogleEventReminders only clears google_ prefixed alarms', async () => {
-            chrome.alarms.getAll.mockImplementation((cb) => {
-                const list = [
-                    { name: 'google_event_reminder_2025-03-15_g1' },
-                    { name: 'event_reminder_2025-03-15_local1' },
-                ];
-                if (cb) { cb(list); return; }
-                return Promise.resolve(list);
-            });
-
-            await AlarmManager.clearGoogleEventReminders('2025-03-15');
-
-            expect(chrome.alarms.clear).toHaveBeenCalledTimes(1);
-            expect(chrome.alarms.clear).toHaveBeenCalledWith(
-                'google_event_reminder_2025-03-15_g1'
-            );
-        });
-
         test('setGoogleEventReminders skips all-day events', async () => {
             const spy = jest.spyOn(AlarmManager, 'setGoogleEventReminder').mockResolvedValue();
-            jest.spyOn(AlarmManager, 'clearGoogleEventReminders').mockResolvedValue();
 
             await AlarmManager.setGoogleEventReminders([
                 { id: 'g1', start: { dateTime: '2030-03-15T10:00:00Z' } },
@@ -356,6 +544,31 @@ describe('AlarmManager', () => {
             ], '2030-03-15');
 
             expect(spy).toHaveBeenCalledTimes(2);
+            spy.mockRestore();
+        });
+
+        test('setGoogleEventReminders clears only alarms for events no longer present', async () => {
+            // Selective clear: a still-present event's reminder must NOT be wiped
+            // (a due-but-late reminder would otherwise be lost); only removed
+            // events and non-Google alarms are left untouched/cleared respectively.
+            const spy = jest.spyOn(AlarmManager, 'setGoogleEventReminder').mockResolvedValue();
+            chrome.alarms.getAll.mockImplementation((cb) => {
+                const list = [
+                    { name: 'google_event_reminder_2030-03-15_g1' },    // still present → keep
+                    { name: 'google_event_reminder_2030-03-15_gone' },  // removed → clear
+                    { name: 'event_reminder_2030-03-15_local' },        // not Google → untouched
+                ];
+                if (cb) { cb(list); return; }
+                return Promise.resolve(list);
+            });
+
+            await AlarmManager.setGoogleEventReminders([
+                { id: 'g1', start: { dateTime: '2030-03-15T10:00:00Z' } },
+            ], '2030-03-15');
+
+            expect(chrome.alarms.clear).toHaveBeenCalledWith('google_event_reminder_2030-03-15_gone');
+            expect(chrome.alarms.clear).not.toHaveBeenCalledWith('google_event_reminder_2030-03-15_g1');
+            expect(chrome.alarms.clear).not.toHaveBeenCalledWith('event_reminder_2030-03-15_local');
             spy.mockRestore();
         });
 
