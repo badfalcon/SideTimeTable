@@ -64,6 +64,9 @@ export class GoogleEventContentBuilder {
             const startDate = new Date(start);
             const endDate = new Date(end);
 
+            const locale = navigator.language || 'en';
+            const localeHint = locale.startsWith('ja') ? 'ja' : 'en';
+
             // For all-day events
             if (event.start.date && event.end.date) {
                 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -72,44 +75,41 @@ export class GoogleEventContentBuilder {
                 const localEnd = new Date(event.end.date + 'T00:00:00');
                 const dayCount = Math.round((localEnd - localStart) / MS_PER_DAY);
                 if (dayCount > 1) {
-                    // Show date range: "06/01 – 06/03 (3 days)" / "06/01 〜 06/03（3日間）"
-                    const locale = navigator.language || 'en';
-                    const dateOpts = { month: '2-digit', day: '2-digit' };
+                    // Show date range: "06/01/2026 – 06/03/2026 (3 days)" / "2026/06/01 〜 2026/06/03（3日間）"
                     // end.date is exclusive in Google Calendar API, so show (end - 1 day) as the last day
                     const lastDay = new Date(localEnd.getTime() - MS_PER_DAY);
-                    const startStr = localStart.toLocaleDateString(locale, dateOpts);
-                    const endStr = lastDay.toLocaleDateString(locale, dateOpts);
+                    const startStr = window.formatDateForLocale(localStart, localeHint);
+                    const endStr = window.formatDateForLocale(lastDay, localeHint);
                     const template = window.getLocalizedMessage('allDayDateRange');
                     if (template) {
                         return template.replace('$1', startStr).replace('$2', endStr).replace('$3', dayCount);
                     }
                     return `${startStr} – ${endStr} (${dayCount} days)`;
                 }
-                const locale = navigator.language || 'en';
-                const dateOpts = { year: 'numeric', month: '2-digit', day: '2-digit' };
-                const dateStr = localStart.toLocaleDateString(locale, dateOpts);
+                const dateStr = window.formatDateForLocale(localStart, localeHint);
                 return `${dateStr} ${window.getLocalizedMessage('allDay')}`;
             }
 
             // For the timed events - use browser locale
-            const locale = navigator.language || 'en';
             const timeOptions = { hour: '2-digit', minute: '2-digit' };
-            const dateOptions = { year: 'numeric', month: '2-digit', day: '2-digit' };
             const startTime = startDate.toLocaleTimeString(locale, timeOptions);
             const endTime = endDate.toLocaleTimeString(locale, timeOptions);
-            const startDateStr = startDate.toLocaleDateString(locale, dateOptions);
-            const separator = locale.startsWith('ja') ? ' ～ ' : ' - ';
+            const startDateStr = window.formatDateForLocale(startDate, localeHint);
+            const separator = localeHint === 'ja' ? ' ～ ' : ' - ';
 
-            // If the event spans multiple calendar days, show the end date as well
-            const sameDay = startDate.getFullYear() === endDate.getFullYear()
-                && startDate.getMonth() === endDate.getMonth()
-                && startDate.getDate() === endDate.getDate();
+            // If the event spans multiple calendar days, show the end date as well.
+            // An event ending exactly at midnight belongs to the day it started,
+            // so compare against the last instant before the end time.
+            const lastInstant = endDate > startDate ? new Date(endDate.getTime() - 1) : endDate;
+            const sameDay = startDate.getFullYear() === lastInstant.getFullYear()
+                && startDate.getMonth() === lastInstant.getMonth()
+                && startDate.getDate() === lastInstant.getDate();
 
             if (sameDay) {
                 return `${startDateStr} ${startTime}${separator}${endTime}`;
             }
 
-            const endDateStr = endDate.toLocaleDateString(locale, dateOptions);
+            const endDateStr = window.formatDateForLocale(endDate, localeHint);
             return `${startDateStr} ${startTime}${separator}${endDateStr} ${endTime}`;
         } catch (error) {
             console.warn('Time format error:', error);
