@@ -49,6 +49,7 @@ export const DEFAULT_SETTINGS = {
     language: 'auto', // Language setting (auto/en/ja)
     googleEventReminder: false, // Automatic reminder for Google events
     reminderMinutes: 5, // Reminder time in minutes before event starts
+    reminderSyncInterval: 60, // How often (minutes) to re-sync Google reminders during the day
     darkMode: false, // Dark mode theme (legacy, kept for migration)
     useGoogleCalendarColors: true, // Use per-calendar colors from Google Calendar API
     colorTheme: 'default', // Active colour-set ID (see color-themes.js)
