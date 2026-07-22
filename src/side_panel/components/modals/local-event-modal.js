@@ -278,10 +278,13 @@ export class LocalEventModal extends ModalComponent {
      * @private
      */
     _formatViewTime(startTime, endTime, displayDate = new Date()) {
+        let dateStr = '';
         try {
             const locale = navigator.language || 'en';
+            const localeHint = locale.startsWith('ja') ? 'ja' : 'en';
             const timeOptions = { hour: '2-digit', minute: '2-digit' };
-            const dateOptions = { year: 'numeric', month: '2-digit', day: '2-digit' };
+
+            dateStr = window.formatDateForLocale(displayDate, localeHint);
 
             const [sh, sm] = startTime.split(':').map(Number);
             const [eh, em] = endTime.split(':').map(Number);
@@ -291,12 +294,11 @@ export class LocalEventModal extends ModalComponent {
 
             const startStr = startDate.toLocaleTimeString(locale, timeOptions);
             const endStr = endDate.toLocaleTimeString(locale, timeOptions);
-            const dateStr = startDate.toLocaleDateString(locale, dateOptions);
-            const separator = locale.startsWith('ja') ? ' \uff5e ' : ' - ';
+            const separator = localeHint === 'ja' ? ' \uff5e ' : ' - ';
 
             return `${dateStr} ${startStr}${separator}${endStr}`;
         } catch {
-            return `${startTime} - ${endTime}`;
+            return dateStr ? `${dateStr} ${startTime} - ${endTime}` : `${startTime} - ${endTime}`;
         }
     }
 

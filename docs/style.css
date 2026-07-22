@@ -137,6 +137,46 @@ button { cursor: pointer; background: none; border: none; font: inherit; }
     color: var(--clr-text);
 }
 
+.lang-switch {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin-left: auto;
+    margin-right: 16px;
+    padding: 3px;
+    border: 1px solid var(--clr-border);
+    border-radius: 999px;
+    flex-shrink: 0;
+}
+
+.lang-switch button,
+.lang-switch a {
+    border: none;
+    background: transparent;
+    text-decoration: none;
+    color: var(--clr-muted);
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    line-height: 1;
+    padding: 6px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: color var(--dur) var(--ease),
+                background var(--dur) var(--ease);
+}
+
+.lang-switch button:hover,
+.lang-switch a:hover {
+    color: var(--clr-text);
+}
+
+.lang-switch button.active,
+.lang-switch a.active {
+    background: var(--clr-card);
+    color: var(--clr-text);
+}
+
 .nav-cta {
     flex-shrink: 0;
     background: var(--grad-main);
@@ -442,12 +482,14 @@ button { cursor: pointer; background: none; border: none; font: inherit; }
 }
 
 .tl-time {
-    width: 36px;
+    /* 42px: 英語の12時間表記ラベル（例 "1:20 PM"）が折り返さない幅 */
+    width: 42px;
     flex-shrink: 0;
     font-size: 0.6rem;
     color: var(--clr-sub);
     padding-top: 8px;
     text-align: right;
+    white-space: nowrap;
     font-feature-settings: "tnum";
 }
 
@@ -1024,11 +1066,15 @@ button { cursor: pointer; background: none; border: none; font: inherit; }
     }
 }
 
-@media (max-width: 768px) {
+/* 800px以下: 言語スイッチャー追加後、英語のリンクテキストが769〜783pxで
+   収まらずCTAがはみ出すため、ナビリンクはここで畳む */
+@media (max-width: 800px) {
     .nav-links {
         display: none;
     }
+}
 
+@media (max-width: 768px) {
     .features-grid,
     .shots-grid {
         grid-template-columns: 1fr;
@@ -1049,6 +1095,12 @@ button { cursor: pointer; background: none; border: none; font: inherit; }
         font-size: 2.2rem;
     }
 
+    /* 英語の説明文は行が長く、固定<br>と自然折り返しが混ざって
+       ガタつくため、狭い画面では<br>を無効化して流し込みにする */
+    html[lang="en"] .hero-desc br {
+        display: none;
+    }
+
     .dev-card {
         flex-direction: column;
         text-align: center;
@@ -1062,6 +1114,29 @@ button { cursor: pointer; background: none; border: none; font: inherit; }
 }
 
 @media (max-width: 480px) {
+    .navbar {
+        padding: 0 16px;
+    }
+
+    .nav-brand span {
+        display: none;
+    }
+
+    .lang-switch {
+        margin-right: 10px;
+    }
+
+    .lang-switch button,
+    .lang-switch a {
+        padding: 5px 9px;
+        font-size: 0.72rem;
+    }
+
+    .nav-cta {
+        padding: 7px 14px;
+        font-size: 0.78rem;
+    }
+
     .hero {
         padding-left: 20px;
         padding-right: 20px;

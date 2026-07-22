@@ -90,6 +90,19 @@ describe('AlarmManager', () => {
             await AlarmManager.setGoogleEventReminder({ id: 'g1' }, '2030-03-15', 5);
             expect(chrome.alarms.create).not.toHaveBeenCalled();
         });
+
+        test.each(['outOfOffice', 'focusTime', 'workingLocation'])(
+            'non-meeting eventType "%s" is skipped even when timed',
+            async (eventType) => {
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                await AlarmManager.setGoogleEventReminder(
+                    { id: 'g1', summary: 'OOO', eventType, start: { dateTime: tomorrow.toISOString() } },
+                    '2030-03-15', 5
+                );
+                expect(chrome.alarms.create).not.toHaveBeenCalled();
+            }
+        );
     });
 
     // ---------------------------------------------------------------
@@ -267,6 +280,85 @@ describe('AlarmManager', () => {
             expect(opts.buttons[0].title).toMatch(/openSideTimeTable|Open.*SideTimeTable/i);
         });
 
+        // The minutes shown in the message are passed to i18n getMessage as the
+        // 2nd placeholder. The test i18n mock echoes the key, so we assert on the
+        // arguments handed to getMessage instead of the rendered string.
+        function startsInMinutesArg() {
+            const call = chrome.i18n.getMessage.mock.calls.find(c => c[0] === 'startsInMinutes');
+            return call ? call[1][1] : null;
+        }
+
+        test('late-delivered alarm shows real remaining minutes, not configured value', async () => {
+            // Configured for 5 min before, but the alarm is delivered late so the
+            // event actually starts in ~2 minutes. The notification must reflect 2.
+            const startMs = Date.now() + 2 * 60_000;
+            const data = {
+                id: 'g-late', title: 'Delayed', startTime: '14:00',
+                reminderMinutes: 5,
+                startTimestamp: startMs
+            };
+            chrome.storage.local.set({
+                'googleEventData_google_event_reminder_2099-01-01_g-late': data
+            }, () => {});
+
+            await AlarmManager.showReminderNotification('google_event_reminder_2099-01-01_g-late');
+
+            expect(startsInMinutesArg()).toBe('2');
+        });
+
+        test('local event remaining minutes derived from alarm date + startTime', async () => {
+            // No reminderMinutes stored on local events; remaining time is
+            // reconstructed from the alarm-name date and the event startTime.
+            const future = new Date(Date.now() + 10 * 60_000);
+            const ds = `${future.getFullYear()}-${String(future.getMonth() + 1).padStart(2, '0')}-${String(future.getDate()).padStart(2, '0')}`;
+            const startTime = `${String(future.getHours()).padStart(2, '0')}:${String(future.getMinutes()).padStart(2, '0')}`;
+            const event = { id: 'loc1', title: 'Local', startTime };
+            chrome.storage.local.set({ [`localEvents_${ds}`]: [event] }, () => {});
+
+            await AlarmManager.showReminderNotification(`event_reminder_${ds}_loc1`);
+
+            // ~10 minutes remaining (allow rounding to 9 or 10)
+            expect(['9', '10']).toContain(startsInMinutesArg());
+        });
+
+        test('event already starting → uses "starting now" message, not "0 minutes"', async () => {
+            // Alarm delivered late: the event start is already in the past.
+            const data = {
+                id: 'g-now', title: 'Now', startTime: '14:00',
+                reminderMinutes: 5,
+                startTimestamp: Date.now() - 30_000
+            };
+            chrome.storage.local.set({
+                'googleEventData_google_event_reminder_2099-01-01_g-now': data
+            }, () => {});
+
+            await AlarmManager.showReminderNotification('google_event_reminder_2099-01-01_g-now');
+
+            const startsInCall = chrome.i18n.getMessage.mock.calls.find(c => c[0] === 'startsInMinutes');
+            const startingNowCall = chrome.i18n.getMessage.mock.calls.find(c => c[0] === 'eventStartingNow');
+            expect(startsInCall).toBeUndefined();
+            expect(startingNowCall).toBeDefined();
+            expect(chrome.notifications.create).toHaveBeenCalledTimes(1);
+        });
+
+        test('1 minute remaining → uses singular message, not plural', async () => {
+            const data = {
+                id: 'g-one', title: 'One', startTime: '14:00',
+                reminderMinutes: 5,
+                startTimestamp: Date.now() + 60_000
+            };
+            chrome.storage.local.set({
+                'googleEventData_google_event_reminder_2099-01-01_g-one': data
+            }, () => {});
+
+            await AlarmManager.showReminderNotification('google_event_reminder_2099-01-01_g-one');
+
+            const singularCall = chrome.i18n.getMessage.mock.calls.find(c => c[0] === 'startsInOneMinute');
+            const pluralCall = chrome.i18n.getMessage.mock.calls.find(c => c[0] === 'startsInMinutes');
+            expect(singularCall).toBeDefined();
+            expect(pluralCall).toBeUndefined();
+        });
+
         test('no notification when event data is missing', async () => {
             await AlarmManager.showReminderNotification('event_reminder_2025-03-15_ghost');
             expect(chrome.notifications.create).not.toHaveBeenCalled();
@@ -350,6 +442,17 @@ describe('AlarmManager', () => {
             expect(payload.conferenceUrl).toBe('https://us02web.zoom.us/j/123');
         });
 
+        test('stores absolute startTimestamp for accurate remaining-time display', async () => {
+            await AlarmManager.setGoogleEventReminder({
+                id: 'g-ts',
+                summary: 'Timestamped',
+                start: { dateTime: FUTURE_ISO }
+            }, DATE_STR, 5);
+
+            const payload = await readSavedPayload('g-ts');
+            expect(payload.startTimestamp).toBe(new Date(FUTURE_ISO).getTime());
+        });
+
         test('no conference link → conferenceUrl and conferenceType are null', async () => {
             await AlarmManager.setGoogleEventReminder({
                 id: 'g-bare',
@@ -411,7 +514,7 @@ describe('AlarmManager', () => {
     // ---------------------------------------------------------------
     // SPEC: Date Scoping
     // - clearDateReminders only clears alarms for that date
-    // - clearGoogleEventReminders only clears Google alarms
+    // - setGoogleEventReminders selectively clears only removed events' alarms
     // ---------------------------------------------------------------
     describe('SPEC: date scoping', () => {
         test('clearDateReminders only affects specified date', async () => {
@@ -431,27 +534,8 @@ describe('AlarmManager', () => {
             expect(chrome.alarms.clear).toHaveBeenCalledTimes(2);
         });
 
-        test('clearGoogleEventReminders only clears google_ prefixed alarms', async () => {
-            chrome.alarms.getAll.mockImplementation((cb) => {
-                const list = [
-                    { name: 'google_event_reminder_2025-03-15_g1' },
-                    { name: 'event_reminder_2025-03-15_local1' },
-                ];
-                if (cb) { cb(list); return; }
-                return Promise.resolve(list);
-            });
-
-            await AlarmManager.clearGoogleEventReminders('2025-03-15');
-
-            expect(chrome.alarms.clear).toHaveBeenCalledTimes(1);
-            expect(chrome.alarms.clear).toHaveBeenCalledWith(
-                'google_event_reminder_2025-03-15_g1'
-            );
-        });
-
         test('setGoogleEventReminders skips all-day events', async () => {
             const spy = jest.spyOn(AlarmManager, 'setGoogleEventReminder').mockResolvedValue();
-            jest.spyOn(AlarmManager, 'clearGoogleEventReminders').mockResolvedValue();
 
             await AlarmManager.setGoogleEventReminders([
                 { id: 'g1', start: { dateTime: '2030-03-15T10:00:00Z' } },
@@ -460,6 +544,31 @@ describe('AlarmManager', () => {
             ], '2030-03-15');
 
             expect(spy).toHaveBeenCalledTimes(2);
+            spy.mockRestore();
+        });
+
+        test('setGoogleEventReminders clears only alarms for events no longer present', async () => {
+            // Selective clear: a still-present event's reminder must NOT be wiped
+            // (a due-but-late reminder would otherwise be lost); only removed
+            // events and non-Google alarms are left untouched/cleared respectively.
+            const spy = jest.spyOn(AlarmManager, 'setGoogleEventReminder').mockResolvedValue();
+            chrome.alarms.getAll.mockImplementation((cb) => {
+                const list = [
+                    { name: 'google_event_reminder_2030-03-15_g1' },    // still present → keep
+                    { name: 'google_event_reminder_2030-03-15_gone' },  // removed → clear
+                    { name: 'event_reminder_2030-03-15_local' },        // not Google → untouched
+                ];
+                if (cb) { cb(list); return; }
+                return Promise.resolve(list);
+            });
+
+            await AlarmManager.setGoogleEventReminders([
+                { id: 'g1', start: { dateTime: '2030-03-15T10:00:00Z' } },
+            ], '2030-03-15');
+
+            expect(chrome.alarms.clear).toHaveBeenCalledWith('google_event_reminder_2030-03-15_gone');
+            expect(chrome.alarms.clear).not.toHaveBeenCalledWith('google_event_reminder_2030-03-15_g1');
+            expect(chrome.alarms.clear).not.toHaveBeenCalledWith('event_reminder_2030-03-15_local');
             spy.mockRestore();
         });
 

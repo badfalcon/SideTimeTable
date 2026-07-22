@@ -123,7 +123,9 @@ English uses `hour: 'numeric'` (no leading zero), Japanese uses `hour: '2-digit'
 
 ### Date Scoping
 - `clearDateReminders(dateStr)` clears ONLY alarms for that date
-- `clearGoogleEventReminders(dateStr)` clears ONLY Google alarms for that date
+- `setGoogleEventReminders(events, dateStr)` clears ONLY the date's Google
+  alarms whose event is no longer present (selective clear), then (re)creates
+  reminders for current events; a still-valid reminder is never wiped
 - Different dates' alarms are unaffected
 
 ### reminderMinutes Validation (Q4)

@@ -19,12 +19,23 @@ export class ReminderSettingsCard extends CardComponent {
         // Form elements
         this.googleReminderToggle = null;
         this.reminderMinutesSelect = null;
+        this.syncIntervalSelect = null;
 
         // Current settings values
         this.settings = {
             googleEventReminder: false,
-            reminderMinutes: 5
+            reminderMinutes: 5,
+            reminderSyncInterval: 60
         };
+
+        // Available sync interval options (in minutes)
+        this.syncIntervalOptions = [
+            { value: 15, key: '__MSG_syncInterval15Min__', text: 'Every 15 minutes' },
+            { value: 30, key: '__MSG_syncInterval30Min__', text: 'Every 30 minutes' },
+            { value: 60, key: '__MSG_syncInterval60Min__', text: 'Every hour' },
+            { value: 120, key: '__MSG_syncInterval120Min__', text: 'Every 2 hours' },
+            { value: 360, key: '__MSG_syncInterval360Min__', text: 'Every 6 hours' }
+        ];
 
         // Available reminder time options (in minutes)
         this.reminderOptions = [
@@ -66,7 +77,58 @@ export class ReminderSettingsCard extends CardComponent {
         const reminderTimeSection = this._createReminderTimeSelect();
         form.appendChild(reminderTimeSection);
 
+        // Sync interval selection
+        const syncIntervalSection = this._createSyncIntervalSelect();
+        form.appendChild(syncIntervalSection);
+
         return form;
+    }
+
+    /**
+     * Create sync interval selection
+     * @private
+     */
+    _createSyncIntervalSelect() {
+        const container = document.createElement('div');
+        container.className = 'mb-3';
+
+        // Label
+        const label = document.createElement('label');
+        label.className = 'form-label fw-semibold';
+        label.htmlFor = 'reminder-sync-interval-select';
+        label.setAttribute('data-localize', '__MSG_reminderSyncIntervalLabel__');
+        label.textContent = window.getLocalizedMessage('reminderSyncIntervalLabel') || 'Check Google Calendar for changes:';
+
+        // Select box
+        this.syncIntervalSelect = document.createElement('select');
+        this.syncIntervalSelect.className = 'form-select';
+        this.syncIntervalSelect.id = 'reminder-sync-interval-select';
+
+        // Add options
+        this.syncIntervalOptions.forEach(option => {
+            const optionElement = document.createElement('option');
+            optionElement.value = option.value;
+            optionElement.setAttribute('data-localize', option.key);
+            optionElement.textContent = option.text;
+
+            if (option.value === this.settings.reminderSyncInterval) {
+                optionElement.selected = true;
+            }
+
+            this.syncIntervalSelect.appendChild(optionElement);
+        });
+
+        // Help text
+        const helpText = document.createElement('small');
+        helpText.className = 'form-text text-muted mt-1';
+        helpText.setAttribute('data-localize', '__MSG_reminderSyncIntervalHelp__');
+        helpText.textContent = window.getLocalizedMessage('reminderSyncIntervalHelp') || 'How often to look for newly added or rescheduled Google Calendar events so their reminders stay up to date.';
+
+        container.appendChild(label);
+        container.appendChild(this.syncIntervalSelect);
+        container.appendChild(helpText);
+
+        return container;
     }
 
     /**
@@ -171,6 +233,12 @@ export class ReminderSettingsCard extends CardComponent {
                 this._handleSettingsChange();
             });
         }
+
+        if (this.syncIntervalSelect) {
+            this.syncIntervalSelect.addEventListener('change', () => {
+                this._handleSettingsChange();
+            });
+        }
     }
 
     /**
@@ -180,6 +248,7 @@ export class ReminderSettingsCard extends CardComponent {
     _handleSettingsChange() {
         this.settings.googleEventReminder = this.googleReminderToggle.checked;
         this.settings.reminderMinutes = parseInt(this.reminderMinutesSelect.value, 10);
+        this.settings.reminderSyncInterval = parseInt(this.syncIntervalSelect.value, 10);
 
         if (this.onSettingsChange) {
             this.onSettingsChange(this.settings);
@@ -204,6 +273,13 @@ export class ReminderSettingsCard extends CardComponent {
                 this.reminderMinutesSelect.value = settings.reminderMinutes;
             }
         }
+
+        if (settings.reminderSyncInterval !== undefined) {
+            this.settings.reminderSyncInterval = settings.reminderSyncInterval;
+            if (this.syncIntervalSelect) {
+                this.syncIntervalSelect.value = settings.reminderSyncInterval;
+            }
+        }
     }
 
     /**
@@ -212,6 +288,7 @@ export class ReminderSettingsCard extends CardComponent {
     resetToDefaults() {
         this.settings.googleEventReminder = false;
         this.settings.reminderMinutes = 5;
+        this.settings.reminderSyncInterval = 60;
 
         if (this.googleReminderToggle) {
             this.googleReminderToggle.checked = false;
@@ -219,6 +296,10 @@ export class ReminderSettingsCard extends CardComponent {
 
         if (this.reminderMinutesSelect) {
             this.reminderMinutesSelect.value = '5';
+        }
+
+        if (this.syncIntervalSelect) {
+            this.syncIntervalSelect.value = '60';
         }
     }
 
