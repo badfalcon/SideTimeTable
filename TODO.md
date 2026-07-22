@@ -38,6 +38,10 @@
 
 - [x] 英語版のSEO対応: `npm run build:landing`（`scripts/build-landing-en.js`）で静的な英語ページ（`docs/en/`）を生成し、`hreflang` 相互リンク・canonical・OGP・JSON-LD・`sitemap.xml`・`robots.txt` を追加済み。ルートは日本語専用で非日本語ブラウザは `/en/` へリダイレクトする方式（ランタイム言語切替は廃止）。**文言（ルートの日本語）や `scripts/landing-en-data.js`（英語辞書）を変更したら `npm run build:landing` で `docs/en/` を再生成すること**（`tests/docs/landing-en.test.js` が再生成忘れを検知する）。
 
+## 将来対応（機能）
+
+- [ ] Outlook カレンダー統合（PKCE OAuth2）: 実装済みの作業を `archive/pkce-outlook-support` タグに保存してブランチはクローズ（旧ブランチ `claude/pkce-outlook-support-83qZL`、最終コミット `7e35449`）。実装内容: `src/lib/pkce.js`（PKCE ヘルパー）、`src/services/outlook-calendar-client.js`（Microsoft Graph クライアント約670行）、設定画面の Outlook 連携カード2種、`OutlookEventManager`、i18n 英日約40キー、テスト320行。main 追従済み（テスト637件・lint・ビルド確認済み）。**再開時の残作業**: (1) Outlook イベント描画が旧方式（`EventElementFactory` 直呼び）のままなので `GoogleEventRenderer` と同様の renderer パターンへ揃える、(2) Azure アプリ登録と実機での OAuth フロー確認、(3) 終日イベント対応（現状スキップ）。
+
 ## 仕様検討（Q7）
 
 - [ ] `saveLocalEventsForDate()` の保存方式を上書き→マージベースに変更するか検討（現状は上書き方式。呼び出し元がload→edit→saveする必要あり）
