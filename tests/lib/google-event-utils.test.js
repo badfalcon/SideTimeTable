@@ -150,4 +150,39 @@ describe('buildGoogleEventResource', () => {
       endTime: '10:00',
     })).toThrow();
   });
+
+  describe('Google Meet', () => {
+    test('omits conferenceData when addMeet is falsy', () => {
+      const r = buildGoogleEventResource({
+        summary: 'X', date, startTime: '10:00', endTime: '11:00',
+      });
+      expect(r).not.toHaveProperty('conferenceData');
+
+      const r2 = buildGoogleEventResource({
+        summary: 'X', date, startTime: '10:00', endTime: '11:00', addMeet: false,
+      });
+      expect(r2).not.toHaveProperty('conferenceData');
+    });
+
+    test('attaches a hangoutsMeet createRequest when addMeet is true', () => {
+      const r = buildGoogleEventResource({
+        summary: 'X', date, startTime: '10:00', endTime: '11:00',
+        addMeet: true, meetRequestId: 'fixed-id-123',
+      });
+      expect(r.conferenceData).toEqual({
+        createRequest: {
+          requestId: 'fixed-id-123',
+          conferenceSolutionKey: { type: 'hangoutsMeet' },
+        },
+      });
+    });
+
+    test('generates a non-empty requestId when none is supplied', () => {
+      const r = buildGoogleEventResource({
+        summary: 'X', date, startTime: '10:00', endTime: '11:00', addMeet: true,
+      });
+      expect(typeof r.conferenceData.createRequest.requestId).toBe('string');
+      expect(r.conferenceData.createRequest.requestId.length).toBeGreaterThan(0);
+    });
+  });
 });

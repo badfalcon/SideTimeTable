@@ -42,6 +42,7 @@ export class LocalEventFormBuilder {
         this.googleFields = null;
         this.calendarSelect = null;
         this.locationInput = null;
+        this.meetCheckbox = null;
 
         // Containers toggled by save destination
         this.reminderContainer = null;
@@ -129,6 +130,28 @@ export class LocalEventFormBuilder {
         this.locationInput.type = 'text';
         this.locationInput.id = 'googleEventLocation';
         container.appendChild(this.locationInput);
+
+        // Google Meet toggle
+        const meetRow = document.createElement('div');
+        meetRow.className = 'google-meet-row';
+
+        this.meetCheckbox = document.createElement('input');
+        this.meetCheckbox.type = 'checkbox';
+        this.meetCheckbox.id = 'googleEventMeet';
+
+        const meetIcon = document.createElement('i');
+        meetIcon.className = 'fas fa-video';
+        meetIcon.setAttribute('aria-hidden', 'true');
+
+        const meetLabel = document.createElement('label');
+        meetLabel.htmlFor = 'googleEventMeet';
+        meetLabel.setAttribute('data-localize', '__MSG_addGoogleMeet__');
+        meetLabel.textContent = window.getLocalizedMessage('addGoogleMeet') || 'Add Google Meet';
+
+        meetRow.appendChild(this.meetCheckbox);
+        meetRow.appendChild(meetIcon);
+        meetRow.appendChild(meetLabel);
+        container.appendChild(meetRow);
 
         parentElement.appendChild(container);
         this.googleFields = container;
@@ -657,6 +680,7 @@ export class LocalEventFormBuilder {
 
         // Reset Google-only fields and save destination
         if (this.locationInput) this.locationInput.value = '';
+        if (this.meetCheckbox) this.meetCheckbox.checked = false;
         this.setSource('local');
 
         // Reset recurrence

@@ -1678,6 +1678,10 @@
     "message": "Location",
     "description": "Label for the location field when creating a Google event"
   },
+  "addGoogleMeet": {
+    "message": "Add Google Meet",
+    "description": "Checkbox label to attach a Google Meet video conference to a new event"
+  },
   "primaryCalendar": {
     "message": "Primary",
     "description": "Suffix marking the user's primary Google calendar in the calendar picker"

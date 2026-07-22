@@ -1678,6 +1678,10 @@
     "message": "場所",
     "description": "Googleイベント作成時の場所フィールドラベル"
   },
+  "addGoogleMeet": {
+    "message": "Google Meet を追加",
+    "description": "新規イベントにGoogle Meetビデオ会議を追加するチェックボックスのラベル"
+  },
   "primaryCalendar": {
     "message": "メイン",
     "description": "カレンダー選択でユーザーのメインカレンダーを示す接尾語"

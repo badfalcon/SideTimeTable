@@ -404,7 +404,10 @@ export class GoogleCalendarClient {
         }
 
         const targetCalendarId = calendarId || 'primary';
-        const eventsUrl = `${CALENDAR_API_BASE}/calendars/${encodeURIComponent(targetCalendarId)}/events`;
+        // conferenceData.createRequest (Google Meet) is only honored when the
+        // insert is sent with conferenceDataVersion=1.
+        const query = eventResource.conferenceData ? '?conferenceDataVersion=1' : '';
+        const eventsUrl = `${CALENDAR_API_BASE}/calendars/${encodeURIComponent(targetCalendarId)}/events${query}`;
 
         const res = await this._fetchWithAuth(eventsUrl, {
             method: 'POST',

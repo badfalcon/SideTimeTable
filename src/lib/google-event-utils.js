@@ -43,6 +43,10 @@ export function filterWritableCalendars(calendars, selectedIds = null) {
  * Optional fields (description, location) are omitted when blank so the
  * request body stays minimal.
  *
+ * When `addMeet` is true, a `conferenceData.createRequest` for Google Meet is
+ * attached — the caller must then send the insert with `conferenceDataVersion=1`
+ * (see GoogleCalendarClient.createEvent, which detects `conferenceData`).
+ *
  * @param {Object} fields
  * @param {string} fields.summary - Event title (required)
  * @param {Date} fields.date - The date the event is on
@@ -50,9 +54,12 @@ export function filterWritableCalendars(calendars, selectedIds = null) {
  * @param {string} fields.endTime - End time "HH:MM" (required)
  * @param {string} [fields.description]
  * @param {string} [fields.location]
+ * @param {boolean} [fields.addMeet] - Attach a Google Meet conference
+ * @param {string} [fields.meetRequestId] - Unique id for the Meet create request
+ *   (generated when omitted; injectable for tests)
  * @returns {Object} A Google Calendar event resource ({summary, start, end, ...})
  */
-export function buildGoogleEventResource({ summary, description, location, date, startTime, endTime }) {
+export function buildGoogleEventResource({ summary, description, location, date, startTime, endTime, addMeet, meetRequestId }) {
     const resource = {
         summary: (summary || '').trim(),
         start: { dateTime: buildRfc3339DateTime(date, startTime) },
@@ -67,6 +74,17 @@ export function buildGoogleEventResource({ summary, description, location, date,
     const trimmedLocation = (location || '').trim();
     if (trimmedLocation) {
         resource.location = trimmedLocation;
+    }
+
+    if (addMeet) {
+        const requestId = meetRequestId
+            || `meet-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+        resource.conferenceData = {
+            createRequest: {
+                requestId,
+                conferenceSolutionKey: { type: 'hangoutsMeet' }
+            }
+        };
     }
 
     return resource;

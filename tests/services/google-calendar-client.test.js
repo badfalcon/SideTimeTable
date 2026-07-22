@@ -305,6 +305,35 @@ describe('SPEC: createEvent', () => {
     expect(url).toBe('https://www.googleapis.com/calendar/v3/calendars/primary/events');
   });
 
+  test('does not add conferenceDataVersion when the event has no conferenceData', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true, status: 200, json: () => Promise.resolve({ id: 'e' }),
+    });
+
+    await client.createEvent('cal1', validResource());
+
+    const [url] = global.fetch.mock.calls[0];
+    expect(url).not.toContain('conferenceDataVersion');
+  });
+
+  test('sends conferenceDataVersion=1 when the event requests a Google Meet', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true, status: 200, json: () => Promise.resolve({ id: 'e', hangoutLink: 'https://meet' }),
+    });
+
+    const resource = {
+      ...validResource(),
+      conferenceData: {
+        createRequest: { requestId: 'r1', conferenceSolutionKey: { type: 'hangoutsMeet' } },
+      },
+    };
+    await client.createEvent('cal1', resource);
+
+    const [url, options] = global.fetch.mock.calls[0];
+    expect(url).toBe('https://www.googleapis.com/calendar/v3/calendars/cal1/events?conferenceDataVersion=1');
+    expect(JSON.parse(options.body).conferenceData.createRequest.conferenceSolutionKey.type).toBe('hangoutsMeet');
+  });
+
   test('classifies a 403 response as an authentication error', async () => {
     global.fetch = jest.fn().mockResolvedValue({
       ok: false,

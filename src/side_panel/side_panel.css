@@ -631,6 +631,26 @@ body {
     outline-offset: 1px;
 }
 
+/* Google Meet toggle row */
+.google-meet-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0 15px;
+}
+
+.google-meet-row input[type="checkbox"] {
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.google-meet-row label {
+    margin: 0;
+    font-weight: normal;
+    cursor: pointer;
+    user-select: none;
+}
+
 /* Google event target-calendar picker (matches text input metrics) */
 .modal-content select.event-form-select {
     width: calc(100% - 20px);
