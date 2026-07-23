@@ -57,6 +57,7 @@ export class GoogleEventManager {
         this.lastFetchDate = null; // The last date when the API was called
         this.currentFetchPromise = null; // The currently executing fetch Promise
         this._toggleVersion = 0; // Version counter for calendar toggle race condition prevention
+        this._fetchVersion = 0; // Version counter for date navigation race condition prevention
         this.onAuthExpired = null; // Callback when authentication expires
         this._authExpiredKnown = false; // Skip fetches after auth failure is detected
         this.allDayEventsContainer = null; // Container for all-day event chips
@@ -106,6 +107,11 @@ export class GoogleEventManager {
 
         this.lastFetchDate = targetDateStr;
 
+        // Guard against rapid date navigation: if a newer fetch starts before
+        // this one resolves, the stale response must be dropped, never
+        // rendered over the newer date's events (same pattern as _toggleVersion).
+        const versionAtStart = ++this._fetchVersion;
+
         // Fetch the events (use the Google colors directly)
         this.currentFetchPromise = (() => {
             const requestId = `req-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
@@ -116,6 +122,11 @@ export class GoogleEventManager {
             return sendMessage(message);
         })()
             .then(async response => {
+                // A newer fetch superseded this one — drop the stale response
+                if (this._fetchVersion !== versionAtStart) {
+                    return;
+                }
+
                 // Clear the previous display
                 this.googleEventsDiv.innerHTML = '';
                 if (this.allDayEventsContainer) {
@@ -169,8 +180,11 @@ export class GoogleEventManager {
                 logError('Google event fetch exception', error);
             })
             .finally(() => {
-                // Clear the Promise when the request completes
-                this.currentFetchPromise = null;
+                // Clear the Promise when the request completes — unless a
+                // newer fetch already owns currentFetchPromise
+                if (this._fetchVersion === versionAtStart) {
+                    this.currentFetchPromise = null;
+                }
             });
 
         return this.currentFetchPromise;

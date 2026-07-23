@@ -52,8 +52,8 @@
     "description": "Cancel button text"
   },
   "remindMeBefore": {
-    "message": "Remind me 5 minutes before",
-    "description": "Checkbox label for event reminder"
+    "message": "Notify me 5 minutes before",
+    "description": "Checkbox label for event reminder (aligned with the \"notification\" wording used on the options page and Google fields)"
   },
   "eventReminder": {
     "message": "Event Reminder",

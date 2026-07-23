@@ -227,7 +227,7 @@ class SidePanelUIController {
         // The modal components
         this.localEventModal = new LocalEventModal({
             onSave: (eventData, mode) => this._handleSaveLocalEvent(eventData, mode),
-            onSaveGoogle: (eventResource, calendarId) => this._handleSaveGoogleEvent(eventResource, calendarId),
+            onSaveGoogle: (eventResource, calendarId, requestId) => this._handleSaveGoogleEvent(eventResource, calendarId, requestId),
             onDelete: (event) => this._handleDeleteLocalEvent(event),
             onCancel: () => this._handleCancelLocalEvent(),
             getCurrentDate: () => this.dateNavService.getDate()
@@ -235,8 +235,8 @@ class SidePanelUIController {
 
         this.googleEventModal = new GoogleEventModal({
             onRsvpResponse: () => this._loadEventsForCurrentDate(),
-            onSaveEdit: (calendarId, eventId, patch) => this._handleUpdateGoogleEvent(calendarId, eventId, patch),
-            onDelete: (calendarId, eventId) => this._handleDeleteGoogleEvent(calendarId, eventId)
+            onSaveEdit: (calendarId, eventId, patch, requestId) => this._handleUpdateGoogleEvent(calendarId, eventId, patch, requestId),
+            onDelete: (calendarId, eventId, requestId) => this._handleDeleteGoogleEvent(calendarId, eventId, requestId)
         });
 
         this.alertModal = new AlertModal();
@@ -631,9 +631,10 @@ class SidePanelUIController {
      * @returns {Promise<boolean>}
      * @private
      */
-    async _handleSaveGoogleEvent(eventResource, calendarId) {
+    async _handleSaveGoogleEvent(eventResource, calendarId, requestId) {
         try {
-            const requestId = `create-evt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+            // The modal supplies a retry-stable id; fall back for older callers
+            requestId = requestId || `create-evt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
             const response = await sendMessage({
                 action: 'createEvent',
                 calendarId,
@@ -664,9 +665,9 @@ class SidePanelUIController {
      * @returns {Promise<boolean>}
      * @private
      */
-    async _handleUpdateGoogleEvent(calendarId, eventId, patchResource) {
+    async _handleUpdateGoogleEvent(calendarId, eventId, patchResource, requestId) {
         try {
-            const requestId = `update-evt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+            requestId = requestId || `update-evt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
             const response = await sendMessage({
                 action: 'updateEvent',
                 calendarId,
@@ -698,9 +699,9 @@ class SidePanelUIController {
      * @returns {Promise<boolean>}
      * @private
      */
-    async _handleDeleteGoogleEvent(calendarId, eventId) {
+    async _handleDeleteGoogleEvent(calendarId, eventId, requestId) {
         try {
-            const requestId = `delete-evt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+            requestId = requestId || `delete-evt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
             const response = await sendMessage({
                 action: 'deleteEvent',
                 calendarId,

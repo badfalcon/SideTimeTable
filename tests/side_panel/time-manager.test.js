@@ -757,3 +757,69 @@ describe('EventLayoutManager', () => {
     });
   });
 });
+
+// ---------------------------------------------------------------
+// SPEC: Day-crossing events (e.g. 23:00 → 01:00 next day)
+// - Overlap detection must use real timestamps, not minutes-of-day,
+//   so events spanning midnight get correct lane assignments
+// ---------------------------------------------------------------
+describe('EventLayoutManager — day-crossing events', () => {
+  let manager;
+
+  beforeEach(() => {
+    manager = new EventLayoutManager(null);
+  });
+
+  afterEach(() => {
+    manager.destroy();
+  });
+
+  // Event on the base day (June 15, 2025) possibly ending the next day
+  function createSpanEvent(id, startDay, startHour, startMin, endDay, endHour, endMin) {
+    return {
+      id,
+      startTime: new Date(2025, 5, startDay, startHour, startMin),
+      endTime: new Date(2025, 5, endDay, endHour, endMin),
+      element: mockElement(),
+    };
+  }
+
+  test('two events crossing midnight overlap', () => {
+    // 23:00→01:00 vs 23:30→00:30 — clearly overlapping in real time
+    const e1 = createSpanEvent('e1', 15, 23, 0, 16, 1, 0);
+    const e2 = createSpanEvent('e2', 15, 23, 30, 16, 0, 30);
+    expect(manager._areEventsOverlapping(e1, e2)).toBe(true);
+    expect(manager._areEventsOverlapping(e2, e1)).toBe(true);
+  });
+
+  test('a day-crossing event does not overlap with a morning event', () => {
+    const crossing = createSpanEvent('e1', 15, 23, 0, 16, 1, 0);
+    const morning = createSpanEvent('e2', 15, 9, 0, 15, 10, 0);
+    expect(manager._areEventsOverlapping(crossing, morning)).toBe(false);
+  });
+
+  test('an event started the previous day overlaps a small-hours event', () => {
+    // Previous day 23:00 → today 01:00 vs today 00:30-01:30
+    const fromYesterday = createSpanEvent('e1', 14, 23, 0, 15, 1, 0);
+    const smallHours = createSpanEvent('e2', 15, 0, 30, 15, 1, 30);
+    expect(manager._areEventsOverlapping(fromYesterday, smallHours)).toBe(true);
+  });
+
+  test('day-crossing overlapping events are assigned different lanes', () => {
+    const e1 = createSpanEvent('e1', 15, 23, 0, 16, 1, 0);
+    const e2 = createSpanEvent('e2', 15, 23, 30, 16, 0, 30);
+    manager._assignLanesToGroup([e1, e2]);
+    expect(e1.lane).not.toBe(e2.lane);
+  });
+
+  test('an event started the previous day sorts before a later same-night event', () => {
+    // Yesterday 23:00 → 01:00 starts BEFORE today 00:15 → 00:45 in real time;
+    // minutes-of-day sorting (1380 vs 15) would invert this
+    const fromYesterday = createSpanEvent('e1', 14, 23, 0, 15, 1, 0);
+    const smallHours = createSpanEvent('e2', 15, 0, 15, 15, 0, 45);
+    manager._assignLanesToGroup([smallHours, fromYesterday]);
+    // Earlier-starting event gets the first lane
+    expect(fromYesterday.lane).toBe(0);
+    expect(smallHours.lane).toBe(1);
+  });
+});

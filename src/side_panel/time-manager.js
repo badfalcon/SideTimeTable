@@ -261,10 +261,12 @@ export class EventLayoutManager {
      * const overlaps = layoutManager._areEventsOverlapping(event1, event2);
      */
     _areEventsOverlapping(event1, event2) {
-        const start1 = this._getCachedTimeValue(event1.startTime);
-        const end1 = this._getCachedTimeValue(event1.endTime);
-        const start2 = this._getCachedTimeValue(event2.startTime);
-        const end2 = this._getCachedTimeValue(event2.endTime);
+        // Real timestamps, not minutes-of-day: a day-crossing event
+        // (23:00 → 01:00 next day) must still compare correctly
+        const start1 = event1.startTime.getTime();
+        const end1 = event1.endTime.getTime();
+        const start2 = event2.startTime.getTime();
+        const end2 = event2.endTime.getTime();
 
         // Zero-duration events at the same time are considered overlapping
         // (same-time appointments should display side by side)
@@ -331,9 +333,10 @@ export class EventLayoutManager {
      * @private
      */
     _assignLanesToGroup(group) {
-        // Sort by the start time
+        // Sort by the real start timestamp (an event started the previous
+        // day must sort before a small-hours event of the viewed day)
         const sortedEvents = [...group].sort((a, b) =>
-            this._getCachedTimeValue(a.startTime) - this._getCachedTimeValue(b.startTime)
+            a.startTime.getTime() - b.startTime.getTime()
         );
 
         // The event list per lane
