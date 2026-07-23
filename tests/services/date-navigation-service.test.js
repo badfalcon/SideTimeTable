@@ -1,4 +1,4 @@
-import { DateNavigationService } from '../../src/side_panel/services/date-navigation-service.js';
+import { DateNavigationService } from '../../src/services/date-navigation-service.js';
 
 describe('DateNavigationService', () => {
     let service;
