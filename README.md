@@ -90,6 +90,9 @@ Notes:
 ### License
 This plugin is released under the [Apache License 2.0]. See the `LICENSE` file for details.
 
+### Third-Party Software
+SideTimeTable bundles or references third-party libraries (Bootstrap, Popper.js, Font Awesome, marked, DOMPurify). See [`THIRD_PARTY_LICENSES.md`](./THIRD_PARTY_LICENSES.md) for copyright notices and license terms.
+
 ---
 
 ## 日本語
@@ -192,4 +195,7 @@ chrome.storage.local.set({ enableDeveloperFeatures: false, enableReminderDebug: 
 
 ### ライセンス
 このプラグインは[Apache License 2.0]の下で公開されています。詳細は`LICENSE`ファイルを参照してください。
+
+### サードパーティソフトウェア
+SideTimeTable は Bootstrap、Popper.js、Font Awesome、marked、DOMPurify などの第三者ライブラリを同梱・参照しています。著作権表示および各ライセンス条項は [`THIRD_PARTY_LICENSES.md`](./THIRD_PARTY_LICENSES.md) を参照してください。
 

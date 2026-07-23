@@ -1657,5 +1657,77 @@
   "authExpiredStatus": {
     "message": "認証の有効期限が切れています — 再接続してください",
     "description": "Googleカレンダー認証が期限切れの場合に設定画面に表示されるステータス"
+  },
+  "saveDestination": {
+    "message": "保存先",
+    "description": "ローカル/Google 保存先トグルのアクセシビリティラベル"
+  },
+  "destinationLocal": {
+    "message": "ローカル",
+    "description": "保存先トグルのローカルイベント選択肢"
+  },
+  "destinationGoogle": {
+    "message": "Google",
+    "description": "保存先トグルのGoogleカレンダーイベント選択肢"
+  },
+  "targetCalendar": {
+    "message": "カレンダー",
+    "description": "Googleイベント作成時の作成先カレンダー選択ラベル"
+  },
+  "eventLocation": {
+    "message": "場所",
+    "description": "Googleイベント作成時の場所フィールドラベル"
+  },
+  "addGoogleMeet": {
+    "message": "Google Meet を追加",
+    "description": "新規イベントにGoogle Meetビデオ会議を追加するチェックボックスのラベル"
+  },
+  "advancedSettings": {
+    "message": "詳細設定",
+    "description": "Googleイベント作成時の詳細フィールドを折りたたむアコーディオンの見出し"
+  },
+  "notification": {
+    "message": "通知",
+    "description": "Googleイベント作成時のリマインダー/通知セレクトのラベル"
+  },
+  "reminderDefault": {
+    "message": "カレンダーのデフォルト",
+    "description": "カレンダーの既定リマインダーをそのまま使うリマインダー選択肢"
+  },
+  "minutesBeforeUnit": {
+    "message": "分前",
+    "description": "リマインダー選択肢で分数の後ろに付ける接尾語（例: 10分前）"
+  },
+  "primaryCalendar": {
+    "message": "メイン",
+    "description": "カレンダー選択でユーザーのメインカレンダーを示す接尾語"
+  },
+  "googleEventCreateFailed": {
+    "message": "Googleイベントの作成に失敗しました。時間をおいて再試行してください。",
+    "description": "Googleカレンダーイベントの作成に失敗した際のエラーメッセージ"
+  },
+  "googleEventUpdateFailed": {
+    "message": "Googleイベントの更新に失敗しました。時間をおいて再試行してください。",
+    "description": "Googleカレンダーイベントの更新に失敗した際のエラーメッセージ"
+  },
+  "googleEventDeleteFailed": {
+    "message": "Googleイベントの削除に失敗しました。時間をおいて再試行してください。",
+    "description": "Googleカレンダーイベントの削除に失敗した際のエラーメッセージ"
+  },
+  "googleDeleteConfirm": {
+    "message": "このイベントをGoogleカレンダーから削除しますか？この操作は取り消せません。",
+    "description": "Googleカレンダーイベント削除前のインライン確認メッセージ"
+  },
+  "confirmDelete": {
+    "message": "削除する",
+    "description": "Googleカレンダーイベントの削除を確定するボタン"
+  },
+  "googleDestinationHidden": {
+    "message": "Googleに保存するには、保存先にできるカレンダーをカレンダーフィルターで表示してください。",
+    "description": "書き込み可能なGoogleカレンダーが全て非表示のときに作成モーダルに表示されるヒント"
+  },
+  "googleEditOtherFields": {
+    "message": "その他の項目はGoogleカレンダーで編集できます。",
+    "description": "Googleイベント編集フォームで編集できない項目についての補足"
   }
 }

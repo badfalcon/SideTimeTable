@@ -31,6 +31,310 @@ export class LocalEventFormBuilder {
         this.endDateInput = null;
         this.noEndDateCheckbox = null;
         this.endDateSection = null;
+
+        // Save destination (local / google) elements
+        this.sourceToggle = null;
+        this.sourceLocalBtn = null;
+        this.sourceGoogleBtn = null;
+        this.googleHiddenHint = null;
+        this.currentSource = 'local';
+
+        // Google-only fields
+        this.googleFields = null;
+        this.calendarSelect = null;
+        this.locationInput = null;
+        this.meetCheckbox = null;
+
+        // Google advanced (accordion) fields
+        this.googleAdvanced = null;
+        this.advancedToggle = null;
+        this.advancedBody = null;
+        this.reminderSelect = null;
+
+        // Containers toggled by save destination
+        this.reminderContainer = null;
+        this.recurrenceSection = null;
+    }
+
+    /**
+     * Build the save-destination toggle (Local / Google). Hidden until a
+     * Google calendar list is provided via setGoogleAvailability().
+     * @param {HTMLElement} parentElement
+     * @private
+     */
+    _buildSourceToggle(parentElement) {
+        const toggle = document.createElement('div');
+        toggle.className = 'event-source-toggle';
+        // Two mutually exclusive toggle buttons (Tab reaches both, Enter/Space
+        // activates). We deliberately use role=group + aria-pressed rather than
+        // radiogroup/radio, which would promise arrow-key navigation we don't wire.
+        toggle.setAttribute('role', 'group');
+        toggle.setAttribute('data-localize-aria-label', '__MSG_saveDestination__');
+        toggle.setAttribute('aria-label', window.getLocalizedMessage('saveDestination') || 'Save destination');
+
+        const makeButton = (source, msgKey, fallback, iconClass) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'event-source-btn';
+            btn.dataset.source = source;
+            btn.setAttribute('aria-pressed', 'false');
+
+            const icon = document.createElement('i');
+            icon.className = iconClass;
+            icon.setAttribute('aria-hidden', 'true');
+
+            const label = document.createElement('span');
+            label.setAttribute('data-localize', `__MSG_${msgKey}__`);
+            label.textContent = window.getLocalizedMessage(msgKey) || fallback;
+
+            btn.appendChild(icon);
+            btn.appendChild(label);
+            this.modal.addEventListener(btn, 'click', () => this.setSource(source));
+            return btn;
+        };
+
+        // Local = stored on this device; Google = written to Google Calendar
+        this.sourceLocalBtn = makeButton('local', 'destinationLocal', 'Local', 'fas fa-laptop');
+        this.sourceGoogleBtn = makeButton('google', 'destinationGoogle', 'Google', 'fab fa-google');
+
+        toggle.appendChild(this.sourceLocalBtn);
+        toggle.appendChild(this.sourceGoogleBtn);
+        parentElement.appendChild(toggle);
+        this.sourceToggle = toggle;
+
+        // Hint shown when writable Google calendars exist but none are
+        // displayed on the timeline (the toggle would otherwise vanish with
+        // no explanation of why Google saving is unavailable).
+        this.googleHiddenHint = document.createElement('div');
+        this.googleHiddenHint.className = 'google-destination-hint';
+        this.googleHiddenHint.style.display = 'none';
+        this.googleHiddenHint.setAttribute('data-localize', '__MSG_googleDestinationHidden__');
+        this.googleHiddenHint.textContent = window.getLocalizedMessage('googleDestinationHidden')
+            || 'To save to Google, show a writable calendar in the calendar filter first.';
+        parentElement.appendChild(this.googleHiddenHint);
+    }
+
+    /**
+     * Build Google-only fields (target calendar picker + Meet toggle). Hidden
+     * unless the save destination is Google.
+     * @param {HTMLElement} parentElement
+     * @private
+     */
+    _buildGoogleFields(parentElement) {
+        const container = document.createElement('div');
+        container.className = 'google-event-fields';
+        container.style.cssText = 'display: none;';
+
+        // Target calendar picker
+        const calendarLabel = document.createElement('label');
+        calendarLabel.htmlFor = 'googleEventCalendar';
+        calendarLabel.setAttribute('data-localize', '__MSG_targetCalendar__');
+        calendarLabel.textContent = window.getLocalizedMessage('targetCalendar') || 'Calendar';
+        container.appendChild(calendarLabel);
+
+        this.calendarSelect = document.createElement('select');
+        this.calendarSelect.id = 'googleEventCalendar';
+        this.calendarSelect.className = 'event-form-select';
+        container.appendChild(this.calendarSelect);
+
+        // Google Meet toggle
+        const meetRow = document.createElement('div');
+        meetRow.className = 'google-meet-row';
+
+        this.meetCheckbox = document.createElement('input');
+        this.meetCheckbox.type = 'checkbox';
+        this.meetCheckbox.id = 'googleEventMeet';
+
+        const meetIcon = document.createElement('i');
+        meetIcon.className = 'fas fa-video';
+        meetIcon.setAttribute('aria-hidden', 'true');
+
+        const meetLabel = document.createElement('label');
+        meetLabel.htmlFor = 'googleEventMeet';
+        meetLabel.setAttribute('data-localize', '__MSG_addGoogleMeet__');
+        meetLabel.textContent = window.getLocalizedMessage('addGoogleMeet') || 'Add Google Meet';
+
+        meetRow.appendChild(this.meetCheckbox);
+        meetRow.appendChild(meetIcon);
+        meetRow.appendChild(meetLabel);
+        container.appendChild(meetRow);
+
+        parentElement.appendChild(container);
+        this.googleFields = container;
+    }
+
+    /**
+     * Build the collapsible "Advanced settings" accordion for Google events
+     * (location, reminder). Hidden unless the save destination is Google;
+     * collapsed by default. Extra detail fields (colour, guests, …) go here.
+     * @param {HTMLElement} parentElement
+     * @private
+     */
+    _buildGoogleAdvanced(parentElement) {
+        const container = document.createElement('div');
+        container.className = 'google-advanced';
+        container.style.display = 'none'; // toggled with the Google destination
+
+        // Accordion header (button)
+        const toggle = document.createElement('button');
+        toggle.type = 'button';
+        toggle.className = 'accordion-toggle';
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.setAttribute('aria-controls', 'googleAdvancedBody');
+
+        const chevron = document.createElement('i');
+        chevron.className = 'fas fa-chevron-right accordion-chevron';
+        chevron.setAttribute('aria-hidden', 'true');
+
+        const toggleLabel = document.createElement('span');
+        toggleLabel.setAttribute('data-localize', '__MSG_advancedSettings__');
+        toggleLabel.textContent = window.getLocalizedMessage('advancedSettings') || 'Advanced settings';
+
+        toggle.appendChild(chevron);
+        toggle.appendChild(toggleLabel);
+        container.appendChild(toggle);
+
+        // Accordion body
+        const body = document.createElement('div');
+        body.className = 'accordion-body';
+        body.id = 'googleAdvancedBody';
+        body.hidden = true;
+
+        // Location
+        const locationLabel = document.createElement('label');
+        locationLabel.htmlFor = 'googleEventLocation';
+        locationLabel.setAttribute('data-localize', '__MSG_eventLocation__');
+        locationLabel.textContent = window.getLocalizedMessage('eventLocation') || 'Location';
+        body.appendChild(locationLabel);
+
+        this.locationInput = document.createElement('input');
+        this.locationInput.type = 'text';
+        this.locationInput.id = 'googleEventLocation';
+        body.appendChild(this.locationInput);
+
+        // Notification (reminder)
+        const reminderLabel = document.createElement('label');
+        reminderLabel.htmlFor = 'googleEventReminder';
+        reminderLabel.setAttribute('data-localize', '__MSG_notification__');
+        reminderLabel.textContent = window.getLocalizedMessage('notification') || 'Notification';
+        body.appendChild(reminderLabel);
+
+        this.reminderSelect = document.createElement('select');
+        this.reminderSelect.id = 'googleEventReminder';
+        this.reminderSelect.className = 'event-form-select';
+
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.setAttribute('data-localize', '__MSG_reminderDefault__');
+        defaultOption.textContent = window.getLocalizedMessage('reminderDefault') || 'Calendar default';
+        this.reminderSelect.appendChild(defaultOption);
+
+        const unit = window.getLocalizedMessage('minutesBeforeUnit') || ' min before';
+        [5, 10, 15, 30, 60].forEach(minutes => {
+            const option = document.createElement('option');
+            option.value = String(minutes);
+            option.textContent = `${minutes}${unit}`;
+            this.reminderSelect.appendChild(option);
+        });
+        body.appendChild(this.reminderSelect);
+
+        container.appendChild(body);
+        parentElement.appendChild(container);
+
+        this.googleAdvanced = container;
+        this.advancedToggle = toggle;
+        this.advancedBody = body;
+
+        this.modal.addEventListener(toggle, 'click', () => this.setAdvancedExpanded());
+    }
+
+    /**
+     * Expand/collapse the advanced accordion.
+     * @param {boolean} [expanded] - Explicit state; toggles when omitted
+     */
+    setAdvancedExpanded(expanded) {
+        if (!this.advancedToggle) return;
+        const next = typeof expanded === 'boolean'
+            ? expanded
+            : this.advancedToggle.getAttribute('aria-expanded') !== 'true';
+        this.advancedToggle.setAttribute('aria-expanded', String(next));
+        this.advancedBody.hidden = !next;
+    }
+
+    /**
+     * Enable or disable the Google save destination and populate its calendar list.
+     * @param {Array<{id: string, summary: string, primary: boolean}>} calendars - Writable calendars (empty disables Google)
+     * @param {Object} [options]
+     * @param {boolean} [options.hiddenWritable] - Writable calendars exist but
+     *   none are displayed; show the explanatory hint instead of the toggle
+     */
+    setGoogleAvailability(calendars, { hiddenWritable = false } = {}) {
+        const writable = Array.isArray(calendars) ? calendars : [];
+        const available = writable.length > 0;
+
+        if (this.sourceToggle) {
+            this.sourceToggle.style.display = available ? 'flex' : 'none';
+        }
+        if (this.googleHiddenHint) {
+            this.googleHiddenHint.style.display = !available && hiddenWritable ? '' : 'none';
+        }
+
+        if (available) {
+            this.calendarSelect.innerHTML = '';
+            writable.forEach(cal => {
+                const option = document.createElement('option');
+                option.value = cal.id;
+                option.textContent = cal.primary
+                    ? `${cal.summary} (${window.getLocalizedMessage('primaryCalendar') || 'Primary'})`
+                    : cal.summary;
+                this.calendarSelect.appendChild(option);
+            });
+            const primary = writable.find(cal => cal.primary);
+            this.calendarSelect.value = primary ? primary.id : writable[0].id;
+        }
+
+        // Always reset to local when (re)configuring
+        this.setSource('local');
+    }
+
+    /**
+     * Switch the active save destination and update field visibility.
+     * @param {string} source - 'local' or 'google'
+     */
+    setSource(source) {
+        this.currentSource = source === 'google' ? 'google' : 'local';
+        const isGoogle = this.currentSource === 'google';
+
+        if (this.sourceLocalBtn) {
+            this.sourceLocalBtn.classList.toggle('active', !isGoogle);
+            this.sourceLocalBtn.setAttribute('aria-pressed', String(!isGoogle));
+        }
+        if (this.sourceGoogleBtn) {
+            this.sourceGoogleBtn.classList.toggle('active', isGoogle);
+            this.sourceGoogleBtn.setAttribute('aria-pressed', String(isGoogle));
+        }
+
+        if (this.googleFields) {
+            this.googleFields.style.display = isGoogle ? '' : 'none';
+        }
+        if (this.googleAdvanced) {
+            this.googleAdvanced.style.display = isGoogle ? '' : 'none';
+        }
+        // Local-only fields are hidden when creating a Google event
+        if (this.reminderContainer) {
+            this.reminderContainer.style.display = isGoogle ? 'none' : '';
+        }
+        if (this.recurrenceSection) {
+            this.recurrenceSection.style.display = isGoogle ? 'none' : '';
+        }
+    }
+
+    /**
+     * Get the currently selected save destination.
+     * @returns {string} 'local' or 'google'
+     */
+    getSource() {
+        return this.currentSource;
     }
 
     /**
@@ -44,6 +348,9 @@ export class LocalEventFormBuilder {
         this.editTitleElement.setAttribute('data-localize', '__MSG_eventDialogTitle__');
         this.editTitleElement.textContent = window.getLocalizedMessage('eventDialogTitle');
         parentElement.appendChild(this.editTitleElement);
+
+        // Save destination toggle (Local / Google) - only shown when Google is available
+        this._buildSourceToggle(parentElement);
 
         // Title input
         const titleLabel = document.createElement('label');
@@ -100,6 +407,9 @@ export class LocalEventFormBuilder {
         timeRow.appendChild(endGroup);
         parentElement.appendChild(timeRow);
 
+        // Google-only fields (target calendar + Meet toggle)
+        this._buildGoogleFields(parentElement);
+
         // Description textarea
         const descriptionLabel = document.createElement('label');
         descriptionLabel.htmlFor = 'eventDescription';
@@ -133,9 +443,13 @@ export class LocalEventFormBuilder {
         reminderContainer.appendChild(this.reminderCheckbox);
         reminderContainer.appendChild(reminderLabel);
         parentElement.appendChild(reminderContainer);
+        this.reminderContainer = reminderContainer;
 
-        // Recurrence section
+        // Recurrence section (local only)
         this.buildRecurrenceSection(parentElement);
+
+        // Google advanced settings accordion (Google only)
+        this._buildGoogleAdvanced(parentElement);
 
         // Button group
         const buttonGroup = document.createElement('div');
@@ -179,6 +493,7 @@ export class LocalEventFormBuilder {
         const recurrenceSection = document.createElement('div');
         recurrenceSection.className = 'recurrence-section';
         recurrenceSection.style.cssText = 'margin: 15px 0; padding: 10px; background: var(--side-calendar-subtle-bg); border-radius: 5px;';
+        this.recurrenceSection = recurrenceSection;
 
         // Recurrence label and select
         const recurrenceLabel = document.createElement('label');
@@ -478,6 +793,13 @@ export class LocalEventFormBuilder {
         this.startTimeInput.value = defaultStartTime;
         this.endTimeInput.value = defaultEndTime;
         this.reminderCheckbox.checked = true;
+
+        // Reset Google-only fields and save destination
+        if (this.locationInput) this.locationInput.value = '';
+        if (this.meetCheckbox) this.meetCheckbox.checked = false;
+        if (this.reminderSelect) this.reminderSelect.value = '';
+        this.setAdvancedExpanded(false); // collapse the accordion
+        this.setSource('local');
 
         // Reset recurrence
         this.recurrenceSelect.value = RECURRENCE_TYPES.NONE;

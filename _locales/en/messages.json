@@ -1657,5 +1657,77 @@
   "authExpiredStatus": {
     "message": "Authorization expired — please reconnect",
     "description": "Status text shown in settings when Google Calendar auth has expired"
+  },
+  "saveDestination": {
+    "message": "Save destination",
+    "description": "Accessible label for the local/Google save-destination toggle"
+  },
+  "destinationLocal": {
+    "message": "Local",
+    "description": "Save-destination toggle option for a local event"
+  },
+  "destinationGoogle": {
+    "message": "Google",
+    "description": "Save-destination toggle option for a Google Calendar event"
+  },
+  "targetCalendar": {
+    "message": "Calendar",
+    "description": "Label for the target calendar picker when creating a Google event"
+  },
+  "eventLocation": {
+    "message": "Location",
+    "description": "Label for the location field when creating a Google event"
+  },
+  "addGoogleMeet": {
+    "message": "Add Google Meet",
+    "description": "Checkbox label to attach a Google Meet video conference to a new event"
+  },
+  "advancedSettings": {
+    "message": "Advanced settings",
+    "description": "Header of the collapsible advanced fields accordion when creating a Google event"
+  },
+  "notification": {
+    "message": "Notification",
+    "description": "Label for the reminder/notification select when creating a Google event"
+  },
+  "reminderDefault": {
+    "message": "Calendar default",
+    "description": "Reminder option that leaves the calendar's default reminders in place"
+  },
+  "minutesBeforeUnit": {
+    "message": " minutes before",
+    "description": "Suffix appended to a number of minutes for a reminder option, e.g. '10 min before'"
+  },
+  "primaryCalendar": {
+    "message": "Primary",
+    "description": "Suffix marking the user's primary Google calendar in the calendar picker"
+  },
+  "googleEventCreateFailed": {
+    "message": "Failed to create Google event. Please try again.",
+    "description": "Error message shown when creating a Google Calendar event fails"
+  },
+  "googleEventUpdateFailed": {
+    "message": "Failed to update Google event. Please try again.",
+    "description": "Error message shown when updating a Google Calendar event fails"
+  },
+  "googleEventDeleteFailed": {
+    "message": "Failed to delete Google event. Please try again.",
+    "description": "Error message shown when deleting a Google Calendar event fails"
+  },
+  "googleDeleteConfirm": {
+    "message": "Delete this event from Google Calendar? This can't be undone.",
+    "description": "Inline confirmation prompt before deleting a Google Calendar event"
+  },
+  "confirmDelete": {
+    "message": "Delete",
+    "description": "Button that confirms the deletion of a Google Calendar event"
+  },
+  "googleDestinationHidden": {
+    "message": "To save to Google, show a writable calendar in the calendar filter first.",
+    "description": "Hint shown in the create modal when writable Google calendars exist but none are displayed"
+  },
+  "googleEditOtherFields": {
+    "message": "Other fields can be edited in Google Calendar.",
+    "description": "Muted note in the Google event edit form about fields it does not cover"
   }
 }

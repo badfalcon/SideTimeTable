@@ -5,6 +5,7 @@ import { ModalComponent } from './modal-component.js';
 import { RECURRENCE_TYPES } from '../../../lib/constants.js';
 import { LocalEventFormBuilder } from './local-event-form-builder.js';
 import { DeleteRecurringDialog } from './delete-recurring-dialog.js';
+import { buildGoogleEventResource } from '../../../lib/google-event-utils.js';
 
 export class LocalEventModal extends ModalComponent {
     constructor(options = {}) {
@@ -37,6 +38,7 @@ export class LocalEventModal extends ModalComponent {
 
         // Callbacks
         this.onSave = options.onSave || null;
+        this.onSaveGoogle = options.onSaveGoogle || null;
         this.onDelete = options.onDelete || null;
         this.onCancel = options.onCancel || null;
         this.onDeleteSeries = options.onDeleteSeries || null;
@@ -349,6 +351,12 @@ export class LocalEventModal extends ModalComponent {
             return;
         }
 
+        // Google event creation path (create mode only)
+        if (this.mode === 'create' && this.formBuilder.getSource() === 'google') {
+            this._handleSaveGoogle();
+            return;
+        }
+
         const recurrenceType = this.recurrenceSelect.value;
         let recurrence = null;
 
@@ -411,6 +419,87 @@ export class LocalEventModal extends ModalComponent {
             // Create mode: close the modal
             this.hide();
         }
+    }
+
+    /**
+     * Build the Google event resource and delegate creation to the controller.
+     * @private
+     */
+    async _handleSaveGoogle() {
+        // Re-entry guard: the title's Enter-key handler routes through _handleSave
+        // too, so a disabled save button alone cannot prevent a double submit.
+        if (this._submittingGoogle) {
+            return;
+        }
+
+        const date = this._getCurrentDate ? this._getCurrentDate() : new Date();
+        const calendarId = this.formBuilder.calendarSelect?.value || 'primary';
+
+        const eventResource = buildGoogleEventResource({
+            summary: this.titleInput.value,
+            description: this.descriptionInput.value,
+            location: this.formBuilder.locationInput?.value,
+            date,
+            startTime: this.startTimeInput.value,
+            endTime: this.endTimeInput.value,
+            addMeet: !!this.formBuilder.meetCheckbox?.checked,
+            reminderMinutes: this.formBuilder.reminderSelect?.value
+        });
+
+        if (!this.onSaveGoogle) {
+            this.hide();
+            return;
+        }
+
+        // Keep the modal open until the create succeeds, so the user does not
+        // lose their input on a network/API failure.
+        this._submittingGoogle = true;
+        this._setSaving(true);
+        let succeeded;
+        try {
+            succeeded = await this.onSaveGoogle(eventResource, calendarId);
+        } catch (error) {
+            // The controller handler already catches and returns a boolean, so
+            // this is defensive: never let a rejection escape as an unhandled
+            // promise and skip the failure message.
+            console.error('Google event save error:', error);
+            succeeded = false;
+        } finally {
+            this._submittingGoogle = false;
+            this._setSaving(false);
+        }
+
+        if (succeeded) {
+            this.hide();
+        } else {
+            this._showError(window.getLocalizedMessage('googleEventCreateFailed') || 'Failed to create Google event');
+        }
+    }
+
+    /**
+     * Toggle the saving state (disables the save button to prevent double submit).
+     * @param {boolean} saving
+     * @private
+     */
+    _setSaving(saving) {
+        if (this.saveButton) {
+            this.saveButton.disabled = saving;
+        }
+    }
+
+    /**
+     * Enable or disable the Google save destination on an already-open create
+     * modal (used when writable calendars resolve asynchronously after open).
+     * @param {Array} writableCalendars
+     * @param {Object} [options]
+     * @param {boolean} [options.hiddenWritable] - Writable calendars exist but
+     *   none are displayed on the timeline; shows an explanatory hint
+     */
+    setGoogleAvailability(writableCalendars, options = {}) {
+        if (this.mode !== 'create' || !this.formBuilder) {
+            return;
+        }
+        this.formBuilder.setGoogleAvailability(writableCalendars, options);
     }
 
     /**
@@ -558,6 +647,8 @@ export class LocalEventModal extends ModalComponent {
         const errorDiv = document.createElement('div');
         errorDiv.className = 'error-message';
         errorDiv.style.cssText = 'color: red; font-size: 0.9em; margin-top: 5px;';
+        // Announce the failure to screen readers when it is inserted
+        errorDiv.setAttribute('role', 'alert');
         errorDiv.textContent = message;
 
         this.modalContent.appendChild(errorDiv);
@@ -579,7 +670,7 @@ export class LocalEventModal extends ModalComponent {
      * @param {string} defaultStartTime Default start time
      * @param {string} defaultEndTime Default end time
      */
-    showCreate(defaultStartTime = '', defaultEndTime = '') {
+    showCreate(defaultStartTime = '', defaultEndTime = '', writableCalendars = []) {
         this.mode = 'create';
         this.currentEvent = null;
 
@@ -594,6 +685,9 @@ export class LocalEventModal extends ModalComponent {
 
         // Reset form via formBuilder
         this.formBuilder.resetForCreate(defaultStartTime, defaultEndTime);
+
+        // Enable/disable the Google save destination based on writable calendars
+        this.formBuilder.setGoogleAvailability(writableCalendars);
 
         // Adjust the button display
         this.deleteButton.style.display = 'none';
@@ -631,6 +725,9 @@ export class LocalEventModal extends ModalComponent {
         // Show edit content, hide view content
         this.viewContent.style.display = 'none';
         this.editContent.style.display = '';
+
+        // Editing is always a local event: hide the Google save destination toggle
+        this.formBuilder.setGoogleAvailability([]);
 
         // Populate form via formBuilder
         this.formBuilder.populateForm(event);

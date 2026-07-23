@@ -5,6 +5,7 @@
  * authentication, calendar listing, event fetching, and RSVP.
  */
 import { StorageHelper } from '../lib/storage-helper.js';
+import { isWritableCalendar } from '../lib/google-event-utils.js';
 
 const CALENDAR_API_BASE = 'https://www.googleapis.com/calendar/v3';
 
@@ -67,14 +68,19 @@ export class GoogleCalendarClient {
      */
     async _checkResponse(response, label) {
         if (response.ok) return;
-        const errorBody = await response.text();
+        // Do not log the response body: Google error bodies can echo submitted
+        // event fields (PII) and must not reach the production console.
         const msg = `${label} error: ${response.status} ${response.statusText}`;
         if (response.status === 401 || response.status === 403) {
             console.warn(`${label} auth error:`, response.status);
-            throw new AuthenticationError(msg);
+            const authError = new AuthenticationError(msg);
+            authError.status = response.status;
+            throw authError;
         }
-        console.error(`${label} error body:`, errorBody);
-        throw new Error(msg);
+        console.error(`${label} error:`, response.status, response.statusText);
+        const error = new Error(msg);
+        error.status = response.status;
+        throw error;
     }
 
     /**
@@ -94,6 +100,7 @@ export class GoogleCalendarClient {
                 id: cal.id,
                 summary: cal.summary,
                 primary: cal.primary || false,
+                accessRole: cal.accessRole,
                 backgroundColor: cal.backgroundColor,
                 foregroundColor: cal.foregroundColor
             }));
@@ -226,6 +233,9 @@ export class GoogleCalendarClient {
             const ownedCalendarIds = new Set(
                 (listData.items || []).filter(cal => cal.accessRole === 'owner').map(cal => cal.id)
             );
+            const writableCalendarIds = new Set(
+                (listData.items || []).filter(isWritableCalendar).map(cal => cal.id)
+            );
             listData.items?.forEach(cal => {
                 calendarColors[cal.id] = {
                     backgroundColor: cal.backgroundColor,
@@ -258,6 +268,7 @@ export class GoogleCalendarClient {
                             event.calendarName = calendarInfo.summary;
                         }
                         event.isOwnedCalendar = ownedCalendarIds.has(event.calendarId);
+                        event.isWritableCalendar = writableCalendarIds.has(event.calendarId);
                         allEvents.push(event);
                     });
                 }
@@ -388,5 +399,93 @@ export class GoogleCalendarClient {
         await this._checkResponse(patchRes, 'Update Event API');
 
         return await patchRes.json();
+    }
+
+    /**
+     * Create a new event on a Google Calendar (events.insert)
+     * @param {string} calendarId - The target calendar ID (defaults to 'primary')
+     * @param {Object} eventResource - The event resource in Google Calendar API format
+     *   (must contain summary, start and end)
+     * @returns {Promise<Object>} The created event object
+     */
+    async createEvent(calendarId, eventResource) {
+        if (!eventResource || !eventResource.summary || !eventResource.start || !eventResource.end) {
+            throw new Error('Missing required parameters');
+        }
+
+        const targetCalendarId = calendarId || 'primary';
+        // conferenceData.createRequest (Google Meet) is only honored when the
+        // insert is sent with conferenceDataVersion=1.
+        const query = eventResource.conferenceData ? '?conferenceDataVersion=1' : '';
+        const eventsUrl = `${CALENDAR_API_BASE}/calendars/${encodeURIComponent(targetCalendarId)}/events${query}`;
+
+        const res = await this._fetchWithAuth(eventsUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(eventResource)
+        });
+
+        await this._checkResponse(res, 'Insert Event API');
+
+        return await res.json();
+    }
+
+    /**
+     * Partially update an event on a Google Calendar (events.patch).
+     * Only the fields present in `patchResource` are changed; omitted fields
+     * keep their current values (so callers must send explicit '' to clear
+     * a text field).
+     * @param {string} calendarId - The calendar the event lives on
+     * @param {string} eventId - The event to update
+     * @param {Object} patchResource - The fields to change, in Google Calendar API format
+     * @returns {Promise<Object>} The updated event object
+     */
+    async patchEvent(calendarId, eventId, patchResource) {
+        if (!calendarId || !eventId || !patchResource) {
+            throw new Error('Missing required parameters');
+        }
+
+        const eventUrl = `${CALENDAR_API_BASE}/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`;
+
+        const res = await this._fetchWithAuth(eventUrl, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(patchResource)
+        });
+
+        await this._checkResponse(res, 'Update Event API');
+
+        return await res.json();
+    }
+
+    /**
+     * Delete an event from a Google Calendar (events.delete).
+     * The API responds 204 No Content, so the body is never parsed.
+     * @param {string} calendarId - The calendar the event lives on
+     * @param {string} eventId - The event to delete
+     * @returns {Promise<void>}
+     */
+    async deleteEvent(calendarId, eventId) {
+        if (!calendarId || !eventId) {
+            throw new Error('Missing required parameters');
+        }
+
+        const eventUrl = `${CALENDAR_API_BASE}/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`;
+
+        const res = await this._fetchWithAuth(eventUrl, {
+            method: 'DELETE'
+        });
+
+        // 404/410 mean the event is already gone (deleted in another client) —
+        // that is the outcome the user wanted, so treat it as success.
+        if (res.status === 404 || res.status === 410) {
+            return;
+        }
+
+        await this._checkResponse(res, 'Delete Event API');
     }
 }

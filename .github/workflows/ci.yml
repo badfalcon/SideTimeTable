@@ -16,7 +16,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npm install
+          cache: npm
+      - run: npm ci
       - run: npm run lint
       - run: npm test
       - run: node scripts/validate-version.js
@@ -33,7 +34,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npm install
+          cache: npm
+      - run: npm ci
       - run: npm run package
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

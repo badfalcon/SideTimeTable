@@ -203,7 +203,7 @@ Chrome alarm-based reminders:
 - Runtime API, Alarms API, Notifications API, Context Menus API
 
 ### External APIs
-- Google Calendar API v3: Read-only calendar access with multi-calendar support
+- Google Calendar API v3: read/write event access (list/insert/patch/delete + RSVP) with multi-calendar support
 - OAuth2: Secure authentication flow via Chrome Identity API
 
 ## Advanced Features

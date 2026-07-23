@@ -33,11 +33,12 @@ import { AlarmManager } from '../lib/alarm-manager.js';
 import { ThemeService } from '../services/theme-service.js';
 import { OnboardingService } from '../services/onboarding-service.js';
 import { generateTimeList } from '../lib/utils.js';
-import { loadSettings } from '../lib/settings-storage.js';
+import { loadSettings, loadSelectedCalendars } from '../lib/settings-storage.js';
 import { migrateEventDataToLocal } from '../lib/event-storage.js';
 import { cleanupObsoleteStorageKeys } from '../lib/storage-cleanup.js';
 import { sendMessage } from '../lib/chrome-messaging.js';
-import { setDemoMode } from '../lib/demo-data.js';
+import { setDemoMode, isDemoMode } from '../lib/demo-data.js';
+import { filterWritableCalendars } from '../lib/google-event-utils.js';
 
 // The reload message listener
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -226,13 +227,16 @@ class SidePanelUIController {
         // The modal components
         this.localEventModal = new LocalEventModal({
             onSave: (eventData, mode) => this._handleSaveLocalEvent(eventData, mode),
+            onSaveGoogle: (eventResource, calendarId) => this._handleSaveGoogleEvent(eventResource, calendarId),
             onDelete: (event) => this._handleDeleteLocalEvent(event),
             onCancel: () => this._handleCancelLocalEvent(),
             getCurrentDate: () => this.dateNavService.getDate()
         });
 
         this.googleEventModal = new GoogleEventModal({
-            onRsvpResponse: () => this._loadEventsForCurrentDate()
+            onRsvpResponse: () => this._loadEventsForCurrentDate(),
+            onSaveEdit: (calendarId, eventId, patch) => this._handleUpdateGoogleEvent(calendarId, eventId, patch),
+            onDelete: (calendarId, eventId) => this._handleDeleteGoogleEvent(calendarId, eventId)
         });
 
         this.alertModal = new AlertModal();
@@ -350,6 +354,7 @@ class SidePanelUIController {
 
         // Set auth expiry callback
         this.googleEventManager.onAuthExpired = () => {
+            this._invalidateWritableCalendarsCache();
             const container = document.getElementById('side-panel-container') || document.body;
             const insertBeforeEl = this.allDayEventsComponent?.element || this.timelineComponent?.element;
             this._showAuthExpiredBanner(container, insertBeforeEl);
@@ -479,6 +484,8 @@ class SidePanelUIController {
      * @private
      */
     async _handleCalendarToggle(changeInfo) {
+        // The displayed-calendar set feeds the create modal's Google destination
+        this._invalidateWritableCalendarsCache();
         await this.eventLoadingService.handleCalendarToggle(
             changeInfo,
             this.dateNavService.getDate(),
@@ -526,7 +533,7 @@ class SidePanelUIController {
      * Local event addition handler
      * @private
      */
-    _handleAddLocalEvent(startTime, endTime) {
+    async _handleAddLocalEvent(startTime, endTime) {
         if (!startTime) {
             const now = new Date();
             startTime = `${String(now.getHours()).padStart(2, '0')}:${String(Math.floor(now.getMinutes() / 15) * 15).padStart(2, '0')}`;
@@ -534,7 +541,188 @@ class SidePanelUIController {
             const endMinutes = now.getHours() >= 23 ? 59 : Math.floor(now.getMinutes() / 15) * 15;
             endTime = `${String(endHour).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
         }
+
+        // Open immediately in local mode so the modal never waits on the network.
         this.localEventModal.showCreate(startTime, endTime);
+
+        // Enrich with the Google save destination once writable calendars resolve.
+        // A token guards against a stale fetch applying to a later modal open.
+        const token = (this._addEventToken = (this._addEventToken || 0) + 1);
+        const { writable, hiddenWritable } = await this._getWritableCalendars();
+        if (token === this._addEventToken) {
+            this.localEventModal.setGoogleAvailability(writable, { hiddenWritable });
+        }
+    }
+
+    /**
+     * Fetch the Google calendars the user can write to (owner/writer),
+     * restricted to those currently displayed on the timeline.
+     * `hiddenWritable` reports the "writable calendars exist but none are
+     * displayed" case so the modal can explain why Google saving is absent.
+     *
+     * The result is cached briefly — the calendar list changes rarely, and
+     * without a cache every "+" click costs a live Google API round-trip.
+     * The cache is invalidated on calendar-selection changes and expires on
+     * its own so auth/list changes are picked up quickly.
+     * @returns {Promise<{writable: Array, hiddenWritable: boolean}>}
+     * @private
+     */
+    async _getWritableCalendars() {
+        const NONE = { writable: [], hiddenWritable: false };
+
+        // Google event creation is not supported in demo mode
+        if (isDemoMode()) {
+            return NONE;
+        }
+
+        const CACHE_TTL_MS = 60 * 1000;
+        if (this._writableCalendarsCache &&
+            Date.now() - this._writableCalendarsCache.ts < CACHE_TTL_MS) {
+            return this._writableCalendarsCache.result;
+        }
+
+        try {
+            // Require the integration to be enabled, not just an available token:
+            // the timeline only renders Google events when googleIntegrated is on
+            // (GoogleEventManager.fetchEvents), so offering a Google save
+            // destination without it would create events that never display.
+            const settings = await loadSettings();
+            if (settings.googleIntegrated !== true) {
+                return NONE;
+            }
+
+            // No auth pre-flight: getCalendarList itself fails with an auth
+            // error when unauthenticated, which the catch below maps to NONE.
+            const requestId = `create-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+            const response = await sendMessage({ action: 'getCalendarList', requestId });
+            if (!response || response.error || !Array.isArray(response.calendars)) {
+                return NONE;
+            }
+
+            // Only offer calendars that are both writable AND currently displayed,
+            // so a newly created event is guaranteed to appear on the timeline
+            // (fetchEvents renders only selectedCalendars).
+            const selectedIds = await loadSelectedCalendars();
+            const writable = filterWritableCalendars(response.calendars, selectedIds);
+            const result = {
+                writable,
+                hiddenWritable: writable.length === 0 &&
+                    filterWritableCalendars(response.calendars).length > 0
+            };
+
+            this._writableCalendarsCache = { result, ts: Date.now() };
+            return result;
+        } catch {
+            return NONE;
+        }
+    }
+
+    /**
+     * Drop the cached writable-calendar list (selection or auth changed).
+     * @private
+     */
+    _invalidateWritableCalendarsCache() {
+        this._writableCalendarsCache = null;
+    }
+
+    /**
+     * Google event save handler. Returns whether creation succeeded so the
+     * modal can stay open (preserving the user's input) on failure.
+     * @returns {Promise<boolean>}
+     * @private
+     */
+    async _handleSaveGoogleEvent(eventResource, calendarId) {
+        try {
+            const requestId = `create-evt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+            const response = await sendMessage({
+                action: 'createEvent',
+                calendarId,
+                event: eventResource,
+                requestId
+            });
+
+            if (!response || !response.success) {
+                if (response && response.authExpired && this.googleEventManager) {
+                    this.googleEventManager.onAuthExpired?.();
+                }
+                console.error('Google event create failed:', (response && response.error) || 'Unknown error');
+                return false;
+            }
+
+            // Reload events so the newly created Google event appears
+            await this._loadEventsForCurrentDate();
+            return true;
+        } catch (error) {
+            console.error('Google event save error:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Google event update handler (events.patch). Returns whether the update
+     * succeeded so the modal can stay open (preserving input) on failure.
+     * @returns {Promise<boolean>}
+     * @private
+     */
+    async _handleUpdateGoogleEvent(calendarId, eventId, patchResource) {
+        try {
+            const requestId = `update-evt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+            const response = await sendMessage({
+                action: 'updateEvent',
+                calendarId,
+                eventId,
+                event: patchResource,
+                requestId
+            });
+
+            if (!response || !response.success) {
+                if (response && response.authExpired && this.googleEventManager) {
+                    this.googleEventManager.onAuthExpired?.();
+                }
+                console.error('Google event update failed:', (response && response.error) || 'Unknown error');
+                return false;
+            }
+
+            // Reload events so the updated Google event is redrawn
+            await this._loadEventsForCurrentDate();
+            return true;
+        } catch (error) {
+            console.error('Google event update error:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Google event delete handler (events.delete). Returns whether the
+     * deletion succeeded so the modal can stay open on failure.
+     * @returns {Promise<boolean>}
+     * @private
+     */
+    async _handleDeleteGoogleEvent(calendarId, eventId) {
+        try {
+            const requestId = `delete-evt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+            const response = await sendMessage({
+                action: 'deleteEvent',
+                calendarId,
+                eventId,
+                requestId
+            });
+
+            if (!response || !response.success) {
+                if (response && response.authExpired && this.googleEventManager) {
+                    this.googleEventManager.onAuthExpired?.();
+                }
+                console.error('Google event delete failed:', (response && response.error) || 'Unknown error');
+                return false;
+            }
+
+            // Reload events so the deleted Google event disappears
+            await this._loadEventsForCurrentDate();
+            return true;
+        } catch (error) {
+            console.error('Google event delete error:', error);
+            return false;
+        }
     }
 
     /**
