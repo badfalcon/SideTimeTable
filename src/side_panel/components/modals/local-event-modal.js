@@ -451,13 +451,20 @@ export class LocalEventModal extends ModalComponent {
             return;
         }
 
+        // Stable across retries of this submission so the background can
+        // deduplicate a retry whose first attempt actually committed;
+        // cleared on success/close so the next creation gets a fresh id.
+        if (!this._googleCreateRequestId) {
+            this._googleCreateRequestId = `create-evt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        }
+
         // Keep the modal open until the create succeeds, so the user does not
         // lose their input on a network/API failure.
         this._submittingGoogle = true;
         this._setSaving(true);
         let succeeded;
         try {
-            succeeded = await this.onSaveGoogle(eventResource, calendarId);
+            succeeded = await this.onSaveGoogle(eventResource, calendarId, this._googleCreateRequestId);
         } catch (error) {
             // The controller handler already catches and returns a boolean, so
             // this is defensive: never let a rejection escape as an unhandled
@@ -470,6 +477,7 @@ export class LocalEventModal extends ModalComponent {
         }
 
         if (succeeded) {
+            this._googleCreateRequestId = null;
             this.hide();
         } else {
             this._showError(window.getLocalizedMessage('googleEventCreateFailed') || 'Failed to create Google event');
@@ -564,6 +572,8 @@ export class LocalEventModal extends ModalComponent {
      */
     hide() {
         this.deleteDialog.remove();
+        // Abandoned submission: the next creation is a new logical request
+        this._googleCreateRequestId = null;
         super.hide();
     }
 

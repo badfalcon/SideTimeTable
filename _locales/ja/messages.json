@@ -52,8 +52,8 @@
     "description": "キャンセルボタンのテキスト"
   },
   "remindMeBefore": {
-    "message": "5分前にリマインドする",
-    "description": "イベントリマインダーのチェックボックスラベル"
+    "message": "5分前に通知する",
+    "description": "イベントリマインダーのチェックボックスラベル（設定ページ・Google用の「通知」表記と統一）"
   },
   "eventReminder": {
     "message": "イベント リマインダー",

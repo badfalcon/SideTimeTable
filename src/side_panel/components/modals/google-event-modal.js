@@ -390,11 +390,17 @@ export class GoogleEventModal extends ModalComponent {
             return;
         }
 
+        // Stable across retries of this edit session so the background can
+        // deduplicate a retry whose first attempt actually committed
+        if (!this._editRequestId) {
+            this._editRequestId = `update-evt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        }
+
         this._submittingEdit = true;
         this._editFormBuilder.saveButton.disabled = true;
         let succeeded;
         try {
-            succeeded = await this.onSaveEdit(event.calendarId, event.id, patchResource);
+            succeeded = await this.onSaveEdit(event.calendarId, event.id, patchResource, this._editRequestId);
         } catch (error) {
             console.error('Google event update error:', error);
             succeeded = false;
@@ -404,6 +410,7 @@ export class GoogleEventModal extends ModalComponent {
         }
 
         if (succeeded) {
+            this._editRequestId = null;
             this.hide();
         } else {
             this._showError(window.getLocalizedMessage('googleEventUpdateFailed') || 'Failed to update Google event');
@@ -424,11 +431,18 @@ export class GoogleEventModal extends ModalComponent {
         }
 
         this._clearError();
+
+        // Stable across retries of this delete so the background can
+        // deduplicate a retry whose first attempt actually committed
+        if (!this._deleteRequestId) {
+            this._deleteRequestId = `delete-evt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        }
+
         this._deletingEvent = true;
         this.confirmDeleteButton.disabled = true;
         let succeeded;
         try {
-            succeeded = await this.onDelete(event.calendarId, event.id);
+            succeeded = await this.onDelete(event.calendarId, event.id, this._deleteRequestId);
         } catch (error) {
             console.error('Google event delete error:', error);
             succeeded = false;
@@ -438,6 +452,7 @@ export class GoogleEventModal extends ModalComponent {
         }
 
         if (succeeded) {
+            this._deleteRequestId = null;
             this.hide();
         } else {
             this._showDeleteConfirm(false);
@@ -719,6 +734,9 @@ export class GoogleEventModal extends ModalComponent {
     hide() {
         super.hide();
         this.currentEvent = null;
+        // Abandoned sessions: the next edit/delete is a new logical request
+        this._editRequestId = null;
+        this._deleteRequestId = null;
     }
 
     /**
