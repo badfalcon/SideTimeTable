@@ -87,6 +87,9 @@ Notes:
 - `enableReminderDebug` remains for backward compatibility but may be deprecated later.
 - No extra Chrome permissions are required for these toggles.
 
+### Sponsor
+If SideTimeTable is useful to you, you can support its development through [GitHub Sponsors](https://github.com/sponsors/badfalcon). Sponsorships help cover maintenance and new features — the extension stays free either way.
+
 ### License
 This plugin is released under the [Apache License 2.0]. See the `LICENSE` file for details.
 
@@ -192,6 +195,9 @@ chrome.storage.local.set({ enableDeveloperFeatures: false, enableReminderDebug: 
   2. `src/` 内のソースファイルを編集
   3. Chromeで拡張機能をリロードして変更を確認
   4. `npm run package` で配布用zipを作成
+
+### スポンサー
+SideTimeTable が役に立ったら、[GitHub Sponsors](https://github.com/sponsors/badfalcon) から開発を支援できます。いただいた支援はメンテナンスや新機能の開発に充てられます（拡張機能は今後も無料でご利用いただけます）。
 
 ### ライセンス
 このプラグインは[Apache License 2.0]の下で公開されています。詳細は`LICENSE`ファイルを参照してください。
