@@ -1,5 +1,7 @@
 # SideTimeTable
 
+[![Sponsor](https://img.shields.io/github/sponsors/badfalcon?logo=githubsponsors&logoColor=white&label=Sponsor&color=ea4aaa)](https://github.com/sponsors/badfalcon)
+
 ## English
 
 ### Overview
