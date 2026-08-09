@@ -1,18 +1,1 @@
-# Sponsor button configuration
-# https://docs.github.com/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository
-
 github: badfalcon
-
-# Other supported platforms (uncomment and fill in as needed):
-# patreon: # Patreon username
-# open_collective: # Open Collective username
-# ko_fi: # Ko-fi username
-# tidelift: # {platform}/{package-name}
-# community_bridge: # LFX Crowdfunding project name
-# liberapay: # Liberapay username
-# issuehunt: # IssueHunt username
-# lfx_crowdfunding: # LFX Crowdfunding project name
-# polar: # Polar username
-# buy_me_a_coffee: # Buy Me a Coffee username
-# thanks_dev: # thanks.dev username
-# custom: # Up to 4 custom URLs
