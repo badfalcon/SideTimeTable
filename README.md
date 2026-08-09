@@ -1,5 +1,9 @@
 # SideTimeTable
 
+[![CI](https://github.com/badfalcon/SideTimeTable/actions/workflows/ci.yml/badge.svg)](https://github.com/badfalcon/SideTimeTable/actions/workflows/ci.yml)
+[![Chrome Web Store](https://img.shields.io/chrome-web-store/v/pnknjjpncnciijkpdfgfiikmhlmamaid?logo=googlechrome&logoColor=white&label=Chrome%20Web%20Store)](https://chromewebstore.google.com/detail/sidetimetable/pnknjjpncnciijkpdfgfiikmhlmamaid)
+[![Users](https://img.shields.io/chrome-web-store/users/pnknjjpncnciijkpdfgfiikmhlmamaid?label=users)](https://chromewebstore.google.com/detail/sidetimetable/pnknjjpncnciijkpdfgfiikmhlmamaid)
+[![License](https://img.shields.io/github/license/badfalcon/SideTimeTable)](./LICENSE)
 [![Sponsor](https://img.shields.io/github/sponsors/badfalcon?logo=githubsponsors&logoColor=white&label=Sponsor&color=ea4aaa)](https://github.com/sponsors/badfalcon)
 
 ## English
