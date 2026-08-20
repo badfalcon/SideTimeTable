@@ -83,6 +83,14 @@ describe('runDeduped', () => {
     expect(op).toHaveBeenCalledTimes(1);
   });
 
+  test('a ledger write failure still returns the committed response', async () => {
+    // The API write already happened: reporting a failure here would make the
+    // user retry and create a duplicate
+    global.chrome.storage.session.set.mockRejectedValueOnce(new Error('quota'));
+    const op = jest.fn().mockResolvedValue({ id: 'evt-1' });
+    await expect(runDeduped('req-1', op)).resolves.toEqual({ id: 'evt-1' });
+  });
+
   test('a failed operation is not recorded — the retry runs again', async () => {
     const failing = jest.fn().mockRejectedValue(new Error('network down'));
     await expect(runDeduped('req-1', failing)).rejects.toThrow('network down');

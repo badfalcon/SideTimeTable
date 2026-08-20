@@ -65,7 +65,7 @@
 
 ## 用語統一
 
-- [x] リマインダー表現の統一: `remindMeBefore` を「5分前に通知する」/"Notify me 5 minutes before" に変更し、設定ページ・Google 用の「通知」表記と統一済み。
+- [x] リマインダー表現の統一: `remindMeBefore` を「開始前に通知する」/"Notify me before the event" に変更し、設定ページ・Google 用の「通知」表記と統一済み。通知タイミングは設定（`reminderMinutes`）で変わるため、ラベルに分数は書かない。
 
 ## 既知の不具合（要設計）
 

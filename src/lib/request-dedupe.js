@@ -94,7 +94,9 @@ export async function runDeduped(requestId, operation) {
         }
 
         const response = await operation();
-        await recordInLedger(sessionArea, requestId, response);
+        // Best-effort: the API write already committed, so a storage failure
+        // must not turn it into a reported failure whose retry duplicates it
+        await recordInLedger(sessionArea, requestId, response).catch(() => {});
 
         return response;
     })();

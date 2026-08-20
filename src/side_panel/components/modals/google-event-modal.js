@@ -139,6 +139,10 @@ export class GoogleEventModal extends ModalComponent {
      */
     showEvent(event) {
         this.currentEvent = event;
+        // A new event is a new logical request: never let a previous event's
+        // id replay its recorded response for this one
+        this._editSeed = null;
+        this._deleteRequestId = null;
 
         // Create the element if it doesn't exist
         if (!this.element) {
