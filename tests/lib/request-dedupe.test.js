@@ -6,7 +6,7 @@
  * the recorded response is replayed from the session-storage ledger, which
  * survives service worker restarts within the browser session.
  */
-import { runDeduped, _clearInFlightForTests } from '../../src/lib/request-dedupe.js';
+import { runDeduped, buildRequestId, _clearInFlightForTests } from '../../src/lib/request-dedupe.js';
 
 // Minimal chrome.storage.session mock (promise-based, like MV3)
 function installSessionStore() {
@@ -112,5 +112,76 @@ describe('runDeduped', () => {
     const op = jest.fn().mockResolvedValue({ id: 'evt-1' });
     await expect(runDeduped('req-1', op)).resolves.toEqual({ id: 'evt-1' });
     expect(op).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('ledger writes under concurrency', () => {
+  // Like installSessionStore, but reads and writes complete a macrotask later,
+  // as real chrome.storage calls do — so two unserialized read-modify-writes
+  // really do interleave (read, read, write, write) and the first entry is lost
+  function installSlowSessionStore() {
+    const store = {};
+    const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
+    global.chrome.storage.session = {
+      get: jest.fn(async (key) => {
+        await tick();
+        return typeof key === 'string' && key in store ? { [key]: store[key] } : {};
+      }),
+      set: jest.fn(async (items) => {
+        await tick();
+        Object.assign(store, items);
+      }),
+    };
+  }
+
+  beforeEach(() => {
+    installSlowSessionStore();
+    _clearInFlightForTests();
+  });
+
+  afterEach(() => {
+    delete global.chrome.storage.session;
+  });
+
+  test('two overlapping requests both stay in the ledger', async () => {
+    // Both operations finish in the same tick, so both ledger writes start
+    // together — the exact interleaving that loses an entry when the
+    // read-modify-write is not serialized
+    let release;
+    const barrier = new Promise((resolve) => { release = resolve; });
+    const pending = [
+      runDeduped('req-a', () => barrier.then(() => ({ id: 'a' }))),
+      runDeduped('req-b', () => barrier.then(() => ({ id: 'b' }))),
+    ];
+    await new Promise((resolve) => setTimeout(resolve, 5)); // both lookups done
+    release();
+    await Promise.all(pending);
+
+    const retryA = jest.fn();
+    const retryB = jest.fn();
+    await expect(runDeduped('req-a', retryA)).resolves.toEqual({ id: 'a' });
+    await expect(runDeduped('req-b', retryB)).resolves.toEqual({ id: 'b' });
+    expect(retryA).not.toHaveBeenCalled();
+    expect(retryB).not.toHaveBeenCalled();
+  });
+});
+
+describe('buildRequestId', () => {
+  test('the same payload with the same seed gives the same id (a retry dedupes)', () => {
+    const payload = { summary: 'Standup', start: '09:00' };
+    expect(buildRequestId('create-evt', 'seed-1', payload))
+      .toBe(buildRequestId('create-evt', 'seed-1', { summary: 'Standup', start: '09:00' }));
+  });
+
+  test('a corrected payload gives a different id, so the correction really runs', () => {
+    const first = buildRequestId('create-evt', 'seed-1', { summary: 'Standp' });
+    const corrected = buildRequestId('create-evt', 'seed-1', { summary: 'Standup' });
+    expect(corrected).not.toBe(first);
+  });
+
+  test('a new seed separates two deliberate identical writes', () => {
+    const payload = { summary: 'Standup' };
+    expect(buildRequestId('create-evt', 'seed-2', payload))
+      .not.toBe(buildRequestId('create-evt', 'seed-1', payload));
   });
 });

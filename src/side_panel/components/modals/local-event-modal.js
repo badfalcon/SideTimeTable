@@ -6,6 +6,7 @@ import { RECURRENCE_TYPES } from '../../../lib/constants.js';
 import { LocalEventFormBuilder } from './local-event-form-builder.js';
 import { DeleteRecurringDialog } from './delete-recurring-dialog.js';
 import { buildGoogleEventResource } from '../../../lib/google-event-utils.js';
+import { buildRequestId } from '../../../lib/request-dedupe.js';
 
 export class LocalEventModal extends ModalComponent {
     constructor(options = {}) {
@@ -452,11 +453,15 @@ export class LocalEventModal extends ModalComponent {
         }
 
         // Stable across retries of this submission so the background can
-        // deduplicate a retry whose first attempt actually committed;
-        // cleared on success/close so the next creation gets a fresh id.
-        if (!this._googleCreateRequestId) {
-            this._googleCreateRequestId = `create-evt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        // deduplicate a retry whose first attempt actually committed. The id
+        // also covers the payload, so if the user corrects the form after a
+        // failure the corrected request really runs instead of replaying the
+        // recorded response. The seed is cleared on success/close so the next
+        // creation is a new logical request.
+        if (!this._googleCreateSeed) {
+            this._googleCreateSeed = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
         }
+        const requestId = buildRequestId('create-evt', this._googleCreateSeed, [calendarId, eventResource]);
 
         // Keep the modal open until the create succeeds, so the user does not
         // lose their input on a network/API failure.
@@ -464,7 +469,7 @@ export class LocalEventModal extends ModalComponent {
         this._setSaving(true);
         let succeeded;
         try {
-            succeeded = await this.onSaveGoogle(eventResource, calendarId, this._googleCreateRequestId);
+            succeeded = await this.onSaveGoogle(eventResource, calendarId, requestId);
         } catch (error) {
             // The controller handler already catches and returns a boolean, so
             // this is defensive: never let a rejection escape as an unhandled
@@ -477,7 +482,7 @@ export class LocalEventModal extends ModalComponent {
         }
 
         if (succeeded) {
-            this._googleCreateRequestId = null;
+            this._googleCreateSeed = null;
             this.hide();
         } else {
             this._showError(window.getLocalizedMessage('googleEventCreateFailed') || 'Failed to create Google event');
@@ -573,7 +578,7 @@ export class LocalEventModal extends ModalComponent {
     hide() {
         this.deleteDialog.remove();
         // Abandoned submission: the next creation is a new logical request
-        this._googleCreateRequestId = null;
+        this._googleCreateSeed = null;
         super.hide();
     }
 

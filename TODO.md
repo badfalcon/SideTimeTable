@@ -9,7 +9,7 @@
 - [ ] 終日イベント（`start.date`/`end.date`）の作成・編集・削除対応（現状は時刻ありイベントのみ）。
 - [x] 作成した Google イベントの編集・削除 — 単発・書込可能カレンダーの時刻ありイベントに対応済み。編集可否は `isEditableGoogleEvent()`（`google-event-utils.js`）で判定: 主催者本人（`organizer.self`）または `guestsCanModify` のイベントのみ（招待コピーは403になるため非表示）、日跨ぎイベントは編集フォームが時刻のみのため除外。削除時の404/410（他クライアントで削除済み）は成功扱い。残: 繰り返しイベントの編集・削除（「この予定のみ/以降すべて/全体」の選択UI）、編集時の Meet 切替、カレンダー移動、ゲスト（attendees）編集と `sendUpdates`、日跨ぎイベントの編集対応。
 - [ ] Google イベント編集の競合制御（ETag/If-Match）: 現状は last-write-wins。他クライアントでの変更を上書きし得る。
-- [x] 書き込みの冪等性: `runDeduped`（`src/lib/request-dedupe.js`）で対応済み — モーダルがリトライ間で安定な `requestId` を保持し、background が `chrome.storage.session` の台帳（SW再起動を跨いで有効）＋in-flight共有で重複実行を防ぐ。残る既知の穴: APIコミット直後〜台帳書き込み前に SW が死んだ場合のみ重複し得る（極小ウィンドウ）。
+- [x] 書き込みの冪等性: `runDeduped`（`src/lib/request-dedupe.js`）で対応済み — モーダルがリトライ間で安定な `requestId` を保持し、background が `chrome.storage.session` の台帳（SW再起動を跨いで有効）＋in-flight共有で重複実行を防ぐ。`requestId` はペイロードのハッシュを含む（`buildRequestId()`）ため、失敗後にフォームを修正して再送した場合は別リクエストとして実行される。台帳の read-modify-write はモジュール内で直列化済み。残る既知の穴: APIコミット直後〜台帳書き込み前に SW が死んだ場合のみ重複し得る（極小ウィンドウ）。
 - [ ] 共有カレンダー（writer 権限）上の外部主催者イベント: API 上は編集可能だが、`isEditableGoogleEvent()` の主催者ゲートが保守的に編集/削除を非表示にする（誤って招待コピーに編集を出すよりも安全側に倒した意図的な仕様）。必要なら accessRole=writer の場合の緩和を検討。
 - [ ] カレンダーリストの共有キャッシュ: 現状は作成モーダル（60秒TTL）のみキャッシュし、タイムラインフィルター・設定ページは都度取得。3箇所で共有するキャッシュ＋無効化契約を設計するリファクタ候補。
 - [ ] `sendUpdates` は未指定（API既定 "none"）— 編集・削除してもゲストに通知メールは送られない。ゲスト付きイベントの編集を本格対応する際に通知可否の UX を設計すること。
