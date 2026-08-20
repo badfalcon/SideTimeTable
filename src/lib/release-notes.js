@@ -6,6 +6,24 @@
  */
 export const RELEASE_NOTES = [
     {
+        version: '1.11.0',
+        date: '2026-08-21',
+        highlights: {
+            en: [
+                'Create and manage Google Calendar events without leaving the side panel',
+                'Add a Google Meet link to events you create',
+                'Choose how often Google reminders are checked so notifications arrive on time',
+                'Bug fixes and stability improvements'
+            ],
+            ja: [
+                'サイドパネルからGoogleカレンダーの予定を作成・編集・削除できるように',
+                '作成する予定にGoogle Meetのリンクを追加できるように',
+                'Googleリマインダーの同期間隔を設定できるようになり通知の取りこぼしを軽減',
+                'バグ修正と安定性の向上'
+            ]
+        }
+    },
+    {
         version: '1.10.2',
         date: '2026-05-25',
         highlights: {
