@@ -5,8 +5,8 @@
  * DOM-free: delegates show/start to component instances passed as parameters.
  */
 
-import { StorageHelper } from '../../lib/storage-helper.js';
-import { findPreviousReleaseVersion } from '../../lib/release-notes.js';
+import { StorageHelper } from '../lib/storage-helper.js';
+import { findPreviousReleaseVersion } from '../lib/release-notes.js';
 
 export class OnboardingService {
 

@@ -13,7 +13,7 @@
  * but mocks AlarmManager since it depends on Chrome Alarms API.
  */
 
-import { LocalEventService } from '../../src/side_panel/services/local-event-service.js';
+import { LocalEventService } from '../../src/services/local-event-service.js';
 import { RECURRENCE_TYPES } from '../../src/lib/constants.js';
 import {
     loadLocalEventsForDate,
