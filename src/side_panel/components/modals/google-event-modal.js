@@ -6,6 +6,7 @@ import { sendMessage } from '../../../lib/chrome-messaging.js';
 import { GoogleEventContentBuilder } from './google-event-content-builder.js';
 import { GoogleEventEditFormBuilder } from './google-event-edit-form-builder.js';
 import { buildGoogleEventResource, extractTimeHHMM, isEditableGoogleEvent } from '../../../lib/google-event-utils.js';
+import { buildRequestId } from '../../../lib/request-dedupe.js';
 
 export class GoogleEventModal extends ModalComponent {
     constructor(options = {}) {
@@ -138,6 +139,10 @@ export class GoogleEventModal extends ModalComponent {
      */
     showEvent(event) {
         this.currentEvent = event;
+        // A new event is a new logical request: never let a previous event's
+        // id replay its recorded response for this one
+        this._editSeed = null;
+        this._deleteRequestId = null;
 
         // Create the element if it doesn't exist
         if (!this.element) {
@@ -390,11 +395,20 @@ export class GoogleEventModal extends ModalComponent {
             return;
         }
 
+        // Stable across retries of this edit session so the background can
+        // deduplicate a retry whose first attempt actually committed. The id
+        // also covers the patch, so a correction made after a failure is not
+        // swallowed by the recorded response of the previous attempt.
+        if (!this._editSeed) {
+            this._editSeed = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        }
+        const requestId = buildRequestId('update-evt', this._editSeed, [event.calendarId, event.id, patchResource]);
+
         this._submittingEdit = true;
         this._editFormBuilder.saveButton.disabled = true;
         let succeeded;
         try {
-            succeeded = await this.onSaveEdit(event.calendarId, event.id, patchResource);
+            succeeded = await this.onSaveEdit(event.calendarId, event.id, patchResource, requestId);
         } catch (error) {
             console.error('Google event update error:', error);
             succeeded = false;
@@ -404,6 +418,7 @@ export class GoogleEventModal extends ModalComponent {
         }
 
         if (succeeded) {
+            this._editSeed = null;
             this.hide();
         } else {
             this._showError(window.getLocalizedMessage('googleEventUpdateFailed') || 'Failed to update Google event');
@@ -424,11 +439,18 @@ export class GoogleEventModal extends ModalComponent {
         }
 
         this._clearError();
+
+        // Stable across retries of this delete so the background can
+        // deduplicate a retry whose first attempt actually committed
+        if (!this._deleteRequestId) {
+            this._deleteRequestId = `delete-evt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        }
+
         this._deletingEvent = true;
         this.confirmDeleteButton.disabled = true;
         let succeeded;
         try {
-            succeeded = await this.onDelete(event.calendarId, event.id);
+            succeeded = await this.onDelete(event.calendarId, event.id, this._deleteRequestId);
         } catch (error) {
             console.error('Google event delete error:', error);
             succeeded = false;
@@ -438,6 +460,7 @@ export class GoogleEventModal extends ModalComponent {
         }
 
         if (succeeded) {
+            this._deleteRequestId = null;
             this.hide();
         } else {
             this._showDeleteConfirm(false);
@@ -719,6 +742,9 @@ export class GoogleEventModal extends ModalComponent {
     hide() {
         super.hide();
         this.currentEvent = null;
+        // Abandoned sessions: the next edit/delete is a new logical request
+        this._editSeed = null;
+        this._deleteRequestId = null;
     }
 
     /**

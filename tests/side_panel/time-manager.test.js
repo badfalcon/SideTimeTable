@@ -757,3 +757,78 @@ describe('EventLayoutManager', () => {
     });
   });
 });
+
+// ---------------------------------------------------------------
+// SPEC: Day-crossing events (e.g. 23:00 → 01:00 next day)
+// - Overlap detection must use the interval the event is DRAWN on
+//   (minutes-of-day of the start + the real duration), so an event ending
+//   after midnight keeps a correct lane and one starting before midnight
+//   is not grouped with the small hours it never touches on screen
+// ---------------------------------------------------------------
+describe('EventLayoutManager — day-crossing events', () => {
+  let manager;
+
+  beforeEach(() => {
+    manager = new EventLayoutManager(null);
+  });
+
+  afterEach(() => {
+    manager.destroy();
+  });
+
+  // Event on the base day (June 15, 2025) possibly ending the next day
+  function createSpanEvent(id, startDay, startHour, startMin, endDay, endHour, endMin) {
+    return {
+      id,
+      startTime: new Date(2025, 5, startDay, startHour, startMin),
+      endTime: new Date(2025, 5, endDay, endHour, endMin),
+      element: mockElement(),
+    };
+  }
+
+  test('two events crossing midnight overlap', () => {
+    // 23:00→01:00 vs 23:30→00:30 — clearly overlapping in real time
+    const e1 = createSpanEvent('e1', 15, 23, 0, 16, 1, 0);
+    const e2 = createSpanEvent('e2', 15, 23, 30, 16, 0, 30);
+    expect(manager._areEventsOverlapping(e1, e2)).toBe(true);
+    expect(manager._areEventsOverlapping(e2, e1)).toBe(true);
+  });
+
+  test('a day-crossing event does not overlap with a morning event', () => {
+    const crossing = createSpanEvent('e1', 15, 23, 0, 16, 1, 0);
+    const morning = createSpanEvent('e2', 15, 9, 0, 15, 10, 0);
+    expect(manager._areEventsOverlapping(crossing, morning)).toBe(false);
+  });
+
+  test('an event started the previous day does not steal a lane from a small-hours event', () => {
+    // Previous day 23:00 → today 01:00 is DRAWN at 23:00 of the viewed day,
+    // so it must not be grouped with today 00:30-01:30, which it never
+    // visually touches
+    const fromYesterday = createSpanEvent('e1', 14, 23, 0, 15, 1, 0);
+    const smallHours = createSpanEvent('e2', 15, 0, 30, 15, 1, 30);
+    expect(manager._areEventsOverlapping(fromYesterday, smallHours)).toBe(false);
+  });
+
+  test('an event started the previous day overlaps the 23:00 event it is drawn on top of', () => {
+    const fromYesterday = createSpanEvent('e1', 14, 23, 0, 15, 1, 0);
+    const tonight = createSpanEvent('e2', 15, 23, 30, 16, 0, 30);
+    expect(manager._areEventsOverlapping(fromYesterday, tonight)).toBe(true);
+  });
+
+  test('day-crossing overlapping events are assigned different lanes', () => {
+    const e1 = createSpanEvent('e1', 15, 23, 0, 16, 1, 0);
+    const e2 = createSpanEvent('e2', 15, 23, 30, 16, 0, 30);
+    manager._assignLanesToGroup([e1, e2]);
+    expect(e1.lane).not.toBe(e2.lane);
+  });
+
+  test('lanes follow the drawn position, not the real timestamp', () => {
+    // Yesterday 23:00 → 01:00 is drawn at 23:00, today 00:15 → 00:45 at 00:15:
+    // no visual overlap, so both keep lane 0 and full width
+    const fromYesterday = createSpanEvent('e1', 14, 23, 0, 15, 1, 0);
+    const smallHours = createSpanEvent('e2', 15, 0, 15, 15, 0, 45);
+    manager._assignLanesToGroup([smallHours, fromYesterday]);
+    expect(fromYesterday.lane).toBe(0);
+    expect(smallHours.lane).toBe(0);
+  });
+});

@@ -11,6 +11,7 @@ import { selectNotificationUrl } from './lib/conference-url-utils.js';
 import { GoogleCalendarClient, AuthenticationError } from './services/google-calendar-client.js';
 import { ReminderSyncService } from './services/reminder-sync-service.js';
 import { logError, logWarn } from './lib/utils.js';
+import { runDeduped } from './lib/request-dedupe.js';
 
 // Instantiate services
 const calendarClient = new GoogleCalendarClient();
@@ -398,7 +399,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 }
                 try {
                     const { calendarId, event } = request;
-                    const createdEvent = await calendarClient.createEvent(calendarId, event);
+                    // Deduped: a retry after a commit-then-crash must not
+                    // create the event a second time
+                    const createdEvent = await runDeduped(request.requestId,
+                        () => calendarClient.createEvent(calendarId, event));
                     // Ensure the new event gets a reminder alarm if reminders are enabled
                     reminderSync.syncAll().catch(() => {});
                     sendResponse({ success: true, event: createdEvent });
@@ -423,7 +427,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 }
                 try {
                     const { calendarId, eventId, event } = request;
-                    const updatedEvent = await calendarClient.patchEvent(calendarId, eventId, event);
+                    const updatedEvent = await runDeduped(request.requestId,
+                        () => calendarClient.patchEvent(calendarId, eventId, event));
                     // The reminder lead time may have changed — resync alarms
                     reminderSync.syncAll().catch(() => {});
                     sendResponse({ success: true, event: updatedEvent });
@@ -448,7 +453,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 }
                 try {
                     const { calendarId, eventId } = request;
-                    await calendarClient.deleteEvent(calendarId, eventId);
+                    await runDeduped(request.requestId,
+                        () => calendarClient.deleteEvent(calendarId, eventId));
                     // Clear any reminder alarm still scheduled for the deleted event
                     reminderSync.syncAll().catch(() => {});
                     sendResponse({ success: true });
