@@ -33,7 +33,7 @@ jest.mock('../../src/side_panel/event-element-factory.js', () => ({
 }));
 
 import { GoogleEventManager } from '../../src/side_panel/event-handlers.js';
-import { loadSettings } from '../../src/lib/settings-storage.js';
+import { loadSettings, loadSelectedCalendars } from '../../src/lib/settings-storage.js';
 import { sendMessage } from '../../src/lib/chrome-messaging.js';
 
 function createGoogleEventsDiv() {
@@ -112,5 +112,50 @@ describe('GoogleEventManager — fetchEvents date race', () => {
     await manager.fetchEvents(new Date(2026, 6, 23));
 
     expect(processSpy).toHaveBeenCalledWith(events);
+  });
+});
+
+describe('GoogleEventManager — fetchEventsForCalendars date race', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockGoogleIntegrated();
+  });
+
+  test('a calendar toggle started on the previous day does not append to the new day', async () => {
+    loadSelectedCalendars.mockResolvedValue(['cal-1']);
+    const manager = new GoogleEventManager(createGoogleEventsDiv(), null);
+    const processSpy = jest.spyOn(manager, '_processEvents').mockResolvedValue();
+
+    // The toggle's fetch hangs until we resolve it manually
+    let resolveToggle;
+    sendMessage.mockImplementationOnce(
+      () => new Promise((resolve) => { resolveToggle = resolve; })
+    );
+    const togglePromise = manager.fetchEventsForCalendars(
+      new Date(2026, 5, 22), ['cal-1']
+    );
+
+    // The user navigates to the next day while the toggle is in flight
+    sendMessage.mockResolvedValueOnce({ events: [] });
+    await manager.fetchEvents(new Date(2026, 5, 23));
+    processSpy.mockClear();
+
+    resolveToggle({ events: [{ id: 'evt-jun22', calendarId: 'cal-1' }] });
+    await togglePromise;
+
+    expect(processSpy).not.toHaveBeenCalled();
+  });
+
+  test('a toggle with no date change still renders its events', async () => {
+    loadSelectedCalendars.mockResolvedValue(['cal-1']);
+    const manager = new GoogleEventManager(createGoogleEventsDiv(), null);
+    const processSpy = jest.spyOn(manager, '_processEvents').mockResolvedValue();
+
+    const events = [{ id: 'evt-1', calendarId: 'cal-1' }];
+    sendMessage.mockResolvedValueOnce({ events });
+
+    await manager.fetchEventsForCalendars(new Date(2026, 5, 23), ['cal-1']);
+
+    expect(processSpy).toHaveBeenCalled();
   });
 });

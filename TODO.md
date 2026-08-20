@@ -69,6 +69,6 @@
 
 ## 既知の不具合（要設計）
 
-- [x] 高速な日付ナビゲーションでの表示レース: `fetchEvents()` に `_fetchVersion` ガードを追加し、古いレスポンスの描画・DOMクリア・`currentFetchPromise` の誤クリアを防止（`tests/side_panel/event-handlers-race.test.js`）。残る極小レース: 古いフェッチの `_processEvents` 実行中に新しいフェッチが完了した場合の混在描画（発生条件が非常に狭いため保留）。
-- [x] 日跨ぎイベントのレイアウト崩れ（レーン割当）: `_areEventsOverlapping()` とグループ内ソートを分単位から実タイムスタンプ（`getTime()`）比較に変更し、23:00→翌01:00 のような予定の重なり判定・レーン割当を修正（`tests/side_panel/time-manager.test.js` に日跨ぎスペック追加）。残: 閲覧中の日へ表示をクランプ／翌日にも継続表示する表示仕様（複数日ローカル予定を実装する際に設計）。
+- [x] 高速な日付ナビゲーションでの表示レース: `fetchEvents()` と `fetchEventsForCalendars()` に `_fetchVersion` ガードを追加し、古いレスポンスの描画・DOMクリア・`currentFetchPromise` の誤クリアを防止（`tests/side_panel/event-handlers-race.test.js`）。残る極小レース: 古いフェッチの `_processEvents` 実行中に新しいフェッチが完了した場合の混在描画（発生条件が非常に狭いため保留）。
+- [x] 日跨ぎイベントのレイアウト崩れ（レーン割当）: `_areEventsOverlapping()` とグループ内ソートを、DOM が実際に描画する区間（開始の分単位 + 実所要時間 = `_getRenderInterval()`）で比較するよう変更。23:00→翌01:00 の重なり判定が正しくなり、かつ前日開始のイベント（23:00 の位置に描かれる）が深夜帯のイベントとグループ化されてレーンを奪う問題も回避（`tests/side_panel/time-manager.test.js` に日跨ぎスペック）。残: 前日開始イベントを閲覧中の日の先頭へクランプする／翌日にも継続表示する表示仕様（複数日ローカル予定を実装する際に設計）。レイアウトは描画位置に追随しているため、その時は `_getRenderInterval()` も合わせて更新すること。
 - [ ] 毎日繰り返しの DST 日数ずれ（潜在）: `event-storage.js` DAILY 分岐の `Math.floor((targetDateObj - eventStartDate) / 86400000)` がサマータイム境界で1日ずれる。現状 `interval` はUIで `1` 固定（`local-event-modal.js` / `local-event-form-builder.js`）のため `daysDiff % 1 === 0` で観測影響なし。`interval > 1` 機能を追加する場合は `Math.floor`→`Math.round`（WEEKLYと整合）に修正すること。

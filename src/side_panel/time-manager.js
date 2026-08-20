@@ -250,6 +250,28 @@ export class EventLayoutManager {
     }
 
     /**
+     * The interval an event actually occupies on screen, in the same
+     * coordinates EventElementFactory draws with: minutes from the viewed
+     * day's 00:00 for the top, plus the real duration for the height.
+     *
+     * Layout must use these and not raw timestamps — an event fetched for the
+     * viewed day but starting the previous day (23:00 → 01:00) is drawn at
+     * 23:00 of the viewed day, so grouping it with the 00:00 events would
+     * hand it a lane it does not visually need and stack it on top of the
+     * real 23:00 events.
+     *
+     * @param {Object} event - The event
+     * @returns {{start: number, end: number}} Minutes from 00:00
+     * @private
+     */
+    _getRenderInterval(event) {
+        const start = this._getCachedTimeValue(event.startTime);
+        const durationMinutes =
+            (event.endTime.getTime() - event.startTime.getTime()) / 60000;
+        return { start, end: start + durationMinutes };
+    }
+
+    /**
      * Determine if two events overlap in time
      *
      * @param {Object} event1 - The first event
@@ -261,12 +283,8 @@ export class EventLayoutManager {
      * const overlaps = layoutManager._areEventsOverlapping(event1, event2);
      */
     _areEventsOverlapping(event1, event2) {
-        // Real timestamps, not minutes-of-day: a day-crossing event
-        // (23:00 → 01:00 next day) must still compare correctly
-        const start1 = event1.startTime.getTime();
-        const end1 = event1.endTime.getTime();
-        const start2 = event2.startTime.getTime();
-        const end2 = event2.endTime.getTime();
+        const { start: start1, end: end1 } = this._getRenderInterval(event1);
+        const { start: start2, end: end2 } = this._getRenderInterval(event2);
 
         // Zero-duration events at the same time are considered overlapping
         // (same-time appointments should display side by side)
@@ -333,10 +351,10 @@ export class EventLayoutManager {
      * @private
      */
     _assignLanesToGroup(group) {
-        // Sort by the real start timestamp (an event started the previous
-        // day must sort before a small-hours event of the viewed day)
+        // Sort by the on-screen start, the same coordinate the lanes are
+        // checked against
         const sortedEvents = [...group].sort((a, b) =>
-            a.startTime.getTime() - b.startTime.getTime()
+            this._getCachedTimeValue(a.startTime) - this._getCachedTimeValue(b.startTime)
         );
 
         // The event list per lane

@@ -234,6 +234,10 @@ export class GoogleEventManager {
         if (targetDate) this._currentTargetDate = targetDate;
 
         const versionAtStart = ++this._toggleVersion;
+        // Date navigation bumps _fetchVersion, not _toggleVersion: without
+        // this, a toggle started on the previous day appends its events to
+        // the newly displayed day
+        const fetchVersionAtStart = this._fetchVersion;
 
         const settings = await loadSettings();
         this.useGoogleCalendarColors = settings.useGoogleCalendarColors !== false;
@@ -252,8 +256,10 @@ export class GoogleEventManager {
 
         const response = await sendMessage(message);
 
-        // If another toggle happened while we were fetching, discard this result
+        // If another toggle or a date change happened while we were fetching,
+        // discard this result
         if (this._toggleVersion !== versionAtStart) return;
+        if (this._fetchVersion !== fetchVersionAtStart) return;
 
         if (!response) return;
 

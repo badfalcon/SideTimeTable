@@ -760,8 +760,10 @@ describe('EventLayoutManager', () => {
 
 // ---------------------------------------------------------------
 // SPEC: Day-crossing events (e.g. 23:00 → 01:00 next day)
-// - Overlap detection must use real timestamps, not minutes-of-day,
-//   so events spanning midnight get correct lane assignments
+// - Overlap detection must use the interval the event is DRAWN on
+//   (minutes-of-day of the start + the real duration), so an event ending
+//   after midnight keeps a correct lane and one starting before midnight
+//   is not grouped with the small hours it never touches on screen
 // ---------------------------------------------------------------
 describe('EventLayoutManager — day-crossing events', () => {
   let manager;
@@ -798,11 +800,19 @@ describe('EventLayoutManager — day-crossing events', () => {
     expect(manager._areEventsOverlapping(crossing, morning)).toBe(false);
   });
 
-  test('an event started the previous day overlaps a small-hours event', () => {
-    // Previous day 23:00 → today 01:00 vs today 00:30-01:30
+  test('an event started the previous day does not steal a lane from a small-hours event', () => {
+    // Previous day 23:00 → today 01:00 is DRAWN at 23:00 of the viewed day,
+    // so it must not be grouped with today 00:30-01:30, which it never
+    // visually touches
     const fromYesterday = createSpanEvent('e1', 14, 23, 0, 15, 1, 0);
     const smallHours = createSpanEvent('e2', 15, 0, 30, 15, 1, 30);
-    expect(manager._areEventsOverlapping(fromYesterday, smallHours)).toBe(true);
+    expect(manager._areEventsOverlapping(fromYesterday, smallHours)).toBe(false);
+  });
+
+  test('an event started the previous day overlaps the 23:00 event it is drawn on top of', () => {
+    const fromYesterday = createSpanEvent('e1', 14, 23, 0, 15, 1, 0);
+    const tonight = createSpanEvent('e2', 15, 23, 30, 16, 0, 30);
+    expect(manager._areEventsOverlapping(fromYesterday, tonight)).toBe(true);
   });
 
   test('day-crossing overlapping events are assigned different lanes', () => {
@@ -812,14 +822,13 @@ describe('EventLayoutManager — day-crossing events', () => {
     expect(e1.lane).not.toBe(e2.lane);
   });
 
-  test('an event started the previous day sorts before a later same-night event', () => {
-    // Yesterday 23:00 → 01:00 starts BEFORE today 00:15 → 00:45 in real time;
-    // minutes-of-day sorting (1380 vs 15) would invert this
+  test('lanes follow the drawn position, not the real timestamp', () => {
+    // Yesterday 23:00 → 01:00 is drawn at 23:00, today 00:15 → 00:45 at 00:15:
+    // no visual overlap, so both keep lane 0 and full width
     const fromYesterday = createSpanEvent('e1', 14, 23, 0, 15, 1, 0);
     const smallHours = createSpanEvent('e2', 15, 0, 15, 15, 0, 45);
     manager._assignLanesToGroup([smallHours, fromYesterday]);
-    // Earlier-starting event gets the first lane
     expect(fromYesterday.lane).toBe(0);
-    expect(smallHours.lane).toBe(1);
+    expect(smallHours.lane).toBe(0);
   });
 });
