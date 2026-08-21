@@ -1,0 +1,48 @@
+name: Claude トークン期限チェック
+
+# CLAUDE_CODE_OAUTH_TOKEN（claude setup-token 発行・有効期限1年）が切れる前に Issue で知らせる。
+# 期限を過ぎると release-announce.yml の告知文生成が認証エラーで落ちる。
+on:
+  schedule:
+    - cron: '0 0 1 * *'   # 毎月1日 00:00 UTC
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Warn before the token expires
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO:  ${{ github.repository }}
+          # ↓ claude setup-token を実行した日の1年後。ローテーションしたらこの日付を更新する
+          EXPIRES:  '2027-08-21'
+          TITLE:    'CLAUDE_CODE_OAUTH_TOKEN の更新が必要です'
+        run: |
+          set -euo pipefail
+          LEFT=$(( ( $(date -d "$EXPIRES" +%s) - $(date +%s) ) / 86400 ))
+          echo "期限 $EXPIRES / 残り ${LEFT}日"
+          if [ "$LEFT" -gt 30 ]; then
+            echo "まだ余裕あり。何もしない"
+            exit 0
+          fi
+          # 既に open な通知 Issue があれば重複作成しない
+          if [ -n "$(gh issue list --state open --search "in:title \"$TITLE\"" --json number --jq '.[0].number')" ]; then
+            echo "通知済みの Issue があるのでスキップ"
+            exit 0
+          fi
+          BODY=$(cat <<EOF
+          \`CLAUDE_CODE_OAUTH_TOKEN\` の有効期限は **$EXPIRES**（残り ${LEFT}日）です。
+          切れると \`release-announce.yml\` の告知文生成が認証エラーで落ちます。
+
+          更新手順:
+
+          1. ローカルで \`claude setup-token\` を実行し、表示されたトークンをコピー
+          2. \`gh secret set CLAUDE_CODE_OAUTH_TOKEN\`
+          3. \`.github/workflows/claude-token-expiry.yml\` の \`EXPIRES\` を1年後の日付に更新
+          EOF
+          )
+          gh issue create --title "$TITLE" --body "$BODY"
