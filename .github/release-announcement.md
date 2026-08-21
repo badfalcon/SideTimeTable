@@ -1,22 +1,39 @@
 # リリース告知ワークフロー 運用ガイド
 
 `.github/workflows/release-announce.yml` の使い方・セットアップ手順。
-GitHub リリース公開をトリガーに、Claude が告知文を生成し、**手動承認後**に
-X / LinkedIn / Reddit へ自動投稿する。
+Claude が告知文を生成し、**手動承認後**に X / LinkedIn / Reddit へ自動投稿する。
 
 ## 全体の流れ
 
 ```
 タグ push
-  └─ ci.yml がビルド → GitHub リリースを作成（release: published 発火）
-       └─ release-announce.yml
-            ├─ generate : Claude が媒体別の告知文を生成し Step Summary に下書き表示
-            └─ post     : 「announce」環境の承認ゲートで待機
-                            └─ Approve 後に X / LinkedIn / Reddit へ投稿
+  └─ ci.yml がビルド → GitHub リリースを作成
+       ↓（※ここは自動で繋がらない。下記「発火のしかた」参照）
+Actions → Release Announcement → Run workflow（tag 入力・空なら最新リリース）
+  └─ release-announce.yml
+       ├─ generate : 対象リリースを解決 → Claude が媒体別の告知文を生成し Step Summary に下書き表示
+       └─ post     : 「announce」環境の承認ゲートで待機
+                       └─ Approve 後に X / LinkedIn / Reddit へ投稿
 ```
 
 承認ゲートが「**Chrome ウェブストア公開後に告知する**」タイミング制御を兼ねる。
 ストアの掲載がライブになったのを確認してから Approve する。
+
+## 発火のしかた
+
+トリガーは2つ（`release-announce.yml` の `on:`）。
+
+| トリガー | 発火する条件 |
+|---|---|
+| `workflow_dispatch` | **通常はこちら。** Actions → Release Announcement → Run workflow。`tag` 入力で対象リリースを指定（空なら最新リリース） |
+| `release: published` | リリースを **人間のアカウント** が公開したとき（GitHub UI の Publish など） |
+
+> **ci.yml のタグ push では `release` イベントは発火しない。**
+> GitHub の仕様上、`GITHUB_TOKEN` が起こしたイベントは（`workflow_dispatch` /
+> `repository_dispatch` を除き）新しいワークフロー実行を作らない（再帰防止）。
+> ci.yml の `softprops/action-gh-release` はデフォルトの `GITHUB_TOKEN` でリリースを
+> 作るため、告知ワークフローは自動では起動しない。だから手動発火を用意している。
+> どのみち「ストア公開を確認してから告知」の運用なので、手動発火のほうが素直。
 
 ## 一度だけ行うセットアップ
 
@@ -54,9 +71,11 @@ Settings → Environments → New environment → 名前 `announce`。
 ## リリースのたびの操作
 
 1. タグ（`*.*.*`）を push → CI が GitHub リリースを作成
-2. 告知ワークフローが起動。**Actions の generate の Step Summary** で3媒体の下書きを確認
-3. Chrome ウェブストアへ手動アップロード＆公開。掲載がライブになったのを確認
-4. `post` ジョブを **Approve**（または Reject）→ 投稿後、Summary に ✅/⏭️/❌ が出る
+2. Chrome ウェブストアへ手動アップロード＆公開。掲載がライブになったのを確認
+3. Actions → **Release Announcement** → **Run workflow**
+   （`tag` は空でよい＝最新リリースが対象。古いリリースを告知し直すときだけタグを入れる）
+4. **generate の Step Summary** で3媒体の下書きを確認
+5. `post` ジョブを **Approve**（または Reject）→ 投稿後、Summary に ✅/⏭️/❌ が出る
 
 > 各媒体の結果: **✅ posted** / **⏭️ skipped（secret 未設定）** / **❌ failed（設定済みだが失敗）**。
 > ❌ が1つでもあると run は赤くなる（未設定スキップでは赤くならない）。
@@ -82,7 +101,8 @@ Settings → Environments → New environment → 名前 `announce`。
   ときどき新しい月次へ更新する。
 - **Reddit**: アカウントが 2FA 有効だと password は `password:TOTP` 形式が必要。
   新規アカウントはスパムフィルタに留まる場合あり。
-- **再実行＝二重投稿**: `post` を再実行すると同じ内容を再投稿する。1リリース＝1回 Approve で運用。
+- **再実行＝二重投稿**: `post` を再実行する／同じタグで再度 Run workflow すると同じ内容を
+  再投稿する。1リリース＝1回 Approve で運用。
 
 ## 参考リンク（投稿時間の出典）
 - Sprout Social「Best Times to Post on Social Media 2026」
