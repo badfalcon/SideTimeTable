@@ -228,7 +228,7 @@ jobs:
             exit 0
           fi
           # スクリプトを一度書き出し、日本語版・英語版で使い回す。
-          # 引数: argv[2]=本文ファイル argv[3]=リンクファイル
+          # 引数: argv[2]=本文ファイル argv[3]=リンクファイル argv[4]=リプライの前置き
           cat > post-x.js <<'EOF'
           const crypto = require('crypto');
           const https = require('https');
@@ -240,6 +240,7 @@ jobs:
           const toks = process.env.X_ACCESS_SECRET;
           const text = fs.readFileSync(process.argv[2], 'utf8').trim();
           const link = fs.readFileSync(process.argv[3], 'utf8').trim();
+          const lead = (process.argv[4] || '').trim();
 
           // RFC3986 percent-encoding
           const pe = s => encodeURIComponent(s).replace(/[!*'()]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase());
@@ -298,16 +299,19 @@ jobs:
           // 本文にURLを入れるとリーチが落ちるとされるため、リンクはリプライで貼る
           (async () => {
             const id = await tweet({ text });
-            await tweet({ text: link, reply: { in_reply_to_tweet_id: id } });
+            await tweet({
+              text: lead ? lead + '\n' + link : link,
+              reply: { in_reply_to_tweet_id: id },
+            });
           })().catch(e => { console.error(e.message); process.exit(1); });
           EOF
           post_x() {
-            # $1=本文ファイル $2=リンクファイル
+            # $1=本文ファイル $2=リンクファイル $3=リプライの前置き
             echo "--- X: $1 ---"
-            node post-x.js "$1" "$2"
+            node post-x.js "$1" "$2" "$3"
           }
-          post_x x.txt    link_ja.txt
-          post_x x_en.txt link_en.txt
+          post_x x.txt    link_ja.txt "ダウンロードはこちらから 👇"
+          post_x x_en.txt link_en.txt "Get it on the Chrome Web Store 👇"
           echo "result=posted" >> "$GITHUB_OUTPUT"
 
       # --- LinkedIn : 個人プロフィールへ Posts API で投稿 ---
