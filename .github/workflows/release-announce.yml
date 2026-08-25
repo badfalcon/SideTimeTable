@@ -105,7 +105,7 @@ jobs:
 
             LinkedIn（日英を1つの投稿にまとめるため1ファイル）:
             - ${{ github.workspace }}/linkedin.txt … 日本語の本文、空行、`---`、空行、英語の本文、の順に並べる。
-              どちらもプロフェッショナルな数文。URLは含めない（別途リンクを記事として添付します）。
+              どちらもプロフェッショナルな数文。URLは含めない（サマリー側で末尾に付けます）。
 
             Reddit（日本語版と英語版を別々の投稿にするため2ファイル）:
             - ${{ github.workspace }}/reddit_title.txt … Reddit投稿のタイトル。300字以内。URLは含めない。
@@ -195,11 +195,11 @@ jobs:
           $(cat link_en.txt)"
 
             echo "## LinkedIn"
-            echo "日英を1つの投稿にまとめています。リンクは記事として添付してください。"
+            echo "日英を1つの投稿にまとめています。末尾のURLごと貼り付ければ、LinkedIn がリンクのプレビューを自動で付けます。"
             echo ""
-            block "本文（日英）" linkedin.txt
-            echo "添付リンク: $(cat link.txt)"
-            echo ""
+            text_block "本文（日英）" "$(cat linkedin.txt)
+
+          $(cat link.txt)"
 
             echo "## Reddit"
             echo "自分のプロフィールへのリンク投稿。日英で別々に投稿します。"
