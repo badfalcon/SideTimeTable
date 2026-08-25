@@ -1,4 +1,13 @@
-name: Release Announcement (X / LinkedIn / Reddit)
+name: Release Announcement Draft (X / LinkedIn / Reddit)
+
+# 告知文の下書きを生成するだけのワークフロー。投稿は手動で行う。
+#
+# 以前は各SNSへ自動投稿していたが、3媒体とも外部要因で運用できなかったため
+# 投稿処理は削除した（生成部分は本番で動作確認済み）:
+#   - X        : 従量課金制。URL入り投稿が $0.200/件と高く、クレジット購入が必要
+#   - LinkedIn : アプリ作成に LinkedIn 会社ページの紐付けが必須
+#   - Reddit   : API 利用登録（Responsible Builder Policy）が必要
+# 復活させる場合は git 履歴の post ジョブを参照すること。
 
 on:
   release:
@@ -11,18 +20,16 @@ on:
         type: string
 
 run-name: >-
-  Announce ${{ inputs.tag || github.event.release.tag_name || 'latest release' }}
+  Draft announcement for ${{ inputs.tag || github.event.release.tag_name || 'latest release' }}
 
 permissions:
   contents: read
 
 env:
   # 告知のリンク先は GitHub リリースではなく Chrome ウェブストア（インストール導線のため）。
-  # hl でロケールを出し分ける。日英で URL が変わるので Reddit の重複リンク判定も回避できる。
   STORE_URL: 'https://chromewebstore.google.com/detail/sidetimetable/pnknjjpncnciijkpdfgfiikmhlmamaid'
 
 jobs:
-  # ① Claude で媒体別・言語別の告知文を生成し、下書きを保存・表示
   generate:
     runs-on: ubuntu-latest
     permissions:
@@ -63,16 +70,17 @@ jobs:
 
           # リリースが解決できていなければ告知する対象が無いのでここで落とす
           [ -s release_url.txt ] && [ "$(cat release_url.txt)" != "null" ] || { echo "リリースを解決できませんでした"; exit 1; }
+          [ -s release_name.txt ] || { echo "リリース名を解決できませんでした"; exit 1; }
 
-          # 実際に投稿するリンクはストアページ。日英でロケールを分ける。
-          printf '%s?hl=ja\n' "$STORE_URL" > link_ja.txt
-          printf '%s?hl=en\n' "$STORE_URL" > link_en.txt
+          # 単一言語の投稿にはロケール付きのリンクを、日英を含む投稿には
+          # ロケール指定なし（ストア側が閲覧者の言語で出し分ける）を使う。
+          printf '%s\n'        "$STORE_URL" > link.txt
+          printf '%s?hl=ja\n'  "$STORE_URL" > link_ja.txt
+          printf '%s?hl=en\n'  "$STORE_URL" > link_en.txt
 
           echo "対象リリース: $(cat release_name.txt) / $(cat release_url.txt)"
-          echo "投稿リンク: $(cat link_ja.txt) , $(cat link_en.txt)"
 
       # Claude Code Action 経由。サブスクの OAuth トークン(claude setup-token)で認証する。
-      # 前ステップが書いた release_*.txt を読み、媒体×言語の6ファイルを書き出させる。
       - name: Generate announcement texts
         uses: anthropics/claude-code-action@v1
         with:
@@ -88,20 +96,22 @@ jobs:
             - ${{ github.workspace }}/release_name.txt … 製品/リリース名
             - ${{ github.workspace }}/release_notes.txt … リリースノート
 
-            内容をもとに X(旧Twitter)・LinkedIn・Reddit 向けの告知文を日本語と英語の
-            両方で作成し、次の6ファイルを絶対パスで書き出してください。
+            内容をもとに X(旧Twitter)・LinkedIn・Reddit 向けの告知文を作成し、
+            次の5ファイルを絶対パスで書き出してください。
 
-            日本語:
+            X（日本語版と英語版を別々の投稿にするため2ファイル）:
             - ${{ github.workspace }}/x.txt … X向け本文。全角140字以内（XはCJKを2カウントするため）。URLやリンクは含めない。絵文字は1〜2個まで。
-            - ${{ github.workspace }}/linkedin.txt … LinkedIn向け本文。プロフェッショナルな数文。URLは含めなくてよい（別途リンクを記事として添付します）。
+            - ${{ github.workspace }}/x_en.txt … 上記の英語版。280字以内。
+
+            LinkedIn（日英を1つの投稿にまとめるため1ファイル）:
+            - ${{ github.workspace }}/linkedin.txt … 日本語の本文、空行、`---`、空行、英語の本文、の順に並べる。
+              どちらもプロフェッショナルな数文。URLは含めない（別途リンクを記事として添付します）。
+
+            Reddit（日本語版と英語版を別々の投稿にするため2ファイル）:
             - ${{ github.workspace }}/reddit_title.txt … Reddit投稿のタイトル。300字以内。URLは含めない。
+            - ${{ github.workspace }}/reddit_title_en.txt … 上記の英語版。300字以内。
 
-            英語:
-            - ${{ github.workspace }}/x_en.txt … 上記 x.txt の英語版。280字以内。
-            - ${{ github.workspace }}/linkedin_en.txt … 上記 linkedin.txt の英語版。
-            - ${{ github.workspace }}/reddit_title_en.txt … 上記 reddit_title.txt の英語版。300字以内。
-
-            英語版は日本語の逐語訳ではなく、英語圏の開発者に自然に読める表現で書いてください。
+            英語は日本語の逐語訳ではなく、英語圏の開発者に自然に読める表現で書いてください。
             製品名 SideTimeTable とバージョン番号は両言語で共通です。
 
             各ファイルには本文だけを書き、見出し・コードフェンス・前置き・説明は一切含めないでください。
@@ -116,7 +126,7 @@ jobs:
       - name: Verify generated texts
         run: |
           set -euo pipefail
-          for f in x.txt linkedin.txt reddit_title.txt x_en.txt linkedin_en.txt reddit_title_en.txt; do
+          for f in x.txt x_en.txt linkedin.txt reddit_title.txt reddit_title_en.txt; do
             [ -s "$f" ] || { echo "$f が生成されませんでした"; exit 1; }
           done
           python3 - <<'PY'
@@ -136,50 +146,76 @@ jobs:
               print(f'  {fn}: {n}/{limit}')
               if n > limit:
                   ng.append(f'{fn}: {n} > {limit}')
+          # LinkedIn は日英を1投稿にまとめるので区切りが入っているかだけ見る
+          if '---' not in open('linkedin.txt', encoding='utf-8').read():
+              ng.append('linkedin.txt: 日英の区切り (---) が見当たりません')
           if ng:
               for m in ng:
-                  print('字数超過:', m)
+                  print('検証NG:', m)
               sys.exit(1)
-          print('字数OK')
+          print('検証OK')
           PY
 
+      # コピペしやすいよう媒体ごとにまとめて表示する
       - name: Show draft in summary
         run: |
           set -euo pipefail
-          show() {
+          block() {
             # $1=見出し $2=ファイル
             # 生成物は改行で終わらないため cat だと閉じフェンスが本文と同じ行に来て
             # コードブロックが閉じない。printf で必ず改行を補う。
-            echo "### $1"
+            echo "**$1**"
             echo '```'
             printf '%s\n' "$(cat "$2")"
             echo '```'
             echo ""
           }
-          {
-            echo "## 📝 生成された告知文（承認前に確認してください）"
+          text_block() {
+            # $1=見出し $2=そのまま出す本文
+            echo "**$1**"
+            echo '```'
+            printf '%s\n' "$2"
+            echo '```'
             echo ""
-            echo "## 日本語"
-            show "X"              x.txt
-            show "LinkedIn"       linkedin.txt
-            show "Reddit (title)" reddit_title.txt
+          }
+          {
+            echo "## 📝 告知文の下書き"
+            echo ""
+            echo "投稿は手動です。下記をコピーして各SNSに貼ってください。"
+            echo ""
+
+            echo "## X"
+            echo "本文にURLを入れるとリーチが落ちるとされるため、本文を投稿してからリンクをリプライで付けます。"
+            echo ""
+            block      "日本語 — 本文"     x.txt
+            text_block "日本語 — リプライ" "ダウンロードはこちらから 👇
+          $(cat link_ja.txt)"
+            block      "English — 本文"     x_en.txt
+            text_block "English — リプライ" "Get it on the Chrome Web Store 👇
+          $(cat link_en.txt)"
+
+            echo "## LinkedIn"
+            echo "日英を1つの投稿にまとめています。リンクは記事として添付してください。"
+            echo ""
+            block "本文（日英）" linkedin.txt
+            echo "添付リンク: $(cat link.txt)"
+            echo ""
+
+            echo "## Reddit"
+            echo "自分のプロフィールへのリンク投稿。日英で別々に投稿します。"
+            echo ""
+            block "日本語 — タイトル" reddit_title.txt
             echo "リンク: $(cat link_ja.txt)"
             echo ""
-            echo "## English"
-            show "X"              x_en.txt
-            show "LinkedIn"       linkedin_en.txt
-            show "Reddit (title)" reddit_title_en.txt
+            block "English — タイトル" reddit_title_en.txt
             echo "リンク: $(cat link_en.txt)"
             echo ""
+
             echo "### ⏰ 推奨投稿時間（JST・目安）"
-            echo "承認＝投稿なので、ストア公開を確認のうえ下記の時間帯に Approve するのが目安です。"
+            echo "ストア公開を確認のうえ、下記の時間帯に投稿するのが目安です。"
             echo "- **X**: 平日 火〜木。昼 12時前後 / 夜 20〜23時"
             echo "- **LinkedIn**: 平日 火〜木の午後（15〜18時）。週末は避ける"
             echo "- **Reddit**: 米国中心のため US東部の朝＝JST 21〜23時頃 or 週末"
-            echo ""
-            echo "各媒体に日本語版・英語版を1件ずつ投稿します。"
-            echo "X はリーチ低下を避けるため本文にURLを入れず、リンクはリプライで貼ります（投稿+リプライ×2言語＝4件）。"
-            echo "内容がOKなら post ジョブを **Approve**、ダメなら **Reject** してください。"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload draft
@@ -188,280 +224,11 @@ jobs:
           name: announcement
           path: |
             x.txt
+            x_en.txt
             linkedin.txt
             reddit_title.txt
-            x_en.txt
-            linkedin_en.txt
             reddit_title_en.txt
+            link.txt
             link_ja.txt
             link_en.txt
             release_name.txt
-
-  # ② 承認後にだけ動く投稿ジョブ。各媒体は独立ステップ（1つ失敗しても他は続行）
-  #    各媒体で日本語版・英語版の2件を投稿する。
-  post:
-    needs: generate
-    runs-on: ubuntu-latest
-    environment: announce   # ← この行で「承認待ち」になる（事前準備Aの環境名と一致）
-    steps:
-      - name: Setup Node
-        uses: actions/setup-node@v7
-        with:
-          node-version: 20
-
-      - name: Download draft
-        uses: actions/download-artifact@v8
-        with:
-          name: announcement
-
-      # --- X (Twitter) : OAuth 1.0a user context ---
-      - name: Post to X
-        id: x
-        continue-on-error: true
-        env:
-          X_CONSUMER_KEY:    ${{ secrets.X_CONSUMER_KEY }}
-          X_CONSUMER_SECRET: ${{ secrets.X_CONSUMER_SECRET }}
-          X_ACCESS_TOKEN:    ${{ secrets.X_ACCESS_TOKEN }}
-          X_ACCESS_SECRET:   ${{ secrets.X_ACCESS_SECRET }}
-        run: |
-          set -euo pipefail
-          if [ -z "${X_CONSUMER_KEY:-}" ]; then
-            echo "result=skipped" >> "$GITHUB_OUTPUT"
-            echo "X: secret 未設定のためスキップ"
-            exit 0
-          fi
-          # スクリプトを一度書き出し、日本語版・英語版で使い回す。
-          # 引数: argv[2]=本文ファイル argv[3]=リンクファイル argv[4]=リプライの前置き
-          cat > post-x.js <<'EOF'
-          const crypto = require('crypto');
-          const https = require('https');
-          const fs = require('fs');
-
-          const ck = process.env.X_CONSUMER_KEY;
-          const cs = process.env.X_CONSUMER_SECRET;
-          const tok = process.env.X_ACCESS_TOKEN;
-          const toks = process.env.X_ACCESS_SECRET;
-          const text = fs.readFileSync(process.argv[2], 'utf8').trim();
-          const link = fs.readFileSync(process.argv[3], 'utf8').trim();
-          const lead = (process.argv[4] || '').trim();
-
-          // RFC3986 percent-encoding
-          const pe = s => encodeURIComponent(s).replace(/[!*'()]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase());
-
-          const url = 'https://api.twitter.com/2/tweets';
-
-          // nonce と timestamp はリクエストごとに変える必要があるため毎回組み立てる
-          function authHeader() {
-            const oauth = {
-              oauth_consumer_key: ck,
-              oauth_nonce: crypto.randomBytes(16).toString('hex'),
-              oauth_signature_method: 'HMAC-SHA1',
-              oauth_timestamp: Math.floor(Date.now() / 1000).toString(),
-              oauth_token: tok,
-              oauth_version: '1.0',
-            };
-            // JSON body は署名対象外。oauth_* のみで署名ベース文字列を作る
-            const paramStr = Object.keys(oauth).sort().map(k => pe(k) + '=' + pe(oauth[k])).join('&');
-            const base = 'POST&' + pe(url) + '&' + pe(paramStr);
-            const signingKey = pe(cs) + '&' + pe(toks);
-            oauth.oauth_signature = crypto.createHmac('sha1', signingKey).update(base).digest('base64');
-            return 'OAuth ' + Object.keys(oauth).sort().map(k => pe(k) + '="' + pe(oauth[k]) + '"').join(', ');
-          }
-
-          // 投稿して tweet id を返す
-          function tweet(payload) {
-            return new Promise((resolve, reject) => {
-              const body = JSON.stringify(payload);
-              const req = https.request(url, {
-                method: 'POST',
-                headers: {
-                  'Authorization': authHeader(),
-                  'Content-Type': 'application/json',
-                  'Content-Length': Buffer.byteLength(body),
-                },
-              }, res => {
-                let data = '';
-                res.on('data', d => data += d);
-                res.on('end', () => {
-                  console.log('X status:', res.statusCode, data);
-                  if (res.statusCode < 200 || res.statusCode >= 300) {
-                    return reject(new Error('X post failed'));
-                  }
-                  let id;
-                  try { id = JSON.parse(data).data.id; } catch (e) { id = null; }
-                  if (!id) return reject(new Error('tweet id を取得できませんでした'));
-                  resolve(id);
-                });
-              });
-              req.on('error', reject);
-              req.write(body);
-              req.end();
-            });
-          }
-
-          // 本文にURLを入れるとリーチが落ちるとされるため、リンクはリプライで貼る
-          (async () => {
-            const id = await tweet({ text });
-            await tweet({
-              text: lead ? lead + '\n' + link : link,
-              reply: { in_reply_to_tweet_id: id },
-            });
-          })().catch(e => { console.error(e.message); process.exit(1); });
-          EOF
-          post_x() {
-            # $1=本文ファイル $2=リンクファイル $3=リプライの前置き
-            echo "--- X: $1 ---"
-            node post-x.js "$1" "$2" "$3"
-          }
-          post_x x.txt    link_ja.txt "ダウンロードはこちらから 👇"
-          post_x x_en.txt link_en.txt "Get it on the Chrome Web Store 👇"
-          echo "result=posted" >> "$GITHUB_OUTPUT"
-
-      # --- LinkedIn : 個人プロフィールへ Posts API で投稿 ---
-      - name: Post to LinkedIn
-        id: linkedin
-        continue-on-error: true
-        env:
-          TOKEN:            ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
-          PERSON_ID:        ${{ secrets.LINKEDIN_PERSON_ID }}
-          LINKEDIN_VERSION: "202605"   # YYYYMM。各版はリリースから約1年で sunset → 定期更新
-        run: |
-          set -euo pipefail
-          if [ -z "${TOKEN:-}" ]; then
-            echo "result=skipped" >> "$GITHUB_OUTPUT"
-            echo "LinkedIn: secret 未設定のためスキップ"
-            exit 0
-          fi
-          # commentary は LinkedIn の "Little Text" 形式。予約文字をバックスラッシュで
-          # エスケープしないと 422 になり、特に括弧があると以降が黙って欠落する。
-          # （article.title / source は Little Text ではないのでエスケープ不要）
-          cat > escape-little-text.py <<'PY'
-          import sys
-          reserved = set('\\|{}@[]()<>#*_~')
-          s = open(sys.argv[1], encoding='utf-8').read()
-          sys.stdout.write(''.join('\\' + c if c in reserved else c for c in s))
-          PY
-          TITLE=$(cat release_name.txt)
-          TITLE="${TITLE:-SideTimeTable}"
-
-          post_one() {
-            # $1=本文ファイル $2=リンクファイル
-            TEXT=$(python3 escape-little-text.py "$1")
-            LINK=$(cat "$2")
-            BODY=$(jq -n \
-              --arg author "urn:li:person:$PERSON_ID" \
-              --arg text "$TEXT" \
-              --arg link "$LINK" \
-              --arg title "$TITLE" '{
-                author: $author,
-                commentary: $text,
-                visibility: "PUBLIC",
-                distribution: { feedDistribution: "MAIN_FEED", targetEntities: [], thirdPartyDistributionChannels: [] },
-                content: { article: { source: $link, title: $title } },
-                lifecycleState: "PUBLISHED",
-                isReshareDisabledByAuthor: false
-              }')
-            HTTP=$(curl -s -o resp.txt -w '%{http_code}' -X POST https://api.linkedin.com/rest/posts \
-              -H "Authorization: Bearer $TOKEN" \
-              -H "LinkedIn-Version: $LINKEDIN_VERSION" \
-              -H "X-Restli-Protocol-Version: 2.0.0" \
-              -H "Content-Type: application/json" \
-              -d "$BODY")
-            echo "LinkedIn ($1) HTTP $HTTP"
-            cat resp.txt || true
-            case "$HTTP" in
-              200|201) echo "LinkedIn post OK" ;;
-              *) echo "LinkedIn post failed"; return 1 ;;
-            esac
-          }
-
-          post_one linkedin.txt    link_ja.txt
-          post_one linkedin_en.txt link_en.txt
-          echo "result=posted" >> "$GITHUB_OUTPUT"
-
-      # --- Reddit : 自分のプロフィール(u_/)へリンク投稿 ---
-      - name: Post to Reddit
-        id: reddit
-        continue-on-error: true
-        env:
-          CID:     ${{ secrets.REDDIT_CLIENT_ID }}
-          CSECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
-          RUSER:   ${{ secrets.REDDIT_USERNAME }}
-          RPASS:   ${{ secrets.REDDIT_PASSWORD }}
-        run: |
-          set -euo pipefail
-          if [ -z "${CID:-}" ]; then
-            echo "result=skipped" >> "$GITHUB_OUTPUT"
-            echo "Reddit: secret 未設定のためスキップ"
-            exit 0
-          fi
-          UA="SideTimeTable-release-bot/1.0 by $RUSER"
-
-          # password grant で短命トークンを取得
-          TOKEN=$(curl -s -X POST https://www.reddit.com/api/v1/access_token \
-            -A "$UA" \
-            -u "$CID:$CSECRET" \
-            --data-urlencode "grant_type=password" \
-            --data-urlencode "username=$RUSER" \
-            --data-urlencode "password=$RPASS" | jq -r '.access_token // empty')
-          [ -n "$TOKEN" ] || { echo "Reddit token exchange failed"; exit 1; }
-
-          submit_one() {
-            # $1=タイトルファイル $2=リンクファイル
-            # 日英でリンクの hl が異なるため、同一URLの重複投稿とは判定されない
-            RESP=$(curl -s -X POST https://oauth.reddit.com/api/submit \
-              -A "$UA" \
-              -H "Authorization: bearer $TOKEN" \
-              --data-urlencode "api_type=json" \
-              --data-urlencode "sr=u_$RUSER" \
-              --data-urlencode "kind=link" \
-              --data-urlencode "title=$(cat "$1")" \
-              --data-urlencode "url=$(cat "$2")")
-            echo "Reddit ($1): $RESP"
-            # エラーが無く、投稿URLが返ったことを確認
-            echo "$RESP" | jq -e '(.json.errors == []) and (.json.data.url != null)' >/dev/null \
-              || { echo "Reddit submit failed"; return 1; }
-          }
-
-          submit_one reddit_title.txt    link_ja.txt
-          submit_one reddit_title_en.txt link_en.txt
-          echo "result=posted" >> "$GITHUB_OUTPUT"
-
-      # --- 結果集計 ---
-      # 各媒体について outcome(success/failure) と result(posted/skipped) を組み合わせ、
-      #   投稿成功=✅ / 秘密未設定スキップ=⏭️ / 失敗=❌ を表示。
-      # ❌（=秘密が設定済みなのに投稿失敗）が1つでもあれば run を赤くする。
-      # 未設定スキップでは赤くしない（媒体を段階的に追加できるようにするため）。
-      - name: Summarize results
-        if: always()
-        env:
-          X_OUTCOME: ${{ steps.x.outcome }}
-          X_RESULT:  ${{ steps.x.outputs.result }}
-          L_OUTCOME: ${{ steps.linkedin.outcome }}
-          L_RESULT:  ${{ steps.linkedin.outputs.result }}
-          R_OUTCOME: ${{ steps.reddit.outcome }}
-          R_RESULT:  ${{ steps.reddit.outputs.result }}
-        run: |
-          set -uo pipefail
-          FAILED=0
-          line() {
-            # $1=媒体名 $2=outcome $3=result
-            if [ "$2" = "success" ] && [ "$3" = "skipped" ]; then
-              echo "- $1: ⏭️ skipped（secret 未設定）"
-            elif [ "$2" = "success" ]; then
-              echo "- $1: ✅ posted（日本語・英語の2件）"
-            else
-              echo "- $1: ❌ failed"
-              FAILED=1
-            fi
-          }
-          {
-            echo "## 投稿結果"
-            line "X"        "$X_OUTCOME" "$X_RESULT"
-            line "LinkedIn" "$L_OUTCOME" "$L_RESULT"
-            line "Reddit"   "$R_OUTCOME" "$R_RESULT"
-          } >> "$GITHUB_STEP_SUMMARY"
-          if [ "$FAILED" -ne 0 ]; then
-            echo "1つ以上の媒体で投稿に失敗しました"
-            exit 1
-          fi
