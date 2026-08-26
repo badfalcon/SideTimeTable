@@ -434,17 +434,28 @@ export class LocalEventModal extends ModalComponent {
         }
 
         const date = this._getCurrentDate ? this._getCurrentDate() : new Date();
-        const calendarId = this.formBuilder.calendarSelect?.value || 'primary';
+        const isOutOfOffice = this.formBuilder.getEventType() === 'outOfOffice';
+        // Out of office can only be created on the primary calendar; the picker
+        // is hidden in that mode, so the resolved primary is used directly.
+        const calendarId = isOutOfOffice
+            ? this.formBuilder.getPrimaryCalendarId()
+            : (this.formBuilder.calendarSelect?.value || 'primary');
 
         const eventResource = buildGoogleEventResource({
-            summary: this.titleInput.value,
+            // createEvent requires a summary, so stand in Google's own default
+            // title for an absence the user left untitled.
+            summary: this.titleInput.value.trim()
+                || (isOutOfOffice ? (window.getLocalizedMessage('outOfOffice') || 'Out of office') : ''),
             description: this.descriptionInput.value,
             location: this.formBuilder.locationInput?.value,
             date,
             startTime: this.startTimeInput.value,
             endTime: this.endTimeInput.value,
             addMeet: !!this.formBuilder.meetCheckbox?.checked,
-            reminderMinutes: this.formBuilder.reminderSelect?.value
+            reminderMinutes: this.formBuilder.reminderSelect?.value,
+            eventType: isOutOfOffice ? 'outOfOffice' : undefined,
+            allDay: this.formBuilder.isAllDay(),
+            autoDecline: this.formBuilder.isAutoDecline()
         });
 
         if (!this.onSaveGoogle) {
@@ -605,24 +616,32 @@ export class LocalEventModal extends ModalComponent {
      * @private
      */
     _validateForm() {
-        // Title check
-        if (!this.titleInput.value.trim()) {
+        // Both getters degrade to the plain-event answer unless the Google
+        // destination and the out-of-office type are actually active, so the
+        // local save path is unaffected.
+        const isOutOfOffice = this.formBuilder.getEventType() === 'outOfOffice';
+
+        // Title check — an untitled absence is allowed; Google's own default
+        // title is filled in on save.
+        if (!isOutOfOffice && !this.titleInput.value.trim()) {
             this._showError(window.getLocalizedMessage('pleaseEnterTitle'));
             this.titleInput.focus();
             return false;
         }
 
-        // Time check
-        if (!this.startTimeInput.value) {
-            this._showError(window.getLocalizedMessage('pleaseEnterStartTime'));
-            this.startTimeInput.focus();
-            return false;
-        }
+        // Time check (skipped for a whole-day absence, which has no time inputs)
+        if (!this.formBuilder.isAllDay()) {
+            if (!this.startTimeInput.value) {
+                this._showError(window.getLocalizedMessage('pleaseEnterStartTime'));
+                this.startTimeInput.focus();
+                return false;
+            }
 
-        if (!this.endTimeInput.value) {
-            this._showError(window.getLocalizedMessage('pleaseEnterEndTime'));
-            this.endTimeInput.focus();
-            return false;
+            if (!this.endTimeInput.value) {
+                this._showError(window.getLocalizedMessage('pleaseEnterEndTime'));
+                this.endTimeInput.focus();
+                return false;
+            }
         }
 
         // The time validity check
@@ -634,6 +653,14 @@ export class LocalEventModal extends ModalComponent {
      * @private
      */
     _validateTimes() {
+        // A whole-day absence hides the time inputs; whatever they still hold
+        // is not part of the event and must not raise an error. This runs on
+        // every time-input change too, not just on save.
+        if (this.formBuilder.isAllDay()) {
+            this._clearError();
+            return true;
+        }
+
         if (!this.startTimeInput.value || !this.endTimeInput.value) {
             return true; // Skip if empty
         }

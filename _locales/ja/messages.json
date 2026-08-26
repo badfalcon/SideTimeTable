@@ -1726,6 +1726,26 @@
     "message": "Googleに保存するには、保存先にできるカレンダーをカレンダーフィルターで表示してください。",
     "description": "書き込み可能なGoogleカレンダーが全て非表示のときに作成モーダルに表示されるヒント"
   },
+  "eventTypeGroup": {
+    "message": "種別",
+    "description": "Accessible label for the event type toggle (Event / Out of office)"
+  },
+  "eventTypeDefault": {
+    "message": "予定",
+    "description": "Event type toggle: a regular event"
+  },
+  "autoDeclineInvitations": {
+    "message": "重複する招待をすべて辞退する",
+    "description": "Out-of-office option: auto-decline conflicting meeting invitations"
+  },
+  "autoDeclineHint": {
+    "message": "承諾済みの会議も辞退され、主催者に通知されます。",
+    "description": "Explains the side effect of auto-declining conflicting invitations"
+  },
+  "oooPrimaryOnly": {
+    "message": "不在の予定はメインカレンダーにのみ作成できます。カレンダーフィルターでメインカレンダーを表示してください。",
+    "description": "Shown when out-of-office cannot be created because the primary calendar is not displayed"
+  },
   "googleEditOtherFields": {
     "message": "その他の項目はGoogleカレンダーで編集できます。",
     "description": "Googleイベント編集フォームで編集できない項目についての補足"

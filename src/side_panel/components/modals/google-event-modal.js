@@ -5,7 +5,7 @@ import { ModalComponent } from './modal-component.js';
 import { sendMessage } from '../../../lib/chrome-messaging.js';
 import { GoogleEventContentBuilder } from './google-event-content-builder.js';
 import { GoogleEventEditFormBuilder } from './google-event-edit-form-builder.js';
-import { buildGoogleEventResource, extractTimeHHMM, isEditableGoogleEvent } from '../../../lib/google-event-utils.js';
+import { buildGoogleEventResource, extractTimeHHMM, isEditableGoogleEvent, isDeletableGoogleEvent } from '../../../lib/google-event-utils.js';
 import { buildRequestId } from '../../../lib/request-dedupe.js';
 
 export class GoogleEventModal extends ModalComponent {
@@ -179,7 +179,7 @@ export class GoogleEventModal extends ModalComponent {
             this._setRsvpButtons(event);
         }
 
-        // Edit/Delete actions (hidden when the event is not editable)
+        // Edit/Delete actions (hidden when the event cannot be changed at all)
         this._setEditDeleteButtons(event);
 
         // Always open in view mode with a clean state
@@ -203,7 +203,20 @@ export class GoogleEventModal extends ModalComponent {
     }
 
     /**
-     * Build (once) and toggle the view-mode Edit/Delete button bar.
+     * Whether the event can be deleted from the panel. A superset of editable:
+     * out-of-office events cannot be edited but can be removed, since the panel
+     * can create them.
+     * @param {Object} event
+     * @returns {boolean}
+     * @private
+     */
+    _isDeletableEvent(event) {
+        return isDeletableGoogleEvent(event);
+    }
+
+    /**
+     * Build (once) and toggle the view-mode Edit/Delete button bar. The bar
+     * shows whenever the event is deletable; Edit within it is gated separately.
      * @param {Object} event
      * @private
      */
@@ -269,8 +282,10 @@ export class GoogleEventModal extends ModalComponent {
             this.viewContent.appendChild(this.deleteConfirmRow);
         }
 
-        const editable = this._isEditableEvent(event);
-        this.viewButtons.style.display = editable ? '' : 'none';
+        // Edit and delete are gated separately: an out-of-office event shows
+        // only Delete.
+        this.editButton.style.display = this._isEditableEvent(event) ? '' : 'none';
+        this.viewButtons.style.display = this._isDeletableEvent(event) ? '' : 'none';
         this._showDeleteConfirm(false);
     }
 
@@ -285,13 +300,13 @@ export class GoogleEventModal extends ModalComponent {
     _showDeleteConfirm(confirming) {
         if (!this.viewButtons) return;
         const wasConfirming = this.deleteConfirmRow.style.display !== 'none';
-        const editable = this._isEditableEvent(this.currentEvent);
-        this.viewButtons.style.display = confirming || !editable ? 'none' : '';
+        const deletable = this._isDeletableEvent(this.currentEvent);
+        this.viewButtons.style.display = confirming || !deletable ? 'none' : '';
         this.deleteConfirmRow.style.display = confirming ? '' : 'none';
 
         if (confirming) {
             this.cancelDeleteButton?.focus();
-        } else if (wasConfirming && editable) {
+        } else if (wasConfirming && deletable) {
             this.deleteButton?.focus();
         }
     }
@@ -758,7 +773,12 @@ export class GoogleEventModal extends ModalComponent {
             if (this.editContent && this.editContent.style.display !== 'none') {
                 this._editFormBuilder.titleInput?.focus();
             } else if (this.viewButtons && this.viewButtons.style.display !== 'none') {
-                this.editButton?.focus();
+                // Edit is hidden on a delete-only event (out of office), so
+                // land on the first action that is actually there.
+                const firstAction = this.editButton && this.editButton.style.display !== 'none'
+                    ? this.editButton
+                    : this.deleteButton;
+                (firstAction || this.closeButton)?.focus();
             } else {
                 this.closeButton?.focus();
             }

@@ -1726,6 +1726,26 @@
     "message": "To save to Google, show a writable calendar in the calendar filter first.",
     "description": "Hint shown in the create modal when writable Google calendars exist but none are displayed"
   },
+  "eventTypeGroup": {
+    "message": "Event type",
+    "description": "Accessible label for the event type toggle (Event / Out of office)"
+  },
+  "eventTypeDefault": {
+    "message": "Event",
+    "description": "Event type toggle: a regular event"
+  },
+  "autoDeclineInvitations": {
+    "message": "Decline all conflicting invitations",
+    "description": "Out-of-office option: auto-decline conflicting meeting invitations"
+  },
+  "autoDeclineHint": {
+    "message": "Meetings you already accepted are declined too, and organizers are notified.",
+    "description": "Explains the side effect of auto-declining conflicting invitations"
+  },
+  "oooPrimaryOnly": {
+    "message": "Out-of-office events can only be created on your primary calendar. Show it in the calendar filter first.",
+    "description": "Shown when out-of-office cannot be created because the primary calendar is not displayed"
+  },
   "googleEditOtherFields": {
     "message": "Other fields can be edited in Google Calendar.",
     "description": "Muted note in the Google event edit form about fields it does not cover"
