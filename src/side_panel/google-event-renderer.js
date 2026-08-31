@@ -67,6 +67,10 @@ export class GoogleEventRenderer {
             chip.dataset.calendarId = event.calendarId;
         }
 
+        if (event.id) {
+            chip.dataset.eventId = event.id;
+        }
+
         // Apply Google Calendar colors
         if (config.useGoogleCalendarColors && event.calendarBackgroundColor) {
             chip.style.backgroundColor = event.calendarBackgroundColor;
@@ -122,6 +126,12 @@ export class GoogleEventRenderer {
         // Add time information to data attributes
         eventDiv.dataset.startTime = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         eventDiv.dataset.endTime = endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        // The Calendar event ID, so a reminder notification can scroll to this
+        // block. Not uniqueId: reminders are keyed by the Calendar ID.
+        if (event.id) {
+            eventDiv.dataset.eventId = event.id;
+        }
 
         // Save the event detail data
         eventDiv.dataset.description = event.description || '';

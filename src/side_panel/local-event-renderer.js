@@ -48,6 +48,11 @@ export class LocalEventRenderer {
         eventDiv.dataset.startTime = startTime;
         eventDiv.dataset.endTime = endTime;
 
+        // Recurring instances keep the ID of the event they were generated from,
+        // which is also the ID reminders are registered under.
+        const eventId = event.originalId || event.id || `local-${title}-${startTime}-${endTime}`;
+        eventDiv.dataset.eventId = eventId;
+
         // Check if this is a recurring event
         const isRecurring = event.isRecurringInstance || (event.recurrence && event.recurrence.type !== RECURRENCE_TYPES.NONE);
 
@@ -56,8 +61,6 @@ export class LocalEventRenderer {
 
         // Setup the edit functionality
         this._setupEventEdit(eventDiv, event, config.onEventClick);
-
-        const eventId = event.id || `local-${title}-${startTime}-${endTime}`;
 
         return { element: eventDiv, startTime: startDate, endTime: endDate, eventId };
     }

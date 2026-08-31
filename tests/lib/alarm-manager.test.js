@@ -593,6 +593,65 @@ describe('AlarmManager', () => {
     });
 
     // ---------------------------------------------------------------
+    // SPEC: parseAlarmName
+    // Alarm names are `${prefix}${YYYY-MM-DD}_${eventId}`; the event ID may
+    // itself contain underscores.
+    // ---------------------------------------------------------------
+    describe('SPEC: alarm name parsing', () => {
+        function nextYearDateStr() {
+            return `${new Date().getFullYear() + 1}-06-15`;
+        }
+
+        test('local reminder alarm → type/date/eventId', () => {
+            expect(AlarmManager.parseAlarmName('event_reminder_2025-03-15_e1')).toEqual({
+                type: 'local', dateStr: '2025-03-15', eventId: 'e1'
+            });
+        });
+
+        test('Google reminder alarm → type google', () => {
+            expect(AlarmManager.parseAlarmName('google_event_reminder_2025-03-15_g1')).toEqual({
+                type: 'google', dateStr: '2025-03-15', eventId: 'g1'
+            });
+        });
+
+        test('event ID containing underscores is kept whole', () => {
+            expect(AlarmManager.parseAlarmName('event_reminder_2025-03-15_evt_12_34')).toEqual({
+                type: 'local', dateStr: '2025-03-15', eventId: 'evt_12_34'
+            });
+        });
+
+        test('round-trips the name built by setReminder', async () => {
+            const dateStr = nextYearDateStr();
+            await AlarmManager.setReminder(
+                { id: 'local_evt_9', startTime: '12:00', reminder: true }, dateStr
+            );
+
+            const alarmName = chrome.alarms.create.mock.calls[0][0];
+            expect(AlarmManager.parseAlarmName(alarmName)).toEqual({
+                type: 'local', dateStr, eventId: 'local_evt_9'
+            });
+        });
+
+        test('unrelated alarm name → null', () => {
+            expect(AlarmManager.parseAlarmName('daily_reminder_sync')).toBeNull();
+        });
+
+        test('missing event ID → null', () => {
+            expect(AlarmManager.parseAlarmName('event_reminder_2025-03-15')).toBeNull();
+            expect(AlarmManager.parseAlarmName('event_reminder_2025-03-15_')).toBeNull();
+        });
+
+        test('malformed date → null', () => {
+            expect(AlarmManager.parseAlarmName('event_reminder_15-03-2025_e1')).toBeNull();
+        });
+
+        test('non-string input → null', () => {
+            expect(AlarmManager.parseAlarmName(undefined)).toBeNull();
+            expect(AlarmManager.parseAlarmName(null)).toBeNull();
+        });
+    });
+
+    // ---------------------------------------------------------------
     // SPEC: formatTimeFromDateTime
     // ---------------------------------------------------------------
     describe('SPEC: time extraction from ISO datetime', () => {

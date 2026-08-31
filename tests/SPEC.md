@@ -439,3 +439,62 @@ Returns: `[...recurringInstances, ...dateSpecificEvents]`
 - Valid response values: `"accepted"`, `"declined"`, `"tentative"`
 - Invalid response → throws `Error("Invalid response status")`
 - Self attendee not found → throws `Error("Self attendee not found in event")`
+
+---
+
+## alarm-manager (parseAlarmName)
+
+### parseAlarmName(alarmName)
+Alarm names are `${prefix}${YYYY-MM-DD}_${eventId}`.
+
+| Input | Result |
+|-------|--------|
+| `event_reminder_2025-03-15_e1` | `{ type: 'local', dateStr: '2025-03-15', eventId: 'e1' }` |
+| `google_event_reminder_2025-03-15_g1` | `{ type: 'google', dateStr: '2025-03-15', eventId: 'g1' }` |
+| `event_reminder_2025-03-15_evt_12_34` | eventId `evt_12_34` (only the first segment is the date) |
+| `daily_reminder_sync` (no reminder prefix) | `null` |
+| Missing or empty event ID | `null` |
+| Date not in `YYYY-MM-DD` form | `null` |
+| Non-string input | `null` |
+
+---
+
+## event-focus (notification → side panel handover)
+
+### savePendingEventFocus(focus)
+- Stores `{ eventId, dateStr, type, requestedAt }` under `pendingEventFocus` in local storage
+- Missing `eventId` or `dateStr` → nothing stored, returns `false`
+
+### consumePendingEventFocus(maxAgeMs)
+- Returns `{ eventId, dateStr, type }` and clears the stored request
+- A request is delivered at most once (second call → `null`)
+- Older than `PENDING_FOCUS_MAX_AGE_MS` (5 min) → `null`, still cleared
+- Malformed stored value → `null`
+
+---
+
+## event-focus-service
+
+### focusEvent(eventId, { root, timelineComponent })
+- Matches the element whose `data-event-id` equals `eventId`
+- Found → scrolls via `timelineComponent.scrollElementIntoView()`, or
+  `element.scrollIntoView()` when no timeline component is supplied,
+  then applies the `event-focused` class; returns `true`
+- Not found within `timeout` → returns `false` (events render asynchronously,
+  so the lookup is retried every `pollInterval` until then)
+- Empty `eventId` → returns `false` without searching
+
+### Highlight lifecycle
+- The `event-focused` class is removed after `highlightDuration`
+- Highlighting another event clears the previous highlight
+- `destroy()` clears the highlight and its timer
+
+---
+
+## time-utils (parseDateString)
+
+### parseDateString(dateStr)
+- `"2025-03-15"` → `Date` at local midnight (the inverse of `getFormattedDateFromDate`)
+- Non-existent dates (`"2025-02-30"`, `"2025-13-01"`) → `null`
+- Malformed strings (`"15-03-2025"`, `"2025-3-15"`, `""`) → `null`
+- Non-string input → `null`

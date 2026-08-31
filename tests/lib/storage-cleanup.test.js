@@ -54,6 +54,31 @@ describe('cleanupObsoleteStorageKeys', () => {
         expect(remaining['localEvents_2025-01-01']).toEqual([]);
     });
 
+    test('preserves googleEventData_ reminder payloads', async () => {
+        // These outlive the side panel: the alarm that fires later needs them
+        // to build its notification.
+        await StorageHelper.setLocal({
+            'googleEventData_google_event_reminder_2025-03-21_g1': { title: 'Standup' }
+        });
+
+        const result = await cleanupObsoleteStorageKeys();
+
+        expect(result.local.removed).toEqual([]);
+        const remaining = await StorageHelper.getLocal(null, {});
+        expect(remaining['googleEventData_google_event_reminder_2025-03-21_g1'])
+            .toEqual({ title: 'Standup' });
+    });
+
+    test('preserves a pending event focus request', async () => {
+        await StorageHelper.setLocal({
+            pendingEventFocus: { eventId: 'g1', dateStr: '2025-03-21', requestedAt: Date.now() }
+        });
+
+        const result = await cleanupObsoleteStorageKeys();
+
+        expect(result.local.removed).toEqual([]);
+    });
+
     test('removes keys with valid prefix but invalid format', async () => {
         await StorageHelper.setLocal({
             'localEvents_not-a-date': 'bad',

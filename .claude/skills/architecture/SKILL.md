@@ -59,6 +59,7 @@ All service modules live here in a single flat directory (background and side-pa
 - `event-loading-service.js`: Coordinates loading Google and local events (debounce, scroll positioning)
 - `local-event-service.js`: CRUD operations for local and recurring events
 - `onboarding-service.js`: First-launch tutorial, initial setup, and changelog flow
+- `event-focus-service.js`: Scrolls to and highlights a single event (reminder notification click)
 - `theme-service.js`: Applies color theme, dark mode, and scrollbar settings
 
 ### Utilities (`src/lib/`)
@@ -71,6 +72,7 @@ Shared functions and framework components:
 - `current-time-line-manager.js`: Dedicated current time indicator management with date-aware visibility
 - `storage-helper.js`: Chrome storage API wrapper with async/await support
 - `alarm-manager.js`: Event reminder system using Chrome alarms API
+- `event-focus.js`: Parks/consumes "show me this event" requests handed from the service worker to the side panel
 - `release-notes.js`: Version history and update highlights for What's New modal
 - `google-button-helper.js`: Helper utilities for Google-style buttons
 - `chrome-messaging.js`: Chrome runtime message passing utilities
@@ -128,6 +130,7 @@ Chrome alarm-based reminders:
 - Configurable reminder timing (default: 5 minutes before)
 - Chrome notifications for upcoming events
 - Automatic cleanup of past alarms
+- Clicking a notification opens the side panel on that event: the alarm name is parsed back into `{date, eventId}`, parked in local storage, and the panel navigates to the date, scrolls to the event and highlights it
 - Integration with both local and recurring events
 
 ## Technical Implementation Details

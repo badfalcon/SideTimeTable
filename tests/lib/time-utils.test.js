@@ -3,6 +3,7 @@ import {
   parseTimeString,
   isToday,
   isSameDay,
+  parseDateString,
   calculateTimeDifference,
   calculateWorkHours,
   buildRfc3339DateTime,
@@ -315,5 +316,38 @@ describe('buildRfc3339DateTime', () => {
     // in the offset would fail this even though the string-format tests pass.
     const result = buildRfc3339DateTime(new Date(2026, 6, 22), '09:30');
     expect(new Date(result).getTime()).toBe(new Date(2026, 6, 22, 9, 30).getTime());
+  });
+});
+
+describe('parseDateString', () => {
+  test('parses YYYY-MM-DD to local midnight', () => {
+    const result = parseDateString('2025-03-15');
+    expect(result.getFullYear()).toBe(2025);
+    expect(result.getMonth()).toBe(2);
+    expect(result.getDate()).toBe(15);
+    expect(result.getHours()).toBe(0);
+    expect(result.getMinutes()).toBe(0);
+  });
+
+  test('round-trips with getFormattedDateFromDate', () => {
+    const original = new Date(2025, 11, 31);
+    expect(parseDateString('2025-12-31').getTime()).toBe(original.getTime());
+  });
+
+  test('rejects a date that does not exist', () => {
+    expect(parseDateString('2025-02-30')).toBeNull();
+    expect(parseDateString('2025-13-01')).toBeNull();
+  });
+
+  test('rejects a malformed string', () => {
+    expect(parseDateString('15-03-2025')).toBeNull();
+    expect(parseDateString('2025-3-15')).toBeNull();
+    expect(parseDateString('')).toBeNull();
+  });
+
+  test('rejects non-string input', () => {
+    expect(parseDateString(null)).toBeNull();
+    expect(parseDateString(undefined)).toBeNull();
+    expect(parseDateString(new Date())).toBeNull();
   });
 });
