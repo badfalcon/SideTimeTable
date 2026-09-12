@@ -29,6 +29,7 @@
 - [ ] `current-time-line-manager.js` のテスト（DOM操作が多く jsdom 環境が必要）
 - [ ] `demo-data.js`（実体）のテスト（スタブ版はカバー済み、実体はDOM依存あり）
 - [ ] UIコンポーネント（options/、side_panel/components/）のテスト（DOM・コンポーネントライフサイクルのモックが必要）
+- [ ] `SidePanelUIController.focusPendingEvent()` / `focusEvent()` のテスト（通知クリックから日付移動→スクロール→ハイライトまでの結線部分。`side_panel.js` はトップレベルでDOM初期化するため import 不可 — コントローラのテスト基盤整備が前提。`EventFocusService` 単体と `event-focus.js` の受け渡しはテスト済み）
 - [ ] `OnboardingService.checkForUpdateNotification()` のテスト（`whatsNewAutoShow=false` 時に `lastSeenVersion` だけ進める分岐の検証含む。`StorageHelper`/`chrome.runtime.getManifest` のモックが必要）
 
 ## ビルド・パッケージング

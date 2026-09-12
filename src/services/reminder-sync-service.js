@@ -6,6 +6,7 @@
  */
 import { StorageHelper } from '../lib/storage-helper.js';
 import { AlarmManager } from '../lib/alarm-manager.js';
+import { STORAGE_KEYS } from '../lib/constants.js';
 import { AuthenticationError } from './google-calendar-client.js';
 
 export class ReminderSyncService {
@@ -67,7 +68,7 @@ export class ReminderSyncService {
                 );
                 for (const alarm of googleReminders) {
                     await chrome.alarms.clear(alarm.name);
-                    await chrome.storage.local.remove(`googleEventData_${alarm.name}`);
+                    await chrome.storage.local.remove(`${STORAGE_KEYS.GOOGLE_EVENT_DATA_PREFIX}${alarm.name}`);
                 }
                 return;
             }
@@ -85,7 +86,7 @@ export class ReminderSyncService {
             for (const alarm of oldReminders) {
                 await chrome.alarms.clear(alarm.name);
                 // Also clear stored event data
-                const storageKey = `googleEventData_${alarm.name}`;
+                const storageKey = `${STORAGE_KEYS.GOOGLE_EVENT_DATA_PREFIX}${alarm.name}`;
                 await chrome.storage.local.remove(storageKey);
             }
 

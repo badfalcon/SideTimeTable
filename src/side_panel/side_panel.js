@@ -29,10 +29,13 @@ import { GoogleEventManager, LocalEventManager } from './event-handlers.js';
 import { LocalEventService } from '../services/local-event-service.js';
 import { DateNavigationService } from '../services/date-navigation-service.js';
 import { EventLoadingService } from '../services/event-loading-service.js';
+import { EventFocusService } from '../services/event-focus-service.js';
+import { consumePendingEventFocus } from '../lib/event-focus.js';
 import { AlarmManager } from '../lib/alarm-manager.js';
 import { ThemeService } from '../services/theme-service.js';
 import { OnboardingService } from '../services/onboarding-service.js';
 import { generateTimeList } from '../lib/utils.js';
+import { isSameDay, parseDateString } from '../lib/time-utils.js';
 import { loadSettings, loadSelectedCalendars } from '../lib/settings-storage.js';
 import { migrateEventDataToLocal } from '../lib/event-storage.js';
 import { cleanupObsoleteStorageKeys } from '../lib/storage-cleanup.js';
@@ -51,6 +54,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         const controller = window.sidePanelController;
         if (controller) {
             controller._handleCalendarToggle(request.changeInfo);
+        }
+    }
+    else if (request.action === "focusEvent") {
+        // Sent when a reminder notification is clicked while the panel is
+        // already open (a panel that opens in response to the click picks the
+        // request up from storage during startup instead).
+        sendResponse({ success: true });
+        const controller = window.sidePanelController;
+        if (controller) {
+            controller.focusPendingEvent();
         }
     }
 });
@@ -79,6 +92,7 @@ class SidePanelUIController {
         this.localEventService = new LocalEventService();
         this.dateNavService = new DateNavigationService();
         this.eventLoadingService = new EventLoadingService();
+        this.eventFocusService = new EventFocusService();
         this.themeService = new ThemeService();
         this.onboardingService = new OnboardingService();
 
@@ -455,6 +469,10 @@ class SidePanelUIController {
             this.timelineComponent
         );
 
+        // If the panel was opened from a reminder notification, jump to that
+        // event instead of leaving the default scroll position.
+        await this.focusPendingEvent();
+
         // Show tutorial on first launch, then initial setup, then changelog
         await this.onboardingService.startOnboardingFlow(
             this.tutorialComponent,
@@ -525,6 +543,73 @@ class SidePanelUIController {
             this.dateNavService.isViewingToday(),
             this.timelineComponent
         );
+    }
+
+    /**
+     * Navigate to a date and wait for its events to be on screen.
+     * Unlike the header-driven date change this skips the debounce, because
+     * the caller needs the events before it can act on them.
+     * @param {Date} date
+     * @private
+     */
+    async _navigateToDate(date) {
+        this.dateNavService.setDate(date);
+        const currentDate = this.dateNavService.getDate();
+
+        this.headerComponent.setCurrentDate(currentDate);
+
+        // Immediately remove the old date events
+        this.allDayEventsComponent.clear();
+        this.timelineComponent.clearAllEvents();
+        if (this.eventLayoutManager) {
+            this.eventLayoutManager.clearAllEvents();
+        }
+
+        this.timelineComponent.setCurrentDate(currentDate);
+        this.timelineComponent.setCurrentTimeLineVisible(this.dateNavService.isViewingToday());
+
+        await this._loadEventsForCurrentDate();
+    }
+
+    // ── Event focus ──────────────────────────────────────────────────
+
+    /**
+     * Act on a pending "show me this event" request, if one was parked by the
+     * service worker (reminder notification click).
+     * @returns {Promise<boolean>} whether an event was focused
+     */
+    async focusPendingEvent() {
+        try {
+            const focus = await consumePendingEventFocus();
+            if (!focus) {
+                return false;
+            }
+            return await this.focusEvent(focus);
+        } catch (error) {
+            console.warn('Failed to focus the requested event:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Show a specific event: switch to its date if needed, then scroll to it
+     * and highlight it.
+     * @param {{eventId: string, dateStr: string}} focus
+     * @returns {Promise<boolean>} whether the event was found on the timeline
+     */
+    async focusEvent(focus) {
+        if (!focus || !focus.eventId) {
+            return false;
+        }
+
+        const targetDate = parseDateString(focus.dateStr);
+        if (targetDate && !isSameDay(targetDate, this.dateNavService.getDate())) {
+            await this._navigateToDate(targetDate);
+        }
+
+        return this.eventFocusService.focusEvent(focus.eventId, {
+            timelineComponent: this.timelineComponent
+        });
     }
 
     // ── Local event CRUD ─────────────────────────────────────────────
@@ -980,6 +1065,7 @@ class SidePanelUIController {
         }
 
         this.eventLoadingService.destroy();
+        this.eventFocusService.destroy();
 
         if (this.eventLayoutManager) {
             this.eventLayoutManager.destroy();

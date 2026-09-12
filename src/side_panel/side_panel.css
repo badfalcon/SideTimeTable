@@ -410,6 +410,38 @@ body {
     color: var(--side-calendar-local-event-text-color);
 }
 
+/* Applied while an event is being pointed out, e.g. after the user clicks a
+   reminder notification and the panel scrolls to that event. */
+.event.event-focused,
+.all-day-event-chip.event-focused {
+    outline: 2px solid var(--side-calendar-accent-color);
+    outline-offset: 1px;
+    /* EventLayoutManager assigns z-index inline, so lifting the highlighted
+       event above its neighbours needs !important */
+    z-index: 30 !important;
+    animation: eventFocusPulse 1.2s ease-out 2;
+}
+
+@keyframes eventFocusPulse {
+    0% {
+        box-shadow: 0 0 0 0 var(--side-calendar-accent-shadow);
+    }
+    50% {
+        box-shadow: 0 0 0 6px var(--side-calendar-accent-shadow);
+    }
+    100% {
+        box-shadow: 0 0 0 0 var(--side-calendar-accent-shadow);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .event.event-focused,
+    .all-day-event-chip.event-focused {
+        animation: none;
+        box-shadow: 0 0 0 4px var(--side-calendar-accent-shadow);
+    }
+}
+
 .drag-preview.event {
     position: absolute;
     left: 40px; /* matches LAYOUT_CONSTANTS.BASE_LEFT in event-handlers.js */

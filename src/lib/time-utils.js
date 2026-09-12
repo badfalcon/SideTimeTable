@@ -96,6 +96,33 @@ export function isToday(date) {
 }
 
 /**
+ * Parse a YYYY-MM-DD string into a local-midnight Date.
+ *
+ * The inverse of getFormattedDateFromDate(). `new Date('2025-03-15')` would
+ * parse as UTC and can land on the previous day in negative offsets, so the
+ * parts are passed to the Date constructor instead.
+ *
+ * @param {string} dateStr - The date string (YYYY-MM-DD)
+ * @returns {Date|null} The date at local midnight, or null if unparseable
+ */
+export function parseDateString(dateStr) {
+    if (typeof dateStr !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        return null;
+    }
+
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const date = new Date(year, month - 1, day, 0, 0, 0, 0);
+
+    // Reject impossible dates that the Date constructor rolls over
+    // (e.g. 2025-02-30 → March 2nd)
+    if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+        return null;
+    }
+
+    return date;
+}
+
+/**
  * Determine if the two dates are the same day
  *
  * @param {Date} date1 - The date 1 to compare

@@ -119,6 +119,49 @@ export class AlarmManager {
     }
 
     /**
+     * Parse a reminder alarm name back into the event it points at.
+     *
+     * Alarm names are `${prefix}${YYYY-MM-DD}_${eventId}`. Event IDs may
+     * themselves contain underscores, so only the first segment after the
+     * prefix is the date and everything after it is the ID.
+     *
+     * @param {string} alarmName The alarm name
+     * @returns {{type: 'google'|'local', dateStr: string, eventId: string}|null}
+     *          null when the name is not a reminder alarm or is malformed
+     */
+    static parseAlarmName(alarmName) {
+        if (typeof alarmName !== 'string') {
+            return null;
+        }
+
+        let type;
+        let prefix;
+        if (alarmName.startsWith(this.GOOGLE_ALARM_PREFIX)) {
+            type = 'google';
+            prefix = this.GOOGLE_ALARM_PREFIX;
+        } else if (alarmName.startsWith(this.ALARM_PREFIX)) {
+            type = 'local';
+            prefix = this.ALARM_PREFIX;
+        } else {
+            return null;
+        }
+
+        const rest = alarmName.slice(prefix.length);
+        const separatorIndex = rest.indexOf('_');
+        if (separatorIndex <= 0) {
+            return null;
+        }
+
+        const dateStr = rest.slice(0, separatorIndex);
+        const eventId = rest.slice(separatorIndex + 1);
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr) || !eventId) {
+            return null;
+        }
+
+        return { type, dateStr, eventId };
+    }
+
+    /**
      * Show the notification for the event reminder
      * @param {string} alarmName The alarm name
      */
@@ -133,17 +176,14 @@ export class AlarmManager {
                 eventData = await this.getGoogleEventData(alarmName);
             } else {
                 // Extract the event info from the alarm name (local event)
-                const parts = alarmName.replace(this.ALARM_PREFIX, '').split('_');
-                if (parts.length < 2) {
+                const parsed = this.parseAlarmName(alarmName);
+                if (!parsed) {
                     console.warn('Invalid alarm name format:', alarmName);
                     return;
                 }
 
-                const dateStr = parts[0];
-                const eventId = parts.slice(1).join('_');
-
                 // Get the event details from the storage
-                eventData = await this.getEventData(eventId, dateStr);
+                eventData = await this.getEventData(parsed.eventId, parsed.dateStr);
             }
 
             if (!eventData) {
@@ -349,7 +389,7 @@ export class AlarmManager {
             const conferenceUrl = videoUrl || meetUrl || null;
             const conferenceType = videoUrl ? 'video' : (meetUrl ? 'meet' : null);
 
-            const storageKey = `googleEventData_${alarmName}`;
+            const storageKey = `${STORAGE_KEYS.GOOGLE_EVENT_DATA_PREFIX}${alarmName}`;
             await chrome.storage.local.set({
                 [storageKey]: {
                     id: event.id,
@@ -404,16 +444,12 @@ export class AlarmManager {
             return eventData.startTimestamp;
         }
 
-        if (!eventData.startTime || typeof alarmName !== 'string') {
+        const parsed = this.parseAlarmName(alarmName);
+        if (!eventData.startTime || !parsed) {
             return null;
         }
 
-        const prefix = alarmName.startsWith(this.GOOGLE_ALARM_PREFIX)
-            ? this.GOOGLE_ALARM_PREFIX
-            : this.ALARM_PREFIX;
-        const dateStr = alarmName.replace(prefix, '').split('_')[0];
-
-        const [year, month, day] = dateStr.split('-').map(Number);
+        const [year, month, day] = parsed.dateStr.split('-').map(Number);
         const [hours, minutes] = eventData.startTime.split(':').map(Number);
 
         if ([year, month, day, hours, minutes].some(n => !Number.isFinite(n))) {
@@ -468,7 +504,7 @@ export class AlarmManager {
             );
             for (const alarm of stale) {
                 await chrome.alarms.clear(alarm.name);
-                await chrome.storage.local.remove(`googleEventData_${alarm.name}`);
+                await chrome.storage.local.remove(`${STORAGE_KEYS.GOOGLE_EVENT_DATA_PREFIX}${alarm.name}`);
             }
 
             // (Re)create reminders for current events. setGoogleEventReminder
@@ -489,7 +525,7 @@ export class AlarmManager {
      */
     static async getGoogleEventData(alarmName) {
         try {
-            const storageKey = `googleEventData_${alarmName}`;
+            const storageKey = `${STORAGE_KEYS.GOOGLE_EVENT_DATA_PREFIX}${alarmName}`;
             const result = await chrome.storage.local.get(storageKey);
             return result[storageKey] || null;
         } catch (error) {

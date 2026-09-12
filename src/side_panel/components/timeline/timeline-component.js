@@ -347,6 +347,37 @@ export class TimelineComponent extends Component {
     }
 
     /**
+     * Scroll an event element to the vertical centre of the timeline.
+     * @param {HTMLElement} element Element inside the timeline
+     */
+    scrollElementIntoView(element) {
+        if (!element || !this.element) {
+            return;
+        }
+
+        try {
+            const container = this.element;
+
+            // All-day chips live above the timeline, outside the scroll area
+            if (typeof container.contains === 'function' && !container.contains(element)) {
+                return;
+            }
+
+            const elementRect = element.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+
+            // Position of the element within the scrollable content
+            const offsetInContent = elementRect.top - containerRect.top + container.scrollTop;
+            const centered = offsetInContent - (container.clientHeight - elementRect.height) / 2;
+            const maxScroll = Math.max(0, container.scrollHeight - container.clientHeight);
+
+            container.scrollTop = Math.min(Math.max(0, centered), maxScroll);
+        } catch (error) {
+            console.warn('Failed to scroll to event:', error);
+        }
+    }
+
+    /**
      * Scroll to current time
      */
     scrollToCurrentTime() {
