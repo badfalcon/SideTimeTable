@@ -21,7 +21,8 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000;
  * Returns true for the standard date-only format, and for OOO events that
  * Google Calendar returns with dateTime but which span a full day starting
  * at local midnight (Google's OOO UI uses time ranges, so "out for the day"
- * comes back as 00:00 → 24:00 timed events).
+ * comes back as 00:00 → 24:00 timed events — as do the whole-day absences
+ * this panel creates).
  *
  * @param {Object} event
  * @returns {boolean}
@@ -36,7 +37,12 @@ export function isAllDayLikeEvent(event) {
         if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return false;
         const startsAtLocalMidnight =
             start.getHours() === 0 && start.getMinutes() === 0 && start.getSeconds() === 0;
-        return startsAtLocalMidnight && (end.getTime() - start.getTime()) >= MS_PER_DAY;
+        const endsAtLocalMidnight =
+            end.getHours() === 0 && end.getMinutes() === 0 && end.getSeconds() === 0;
+        // Ending on a later local midnight counts even when the span is under
+        // 24h: on a DST spring-forward day midnight→midnight is only 23 hours.
+        return startsAtLocalMidnight && end.getTime() > start.getTime() &&
+            (endsAtLocalMidnight || (end.getTime() - start.getTime()) >= MS_PER_DAY);
     }
 
     return false;

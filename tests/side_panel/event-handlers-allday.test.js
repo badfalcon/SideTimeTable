@@ -173,6 +173,39 @@ describe('GoogleEventManager — all-day event routing', () => {
     expect(chip.className).toBe('all-day-event-chip all-day-event-chip-ooo');
   });
 
+  // The "ends at a later local midnight" branch of isAllDayLikeEvent only
+  // differs from the ">= 24h" rule inside a DST transition, which this suite
+  // cannot reach: Jest's workers pin the timezone to UTC before a test file
+  // runs, so setting process.env.TZ has no effect. See TODO.md.
+  test('zero-length outOfOffice event at midnight is not treated as all-day', async () => {
+    const midnight = new Date(2025, 5, 1, 0, 0, 0);
+    await manager._processEvents([{
+      id: 'ooo-zero',
+      summary: 'Out of office',
+      start: { dateTime: midnight.toISOString() },
+      end: { dateTime: midnight.toISOString() },
+      eventType: 'outOfOffice',
+      calendarId: 'primary',
+    }]);
+
+    expect(allDayContainer.appendChild).not.toHaveBeenCalled();
+  });
+
+  test('outOfOffice event from midnight to the same evening stays in the timed timeline', async () => {
+    const start = new Date(2025, 5, 1, 0, 0, 0);
+    const end = new Date(2025, 5, 1, 23, 0, 0);
+    await manager._processEvents([{
+      id: 'ooo-until-evening',
+      summary: 'Out of office',
+      start: { dateTime: start.toISOString() },
+      end: { dateTime: end.toISOString() },
+      eventType: 'outOfOffice',
+      calendarId: 'primary',
+    }]);
+
+    expect(allDayContainer.appendChild).not.toHaveBeenCalled();
+  });
+
   test('partial-day outOfOffice event with dateTime stays in the timed timeline', async () => {
     // 13:00–18:00 OOO should NOT become a chip.
     const start = new Date(2025, 5, 1, 13, 0, 0);

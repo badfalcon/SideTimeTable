@@ -39,6 +39,21 @@ export class LocalEventFormBuilder {
         this.googleHiddenHint = null;
         this.currentSource = 'local';
 
+        // Event type (default / outOfOffice) elements
+        this.eventTypeToggle = null;
+        this.typeDefaultBtn = null;
+        this.typeOooBtn = null;
+        this.oooPrimaryHint = null;
+        this.currentEventType = 'default';
+        // The writable+displayed primary calendar, or null when there is none.
+        // Out-of-office events can only be created on the primary calendar.
+        this.primaryCalendar = null;
+
+        // Out-of-office-only fields
+        this.oooFields = null;
+        this.allDayCheckbox = null;
+        this.autoDeclineCheckbox = null;
+
         // Google-only fields
         this.googleFields = null;
         this.calendarSelect = null;
@@ -51,9 +66,11 @@ export class LocalEventFormBuilder {
         this.advancedBody = null;
         this.reminderSelect = null;
 
-        // Containers toggled by save destination
+        // Containers toggled by save destination / event type
         this.reminderContainer = null;
         this.recurrenceSection = null;
+        this.descriptionSection = null;
+        this.timeRow = null;
     }
 
     /**
@@ -112,6 +129,121 @@ export class LocalEventFormBuilder {
         this.googleHiddenHint.textContent = window.getLocalizedMessage('googleDestinationHidden')
             || 'To save to Google, show a writable calendar in the calendar filter first.';
         parentElement.appendChild(this.googleHiddenHint);
+    }
+
+    /**
+     * Build the event-type toggle (Event / Out of office). Only meaningful for
+     * the Google save destination, so it stays hidden while saving locally.
+     * @param {HTMLElement} parentElement
+     * @private
+     */
+    _buildEventTypeToggle(parentElement) {
+        const toggle = document.createElement('div');
+        toggle.className = 'event-type-toggle';
+        // Same role=group + aria-pressed pattern as the save-destination toggle.
+        toggle.setAttribute('role', 'group');
+        toggle.setAttribute('data-localize-aria-label', '__MSG_eventTypeGroup__');
+        toggle.setAttribute('aria-label', window.getLocalizedMessage('eventTypeGroup') || 'Event type');
+
+        const makeButton = (type, msgKey, fallback, iconClass) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'event-type-btn';
+            btn.dataset.eventType = type;
+            btn.setAttribute('aria-pressed', 'false');
+
+            const icon = document.createElement('i');
+            icon.className = iconClass;
+            icon.setAttribute('aria-hidden', 'true');
+
+            const label = document.createElement('span');
+            label.setAttribute('data-localize', `__MSG_${msgKey}__`);
+            label.textContent = window.getLocalizedMessage(msgKey) || fallback;
+
+            btn.appendChild(icon);
+            btn.appendChild(label);
+            this.modal.addEventListener(btn, 'click', () => this.setEventType(type));
+            return btn;
+        };
+
+        this.typeDefaultBtn = makeButton('default', 'eventTypeDefault', 'Event', 'fas fa-calendar-day');
+        this.typeOooBtn = makeButton('outOfOffice', 'outOfOffice', 'Out of office', 'fas fa-user-slash');
+
+        toggle.appendChild(this.typeDefaultBtn);
+        toggle.appendChild(this.typeOooBtn);
+        parentElement.appendChild(toggle);
+        this.eventTypeToggle = toggle;
+
+        // Explains a disabled "Out of office" button. A disabled button cannot
+        // be focused, so the reason has to be visible text rather than a tooltip.
+        this.oooPrimaryHint = document.createElement('div');
+        this.oooPrimaryHint.className = 'google-destination-hint';
+        this.oooPrimaryHint.style.display = 'none';
+        this.oooPrimaryHint.setAttribute('data-localize', '__MSG_oooPrimaryOnly__');
+        this.oooPrimaryHint.textContent = window.getLocalizedMessage('oooPrimaryOnly')
+            || 'Out-of-office events can only be created on your primary calendar. Show it in the calendar filter first.';
+        parentElement.appendChild(this.oooPrimaryHint);
+    }
+
+    /**
+     * Build the out-of-office-only fields (all day + auto-decline). Hidden
+     * unless the event type is Out of office.
+     * @param {HTMLElement} parentElement
+     * @private
+     */
+    _buildOooFields(parentElement) {
+        const container = document.createElement('div');
+        container.className = 'ooo-event-fields';
+        container.style.display = 'none';
+
+        // All day
+        const allDayRow = document.createElement('div');
+        allDayRow.className = 'google-meet-row';
+
+        this.allDayCheckbox = document.createElement('input');
+        this.allDayCheckbox.type = 'checkbox';
+        this.allDayCheckbox.id = 'oooEventAllDay';
+
+        const allDayLabel = document.createElement('label');
+        allDayLabel.htmlFor = 'oooEventAllDay';
+        allDayLabel.setAttribute('data-localize', '__MSG_allDay__');
+        allDayLabel.textContent = window.getLocalizedMessage('allDay') || 'All day';
+
+        allDayRow.appendChild(this.allDayCheckbox);
+        allDayRow.appendChild(allDayLabel);
+        container.appendChild(allDayRow);
+
+        // Auto-decline conflicting invitations
+        const declineRow = document.createElement('div');
+        declineRow.className = 'google-meet-row';
+
+        this.autoDeclineCheckbox = document.createElement('input');
+        this.autoDeclineCheckbox.type = 'checkbox';
+        this.autoDeclineCheckbox.id = 'oooEventAutoDecline';
+        this.autoDeclineCheckbox.setAttribute('aria-describedby', 'oooAutoDeclineHint');
+
+        const declineLabel = document.createElement('label');
+        declineLabel.htmlFor = 'oooEventAutoDecline';
+        declineLabel.setAttribute('data-localize', '__MSG_autoDeclineInvitations__');
+        declineLabel.textContent = window.getLocalizedMessage('autoDeclineInvitations')
+            || 'Decline all conflicting invitations';
+
+        declineRow.appendChild(this.autoDeclineCheckbox);
+        declineRow.appendChild(declineLabel);
+        container.appendChild(declineRow);
+
+        // Auto-decline reaches outside the panel (organizers are notified), so
+        // spell out the consequence next to the checkbox rather than hiding it.
+        const declineHint = document.createElement('div');
+        declineHint.id = 'oooAutoDeclineHint';
+        declineHint.className = 'google-destination-hint';
+        declineHint.setAttribute('data-localize', '__MSG_autoDeclineHint__');
+        declineHint.textContent = window.getLocalizedMessage('autoDeclineHint')
+            || 'Meetings you already accepted are declined too, and organizers are notified.';
+        container.appendChild(declineHint);
+
+        parentElement.appendChild(container);
+        this.oooFields = container;
     }
 
     /**
@@ -279,6 +411,17 @@ export class LocalEventFormBuilder {
             this.googleHiddenHint.style.display = !available && hiddenWritable ? '' : 'none';
         }
 
+        // Out of office can only be created on the primary calendar, and only
+        // shows up afterwards if that calendar is displayed. Recomputed on every
+        // call: the modal opens with an empty list and is enriched once the real
+        // one resolves.
+        const primary = writable.find(cal => cal.primary) || null;
+        this.primaryCalendar = primary;
+        if (this.typeOooBtn) {
+            this.typeOooBtn.disabled = !primary;
+            this.typeOooBtn.setAttribute('aria-disabled', String(!primary));
+        }
+
         if (available) {
             this.calendarSelect.innerHTML = '';
             writable.forEach(cal => {
@@ -289,7 +432,6 @@ export class LocalEventFormBuilder {
                     : cal.summary;
                 this.calendarSelect.appendChild(option);
             });
-            const primary = writable.find(cal => cal.primary);
             this.calendarSelect.value = primary ? primary.id : writable[0].id;
         }
 
@@ -298,12 +440,14 @@ export class LocalEventFormBuilder {
     }
 
     /**
-     * Switch the active save destination and update field visibility.
-     * @param {string} source - 'local' or 'google'
+     * Apply every piece of field visibility that derives from the current save
+     * destination and event type. Both setters funnel through here so the two
+     * dimensions cannot get out of step.
+     * @private
      */
-    setSource(source) {
-        this.currentSource = source === 'google' ? 'google' : 'local';
+    _applyFieldVisibility() {
         const isGoogle = this.currentSource === 'google';
+        const isOoo = isGoogle && this.currentEventType === 'outOfOffice';
 
         if (this.sourceLocalBtn) {
             this.sourceLocalBtn.classList.toggle('active', !isGoogle);
@@ -314,12 +458,44 @@ export class LocalEventFormBuilder {
             this.sourceGoogleBtn.setAttribute('aria-pressed', String(isGoogle));
         }
 
+        // The event type only applies to Google events
+        if (this.eventTypeToggle) {
+            this.eventTypeToggle.style.display = isGoogle ? 'flex' : 'none';
+        }
+        if (this.oooPrimaryHint) {
+            this.oooPrimaryHint.style.display = isGoogle && !this.primaryCalendar ? '' : 'none';
+        }
+        if (this.typeDefaultBtn) {
+            this.typeDefaultBtn.classList.toggle('active', !isOoo);
+            this.typeDefaultBtn.setAttribute('aria-pressed', String(!isOoo));
+        }
+        if (this.typeOooBtn) {
+            this.typeOooBtn.classList.toggle('active', isOoo);
+            this.typeOooBtn.setAttribute('aria-pressed', String(isOoo));
+        }
+
+        // Target calendar, Meet, location and reminder do not apply to an
+        // absence: it always lands on the primary calendar and is not a meeting.
         if (this.googleFields) {
-            this.googleFields.style.display = isGoogle ? '' : 'none';
+            this.googleFields.style.display = isGoogle && !isOoo ? '' : 'none';
         }
         if (this.googleAdvanced) {
-            this.googleAdvanced.style.display = isGoogle ? '' : 'none';
+            this.googleAdvanced.style.display = isGoogle && !isOoo ? '' : 'none';
         }
+        if (this.descriptionSection) {
+            this.descriptionSection.style.display = isOoo ? 'none' : '';
+        }
+        if (this.oooFields) {
+            this.oooFields.style.display = isOoo ? '' : 'none';
+        }
+        // Google names an untitled absence "Out of office" — show that as the
+        // placeholder, since the title is optional in this mode.
+        if (this.titleInput) {
+            this.titleInput.placeholder = isOoo
+                ? (window.getLocalizedMessage('outOfOffice') || 'Out of office')
+                : '';
+        }
+
         // Local-only fields are hidden when creating a Google event
         if (this.reminderContainer) {
             this.reminderContainer.style.display = isGoogle ? 'none' : '';
@@ -330,11 +506,91 @@ export class LocalEventFormBuilder {
     }
 
     /**
+     * Switch the active save destination and update field visibility.
+     * @param {string} source - 'local' or 'google'
+     */
+    setSource(source) {
+        this.currentSource = source === 'google' ? 'google' : 'local';
+        if (this.currentSource !== 'google') {
+            // Out of office is a Google-only shape; leaving Google drops it
+            // (and the all-day state that only exists inside it).
+            this.currentEventType = 'default';
+            this.setAllDay(false);
+        }
+        this._applyFieldVisibility();
+    }
+
+    /**
      * Get the currently selected save destination.
      * @returns {string} 'local' or 'google'
      */
     getSource() {
         return this.currentSource;
+    }
+
+    /**
+     * Switch the event type being created and update field visibility.
+     * Out of office is refused when there is no primary calendar to write to.
+     * @param {string} type - 'default' or 'outOfOffice'
+     */
+    setEventType(type) {
+        const next = type === 'outOfOffice' && this.primaryCalendar ? 'outOfOffice' : 'default';
+        this.currentEventType = next;
+        if (next !== 'outOfOffice') {
+            // Restore the time inputs: an all-day absence hid them, and a plain
+            // event has no way to get them back.
+            this.setAllDay(false);
+        }
+        this._applyFieldVisibility();
+    }
+
+    /**
+     * Get the event type being created.
+     * Degrades to 'default' unless the Google destination is active, so a
+     * stale toggle can never leak out-of-office state into a local save.
+     * @returns {string} 'default' or 'outOfOffice'
+     */
+    getEventType() {
+        return this.currentSource === 'google' ? this.currentEventType : 'default';
+    }
+
+    /**
+     * Toggle the whole-day absence state, hiding or restoring the time inputs.
+     * Keeps the checkbox itself in sync so isAllDay() cannot report a stale
+     * true after the event type is switched back.
+     * @param {boolean} checked
+     */
+    setAllDay(checked) {
+        if (this.allDayCheckbox) {
+            this.allDayCheckbox.checked = !!checked;
+        }
+        if (this.timeRow) {
+            this.timeRow.style.display = checked ? 'none' : '';
+        }
+    }
+
+    /**
+     * Whether a whole-day absence is being created.
+     * @returns {boolean}
+     */
+    isAllDay() {
+        return this.getEventType() === 'outOfOffice' && !!this.allDayCheckbox?.checked;
+    }
+
+    /**
+     * Whether conflicting invitations should be auto-declined.
+     * @returns {boolean}
+     */
+    isAutoDecline() {
+        return this.getEventType() === 'outOfOffice' && !!this.autoDeclineCheckbox?.checked;
+    }
+
+    /**
+     * The calendar id an out-of-office event must be created on.
+     * @returns {string|null} The primary calendar's id, or null when there is none
+     */
+    getPrimaryCalendarId() {
+        return this.primaryCalendar ? this.primaryCalendar.id : null;
     }
 
     /**
@@ -351,6 +607,9 @@ export class LocalEventFormBuilder {
 
         // Save destination toggle (Local / Google) - only shown when Google is available
         this._buildSourceToggle(parentElement);
+
+        // Event type toggle (Event / Out of office) - only shown for Google
+        this._buildEventTypeToggle(parentElement);
 
         // Title input
         const titleLabel = document.createElement('label');
@@ -406,22 +665,31 @@ export class LocalEventFormBuilder {
         timeRow.appendChild(startGroup);
         timeRow.appendChild(endGroup);
         parentElement.appendChild(timeRow);
+        this.timeRow = timeRow;
+
+        // Out-of-office-only fields (all day + auto-decline)
+        this._buildOooFields(parentElement);
 
         // Google-only fields (target calendar + Meet toggle)
         this._buildGoogleFields(parentElement);
 
-        // Description textarea
+        // Description textarea (wrapped so the label and field hide together)
+        const descriptionSection = document.createElement('div');
+        this.descriptionSection = descriptionSection;
+
         const descriptionLabel = document.createElement('label');
         descriptionLabel.htmlFor = 'eventDescription';
         descriptionLabel.setAttribute('data-localize', '__MSG_eventDescription__');
         descriptionLabel.textContent = window.getLocalizedMessage('eventDescription');
-        parentElement.appendChild(descriptionLabel);
+        descriptionSection.appendChild(descriptionLabel);
 
         this.descriptionInput = document.createElement('textarea');
         this.descriptionInput.id = 'eventDescription';
         this.descriptionInput.className = 'event-description-input';
         this.descriptionInput.rows = 3;
-        parentElement.appendChild(this.descriptionInput);
+        descriptionSection.appendChild(this.descriptionInput);
+
+        parentElement.appendChild(descriptionSection);
 
         // Reminder checkbox
         const reminderContainer = document.createElement('div');
@@ -650,6 +918,13 @@ export class LocalEventFormBuilder {
             if (options.onValidateTimes) options.onValidateTimes();
         });
 
+        // All-day toggle: hides the time inputs, so re-run validation to clear
+        // any error the now-irrelevant times left on screen
+        this.modal.addEventListener(this.allDayCheckbox, 'change', () => {
+            this.setAllDay(this.allDayCheckbox.checked);
+            if (options.onValidateTimes) options.onValidateTimes();
+        });
+
         // Recurrence select change
         this.modal.addEventListener(this.recurrenceSelect, 'change', () => {
             this.updateRecurrenceOptions();
@@ -798,7 +1073,9 @@ export class LocalEventFormBuilder {
         if (this.locationInput) this.locationInput.value = '';
         if (this.meetCheckbox) this.meetCheckbox.checked = false;
         if (this.reminderSelect) this.reminderSelect.value = '';
+        if (this.autoDeclineCheckbox) this.autoDeclineCheckbox.checked = false;
         this.setAdvancedExpanded(false); // collapse the accordion
+        // Resets the event type, the all-day state and the time row along with it
         this.setSource('local');
 
         // Reset recurrence

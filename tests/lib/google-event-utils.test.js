@@ -4,6 +4,7 @@ import {
   buildGoogleEventResource,
   extractTimeHHMM,
   isEditableGoogleEvent,
+  isDeletableGoogleEvent,
 } from '../../src/lib/google-event-utils.js';
 import { buildRfc3339DateTime as buildRfc3339DateTimeForTest } from '../../src/lib/time-utils.js';
 
@@ -359,7 +360,7 @@ describe('extractTimeHHMM', () => {
 
 // ---------------------------------------------------------------
 // SPEC: isEditableGoogleEvent
-// Gates the destructive edit/delete UI. Requires: writable calendar,
+// Gates the edit UI (delete has its own, wider gate). Requires: writable calendar,
 // id + calendarId, timed same-day event, non-recurring, plain event type,
 // and modification rights (organizer.self or guestsCanModify).
 // ---------------------------------------------------------------
@@ -454,5 +455,176 @@ describe('isEditableGoogleEvent', () => {
     const e = editable();
     e.start = { dateTime: 'garbage' };
     expect(isEditableGoogleEvent(e)).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------
+// SPEC: buildGoogleEventResource — out-of-office events
+// eventType 'outOfOffice' produces an absence: eventType + opaque
+// transparency + outOfOfficeProperties, and none of the meeting fields.
+// ---------------------------------------------------------------
+describe('buildGoogleEventResource out of office', () => {
+  const base = {
+    summary: 'Out of office',
+    date: new Date(2026, 6, 23),
+    startTime: '09:00',
+    endTime: '17:00',
+    eventType: 'outOfOffice',
+  };
+
+  test('emits eventType, opaque transparency and outOfOfficeProperties', () => {
+    const r = buildGoogleEventResource(base);
+    expect(r.eventType).toBe('outOfOffice');
+    expect(r.transparency).toBe('opaque');
+    expect(r.outOfOfficeProperties).toEqual({ autoDeclineMode: 'declineNone' });
+  });
+
+  test('autoDecline true declines all conflicting invitations', () => {
+    const r = buildGoogleEventResource({ ...base, autoDecline: true });
+    expect(r.outOfOfficeProperties.autoDeclineMode).toBe('declineAllConflictingInvitations');
+  });
+
+  test('autoDecline false declines nothing', () => {
+    const r = buildGoogleEventResource({ ...base, autoDecline: false });
+    expect(r.outOfOfficeProperties.autoDeclineMode).toBe('declineNone');
+  });
+
+  test('keeps the timed start/end when not all day', () => {
+    const r = buildGoogleEventResource(base);
+    expect(r.start.dateTime).toBe(buildRfc3339DateTimeForTest(new Date(2026, 6, 23), '09:00'));
+    expect(r.end.dateTime).toBe(buildRfc3339DateTimeForTest(new Date(2026, 6, 23), '17:00'));
+  });
+
+  test('drops description, location, Meet and reminders even when supplied', () => {
+    const r = buildGoogleEventResource({
+      ...base,
+      description: 'on leave',
+      location: 'Tokyo',
+      addMeet: true,
+      reminderMinutes: 30,
+    });
+    expect(r.description).toBeUndefined();
+    expect(r.location).toBeUndefined();
+    expect(r.conferenceData).toBeUndefined();
+    expect(r.reminders).toBeUndefined();
+  });
+
+  test('eventType is ignored in patch mode (it cannot be changed after creation)', () => {
+    const r = buildGoogleEventResource(base, { forPatch: true });
+    expect(r.eventType).toBeUndefined();
+    expect(r.transparency).toBeUndefined();
+    expect(r.outOfOfficeProperties).toBeUndefined();
+  });
+
+  test('a plain event never gets out-of-office fields', () => {
+    const r = buildGoogleEventResource({ ...base, eventType: undefined });
+    expect(r.eventType).toBeUndefined();
+    expect(r.transparency).toBeUndefined();
+    expect(r.outOfOfficeProperties).toBeUndefined();
+  });
+
+  describe('all day', () => {
+    test('spans local midnight to the next local midnight', () => {
+      const r = buildGoogleEventResource({ ...base, allDay: true });
+      expect(r.start.dateTime).toBe(buildRfc3339DateTimeForTest(new Date(2026, 6, 23), '00:00'));
+      expect(r.end.dateTime).toBe(buildRfc3339DateTimeForTest(new Date(2026, 6, 24), '00:00'));
+    });
+
+    test('rolls over a month boundary', () => {
+      const r = buildGoogleEventResource({ ...base, date: new Date(2026, 6, 31), allDay: true });
+      expect(r.start.dateTime).toBe(buildRfc3339DateTimeForTest(new Date(2026, 6, 31), '00:00'));
+      expect(r.end.dateTime).toBe(buildRfc3339DateTimeForTest(new Date(2026, 7, 1), '00:00'));
+    });
+
+    test('rolls over a year boundary', () => {
+      const r = buildGoogleEventResource({ ...base, date: new Date(2026, 11, 31), allDay: true });
+      expect(r.start.dateTime).toBe(buildRfc3339DateTimeForTest(new Date(2026, 11, 31), '00:00'));
+      expect(r.end.dateTime).toBe(buildRfc3339DateTimeForTest(new Date(2027, 0, 1), '00:00'));
+    });
+
+    test('ignores blank times, which the form no longer collects', () => {
+      const r = buildGoogleEventResource({ ...base, startTime: '', endTime: '', allDay: true });
+      expect(r.start.dateTime).toBe(buildRfc3339DateTimeForTest(new Date(2026, 6, 23), '00:00'));
+      expect(r.end.dateTime).toBe(buildRfc3339DateTimeForTest(new Date(2026, 6, 24), '00:00'));
+    });
+
+    test('does not apply to a plain event', () => {
+      const r = buildGoogleEventResource({ ...base, eventType: undefined, allDay: true });
+      expect(r.start.dateTime).toBe(buildRfc3339DateTimeForTest(new Date(2026, 6, 23), '09:00'));
+    });
+  });
+});
+
+// ---------------------------------------------------------------
+// SPEC: isDeletableGoogleEvent
+// A superset of isEditableGoogleEvent: out-of-office events are
+// deletable but not editable, since the panel can create them.
+// ---------------------------------------------------------------
+describe('isDeletableGoogleEvent', () => {
+  const local = (y, m, d, hhmm) => buildRfc3339DateTimeForTest(new Date(y, m - 1, d), hhmm);
+
+  const ooo = (overrides = {}) => ({
+    id: 'ooo1',
+    calendarId: 'cal1',
+    isWritableCalendar: true,
+    eventType: 'outOfOffice',
+    start: { dateTime: local(2026, 7, 23, '09:00') },
+    end: { dateTime: local(2026, 7, 23, '17:00') },
+    organizer: { self: true },
+    ...overrides,
+  });
+
+  test('a self-organized out-of-office event on a writable calendar is deletable', () => {
+    expect(isDeletableGoogleEvent(ooo())).toBe(true);
+    expect(isEditableGoogleEvent(ooo())).toBe(false);
+  });
+
+  test('a whole-day out-of-office event is deletable', () => {
+    const e = ooo({
+      start: { dateTime: local(2026, 7, 23, '00:00') },
+      end: { dateTime: local(2026, 7, 24, '00:00') },
+    });
+    expect(isDeletableGoogleEvent(e)).toBe(true);
+  });
+
+  test.each([
+    ['a read-only calendar', { isWritableCalendar: false }],
+    ['a recurring instance', { recurringEventId: 'master1' }],
+    ['a recurring master', { recurrence: ['RRULE:FREQ=DAILY'] }],
+    ['someone else\'s event', { organizer: { self: false } }],
+    ['a missing id', { id: undefined }],
+    ['a missing calendarId', { calendarId: undefined }],
+  ])('out of office on %s is not deletable', (_label, extra) => {
+    expect(isDeletableGoogleEvent(ooo(extra))).toBe(false);
+  });
+
+  test.each([
+    ['focusTime'],
+    ['workingLocation'],
+  ])('%s is still not deletable', (eventType) => {
+    expect(isDeletableGoogleEvent(ooo({ eventType }))).toBe(false);
+  });
+
+  test('for plain events it matches isEditableGoogleEvent', () => {
+    const plain = {
+      id: 'evt1',
+      calendarId: 'cal1',
+      isWritableCalendar: true,
+      start: { dateTime: local(2026, 7, 23, '09:00') },
+      end: { dateTime: local(2026, 7, 23, '10:00') },
+      organizer: { self: true },
+    };
+    expect(isDeletableGoogleEvent(plain)).toBe(isEditableGoogleEvent(plain));
+    expect(isDeletableGoogleEvent(plain)).toBe(true);
+
+    // Cross-midnight: the edit form cannot express it, so neither gate opens
+    const crossMidnight = { ...plain, end: { dateTime: local(2026, 7, 24, '01:00') } };
+    expect(isDeletableGoogleEvent(crossMidnight)).toBe(isEditableGoogleEvent(crossMidnight));
+    expect(isDeletableGoogleEvent(crossMidnight)).toBe(false);
+  });
+
+  test('null/undefined are not deletable', () => {
+    expect(isDeletableGoogleEvent(null)).toBe(false);
+    expect(isDeletableGoogleEvent(undefined)).toBe(false);
   });
 });

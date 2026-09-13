@@ -614,8 +614,9 @@ body {
     font-family: inherit;
 }
 
-/* Save destination segmented control (Local / Google) */
-.event-source-toggle {
+/* Segmented controls: save destination (Local / Google), event type (Event / Out of office) */
+.event-source-toggle,
+.event-type-toggle {
     display: none; /* Shown via JS when writable Google calendars exist */
     gap: 4px;
     margin: 6px 0 16px;
@@ -625,7 +626,8 @@ body {
     background: var(--side-calendar-subtle-bg);
 }
 
-.event-source-toggle .event-source-btn {
+.event-source-toggle .event-source-btn,
+.event-type-toggle .event-type-btn {
     flex: 1;
     display: inline-flex;
     align-items: center;
@@ -643,12 +645,14 @@ body {
     transition: background-color 0.15s, color 0.15s, box-shadow 0.15s;
 }
 
-.event-source-toggle .event-source-btn:hover:not(.active) {
+.event-source-toggle .event-source-btn:hover:not(.active),
+.event-type-toggle .event-type-btn:hover:not(.active):not(:disabled) {
     background: var(--side-calendar-subtle-bg-hover);
     color: inherit;
 }
 
-.event-source-toggle .event-source-btn.active {
+.event-source-toggle .event-source-btn.active,
+.event-type-toggle .event-type-btn.active {
     background: var(--side-calendar-modal-bg);
     /* accent-hover is darker (#0056b3) → meets WCAG AA (4.5:1) on white */
     color: var(--side-calendar-accent-hover-color);
@@ -658,9 +662,27 @@ body {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
-.event-source-toggle .event-source-btn:focus-visible {
+.event-source-toggle .event-source-btn:focus-visible,
+.event-type-toggle .event-type-btn:focus-visible {
     outline: 2px solid var(--side-calendar-accent-color);
     outline-offset: 1px;
+}
+
+/* The event-type control sits right under the destination one */
+.event-type-toggle {
+    margin-top: -8px;
+}
+
+/* A disabled "Out of office" (no primary calendar to write to) still reads as
+   a choice that exists, just not right now. */
+.event-type-toggle .event-type-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Out-of-office-only fields (all day + auto-decline) */
+.ooo-event-fields {
+    margin-bottom: 15px;
 }
 
 /* Google "advanced settings" accordion */
