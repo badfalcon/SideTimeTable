@@ -232,7 +232,7 @@ export class CalendarManagementCard extends CardComponent {
         this.clearSearchBtn?.addEventListener('click', () => this._clearSearch());
 
         // Add group button
-        this.addGroupBtn?.addEventListener('click', () => this._groupManager.handleAddGroup(this.allCalendars));
+        this.addGroupBtn?.addEventListener('click', () => this._groupManager.handleAddGroup(this.allCalendars, this.calendarGroups));
 
         // Handle the calendar checkbox using event delegation
         this.calendarList?.addEventListener('change', (e) => {

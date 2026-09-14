@@ -187,9 +187,11 @@ export class CalendarGroupManager {
 
     /**
      * Handle adding a new group — opens modal
+     * @param {Array} allCalendars - All available calendars
+     * @param {Array} calendarGroups - Current calendar groups (the new group is appended to it)
      */
-    handleAddGroup(allCalendars) {
-        this.showGroupModal(null, allCalendars);
+    handleAddGroup(allCalendars, calendarGroups) {
+        this.showGroupModal(null, allCalendars, calendarGroups);
     }
 
     /**
@@ -226,6 +228,10 @@ export class CalendarGroupManager {
      */
     async _submitGroupModal(name, checkboxes, editingGroup, calendarGroups) {
         if (this._isSubmittingGroup) return;
+        if (!Array.isArray(calendarGroups)) {
+            logError('Group modal submit', new Error('calendarGroups was not provided'));
+            return;
+        }
         this._isSubmittingGroup = true;
 
         const groupName = name || (window.getLocalizedMessage('newGroupName') || 'New Group');
@@ -233,43 +239,47 @@ export class CalendarGroupManager {
             .filter(cb => cb.checked)
             .map(cb => cb.value);
 
-        if (editingGroup) {
-            const previousName = editingGroup.name;
-            const previousCalendarIds = [...editingGroup.calendarIds];
-            editingGroup.name = groupName.slice(0, 50);
-            editingGroup.calendarIds = selectedCalIds;
+        try {
+            if (editingGroup) {
+                const previousName = editingGroup.name;
+                const previousCalendarIds = [...editingGroup.calendarIds];
+                editingGroup.name = groupName.slice(0, 50);
+                editingGroup.calendarIds = selectedCalIds;
 
-            try {
-                await saveCalendarGroups(calendarGroups);
-                this.closeGroupModal();
-                this._onGroupsChanged();
-            } catch (error) {
-                editingGroup.name = previousName;
-                editingGroup.calendarIds = previousCalendarIds;
-                logError('Edit group', error);
-            } finally {
-                this._isSubmittingGroup = false;
-            }
-        } else {
-            const groupId = `group_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-            const newGroup = {
-                id: groupId,
-                name: groupName.slice(0, 50),
-                calendarIds: selectedCalIds,
-                collapsed: false
-            };
-            calendarGroups.push(newGroup);
+                try {
+                    await saveCalendarGroups(calendarGroups);
+                    this.closeGroupModal();
+                    this._onGroupsChanged();
+                } catch (error) {
+                    editingGroup.name = previousName;
+                    editingGroup.calendarIds = previousCalendarIds;
+                    logError('Edit group', error);
+                }
+            } else {
+                const groupId = `group_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+                const newGroup = {
+                    id: groupId,
+                    name: groupName.slice(0, 50),
+                    calendarIds: selectedCalIds,
+                    collapsed: false
+                };
+                calendarGroups.push(newGroup);
 
-            try {
-                await saveCalendarGroups(calendarGroups);
-                this.closeGroupModal();
-                this._onGroupsChanged();
-            } catch (error) {
-                this._setCalendarGroups(calendarGroups.filter(g => g.id !== groupId));
-                logError('Add group', error);
-            } finally {
-                this._isSubmittingGroup = false;
+                try {
+                    await saveCalendarGroups(calendarGroups);
+                    this.closeGroupModal();
+                    this._onGroupsChanged();
+                } catch (error) {
+                    // Roll back in place: the modal keeps a reference to this array,
+                    // so a retry must not see the failed group.
+                    const index = calendarGroups.indexOf(newGroup);
+                    if (index !== -1) calendarGroups.splice(index, 1);
+                    this._setCalendarGroups(calendarGroups);
+                    logError('Add group', error);
+                }
             }
+        } finally {
+            this._isSubmittingGroup = false;
         }
     }
 

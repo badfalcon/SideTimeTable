@@ -39,6 +39,7 @@
 
 ## ビルド・パッケージング
 
+- [ ] `prepare-release.js` が `package-lock.json` のバージョンを更新しないため、`npm install` するたびに lockfile が差分として出る（現在 lockfile は 1.10.2、`package.json` は 1.11.0）。`validate-version.js` のチェック対象にも含まれていない。
 - [x] `build-zip.js` がリリースzipに `docs/` ディレクトリ全体を同梱していた問題 — 拡張機能は実行時に読み込まないため、リリースzipから除外済み
 
 ## リファクタリング（既存コード）
