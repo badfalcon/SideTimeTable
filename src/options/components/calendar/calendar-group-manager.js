@@ -11,6 +11,7 @@
 
 import { logError } from '../../../lib/utils.js';
 import { saveCalendarGroups, saveSelectedCalendars } from '../../../lib/settings-storage.js';
+import { calendarMatchesSearch } from '../../../lib/calendar-search.js';
 
 export class CalendarGroupManager {
     /**
@@ -617,7 +618,7 @@ export class CalendarGroupManager {
                 wrapper.appendChild(label);
                 calList.appendChild(wrapper);
                 checkboxes.push(checkbox);
-                calItems.push({ element: wrapper, name: (cal.summary || cal.id).toLowerCase() });
+                calItems.push({ element: wrapper, calendar: cal });
             }
         }
 
@@ -625,9 +626,10 @@ export class CalendarGroupManager {
         renderChips();
 
         searchInput.addEventListener('input', () => {
-            const term = searchInput.value.toLowerCase().trim();
+            // Matches the display name or the calendar address (email)
+            const term = searchInput.value;
             for (const item of calItems) {
-                item.element.style.display = (!term || item.name.includes(term)) ? '' : 'none';
+                item.element.style.display = calendarMatchesSearch(item.calendar, term) ? '' : 'none';
             }
         });
 
