@@ -20,7 +20,7 @@
 - [ ] 不在（OOO）イベントの**編集**: `eventType` は作成後に変更できないため、patch できるのは summary / start / end / `outOfOfficeProperties` のみ。既存の Google 編集フォームは時刻＋場所＋通知が前提なので、不在専用の編集フォームが要る。現状は削除のみ対応（`isDeletableGoogleEvent()`）。
 - [ ] 不在の辞退設定の3値化: 現状は `declineNone` / `declineAllConflictingInvitations` のオン・オフのみ。Google 本体と揃えるなら `declineOnlyNewConflictingInvitations` と辞退メッセージ（`outOfOfficeProperties.declineMessage`）の入力欄が必要。
 - [ ] 複数日にまたがる不在: 現状の「終日」は1日単位（`00:00` → 翌 `00:00`）。日付範囲の指定 UI と、`createAllDayEventElement()` の Day X/Y バッジ（`start.date`/`end.date` 前提）の対応が必要。
-- [ ] 種別トグル・OOO フィールド（`_buildEventTypeToggle` / `_buildOooFields` / `_applyFieldVisibility`）の DOM テスト: `jest.config.js` が `testEnvironment: 'node'` のため jsdom 基盤の整備が前提（既存のモーダル系 DOM テストと同じ理由）。
+- [ ] 保存先・種別セグメント（`_buildModeToggle` / `setMode`）、OOO フィールド（`_buildOooFields`）、`_applyFieldVisibility`、所要時間ピッカー（`_applyDurationPreset` / `_syncDurationFromTimes`）の DOM テスト: `jest.config.js` が `testEnvironment: 'node'` のため jsdom 基盤の整備が前提（既存のモーダル系 DOM テストと同じ理由）。時刻計算の純関数部分（`timeStringToMinutes` / `minutesToTimeString`）は `tests/lib/time-utils.test.js` でカバー済み。
 - [ ] `isAllDayLikeEvent()` の DST 分岐のテスト: 「翌日以降の現地 0:00 で終わる」判定は DST 移行日（23時間の日）でしか `>= 24h` 判定と挙動が分かれないが、Jest のワーカーはテストファイル実行前にタイムゾーンを UTC で確定させるため、ファイル内で `process.env.TZ` を設定しても効かない。スイート全体の TZ を変えると既存の時刻テストに影響するため保留。
 - [ ] `_fetchEventsForCalendarIds()` の `isWritableCalendar` 刻印のテスト（fetch モックが複雑なため未整備 — `getCalendarEvents` 系テスト整備と合わせて対応）。
 
@@ -47,6 +47,8 @@
 - [x] `_fetchEventsForCalendarIds()` が `_fetchWithAuth()` を迂回して直接 `fetch()` している — calendarList取得部分は `_fetchWithAuth()` に統一済み
 - [x] `respondToEvent()` のGET/PATCHレスポンスが `_checkResponse()` を使っていない — `_checkResponse()` に統一済み
 - [ ] `localize.js` が `window` グローバルに関数を export している — ES6 module の `export` に移行して明示的な `import` に統一（34ファイルが `window.getLocalizedMessage()` を使用中）
+- [ ] `.visually-hidden` が `options.css` に未定義 — `calendar-management-card.js` がこのクラスを付けたスパンを生成しているが、設定ページ側には対応するスタイルがなく視覚的に隠れていない。`side_panel.css` には予定モーダルのラベル用に定義済みなので、共通CSSに切り出すか `options.css` にも同じ定義を追加する。
+- [ ] 通知チェックボックスの文言に実際のリード時間を出す — 現状は `remindMeBefore`（「開始前に通知する」）固定。設定のリマインダー分数（既定5分）を差し込むには、プレースホルダ付きメッセージの新設と、設定値をフォームビルダーまで渡す配線が要る。
 - [x] `background.js` の21箇所の `console.error/warn` 直接呼出を `logError()`/`logWarn()` に統一
 - [x] `StorageHelper` 直接利用とラッパー関数 (`settings-storage.js`, `event-storage.js`) の使い分け基準を storage-helper.js の JSDoc に明記
 

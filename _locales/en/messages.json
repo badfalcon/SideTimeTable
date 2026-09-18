@@ -23,6 +23,70 @@
     "message": "Create/Edit Event",
     "description": "Title of event dialog"
   },
+  "eventDialogTitleCreate": {
+    "message": "Create event",
+    "description": "Header of the event dialog in create mode"
+  },
+  "eventDialogTitleEdit": {
+    "message": "Edit event",
+    "description": "Header of the event dialog in edit mode"
+  },
+  "eventTitlePlaceholder": {
+    "message": "Title",
+    "description": "Placeholder of the event title input"
+  },
+  "saveDestinationAndType": {
+    "message": "Destination and type",
+    "description": "Accessible name of the local/Google/out-of-office segmented control"
+  },
+  "addDescription": {
+    "message": "Add a note",
+    "description": "Placeholder of the event description field"
+  },
+  "addLocation": {
+    "message": "Add a location",
+    "description": "Placeholder of the event location field"
+  },
+  "duration": {
+    "message": "Duration",
+    "description": "Label of the duration picker next to the time inputs"
+  },
+  "duration15m": {
+    "message": "15m",
+    "description": "Duration preset"
+  },
+  "duration30m": {
+    "message": "30m",
+    "description": "Duration preset"
+  },
+  "duration45m": {
+    "message": "45m",
+    "description": "Duration preset"
+  },
+  "duration1h": {
+    "message": "1h",
+    "description": "Duration preset"
+  },
+  "duration90m": {
+    "message": "1h 30m",
+    "description": "Duration preset"
+  },
+  "duration2h": {
+    "message": "2h",
+    "description": "Duration preset"
+  },
+  "duration3h": {
+    "message": "3h",
+    "description": "Duration preset"
+  },
+  "durationCustom": {
+    "message": "Custom",
+    "description": "Duration option shown when the times do not match a preset"
+  },
+  "recurrenceWeekdaysGroup": {
+    "message": "Days of the week",
+    "description": "Accessible name of the weekday chip group"
+  },
   "eventTitle": {
     "message": "Title:",
     "description": "Label for event title input"

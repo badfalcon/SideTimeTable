@@ -23,6 +23,70 @@
     "message": "予定を作成/編集",
     "description": "予定ダイアログのタイトル"
   },
+  "eventDialogTitleCreate": {
+    "message": "予定を作成",
+    "description": "Header of the event dialog in create mode"
+  },
+  "eventDialogTitleEdit": {
+    "message": "予定を編集",
+    "description": "Header of the event dialog in edit mode"
+  },
+  "eventTitlePlaceholder": {
+    "message": "タイトル",
+    "description": "Placeholder of the event title input"
+  },
+  "saveDestinationAndType": {
+    "message": "保存先と種別",
+    "description": "Accessible name of the local/Google/out-of-office segmented control"
+  },
+  "addDescription": {
+    "message": "メモを追加",
+    "description": "Placeholder of the event description field"
+  },
+  "addLocation": {
+    "message": "場所を追加",
+    "description": "Placeholder of the event location field"
+  },
+  "duration": {
+    "message": "所要時間",
+    "description": "Label of the duration picker next to the time inputs"
+  },
+  "duration15m": {
+    "message": "15分",
+    "description": "Duration preset"
+  },
+  "duration30m": {
+    "message": "30分",
+    "description": "Duration preset"
+  },
+  "duration45m": {
+    "message": "45分",
+    "description": "Duration preset"
+  },
+  "duration1h": {
+    "message": "1時間",
+    "description": "Duration preset"
+  },
+  "duration90m": {
+    "message": "90分",
+    "description": "Duration preset"
+  },
+  "duration2h": {
+    "message": "2時間",
+    "description": "Duration preset"
+  },
+  "duration3h": {
+    "message": "3時間",
+    "description": "Duration preset"
+  },
+  "durationCustom": {
+    "message": "カスタム",
+    "description": "Duration option shown when the times do not match a preset"
+  },
+  "recurrenceWeekdaysGroup": {
+    "message": "繰り返す曜日",
+    "description": "Accessible name of the weekday chip group"
+  },
   "eventTitle": {
     "message": "タイトル:",
     "description": "予定タイトル入力のラベル"

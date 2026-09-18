@@ -175,9 +175,11 @@ export class LocalEventModal extends ModalComponent {
             this.createElement();
         }
 
-        // Show view content, hide edit content
+        // Show view content, hide edit content. The edit form brings its own
+        // header (and close button), so the base modal's "×" is only used here.
         this.viewContent.style.display = '';
         this.editContent.style.display = 'none';
+        this.modalContent.classList.remove('edit-mode');
 
         // Populate view content
         this._populateViewContent(event);
@@ -683,17 +685,14 @@ export class LocalEventModal extends ModalComponent {
      * @private
      */
     _showError(message) {
-        // Remove the existing error messages
-        this._clearError();
-
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'error-message';
-        errorDiv.style.cssText = 'color: red; font-size: 0.9em; margin-top: 5px;';
-        // Announce the failure to screen readers when it is inserted
-        errorDiv.setAttribute('role', 'alert');
-        errorDiv.textContent = message;
-
-        this.modalContent.appendChild(errorDiv);
+        const errorElement = this.formBuilder?.errorContainer;
+        if (!errorElement) {
+            return;
+        }
+        // Reveal first, then write: a role=alert region that is already
+        // populated when it appears is not reliably announced.
+        errorElement.hidden = false;
+        errorElement.textContent = message;
     }
 
     /**
@@ -701,9 +700,10 @@ export class LocalEventModal extends ModalComponent {
      * @private
      */
     _clearError() {
-        const errorElement = this.modalContent?.querySelector('.error-message');
+        const errorElement = this.formBuilder?.errorContainer;
         if (errorElement) {
-            errorElement.remove();
+            errorElement.textContent = '';
+            errorElement.hidden = true;
         }
     }
 
@@ -724,6 +724,7 @@ export class LocalEventModal extends ModalComponent {
         // Show edit content, hide view content
         this.viewContent.style.display = 'none';
         this.editContent.style.display = '';
+        this.modalContent.classList.add('edit-mode');
 
         // Reset form via formBuilder
         this.formBuilder.resetForCreate(defaultStartTime, defaultEndTime);
@@ -767,6 +768,7 @@ export class LocalEventModal extends ModalComponent {
         // Show edit content, hide view content
         this.viewContent.style.display = 'none';
         this.editContent.style.display = '';
+        this.modalContent.classList.add('edit-mode');
 
         // Editing is always a local event: hide the Google save destination toggle
         this.formBuilder.setGoogleAvailability([]);
