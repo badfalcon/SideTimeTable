@@ -747,11 +747,13 @@ body {
     cursor: not-allowed;
 }
 
+/* One line exactly fills the 36px box (1px border + 7px padding + 20px line),
+   so an empty or one-line note never shows a scrollbar */
 :is(#localEventDialog, #googleEventDialog) .event-form-textarea {
     height: 36px;
     min-height: 36px;
-    padding: 8px 10px;
-    line-height: 1.45;
+    padding: 7px 10px;
+    line-height: 20px;
     resize: vertical;
 }
 
