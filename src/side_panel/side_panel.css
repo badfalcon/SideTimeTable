@@ -828,11 +828,32 @@ body {
     font-variant-numeric: tabular-nums;
 }
 
-/* Chrome's picker button costs ~22px, which a 12-hour locale cannot spare here:
-   with it, "04:30 PM" renders clipped to "04:30 P". The field still takes typed
-   input and arrow keys, and the duration presets cover quick picking. */
-:is(#localEventDialog, #googleEventDialog) .event-time-input::-webkit-calendar-picker-indicator {
+/* Chrome's picker button costs ~22px. A 24-hour value ("16:30") has room for
+   it; a 12-hour one does not — with it, "04:30 PM" renders clipped to
+   "04:30 P" — so a 12-hour Chrome gets the field without the button. It still
+   takes typed input and arrow keys, and the duration presets cover quick
+   picking. */
+:is(#localEventDialog, #googleEventDialog) .event-time-fields.is-12h .event-time-input::-webkit-calendar-picker-indicator {
     display: none;
+}
+
+:is(#localEventDialog, #googleEventDialog) .event-time-input::-webkit-calendar-picker-indicator {
+    margin: 0;
+    padding: 2px;
+    border-radius: 4px;
+    cursor: pointer;
+    opacity: 0.6;
+}
+
+:is(#localEventDialog, #googleEventDialog) .event-time-input::-webkit-calendar-picker-indicator:hover {
+    background-color: var(--side-calendar-subtle-bg-hover);
+    opacity: 1;
+}
+
+/* The dialogs set color-scheme: dark, which already draws a light icon; the
+   global dark-mode invert would turn it back to dark-on-dark */
+[data-theme="dark"] :is(#localEventDialog, #googleEventDialog) .event-time-input::-webkit-calendar-picker-indicator {
+    filter: none;
 }
 
 :is(#localEventDialog, #googleEventDialog) .event-time-separator {

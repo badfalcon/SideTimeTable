@@ -1,13 +1,15 @@
 /**
  * Tests for the event dialogs' shared helpers that do not need a DOM:
- * message substitution and the duration picker's arithmetic.
+ * message substitution, the duration picker's arithmetic, and whether
+ * Chrome's time fields use a 12-hour clock.
  */
 import {
     CUSTOM_DURATION,
     applyDurationPreset,
     msg,
     msgWith,
-    syncDurationFromTimes
+    syncDurationFromTimes,
+    usesTwelveHourClock
 } from '../../src/side_panel/components/modals/event-dialog-dom.js';
 
 describe('msg / msgWith', () => {
@@ -73,5 +75,34 @@ describe('duration picker', () => {
         expect(duration.value).toBe(CUSTOM_DURATION);
         syncDurationFromTimes(field('12:00'), field('11:00'), duration);
         expect(duration.value).toBe(CUSTOM_DURATION);
+    });
+});
+
+describe('usesTwelveHourClock', () => {
+    const original = chrome.i18n.getUILanguage;
+
+    afterEach(() => {
+        chrome.i18n.getUILanguage = original;
+    });
+
+    test.each([
+        ['en-US', true],
+        ['en', true],
+        ['ja', false],
+        ['en-GB', false],
+        ['de', false],
+    ])('Chrome UI language %s → 12-hour: %s', (language, expected) => {
+        chrome.i18n.getUILanguage = jest.fn(() => language);
+        expect(usesTwelveHourClock()).toBe(expected);
+    });
+
+    test('falls back to navigator.language when chrome.i18n is unavailable', () => {
+        chrome.i18n.getUILanguage = jest.fn(() => { throw new Error('no i18n'); });
+        Object.defineProperty(globalThis, 'navigator', {
+            value: { language: 'ja-JP' },
+            configurable: true,
+            writable: true,
+        });
+        expect(usesTwelveHourClock()).toBe(false);
     });
 });

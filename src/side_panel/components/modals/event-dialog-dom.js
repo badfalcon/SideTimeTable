@@ -360,6 +360,31 @@ export function showStatusLine(line, tone, message) {
 // ===== Time row =====
 
 /**
+ * Whether Chrome shows time fields with a 12-hour clock ("04:30 PM").
+ *
+ * A native `<input type="time">` takes its format from Chrome's UI language,
+ * not from the page's `lang` (so not from the extension's language setting).
+ * This asks the same language for its hour cycle.
+ * @returns {boolean}
+ */
+export function usesTwelveHourClock() {
+    let language;
+    try {
+        language = chrome.i18n.getUILanguage();
+    } catch {
+        language = undefined;
+    }
+    language = language || globalThis.navigator?.language || 'en-US';
+    try {
+        const { hourCycle, hour12 } = new Intl.DateTimeFormat(language, { hour: 'numeric' }).resolvedOptions();
+        if (hourCycle) return hourCycle === 'h11' || hourCycle === 'h12';
+        return hour12 === true;
+    } catch {
+        return false;
+    }
+}
+
+/**
  * The time row: start, end and a duration picker that writes the end time.
  * The three wrap as a group, so in a narrow panel the duration drops under
  * the times rather than the times being clipped.
@@ -371,6 +396,10 @@ export function createTimeRow(ids) {
 
     const fields = document.createElement('div');
     fields.className = 'event-time-fields';
+    // A 12-hour value has no room for Chrome's picker button (see the CSS)
+    if (usesTwelveHourClock()) {
+        fields.classList.add('is-12h');
+    }
     row.appendChild(fields);
 
     const makeTimeInput = (id, msgKey, fallback) => {

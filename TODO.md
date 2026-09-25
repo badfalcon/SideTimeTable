@@ -81,6 +81,11 @@
 ## 既知の不具合（要設計）
 
 - [ ] サイドパネル幅 320px（Chrome の最小幅）でヘッダーの更新アイコンと「前の日」ボタンが重なる（英語表示で確認。予定モーダルとは別件の既存レイアウト）。
+- [ ] 拡張機能の言語設定と Chrome の言語が違うと、日付・時刻の表記が混在する（2026-09 に実拡張で確認）。例: Chrome が米国英語・拡張機能が日本語だと、日本語の画面に「04:30 PM」（時刻欄）・「09/25/2026」（ヘッダーの日付）・「午前9:00」（タイムライン）が並ぶ。表記を決めている箇所が3系統に分かれているのが原因:
+  - 時刻欄・ヘッダーの日付（`<input type="time">` / `<input type="date">`）は Chrome の UI 言語に従う。ページの `lang` 属性では変わらない（実拡張で確認済み）ため、拡張機能からは制御できない。
+  - タイムライン・予定ブロックの時刻は、12h/24h を `determineDefaultTimeFormat()`（`locale-utils.js`: Chrome の UI 言語が en-US なら 12h）で、「午前/AM」などの言葉を拡張機能の言語で決めている。
+  - 詳細表示の日時（`formatEventTime()` / `_formatViewTime()`）と繰り返し削除ダイアログの日付は `navigator.language` で決めている。
+  言語設定が「自動」なら拡張機能の言語も Chrome に揃うため、混在するのは言語を手動で変えたときだけ。どれを基準にするか（Chrome の言語に全部揃える／拡張機能の言語に揃え、時刻欄は独自の入力部品に置き換える、等）を決めてから直す。`CLAUDE.md` の「12h for English, 24h for Japanese」の記述も実態（Chrome の言語で決まる）と合わせて見直す。
 - [x] 高速な日付ナビゲーションでの表示レース: `fetchEvents()` と `fetchEventsForCalendars()` に `_fetchVersion` ガードを追加し、古いレスポンスの描画・DOMクリア・`currentFetchPromise` の誤クリアを防止（`tests/side_panel/event-handlers-race.test.js`）。残る極小レース: 古いフェッチの `_processEvents` 実行中に新しいフェッチが完了した場合の混在描画（発生条件が非常に狭いため保留）。
 - [x] 日跨ぎイベントのレイアウト崩れ（レーン割当）: `_areEventsOverlapping()` とグループ内ソートを、DOM が実際に描画する区間（開始の分単位 + 実所要時間 = `_getRenderInterval()`）で比較するよう変更。23:00→翌01:00 の重なり判定が正しくなり、かつ前日開始のイベント（23:00 の位置に描かれる）が深夜帯のイベントとグループ化されてレーンを奪う問題も回避（`tests/side_panel/time-manager.test.js` に日跨ぎスペック）。残: 前日開始イベントを閲覧中の日の先頭へクランプする／翌日にも継続表示する表示仕様（複数日ローカル予定を実装する際に設計）。レイアウトは描画位置に追随しているため、その時は `_getRenderInterval()` も合わせて更新すること。
 - [ ] 毎日繰り返しの DST 日数ずれ（潜在）: `event-storage.js` DAILY 分岐の `Math.floor((targetDateObj - eventStartDate) / 86400000)` がサマータイム境界で1日ずれる。現状 `interval` はUIで `1` 固定（`local-event-modal.js` / `local-event-form-builder.js`）のため `daysDiff % 1 === 0` で観測影響なし。`interval > 1` 機能を追加する場合は `Math.floor`→`Math.round`（WEEKLYと整合）に修正すること。
