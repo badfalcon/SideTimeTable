@@ -55,6 +55,44 @@ export function parseTimeString(timeString) {
     return { hour, minute };
 }
 
+/** Minutes in a day, the ceiling for same-day time arithmetic. */
+const MINUTES_IN_DAY = 24 * 60;
+
+/**
+ * Convert an "HH:MM" time string to minutes since midnight.
+ *
+ * Unlike parseTimeString this reports failure instead of throwing: a form's
+ * time input is routinely empty or half-typed, which is an ordinary state.
+ *
+ * @param {string} timeString - The time string (e.g. "09:30")
+ * @returns {number|null} Minutes since midnight, or null when unparseable
+ */
+export function timeStringToMinutes(timeString) {
+    try {
+        const { hour, minute } = parseTimeString(timeString);
+        return hour * 60 + minute;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Format minutes since midnight as an "HH:MM" time string.
+ *
+ * Clamped to the same day: an event pushed past midnight ends at 23:59
+ * instead, since local events store an end time with no date attached and
+ * cannot express a next-day end.
+ *
+ * @param {number} minutes - Minutes since midnight
+ * @returns {string} The time in "HH:MM" format
+ */
+export function minutesToTimeString(minutes) {
+    const clamped = Math.max(0, Math.min(MINUTES_IN_DAY - 1, Math.round(minutes)));
+    const hour = String(Math.floor(clamped / 60)).padStart(2, '0');
+    const minute = String(clamped % 60).padStart(2, '0');
+    return `${hour}:${minute}`;
+}
+
 /**
  * Build an RFC3339 date-time string (with local timezone offset) for a given
  * date and "HH:MM" time. Suitable for the Google Calendar API `dateTime` field.

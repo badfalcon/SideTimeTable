@@ -1,7 +1,19 @@
 /**
- * AlertModal - The alert display modal
+ * AlertModal - A short message the user has to acknowledge
+ *
+ * Laid out like the event dialogs: a compact card with the message beside a
+ * tone icon (error, warning, success, info), an optional line of technical
+ * detail, and a single button in the footer.
  */
 import { ModalComponent } from './modal-component.js';
+import { createButton, createFooterSpacer, createIcon } from './event-dialog-dom.js';
+
+const TONE_ICONS = {
+    error: 'fas fa-exclamation-circle',
+    warning: 'fas fa-exclamation-triangle',
+    success: 'fas fa-check-circle',
+    info: 'fas fa-info-circle'
+};
 
 export class AlertModal extends ModalComponent {
     constructor(options = {}) {
@@ -12,7 +24,9 @@ export class AlertModal extends ModalComponent {
         });
 
         // The display elements
+        this.iconElement = null;
         this.messageElement = null;
+        this.detailElement = null;
         this.confirmButton = null;
 
         // The callback
@@ -24,42 +38,63 @@ export class AlertModal extends ModalComponent {
 
     createContent() {
         const content = document.createElement('div');
+        content.className = 'alert-dialog';
 
-        // The message element
+        const body = document.createElement('div');
+        body.className = 'alert-body';
+
+        this.iconElement = createIcon(`${TONE_ICONS.info} alert-tone-icon`);
+        body.appendChild(this.iconElement);
+
+        const text = document.createElement('div');
+        text.className = 'alert-text';
+
         this.messageElement = document.createElement('p');
         this.messageElement.id = 'alertMessage';
-        content.appendChild(this.messageElement);
+        this.messageElement.className = 'alert-message';
+        text.appendChild(this.messageElement);
 
-        // The confirmation button
-        this.confirmButton = document.createElement('button');
-        this.confirmButton.id = 'closeAlertButton';
-        this.confirmButton.className = 'btn btn-primary';
-        this.confirmButton.setAttribute('data-localize', '__MSG_close__');
-        this.confirmButton.textContent = window.getLocalizedMessage('close') || 'Close';
-        content.appendChild(this.confirmButton);
+        // Technical detail (an API error message, …) under the plain message
+        this.detailElement = document.createElement('p');
+        this.detailElement.id = 'alertDetail';
+        this.detailElement.className = 'alert-detail';
+        this.detailElement.hidden = true;
+        text.appendChild(this.detailElement);
 
-        // Set up the event listeners
-        this._setupAlertEventListeners();
+        body.appendChild(text);
+        content.appendChild(body);
 
-        return content;
-    }
-
-    /**
-     * Set up alert event listeners
-     * @private
-     */
-    _setupAlertEventListeners() {
-        // The confirmation button
-        this.addEventListener(this.confirmButton, 'click', () => {
-            this._handleConfirm();
+        const footer = document.createElement('footer');
+        footer.className = 'event-form-footer';
+        footer.appendChild(createFooterSpacer());
+        this.confirmButton = createButton(this, {
+            id: 'closeAlertButton',
+            variant: 'primary',
+            msgKey: 'close',
+            fallback: 'Close',
+            onClick: () => this._handleConfirm()
         });
+        footer.appendChild(this.confirmButton);
+        content.appendChild(footer);
 
         // Confirm with the Enter key
         this.addEventListener(document, 'keydown', (e) => {
             if (e.key === 'Enter' && this.isVisible()) {
+                e.preventDefault();
                 this._handleConfirm();
             }
         });
+
+        return content;
+    }
+
+    createElement() {
+        const element = super.createElement();
+        element.setAttribute('role', 'alertdialog');
+        element.setAttribute('aria-modal', 'true');
+        element.setAttribute('aria-labelledby', 'alertMessage');
+        element.setAttribute('aria-describedby', 'alertDetail');
+        return element;
     }
 
     /**
@@ -67,144 +102,79 @@ export class AlertModal extends ModalComponent {
      * @private
      */
     _handleConfirm() {
-        if (this.onConfirm) {
-            this.onConfirm();
-        }
+        const onConfirm = this.onConfirm;
         this.hide();
+        if (onConfirm) {
+            onConfirm();
+        }
     }
 
     /**
      * Display information alert
      * @param {string} message The message
      * @param {Function} onConfirm The callback on confirmation
+     * @param {{detail?: string}} [options]
      */
-    showInfo(message, onConfirm = null) {
-        this._showAlert(message, 'info', onConfirm);
+    showInfo(message, onConfirm = null, options = {}) {
+        this._showAlert(message, 'info', onConfirm, options);
     }
 
     /**
      * Display warning alert
      * @param {string} message The message
      * @param {Function} onConfirm The callback on confirmation
+     * @param {{detail?: string}} [options]
      */
-    showWarning(message, onConfirm = null) {
-        this._showAlert(message, 'warning', onConfirm);
+    showWarning(message, onConfirm = null, options = {}) {
+        this._showAlert(message, 'warning', onConfirm, options);
     }
 
     /**
      * Display error alert
      * @param {string} message The message
      * @param {Function} onConfirm The callback on confirmation
+     * @param {{detail?: string}} [options] - detail: technical cause, shown smaller
      */
-    showError(message, onConfirm = null) {
-        this._showAlert(message, 'error', onConfirm);
+    showError(message, onConfirm = null, options = {}) {
+        this._showAlert(message, 'error', onConfirm, options);
     }
 
     /**
      * Display success alert
      * @param {string} message The message
      * @param {Function} onConfirm The callback on confirmation
+     * @param {{detail?: string}} [options]
      */
-    showSuccess(message, onConfirm = null) {
-        this._showAlert(message, 'success', onConfirm);
+    showSuccess(message, onConfirm = null, options = {}) {
+        this._showAlert(message, 'success', onConfirm, options);
     }
 
     /**
      * Display alert
      * @private
      */
-    _showAlert(message, type, onConfirm) {
-        this.alertType = type;
+    _showAlert(message, type, onConfirm, { detail } = {}) {
+        if (!this.element) {
+            this.createElement();
+        }
+        this.alertType = TONE_ICONS[type] ? type : 'info';
         this.onConfirm = onConfirm;
 
-        // Set the message
         this.messageElement.textContent = message;
+        this.detailElement.textContent = detail || '';
+        this.detailElement.hidden = !detail;
 
-        // Adjust the style according to the alert type
-        this._updateAlertStyle();
+        this.iconElement.className = `${TONE_ICONS[this.alertType]} alert-tone-icon is-${this.alertType}`;
 
         this.show();
     }
 
     /**
-     * Update style according to alert type
+     * Focus the button: the alert has no input, and Enter/Space should close it.
      * @private
      */
-    _updateAlertStyle() {
-        // Update the button class
-        this.confirmButton.className = this._getButtonClass();
-
-        // Add the alert type class to the modal content
-        if (this.modalContent) {
-            // Remove existing alert type classes
-            this.modalContent.classList.remove('alert-info', 'alert-warning', 'alert-error', 'alert-success');
-
-            // Add new alert type class
-            this.modalContent.classList.add(`alert-${this.alertType}`);
-        }
-
-        // Add icon (if it doesn't exist)
-        this._updateAlertIcon();
-    }
-
-    /**
-     * Get button class according to alert type
-     * @private
-     */
-    _getButtonClass() {
-        const baseClass = 'btn';
-
-        switch (this.alertType) {
-            case 'error':
-                return `${baseClass} btn-danger`;
-            case 'warning':
-                return `${baseClass} btn-warning`;
-            case 'success':
-                return `${baseClass} btn-success`;
-            case 'info':
-            default:
-                return `${baseClass} btn-primary`;
-        }
-    }
-
-    /**
-     * Update alert icon
-     * @private
-     */
-    _updateAlertIcon() {
-        // Remove existing icon
-        const existingIcon = this.messageElement?.previousElementSibling?.querySelector('i');
-        if (existingIcon) {
-            existingIcon.parentElement.remove();
-        }
-
-        // Create icon container
-        const iconContainer = document.createElement('div');
-        iconContainer.className = 'alert-icon-container mb-2 text-center';
-
-        const icon = document.createElement('i');
-
-        switch (this.alertType) {
-            case 'error':
-                icon.className = 'fas fa-exclamation-circle text-danger';
-                break;
-            case 'warning':
-                icon.className = 'fas fa-exclamation-triangle text-warning';
-                break;
-            case 'success':
-                icon.className = 'fas fa-check-circle text-success';
-                break;
-            case 'info':
-            default:
-                icon.className = 'fas fa-info-circle text-primary';
-                break;
-        }
-
-        icon.style.fontSize = '2em';
-        iconContainer.appendChild(icon);
-
-        // Insert before message
-        this.messageElement.parentNode.insertBefore(iconContainer, this.messageElement);
+    _focusFirstInput() {
+        setTimeout(() => this.confirmButton?.focus(), 100);
     }
 
     /**
@@ -212,8 +182,9 @@ export class AlertModal extends ModalComponent {
      * @param {string} text Button text
      */
     setConfirmButtonText(text) {
-        if (this.confirmButton) {
-            this.confirmButton.textContent = text;
+        const label = this.confirmButton?.querySelector('span');
+        if (label) {
+            label.textContent = text;
         }
     }
 
@@ -222,8 +193,9 @@ export class AlertModal extends ModalComponent {
      * @param {string} key Localization key
      */
     setConfirmButtonLocalize(key) {
-        if (this.confirmButton) {
-            this.confirmButton.setAttribute('data-localize', key);
+        const label = this.confirmButton?.querySelector('span');
+        if (label) {
+            label.setAttribute('data-localize', key);
         }
     }
 
@@ -234,16 +206,5 @@ export class AlertModal extends ModalComponent {
         super.hide();
         this.onConfirm = null;
         this.alertType = 'info';
-
-        // Remove icon
-        const iconContainer = this.modalContent?.querySelector('.alert-icon-container');
-        if (iconContainer) {
-            iconContainer.remove();
-        }
-
-        // Remove alert type classes
-        if (this.modalContent) {
-            this.modalContent.classList.remove('alert-info', 'alert-warning', 'alert-error', 'alert-success');
-        }
     }
 }

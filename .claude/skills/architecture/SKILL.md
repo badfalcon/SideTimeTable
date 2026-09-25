@@ -25,6 +25,8 @@ Main UI displayed in Chrome's side panel:
   - `timeline/timeline-component.js`: Main timeline display with integrated event layout
   - `header/header-component.js`: Date navigation and settings controls
   - `modals/`: Modal dialog components (Google events, local events, alerts, What's New, review)
+    - `event-dialog-dom.js`: Shared DOM builders for the event dialogs (sticky header/footer, icon-led rows, segmented controls, buttons, inline delete confirmation, status line, time row with duration picker)
+    - `delete-recurring-dialog.js`: "This event / All events" choice before deleting a recurring local event
   - `memo/memo-component.js`: Collapsible memo panel with persistent storage and resizable height
   - `setup/initial-setup-component.js`: First-time user setup wizard
   - `tutorial/tutorial-component.js`: Interactive tutorial for new users

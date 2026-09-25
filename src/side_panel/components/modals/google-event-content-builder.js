@@ -1,52 +1,55 @@
 /**
- * GoogleEventContentBuilder - Builds content sections for the Google event modal
+ * GoogleEventContentBuilder - Fills the rows of the Google event detail view
  *
- * Extracts DOM-building logic from GoogleEventModal into a standalone class.
- * Methods receive DOM elements and event data as parameters, mutating the DOM directly.
+ * Keeps the DOM building for event data out of GoogleEventModal. Each setter
+ * receives the element to fill and the event, fills it, and returns whether
+ * there was anything to show so the caller can hide an empty row.
  */
 import { extractMeetUrl, extractVideoUrl } from '../../../lib/conference-url-utils.js';
+import { createIcon, msg, msgWith, setLocalizedText } from './event-dialog-dom.js';
+
+/** Guests at or under this count are listed straight away; more start folded. */
+const ATTENDEES_EXPANDED_MAX = 3;
+
+/** How each response status is drawn and named, in summary order. */
+const RESPONSE_STATUSES = [
+    { status: 'accepted', icon: 'fas fa-check-circle', labelKey: 'accepted', labelFallback: 'Accepted', countKey: 'guestSummaryYes', countFallback: '$1 yes' },
+    { status: 'declined', icon: 'fas fa-times-circle', labelKey: 'declined', labelFallback: 'Declined', countKey: 'guestSummaryNo', countFallback: '$1 no' },
+    { status: 'tentative', icon: 'far fa-question-circle', labelKey: 'tentative', labelFallback: 'Tentative', countKey: 'guestSummaryMaybe', countFallback: '$1 maybe' },
+    { status: 'needsAction', icon: 'far fa-circle', labelKey: 'noResponse', labelFallback: 'No response', countKey: 'guestSummaryAwaiting', countFallback: '$1 awaiting' }
+];
+
+/**
+ * The status entry for an attendee's responseStatus (unknown → awaiting).
+ * @param {string} responseStatus
+ * @returns {Object}
+ */
+function statusFor(responseStatus) {
+    return RESPONSE_STATUSES.find(s => s.status === responseStatus) || RESPONSE_STATUSES[3];
+}
 
 export class GoogleEventContentBuilder {
     /**
-     * Set calendar information
-     * @param {HTMLElement} calendarElement - The calendar row element
-     * @param {Object} event - Google event data
+     * Calendar the event is on.
+     * @param {HTMLElement} content
+     * @param {Object} event
+     * @returns {boolean} whether there is anything to show
      */
-    setCalendarInfo(calendarElement, event) {
-        calendarElement.innerHTML = '';
-
-        if (event.calendarName) {
-            const icon = document.createElement('i');
-            icon.className = 'fas fa-calendar me-1';
-
-            const text = document.createElement('span');
-            text.textContent = event.calendarName;
-
-            calendarElement.appendChild(icon);
-
-            calendarElement.appendChild(text);
-        }
+    setCalendarInfo(content, event) {
+        content.textContent = event.calendarName || '';
+        return !!event.calendarName;
     }
 
     /**
-     * Set time information
-     * @param {HTMLElement} timeElement - The time row element
-     * @param {Object} event - Google event data
+     * Date and time.
+     * @param {HTMLElement} content
+     * @param {Object} event
+     * @returns {boolean}
      */
-    setTimeInfo(timeElement, event) {
-        timeElement.innerHTML = '';
-
-        if (event.start && event.end) {
-            const icon = document.createElement('i');
-            icon.className = 'fas fa-clock me-1';
-
-            const timeText = this.formatEventTime(event);
-            const text = document.createElement('span');
-            text.textContent = timeText;
-
-            timeElement.appendChild(icon);
-            timeElement.appendChild(text);
-        }
+    setTimeInfo(content, event) {
+        const hasTime = !!(event.start && event.end);
+        content.textContent = hasTime ? this.formatEventTime(event) : '';
+        return hasTime;
     }
 
     /**
@@ -120,199 +123,221 @@ export class GoogleEventContentBuilder {
     }
 
     /**
-     * Set description
-     * @param {HTMLElement} descriptionElement - The description row element
-     * @param {Object} event - Google event data
+     * Description, as plain text with its line breaks.
+     * @param {HTMLElement} content
+     * @param {Object} event
+     * @returns {boolean}
      */
-    setDescription(descriptionElement, event) {
-        descriptionElement.innerHTML = '';
-
-        if (event.description) {
-            const icon = document.createElement('i');
-            icon.className = 'fas fa-align-left me-1';
-
-            const text = document.createElement('div');
-            text.className = 'google-event-detail-text';
-
-            // Remove the HTML tags and display text only
-            text.textContent = this.stripHtml(event.description);
-
-            descriptionElement.appendChild(icon);
-            descriptionElement.appendChild(text);
-        }
+    setDescription(content, event) {
+        content.textContent = event.description ? this.stripHtml(event.description) : '';
+        return !!content.textContent;
     }
 
     /**
-     * Set location
-     * @param {HTMLElement} locationElement - The location row element
-     * @param {Object} event - Google event data
+     * Location.
+     * @param {HTMLElement} content
+     * @param {Object} event
+     * @returns {boolean}
      */
-    setLocation(locationElement, event) {
-        locationElement.innerHTML = '';
-
-        if (event.location) {
-            const icon = document.createElement('i');
-            icon.className = 'fas fa-map-marker-alt me-1';
-
-            const text = document.createElement('span');
-            text.textContent = event.location;
-
-            locationElement.appendChild(icon);
-            locationElement.appendChild(text);
-        }
+    setLocation(content, event) {
+        content.textContent = event.location || '';
+        return !!event.location;
     }
 
     /**
-     * Set Meet information
-     * @param {HTMLElement} meetElement - The meet row element
-     * @param {Object} event - Google event data
+     * Buttons that join the event's video call. A non-Meet link (Zoom, Teams,
+     * Webex pasted into the description) comes first, matching the button on
+     * the reminder notification, which treats it as the room people meant.
+     * @param {HTMLElement} container
+     * @param {Object} event
+     * @returns {boolean}
      */
-    setMeetInfo(meetElement, event) {
-        meetElement.innerHTML = '';
+    setMeetInfo(container, event) {
+        container.innerHTML = '';
 
-        // Render non-Meet video conference link first to match the notification button priority
-        // (a Zoom/Teams/Webex URL pasted in the description is treated as the user's intended room).
         const otherVideoUrl = extractVideoUrl(event);
         if (otherVideoUrl) {
-            const icon = document.createElement('i');
-            icon.className = 'fas fa-video me-1';
-
-            const link = document.createElement('a');
-            link.href = otherVideoUrl;
-            link.target = '_blank';
-            link.setAttribute('data-localize', '__MSG_joinVideoConference__');
-            link.textContent = window.getLocalizedMessage('joinVideoConference');
-            link.style.cssText = 'color: var(--side-calendar-link-color); text-decoration: none;';
-
-            meetElement.appendChild(icon);
-            meetElement.appendChild(link);
+            container.appendChild(this._createJoinLink(otherVideoUrl, 'joinVideoConference', 'Join video conference'));
         }
 
         const meetUrl = extractMeetUrl(event);
         if (meetUrl) {
-            const icon = document.createElement('i');
-            icon.className = 'fas fa-video me-1';
+            container.appendChild(this._createJoinLink(meetUrl, 'joinGoogleMeet', 'Join Google Meet'));
+        }
 
-            const link = document.createElement('a');
-            link.href = meetUrl;
-            link.target = '_blank';
-            link.setAttribute('data-localize', '__MSG_joinGoogleMeet__');
-            link.textContent = window.getLocalizedMessage('joinGoogleMeet');
-            link.style.cssText = 'color: var(--side-calendar-link-color); text-decoration: none;';
+        return !!(otherVideoUrl || meetUrl);
+    }
 
-            meetElement.appendChild(icon);
-            meetElement.appendChild(link);
+    /**
+     * One join button: what it does, plus where it goes (the Meet code, or
+     * the service's host) so two calls can be told apart.
+     * @param {string} url
+     * @param {string} msgKey
+     * @param {string} fallback
+     * @returns {HTMLAnchorElement}
+     * @private
+     */
+    _createJoinLink(url, msgKey, fallback) {
+        const link = document.createElement('a');
+        link.className = 'event-detail-join';
+        link.href = url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+
+        const label = document.createElement('span');
+        label.className = 'event-detail-join-label';
+        link.appendChild(setLocalizedText(label, msgKey, fallback));
+
+        const meta = this._joinLinkMeta(url);
+        if (meta) {
+            const metaEl = document.createElement('span');
+            metaEl.className = 'event-detail-join-meta';
+            metaEl.textContent = meta;
+            link.appendChild(metaEl);
+        }
+        return link;
+    }
+
+    /**
+     * Short identifier for a call URL: the Meet code, else the host name.
+     * @param {string} url
+     * @returns {string}
+     * @private
+     */
+    _joinLinkMeta(url) {
+        try {
+            const parsed = new URL(url);
+            if (parsed.hostname === 'meet.google.com') {
+                return parsed.pathname.replace(/^\/+/, '').split('/')[0];
+            }
+            return parsed.hostname.replace(/^www\./, '');
+        } catch {
+            return '';
         }
     }
 
     /**
-     * Set out of office information
-     * @param {HTMLElement} oooInfoElement - The out-of-office row element
-     * @param {Object} event - Google event data
+     * Out-of-office details: the type (an absence may carry any title), whether
+     * conflicting invitations are declined, and the decline message.
+     * @param {HTMLElement} content
+     * @param {Object} event
+     * @returns {boolean}
      */
-    setOutOfOfficeInfo(oooInfoElement, event) {
-        oooInfoElement.innerHTML = '';
+    setOutOfOfficeInfo(content, event) {
+        content.innerHTML = '';
+        if (event.eventType !== 'outOfOffice') return false;
 
-        if (event.eventType !== 'outOfOffice') return;
+        const type = document.createElement('span');
+        type.className = 'event-detail-ooo-type';
+        content.appendChild(setLocalizedText(type, 'outOfOffice', 'Out of office'));
 
-        const icon = document.createElement('i');
-        icon.className = 'fas fa-plane-departure me-1';
+        const props = event.outOfOfficeProperties || {};
+        const declineKey = {
+            declineAllConflictingInvitations: ['autoDeclineInvitations', 'Decline all conflicting invitations'],
+            declineOnlyNewConflictingInvitations: ['oooDeclineNewOnly', 'Decline only new conflicting invitations']
+        }[props.autoDeclineMode];
+        if (declineKey) {
+            const decline = document.createElement('span');
+            decline.className = 'event-detail-ooo-decline';
+            decline.appendChild(createIcon('fas fa-check'));
+            decline.appendChild(setLocalizedText(document.createElement('span'), declineKey[0], declineKey[1]));
+            content.appendChild(decline);
+        }
 
-        const text = document.createElement('span');
-        const declineMessage = event.outOfOfficeProperties?.declineMessage;
-        text.textContent = declineMessage || window.getLocalizedMessage('outOfOffice');
-
-        oooInfoElement.appendChild(icon);
-        oooInfoElement.appendChild(text);
+        if (props.declineMessage) {
+            const message = document.createElement('blockquote');
+            message.className = 'event-detail-ooo-message';
+            message.textContent = props.declineMessage;
+            content.appendChild(message);
+        }
+        return true;
     }
 
     /**
-     * Set attendees information
-     * @param {HTMLElement} attendeesElement - The attendees row element
-     * @param {Object} event - Google event data
+     * Guests: a one-line summary ("4 guests  2 yes · 1 maybe · 1 awaiting")
+     * that folds the list away, then the list with a coloured response icon
+     * each. A short list starts open; a long one starts folded so the actions
+     * stay in view. Conference rooms and other resources are left out.
+     * @param {HTMLElement} container
+     * @param {Object} event
+     * @param {string} listId - id for the list, referenced by aria-controls
+     * @returns {boolean}
      */
-    setAttendeesInfo(attendeesElement, event) {
-        attendeesElement.innerHTML = '';
+    setAttendeesInfo(container, event, listId) {
+        container.innerHTML = '';
 
-        // Filter out conference rooms and other resources
-        const realAttendees = (event.attendees || []).filter(attendee => !attendee.resource);
+        const attendees = (event.attendees || []).filter(attendee => !attendee.resource);
+        if (attendees.length === 0) return false;
 
-        if (realAttendees.length > 0) {
+        // Organizer first, everyone else in the order Google returns them
+        const ordered = [
+            ...attendees.filter(a => a.organizer),
+            ...attendees.filter(a => !a.organizer)
+        ];
+        const expanded = attendees.length <= ATTENDEES_EXPANDED_MAX;
+
+        const header = document.createElement('div');
+        header.className = 'event-detail-row event-detail-row-center';
+        header.appendChild(createIcon('fas fa-user-friends event-form-row-icon'));
+
+        const toggle = document.createElement('button');
+        toggle.type = 'button';
+        toggle.className = 'event-detail-attendees-toggle';
+        toggle.setAttribute('aria-expanded', String(expanded));
+        toggle.setAttribute('aria-controls', listId);
+
+        const count = document.createElement('span');
+        count.className = 'event-detail-attendees-count';
+        count.textContent = attendees.length === 1
+            ? msg('guestCountOne', '1 guest')
+            : msgWith('guestCountMany', '$1 guests', attendees.length);
+        toggle.appendChild(count);
+
+        const breakdown = document.createElement('span');
+        breakdown.className = 'event-detail-attendees-breakdown';
+        breakdown.textContent = RESPONSE_STATUSES
+            .map(s => ({ s, n: attendees.filter(a => statusFor(a.responseStatus) === s).length }))
+            .filter(({ n }) => n > 0)
+            .map(({ s, n }) => msgWith(s.countKey, s.countFallback, n))
+            .join(' · ');
+        toggle.appendChild(breakdown);
+
+        toggle.appendChild(createIcon('fas fa-chevron-right event-detail-attendees-chevron'));
+        header.appendChild(toggle);
+        container.appendChild(header);
+
+        const list = document.createElement('ul');
+        list.className = 'event-detail-attendee-list';
+        list.id = listId;
+        list.hidden = !expanded;
+
+        ordered.forEach(attendee => {
+            const status = statusFor(attendee.responseStatus);
+            const item = document.createElement('li');
+            item.className = `event-detail-attendee is-${status.status}`;
+
             const icon = document.createElement('i');
-            icon.className = 'fas fa-users me-1';
-            icon.style.cssText = 'margin-top: 2px; color: var(--side-calendar-secondary-text-color);';
+            icon.className = `${status.icon} attendee-status attendee-status-${status.status}`;
+            icon.setAttribute('role', 'img');
+            icon.setAttribute('aria-label', msg(status.labelKey, status.labelFallback));
+            icon.title = msg(status.labelKey, status.labelFallback);
+            item.appendChild(icon);
 
-            const container = document.createElement('div');
-            container.className = 'google-event-detail-text';
+            const name = document.createElement('span');
+            name.className = 'event-detail-attendee-name';
+            name.textContent = attendee.displayName || attendee.email;
+            item.appendChild(name);
 
-            const title = document.createElement('div');
-            title.style.cssText = 'margin-bottom: 5px;';
+            if (attendee.organizer) {
+                const badge = document.createElement('span');
+                badge.className = 'event-detail-badge';
+                item.appendChild(setLocalizedText(badge, 'organizer', 'Organizer'));
+            }
+            list.appendChild(item);
+        });
+        container.appendChild(list);
 
-            // Store attendee count for later use
-            title.dataset.attendeeCount = realAttendees.length;
-
-            // Create a span for the localized text
-            const titleText = document.createElement('span');
-            titleText.setAttribute('data-localize', '__MSG_attendees__');
-            titleText.textContent = window.getLocalizedMessage('attendees');
-
-            // Create a span for the count
-            const countText = document.createTextNode(` (${realAttendees.length})`);
-
-            title.appendChild(titleText);
-            title.appendChild(countText);
-
-            const attendeesList = document.createElement('div');
-
-            realAttendees.forEach(attendee => {
-                const attendeeDiv = document.createElement('div');
-                attendeeDiv.className = 'google-event-attendee-row';
-
-                // The participation status icon
-                const statusIcon = document.createElement('i');
-                switch (attendee.responseStatus) {
-                    case 'accepted':
-                        statusIcon.className = 'fas fa-check-circle attendee-status-accepted';
-                        statusIcon.title = window.getLocalizedMessage('accepted');
-                        break;
-                    case 'declined':
-                        statusIcon.className = 'fas fa-times-circle attendee-status-declined';
-                        statusIcon.title = window.getLocalizedMessage('declined');
-                        break;
-                    case 'tentative':
-                        statusIcon.className = 'fas fa-question-circle attendee-status-tentative';
-                        statusIcon.title = window.getLocalizedMessage('tentative');
-                        break;
-                    default:
-                        statusIcon.className = 'fas fa-circle attendee-status-default';
-                        statusIcon.title = window.getLocalizedMessage('noResponse');
-                }
-                statusIcon.style.cssText = 'margin-right: 8px; font-size: 12px;';
-
-                // The attendee name and email
-                const nameSpan = document.createElement('span');
-                nameSpan.className = 'google-event-attendee-name';
-                nameSpan.textContent = attendee.displayName || attendee.email;
-                if (attendee.organizer) {
-                    nameSpan.textContent += ` (${window.getLocalizedMessage('organizer')})`;
-                    nameSpan.style.fontWeight = 'bold';
-                }
-
-                attendeeDiv.appendChild(statusIcon);
-                attendeeDiv.appendChild(nameSpan);
-                if (attendee.organizer) {
-                    attendeesList.prepend(attendeeDiv);
-                } else {
-                    attendeesList.appendChild(attendeeDiv);
-                }
-            });
-
-            container.appendChild(title);
-            container.appendChild(attendeesList);
-
-            attendeesElement.appendChild(icon);
-            attendeesElement.appendChild(container);
-        }
+        return true;
     }
 
     /**

@@ -7,6 +7,8 @@ import {
   calculateTimeDifference,
   calculateWorkHours,
   buildRfc3339DateTime,
+  timeStringToMinutes,
+  minutesToTimeString,
 } from '../../src/lib/time-utils.js';
 
 describe('createTimeOnDate', () => {
@@ -349,5 +351,50 @@ describe('parseDateString', () => {
     expect(parseDateString(null)).toBeNull();
     expect(parseDateString(undefined)).toBeNull();
     expect(parseDateString(new Date())).toBeNull();
+  });
+});
+describe('timeStringToMinutes', () => {
+  test('converts a time string to minutes since midnight', () => {
+    expect(timeStringToMinutes('00:00')).toBe(0);
+    expect(timeStringToMinutes('09:30')).toBe(570);
+    expect(timeStringToMinutes('23:59')).toBe(1439);
+  });
+
+  test('accepts single-digit hours and minutes', () => {
+    expect(timeStringToMinutes('9:5')).toBe(545);
+  });
+
+  test('returns null instead of throwing for an unusable value', () => {
+    expect(timeStringToMinutes('')).toBeNull();
+    expect(timeStringToMinutes(null)).toBeNull();
+    expect(timeStringToMinutes(undefined)).toBeNull();
+    expect(timeStringToMinutes('24:00')).toBeNull();
+    expect(timeStringToMinutes('10.5')).toBeNull();
+    expect(timeStringToMinutes('abc')).toBeNull();
+  });
+});
+
+describe('minutesToTimeString', () => {
+  test('formats minutes as a zero-padded time', () => {
+    expect(minutesToTimeString(0)).toBe('00:00');
+    expect(minutesToTimeString(545)).toBe('09:05');
+    expect(minutesToTimeString(1439)).toBe('23:59');
+  });
+
+  test('clamps past midnight to the end of the same day', () => {
+    // 23:30 plus two hours: a local event stores no end date, so it has to
+    // stop at 23:59 rather than wrap to 01:30.
+    expect(minutesToTimeString(23 * 60 + 30 + 120)).toBe('23:59');
+    expect(minutesToTimeString(24 * 60)).toBe('23:59');
+  });
+
+  test('clamps a negative value to midnight', () => {
+    expect(minutesToTimeString(-30)).toBe('00:00');
+  });
+
+  test('round-trips with timeStringToMinutes', () => {
+    ['00:00', '07:45', '12:00', '23:59'].forEach((time) => {
+      expect(minutesToTimeString(timeStringToMinutes(time))).toBe(time);
+    });
   });
 });

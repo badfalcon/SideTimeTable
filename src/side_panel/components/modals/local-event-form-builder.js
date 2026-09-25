@@ -3,8 +3,31 @@
  *
  * Handles DOM construction for edit mode, form population, data retrieval, and reset.
  * This is a plain helper class (not a Component subclass).
+ *
+ * The form is laid out for the side panel, which is ~384px wide: every field is
+ * one row of "icon + control" rather than a label line above a control, so a
+ * field costs 46px instead of 79px and no state needs to scroll. The icons are
+ * decorative (`aria-hidden`); each control keeps a real `<label>` that is only
+ * visually hidden, and empty fields name themselves through their placeholder.
  */
 import { RECURRENCE_TYPES } from '../../../lib/constants.js';
+import {
+    applyDurationPreset,
+    createButton,
+    createCloseButton,
+    createDeleteButton,
+    createFooterSpacer,
+    createHiddenLabel,
+    createHint,
+    createIcon,
+    createRow,
+    createSegmentButton,
+    createSegmented,
+    createTimeRow,
+    setPressed,
+    syncDurationFromTimes,
+    wrapSelect
+} from './event-dialog-dom.js';
 
 export class LocalEventFormBuilder {
     /**
@@ -18,11 +41,17 @@ export class LocalEventFormBuilder {
         this.titleInput = null;
         this.startTimeInput = null;
         this.endTimeInput = null;
+        this.durationSelect = null;
         this.descriptionInput = null;
         this.reminderCheckbox = null;
         this.saveButton = null;
         this.deleteButton = null;
         this.cancelButton = null;
+        this.closeButton = null;
+        this.footer = null;
+
+        // Containers
+        this.errorContainer = null;
 
         // Recurrence elements
         this.recurrenceSelect = null;
@@ -39,8 +68,9 @@ export class LocalEventFormBuilder {
         this.googleHiddenHint = null;
         this.currentSource = 'local';
 
-        // Event type (default / outOfOffice) elements
-        this.eventTypeToggle = null;
+        // Event type (default / outOfOffice) elements — a property of a Google
+        // event, so its row only shows under the Google destination
+        this.eventTypeRow = null;
         this.typeDefaultBtn = null;
         this.typeOooBtn = null;
         this.oooPrimaryHint = null;
@@ -52,6 +82,7 @@ export class LocalEventFormBuilder {
         // Out-of-office-only fields
         this.oooFields = null;
         this.allDayCheckbox = null;
+        this.allDayRow = null;
         this.autoDeclineCheckbox = null;
 
         // Google-only fields
@@ -67,10 +98,97 @@ export class LocalEventFormBuilder {
         this.reminderSelect = null;
 
         // Containers toggled by save destination / event type
-        this.reminderContainer = null;
+        this.reminderRow = null;
         this.recurrenceSection = null;
-        this.descriptionSection = null;
+        this.descriptionRow = null;
         this.timeRow = null;
+
+        // Callbacks handed in by buildEditContent, kept so controls added later
+        // (the duration picker) can re-run validation.
+        this._callbacks = {};
+    }
+
+    // ===== Small DOM helpers =====
+
+    /**
+     * Build a chip that toggles a checkbox. The checkbox stays a real one (only
+     * visually hidden) so callers keep reading `.checked`.
+     * @param {string} inputId
+     * @param {string} msgKey
+     * @param {string} fallback
+     * @returns {{chip: HTMLLabelElement, input: HTMLInputElement}}
+     * @private
+     */
+    _createChipToggle(inputId, msgKey, fallback) {
+        const chip = document.createElement('label');
+        chip.className = 'chip-toggle';
+
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.id = inputId;
+        input.className = 'chip-toggle-input';
+
+        const text = document.createElement('span');
+        text.setAttribute('data-localize', `__MSG_${msgKey}__`);
+        text.textContent = window.getLocalizedMessage(msgKey) || fallback;
+
+        chip.appendChild(input);
+        chip.appendChild(text);
+        return { chip, input };
+    }
+
+    /**
+     * Build a settings-style row: icon, label text, checkbox on the right. The
+     * whole row is the label, so the entire width is clickable.
+     * @param {string} inputId
+     * @param {string} iconClass
+     * @param {string} msgKey
+     * @param {string} fallback
+     * @returns {{row: HTMLLabelElement, input: HTMLInputElement}}
+     * @private
+     */
+    _createCheckRow(inputId, iconClass, msgKey, fallback) {
+        const row = document.createElement('label');
+        row.className = 'event-form-check-row';
+        row.htmlFor = inputId;
+        row.appendChild(createIcon(`${iconClass} event-form-row-icon`));
+
+        const text = document.createElement('span');
+        text.className = 'event-form-check-label';
+        text.setAttribute('data-localize', `__MSG_${msgKey}__`);
+        text.textContent = window.getLocalizedMessage(msgKey) || fallback;
+        row.appendChild(text);
+
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.id = inputId;
+        input.className = 'event-form-check-input';
+        row.appendChild(input);
+
+        return { row, input };
+    }
+
+    // ===== Sections =====
+
+    /**
+     * Build the sticky header: dialog title plus a close button.
+     * @param {HTMLElement} parentElement
+     * @private
+     */
+    _buildHeader(parentElement) {
+        const header = document.createElement('header');
+        header.className = 'event-form-header';
+
+        this.editTitleElement = document.createElement('h2');
+        this.editTitleElement.className = 'event-form-title';
+        this.editTitleElement.setAttribute('data-localize', '__MSG_eventDialogTitleCreate__');
+        this.editTitleElement.textContent = window.getLocalizedMessage('eventDialogTitleCreate') || 'Create event';
+        header.appendChild(this.editTitleElement);
+
+        this.closeButton = createCloseButton(this.modal, () => this.modal.hide());
+        header.appendChild(this.closeButton);
+
+        parentElement.appendChild(header);
     }
 
     /**
@@ -80,166 +198,173 @@ export class LocalEventFormBuilder {
      * @private
      */
     _buildSourceToggle(parentElement) {
-        const toggle = document.createElement('div');
-        toggle.className = 'event-source-toggle';
-        // Two mutually exclusive toggle buttons (Tab reaches both, Enter/Space
-        // activates). We deliberately use role=group + aria-pressed rather than
-        // radiogroup/radio, which would promise arrow-key navigation we don't wire.
-        toggle.setAttribute('role', 'group');
-        toggle.setAttribute('data-localize-aria-label', '__MSG_saveDestination__');
-        toggle.setAttribute('aria-label', window.getLocalizedMessage('saveDestination') || 'Save destination');
-
-        const makeButton = (source, msgKey, fallback, iconClass) => {
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'event-source-btn';
-            btn.dataset.source = source;
-            btn.setAttribute('aria-pressed', 'false');
-
-            const icon = document.createElement('i');
-            icon.className = iconClass;
-            icon.setAttribute('aria-hidden', 'true');
-
-            const label = document.createElement('span');
-            label.setAttribute('data-localize', `__MSG_${msgKey}__`);
-            label.textContent = window.getLocalizedMessage(msgKey) || fallback;
-
-            btn.appendChild(icon);
-            btn.appendChild(label);
-            this.modal.addEventListener(btn, 'click', () => this.setSource(source));
-            return btn;
-        };
+        const toggle = createSegmented('saveDestination', 'Save destination');
 
         // Local = stored on this device; Google = written to Google Calendar
-        this.sourceLocalBtn = makeButton('local', 'destinationLocal', 'Local', 'fas fa-laptop');
-        this.sourceGoogleBtn = makeButton('google', 'destinationGoogle', 'Google', 'fab fa-google');
+        this.sourceLocalBtn = createSegmentButton(
+            this.modal, 'destinationLocal', 'Local', 'fas fa-laptop', () => this.setSource('local')
+        );
+        this.sourceGoogleBtn = createSegmentButton(
+            this.modal, 'destinationGoogle', 'Google', 'fab fa-google', () => this.setSource('google')
+        );
 
         toggle.appendChild(this.sourceLocalBtn);
         toggle.appendChild(this.sourceGoogleBtn);
+        // Stays hidden until setGoogleAvailability() reports a writable
+        // calendar: with no Google destination there is nothing to choose.
+        toggle.hidden = true;
         parentElement.appendChild(toggle);
         this.sourceToggle = toggle;
 
-        // Hint shown when writable Google calendars exist but none are
-        // displayed on the timeline (the toggle would otherwise vanish with
-        // no explanation of why Google saving is unavailable).
-        this.googleHiddenHint = document.createElement('div');
-        this.googleHiddenHint.className = 'google-destination-hint';
-        this.googleHiddenHint.style.display = 'none';
-        this.googleHiddenHint.setAttribute('data-localize', '__MSG_googleDestinationHidden__');
-        this.googleHiddenHint.textContent = window.getLocalizedMessage('googleDestinationHidden')
-            || 'To save to Google, show a writable calendar in the calendar filter first.';
+        // Shown when writable Google calendars exist but none are displayed on
+        // the timeline (the toggle would otherwise vanish with no explanation
+        // of why Google saving is unavailable).
+        this.googleHiddenHint = createHint(
+            'googleDestinationHidden',
+            'To save to Google, show a writable calendar in the calendar filter first.'
+        );
+        this.googleHiddenHint.hidden = true;
         parentElement.appendChild(this.googleHiddenHint);
     }
 
     /**
-     * Build the event-type toggle (Event / Out of office). Only meaningful for
-     * the Google save destination, so it stays hidden while saving locally.
+     * Build the event-type row (Event / Out of office). An absence is a kind
+     * of Google event rather than a third place to save to, so this sits as
+     * the first field under the Google destination and is hidden otherwise.
      * @param {HTMLElement} parentElement
      * @private
      */
-    _buildEventTypeToggle(parentElement) {
-        const toggle = document.createElement('div');
-        toggle.className = 'event-type-toggle';
-        // Same role=group + aria-pressed pattern as the save-destination toggle.
-        toggle.setAttribute('role', 'group');
-        toggle.setAttribute('data-localize-aria-label', '__MSG_eventTypeGroup__');
-        toggle.setAttribute('aria-label', window.getLocalizedMessage('eventTypeGroup') || 'Event type');
+    _buildEventTypeRow(parentElement) {
+        const row = createRow('fas fa-tag');
+        row.hidden = true;
 
-        const makeButton = (type, msgKey, fallback, iconClass) => {
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'event-type-btn';
-            btn.dataset.eventType = type;
-            btn.setAttribute('aria-pressed', 'false');
-
-            const icon = document.createElement('i');
-            icon.className = iconClass;
-            icon.setAttribute('aria-hidden', 'true');
-
-            const label = document.createElement('span');
-            label.setAttribute('data-localize', `__MSG_${msgKey}__`);
-            label.textContent = window.getLocalizedMessage(msgKey) || fallback;
-
-            btn.appendChild(icon);
-            btn.appendChild(label);
-            this.modal.addEventListener(btn, 'click', () => this.setEventType(type));
-            return btn;
-        };
-
-        this.typeDefaultBtn = makeButton('default', 'eventTypeDefault', 'Event', 'fas fa-calendar-day');
-        this.typeOooBtn = makeButton('outOfOffice', 'outOfOffice', 'Out of office', 'fas fa-user-slash');
-
+        const toggle = createSegmented('eventTypeGroup', 'Event type');
+        this.typeDefaultBtn = createSegmentButton(
+            this.modal, 'eventTypeDefault', 'Event', null, () => this.setEventType('default')
+        );
+        this.typeOooBtn = createSegmentButton(
+            this.modal, 'outOfOffice', 'Out of office', null, () => this.setEventType('outOfOffice')
+        );
         toggle.appendChild(this.typeDefaultBtn);
         toggle.appendChild(this.typeOooBtn);
-        parentElement.appendChild(toggle);
-        this.eventTypeToggle = toggle;
+        row.appendChild(toggle);
+
+        parentElement.appendChild(row);
+        this.eventTypeRow = row;
 
         // Explains a disabled "Out of office" button. A disabled button cannot
         // be focused, so the reason has to be visible text rather than a tooltip.
-        this.oooPrimaryHint = document.createElement('div');
-        this.oooPrimaryHint.className = 'google-destination-hint';
-        this.oooPrimaryHint.style.display = 'none';
-        this.oooPrimaryHint.setAttribute('data-localize', '__MSG_oooPrimaryOnly__');
-        this.oooPrimaryHint.textContent = window.getLocalizedMessage('oooPrimaryOnly')
-            || 'Out-of-office events can only be created on your primary calendar. Show it in the calendar filter first.';
+        this.oooPrimaryHint = createHint(
+            'oooPrimaryOnly',
+            'Out-of-office events can only be created on your primary calendar. Show it in the calendar filter first.'
+        );
+        this.oooPrimaryHint.hidden = true;
         parentElement.appendChild(this.oooPrimaryHint);
     }
 
     /**
-     * Build the out-of-office-only fields (all day + auto-decline). Hidden
-     * unless the event type is Out of office.
+     * Build the title field. It leads the form as a single underlined line
+     * rather than a boxed input with a label above it.
+     * @param {HTMLElement} parentElement
+     * @private
+     */
+    _buildTitleField(parentElement) {
+        parentElement.appendChild(createHiddenLabel('eventTitle', 'eventTitle', 'Title'));
+
+        this.titleInput = document.createElement('input');
+        this.titleInput.type = 'text';
+        this.titleInput.id = 'eventTitle';
+        this.titleInput.className = 'event-title-input';
+        this.titleInput.required = true;
+        this.titleInput.setAttribute('data-localize-placeholder', '__MSG_eventTitlePlaceholder__');
+        this.titleInput.placeholder = window.getLocalizedMessage('eventTitlePlaceholder') || 'Title';
+        parentElement.appendChild(this.titleInput);
+    }
+
+    /**
+     * Build the all-day toggle (absences only). It gets its own row above the
+     * times rather than a chip beside them: the time row has no width to spare
+     * in a 12-hour locale, and a toggle that hides the times reads best when it
+     * does not move as they disappear.
+     * @param {HTMLElement} parentElement
+     * @private
+     */
+    _buildAllDayRow(parentElement) {
+        const allDay = this._createCheckRow('oooEventAllDay', 'fas fa-sun', 'allDay', 'All day');
+        this.allDayRow = allDay.row;
+        this.allDayCheckbox = allDay.input;
+        this.allDayRow.hidden = true;
+        parentElement.appendChild(this.allDayRow);
+    }
+
+    /**
+     * Build the time row: start, end and a duration picker. They share one
+     * line, but the fields wrap as a group: when the panel is too narrow for a
+     * 12-hour value such as "12:30 PM", the duration picker moves to a second
+     * line under the times instead of the times being clipped.
+     * @param {HTMLElement} parentElement
+     * @private
+     */
+    _buildTimeRow(parentElement) {
+        const time = createTimeRow({ start: 'eventStartTime', end: 'eventEndTime', duration: 'eventDuration' });
+        this.startTimeInput = time.startInput;
+        this.endTimeInput = time.endInput;
+        this.durationSelect = time.durationSelect;
+
+        parentElement.appendChild(time.row);
+        this.timeRow = time.row;
+    }
+
+    /**
+     * Build Google-only fields (the target calendar picker). Hidden unless the
+     * save destination is Google.
+     * @param {HTMLElement} parentElement
+     * @private
+     */
+    _buildGoogleFields(parentElement) {
+        const row = createRow('fas fa-calendar-alt');
+        row.hidden = true;
+
+        row.appendChild(createHiddenLabel('googleEventCalendar', 'targetCalendar', 'Calendar'));
+
+        this.calendarSelect = document.createElement('select');
+        this.calendarSelect.id = 'googleEventCalendar';
+        this.calendarSelect.className = 'event-form-field';
+        row.appendChild(wrapSelect(this.calendarSelect));
+
+        parentElement.appendChild(row);
+        this.googleFields = row;
+    }
+
+    /**
+     * Build the out-of-office-only fields (auto-decline). "All day" has its own
+     * row above the times. Hidden unless the event type is Out of office.
      * @param {HTMLElement} parentElement
      * @private
      */
     _buildOooFields(parentElement) {
         const container = document.createElement('div');
         container.className = 'ooo-event-fields';
-        container.style.display = 'none';
+        container.hidden = true;
 
-        // All day
-        const allDayRow = document.createElement('div');
-        allDayRow.className = 'google-meet-row';
-
-        this.allDayCheckbox = document.createElement('input');
-        this.allDayCheckbox.type = 'checkbox';
-        this.allDayCheckbox.id = 'oooEventAllDay';
-
-        const allDayLabel = document.createElement('label');
-        allDayLabel.htmlFor = 'oooEventAllDay';
-        allDayLabel.setAttribute('data-localize', '__MSG_allDay__');
-        allDayLabel.textContent = window.getLocalizedMessage('allDay') || 'All day';
-
-        allDayRow.appendChild(this.allDayCheckbox);
-        allDayRow.appendChild(allDayLabel);
-        container.appendChild(allDayRow);
-
-        // Auto-decline conflicting invitations
-        const declineRow = document.createElement('div');
-        declineRow.className = 'google-meet-row';
-
-        this.autoDeclineCheckbox = document.createElement('input');
-        this.autoDeclineCheckbox.type = 'checkbox';
-        this.autoDeclineCheckbox.id = 'oooEventAutoDecline';
+        const decline = this._createCheckRow(
+            'oooEventAutoDecline',
+            'fas fa-ban',
+            'autoDeclineInvitations',
+            'Decline all conflicting invitations'
+        );
+        this.autoDeclineCheckbox = decline.input;
         this.autoDeclineCheckbox.setAttribute('aria-describedby', 'oooAutoDeclineHint');
-
-        const declineLabel = document.createElement('label');
-        declineLabel.htmlFor = 'oooEventAutoDecline';
-        declineLabel.setAttribute('data-localize', '__MSG_autoDeclineInvitations__');
-        declineLabel.textContent = window.getLocalizedMessage('autoDeclineInvitations')
-            || 'Decline all conflicting invitations';
-
-        declineRow.appendChild(this.autoDeclineCheckbox);
-        declineRow.appendChild(declineLabel);
-        container.appendChild(declineRow);
+        container.appendChild(decline.row);
 
         // Auto-decline reaches outside the panel (organizers are notified), so
         // spell out the consequence next to the checkbox rather than hiding it.
-        const declineHint = document.createElement('div');
+        const declineHint = createHint(
+            'autoDeclineHint',
+            'Meetings you already accepted are declined too, and organizers are notified.'
+        );
         declineHint.id = 'oooAutoDeclineHint';
-        declineHint.className = 'google-destination-hint';
-        declineHint.setAttribute('data-localize', '__MSG_autoDeclineHint__');
-        declineHint.textContent = window.getLocalizedMessage('autoDeclineHint')
-            || 'Meetings you already accepted are declined too, and organizers are notified.';
+        declineHint.classList.add('event-form-hint-indented');
         container.appendChild(declineHint);
 
         parentElement.appendChild(container);
@@ -247,52 +372,43 @@ export class LocalEventFormBuilder {
     }
 
     /**
-     * Build Google-only fields (target calendar picker + Meet toggle). Hidden
-     * unless the save destination is Google.
+     * Build the description field.
      * @param {HTMLElement} parentElement
      * @private
      */
-    _buildGoogleFields(parentElement) {
-        const container = document.createElement('div');
-        container.className = 'google-event-fields';
-        container.style.cssText = 'display: none;';
+    _buildDescriptionField(parentElement) {
+        const row = createRow('fas fa-align-left');
 
-        // Target calendar picker
-        const calendarLabel = document.createElement('label');
-        calendarLabel.htmlFor = 'googleEventCalendar';
-        calendarLabel.setAttribute('data-localize', '__MSG_targetCalendar__');
-        calendarLabel.textContent = window.getLocalizedMessage('targetCalendar') || 'Calendar';
-        container.appendChild(calendarLabel);
+        row.appendChild(createHiddenLabel('eventDescription', 'eventDescription', 'Description'));
 
-        this.calendarSelect = document.createElement('select');
-        this.calendarSelect.id = 'googleEventCalendar';
-        this.calendarSelect.className = 'event-form-select';
-        container.appendChild(this.calendarSelect);
+        this.descriptionInput = document.createElement('textarea');
+        this.descriptionInput.id = 'eventDescription';
+        this.descriptionInput.className = 'event-form-field event-form-textarea';
+        this.descriptionInput.rows = 1;
+        this.descriptionInput.setAttribute('data-localize-placeholder', '__MSG_addDescription__');
+        this.descriptionInput.placeholder = window.getLocalizedMessage('addDescription') || 'Add a note';
+        row.appendChild(this.descriptionInput);
 
-        // Google Meet toggle
-        const meetRow = document.createElement('div');
-        meetRow.className = 'google-meet-row';
+        parentElement.appendChild(row);
+        this.descriptionRow = row;
+    }
 
-        this.meetCheckbox = document.createElement('input');
-        this.meetCheckbox.type = 'checkbox';
-        this.meetCheckbox.id = 'googleEventMeet';
-
-        const meetIcon = document.createElement('i');
-        meetIcon.className = 'fas fa-video';
-        meetIcon.setAttribute('aria-hidden', 'true');
-
-        const meetLabel = document.createElement('label');
-        meetLabel.htmlFor = 'googleEventMeet';
-        meetLabel.setAttribute('data-localize', '__MSG_addGoogleMeet__');
-        meetLabel.textContent = window.getLocalizedMessage('addGoogleMeet') || 'Add Google Meet';
-
-        meetRow.appendChild(this.meetCheckbox);
-        meetRow.appendChild(meetIcon);
-        meetRow.appendChild(meetLabel);
-        container.appendChild(meetRow);
-
-        parentElement.appendChild(container);
-        this.googleFields = container;
+    /**
+     * Build the reminder toggle (local events only).
+     * @param {HTMLElement} parentElement
+     * @private
+     */
+    _buildReminderRow(parentElement) {
+        const reminder = this._createCheckRow(
+            'eventReminder',
+            'fas fa-bell',
+            'remindMeBefore',
+            'Notify me before the event'
+        );
+        this.reminderCheckbox = reminder.input;
+        this.reminderCheckbox.checked = true;
+        parentElement.appendChild(reminder.row);
+        this.reminderRow = reminder.row;
     }
 
     /**
@@ -305,7 +421,7 @@ export class LocalEventFormBuilder {
     _buildGoogleAdvanced(parentElement) {
         const container = document.createElement('div');
         container.className = 'google-advanced';
-        container.style.display = 'none'; // toggled with the Google destination
+        container.hidden = true; // toggled with the Google destination
 
         // Accordion header (button)
         const toggle = document.createElement('button');
@@ -314,16 +430,13 @@ export class LocalEventFormBuilder {
         toggle.setAttribute('aria-expanded', 'false');
         toggle.setAttribute('aria-controls', 'googleAdvancedBody');
 
-        const chevron = document.createElement('i');
-        chevron.className = 'fas fa-chevron-right accordion-chevron';
-        chevron.setAttribute('aria-hidden', 'true');
+        toggle.appendChild(createIcon('fas fa-chevron-down accordion-chevron'));
 
         const toggleLabel = document.createElement('span');
         toggleLabel.setAttribute('data-localize', '__MSG_advancedSettings__');
         toggleLabel.textContent = window.getLocalizedMessage('advancedSettings') || 'Advanced settings';
-
-        toggle.appendChild(chevron);
         toggle.appendChild(toggleLabel);
+
         container.appendChild(toggle);
 
         // Accordion body
@@ -333,27 +446,25 @@ export class LocalEventFormBuilder {
         body.hidden = true;
 
         // Location
-        const locationLabel = document.createElement('label');
-        locationLabel.htmlFor = 'googleEventLocation';
-        locationLabel.setAttribute('data-localize', '__MSG_eventLocation__');
-        locationLabel.textContent = window.getLocalizedMessage('eventLocation') || 'Location';
-        body.appendChild(locationLabel);
+        const locationRow = createRow('fas fa-map-marker-alt');
+        locationRow.appendChild(createHiddenLabel('googleEventLocation', 'eventLocation', 'Location'));
 
         this.locationInput = document.createElement('input');
         this.locationInput.type = 'text';
         this.locationInput.id = 'googleEventLocation';
-        body.appendChild(this.locationInput);
+        this.locationInput.className = 'event-form-field';
+        this.locationInput.setAttribute('data-localize-placeholder', '__MSG_addLocation__');
+        this.locationInput.placeholder = window.getLocalizedMessage('addLocation') || 'Add a location';
+        locationRow.appendChild(this.locationInput);
+        body.appendChild(locationRow);
 
         // Notification (reminder)
-        const reminderLabel = document.createElement('label');
-        reminderLabel.htmlFor = 'googleEventReminder';
-        reminderLabel.setAttribute('data-localize', '__MSG_notification__');
-        reminderLabel.textContent = window.getLocalizedMessage('notification') || 'Notification';
-        body.appendChild(reminderLabel);
+        const reminderRow = createRow('fas fa-bell');
+        reminderRow.appendChild(createHiddenLabel('googleEventReminder', 'notification', 'Notification'));
 
         this.reminderSelect = document.createElement('select');
         this.reminderSelect.id = 'googleEventReminder';
-        this.reminderSelect.className = 'event-form-select';
+        this.reminderSelect.className = 'event-form-field';
 
         const defaultOption = document.createElement('option');
         defaultOption.value = '';
@@ -368,7 +479,13 @@ export class LocalEventFormBuilder {
             option.textContent = `${minutes}${unit}`;
             this.reminderSelect.appendChild(option);
         });
-        body.appendChild(this.reminderSelect);
+        reminderRow.appendChild(wrapSelect(this.reminderSelect));
+        body.appendChild(reminderRow);
+
+        // Google Meet
+        const meet = this._createCheckRow('googleEventMeet', 'fas fa-video', 'addGoogleMeet', 'Add Google Meet');
+        this.meetCheckbox = meet.input;
+        body.appendChild(meet.row);
 
         container.appendChild(body);
         parentElement.appendChild(container);
@@ -378,6 +495,196 @@ export class LocalEventFormBuilder {
         this.advancedBody = body;
 
         this.modal.addEventListener(toggle, 'click', () => this.setAdvancedExpanded());
+    }
+
+    /**
+     * Build the recurrence section: the type picker, plus the weekday chips and
+     * end date that only apply to some types.
+     * @param {HTMLElement} parentElement - The container to append recurrence UI to
+     */
+    buildRecurrenceSection(parentElement) {
+        const section = document.createElement('div');
+        section.className = 'recurrence-section';
+        this.recurrenceSection = section;
+
+        const row = createRow('fas fa-sync-alt');
+        row.appendChild(createHiddenLabel('recurrenceType', 'recurrence', 'Recurrence'));
+
+        this.recurrenceSelect = document.createElement('select');
+        this.recurrenceSelect.id = 'recurrenceType';
+        this.recurrenceSelect.className = 'event-form-field';
+
+        const recurrenceOptions = [
+            { value: RECURRENCE_TYPES.NONE, msgKey: 'recurrenceNone', default: 'Does not repeat' },
+            { value: RECURRENCE_TYPES.DAILY, msgKey: 'recurrenceDaily', default: 'Daily' },
+            { value: RECURRENCE_TYPES.WEEKDAYS, msgKey: 'recurrenceWeekdays', default: 'Every weekday (Mon-Fri)' },
+            { value: RECURRENCE_TYPES.WEEKLY, msgKey: 'recurrenceWeekly', default: 'Weekly' },
+            { value: RECURRENCE_TYPES.MONTHLY, msgKey: 'recurrenceMonthly', default: 'Monthly' }
+        ];
+
+        recurrenceOptions.forEach(opt => {
+            const option = document.createElement('option');
+            option.value = opt.value;
+            option.setAttribute('data-localize', `__MSG_${opt.msgKey}__`);
+            option.textContent = window.getLocalizedMessage(opt.msgKey) || opt.default;
+            this.recurrenceSelect.appendChild(option);
+        });
+
+        row.appendChild(wrapSelect(this.recurrenceSelect));
+        section.appendChild(row);
+
+        // Weekly day selection, indented to line up with the controls above
+        this.recurrenceOptionsContainer = document.createElement('div');
+        this.recurrenceOptionsContainer.className = 'weekday-chips';
+        this.recurrenceOptionsContainer.setAttribute('role', 'group');
+        this.recurrenceOptionsContainer.setAttribute('data-localize-aria-label', '__MSG_recurrenceWeekdaysGroup__');
+        this.recurrenceOptionsContainer.setAttribute(
+            'aria-label',
+            window.getLocalizedMessage('recurrenceWeekdaysGroup') || 'Days of the week'
+        );
+        this.recurrenceOptionsContainer.hidden = true;
+
+        const weekdays = [
+            { value: 0, msgKey: 'daySun', default: 'Sun' },
+            { value: 1, msgKey: 'dayMon', default: 'Mon' },
+            { value: 2, msgKey: 'dayTue', default: 'Tue' },
+            { value: 3, msgKey: 'dayWed', default: 'Wed' },
+            { value: 4, msgKey: 'dayThu', default: 'Thu' },
+            { value: 5, msgKey: 'dayFri', default: 'Fri' },
+            { value: 6, msgKey: 'daySat', default: 'Sat' }
+        ];
+
+        weekdays.forEach(day => {
+            const { chip, input } = this._createChipToggle(`recurrenceDay${day.value}`, day.msgKey, day.default);
+            chip.classList.add('weekday-chip');
+            input.value = String(day.value);
+            this.weekdayCheckboxes[day.value] = input;
+            this.recurrenceOptionsContainer.appendChild(chip);
+        });
+
+        section.appendChild(this.recurrenceOptionsContainer);
+
+        // End date, indented the same way
+        const endDateSection = document.createElement('div');
+        endDateSection.className = 'end-date-section';
+        endDateSection.hidden = true;
+
+        endDateSection.appendChild(
+            createHiddenLabel('recurrenceEndDate', 'recurrenceEndDate', 'End date')
+        );
+
+        this.endDateInput = document.createElement('input');
+        this.endDateInput.type = 'date';
+        this.endDateInput.id = 'recurrenceEndDate';
+        this.endDateInput.className = 'event-form-field';
+        endDateSection.appendChild(this.endDateInput);
+
+        const noEnd = this._createChipToggle('noEndDate', 'noEndDate', 'No end date');
+        this.noEndDateCheckbox = noEnd.input;
+        this.noEndDateCheckbox.checked = true;
+        endDateSection.appendChild(noEnd.chip);
+
+        section.appendChild(endDateSection);
+        this.endDateSection = endDateSection;
+
+        parentElement.appendChild(section);
+    }
+
+    /**
+     * Build the sticky footer: delete on the left, cancel and save on the right
+     * so the destructive action is not adjacent to the primary one.
+     * @param {HTMLElement} parentElement
+     * @private
+     */
+    _buildFooter(parentElement) {
+        const footer = document.createElement('footer');
+        footer.className = 'event-form-footer';
+
+        this.deleteButton = createDeleteButton(this.modal, { id: 'deleteEventButton' });
+        footer.appendChild(this.deleteButton);
+
+        footer.appendChild(createFooterSpacer());
+
+        this.cancelButton = createButton(this.modal, {
+            id: 'cancelEventButton', variant: 'secondary', msgKey: 'cancel', fallback: 'Cancel'
+        });
+        footer.appendChild(this.cancelButton);
+
+        this.saveButton = createButton(this.modal, {
+            id: 'saveEventButton', variant: 'primary', msgKey: 'save', fallback: 'Save'
+        });
+        footer.appendChild(this.saveButton);
+
+        parentElement.appendChild(footer);
+        this.footer = footer;
+    }
+
+    /**
+     * Build the edit mode content and append it to the parent element
+     * @param {HTMLElement} parentElement - The container to append form elements to
+     * @param {Object} options - Callbacks: { onSave, onDelete, onCancel, onValidateTimes }
+     */
+    buildEditContent(parentElement, options = {}) {
+        this._callbacks = options;
+
+        this._buildHeader(parentElement);
+
+        const body = document.createElement('div');
+        body.className = 'event-form-body';
+
+        this._buildSourceToggle(body);
+        this._buildEventTypeRow(body);
+        this._buildTitleField(body);
+        this._buildAllDayRow(body);
+        this._buildTimeRow(body);
+
+        // Order below decides what each mode shows: the calendar picker sits
+        // right under the time for a Google event, the absence fields do the
+        // same for an absence, and recurrence/description/reminder follow for a
+        // local one.
+        this._buildGoogleFields(body);
+        this._buildOooFields(body);
+        this.buildRecurrenceSection(body);
+        this._buildDescriptionField(body);
+        this._buildReminderRow(body);
+        this._buildGoogleAdvanced(body);
+
+        // Validation failures land here rather than after the footer.
+        this.errorContainer = document.createElement('div');
+        this.errorContainer.className = 'event-form-error';
+        this.errorContainer.setAttribute('role', 'alert');
+        this.errorContainer.hidden = true;
+        body.appendChild(this.errorContainer);
+
+        parentElement.appendChild(body);
+
+        this._buildFooter(parentElement);
+
+        // Set up the event listeners
+        this._setupFormEventListeners(options);
+
+        this._applyFieldVisibility();
+    }
+
+    // ===== Duration =====
+
+    /**
+     * Write the end time from the start time plus the picked duration.
+     * @private
+     */
+    _applyDurationPreset() {
+        if (!this.durationSelect) return;
+        applyDurationPreset(this.startTimeInput, this.endTimeInput, this.durationSelect);
+        if (this._callbacks.onValidateTimes) this._callbacks.onValidateTimes();
+    }
+
+    /**
+     * Point the duration picker at whatever the times currently say.
+     * @private
+     */
+    _syncDurationFromTimes() {
+        if (!this.durationSelect) return;
+        syncDurationFromTimes(this.startTimeInput, this.endTimeInput, this.durationSelect);
     }
 
     /**
@@ -394,6 +701,19 @@ export class LocalEventFormBuilder {
     }
 
     /**
+     * Set the dialog heading for the mode being shown. The attribute is updated
+     * alongside the text so a later re-localization keeps the right one.
+     * @param {string} mode - 'create' or 'edit'
+     */
+    setDialogTitle(mode) {
+        if (!this.editTitleElement) return;
+        const msgKey = mode === 'edit' ? 'eventDialogTitleEdit' : 'eventDialogTitleCreate';
+        const fallback = mode === 'edit' ? 'Edit event' : 'Create event';
+        this.editTitleElement.setAttribute('data-localize', `__MSG_${msgKey}__`);
+        this.editTitleElement.textContent = window.getLocalizedMessage(msgKey) || fallback;
+    }
+
+    /**
      * Enable or disable the Google save destination and populate its calendar list.
      * @param {Array<{id: string, summary: string, primary: boolean}>} calendars - Writable calendars (empty disables Google)
      * @param {Object} [options]
@@ -405,10 +725,10 @@ export class LocalEventFormBuilder {
         const available = writable.length > 0;
 
         if (this.sourceToggle) {
-            this.sourceToggle.style.display = available ? 'flex' : 'none';
+            this.sourceToggle.hidden = !available;
         }
         if (this.googleHiddenHint) {
-            this.googleHiddenHint.style.display = !available && hiddenWritable ? '' : 'none';
+            this.googleHiddenHint.hidden = available || !hiddenWritable;
         }
 
         // Out of office can only be created on the primary calendar, and only
@@ -441,7 +761,7 @@ export class LocalEventFormBuilder {
 
     /**
      * Apply every piece of field visibility that derives from the current save
-     * destination and event type. Both setters funnel through here so the two
+     * destination and event type. All the setters funnel through here so the two
      * dimensions cannot get out of step.
      * @private
      */
@@ -449,59 +769,51 @@ export class LocalEventFormBuilder {
         const isGoogle = this.currentSource === 'google';
         const isOoo = isGoogle && this.currentEventType === 'outOfOffice';
 
-        if (this.sourceLocalBtn) {
-            this.sourceLocalBtn.classList.toggle('active', !isGoogle);
-            this.sourceLocalBtn.setAttribute('aria-pressed', String(!isGoogle));
-        }
-        if (this.sourceGoogleBtn) {
-            this.sourceGoogleBtn.classList.toggle('active', isGoogle);
-            this.sourceGoogleBtn.setAttribute('aria-pressed', String(isGoogle));
-        }
+        setPressed(this.sourceLocalBtn, !isGoogle);
+        setPressed(this.sourceGoogleBtn, isGoogle);
+        setPressed(this.typeDefaultBtn, !isOoo);
+        setPressed(this.typeOooBtn, isOoo);
 
         // The event type only applies to Google events
-        if (this.eventTypeToggle) {
-            this.eventTypeToggle.style.display = isGoogle ? 'flex' : 'none';
+        if (this.eventTypeRow) {
+            this.eventTypeRow.hidden = !isGoogle;
         }
         if (this.oooPrimaryHint) {
-            this.oooPrimaryHint.style.display = isGoogle && !this.primaryCalendar ? '' : 'none';
-        }
-        if (this.typeDefaultBtn) {
-            this.typeDefaultBtn.classList.toggle('active', !isOoo);
-            this.typeDefaultBtn.setAttribute('aria-pressed', String(!isOoo));
-        }
-        if (this.typeOooBtn) {
-            this.typeOooBtn.classList.toggle('active', isOoo);
-            this.typeOooBtn.setAttribute('aria-pressed', String(isOoo));
+            this.oooPrimaryHint.hidden = !(isGoogle && !this.primaryCalendar);
         }
 
         // Target calendar, Meet, location and reminder do not apply to an
         // absence: it always lands on the primary calendar and is not a meeting.
         if (this.googleFields) {
-            this.googleFields.style.display = isGoogle && !isOoo ? '' : 'none';
+            this.googleFields.hidden = !(isGoogle && !isOoo);
         }
         if (this.googleAdvanced) {
-            this.googleAdvanced.style.display = isGoogle && !isOoo ? '' : 'none';
+            this.googleAdvanced.hidden = !(isGoogle && !isOoo);
         }
-        if (this.descriptionSection) {
-            this.descriptionSection.style.display = isOoo ? 'none' : '';
+        if (this.descriptionRow) {
+            this.descriptionRow.hidden = isOoo;
         }
         if (this.oooFields) {
-            this.oooFields.style.display = isOoo ? '' : 'none';
+            this.oooFields.hidden = !isOoo;
+        }
+        if (this.allDayRow) {
+            this.allDayRow.hidden = !isOoo;
         }
         // Google names an untitled absence "Out of office" — show that as the
         // placeholder, since the title is optional in this mode.
         if (this.titleInput) {
-            this.titleInput.placeholder = isOoo
-                ? (window.getLocalizedMessage('outOfOffice') || 'Out of office')
-                : '';
+            const msgKey = isOoo ? 'outOfOffice' : 'eventTitlePlaceholder';
+            const fallback = isOoo ? 'Out of office' : 'Title';
+            this.titleInput.setAttribute('data-localize-placeholder', `__MSG_${msgKey}__`);
+            this.titleInput.placeholder = window.getLocalizedMessage(msgKey) || fallback;
         }
 
         // Local-only fields are hidden when creating a Google event
-        if (this.reminderContainer) {
-            this.reminderContainer.style.display = isGoogle ? 'none' : '';
+        if (this.reminderRow) {
+            this.reminderRow.hidden = isGoogle;
         }
         if (this.recurrenceSection) {
-            this.recurrenceSection.style.display = isGoogle ? 'none' : '';
+            this.recurrenceSection.hidden = isGoogle;
         }
     }
 
@@ -565,7 +877,7 @@ export class LocalEventFormBuilder {
             this.allDayCheckbox.checked = !!checked;
         }
         if (this.timeRow) {
-            this.timeRow.style.display = checked ? 'none' : '';
+            this.timeRow.hidden = !!checked;
         }
     }
 
@@ -591,293 +903,6 @@ export class LocalEventFormBuilder {
      */
     getPrimaryCalendarId() {
         return this.primaryCalendar ? this.primaryCalendar.id : null;
-    }
-
-    /**
-     * Build the edit mode content and append it to the parent element
-     * @param {HTMLElement} parentElement - The container to append form elements to
-     * @param {Object} options - Callbacks: { onSave, onDelete, onCancel, onValidateTimes }
-     */
-    buildEditContent(parentElement, options = {}) {
-        // Title
-        this.editTitleElement = document.createElement('h2');
-        this.editTitleElement.setAttribute('data-localize', '__MSG_eventDialogTitle__');
-        this.editTitleElement.textContent = window.getLocalizedMessage('eventDialogTitle');
-        parentElement.appendChild(this.editTitleElement);
-
-        // Save destination toggle (Local / Google) - only shown when Google is available
-        this._buildSourceToggle(parentElement);
-
-        // Event type toggle (Event / Out of office) - only shown for Google
-        this._buildEventTypeToggle(parentElement);
-
-        // Title input
-        const titleLabel = document.createElement('label');
-        titleLabel.htmlFor = 'eventTitle';
-        titleLabel.setAttribute('data-localize', '__MSG_eventTitle__');
-        titleLabel.textContent = window.getLocalizedMessage('eventTitle');
-        parentElement.appendChild(titleLabel);
-
-        this.titleInput = document.createElement('input');
-        this.titleInput.type = 'text';
-        this.titleInput.id = 'eventTitle';
-        this.titleInput.required = true;
-        parentElement.appendChild(this.titleInput);
-
-        // Time inputs row (side by side)
-        const timeRow = document.createElement('div');
-        timeRow.className = 'time-input-row';
-
-        // Start time group
-        const startGroup = document.createElement('div');
-        startGroup.className = 'time-input-group';
-
-        const startLabel = document.createElement('label');
-        startLabel.htmlFor = 'eventStartTime';
-        startLabel.setAttribute('data-localize', '__MSG_startTime__');
-        startLabel.textContent = window.getLocalizedMessage('startTime');
-        startGroup.appendChild(startLabel);
-
-        this.startTimeInput = document.createElement('input');
-        this.startTimeInput.type = 'time';
-        this.startTimeInput.id = 'eventStartTime';
-        this.startTimeInput.setAttribute('list', 'time-list');
-        this.startTimeInput.required = true;
-        startGroup.appendChild(this.startTimeInput);
-
-        // End time group
-        const endGroup = document.createElement('div');
-        endGroup.className = 'time-input-group';
-
-        const endLabel = document.createElement('label');
-        endLabel.htmlFor = 'eventEndTime';
-        endLabel.setAttribute('data-localize', '__MSG_endTime__');
-        endLabel.textContent = window.getLocalizedMessage('endTime');
-        endGroup.appendChild(endLabel);
-
-        this.endTimeInput = document.createElement('input');
-        this.endTimeInput.type = 'time';
-        this.endTimeInput.id = 'eventEndTime';
-        this.endTimeInput.setAttribute('list', 'time-list');
-        this.endTimeInput.required = true;
-        endGroup.appendChild(this.endTimeInput);
-
-        timeRow.appendChild(startGroup);
-        timeRow.appendChild(endGroup);
-        parentElement.appendChild(timeRow);
-        this.timeRow = timeRow;
-
-        // Out-of-office-only fields (all day + auto-decline)
-        this._buildOooFields(parentElement);
-
-        // Google-only fields (target calendar + Meet toggle)
-        this._buildGoogleFields(parentElement);
-
-        // Description textarea (wrapped so the label and field hide together)
-        const descriptionSection = document.createElement('div');
-        this.descriptionSection = descriptionSection;
-
-        const descriptionLabel = document.createElement('label');
-        descriptionLabel.htmlFor = 'eventDescription';
-        descriptionLabel.setAttribute('data-localize', '__MSG_eventDescription__');
-        descriptionLabel.textContent = window.getLocalizedMessage('eventDescription');
-        descriptionSection.appendChild(descriptionLabel);
-
-        this.descriptionInput = document.createElement('textarea');
-        this.descriptionInput.id = 'eventDescription';
-        this.descriptionInput.className = 'event-description-input';
-        this.descriptionInput.rows = 3;
-        descriptionSection.appendChild(this.descriptionInput);
-
-        parentElement.appendChild(descriptionSection);
-
-        // Reminder checkbox
-        const reminderContainer = document.createElement('div');
-        reminderContainer.className = 'reminder-container';
-        reminderContainer.style.cssText = 'margin: 10px 0; display: flex; align-items: center;';
-
-        this.reminderCheckbox = document.createElement('input');
-        this.reminderCheckbox.type = 'checkbox';
-        this.reminderCheckbox.id = 'eventReminder';
-        this.reminderCheckbox.checked = true;
-        this.reminderCheckbox.style.cssText = 'margin: 0; flex-shrink: 0;';
-
-        const reminderLabel = document.createElement('label');
-        reminderLabel.htmlFor = 'eventReminder';
-        reminderLabel.setAttribute('data-localize', '__MSG_remindMeBefore__');
-        reminderLabel.textContent = window.getLocalizedMessage('remindMeBefore');
-        reminderLabel.style.cssText = 'margin-left: 8px; margin-bottom: 0; user-select: none; cursor: pointer; display: inline-block; font-weight: normal;';
-
-        reminderContainer.appendChild(this.reminderCheckbox);
-        reminderContainer.appendChild(reminderLabel);
-        parentElement.appendChild(reminderContainer);
-        this.reminderContainer = reminderContainer;
-
-        // Recurrence section (local only)
-        this.buildRecurrenceSection(parentElement);
-
-        // Google advanced settings accordion (Google only)
-        this._buildGoogleAdvanced(parentElement);
-
-        // Button group
-        const buttonGroup = document.createElement('div');
-        buttonGroup.className = 'modal-buttons';
-
-        // Save button
-        this.saveButton = document.createElement('button');
-        this.saveButton.id = 'saveEventButton';
-        this.saveButton.className = 'btn btn-success';
-        this.saveButton.setAttribute('data-localize', '__MSG_save__');
-        this.saveButton.textContent = window.getLocalizedMessage('save');
-
-        // Delete button
-        this.deleteButton = document.createElement('button');
-        this.deleteButton.id = 'deleteEventButton';
-        this.deleteButton.className = 'btn btn-danger';
-        this.deleteButton.setAttribute('data-localize', '__MSG_delete__');
-        this.deleteButton.textContent = window.getLocalizedMessage('delete');
-
-        // Cancel button
-        this.cancelButton = document.createElement('button');
-        this.cancelButton.id = 'cancelEventButton';
-        this.cancelButton.className = 'btn btn-secondary';
-        this.cancelButton.setAttribute('data-localize', '__MSG_cancel__');
-        this.cancelButton.textContent = window.getLocalizedMessage('cancel');
-
-        buttonGroup.appendChild(this.saveButton);
-        buttonGroup.appendChild(this.deleteButton);
-        buttonGroup.appendChild(this.cancelButton);
-        parentElement.appendChild(buttonGroup);
-
-        // Set up the event listeners
-        this._setupFormEventListeners(options);
-    }
-
-    /**
-     * Build the recurrence section and append it to the parent element
-     * @param {HTMLElement} parentElement - The container to append recurrence UI to
-     */
-    buildRecurrenceSection(parentElement) {
-        const recurrenceSection = document.createElement('div');
-        recurrenceSection.className = 'recurrence-section';
-        recurrenceSection.style.cssText = 'margin: 15px 0; padding: 10px; background: var(--side-calendar-subtle-bg); border-radius: 5px;';
-        this.recurrenceSection = recurrenceSection;
-
-        // Recurrence label and select
-        const recurrenceLabel = document.createElement('label');
-        recurrenceLabel.htmlFor = 'recurrenceType';
-        recurrenceLabel.setAttribute('data-localize', '__MSG_recurrence__');
-        recurrenceLabel.textContent = window.getLocalizedMessage('recurrence') || 'Recurrence:';
-        recurrenceSection.appendChild(recurrenceLabel);
-
-        this.recurrenceSelect = document.createElement('select');
-        this.recurrenceSelect.id = 'recurrenceType';
-        this.recurrenceSelect.style.cssText = 'width: 100%; padding: 6px; margin-top: 5px; border: 1px solid var(--side-calendar-input-border); border-radius: 4px; background: var(--side-calendar-input-bg); color: inherit;';
-
-        const recurrenceOptions = [
-            { value: RECURRENCE_TYPES.NONE, msgKey: 'recurrenceNone', default: 'Does not repeat' },
-            { value: RECURRENCE_TYPES.DAILY, msgKey: 'recurrenceDaily', default: 'Daily' },
-            { value: RECURRENCE_TYPES.WEEKDAYS, msgKey: 'recurrenceWeekdays', default: 'Every weekday (Mon-Fri)' },
-            { value: RECURRENCE_TYPES.WEEKLY, msgKey: 'recurrenceWeekly', default: 'Weekly' },
-            { value: RECURRENCE_TYPES.MONTHLY, msgKey: 'recurrenceMonthly', default: 'Monthly' }
-        ];
-
-        recurrenceOptions.forEach(opt => {
-            const option = document.createElement('option');
-            option.value = opt.value;
-            option.setAttribute('data-localize', `__MSG_${opt.msgKey}__`);
-            option.textContent = window.getLocalizedMessage(opt.msgKey) || opt.default;
-            this.recurrenceSelect.appendChild(option);
-        });
-
-        recurrenceSection.appendChild(this.recurrenceSelect);
-
-        // Recurrence options container (for weekly day selection)
-        this.recurrenceOptionsContainer = document.createElement('div');
-        this.recurrenceOptionsContainer.className = 'recurrence-options';
-        this.recurrenceOptionsContainer.style.cssText = 'margin-top: 10px; display: none;';
-
-        // Weekly day selection
-        const weekdayContainer = document.createElement('div');
-        weekdayContainer.className = 'weekday-container';
-        weekdayContainer.style.cssText = 'display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px;';
-
-        const weekdays = [
-            { value: 0, msgKey: 'daySun', default: 'Sun' },
-            { value: 1, msgKey: 'dayMon', default: 'Mon' },
-            { value: 2, msgKey: 'dayTue', default: 'Tue' },
-            { value: 3, msgKey: 'dayWed', default: 'Wed' },
-            { value: 4, msgKey: 'dayThu', default: 'Thu' },
-            { value: 5, msgKey: 'dayFri', default: 'Fri' },
-            { value: 6, msgKey: 'daySat', default: 'Sat' }
-        ];
-
-        weekdays.forEach(day => {
-            const dayLabel = document.createElement('label');
-            dayLabel.style.cssText = 'display: flex; align-items: center; padding: 4px 8px; background: var(--side-calendar-btn-secondary-bg); border-radius: 3px; cursor: pointer; font-size: 0.85em;';
-
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.value = day.value;
-            checkbox.style.cssText = 'margin-right: 4px;';
-            this.weekdayCheckboxes[day.value] = checkbox;
-
-            const dayText = document.createElement('span');
-            dayText.setAttribute('data-localize', `__MSG_${day.msgKey}__`);
-            dayText.textContent = window.getLocalizedMessage(day.msgKey) || day.default;
-
-            dayLabel.appendChild(checkbox);
-            dayLabel.appendChild(dayText);
-            weekdayContainer.appendChild(dayLabel);
-        });
-
-        this.recurrenceOptionsContainer.appendChild(weekdayContainer);
-        recurrenceSection.appendChild(this.recurrenceOptionsContainer);
-
-        // End date section
-        const endDateSection = document.createElement('div');
-        endDateSection.className = 'end-date-section';
-        endDateSection.style.cssText = 'margin-top: 10px; display: none;';
-
-        const endDateLabel = document.createElement('label');
-        endDateLabel.htmlFor = 'recurrenceEndDate';
-        endDateLabel.setAttribute('data-localize', '__MSG_recurrenceEndDate__');
-        endDateLabel.textContent = window.getLocalizedMessage('recurrenceEndDate') || 'End date:';
-        endDateSection.appendChild(endDateLabel);
-
-        const endDateRow = document.createElement('div');
-        endDateRow.style.cssText = 'display: flex; align-items: center; gap: 10px; margin-top: 5px;';
-
-        this.endDateInput = document.createElement('input');
-        this.endDateInput.type = 'date';
-        this.endDateInput.id = 'recurrenceEndDate';
-        this.endDateInput.style.cssText = 'flex: 1; padding: 6px; border: 1px solid var(--side-calendar-input-border); border-radius: 4px; background: var(--side-calendar-input-bg); color: inherit;';
-
-        const noEndDateContainer = document.createElement('label');
-        noEndDateContainer.style.cssText = 'display: flex; align-items: center; cursor: pointer; white-space: nowrap;';
-
-        this.noEndDateCheckbox = document.createElement('input');
-        this.noEndDateCheckbox.type = 'checkbox';
-        this.noEndDateCheckbox.id = 'noEndDate';
-        this.noEndDateCheckbox.checked = true;
-        this.noEndDateCheckbox.style.cssText = 'margin-right: 5px;';
-
-        const noEndDateLabel = document.createElement('span');
-        noEndDateLabel.setAttribute('data-localize', '__MSG_noEndDate__');
-        noEndDateLabel.textContent = window.getLocalizedMessage('noEndDate') || 'No end date';
-        noEndDateLabel.style.cssText = 'font-size: 0.9em;';
-
-        noEndDateContainer.appendChild(this.noEndDateCheckbox);
-        noEndDateContainer.appendChild(noEndDateLabel);
-
-        endDateRow.appendChild(this.endDateInput);
-        endDateRow.appendChild(noEndDateContainer);
-        endDateSection.appendChild(endDateRow);
-
-        recurrenceSection.appendChild(endDateSection);
-        this.endDateSection = endDateSection;
-
-        parentElement.appendChild(recurrenceSection);
     }
 
     /**
@@ -909,13 +934,21 @@ export class LocalEventFormBuilder {
             }
         });
 
-        // The time input validation
+        // The time input validation. Editing either time also re-points the
+        // duration picker, which only ever reports the current gap.
         this.modal.addEventListener(this.startTimeInput, 'change', () => {
+            this._syncDurationFromTimes();
             if (options.onValidateTimes) options.onValidateTimes();
         });
 
         this.modal.addEventListener(this.endTimeInput, 'change', () => {
+            this._syncDurationFromTimes();
             if (options.onValidateTimes) options.onValidateTimes();
+        });
+
+        // Duration picker writes the end time from the start time
+        this.modal.addEventListener(this.durationSelect, 'change', () => {
+            this._applyDurationPreset();
         });
 
         // All-day toggle: hides the time inputs, so re-run validation to clear
@@ -946,18 +979,10 @@ export class LocalEventFormBuilder {
         const recurrenceType = this.recurrenceSelect.value;
 
         // Show/hide weekday selection for weekly recurrence
-        if (recurrenceType === RECURRENCE_TYPES.WEEKLY) {
-            this.recurrenceOptionsContainer.style.display = 'block';
-        } else {
-            this.recurrenceOptionsContainer.style.display = 'none';
-        }
+        this.recurrenceOptionsContainer.hidden = recurrenceType !== RECURRENCE_TYPES.WEEKLY;
 
         // Show/hide end date section for any recurrence except 'none'
-        if (recurrenceType !== RECURRENCE_TYPES.NONE) {
-            this.endDateSection.style.display = 'block';
-        } else {
-            this.endDateSection.style.display = 'none';
-        }
+        this.endDateSection.hidden = recurrenceType === RECURRENCE_TYPES.NONE;
     }
 
     /**
@@ -971,6 +996,7 @@ export class LocalEventFormBuilder {
         this.startTimeInput.value = event.startTime || '';
         this.endTimeInput.value = event.endTime || '';
         this.reminderCheckbox.checked = event.reminder !== false;
+        this._syncDurationFromTimes();
 
         // Set recurrence values
         this._resetWeekdayCheckboxes();
@@ -1004,8 +1030,7 @@ export class LocalEventFormBuilder {
         }
         this.updateRecurrenceOptions();
 
-        // Update edit title
-        this.editTitleElement.textContent = window.getLocalizedMessage('eventDialogTitle');
+        this.setDialogTitle('edit');
     }
 
     /**
@@ -1055,6 +1080,7 @@ export class LocalEventFormBuilder {
         if (this.startTimeInput) this.startTimeInput.value = '';
         if (this.endTimeInput) this.endTimeInput.value = '';
         if (this.reminderCheckbox) this.reminderCheckbox.checked = true;
+        this._syncDurationFromTimes();
     }
 
     /**
@@ -1068,6 +1094,7 @@ export class LocalEventFormBuilder {
         this.startTimeInput.value = defaultStartTime;
         this.endTimeInput.value = defaultEndTime;
         this.reminderCheckbox.checked = true;
+        this._syncDurationFromTimes();
 
         // Reset Google-only fields and save destination
         if (this.locationInput) this.locationInput.value = '';
@@ -1086,8 +1113,7 @@ export class LocalEventFormBuilder {
         this.endDateInput.disabled = true;
         this.updateRecurrenceOptions();
 
-        // Update edit title
-        this.editTitleElement.textContent = window.getLocalizedMessage('eventDialogTitle');
+        this.setDialogTitle('create');
     }
 
     /**

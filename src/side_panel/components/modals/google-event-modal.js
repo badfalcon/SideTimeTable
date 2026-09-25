@@ -1,12 +1,46 @@
 /**
- * GoogleEventModal - Google event details modal
+ * GoogleEventModal - Google event details, edit form and delete confirmation
+ *
+ * The detail view shares the create form's layout: a sticky header (calendar
+ * colour, title, open in Google Calendar, close), icon-led rows, and a sticky
+ * footer. The footer holds whatever the event allows: Delete and Edit on an
+ * event the user can change, the RSVP control on an invitation, the delete
+ * confirmation while one is pending — or nothing on a read-only event.
  */
 import { ModalComponent } from './modal-component.js';
 import { sendMessage } from '../../../lib/chrome-messaging.js';
 import { GoogleEventContentBuilder } from './google-event-content-builder.js';
 import { GoogleEventEditFormBuilder } from './google-event-edit-form-builder.js';
+import {
+    createButton,
+    createDeleteButton,
+    createDeleteConfirmFooter,
+    createDetailHeader,
+    createDetailRow,
+    createFooterSpacer,
+    createIcon,
+    createSegmented,
+    createStatusLine,
+    msg,
+    setLocalizedText,
+    setPressed,
+    showStatusLine
+} from './event-dialog-dom.js';
 import { buildGoogleEventResource, extractTimeHHMM, isEditableGoogleEvent, isDeletableGoogleEvent } from '../../../lib/google-event-utils.js';
 import { buildRequestId } from '../../../lib/request-dedupe.js';
+
+/** RSVP choices, in display order. */
+const RSVP_CHOICES = [
+    { response: 'accepted', icon: 'fas fa-check', labelKey: 'rsvpAccept', fallback: 'Yes' },
+    { response: 'tentative', icon: 'fas fa-question', labelKey: 'rsvpTentative', fallback: 'Maybe' },
+    { response: 'declined', icon: 'fas fa-times', labelKey: 'rsvpDecline', fallback: 'No' }
+];
+
+/** How long a "response sent" line stays before it clears itself. */
+const RSVP_FEEDBACK_MS = 3000;
+
+/** Pause after declining before the dialog closes (the event then hides). */
+const RSVP_DECLINE_CLOSE_MS = 1200;
 
 export class GoogleEventModal extends ModalComponent {
     constructor(options = {}) {
@@ -15,24 +49,41 @@ export class GoogleEventModal extends ModalComponent {
             ...options
         });
 
-        // Display elements
-        this.titleElement = null;
-        this.calendarElement = null;
-        this.timeElement = null;
-        this.descriptionElement = null;
-        this.locationElement = null;
-        this.meetElement = null;
-
         // View/edit containers
         this.viewContent = null;
         this.editContent = null;
-        this.viewButtons = null;
+
+        // View header
+        this.headerSwatch = null;
+        this.titleElement = null;
+        this.openLink = null;
+        this.viewCloseButton = null;
+
+        // View rows: { row, content } pairs
+        this.timeRow = null;
+        this.calendarRow = null;
+        this.locationRow = null;
+        this.meetRow = null;
+        this.oooRow = null;
+        this.descriptionRow = null;
+        this.attendeesContainer = null;
+        this.rsvpBodyRow = null;
+        this.viewError = null;
+
+        // View footers (at most one shows)
+        this.actionFooter = null;
         this.editButton = null;
         this.deleteButton = null;
-        this.deleteConfirmRow = null;
+        this.confirmFooter = null;
+        this.confirmDeleteButton = null;
+        this.cancelDeleteButton = null;
+        this.rsvpFooter = null;
 
-        // RSVP elements
-        this.rsvpContainer = null;
+        // The RSVP control and its outcome line, wherever they are placed
+        this.rsvpGroup = null;
+        this.rsvpStatusLine = null;
+        this._rsvpFeedbackTimer = null;
+        this._rsvpCloseTimer = null;
 
         // Callback for when RSVP response is sent
         this.onRsvpResponse = options.onRsvpResponse || null;
@@ -58,59 +109,23 @@ export class GoogleEventModal extends ModalComponent {
 
     createContent() {
         const content = document.createElement('div');
+        content.className = 'event-dialog-content';
 
-        // ── View mode ────────────────────────────────────────────────
         this.viewContent = document.createElement('div');
-
-        // Event title
-        this.titleElement = document.createElement('h2');
-        this.titleElement.className = 'google-event-title';
-        this.viewContent.appendChild(this.titleElement);
-
-        // Calendar name
-        this.calendarElement = document.createElement('div');
-        this.calendarElement.className = 'google-event-row google-event-calendar mb-2';
-        this.viewContent.appendChild(this.calendarElement);
-
-        // Event time
-        this.timeElement = document.createElement('div');
-        this.timeElement.className = 'google-event-row google-event-time mb-2';
-        this.viewContent.appendChild(this.timeElement);
-
-        // Description
-        this.descriptionElement = document.createElement('div');
-        this.descriptionElement.className = 'google-event-row google-event-description mb-2';
-        this.viewContent.appendChild(this.descriptionElement);
-
-        // Location
-        this.locationElement = document.createElement('div');
-        this.locationElement.className = 'google-event-row google-event-location mb-2';
-        this.viewContent.appendChild(this.locationElement);
-
-        // Meet information
-        this.meetElement = document.createElement('div');
-        this.meetElement.className = 'google-event-row google-event-meet';
-        this.viewContent.appendChild(this.meetElement);
-
-        // Out of office information
-        this.oooInfoElement = document.createElement('div');
-        this.oooInfoElement.className = 'google-event-row google-event-ooo-info mb-2';
-        this.viewContent.appendChild(this.oooInfoElement);
-
+        this.viewContent.className = 'event-detail';
+        this._buildViewContent();
         content.appendChild(this.viewContent);
 
-        // ── Edit mode (hidden until the Edit button is pressed) ──────
+        // Edit mode (hidden until the Edit button is pressed)
         this.editContent = document.createElement('div');
-        this.editContent.style.display = 'none';
+        this.editContent.className = 'event-edit';
+        this.editContent.hidden = true;
         this._editFormBuilder.buildEditContent(this.editContent, {
             onSave: () => this._handleSaveEdit(),
-            onCancel: () => this._showViewMode({ returnFocus: true })
+            onCancel: () => this._showViewMode({ returnFocus: true }),
+            onClose: () => this.hide()
         });
         content.appendChild(this.editContent);
-
-        // Attendees/RSVP (created lazily) must land inside viewContent so
-        // they are hidden together with the rest of the view mode.
-        this.modalBody = this.viewContent;
 
         // Escape backs out of sub-states (edit form, delete confirmation)
         // instead of closing the whole modal and discarding input. Capture
@@ -119,11 +134,11 @@ export class GoogleEventModal extends ModalComponent {
             if (e.key !== 'Escape' || !this.isVisible()) {
                 return;
             }
-            if (this.deleteConfirmRow && this.deleteConfirmRow.style.display !== 'none') {
+            if (!this.confirmFooter.hidden) {
                 e.preventDefault();
                 e.stopPropagation();
                 this._showDeleteConfirm(false);
-            } else if (this.editContent.style.display !== 'none') {
+            } else if (!this.editContent.hidden) {
                 e.preventDefault();
                 e.stopPropagation();
                 this._showViewMode({ returnFocus: true });
@@ -131,6 +146,113 @@ export class GoogleEventModal extends ModalComponent {
         }, true);
 
         return content;
+    }
+
+    /**
+     * Build the view mode: header, one row per field, and the three footers.
+     * @private
+     */
+    _buildViewContent() {
+        const header = createDetailHeader(this, { titleId: 'googleEventTitle', onClose: () => this.hide() });
+        this.headerSwatch = header.swatch;
+        this.titleElement = header.title;
+        this.viewCloseButton = header.closeButton;
+
+        this.openLink = document.createElement('a');
+        this.openLink.className = 'event-detail-icon-btn';
+        this.openLink.target = '_blank';
+        this.openLink.rel = 'noopener noreferrer';
+        this.openLink.setAttribute('data-localize-aria-label', '__MSG_openInGoogleCalendar__');
+        this.openLink.setAttribute('aria-label', msg('openInGoogleCalendar', 'Open in Google Calendar'));
+        this.openLink.setAttribute('data-localize-title', '__MSG_openInGoogleCalendar__');
+        this.openLink.title = msg('openInGoogleCalendar', 'Open in Google Calendar');
+        this.openLink.appendChild(createIcon('fas fa-external-link-alt'));
+        header.trailing.appendChild(this.openLink);
+
+        this.viewContent.appendChild(header.header);
+
+        const body = document.createElement('div');
+        body.className = 'event-detail-body';
+
+        this.timeRow = createDetailRow('fas fa-clock');
+        this.calendarRow = createDetailRow('fas fa-calendar-alt');
+        this.calendarRow.content.classList.add('is-secondary');
+        this.locationRow = createDetailRow('fas fa-map-marker-alt');
+        this.meetRow = createDetailRow('fas fa-video');
+        this.meetRow.row.classList.add('event-detail-row-center');
+        this.meetRow.content.classList.add('event-detail-joins');
+        this.oooRow = createDetailRow('fas fa-plane-departure');
+        this.oooRow.content.classList.add('event-detail-ooo');
+        this.descriptionRow = createDetailRow('fas fa-align-left');
+        this.descriptionRow.content.classList.add('event-detail-description');
+        [this.timeRow, this.calendarRow, this.locationRow, this.meetRow, this.oooRow, this.descriptionRow]
+            .forEach(({ row }) => body.appendChild(row));
+
+        this.attendeesContainer = document.createElement('div');
+        this.attendeesContainer.className = 'event-detail-attendees';
+        // One delegated listener survives the container being refilled
+        this.addEventListener(this.attendeesContainer, 'click', (e) => {
+            const toggle = e.target.closest('.event-detail-attendees-toggle');
+            if (!toggle) return;
+            const expanded = toggle.getAttribute('aria-expanded') !== 'true';
+            toggle.setAttribute('aria-expanded', String(expanded));
+            const list = this.attendeesContainer.querySelector('.event-detail-attendee-list');
+            if (list) list.hidden = !expanded;
+        });
+        body.appendChild(this.attendeesContainer);
+
+        // RSVP in the body, used when the footer is taken by Delete/Edit
+        this.rsvpBodyRow = document.createElement('div');
+        this.rsvpBodyRow.className = 'event-detail-rsvp';
+        this.rsvpBodyRow.hidden = true;
+        body.appendChild(this.rsvpBodyRow);
+
+        this.viewError = document.createElement('div');
+        this.viewError.className = 'event-form-error';
+        this.viewError.setAttribute('role', 'alert');
+        this.viewError.hidden = true;
+        body.appendChild(this.viewError);
+
+        this.viewContent.appendChild(body);
+
+        // Footer 1: Delete on the left, Edit on the right
+        this.actionFooter = document.createElement('footer');
+        this.actionFooter.className = 'event-form-footer';
+        this.deleteButton = createDeleteButton(this, {
+            id: 'googleEventDeleteButton',
+            onClick: () => this._showDeleteConfirm(true)
+        });
+        this.actionFooter.appendChild(this.deleteButton);
+        this.actionFooter.appendChild(createFooterSpacer());
+        this.editButton = createButton(this, {
+            id: 'googleEventEditButton',
+            variant: 'secondary',
+            msgKey: 'editEvent',
+            fallback: 'Edit',
+            iconClass: 'fas fa-pen',
+            onClick: () => this._showEditMode()
+        });
+        this.actionFooter.appendChild(this.editButton);
+        this.viewContent.appendChild(this.actionFooter);
+
+        // Footer 2: the delete confirmation that replaces footer 1
+        const confirm = createDeleteConfirmFooter(this, {
+            idPrefix: 'googleEvent',
+            messageKey: 'googleDeleteConfirm',
+            messageFallback: "Delete this event from Google Calendar? This can't be undone.",
+            onConfirm: () => this._handleDeleteConfirmed(),
+            onCancel: () => this._showDeleteConfirm(false)
+        });
+        this.confirmFooter = confirm.footer;
+        this.confirmDeleteButton = confirm.confirmButton;
+        this.cancelDeleteButton = confirm.cancelButton;
+        this.viewContent.appendChild(this.confirmFooter);
+
+        // Footer 3: the RSVP control, on an invitation that has no actions
+        this.rsvpFooter = document.createElement('footer');
+        this.rsvpFooter.className = 'event-form-footer event-rsvp-footer';
+        this.rsvpFooter.hidden = true;
+        this.viewContent.appendChild(this.rsvpFooter);
     }
 
     /**
@@ -143,44 +265,30 @@ export class GoogleEventModal extends ModalComponent {
         // id replay its recorded response for this one
         this._editSeed = null;
         this._deleteRequestId = null;
+        this._clearRsvpTimers();
 
         // Create the element if it doesn't exist
         if (!this.element) {
             this.createElement();
         }
 
-        // Title
-        this._setTitle(event);
+        this._setHeader(event);
 
-        // Calendar name
-        this._contentBuilder.setCalendarInfo(this.calendarElement, event);
+        const b = this._contentBuilder;
+        this.timeRow.row.hidden = !b.setTimeInfo(this.timeRow.content, event);
+        this.calendarRow.row.hidden = !b.setCalendarInfo(this.calendarRow.content, event);
+        this.locationRow.row.hidden = !b.setLocation(this.locationRow.content, event);
+        this.meetRow.row.hidden = !b.setMeetInfo(this.meetRow.content, event);
+        this.oooRow.row.hidden = !b.setOutOfOfficeInfo(this.oooRow.content, event);
+        this.descriptionRow.row.hidden = !b.setDescription(this.descriptionRow.content, event);
 
-        // Time information
-        this._contentBuilder.setTimeInfo(this.timeElement, event);
+        // Attendees and RSVP do not apply to an absence
+        const isOoo = event.eventType === 'outOfOffice';
+        this.attendeesContainer.hidden = isOoo
+            || !b.setAttendeesInfo(this.attendeesContainer, event, 'googleEventAttendeeList');
+        if (isOoo) this.attendeesContainer.innerHTML = '';
 
-        // Description
-        this._contentBuilder.setDescription(this.descriptionElement, event);
-
-        // Location
-        this._contentBuilder.setLocation(this.locationElement, event);
-
-        // Meet information
-        this._contentBuilder.setMeetInfo(this.meetElement, event);
-
-        // Out of office information
-        this._contentBuilder.setOutOfOfficeInfo(this.oooInfoElement, event);
-
-        // Attendees and RSVP (skip for out-of-office events)
-        if (event.eventType === 'outOfOffice') {
-            if (this.attendeesElement) this.attendeesElement.innerHTML = '';
-            if (this.rsvpContainer) this.rsvpContainer.innerHTML = '';
-        } else {
-            this._setAttendeesInfo(event);
-            this._setRsvpButtons(event);
-        }
-
-        // Edit/Delete actions (hidden when the event cannot be changed at all)
-        this._setEditDeleteButtons(event);
+        this._setFooters(event);
 
         // Always open in view mode with a clean state
         this._showViewMode();
@@ -192,7 +300,142 @@ export class GoogleEventModal extends ModalComponent {
     }
 
     /**
-     * Whether the event can be edited/deleted from the panel.
+     * Header: calendar colour, title, link to the event in Google Calendar.
+     * @param {Object} event
+     * @private
+     */
+    _setHeader(event) {
+        // The calendar's own colour, so the dialog matches the timeline block
+        this.headerSwatch.hidden = !event.calendarBackgroundColor;
+        this.headerSwatch.style.backgroundColor = event.calendarBackgroundColor || '';
+
+        this.titleElement.textContent = event.summary || (event.eventType === 'outOfOffice'
+            ? msg('outOfOffice', 'Out of office')
+            : msg('noTitle', 'No Title'));
+
+        this.openLink.hidden = !event.htmlLink;
+        if (event.htmlLink) {
+            this.openLink.href = event.htmlLink;
+        } else {
+            this.openLink.removeAttribute('href');
+        }
+    }
+
+    /**
+     * Decide which footer shows and where the RSVP control goes.
+     * @param {Object} event
+     * @private
+     */
+    _setFooters(event) {
+        const deletable = this._isDeletableEvent(event);
+        const canRsvp = this._canRsvp(event);
+
+        this.editButton.hidden = !this._isEditableEvent(event);
+        this.actionFooter.hidden = !deletable;
+        this.confirmFooter.hidden = true;
+
+        // The RSVP control takes the footer when nothing else needs it (an
+        // invitation); otherwise it sits in the body above Delete/Edit.
+        const inFooter = canRsvp && !deletable;
+        this.rsvpBodyRow.innerHTML = '';
+        this.rsvpFooter.innerHTML = '';
+        this.rsvpBodyRow.hidden = !(canRsvp && !inFooter);
+        this.rsvpFooter.hidden = !inFooter;
+        this.rsvpGroup = null;
+        this.rsvpStatusLine = null;
+
+        if (canRsvp) {
+            this._buildRsvp(event, inFooter ? this.rsvpFooter : this.rsvpBodyRow, inFooter);
+        }
+    }
+
+    /**
+     * Whether the user can answer the invitation from here: they are a guest,
+     * and the calendar is their own (a shared calendar's copy cannot RSVP).
+     * @param {Object} event
+     * @returns {boolean}
+     * @private
+     */
+    _canRsvp(event) {
+        if (event.eventType === 'outOfOffice') return false;
+        const selfAttendee = (event.attendees || []).find(a => a.self);
+        return !!(selfAttendee && event.isOwnedCalendar && event.calendarId && event.id);
+    }
+
+    /**
+     * Build the RSVP control and its outcome line.
+     * @param {Object} event
+     * @param {HTMLElement} container - The body row or the footer
+     * @param {boolean} inFooter - Footer placement has a visible label; the
+     *   body row uses an icon like the other rows
+     * @private
+     */
+    _buildRsvp(event, container, inFooter) {
+        const selfAttendee = event.attendees.find(a => a.self);
+        // A reply to one occurrence of a series only applies to that one;
+        // say so on the choice that hides the event.
+        const isRecurringInstance = !!event.recurringEventId;
+
+        this.rsvpStatusLine = createStatusLine();
+
+        const row = document.createElement('div');
+        row.className = 'event-rsvp-row';
+
+        if (inFooter) {
+            const label = document.createElement('span');
+            label.className = 'event-rsvp-label';
+            label.id = 'googleEventRsvpLabel';
+            row.appendChild(setLocalizedText(label, 'rsvpLabel', 'Going?'));
+        } else {
+            row.appendChild(createIcon('fas fa-reply event-form-row-icon'));
+        }
+
+        this.rsvpGroup = createSegmented('rsvpLabel', 'Going?');
+        this.rsvpGroup.classList.add('event-rsvp-group');
+        if (inFooter) {
+            // The visible label names the group
+            this.rsvpGroup.removeAttribute('aria-label');
+            this.rsvpGroup.removeAttribute('data-localize-aria-label');
+            this.rsvpGroup.setAttribute('aria-labelledby', 'googleEventRsvpLabel');
+        }
+
+        RSVP_CHOICES.forEach(choice => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = `event-segmented-btn event-rsvp-btn is-${choice.response}`;
+            button.dataset.response = choice.response;
+            button.appendChild(createIcon(`${choice.icon} event-rsvp-icon`));
+
+            const text = document.createElement('span');
+            text.className = 'event-rsvp-text';
+            text.appendChild(setLocalizedText(document.createElement('span'), choice.labelKey, choice.fallback));
+            if (choice.response === 'declined' && isRecurringInstance) {
+                const scope = document.createElement('span');
+                scope.className = 'event-rsvp-scope';
+                text.appendChild(setLocalizedText(scope, 'rsvpDeclineScope', 'this only'));
+                this.rsvpGroup.classList.add('has-scope');
+            }
+            button.appendChild(text);
+
+            setPressed(button, selfAttendee.responseStatus === choice.response);
+            this.addEventListener(button, 'click', () => this._sendRsvpResponse(event, choice.response));
+            this.rsvpGroup.appendChild(button);
+        });
+        row.appendChild(this.rsvpGroup);
+
+        // In the footer the outcome reads above the control, like the delete
+        // confirmation; in the body it follows the control.
+        if (inFooter) {
+            container.appendChild(this.rsvpStatusLine);
+            container.appendChild(row);
+        } else {
+            container.appendChild(row);
+            container.appendChild(this.rsvpStatusLine);
+        }
+    }
+
+    /**
+     * Whether the event can be edited from the panel.
      * Delegates to the pure, unit-tested predicate in google-event-utils.
      * @param {Object} event
      * @returns {boolean}
@@ -215,99 +458,24 @@ export class GoogleEventModal extends ModalComponent {
     }
 
     /**
-     * Build (once) and toggle the view-mode Edit/Delete button bar. The bar
-     * shows whenever the event is deletable; Edit within it is gated separately.
-     * @param {Object} event
-     * @private
-     */
-    _setEditDeleteButtons(event) {
-        if (!this.viewButtons) {
-            this.viewButtons = document.createElement('div');
-            this.viewButtons.className = 'modal-buttons';
-
-            this.editButton = document.createElement('button');
-            this.editButton.type = 'button';
-            this.editButton.id = 'googleEventEditButton';
-            this.editButton.className = 'btn btn-primary';
-            this.editButton.setAttribute('data-localize', '__MSG_editEvent__');
-            this.editButton.textContent = window.getLocalizedMessage('editEvent') || 'Edit';
-            this.addEventListener(this.editButton, 'click', () => this._showEditMode());
-
-            this.deleteButton = document.createElement('button');
-            this.deleteButton.type = 'button';
-            this.deleteButton.id = 'googleEventDeleteButton';
-            this.deleteButton.className = 'btn btn-danger';
-            this.deleteButton.setAttribute('data-localize', '__MSG_delete__');
-            this.deleteButton.textContent = window.getLocalizedMessage('delete') || 'Delete';
-            this.addEventListener(this.deleteButton, 'click', () => this._showDeleteConfirm(true));
-
-            this.viewButtons.appendChild(this.editButton);
-            this.viewButtons.appendChild(this.deleteButton);
-
-            // Inline two-step delete confirmation (hidden by default)
-            this.deleteConfirmRow = document.createElement('div');
-            this.deleteConfirmRow.className = 'modal-buttons google-event-delete-confirm';
-            this.deleteConfirmRow.style.display = 'none';
-
-            const confirmText = document.createElement('span');
-            confirmText.id = 'googleDeleteConfirmText';
-            confirmText.setAttribute('data-localize', '__MSG_googleDeleteConfirm__');
-            confirmText.textContent = window.getLocalizedMessage('googleDeleteConfirm') || 'Delete this event?';
-
-            this.confirmDeleteButton = document.createElement('button');
-            this.confirmDeleteButton.type = 'button';
-            this.confirmDeleteButton.id = 'googleEventConfirmDeleteButton';
-            this.confirmDeleteButton.className = 'btn btn-danger';
-            this.confirmDeleteButton.setAttribute('data-localize', '__MSG_confirmDelete__');
-            // Focus lands on these buttons when the confirm row opens; the
-            // describedby makes screen readers announce the question with them.
-            this.confirmDeleteButton.setAttribute('aria-describedby', 'googleDeleteConfirmText');
-            this.confirmDeleteButton.textContent = window.getLocalizedMessage('confirmDelete') || 'Delete';
-            this.addEventListener(this.confirmDeleteButton, 'click', () => this._handleDeleteConfirmed());
-
-            this.cancelDeleteButton = document.createElement('button');
-            this.cancelDeleteButton.type = 'button';
-            this.cancelDeleteButton.id = 'googleEventCancelDeleteButton';
-            this.cancelDeleteButton.className = 'btn btn-secondary';
-            this.cancelDeleteButton.setAttribute('data-localize', '__MSG_cancel__');
-            this.cancelDeleteButton.setAttribute('aria-describedby', 'googleDeleteConfirmText');
-            this.cancelDeleteButton.textContent = window.getLocalizedMessage('cancel') || 'Cancel';
-            this.addEventListener(this.cancelDeleteButton, 'click', () => this._showDeleteConfirm(false));
-
-            this.deleteConfirmRow.appendChild(confirmText);
-            this.deleteConfirmRow.appendChild(this.confirmDeleteButton);
-            this.deleteConfirmRow.appendChild(this.cancelDeleteButton);
-
-            this.viewContent.appendChild(this.viewButtons);
-            this.viewContent.appendChild(this.deleteConfirmRow);
-        }
-
-        // Edit and delete are gated separately: an out-of-office event shows
-        // only Delete.
-        this.editButton.style.display = this._isEditableEvent(event) ? '' : 'none';
-        this.viewButtons.style.display = this._isDeletableEvent(event) ? '' : 'none';
-        this._showDeleteConfirm(false);
-    }
-
-    /**
-     * Toggle between the action bar and the inline delete confirmation.
-     * Moves keyboard focus with the state change: into the confirmation
-     * (on its non-destructive Cancel) when opening, back to the Delete
-     * button when dismissing.
+     * Swap the action footer for the inline delete confirmation, or back.
+     * Moves keyboard focus with the state change: into the confirmation (on
+     * its non-destructive Cancel) when opening, back to Delete when dismissing.
      * @param {boolean} confirming
      * @private
      */
     _showDeleteConfirm(confirming) {
-        if (!this.viewButtons) return;
-        const wasConfirming = this.deleteConfirmRow.style.display !== 'none';
-        const deletable = this._isDeletableEvent(this.currentEvent);
-        this.viewButtons.style.display = confirming || !deletable ? 'none' : '';
-        this.deleteConfirmRow.style.display = confirming ? '' : 'none';
+        if (!this.actionFooter) return;
+        const wasConfirming = !this.confirmFooter.hidden;
+        const deletable = !!this.currentEvent && this._isDeletableEvent(this.currentEvent);
+
+        this.actionFooter.hidden = confirming || !deletable;
+        this.confirmFooter.hidden = !confirming;
 
         if (confirming) {
-            this.cancelDeleteButton?.focus();
+            this.cancelDeleteButton.focus();
         } else if (wasConfirming && deletable) {
-            this.deleteButton?.focus();
+            this.deleteButton.focus();
         }
     }
 
@@ -321,8 +489,8 @@ export class GoogleEventModal extends ModalComponent {
      */
     _showViewMode({ returnFocus = false } = {}) {
         this._clearError();
-        this.viewContent.style.display = '';
-        this.editContent.style.display = 'none';
+        this.viewContent.hidden = false;
+        this.editContent.hidden = true;
         this._showDeleteConfirm(false);
 
         if (returnFocus) {
@@ -347,8 +515,8 @@ export class GoogleEventModal extends ModalComponent {
             extractTimeHHMM(event.end?.dateTime)
         );
 
-        this.viewContent.style.display = 'none';
-        this.editContent.style.display = '';
+        this.viewContent.hidden = true;
+        this.editContent.hidden = false;
         this._localizeModal();
 
         // Move focus into the form (the Edit button that opened it is now hidden)
@@ -374,20 +542,20 @@ export class GoogleEventModal extends ModalComponent {
         const values = this._editFormBuilder.getValues();
 
         if (!values.summary.trim()) {
-            this._showError(window.getLocalizedMessage('pleaseEnterTitle') || 'Please enter a title');
+            this._showError(msg('pleaseEnterTitle', 'Please enter a title'));
             return;
         }
         if (!values.startTime) {
-            this._showError(window.getLocalizedMessage('pleaseEnterStartTime') || 'Please enter a start time');
+            this._showError(msg('pleaseEnterStartTime', 'Please enter a start time'));
             return;
         }
         if (!values.endTime) {
-            this._showError(window.getLocalizedMessage('pleaseEnterEndTime') || 'Please enter an end time');
+            this._showError(msg('pleaseEnterEndTime', 'Please enter an end time'));
             return;
         }
         // Zero-padded "HH:MM" strings compare correctly lexicographically
         if (values.endTime <= values.startTime) {
-            this._showError(window.getLocalizedMessage('endTimeMustBeLater') || 'End time must be later than start time');
+            this._showError(msg('endTimeMustBeLater', 'End time must be later than start time'));
             return;
         }
 
@@ -436,7 +604,7 @@ export class GoogleEventModal extends ModalComponent {
             this._editSeed = null;
             this.hide();
         } else {
-            this._showError(window.getLocalizedMessage('googleEventUpdateFailed') || 'Failed to update Google event');
+            this._showError(msg('googleEventUpdateFailed', 'Failed to update Google event'));
         }
     }
 
@@ -479,25 +647,24 @@ export class GoogleEventModal extends ModalComponent {
             this.hide();
         } else {
             this._showDeleteConfirm(false);
-            this._showError(window.getLocalizedMessage('googleEventDeleteFailed') || 'Failed to delete Google event');
+            this._showError(msg('googleEventDeleteFailed', 'Failed to delete Google event'));
         }
     }
 
     /**
-     * Display an error message at the bottom of the modal.
+     * Show an error in the visible mode's error slot (end of the body).
      * @param {string} message
      * @private
      */
     _showError(message) {
-        this._clearError();
-
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'error-message';
-        // Announce the failure to screen readers when it is inserted
-        errorDiv.setAttribute('role', 'alert');
-        errorDiv.textContent = message;
-
-        this.modalContent.appendChild(errorDiv);
+        const slot = this.editContent && !this.editContent.hidden
+            ? this._editFormBuilder.errorContainer
+            : this.viewError;
+        if (!slot) return;
+        // Reveal first, then write: a role=alert region that is already
+        // populated when it appears is not reliably announced.
+        slot.hidden = false;
+        slot.textContent = message;
     }
 
     /**
@@ -505,242 +672,116 @@ export class GoogleEventModal extends ModalComponent {
      * @private
      */
     _clearError() {
-        this.modalContent?.querySelector('.error-message')?.remove();
-    }
-
-    /**
-     * Set event title
-     * @private
-     */
-    _setTitle(event) {
-        this.titleElement.innerHTML = '';
-        if (event.htmlLink) {
-            if (event.calendarBackgroundColor) {
-                const colorIndicator = document.createElement('span');
-                colorIndicator.className = 'google-event-title-color';
-                colorIndicator.style.backgroundColor = event.calendarBackgroundColor;
-                this.titleElement.appendChild(colorIndicator);
-            }
-            const titleLink = document.createElement('a');
-            titleLink.href = event.htmlLink;
-            titleLink.target = '_blank';
-            titleLink.textContent = event.summary || (event.eventType === 'outOfOffice' ? window.getLocalizedMessage('outOfOffice') : window.getLocalizedMessage('noTitle'));
-            titleLink.style.cssText = 'color: inherit; text-decoration: none;';
-            titleLink.addEventListener('mouseenter', () => {
-                titleLink.style.textDecoration = 'underline';
-            });
-            titleLink.addEventListener('mouseleave', () => {
-                titleLink.style.textDecoration = 'none';
-            });
-            this.titleElement.appendChild(titleLink);
-        } else {
-            if (event.calendarBackgroundColor) {
-                const colorIndicator = document.createElement('span');
-                colorIndicator.className = 'google-event-title-color';
-                colorIndicator.style.backgroundColor = event.calendarBackgroundColor;
-                this.titleElement.appendChild(colorIndicator);
-            }
-            const titleText = document.createElement('span');
-            titleText.textContent = event.summary || (event.eventType === 'outOfOffice' ? window.getLocalizedMessage('outOfOffice') : window.getLocalizedMessage('noTitle'));
-            this.titleElement.appendChild(titleText);
-        }
-    }
-
-    /**
-     * Set attendees information (delegates to content builder, manages element lifecycle)
-     * @private
-     */
-    _setAttendeesInfo(event) {
-        // Create the attendees element if it doesn't exist
-        if (!this.attendeesElement) {
-            this.attendeesElement = document.createElement('div');
-            this.attendeesElement.className = 'google-event-row google-event-attendees mb-3';
-            this.modalBody.appendChild(this.attendeesElement);
-        }
-
-        this._contentBuilder.setAttendeesInfo(this.attendeesElement, event);
-    }
-
-    /**
-     * Set RSVP response buttons
-     * @private
-     */
-    _setRsvpButtons(event) {
-        // Create the RSVP container if it doesn't exist
-        if (!this.rsvpContainer) {
-            this.rsvpContainer = document.createElement('div');
-            this.rsvpContainer.className = 'google-event-rsvp mb-2';
-            this.modalBody.appendChild(this.rsvpContainer);
-        }
-
-        this.rsvpContainer.innerHTML = '';
-
-        // Only show RSVP buttons if:
-        // - The event is from a calendar owned by the user (not shared/read-only calendars)
-        // - The event has attendees and the user is one of them
-        const attendees = event.attendees || [];
-        const selfAttendee = attendees.find(a => a.self);
-        if (!selfAttendee || !event.isOwnedCalendar || !event.calendarId || !event.id) {
-            return;
-        }
-
-        const icon = document.createElement('i');
-        icon.className = 'fas fa-reply me-1';
-        icon.style.cssText = 'color: var(--side-calendar-secondary-text-color);';
-
-        const buttonsWrapper = document.createElement('div');
-        buttonsWrapper.className = 'google-event-rsvp-wrapper';
-
-        const label = document.createElement('div');
-        label.className = 'google-event-rsvp-label';
-        const labelText = document.createElement('span');
-        labelText.setAttribute('data-localize', '__MSG_rsvpLabel__');
-        labelText.textContent = window.getLocalizedMessage('rsvpLabel') || 'Your response';
-        label.appendChild(labelText);
-
-        const btnGroup = document.createElement('div');
-        btnGroup.className = 'google-event-rsvp-buttons';
-
-        const isRecurringInstance = !!event.recurringEventId;
-        const buttons = [
-            { response: 'accepted', icon: 'fa-check', labelKey: 'rsvpAccept', fallback: 'Accept' },
-            { response: 'tentative', icon: 'fa-question', labelKey: 'rsvpTentative', fallback: 'Maybe' },
-            { response: 'declined', icon: 'fa-times', labelKey: 'rsvpDecline', fallback: 'Decline' }
-        ];
-
-        buttons.forEach(btn => {
-            const button = document.createElement('button');
-            button.className = 'google-event-rsvp-btn';
-            if (selfAttendee.responseStatus === btn.response) {
-                button.classList.add('active');
-            }
-            button.type = 'button';
-            button.dataset.response = btn.response;
-
-            const btnIcon = document.createElement('i');
-            btnIcon.className = `fas ${btn.icon}`;
-            button.appendChild(btnIcon);
-
-            const btnText = document.createElement('span');
-            btnText.className = 'google-event-rsvp-btn-text';
-
-            const btnTextMain = document.createElement('span');
-            btnTextMain.setAttribute('data-localize', `__MSG_${btn.labelKey}__`);
-            btnTextMain.textContent = window.getLocalizedMessage(btn.labelKey) || btn.fallback;
-            btnText.appendChild(btnTextMain);
-
-            if (btn.response === 'declined' && isRecurringInstance) {
-                const btnTextSub = document.createElement('span');
-                btnTextSub.className = 'google-event-rsvp-btn-text-sub';
-                btnTextSub.setAttribute('data-localize', '__MSG_rsvpDeclineScope__');
-                btnTextSub.textContent = window.getLocalizedMessage('rsvpDeclineScope') || '(this only)';
-                btnText.appendChild(btnTextSub);
-            }
-
-            button.appendChild(btnText);
-
-            button.addEventListener('click', () => {
-                this._sendRsvpResponse(event, btn.response, btnGroup);
-            });
-
-            btnGroup.appendChild(button);
+        [this.viewError, this._editFormBuilder.errorContainer].forEach(slot => {
+            if (!slot) return;
+            slot.textContent = '';
+            slot.hidden = true;
         });
-
-        buttonsWrapper.appendChild(label);
-        buttonsWrapper.appendChild(btnGroup);
-
-        this.rsvpContainer.appendChild(icon);
-        this.rsvpContainer.appendChild(buttonsWrapper);
     }
 
     /**
-     * Send RSVP response to Google Calendar
+     * Send the RSVP response to Google Calendar.
+     * @param {Object} event
+     * @param {string} response - accepted | tentative | declined
      * @private
      */
-    async _sendRsvpResponse(event, response, btnGroup) {
-        // Disable all buttons while sending
-        const allButtons = btnGroup.querySelectorAll('.google-event-rsvp-btn');
-        allButtons.forEach(btn => {
-            btn.disabled = true;
-        });
+    async _sendRsvpResponse(event, response) {
+        const group = this.rsvpGroup;
+        if (!group) return;
+        const buttons = [...group.querySelectorAll('.event-rsvp-btn')];
+        buttons.forEach(btn => { btn.disabled = true; });
+        this._clearRsvpTimers();
 
+        let result;
         try {
-            const result = await sendMessage({
+            result = await sendMessage({
                 action: 'respondToEvent',
                 calendarId: event.calendarId,
                 eventId: event.id,
                 response: response
             });
-
-            if (result && result.success) {
-                // Update button states
-                allButtons.forEach(btn => {
-                    btn.classList.remove('active');
-                    btn.disabled = false;
-                });
-                // Find the clicked button and mark as active
-                const activeIndex = ['accepted', 'tentative', 'declined'].indexOf(response);
-                if (activeIndex >= 0 && allButtons[activeIndex]) {
-                    allButtons[activeIndex].classList.add('active');
-                }
-
-                // Update the self attendee's status in the attendees list display
-                if (this.currentEvent && this.currentEvent.attendees) {
-                    const selfAttendee = this.currentEvent.attendees.find(a => a.self);
-                    if (selfAttendee) {
-                        selfAttendee.responseStatus = response;
-                    }
-                    this._setAttendeesInfo(this.currentEvent);
-                }
-
-                // If declined, close modal after a brief delay (event will be removed from timeline)
-                if (response === 'declined') {
-                    this._showRsvpFeedback(window.getLocalizedMessage('rsvpDeclinedFeedback') || 'Declined. Event will be hidden.', 'declined');
-                    setTimeout(() => {
-                        this.hide();
-                        if (this.onRsvpResponse) {
-                            this.onRsvpResponse(response, event);
-                        }
-                    }, 1200);
-                } else {
-                    this._showRsvpFeedback(window.getLocalizedMessage('rsvpSuccessFeedback') || 'Response sent.', 'success');
-                    // Notify parent to refresh events
-                    if (this.onRsvpResponse) {
-                        this.onRsvpResponse(response, event);
-                    }
-                }
-            } else {
-                console.error('RSVP response failed:', result?.error);
-                allButtons.forEach(btn => btn.disabled = false);
-                this._showRsvpFeedback(window.getLocalizedMessage('rsvpErrorFeedback') || 'Failed to send response.', 'error');
-            }
         } catch (error) {
             console.error('Failed to send RSVP response:', error);
-            allButtons.forEach(btn => btn.disabled = false);
-            this._showRsvpFeedback(window.getLocalizedMessage('rsvpErrorFeedback') || 'Failed to send response.', 'error');
+            result = null;
+        }
+
+        // The dialog may have moved on to another event while this was in flight
+        if (this.rsvpGroup !== group) return;
+        buttons.forEach(btn => { btn.disabled = false; });
+
+        if (!result || !result.success) {
+            if (result) console.error('RSVP response failed:', result.error);
+            // The pressed button still shows the answer Google has
+            this._showRsvpFeedback(msg('rsvpErrorFeedback', 'Failed to send response.'), 'error');
+            return;
+        }
+
+        buttons.forEach(btn => setPressed(btn, btn.dataset.response === response));
+
+        // Reflect the new answer in the guest list and its summary
+        const selfAttendee = this.currentEvent?.attendees?.find(a => a.self);
+        if (selfAttendee) {
+            selfAttendee.responseStatus = response;
+            const list = this.attendeesContainer.querySelector('.event-detail-attendee-list');
+            const wasExpanded = list ? !list.hidden : null;
+            this._contentBuilder.setAttendeesInfo(this.attendeesContainer, this.currentEvent, 'googleEventAttendeeList');
+            if (wasExpanded !== null) this._setAttendeesExpanded(wasExpanded);
+        }
+
+        if (response === 'declined') {
+            // A declined event leaves the timeline, so close once the user
+            // has had a moment to read why
+            this._showRsvpFeedback(msg('rsvpDeclinedFeedback', 'Declined. Event will be hidden.'), 'neutral');
+            this._rsvpCloseTimer = setTimeout(() => {
+                this.hide();
+                if (this.onRsvpResponse) {
+                    this.onRsvpResponse(response, event);
+                }
+            }, RSVP_DECLINE_CLOSE_MS);
+        } else {
+            this._showRsvpFeedback(msg('rsvpSuccessFeedback', 'Response sent.'), 'success');
+            if (this.onRsvpResponse) {
+                this.onRsvpResponse(response, event);
+            }
         }
     }
 
     /**
-     * Show a brief feedback message in the RSVP area
+     * Keep the guest list's folded state across a refill.
+     * @param {boolean} expanded
      * @private
      */
-    _showRsvpFeedback(message, type) {
-        if (!this.rsvpContainer) return;
+    _setAttendeesExpanded(expanded) {
+        const toggle = this.attendeesContainer.querySelector('.event-detail-attendees-toggle');
+        const list = this.attendeesContainer.querySelector('.event-detail-attendee-list');
+        if (!toggle || !list) return;
+        toggle.setAttribute('aria-expanded', String(expanded));
+        list.hidden = !expanded;
+    }
 
-        // Remove existing feedback
-        const existing = this.rsvpContainer.querySelector('.google-event-rsvp-feedback');
-        if (existing) existing.remove();
+    /**
+     * Show the outcome of an RSVP next to the control.
+     * @param {string} message
+     * @param {'success'|'neutral'|'error'} tone
+     * @private
+     */
+    _showRsvpFeedback(message, tone) {
+        if (!this.rsvpStatusLine) return;
+        showStatusLine(this.rsvpStatusLine, tone, message);
 
-        const feedback = document.createElement('div');
-        feedback.className = `google-event-rsvp-feedback rsvp-feedback-${type}`;
-        feedback.textContent = message;
-        this.rsvpContainer.appendChild(feedback);
-
-        // Auto-remove after delay (unless declined, which closes modal)
-        if (type !== 'declined') {
-            setTimeout(() => feedback.remove(), 3000);
+        // A plain confirmation clears itself; an error stays until the next try
+        if (tone === 'success') {
+            const line = this.rsvpStatusLine;
+            this._rsvpFeedbackTimer = setTimeout(() => { line.hidden = true; }, RSVP_FEEDBACK_MS);
         }
+    }
+
+    /** @private */
+    _clearRsvpTimers() {
+        clearTimeout(this._rsvpFeedbackTimer);
+        clearTimeout(this._rsvpCloseTimer);
+        this._rsvpFeedbackTimer = null;
+        this._rsvpCloseTimer = null;
     }
 
     /**
@@ -757,31 +798,29 @@ export class GoogleEventModal extends ModalComponent {
     hide() {
         super.hide();
         this.currentEvent = null;
+        this._clearRsvpTimers();
         // Abandoned sessions: the next edit/delete is a new logical request
         this._editSeed = null;
         this._deleteRequestId = null;
     }
 
     /**
-     * Place initial focus inside the dialog. The base implementation would
-     * match the (hidden) edit form's title input, which is a no-op; in view
-     * mode focus the Edit button when present, otherwise the close button.
+     * Place initial focus inside the dialog: the form's title in edit mode;
+     * in view mode the first action the event offers, else close.
      * @private
      */
     _focusFirstInput() {
         setTimeout(() => {
-            if (this.editContent && this.editContent.style.display !== 'none') {
+            if (this.editContent && !this.editContent.hidden) {
                 this._editFormBuilder.titleInput?.focus();
-            } else if (this.viewButtons && this.viewButtons.style.display !== 'none') {
-                // Edit is hidden on a delete-only event (out of office), so
-                // land on the first action that is actually there.
-                const firstAction = this.editButton && this.editButton.style.display !== 'none'
-                    ? this.editButton
-                    : this.deleteButton;
-                (firstAction || this.closeButton)?.focus();
-            } else {
-                this.closeButton?.focus();
+                return;
             }
+            let target = this.viewCloseButton;
+            if (this.actionFooter && !this.actionFooter.hidden) {
+                // Edit is hidden on a delete-only event (out of office)
+                target = this.editButton.hidden ? this.deleteButton : this.editButton;
+            }
+            target?.focus();
         }, 100);
     }
 }

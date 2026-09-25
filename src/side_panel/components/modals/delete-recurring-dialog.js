@@ -1,90 +1,108 @@
 /**
- * DeleteRecurringDialog - Helper class for the delete recurring event confirmation dialog
+ * DeleteRecurringDialog - Asks how much of a recurring event to delete
  *
- * Manages the overlay dialog that asks whether to delete a single occurrence
- * or all occurrences of a recurring event.
- * This is a plain helper class (not a Component subclass).
+ * Two choices as radio cards — this occurrence (the default) or the whole
+ * series — then Cancel and a single red Delete, so the destructive action is
+ * one button whatever the scope.
+ * This is a plain helper class (not a Component subclass): the dialog is an
+ * overlay on top of the event dialog and lives only while it is open.
  */
+import { createButton, msg, msgWith, setLocalizedText } from './event-dialog-dom.js';
 
 export class DeleteRecurringDialog {
     constructor() {
         // Tracked overlay element for cleanup
         this._overlay = null;
+        this._returnFocusTo = null;
     }
 
     /**
-     * Show the delete recurring event dialog
-     * @param {Object} event - The recurring event being deleted
-     * @param {Object} callbacks - { onDeleteThis, onDeleteAll, onCancel }
+     * Whether the dialog is open.
+     * @returns {boolean}
      */
-    show(event, callbacks = {}) {
+    isOpen() {
+        return !!this._overlay;
+    }
+
+    /**
+     * Show the dialog.
+     * @param {Object} event - The recurring event being deleted
+     * @param {Object} options
+     * @param {Date} [options.date] - The occurrence being looked at
+     * @param {HTMLElement} [options.returnFocusTo] - Refocused when the dialog is dismissed
+     * @param {Function} [options.onDeleteThis]
+     * @param {Function} [options.onDeleteAll]
+     */
+    show(event, options = {}) {
         // Remove any existing overlay first
         this.remove();
+        this._returnFocusTo = options.returnFocusTo || null;
 
-        // Create dialog overlay
         const overlay = document.createElement('div');
         overlay.className = 'delete-recurring-overlay';
-        overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 10001; display: flex; align-items: center; justify-content: center;';
 
         const dialog = document.createElement('div');
         dialog.className = 'delete-recurring-dialog';
-        dialog.style.cssText = 'background: var(--side-calendar-modal-bg); color: inherit; padding: 20px; border-radius: 8px; max-width: 300px; text-align: center;';
+        dialog.setAttribute('role', 'dialog');
+        dialog.setAttribute('aria-modal', 'true');
+        dialog.setAttribute('aria-labelledby', 'deleteRecurringTitle');
 
-        const title = document.createElement('h3');
-        title.style.cssText = 'margin: 0 0 15px 0; font-size: 1.1em;';
-        title.setAttribute('data-localize', '__MSG_deleteRecurringTitle__');
-        title.textContent = window.getLocalizedMessage('deleteRecurringTitle') || 'Delete recurring event?';
-        dialog.appendChild(title);
+        const title = document.createElement('h2');
+        title.id = 'deleteRecurringTitle';
+        title.className = 'delete-recurring-title';
+        dialog.appendChild(setLocalizedText(title, 'deleteRecurringTitle', 'Delete recurring event'));
 
-        const message = document.createElement('p');
-        message.style.cssText = 'margin: 0 0 20px 0; font-size: 0.9em; color: var(--side-calendar-secondary-text-color);';
-        message.setAttribute('data-localize', '__MSG_deleteRecurringMessage__');
-        message.textContent = window.getLocalizedMessage('deleteRecurringMessage') || 'Do you want to delete this occurrence only or all occurrences?';
-        dialog.appendChild(message);
+        const fieldset = document.createElement('fieldset');
+        fieldset.className = 'delete-scope-options';
+        const legend = document.createElement('legend');
+        legend.className = 'visually-hidden';
+        fieldset.appendChild(setLocalizedText(legend, 'deleteScopeLegend', 'What to delete'));
 
-        const buttonContainer = document.createElement('div');
-        buttonContainer.style.cssText = 'display: flex; flex-direction: column; gap: 10px;';
+        const thisOption = this._createOption({
+            value: 'this',
+            checked: true,
+            mainKey: 'deleteScopeThis',
+            mainFallback: 'This event',
+            detail: this._occurrenceDetail(options.date)
+        });
+        const allOption = this._createOption({
+            value: 'all',
+            checked: false,
+            mainKey: 'deleteScopeAll',
+            mainFallback: 'All events',
+            detail: msg('deleteScopeAllDetail', 'Every occurrence in this series')
+        });
+        fieldset.appendChild(thisOption.label);
+        fieldset.appendChild(allOption.label);
+        dialog.appendChild(fieldset);
 
-        // Delete this occurrence only
-        const deleteThisBtn = document.createElement('button');
-        deleteThisBtn.className = 'btn btn-outline-danger';
-        deleteThisBtn.style.cssText = 'width: 100%; padding: 8px;';
-        deleteThisBtn.setAttribute('data-localize', '__MSG_deleteThisOccurrence__');
-        deleteThisBtn.textContent = window.getLocalizedMessage('deleteThisOccurrence') || 'Delete this occurrence';
-        deleteThisBtn.addEventListener('click', () => {
-            this.remove();
-            if (callbacks.onDeleteThis) {
-                callbacks.onDeleteThis(event);
+        const actions = document.createElement('div');
+        actions.className = 'delete-recurring-actions';
+        // A tiny owner shim: the overlay is removed as a whole, taking these
+        // listeners with it.
+        const owner = { addEventListener: (el, type, fn) => el.addEventListener(type, fn) };
+        actions.appendChild(createButton(owner, {
+            variant: 'secondary',
+            msgKey: 'cancel',
+            fallback: 'Cancel',
+            onClick: () => this.dismiss()
+        }));
+        actions.appendChild(createButton(owner, {
+            id: 'deleteRecurringConfirmButton',
+            variant: 'danger',
+            msgKey: 'delete',
+            fallback: 'Delete',
+            onClick: () => {
+                const deleteAll = allOption.input.checked;
+                this.remove();
+                if (deleteAll) {
+                    options.onDeleteAll?.(event);
+                } else {
+                    options.onDeleteThis?.(event);
+                }
             }
-        });
-
-        // Delete all occurrences
-        const deleteAllBtn = document.createElement('button');
-        deleteAllBtn.className = 'btn btn-danger';
-        deleteAllBtn.style.cssText = 'width: 100%; padding: 8px;';
-        deleteAllBtn.setAttribute('data-localize', '__MSG_deleteAllOccurrences__');
-        deleteAllBtn.textContent = window.getLocalizedMessage('deleteAllOccurrences') || 'Delete all occurrences';
-        deleteAllBtn.addEventListener('click', () => {
-            this.remove();
-            if (callbacks.onDeleteAll) {
-                callbacks.onDeleteAll(event);
-            }
-        });
-
-        // Cancel
-        const cancelBtn = document.createElement('button');
-        cancelBtn.className = 'btn btn-secondary';
-        cancelBtn.style.cssText = 'width: 100%; padding: 8px;';
-        cancelBtn.setAttribute('data-localize', '__MSG_cancel__');
-        cancelBtn.textContent = window.getLocalizedMessage('cancel') || 'Cancel';
-        cancelBtn.addEventListener('click', () => {
-            this.remove();
-        });
-
-        buttonContainer.appendChild(deleteThisBtn);
-        buttonContainer.appendChild(deleteAllBtn);
-        buttonContainer.appendChild(cancelBtn);
-        dialog.appendChild(buttonContainer);
+        }));
+        dialog.appendChild(actions);
 
         overlay.appendChild(dialog);
         document.body.appendChild(overlay);
@@ -93,9 +111,90 @@ export class DeleteRecurringDialog {
         // Close on overlay click
         overlay.addEventListener('click', (e) => {
             if (e.target === overlay) {
-                this.remove();
+                this.dismiss();
             }
         });
+
+        overlay.addEventListener('keydown', (e) => {
+            // Escape closes this dialog only, not the event dialog underneath
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                e.stopPropagation();
+                this.dismiss();
+                return;
+            }
+            // Keep Tab inside the dialog while it is modal
+            if (e.key === 'Tab') {
+                const stops = [...dialog.querySelectorAll('input:checked, button')];
+                const first = stops[0];
+                const last = stops[stops.length - 1];
+                if (e.shiftKey && document.activeElement === first) {
+                    e.preventDefault();
+                    last.focus();
+                } else if (!e.shiftKey && document.activeElement === last) {
+                    e.preventDefault();
+                    first.focus();
+                }
+            }
+        });
+
+        thisOption.input.focus();
+    }
+
+    /**
+     * One radio card: the choice, and what it covers in smaller text.
+     * @private
+     */
+    _createOption({ value, checked, mainKey, mainFallback, detail }) {
+        const label = document.createElement('label');
+        label.className = 'delete-scope-option';
+
+        const input = document.createElement('input');
+        input.type = 'radio';
+        input.name = 'deleteRecurringScope';
+        input.value = value;
+        input.checked = checked;
+        label.appendChild(input);
+
+        const text = document.createElement('span');
+        text.className = 'delete-scope-text';
+        const main = document.createElement('span');
+        main.className = 'delete-scope-main';
+        text.appendChild(setLocalizedText(main, mainKey, mainFallback));
+        const sub = document.createElement('span');
+        sub.className = 'delete-scope-detail';
+        sub.textContent = detail;
+        text.appendChild(sub);
+        label.appendChild(text);
+
+        return { label, input };
+    }
+
+    /**
+     * "Only Thu, Sep 25" / "9月25日(木)の回だけ" for the occurrence on screen.
+     * @param {Date} [date]
+     * @returns {string}
+     * @private
+     */
+    _occurrenceDetail(date) {
+        if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+            return msg('deleteScopeThisDetailNoDate', 'Only this occurrence');
+        }
+        const locale = navigator.language || 'en';
+        const isJa = locale.startsWith('ja');
+        const dateText = date.toLocaleDateString(isJa ? 'ja-JP' : 'en-US', isJa
+            ? { month: 'long', day: 'numeric', weekday: 'short' }
+            : { weekday: 'short', month: 'short', day: 'numeric' });
+        return msgWith('deleteScopeThisDetail', 'Only $1', dateText);
+    }
+
+    /**
+     * Close without deleting, and give focus back to where it came from.
+     */
+    dismiss() {
+        const target = this._returnFocusTo;
+        this.remove();
+        target?.focus();
     }
 
     /**
@@ -106,5 +205,6 @@ export class DeleteRecurringDialog {
             this._overlay.remove();
             this._overlay = null;
         }
+        this._returnFocusTo = null;
     }
 }
