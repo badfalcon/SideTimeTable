@@ -48,7 +48,6 @@
 - [x] `_fetchEventsForCalendarIds()` が `_fetchWithAuth()` を迂回して直接 `fetch()` している — calendarList取得部分は `_fetchWithAuth()` に統一済み
 - [x] `respondToEvent()` のGET/PATCHレスポンスが `_checkResponse()` を使っていない — `_checkResponse()` に統一済み
 - [ ] `localize.js` が `window` グローバルに関数を export している — ES6 module の `export` に移行して明示的な `import` に統一（34ファイルが `window.getLocalizedMessage()` を使用中）
-- [ ] `.visually-hidden` が `options.css` に未定義 — `calendar-management-card.js` がこのクラスを付けたスパンを生成しているが、設定ページ側には対応するスタイルがなく視覚的に隠れていない。`side_panel.css` には予定モーダルのラベル用に定義済みなので、共通CSSに切り出すか `options.css` にも同じ定義を追加する。
 - [ ] 通知チェックボックスの文言に実際のリード時間を出す — 現状は `remindMeBefore`（「開始前に通知する」）固定。設定のリマインダー分数（既定5分）を差し込むには、プレースホルダ付きメッセージの新設と、設定値をフォームビルダーまで渡す配線が要る。
 - [x] `background.js` の21箇所の `console.error/warn` 直接呼出を `logError()`/`logWarn()` に統一
 - [x] `StorageHelper` 直接利用とラッパー関数 (`settings-storage.js`, `event-storage.js`) の使い分け基準を storage-helper.js の JSDoc に明記
@@ -75,7 +74,7 @@
 
 ## 用語統一
 
-- [ ] 日本語の「イベント」と「予定」の混在: 予定の作成・詳細・削除まわり（ダイアログ見出し、削除確認、繰り返し削除、出欠の結果表示）は「予定」に揃えたが、`_locales/ja/messages.json` には他に「イベント」表記が100件ほど残る（設定ページ、エラーメッセージ等）。どこまで「予定」に寄せるかを決めてまとめて置き換える。
+- [ ] 日本語の「イベント」と「予定」の混在: 予定の作成・詳細・削除まわり（ダイアログ見出し、削除確認、繰り返し削除、出欠の結果表示、作成・更新・削除の失敗メッセージ）は「予定」に揃えたが、`_locales/ja/messages.json` には他に「イベント」表記が100件ほど残る（設定ページ、エラーメッセージ等）。どこまで「予定」に寄せるかを決めてまとめて置き換える。
 - [ ] 繰り返し予定の回への出欠: 「今回のみ」の補足は不参加にだけ付く（既存仕様）が、API にはインスタンス ID で送るため参加・未定も実際はその回だけに効く。補足を3択すべてに出すか、グループのラベル側（「今回の出欠」）で示すかを検討。
 - [x] リマインダー表現の統一: `remindMeBefore` を「開始前に通知する」/"Notify me before the event" に変更し、設定ページ・Google 用の「通知」表記と統一済み。通知タイミングは設定（`reminderMinutes`）で変わるため、ラベルに分数は書かない。
 

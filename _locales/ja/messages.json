@@ -1819,15 +1819,15 @@
     "description": "カレンダー選択でユーザーのメインカレンダーを示す接尾語"
   },
   "googleEventCreateFailed": {
-    "message": "Googleイベントの作成に失敗しました。時間をおいて再試行してください。",
+    "message": "Googleカレンダーに予定を作成できませんでした。時間をおいて再試行してください。",
     "description": "Googleカレンダーイベントの作成に失敗した際のエラーメッセージ"
   },
   "googleEventUpdateFailed": {
-    "message": "Googleイベントの更新に失敗しました。時間をおいて再試行してください。",
+    "message": "Googleカレンダーの予定を更新できませんでした。時間をおいて再試行してください。",
     "description": "Googleカレンダーイベントの更新に失敗した際のエラーメッセージ"
   },
   "googleEventDeleteFailed": {
-    "message": "Googleイベントの削除に失敗しました。時間をおいて再試行してください。",
+    "message": "Googleカレンダーの予定を削除できませんでした。時間をおいて再試行してください。",
     "description": "Googleカレンダーイベントの削除に失敗した際のエラーメッセージ"
   },
   "googleDeleteConfirm": {
