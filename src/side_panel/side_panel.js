@@ -143,7 +143,7 @@ class SidePanelUIController {
 
         } catch (error) {
             console.error('Side panel UI initialization error:', error);
-            this._showError((window.getLocalizedMessage?.('initializationError') || 'Initialization error') + ': ' + error.message);
+            this._showError(window.getLocalizedMessage?.('initializationError') || 'Initialization error', error.message);
         }
     }
 
@@ -835,7 +835,7 @@ class SidePanelUIController {
 
         } catch (error) {
             console.error('Local event save error:', error);
-            this.alertModal.showError('Failed to save event: ' + error.message);
+            this.alertModal.showError(window.getLocalizedMessage('localEventSaveFailed'), null, { detail: error.message });
         }
     }
 
@@ -857,7 +857,7 @@ class SidePanelUIController {
 
         } catch (error) {
             console.error('Local event deletion error:', error);
-            this.alertModal.showError('Failed to delete event: ' + error.message);
+            this.alertModal.showError(window.getLocalizedMessage('localEventDeleteFailed'), null, { detail: error.message });
         }
     }
 
@@ -881,10 +881,10 @@ class SidePanelUIController {
             if (response.success) {
                 await this._loadEventsForCurrentDate();
             } else {
-                this.alertModal.showError('Failed to sync reminders: ' + (response.error || 'Unknown error'));
+                this.alertModal.showError(window.getLocalizedMessage('reminderSyncFailed'), null, { detail: response.error });
             }
         } catch (error) {
-            this.alertModal.showError('Failed to sync reminders: ' + error.message);
+            this.alertModal.showError(window.getLocalizedMessage('reminderSyncFailed'), null, { detail: error.message });
         }
     }
 
@@ -1045,13 +1045,15 @@ class SidePanelUIController {
 
     /**
      * Show error
+     * @param {string} message - What went wrong, for the user
+     * @param {string} [detail] - Technical cause, shown smaller underneath
      * @private
      */
-    _showError(message) {
+    _showError(message, detail) {
         if (this.alertModal) {
-            this.alertModal.showError(message);
+            this.alertModal.showError(message, null, { detail });
         } else {
-            console.error(message);
+            console.error(message, detail ?? '');
         }
     }
 

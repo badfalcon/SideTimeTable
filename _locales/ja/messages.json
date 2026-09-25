@@ -75,6 +75,18 @@
     "message": "この予定を削除しますか？この操作は取り消せません。",
     "description": "Inline confirmation before deleting a local event"
   },
+  "localEventSaveFailed": {
+    "message": "予定を保存できませんでした。",
+    "description": "Alert when saving a local event fails"
+  },
+  "localEventDeleteFailed": {
+    "message": "予定を削除できませんでした。",
+    "description": "Alert when deleting a local event fails"
+  },
+  "reminderSyncFailed": {
+    "message": "リマインダーを同期できませんでした。",
+    "description": "Alert when the manual reminder sync fails"
+  },
   "deleteScopeLegend": {
     "message": "削除する範囲",
     "description": "Accessible name of the choice in the recurring delete dialog"

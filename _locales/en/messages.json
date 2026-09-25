@@ -75,6 +75,18 @@
     "message": "Delete this event? This can't be undone.",
     "description": "Inline confirmation before deleting a local event"
   },
+  "localEventSaveFailed": {
+    "message": "Couldn't save the event.",
+    "description": "Alert when saving a local event fails"
+  },
+  "localEventDeleteFailed": {
+    "message": "Couldn't delete the event.",
+    "description": "Alert when deleting a local event fails"
+  },
+  "reminderSyncFailed": {
+    "message": "Couldn't sync reminders.",
+    "description": "Alert when the manual reminder sync fails"
+  },
   "deleteScopeLegend": {
     "message": "What to delete",
     "description": "Accessible name of the choice in the recurring delete dialog"

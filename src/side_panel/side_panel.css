@@ -227,13 +227,24 @@ body {
     padding: 8px 8px 10px;
 }
 
+/* Three columns: buttons, date, buttons. The date stays centred while the
+   side columns have room, and moves over rather than covering the buttons
+   when they do not (a 320px panel in English). */
 #sideTimeTableHeader{
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
+    column-gap: 8px;
     background-color: var(--side-calendar-panel-background-color);
     width: 100%;
-    position: relative; /* For absolute positioning of date navigation */
+}
+
+#sideTimeTableHeader > .action-buttons:first-child {
+    justify-self: start;
+}
+
+#sideTimeTableHeader > .action-buttons:last-child {
+    justify-self: end;
 }
 
 .action-buttons {
@@ -246,9 +257,6 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
-    position: absolute; /* Absolute positioning for centering */
-    left: 50%;
-    transform: translateX(-50%); /* Center horizontally */
 }
 
 .nav-arrow {
@@ -607,23 +615,23 @@ body {
 
 /* The form toggles sections with the `hidden` property, which the display
    rules below would otherwise override. */
-:is(#localEventDialog, #googleEventDialog) [hidden] {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) [hidden] {
     display: none !important;
 }
 
-:is(#localEventDialog, #googleEventDialog) .modal-content {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .modal-content {
     padding: 0;
 }
 
 /* Every view of these dialogs has a header with its own close button */
-:is(#localEventDialog, #googleEventDialog) .modal-content > .close {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .modal-content > .close {
     display: none;
 }
 
 /* --- Header, body, footer --- */
 
-:is(#localEventDialog, #googleEventDialog) .event-form-header,
-:is(#localEventDialog, #googleEventDialog) .event-form-footer {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-header,
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-footer {
     position: sticky;
     z-index: 2;
     display: flex;
@@ -632,7 +640,7 @@ body {
     background: var(--side-calendar-modal-bg);
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-form-header {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-header {
     top: 0;
     gap: 4px;
     height: 44px;
@@ -640,14 +648,14 @@ body {
     border-bottom: 1px solid var(--side-calendar-border-color-lighter);
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-form-title {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-title {
     flex-grow: 1;
     margin: 0;
     font-size: 14px;
     font-weight: 600;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-form-close {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-close {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -663,24 +671,24 @@ body {
     cursor: pointer;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-form-close:hover {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-close:hover {
     background: var(--side-calendar-subtle-bg);
     color: inherit;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-form-close:focus-visible {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-close:focus-visible {
     outline: 2px solid var(--side-calendar-accent-color);
     outline-offset: -2px;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-form-body {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-body {
     display: flex;
     flex-direction: column;
     gap: 10px;
     padding: 12px 16px;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-form-footer {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-footer {
     bottom: 0;
     gap: 8px;
     height: 52px;
@@ -688,20 +696,20 @@ body {
     border-top: 1px solid var(--side-calendar-border-color-lighter);
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-form-footer-spacer {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-footer-spacer {
     flex-grow: 1;
     min-width: 0;
 }
 
 /* --- Icon-led rows --- */
 
-:is(#localEventDialog, #googleEventDialog) .event-form-row {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-row {
     display: flex;
     align-items: center;
     gap: 10px;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-form-row-icon {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-row-icon {
     flex-shrink: 0;
     width: 16px;
     color: var(--side-calendar-secondary-text-color);
@@ -709,7 +717,7 @@ body {
     text-align: center;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-form-field {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-field {
     flex-grow: 1;
     width: 0;
     min-width: 0;
@@ -725,7 +733,7 @@ body {
     font-size: 13.5px;
 }
 
-:is(#localEventDialog, #googleEventDialog) select.event-form-field {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) select.event-form-field {
     width: 100%;
     padding-right: 30px;
     appearance: none;
@@ -735,13 +743,13 @@ body {
     text-overflow: ellipsis;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-form-field:focus-visible {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-field:focus-visible {
     outline: none;
     border-color: var(--side-calendar-accent-color);
     box-shadow: 0 0 0 3px var(--side-calendar-accent-shadow);
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-form-field:disabled {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-field:disabled {
     background: var(--side-calendar-subtle-bg);
     color: var(--side-calendar-muted-text-color);
     cursor: not-allowed;
@@ -749,7 +757,7 @@ body {
 
 /* One line exactly fills the 36px box (1px border + 7px padding + 20px line),
    so an empty or one-line note never shows a scrollbar */
-:is(#localEventDialog, #googleEventDialog) .event-form-textarea {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-textarea {
     height: 36px;
     min-height: 36px;
     padding: 7px 10px;
@@ -758,18 +766,18 @@ body {
 }
 
 /* Editing an existing description: show its first lines (the rows count) */
-:is(#localEventDialog, #googleEventDialog) .event-form-textarea.is-multiline {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-textarea.is-multiline {
     height: auto;
 }
 
 /* Wrapper so the chevron can be drawn over a native select */
-:is(#localEventDialog, #googleEventDialog) .event-form-select-wrap {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-select-wrap {
     position: relative;
     flex-grow: 1;
     min-width: 0;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-form-select-chevron {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-select-chevron {
     position: absolute;
     top: 50%;
     right: 11px;
@@ -781,7 +789,7 @@ body {
 
 /* --- Title: the one field that leads the form, so no icon and no box --- */
 
-:is(#localEventDialog, #googleEventDialog) .event-title-input {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-title-input {
     width: 100%;
     height: 42px;
     box-sizing: border-box;
@@ -797,7 +805,7 @@ body {
     font-weight: 600;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-title-input:focus-visible {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-title-input:focus-visible {
     outline: none;
     border-bottom: 2px solid var(--side-calendar-accent-color);
 }
@@ -808,12 +816,12 @@ body {
    line; in a narrow panel the duration picker drops under the times rather
    than the times being clipped. */
 /* When the fields wrap, keep the clock beside the first line of them */
-:is(#localEventDialog, #googleEventDialog) .event-form-row:has(> .event-time-fields) > .event-form-row-icon {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-row:has(> .event-time-fields) > .event-form-row-icon {
     align-self: flex-start;
     margin-top: 11px;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-time-fields {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-time-fields {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -822,7 +830,7 @@ body {
     min-width: 0;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-time-input {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-time-input {
     flex: 1 1 0;
     /* Room for a 12-hour value such as "12:30 PM" */
     min-width: 6em;
@@ -835,11 +843,11 @@ body {
    "04:30 P" — so a 12-hour Chrome gets the field without the button. It still
    takes typed input and arrow keys, and the duration presets cover quick
    picking. */
-:is(#localEventDialog, #googleEventDialog) .event-time-fields.is-12h .event-time-input::-webkit-calendar-picker-indicator {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-time-fields.is-12h .event-time-input::-webkit-calendar-picker-indicator {
     display: none;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-time-input::-webkit-calendar-picker-indicator {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-time-input::-webkit-calendar-picker-indicator {
     margin: 0;
     padding: 2px;
     border-radius: 4px;
@@ -847,24 +855,24 @@ body {
     opacity: 0.6;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-time-input::-webkit-calendar-picker-indicator:hover {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-time-input::-webkit-calendar-picker-indicator:hover {
     background-color: var(--side-calendar-subtle-bg-hover);
     opacity: 1;
 }
 
 /* The dialogs set color-scheme: dark, which already draws a light icon; the
    global dark-mode invert would turn it back to dark-on-dark */
-[data-theme="dark"] :is(#localEventDialog, #googleEventDialog) .event-time-input::-webkit-calendar-picker-indicator {
+[data-theme="dark"] :is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-time-input::-webkit-calendar-picker-indicator {
     filter: none;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-time-separator {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-time-separator {
     flex-shrink: 0;
     color: var(--side-calendar-muted-text-color);
     font-size: 12px;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-duration-select {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-duration-select {
     /* Sized by its own longest label rather than a fixed width, so the time
        inputs keep whatever is left over in every locale. */
     width: auto;
@@ -887,24 +895,24 @@ body {
     cursor: pointer;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-duration-select:focus-visible {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-duration-select:focus-visible {
     outline: 2px solid var(--side-calendar-accent-color);
     outline-offset: 1px;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-form-select-wrap:has(.event-duration-select) {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-select-wrap:has(.event-duration-select) {
     flex-grow: 0;
     flex-shrink: 0;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-form-select-wrap:has(.event-duration-select) .event-form-select-chevron {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-select-wrap:has(.event-duration-select) .event-form-select-chevron {
     right: 7px;
 }
 
 /* --- Segmented controls: save destination (Local / Google) and, under
        Google, the event type (Event / Out of office) --- */
 
-:is(#localEventDialog, #googleEventDialog) .event-segmented {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-segmented {
     display: flex;
     gap: 2px;
     height: 32px;
@@ -916,12 +924,12 @@ body {
 }
 
 /* The event-type control sits in an icon row, beside the icon column */
-:is(#localEventDialog, #googleEventDialog) .event-form-row > .event-segmented {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-row > .event-segmented {
     flex-grow: 1;
     min-width: 0;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-segmented-btn {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-segmented-btn {
     flex-grow: 1;
     flex-basis: 0;
     min-width: 0;
@@ -942,47 +950,47 @@ body {
     transition: background-color 0.15s, color 0.15s;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-segmented-btn i {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-segmented-btn i {
     flex-shrink: 0;
     font-size: 11px;
 }
 
 /* A label longer than its half of the control ends in an ellipsis rather
    than wrapping inside the 32px button or pushing the dialog wider */
-:is(#localEventDialog, #googleEventDialog) .event-segmented-btn > span {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-segmented-btn > span {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-segmented-btn:hover:not(.active):not(:disabled) {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-segmented-btn:hover:not(.active):not(:disabled) {
     background: var(--side-calendar-subtle-bg-hover);
     color: inherit;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-segmented-btn.active {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-segmented-btn.active {
     border-color: var(--side-calendar-accent-color);
     background: var(--side-calendar-modal-bg);
     color: inherit;
     box-shadow: 0 1px 2px var(--side-calendar-shadow-color);
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-segmented-btn:focus-visible {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-segmented-btn:focus-visible {
     outline: 2px solid var(--side-calendar-accent-color);
     outline-offset: 1px;
 }
 
 /* A disabled "Out of office" (no primary calendar to write to) still reads as
    a choice that exists, just not right now. */
-:is(#localEventDialog, #googleEventDialog) .event-segmented-btn:disabled {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-segmented-btn:disabled {
     opacity: 0.45;
     cursor: not-allowed;
 }
 
 /* --- Chips that toggle a checkbox (weekdays, no end date) --- */
 
-:is(#localEventDialog, #googleEventDialog) .chip-toggle {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .chip-toggle {
     position: relative;
     display: inline-flex;
     align-items: center;
@@ -1003,7 +1011,7 @@ body {
 }
 
 /* The checkbox stays real so `.checked` keeps working; only its box is hidden */
-:is(#localEventDialog, #googleEventDialog) .chip-toggle-input {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .chip-toggle-input {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -1014,16 +1022,16 @@ body {
     border: 0;
 }
 
-:is(#localEventDialog, #googleEventDialog) .chip-toggle:hover {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .chip-toggle:hover {
     background: var(--side-calendar-subtle-bg-hover);
 }
 
-:is(#localEventDialog, #googleEventDialog) .chip-toggle:has(.chip-toggle-input:checked) {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .chip-toggle:has(.chip-toggle-input:checked) {
     border-color: var(--side-calendar-accent-color);
     background: color-mix(in srgb, var(--side-calendar-accent-color) 14%, var(--side-calendar-modal-bg));
 }
 
-:is(#localEventDialog, #googleEventDialog) .chip-toggle:has(.chip-toggle-input:focus-visible) {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .chip-toggle:has(.chip-toggle-input:focus-visible) {
     outline: 2px solid var(--side-calendar-accent-color);
     outline-offset: 1px;
 }
@@ -1031,20 +1039,20 @@ body {
 /* --- Recurrence: type row, then the parts that depend on it, indented to
        line up with the controls beside the icon column --- */
 
-:is(#localEventDialog, #googleEventDialog) .recurrence-section {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .recurrence-section {
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
 
-:is(#localEventDialog, #googleEventDialog) .weekday-chips {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .weekday-chips {
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
     margin-left: 26px;
 }
 
-:is(#localEventDialog, #googleEventDialog) .weekday-chip {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .weekday-chip {
     flex-grow: 1;
     flex-basis: 0;
     /* Never narrower than the day name: longer abbreviations push the chips
@@ -1055,7 +1063,7 @@ body {
     font-size: 12px;
 }
 
-:is(#localEventDialog, #googleEventDialog) .end-date-section {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .end-date-section {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -1065,13 +1073,13 @@ body {
 
 /* Room for a full date plus Chrome's picker button; a long "No end date"
    label wraps under it rather than squeezing the date */
-:is(#localEventDialog, #googleEventDialog) .end-date-section .event-form-field {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .end-date-section .event-form-field {
     min-width: 7.5em;
 }
 
 /* --- Settings-style rows: icon, label, checkbox on the right --- */
 
-:is(#localEventDialog, #googleEventDialog) .event-form-check-row {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-check-row {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -1084,12 +1092,12 @@ body {
     cursor: pointer;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-form-check-label {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-check-label {
     flex-grow: 1;
     font-size: 13px;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-form-check-input {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-check-input {
     flex-shrink: 0;
     width: 16px;
     height: 16px;
@@ -1098,7 +1106,7 @@ body {
     cursor: pointer;
 }
 
-:is(#localEventDialog, #googleEventDialog) .ooo-event-fields {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .ooo-event-fields {
     display: flex;
     flex-direction: column;
     gap: 2px;
@@ -1106,15 +1114,15 @@ body {
 
 /* --- Hints and errors --- */
 
-:is(#localEventDialog, #googleEventDialog) .event-form-hint,
-:is(#localEventDialog, #googleEventDialog) .event-form-check-label,
-:is(#localEventDialog, #googleEventDialog) .event-form-error {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-hint,
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-check-label,
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-error {
     /* Long compound words (German) or pasted URLs break instead of widening
        the dialog */
     overflow-wrap: anywhere;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-form-hint {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-hint {
     margin: 0;
     padding: 6px 10px;
     border-radius: 8px;
@@ -1125,13 +1133,13 @@ body {
 }
 
 /* A hint that belongs to the row above it reads better unboxed */
-:is(#localEventDialog, #googleEventDialog) .event-form-hint-indented {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-hint-indented {
     margin-left: 26px;
     padding: 0;
     background: transparent;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-form-error {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-error {
     margin: 0;
     padding: 8px 10px;
     border-radius: 8px;
@@ -1143,7 +1151,7 @@ body {
 
 /* --- Google "advanced settings" accordion --- */
 
-:is(#localEventDialog, #googleEventDialog) .google-advanced {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .google-advanced {
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -1151,7 +1159,7 @@ body {
     border-top: 1px solid var(--side-calendar-border-color-lighter);
 }
 
-:is(#localEventDialog, #googleEventDialog) .accordion-toggle {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .accordion-toggle {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -1170,7 +1178,7 @@ body {
     cursor: pointer;
 }
 
-:is(#localEventDialog, #googleEventDialog) .accordion-chevron {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .accordion-chevron {
     flex-shrink: 0;
     width: 16px;
     color: var(--side-calendar-secondary-text-color);
@@ -1179,16 +1187,16 @@ body {
     transition: transform 0.15s ease;
 }
 
-:is(#localEventDialog, #googleEventDialog) .accordion-toggle[aria-expanded="false"] .accordion-chevron {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .accordion-toggle[aria-expanded="false"] .accordion-chevron {
     transform: rotate(-90deg);
 }
 
-:is(#localEventDialog, #googleEventDialog) .accordion-toggle:focus-visible {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .accordion-toggle:focus-visible {
     outline: 2px solid var(--side-calendar-accent-color);
     outline-offset: 1px;
 }
 
-:is(#localEventDialog, #googleEventDialog) .accordion-body {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .accordion-body {
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -1196,7 +1204,7 @@ body {
 
 /* --- Footer buttons --- */
 
-:is(#localEventDialog, #googleEventDialog, .delete-recurring-dialog) .event-form-btn {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, .delete-recurring-dialog) .event-form-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -1215,43 +1223,43 @@ body {
     transition: background-color 0.15s, border-color 0.15s;
 }
 
-:is(#localEventDialog, #googleEventDialog, .delete-recurring-dialog) .event-form-btn:focus-visible {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, .delete-recurring-dialog) .event-form-btn:focus-visible {
     outline: 2px solid var(--side-calendar-accent-color);
     outline-offset: 2px;
 }
 
-:is(#localEventDialog, #googleEventDialog, .delete-recurring-dialog) .event-form-btn-secondary {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, .delete-recurring-dialog) .event-form-btn-secondary {
     border-color: var(--side-calendar-modal-btn-border);
     background: var(--side-calendar-modal-btn-bg);
     color: var(--side-calendar-modal-btn-text);
 }
 
-:is(#localEventDialog, #googleEventDialog, .delete-recurring-dialog) .event-form-btn-secondary:hover {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, .delete-recurring-dialog) .event-form-btn-secondary:hover {
     border-color: var(--side-calendar-modal-btn-hover-border);
     background: var(--side-calendar-modal-btn-hover-bg);
 }
 
 /* The only filled button in the dialog. It uses accent-hover rather than
    accent because white on #007bff is 3.1:1; on #0056b3 it is 6.8:1. */
-:is(#localEventDialog, #googleEventDialog, .delete-recurring-dialog) .event-form-btn-primary {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, .delete-recurring-dialog) .event-form-btn-primary {
     padding: 0 20px;
     border-color: var(--side-calendar-accent-hover-color);
     background: var(--side-calendar-accent-hover-color);
     color: #ffffff;
 }
 
-:is(#localEventDialog, #googleEventDialog, .delete-recurring-dialog) .event-form-btn-primary:hover:not(:disabled) {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, .delete-recurring-dialog) .event-form-btn-primary:hover:not(:disabled) {
     border-color: var(--side-calendar-accent-color);
     background: var(--side-calendar-accent-color);
 }
 
-:is(#localEventDialog, #googleEventDialog, .delete-recurring-dialog) .event-form-btn-primary:disabled {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, .delete-recurring-dialog) .event-form-btn-primary:disabled {
     opacity: 0.6;
     cursor: default;
 }
 
 /* Delete sits apart from save, and reads as text rather than a third pill */
-:is(#localEventDialog, #googleEventDialog) .event-form-delete {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-delete {
     display: inline-flex;
     /* When the three labels do not fit (long translations), this button is
        the one that shrinks. Its label then wraps onto a second line that the
@@ -1277,73 +1285,73 @@ body {
     cursor: pointer;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-form-delete > i,
-:is(#localEventDialog, #googleEventDialog) .event-form-delete-label {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-delete > i,
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-delete-label {
     line-height: 40px;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-form-delete-label {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-delete-label {
     white-space: nowrap;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-form-delete:hover {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-delete:hover {
     background: color-mix(in srgb, var(--side-calendar-danger-color) 12%, var(--side-calendar-modal-bg));
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-form-delete:focus-visible {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-delete:focus-visible {
     outline: 2px solid var(--side-calendar-danger-color);
     outline-offset: 1px;
 }
 
 /* Dark mode: the filled button flips its text colour, because #0f1b2e on
    #5b9dff is 5.7:1 where white on it would be 3.4:1. */
-[data-theme="dark"] :is(#localEventDialog, #googleEventDialog, .delete-recurring-dialog) .event-form-btn-primary {
+[data-theme="dark"] :is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, .delete-recurring-dialog) .event-form-btn-primary {
     border-color: var(--side-calendar-accent-color);
     background: var(--side-calendar-accent-color);
     color: #0f1b2e;
 }
 
-[data-theme="dark"] :is(#localEventDialog, #googleEventDialog, .delete-recurring-dialog) .event-form-btn-primary:hover:not(:disabled) {
+[data-theme="dark"] :is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, .delete-recurring-dialog) .event-form-btn-primary:hover:not(:disabled) {
     border-color: var(--side-calendar-accent-hover-color);
     background: var(--side-calendar-accent-hover-color);
 }
 
 /* The destructive twin of the primary button, only ever shown once the user
    has asked to delete. White on #b3261e is 6.5:1. */
-:is(#localEventDialog, #googleEventDialog, .delete-recurring-dialog) .event-form-btn-danger {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, .delete-recurring-dialog) .event-form-btn-danger {
     padding: 0 18px;
     border-color: var(--side-calendar-danger-color);
     background: var(--side-calendar-danger-color);
     color: #ffffff;
 }
 
-:is(#localEventDialog, #googleEventDialog, .delete-recurring-dialog) .event-form-btn-danger:hover:not(:disabled) {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, .delete-recurring-dialog) .event-form-btn-danger:hover:not(:disabled) {
     filter: brightness(0.9);
 }
 
-:is(#localEventDialog, #googleEventDialog, .delete-recurring-dialog) .event-form-btn-danger:focus-visible {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, .delete-recurring-dialog) .event-form-btn-danger:focus-visible {
     outline-color: var(--side-calendar-danger-color);
 }
 
-:is(#localEventDialog, #googleEventDialog, .delete-recurring-dialog) .event-form-btn-danger:disabled {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, .delete-recurring-dialog) .event-form-btn-danger:disabled {
     opacity: 0.6;
     cursor: default;
 }
 
 /* Native controls (radios, checkboxes, select menus, date pickers) follow the
    dialog's theme */
-[data-theme="dark"] :is(#localEventDialog, #googleEventDialog, .delete-recurring-dialog) {
+[data-theme="dark"] :is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, .delete-recurring-dialog) {
     color-scheme: dark;
 }
 
 /* Dark mode: light red with dark text (7.7:1), as the primary button does */
-[data-theme="dark"] :is(#localEventDialog, #googleEventDialog, .delete-recurring-dialog) .event-form-btn-danger {
+[data-theme="dark"] :is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, .delete-recurring-dialog) .event-form-btn-danger {
     color: #3b0a07;
 }
 
 /* Japanese sentences break between phrases rather than mid-word (Chrome 119+;
    elsewhere this falls back to normal breaking). */
-:is(#localEventDialog, #googleEventDialog, .delete-recurring-dialog) :is(
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, .delete-recurring-dialog) :is(
     .event-form-hint, .event-form-error, .event-confirm-message,
     .event-status-line, .event-detail-ooo-message, .delete-scope-detail
 ) {
@@ -1354,7 +1362,7 @@ body {
 /* --- Google edit form extras --- */
 
 /* The calendar an edited event lives on: shown, not changeable here */
-:is(#localEventDialog, #googleEventDialog) .event-form-calendar-chip {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-calendar-chip {
     display: inline-flex;
     align-items: center;
     gap: 5px;
@@ -1371,43 +1379,43 @@ body {
     font-weight: 600;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-form-calendar-chip > span {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-calendar-chip > span {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-form-link {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-link {
     color: var(--side-calendar-accent-hover-color);
     font-weight: 600;
     text-decoration: none;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-form-link:hover {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-link:hover {
     text-decoration: underline;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-form-link-icon {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-link-icon {
     margin-left: 4px;
     font-size: 0.85em;
 }
 
-[data-theme="dark"] :is(#localEventDialog, #googleEventDialog) .event-form-link {
+[data-theme="dark"] :is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-form-link {
     color: var(--side-calendar-link-color);
 }
 
 /* --- Detail view --- */
 
 /* The title can run to two lines, so the header grows instead of clipping */
-:is(#localEventDialog, #googleEventDialog) .event-detail-header {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-header {
     height: auto;
     min-height: 44px;
     gap: 2px;
     padding: 0 4px 0 16px;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-detail-swatch {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-swatch {
     flex-shrink: 0;
     width: 10px;
     height: 10px;
@@ -1416,11 +1424,11 @@ body {
     box-shadow: inset 0 0 0 1px var(--side-calendar-shadow-color);
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-detail-swatch.is-local {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-swatch.is-local {
     background: var(--side-calendar-local-event-color);
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-detail-title {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-title {
     flex-grow: 1;
     min-width: 0;
     margin: 0;
@@ -1431,12 +1439,12 @@ body {
     overflow-wrap: anywhere;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-detail-header-actions {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-header-actions {
     display: flex;
     flex-shrink: 0;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-detail-icon-btn {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-icon-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -1448,17 +1456,17 @@ body {
     text-decoration: none;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-detail-icon-btn:hover {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-icon-btn:hover {
     background: var(--side-calendar-subtle-bg);
     color: inherit;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-detail-icon-btn:focus-visible {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-icon-btn:focus-visible {
     outline: 2px solid var(--side-calendar-accent-color);
     outline-offset: -2px;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-detail-body {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-body {
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -1467,43 +1475,43 @@ body {
     line-height: 20px;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-detail-row {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-row {
     display: flex;
     align-items: flex-start;
     gap: 10px;
 }
 
 /* Icons line up with the first line of text beside them */
-:is(#localEventDialog, #googleEventDialog) .event-detail-row > .event-form-row-icon {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-row > .event-form-row-icon {
     line-height: 20px;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-detail-row-center {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-row-center {
     align-items: center;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-detail-text {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-text {
     flex-grow: 1;
     min-width: 0;
     overflow-wrap: anywhere;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-detail-text.is-secondary {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-text.is-secondary {
     color: var(--side-calendar-secondary-text-color);
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-detail-description {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-description {
     white-space: pre-wrap;
 }
 
 /* Join buttons for the event's video call */
-:is(#localEventDialog, #googleEventDialog) .event-detail-joins {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-joins {
     display: flex;
     flex-direction: column;
     gap: 6px;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-detail-join {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-join {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -1519,16 +1527,16 @@ body {
     text-decoration: none;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-detail-join:hover {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-join:hover {
     background: color-mix(in srgb, var(--side-calendar-accent-color) 22%, var(--side-calendar-modal-bg));
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-detail-join:focus-visible {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-join:focus-visible {
     outline: 2px solid var(--side-calendar-accent-color);
     outline-offset: 1px;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-detail-join-label {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-join-label {
     flex-grow: 1;
     min-width: 0;
     overflow: hidden;
@@ -1536,7 +1544,7 @@ body {
     white-space: nowrap;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-detail-join-meta {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-join-meta {
     flex-shrink: 1;
     min-width: 0;
     overflow: hidden;
@@ -1548,22 +1556,22 @@ body {
 }
 
 /* On the dark tint, the link blue reads where accent-hover would not (4.9:1) */
-[data-theme="dark"] :is(#localEventDialog, #googleEventDialog) .event-detail-join {
+[data-theme="dark"] :is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-join {
     color: var(--side-calendar-link-color);
 }
 
 /* Out of office: type, auto-decline, decline message */
-:is(#localEventDialog, #googleEventDialog) .event-detail-ooo {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-ooo {
     display: flex;
     flex-direction: column;
     gap: 4px;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-detail-ooo-type {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-ooo-type {
     font-weight: 600;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-detail-ooo-decline {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-ooo-decline {
     display: flex;
     align-items: baseline;
     gap: 6px;
@@ -1572,12 +1580,12 @@ body {
     line-height: 18px;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-detail-ooo-decline > i {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-ooo-decline > i {
     flex-shrink: 0;
     font-size: 11px;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-detail-ooo-message {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-ooo-message {
     margin: 2px 0 0;
     padding: 2px 0 2px 10px;
     border-left: 2px solid var(--side-calendar-input-border);
@@ -1588,13 +1596,13 @@ body {
 }
 
 /* Guests: a summary line that folds the list */
-:is(#localEventDialog, #googleEventDialog) .event-detail-attendees {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-attendees {
     display: flex;
     flex-direction: column;
     gap: 4px;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-detail-attendees-toggle {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-attendees-toggle {
     display: flex;
     flex-grow: 1;
     flex-wrap: wrap;
@@ -1615,29 +1623,29 @@ body {
     cursor: pointer;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-detail-attendees-toggle:focus-visible {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-attendees-toggle:focus-visible {
     outline: 2px solid var(--side-calendar-accent-color);
     outline-offset: 2px;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-detail-attendees-breakdown {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-attendees-breakdown {
     flex-grow: 1;
     color: var(--side-calendar-secondary-text-color);
     font-size: 11.5px;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-detail-attendees-chevron {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-attendees-chevron {
     flex-shrink: 0;
     color: var(--side-calendar-secondary-text-color);
     font-size: 10px;
     transition: transform 0.15s ease;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-detail-attendees-toggle[aria-expanded="true"] .event-detail-attendees-chevron {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-attendees-toggle[aria-expanded="true"] .event-detail-attendees-chevron {
     transform: rotate(90deg);
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-detail-attendee-list {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-attendee-list {
     display: flex;
     flex-direction: column;
     gap: 2px;
@@ -1647,23 +1655,23 @@ body {
     font-size: 13px;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-detail-attendee {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-attendee {
     display: flex;
     align-items: center;
     gap: 8px;
     min-height: 24px;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-detail-attendee-name {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-attendee-name {
     min-width: 0;
     overflow-wrap: anywhere;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-detail-attendee.is-declined .event-detail-attendee-name {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-attendee.is-declined .event-detail-attendee-name {
     color: var(--side-calendar-secondary-text-color);
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-detail-badge {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-badge {
     flex-shrink: 0;
     padding: 0 6px;
     border-radius: 4px;
@@ -1687,79 +1695,79 @@ body {
 
 /* --- RSVP --- */
 
-:is(#localEventDialog, #googleEventDialog) .event-detail-rsvp {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-detail-rsvp {
     display: flex;
     flex-direction: column;
     gap: 6px;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-rsvp-row {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-rsvp-row {
     display: flex;
     align-items: center;
     gap: 10px;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-rsvp-label {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-rsvp-label {
     flex-shrink: 0;
     color: var(--side-calendar-secondary-text-color);
     font-size: 12px;
     font-weight: 600;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-rsvp-group {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-rsvp-group {
     flex-grow: 1;
     min-width: 0;
 }
 
 /* Room for the second line under "No" on one occurrence of a series */
-:is(#localEventDialog, #googleEventDialog) .event-rsvp-group.has-scope {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-rsvp-group.has-scope {
     height: 40px;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-rsvp-footer .event-rsvp-group {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-rsvp-footer .event-rsvp-group {
     height: 36px;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-rsvp-footer .event-rsvp-group.has-scope {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-rsvp-footer .event-rsvp-group.has-scope {
     height: 40px;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-rsvp-btn {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-rsvp-btn {
     gap: 4px;
     padding: 0 2px;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-rsvp-text {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-rsvp-text {
     display: flex;
     flex-direction: column;
     align-items: center;
     line-height: 1.15;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-rsvp-scope {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-rsvp-scope {
     color: var(--side-calendar-secondary-text-color);
     font-size: 10px;
     font-weight: 500;
 }
 
 /* The answer's icon only marks the picked choice */
-:is(#localEventDialog, #googleEventDialog) .event-segmented-btn .event-rsvp-icon {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-segmented-btn .event-rsvp-icon {
     display: none;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-segmented-btn.active .event-rsvp-icon {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-segmented-btn.active .event-rsvp-icon {
     display: inline-block;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-rsvp-btn.is-accepted .event-rsvp-icon {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-rsvp-btn.is-accepted .event-rsvp-icon {
     color: var(--side-calendar-success-color);
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-rsvp-btn.is-declined .event-rsvp-icon {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-rsvp-btn.is-declined .event-rsvp-icon {
     color: var(--side-calendar-danger-color);
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-rsvp-footer {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-rsvp-footer {
     flex-direction: column;
     align-items: stretch;
     gap: 8px;
@@ -1767,13 +1775,13 @@ body {
     padding: 8px 16px;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-rsvp-footer .event-rsvp-row {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-rsvp-footer .event-rsvp-row {
     min-height: 36px;
 }
 
 /* --- Outcome lines and the delete confirmation --- */
 
-:is(#localEventDialog, #googleEventDialog) .event-status-line {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-status-line {
     display: flex;
     align-items: baseline;
     gap: 8px;
@@ -1784,31 +1792,31 @@ body {
     line-height: 1.5;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-status-line > i {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-status-line > i {
     flex-shrink: 0;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-status-line > span {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-status-line > span {
     min-width: 0;
     overflow-wrap: anywhere;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-status-line.is-success {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-status-line.is-success {
     background: color-mix(in srgb, var(--side-calendar-success-color) 12%, var(--side-calendar-modal-bg));
     color: var(--side-calendar-success-color);
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-status-line.is-neutral {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-status-line.is-neutral {
     background: var(--side-calendar-subtle-bg);
     color: inherit;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-status-line.is-error {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-status-line.is-error {
     background: color-mix(in srgb, var(--side-calendar-danger-color) 12%, var(--side-calendar-modal-bg));
     color: var(--side-calendar-danger-color);
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-confirm-footer {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-confirm-footer {
     flex-direction: column;
     align-items: stretch;
     gap: 10px;
@@ -1816,7 +1824,7 @@ body {
     padding: 12px 16px 14px;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-confirm-message {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-confirm-message {
     display: flex;
     align-items: baseline;
     gap: 8px;
@@ -1829,16 +1837,16 @@ body {
     line-height: 1.5;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-confirm-message > i {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-confirm-message > i {
     flex-shrink: 0;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-confirm-message > span {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-confirm-message > span {
     min-width: 0;
     overflow-wrap: anywhere;
 }
 
-:is(#localEventDialog, #googleEventDialog) .event-confirm-actions {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .event-confirm-actions {
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-end;
@@ -2040,88 +2048,133 @@ body {
     display: none;
 }
 
-/* What's New modal styles */
-.whats-new-content {
-    text-align: left;
+/* What's New: the notes scroll between the dialog's sticky header and footer */
+#whatsNewModal .whats-new-notes {
+    padding: 12px 16px 4px;
 }
 
-.whats-new-content .modal-title {
-    margin-bottom: 16px;
-    font-size: 1.3em;
-    color: var(--side-calendar-icon-color);
-}
-
-.whats-new-notes {
-    max-height: 50vh;
-    overflow-y: auto;
-    margin-bottom: 16px;
-}
-
-.whats-new-version-section {
+#whatsNewModal .whats-new-version-section {
     margin-bottom: 12px;
 }
 
-.whats-new-version-header {
+#whatsNewModal .whats-new-version-header {
     display: flex;
-    align-items: center;
+    align-items: baseline;
     gap: 10px;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
-.whats-new-version-label {
-    font-weight: bold;
-    font-size: 1.05em;
-    color: var(--side-calendar-hover-color);
+#whatsNewModal .whats-new-version-label {
+    color: var(--side-calendar-accent-hover-color);
+    font-size: 14px;
+    font-weight: 600;
 }
 
-.whats-new-version-date {
-    font-size: 0.85em;
+[data-theme="dark"] #whatsNewModal .whats-new-version-label {
+    color: var(--side-calendar-link-color);
+}
+
+#whatsNewModal .whats-new-version-date {
     color: var(--side-calendar-muted-text-color);
+    font-size: 12px;
 }
 
-.whats-new-highlights {
+#whatsNewModal .whats-new-highlights {
     margin: 0;
     padding-left: 20px;
     list-style-type: disc;
 }
 
-.whats-new-highlights li {
+#whatsNewModal .whats-new-highlights li {
     margin-bottom: 4px;
-    font-size: 0.93em;
-    line-height: 1.5;
     color: var(--side-calendar-secondary-text-color);
+    font-size: 13px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
 }
 
-.whats-new-separator {
+#whatsNewModal .whats-new-separator {
+    margin: 12px 0 0;
     border: none;
     border-top: 1px solid var(--side-calendar-border-color-lighter);
-    margin: 12px 0;
 }
 
-.whats-new-dont-show-again {
+/* "Don't show again" shares the footer with OK; its label wraps in a narrow
+   panel and the footer grows with it */
+#whatsNewModal .whats-new-footer {
+    height: auto;
+    min-height: 52px;
+    gap: 12px;
+    padding: 6px 12px 6px 16px;
+}
+
+#whatsNewModal .whats-new-dont-show-again {
     display: flex;
+    flex: 1 1 auto;
     align-items: center;
     gap: 8px;
-    margin: 12px 0;
-    padding-left: 0;
-    color: inherit;
+    min-width: 0;
+    margin: 0;
+    font-size: 12.5px;
+    font-weight: normal;
+    line-height: 1.35;
+    cursor: pointer;
 }
 
-.whats-new-dont-show-again .form-check-input {
-    float: none;
-    margin: 0;
+/* ===== Alert: a short message to acknowledge ===== */
+
+#alertModal .modal-content {
+    max-width: 320px;
+}
+
+#alertModal .alert-body {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 20px 20px 12px;
+}
+
+#alertModal .alert-tone-icon {
     flex-shrink: 0;
+    margin-top: 1px;
+    font-size: 20px;
+    line-height: 1;
 }
 
-.whats-new-dont-show-again .form-check-label {
-    color: inherit;
-    font-size: 0.9em;
+#alertModal .alert-tone-icon.is-error { color: var(--side-calendar-danger-color); }
+#alertModal .alert-tone-icon.is-warning { color: var(--side-calendar-warning-icon); }
+#alertModal .alert-tone-icon.is-success { color: var(--side-calendar-success-color); }
+#alertModal .alert-tone-icon.is-info { color: var(--side-calendar-accent-hover-color); }
+[data-theme="dark"] #alertModal .alert-tone-icon.is-info { color: var(--side-calendar-link-color); }
+
+#alertModal .alert-text {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+#alertModal .alert-message {
     margin: 0;
+    font-size: 14px;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+    word-break: auto-phrase;
+    text-wrap: pretty;
 }
 
-.whats-new-confirm-btn {
-    display: block;
-    width: 100%;
+#alertModal .alert-detail {
+    margin: 6px 0 0;
+    color: var(--side-calendar-secondary-text-color);
+    font-size: 12px;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+
+/* A one-button card: no divider, the button sits in the corner */
+#alertModal .event-form-footer {
+    position: static;
+    height: auto;
+    padding: 0 16px 16px;
+    border-top: none;
 }
 
 /* Tutorial overlay styles */
@@ -2157,6 +2210,9 @@ body {
 
 .tutorial-tooltip {
     position: fixed;
+    /* Padding inside the width: at 90% of a 320px panel a content-box tooltip
+       is 328px wide and the edge clamp cannot keep it on screen */
+    box-sizing: border-box;
     background: var(--side-calendar-modal-bg);
     border-radius: 10px;
     padding: 20px;
@@ -2209,12 +2265,24 @@ body {
     margin-top: 0;
 }
 
+/* Same filled button as the event dialogs: white on accent-hover is 6.8:1,
+   where white on the lighter accent would be 3.1:1 */
 .tutorial-btn-primary {
-    background-color: var(--side-calendar-accent-color);
+    background-color: var(--side-calendar-accent-hover-color);
     color: #fff;
 }
 
 .tutorial-btn-primary:hover {
+    background-color: var(--side-calendar-accent-color);
+}
+
+/* Dark mode: dark text on the light accent (5.7:1), as in the event dialogs */
+[data-theme="dark"] .tutorial-btn-primary {
+    background-color: var(--side-calendar-accent-color);
+    color: #0f1b2e;
+}
+
+[data-theme="dark"] .tutorial-btn-primary:hover {
     background-color: var(--side-calendar-accent-hover-color);
 }
 
@@ -2261,6 +2329,9 @@ body {
 
 .setup-card {
     position: relative;
+    /* The padding counts inside the width, so the card keeps its side margins
+       in a narrow panel instead of running into the edges */
+    box-sizing: border-box;
     background: var(--side-calendar-modal-bg);
     border-radius: 12px;
     padding: 24px 20px 20px;
@@ -2479,12 +2550,24 @@ body {
     font-weight: 500;
 }
 
+/* Same filled button as the event dialogs: white on accent-hover is 6.8:1,
+   where white on the lighter accent would be 3.1:1 */
 .setup-btn-primary {
-    background-color: var(--side-calendar-accent-color);
+    background-color: var(--side-calendar-accent-hover-color);
     color: #fff;
 }
 
 .setup-btn-primary:hover {
+    background-color: var(--side-calendar-accent-color);
+}
+
+/* Dark mode: dark text on the light accent (5.7:1), as in the event dialogs */
+[data-theme="dark"] .setup-btn-primary {
+    background-color: var(--side-calendar-accent-color);
+    color: #0f1b2e;
+}
+
+[data-theme="dark"] .setup-btn-primary:hover {
     background-color: var(--side-calendar-accent-hover-color);
 }
 
