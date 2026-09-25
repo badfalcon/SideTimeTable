@@ -259,6 +259,23 @@ body {
     gap: 10px;
 }
 
+/* In a narrow panel (Chrome's minimum is 320px) the date would sit right
+   against the refresh button, and the tutorial's highlight around it would
+   touch the button too; a slightly smaller date buys the gap back. */
+@media (max-width: 360px) {
+    #sideTimeTableHeader {
+        column-gap: 12px;
+    }
+
+    #dateNavigation {
+        gap: 6px;
+    }
+
+    #currentDateDisplay {
+        font-size: 16px;
+    }
+}
+
 .nav-arrow {
     font-size: 16px;
     cursor: pointer;
