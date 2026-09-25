@@ -424,17 +424,22 @@ export class LocalEventFormBuilder {
     }
 
     /**
-     * Build the time row: start, end and a duration picker on one line.
+     * Build the time row: start, end and a duration picker. They share one
+     * line, but the fields wrap as a group: when the panel is too narrow for a
+     * 12-hour value such as "12:30 PM", the duration picker moves to a second
+     * line under the times instead of the times being clipped.
      * @param {HTMLElement} parentElement
      * @private
      */
     _buildTimeRow(parentElement) {
         const row = this._createRow('fas fa-clock');
-        // The tightest row in the form; it gets its own spacing.
-        row.classList.add('event-time-row');
+
+        const fields = document.createElement('div');
+        fields.className = 'event-time-fields';
+        row.appendChild(fields);
 
         const makeTimeInput = (id, msgKey, fallback) => {
-            row.appendChild(this._createHiddenLabel(id, msgKey, fallback));
+            fields.appendChild(this._createHiddenLabel(id, msgKey, fallback));
 
             const input = document.createElement('input');
             input.type = 'time';
@@ -442,7 +447,7 @@ export class LocalEventFormBuilder {
             input.className = 'event-form-field event-time-input';
             input.setAttribute('list', 'time-list');
             input.required = true;
-            row.appendChild(input);
+            fields.appendChild(input);
             return input;
         };
 
@@ -452,13 +457,13 @@ export class LocalEventFormBuilder {
         separator.className = 'event-time-separator';
         separator.setAttribute('aria-hidden', 'true');
         separator.textContent = '–';
-        row.appendChild(separator);
+        fields.appendChild(separator);
 
         this.endTimeInput = makeTimeInput('eventEndTime', 'endTime', 'End time');
 
         // Duration picker: sets the end time from the start time. It only ever
         // writes the end time, so changing the start never silently moves it.
-        row.appendChild(this._createHiddenLabel('eventDuration', 'duration', 'Duration'));
+        fields.appendChild(this._createHiddenLabel('eventDuration', 'duration', 'Duration'));
 
         this.durationSelect = document.createElement('select');
         this.durationSelect.id = 'eventDuration';
@@ -481,7 +486,7 @@ export class LocalEventFormBuilder {
         customOption.textContent = window.getLocalizedMessage('durationCustom') || 'Custom';
         this.durationSelect.appendChild(customOption);
 
-        row.appendChild(this._wrapSelect(this.durationSelect));
+        fields.appendChild(this._wrapSelect(this.durationSelect));
 
         parentElement.appendChild(row);
         this.timeRow = row;
@@ -778,7 +783,13 @@ export class LocalEventFormBuilder {
         this.deleteButton.className = 'event-form-delete';
         this.deleteButton.appendChild(this._createIcon('fas fa-trash-alt'));
 
+        // In a language with long button labels this is the one that gives way
+        // (it truncates, down to the icon), so the tooltip keeps the full word.
+        this.deleteButton.setAttribute('data-localize-title', '__MSG_delete__');
+        this.deleteButton.title = window.getLocalizedMessage('delete') || 'Delete';
+
         const deleteLabel = document.createElement('span');
+        deleteLabel.className = 'event-form-delete-label';
         deleteLabel.setAttribute('data-localize', '__MSG_delete__');
         deleteLabel.textContent = window.getLocalizedMessage('delete') || 'Delete';
         this.deleteButton.appendChild(deleteLabel);
