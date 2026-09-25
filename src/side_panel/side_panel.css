@@ -902,16 +902,10 @@ body {
     right: 7px;
 }
 
-/* A whole-day absence drops the times but keeps the chip that set it */
-#localEventDialog .event-form-row.is-all-day .event-time-input,
-#localEventDialog .event-form-row.is-all-day .event-time-separator,
-#localEventDialog .event-form-row.is-all-day .event-form-select-wrap {
-    display: none;
-}
+/* --- Segmented controls: save destination (Local / Google) and, under
+       Google, the event type (Event / Out of office) --- */
 
-/* --- Segmented control: local / Google / out of office --- */
-
-#localEventDialog .event-mode-toggle {
+#localEventDialog .event-segmented {
     display: flex;
     gap: 2px;
     height: 32px;
@@ -922,7 +916,13 @@ body {
     background: var(--side-calendar-subtle-bg);
 }
 
-#localEventDialog .event-mode-btn {
+/* The event-type control sits in an icon row, beside the icon column */
+#localEventDialog .event-form-row > .event-segmented {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+#localEventDialog .event-segmented-btn {
     flex-grow: 1;
     flex-basis: 0;
     min-width: 0;
@@ -943,35 +943,35 @@ body {
     transition: background-color 0.15s, color 0.15s;
 }
 
-#localEventDialog .event-mode-btn i {
+#localEventDialog .event-segmented-btn i {
     font-size: 11px;
 }
 
-#localEventDialog .event-mode-btn:hover:not(.active):not(:disabled) {
+#localEventDialog .event-segmented-btn:hover:not(.active):not(:disabled) {
     background: var(--side-calendar-subtle-bg-hover);
     color: inherit;
 }
 
-#localEventDialog .event-mode-btn.active {
+#localEventDialog .event-segmented-btn.active {
     border-color: var(--side-calendar-accent-color);
     background: var(--side-calendar-modal-bg);
     color: inherit;
     box-shadow: 0 1px 2px var(--side-calendar-shadow-color);
 }
 
-#localEventDialog .event-mode-btn:focus-visible {
+#localEventDialog .event-segmented-btn:focus-visible {
     outline: 2px solid var(--side-calendar-accent-color);
     outline-offset: 1px;
 }
 
 /* A disabled "Out of office" (no primary calendar to write to) still reads as
    a choice that exists, just not right now. */
-#localEventDialog .event-mode-btn:disabled {
+#localEventDialog .event-segmented-btn:disabled {
     opacity: 0.45;
     cursor: not-allowed;
 }
 
-/* --- Chips that toggle a checkbox (all day, weekdays, no end date) --- */
+/* --- Chips that toggle a checkbox (weekdays, no end date) --- */
 
 #localEventDialog .chip-toggle {
     position: relative;

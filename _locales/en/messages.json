@@ -35,10 +35,6 @@
     "message": "Title",
     "description": "Placeholder of the event title input"
   },
-  "saveDestinationAndType": {
-    "message": "Destination and type",
-    "description": "Accessible name of the local/Google/out-of-office segmented control"
-  },
   "addDescription": {
     "message": "Add a note",
     "description": "Placeholder of the event description field"

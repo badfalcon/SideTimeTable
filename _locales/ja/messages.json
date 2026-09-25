@@ -35,10 +35,6 @@
     "message": "タイトル",
     "description": "Placeholder of the event title input"
   },
-  "saveDestinationAndType": {
-    "message": "保存先と種別",
-    "description": "Accessible name of the local/Google/out-of-office segmented control"
-  },
   "addDescription": {
     "message": "メモを追加",
     "description": "Placeholder of the event description field"

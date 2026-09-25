@@ -58,16 +58,18 @@ export class LocalEventFormBuilder {
         this.noEndDateCheckbox = null;
         this.endDateSection = null;
 
-        // Save destination / event type. Both are driven by one segmented
-        // control, but stay two independent values because the rest of the
-        // modal asks for them separately.
-        this.modeToggle = null;
-        this.modeLocalBtn = null;
-        this.modeGoogleBtn = null;
-        this.modeOooBtn = null;
+        // Save destination (local / google) elements
+        this.sourceToggle = null;
+        this.sourceLocalBtn = null;
+        this.sourceGoogleBtn = null;
         this.googleHiddenHint = null;
         this.currentSource = 'local';
 
+        // Event type (default / outOfOffice) elements — a property of a Google
+        // event, so its row only shows under the Google destination
+        this.eventTypeRow = null;
+        this.typeDefaultBtn = null;
+        this.typeOooBtn = null;
         this.oooPrimaryHint = null;
         this.currentEventType = 'default';
         // The writable+displayed primary calendar, or null when there is none.
@@ -77,7 +79,7 @@ export class LocalEventFormBuilder {
         // Out-of-office-only fields
         this.oooFields = null;
         this.allDayCheckbox = null;
-        this.allDayChip = null;
+        this.allDayRow = null;
         this.autoDeclineCheckbox = null;
 
         // Google-only fields
@@ -269,56 +271,76 @@ export class LocalEventFormBuilder {
     }
 
     /**
-     * Build the save-destination / event-type segmented control. One control
-     * covers both because the three reachable combinations are local event,
-     * Google event and Google absence — the fourth (a local absence) does not
-     * exist. Hidden until a Google calendar list is provided via
-     * setGoogleAvailability().
+     * Build a segmented control: mutually exclusive toggle buttons (Tab reaches
+     * each, Enter/Space activates). We deliberately use role=group +
+     * aria-pressed rather than radiogroup/radio, which would promise arrow-key
+     * navigation we don't wire.
+     * @param {string} ariaMsgKey - Message key for the group's accessible name
+     * @param {string} ariaFallback
+     * @returns {HTMLElement}
+     * @private
+     */
+    _createSegmented(ariaMsgKey, ariaFallback) {
+        const group = document.createElement('div');
+        group.className = 'event-segmented';
+        group.setAttribute('role', 'group');
+        group.setAttribute('data-localize-aria-label', `__MSG_${ariaMsgKey}__`);
+        group.setAttribute('aria-label', window.getLocalizedMessage(ariaMsgKey) || ariaFallback);
+        return group;
+    }
+
+    /**
+     * Build one button of a segmented control.
+     * @param {string} msgKey
+     * @param {string} fallback
+     * @param {string|null} iconClass - Font Awesome classes, or null for text only
+     * @param {Function} onPick
+     * @returns {HTMLButtonElement}
+     * @private
+     */
+    _createSegmentButton(msgKey, fallback, iconClass, onPick) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'event-segmented-btn';
+        btn.setAttribute('aria-pressed', 'false');
+
+        if (iconClass) {
+            btn.appendChild(this._createIcon(iconClass));
+        }
+
+        const label = document.createElement('span');
+        label.setAttribute('data-localize', `__MSG_${msgKey}__`);
+        label.textContent = window.getLocalizedMessage(msgKey) || fallback;
+        btn.appendChild(label);
+
+        this.modal.addEventListener(btn, 'click', onPick);
+        return btn;
+    }
+
+    /**
+     * Build the save-destination toggle (Local / Google). Hidden until a
+     * Google calendar list is provided via setGoogleAvailability().
      * @param {HTMLElement} parentElement
      * @private
      */
-    _buildModeToggle(parentElement) {
-        const toggle = document.createElement('div');
-        toggle.className = 'event-mode-toggle';
-        // Three mutually exclusive toggle buttons (Tab reaches each, Enter/Space
-        // activates). We deliberately use role=group + aria-pressed rather than
-        // radiogroup/radio, which would promise arrow-key navigation we don't wire.
-        toggle.setAttribute('role', 'group');
-        toggle.setAttribute('data-localize-aria-label', '__MSG_saveDestinationAndType__');
-        toggle.setAttribute('aria-label', window.getLocalizedMessage('saveDestinationAndType') || 'Destination and type');
+    _buildSourceToggle(parentElement) {
+        const toggle = this._createSegmented('saveDestination', 'Save destination');
 
-        const makeButton = (mode, msgKey, fallback, iconClass) => {
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'event-mode-btn';
-            btn.dataset.mode = mode;
-            btn.setAttribute('aria-pressed', 'false');
+        // Local = stored on this device; Google = written to Google Calendar
+        this.sourceLocalBtn = this._createSegmentButton(
+            'destinationLocal', 'Local', 'fas fa-laptop', () => this.setSource('local')
+        );
+        this.sourceGoogleBtn = this._createSegmentButton(
+            'destinationGoogle', 'Google', 'fab fa-google', () => this.setSource('google')
+        );
 
-            btn.appendChild(this._createIcon(iconClass));
-
-            const label = document.createElement('span');
-            label.setAttribute('data-localize', `__MSG_${msgKey}__`);
-            label.textContent = window.getLocalizedMessage(msgKey) || fallback;
-            btn.appendChild(label);
-
-            this.modal.addEventListener(btn, 'click', () => this.setMode(mode));
-            return btn;
-        };
-
-        // Local = stored on this device; Google = written to Google Calendar;
-        // Out of office = a Google absence on the primary calendar.
-        this.modeLocalBtn = makeButton('local', 'destinationLocal', 'Local', 'fas fa-laptop');
-        this.modeGoogleBtn = makeButton('google', 'destinationGoogle', 'Google', 'fab fa-google');
-        this.modeOooBtn = makeButton('outOfOffice', 'outOfOffice', 'Out of office', 'fas fa-user-slash');
-
-        toggle.appendChild(this.modeLocalBtn);
-        toggle.appendChild(this.modeGoogleBtn);
-        toggle.appendChild(this.modeOooBtn);
+        toggle.appendChild(this.sourceLocalBtn);
+        toggle.appendChild(this.sourceGoogleBtn);
         // Stays hidden until setGoogleAvailability() reports a writable
         // calendar: with no Google destination there is nothing to choose.
         toggle.hidden = true;
         parentElement.appendChild(toggle);
-        this.modeToggle = toggle;
+        this.sourceToggle = toggle;
 
         // Shown when writable Google calendars exist but none are displayed on
         // the timeline (the toggle would otherwise vanish with no explanation
@@ -329,6 +351,32 @@ export class LocalEventFormBuilder {
         );
         this.googleHiddenHint.hidden = true;
         parentElement.appendChild(this.googleHiddenHint);
+    }
+
+    /**
+     * Build the event-type row (Event / Out of office). An absence is a kind
+     * of Google event rather than a third place to save to, so this sits as
+     * the first field under the Google destination and is hidden otherwise.
+     * @param {HTMLElement} parentElement
+     * @private
+     */
+    _buildEventTypeRow(parentElement) {
+        const row = this._createRow('fas fa-tag');
+        row.hidden = true;
+
+        const toggle = this._createSegmented('eventTypeGroup', 'Event type');
+        this.typeDefaultBtn = this._createSegmentButton(
+            'eventTypeDefault', 'Event', null, () => this.setEventType('default')
+        );
+        this.typeOooBtn = this._createSegmentButton(
+            'outOfOffice', 'Out of office', null, () => this.setEventType('outOfOffice')
+        );
+        toggle.appendChild(this.typeDefaultBtn);
+        toggle.appendChild(this.typeOooBtn);
+        row.appendChild(toggle);
+
+        parentElement.appendChild(row);
+        this.eventTypeRow = row;
 
         // Explains a disabled "Out of office" button. A disabled button cannot
         // be focused, so the reason has to be visible text rather than a tooltip.
@@ -360,8 +408,23 @@ export class LocalEventFormBuilder {
     }
 
     /**
-     * Build the time row: start, end, a duration picker, and (for an absence)
-     * the all-day chip — all on one line.
+     * Build the all-day toggle (absences only). It gets its own row above the
+     * times rather than a chip beside them: the time row has no width to spare
+     * in a 12-hour locale, and a toggle that hides the times reads best when it
+     * does not move as they disappear.
+     * @param {HTMLElement} parentElement
+     * @private
+     */
+    _buildAllDayRow(parentElement) {
+        const allDay = this._createCheckRow('oooEventAllDay', 'fas fa-sun', 'allDay', 'All day');
+        this.allDayRow = allDay.row;
+        this.allDayCheckbox = allDay.input;
+        this.allDayRow.hidden = true;
+        parentElement.appendChild(this.allDayRow);
+    }
+
+    /**
+     * Build the time row: start, end and a duration picker on one line.
      * @param {HTMLElement} parentElement
      * @private
      */
@@ -420,14 +483,6 @@ export class LocalEventFormBuilder {
 
         row.appendChild(this._wrapSelect(this.durationSelect));
 
-        // All-day only applies to an absence, so it rides along in this row and
-        // stays hidden otherwise.
-        const allDay = this._createChipToggle('oooEventAllDay', 'allDay', 'All day');
-        this.allDayChip = allDay.chip;
-        this.allDayCheckbox = allDay.input;
-        this.allDayChip.hidden = true;
-        row.appendChild(this.allDayChip);
-
         parentElement.appendChild(row);
         this.timeRow = row;
     }
@@ -454,8 +509,8 @@ export class LocalEventFormBuilder {
     }
 
     /**
-     * Build the out-of-office-only fields (auto-decline). "All day" lives in
-     * the time row. Hidden unless the event type is Out of office.
+     * Build the out-of-office-only fields (auto-decline). "All day" has its own
+     * row above the times. Hidden unless the event type is Out of office.
      * @param {HTMLElement} parentElement
      * @private
      */
@@ -765,8 +820,10 @@ export class LocalEventFormBuilder {
         const body = document.createElement('div');
         body.className = 'event-form-body';
 
-        this._buildModeToggle(body);
+        this._buildSourceToggle(body);
+        this._buildEventTypeRow(body);
         this._buildTitleField(body);
+        this._buildAllDayRow(body);
         this._buildTimeRow(body);
 
         // Order below decides what each mode shows: the calendar picker sits
@@ -870,8 +927,8 @@ export class LocalEventFormBuilder {
         const writable = Array.isArray(calendars) ? calendars : [];
         const available = writable.length > 0;
 
-        if (this.modeToggle) {
-            this.modeToggle.hidden = !available;
+        if (this.sourceToggle) {
+            this.sourceToggle.hidden = !available;
         }
         if (this.googleHiddenHint) {
             this.googleHiddenHint.hidden = available || !hiddenWritable;
@@ -883,9 +940,9 @@ export class LocalEventFormBuilder {
         // one resolves.
         const primary = writable.find(cal => cal.primary) || null;
         this.primaryCalendar = primary;
-        if (this.modeOooBtn) {
-            this.modeOooBtn.disabled = !primary;
-            this.modeOooBtn.setAttribute('aria-disabled', String(!primary));
+        if (this.typeOooBtn) {
+            this.typeOooBtn.disabled = !primary;
+            this.typeOooBtn.setAttribute('aria-disabled', String(!primary));
         }
 
         if (available) {
@@ -915,14 +972,20 @@ export class LocalEventFormBuilder {
         const isGoogle = this.currentSource === 'google';
         const isOoo = isGoogle && this.currentEventType === 'outOfOffice';
 
-        const activeMode = isOoo ? 'outOfOffice' : (isGoogle ? 'google' : 'local');
-        [this.modeLocalBtn, this.modeGoogleBtn, this.modeOooBtn].forEach(btn => {
+        const setPressed = (btn, pressed) => {
             if (!btn) return;
-            const active = btn.dataset.mode === activeMode;
-            btn.classList.toggle('active', active);
-            btn.setAttribute('aria-pressed', String(active));
-        });
+            btn.classList.toggle('active', pressed);
+            btn.setAttribute('aria-pressed', String(pressed));
+        };
+        setPressed(this.sourceLocalBtn, !isGoogle);
+        setPressed(this.sourceGoogleBtn, isGoogle);
+        setPressed(this.typeDefaultBtn, !isOoo);
+        setPressed(this.typeOooBtn, isOoo);
 
+        // The event type only applies to Google events
+        if (this.eventTypeRow) {
+            this.eventTypeRow.hidden = !isGoogle;
+        }
         if (this.oooPrimaryHint) {
             this.oooPrimaryHint.hidden = !(isGoogle && !this.primaryCalendar);
         }
@@ -941,8 +1004,8 @@ export class LocalEventFormBuilder {
         if (this.oooFields) {
             this.oooFields.hidden = !isOoo;
         }
-        if (this.allDayChip) {
-            this.allDayChip.hidden = !isOoo;
+        if (this.allDayRow) {
+            this.allDayRow.hidden = !isOoo;
         }
         // Google names an untitled absence "Out of office" — show that as the
         // placeholder, since the title is optional in this mode.
@@ -963,24 +1026,6 @@ export class LocalEventFormBuilder {
     }
 
     /**
-     * Switch the segmented control, which sets the save destination and the
-     * event type together.
-     * @param {string} mode - 'local', 'google' or 'outOfOffice'
-     */
-    setMode(mode) {
-        if (mode === 'outOfOffice') {
-            // The button is disabled without a primary calendar; do nothing
-            // rather than dropping the user back to a destination they did not
-            // ask for.
-            if (!this.primaryCalendar) return;
-            this.currentSource = 'google';
-            this.setEventType('outOfOffice');
-            return;
-        }
-        this.setSource(mode === 'google' ? 'google' : 'local');
-    }
-
-    /**
      * Switch the active save destination and update field visibility.
      * @param {string} source - 'local' or 'google'
      */
@@ -989,10 +1034,6 @@ export class LocalEventFormBuilder {
         if (this.currentSource !== 'google') {
             // Out of office is a Google-only shape; leaving Google drops it
             // (and the all-day state that only exists inside it).
-            this.currentEventType = 'default';
-            this.setAllDay(false);
-        } else if (this.currentEventType === 'outOfOffice') {
-            // Landing back on plain Google leaves the absence behind too.
             this.currentEventType = 'default';
             this.setAllDay(false);
         }
@@ -1043,8 +1084,9 @@ export class LocalEventFormBuilder {
         if (this.allDayCheckbox) {
             this.allDayCheckbox.checked = !!checked;
         }
-        // The all-day chip shares the time row, so only the time controls hide.
-        this.timeRow?.classList.toggle('is-all-day', !!checked);
+        if (this.timeRow) {
+            this.timeRow.hidden = !!checked;
+        }
     }
 
     /**
