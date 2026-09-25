@@ -11,21 +11,23 @@
  * visually hidden, and empty fields name themselves through their placeholder.
  */
 import { RECURRENCE_TYPES } from '../../../lib/constants.js';
-import { timeStringToMinutes, minutesToTimeString } from '../../../lib/time-utils.js';
-
-/** Duration presets offered next to the time inputs, in minutes. */
-const DURATION_PRESETS = [
-    { minutes: 15, msgKey: 'duration15m', fallback: '15 min' },
-    { minutes: 30, msgKey: 'duration30m', fallback: '30 min' },
-    { minutes: 45, msgKey: 'duration45m', fallback: '45 min' },
-    { minutes: 60, msgKey: 'duration1h', fallback: '1 hr' },
-    { minutes: 90, msgKey: 'duration90m', fallback: '1 hr 30 min' },
-    { minutes: 120, msgKey: 'duration2h', fallback: '2 hr' },
-    { minutes: 180, msgKey: 'duration3h', fallback: '3 hr' }
-];
-
-/** Value of the duration option shown when the times match no preset. */
-const CUSTOM_DURATION = 'custom';
+import {
+    applyDurationPreset,
+    createButton,
+    createCloseButton,
+    createDeleteButton,
+    createFooterSpacer,
+    createHiddenLabel,
+    createHint,
+    createIcon,
+    createRow,
+    createSegmentButton,
+    createSegmented,
+    createTimeRow,
+    setPressed,
+    syncDurationFromTimes,
+    wrapSelect
+} from './event-dialog-dom.js';
 
 export class LocalEventFormBuilder {
     /**
@@ -46,6 +48,7 @@ export class LocalEventFormBuilder {
         this.deleteButton = null;
         this.cancelButton = null;
         this.closeButton = null;
+        this.footer = null;
 
         // Containers
         this.errorContainer = null;
@@ -108,65 +111,6 @@ export class LocalEventFormBuilder {
     // ===== Small DOM helpers =====
 
     /**
-     * Build a decorative icon. Every icon in this form sits beside a control
-     * that carries its own accessible name, so icons are never announced.
-     * @param {string} className
-     * @returns {HTMLElement}
-     * @private
-     */
-    _createIcon(className) {
-        const icon = document.createElement('i');
-        icon.className = className;
-        icon.setAttribute('aria-hidden', 'true');
-        return icon;
-    }
-
-    /**
-     * Build a real label that is only visually hidden, so the control keeps its
-     * accessible name now that the form shows no label text.
-     * @param {string} htmlFor - id of the labelled control
-     * @param {string} msgKey
-     * @param {string} fallback
-     * @returns {HTMLLabelElement}
-     * @private
-     */
-    _createHiddenLabel(htmlFor, msgKey, fallback) {
-        const label = document.createElement('label');
-        label.className = 'visually-hidden';
-        label.htmlFor = htmlFor;
-        label.setAttribute('data-localize', `__MSG_${msgKey}__`);
-        label.textContent = window.getLocalizedMessage(msgKey) || fallback;
-        return label;
-    }
-
-    /**
-     * Build an icon-led form row.
-     * @param {string} iconClass - Font Awesome classes for the row icon
-     * @returns {HTMLElement}
-     * @private
-     */
-    _createRow(iconClass) {
-        const row = document.createElement('div');
-        row.className = 'event-form-row';
-        row.appendChild(this._createIcon(`${iconClass} event-form-row-icon`));
-        return row;
-    }
-
-    /**
-     * Wrap a select so the custom chevron can be positioned over it.
-     * @param {HTMLSelectElement} select
-     * @returns {HTMLElement}
-     * @private
-     */
-    _wrapSelect(select) {
-        const wrap = document.createElement('div');
-        wrap.className = 'event-form-select-wrap';
-        wrap.appendChild(select);
-        wrap.appendChild(this._createIcon('fas fa-chevron-down event-form-select-chevron'));
-        return wrap;
-    }
-
-    /**
      * Build a chip that toggles a checkbox. The checkbox stays a real one (only
      * visually hidden) so callers keep reading `.checked`.
      * @param {string} inputId
@@ -207,7 +151,7 @@ export class LocalEventFormBuilder {
         const row = document.createElement('label');
         row.className = 'event-form-check-row';
         row.htmlFor = inputId;
-        row.appendChild(this._createIcon(`${iconClass} event-form-row-icon`));
+        row.appendChild(createIcon(`${iconClass} event-form-row-icon`));
 
         const text = document.createElement('span');
         text.className = 'event-form-check-label';
@@ -222,21 +166,6 @@ export class LocalEventFormBuilder {
         row.appendChild(input);
 
         return { row, input };
-    }
-
-    /**
-     * Build an explanatory hint paragraph.
-     * @param {string} msgKey
-     * @param {string} fallback
-     * @returns {HTMLElement}
-     * @private
-     */
-    _createHint(msgKey, fallback) {
-        const hint = document.createElement('p');
-        hint.className = 'event-form-hint';
-        hint.setAttribute('data-localize', `__MSG_${msgKey}__`);
-        hint.textContent = window.getLocalizedMessage(msgKey) || fallback;
-        return hint;
     }
 
     // ===== Sections =====
@@ -256,65 +185,10 @@ export class LocalEventFormBuilder {
         this.editTitleElement.textContent = window.getLocalizedMessage('eventDialogTitleCreate') || 'Create event';
         header.appendChild(this.editTitleElement);
 
-        // The base ModalComponent's "×" is hidden in edit mode (it cannot live
-        // inside this header), so the form supplies its own real button.
-        this.closeButton = document.createElement('button');
-        this.closeButton.type = 'button';
-        this.closeButton.className = 'event-form-close';
-        this.closeButton.setAttribute('data-localize-aria-label', '__MSG_close__');
-        this.closeButton.setAttribute('aria-label', window.getLocalizedMessage('close') || 'Close');
-        this.closeButton.appendChild(this._createIcon('fas fa-times'));
-        this.modal.addEventListener(this.closeButton, 'click', () => this.modal.hide());
+        this.closeButton = createCloseButton(this.modal, () => this.modal.hide());
         header.appendChild(this.closeButton);
 
         parentElement.appendChild(header);
-    }
-
-    /**
-     * Build a segmented control: mutually exclusive toggle buttons (Tab reaches
-     * each, Enter/Space activates). We deliberately use role=group +
-     * aria-pressed rather than radiogroup/radio, which would promise arrow-key
-     * navigation we don't wire.
-     * @param {string} ariaMsgKey - Message key for the group's accessible name
-     * @param {string} ariaFallback
-     * @returns {HTMLElement}
-     * @private
-     */
-    _createSegmented(ariaMsgKey, ariaFallback) {
-        const group = document.createElement('div');
-        group.className = 'event-segmented';
-        group.setAttribute('role', 'group');
-        group.setAttribute('data-localize-aria-label', `__MSG_${ariaMsgKey}__`);
-        group.setAttribute('aria-label', window.getLocalizedMessage(ariaMsgKey) || ariaFallback);
-        return group;
-    }
-
-    /**
-     * Build one button of a segmented control.
-     * @param {string} msgKey
-     * @param {string} fallback
-     * @param {string|null} iconClass - Font Awesome classes, or null for text only
-     * @param {Function} onPick
-     * @returns {HTMLButtonElement}
-     * @private
-     */
-    _createSegmentButton(msgKey, fallback, iconClass, onPick) {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'event-segmented-btn';
-        btn.setAttribute('aria-pressed', 'false');
-
-        if (iconClass) {
-            btn.appendChild(this._createIcon(iconClass));
-        }
-
-        const label = document.createElement('span');
-        label.setAttribute('data-localize', `__MSG_${msgKey}__`);
-        label.textContent = window.getLocalizedMessage(msgKey) || fallback;
-        btn.appendChild(label);
-
-        this.modal.addEventListener(btn, 'click', onPick);
-        return btn;
     }
 
     /**
@@ -324,14 +198,14 @@ export class LocalEventFormBuilder {
      * @private
      */
     _buildSourceToggle(parentElement) {
-        const toggle = this._createSegmented('saveDestination', 'Save destination');
+        const toggle = createSegmented('saveDestination', 'Save destination');
 
         // Local = stored on this device; Google = written to Google Calendar
-        this.sourceLocalBtn = this._createSegmentButton(
-            'destinationLocal', 'Local', 'fas fa-laptop', () => this.setSource('local')
+        this.sourceLocalBtn = createSegmentButton(
+            this.modal, 'destinationLocal', 'Local', 'fas fa-laptop', () => this.setSource('local')
         );
-        this.sourceGoogleBtn = this._createSegmentButton(
-            'destinationGoogle', 'Google', 'fab fa-google', () => this.setSource('google')
+        this.sourceGoogleBtn = createSegmentButton(
+            this.modal, 'destinationGoogle', 'Google', 'fab fa-google', () => this.setSource('google')
         );
 
         toggle.appendChild(this.sourceLocalBtn);
@@ -345,7 +219,7 @@ export class LocalEventFormBuilder {
         // Shown when writable Google calendars exist but none are displayed on
         // the timeline (the toggle would otherwise vanish with no explanation
         // of why Google saving is unavailable).
-        this.googleHiddenHint = this._createHint(
+        this.googleHiddenHint = createHint(
             'googleDestinationHidden',
             'To save to Google, show a writable calendar in the calendar filter first.'
         );
@@ -361,15 +235,15 @@ export class LocalEventFormBuilder {
      * @private
      */
     _buildEventTypeRow(parentElement) {
-        const row = this._createRow('fas fa-tag');
+        const row = createRow('fas fa-tag');
         row.hidden = true;
 
-        const toggle = this._createSegmented('eventTypeGroup', 'Event type');
-        this.typeDefaultBtn = this._createSegmentButton(
-            'eventTypeDefault', 'Event', null, () => this.setEventType('default')
+        const toggle = createSegmented('eventTypeGroup', 'Event type');
+        this.typeDefaultBtn = createSegmentButton(
+            this.modal, 'eventTypeDefault', 'Event', null, () => this.setEventType('default')
         );
-        this.typeOooBtn = this._createSegmentButton(
-            'outOfOffice', 'Out of office', null, () => this.setEventType('outOfOffice')
+        this.typeOooBtn = createSegmentButton(
+            this.modal, 'outOfOffice', 'Out of office', null, () => this.setEventType('outOfOffice')
         );
         toggle.appendChild(this.typeDefaultBtn);
         toggle.appendChild(this.typeOooBtn);
@@ -380,7 +254,7 @@ export class LocalEventFormBuilder {
 
         // Explains a disabled "Out of office" button. A disabled button cannot
         // be focused, so the reason has to be visible text rather than a tooltip.
-        this.oooPrimaryHint = this._createHint(
+        this.oooPrimaryHint = createHint(
             'oooPrimaryOnly',
             'Out-of-office events can only be created on your primary calendar. Show it in the calendar filter first.'
         );
@@ -395,7 +269,7 @@ export class LocalEventFormBuilder {
      * @private
      */
     _buildTitleField(parentElement) {
-        parentElement.appendChild(this._createHiddenLabel('eventTitle', 'eventTitle', 'Title'));
+        parentElement.appendChild(createHiddenLabel('eventTitle', 'eventTitle', 'Title'));
 
         this.titleInput = document.createElement('input');
         this.titleInput.type = 'text';
@@ -432,64 +306,13 @@ export class LocalEventFormBuilder {
      * @private
      */
     _buildTimeRow(parentElement) {
-        const row = this._createRow('fas fa-clock');
+        const time = createTimeRow({ start: 'eventStartTime', end: 'eventEndTime', duration: 'eventDuration' });
+        this.startTimeInput = time.startInput;
+        this.endTimeInput = time.endInput;
+        this.durationSelect = time.durationSelect;
 
-        const fields = document.createElement('div');
-        fields.className = 'event-time-fields';
-        row.appendChild(fields);
-
-        const makeTimeInput = (id, msgKey, fallback) => {
-            fields.appendChild(this._createHiddenLabel(id, msgKey, fallback));
-
-            const input = document.createElement('input');
-            input.type = 'time';
-            input.id = id;
-            input.className = 'event-form-field event-time-input';
-            input.setAttribute('list', 'time-list');
-            input.required = true;
-            fields.appendChild(input);
-            return input;
-        };
-
-        this.startTimeInput = makeTimeInput('eventStartTime', 'startTime', 'Start time');
-
-        const separator = document.createElement('span');
-        separator.className = 'event-time-separator';
-        separator.setAttribute('aria-hidden', 'true');
-        separator.textContent = '–';
-        fields.appendChild(separator);
-
-        this.endTimeInput = makeTimeInput('eventEndTime', 'endTime', 'End time');
-
-        // Duration picker: sets the end time from the start time. It only ever
-        // writes the end time, so changing the start never silently moves it.
-        fields.appendChild(this._createHiddenLabel('eventDuration', 'duration', 'Duration'));
-
-        this.durationSelect = document.createElement('select');
-        this.durationSelect.id = 'eventDuration';
-        this.durationSelect.className = 'event-duration-select';
-
-        DURATION_PRESETS.forEach(preset => {
-            const option = document.createElement('option');
-            option.value = String(preset.minutes);
-            option.setAttribute('data-localize', `__MSG_${preset.msgKey}__`);
-            option.textContent = window.getLocalizedMessage(preset.msgKey) || preset.fallback;
-            this.durationSelect.appendChild(option);
-        });
-
-        // Shown when the times match no preset. Disabled because picking it
-        // would mean nothing — it reports a state, it does not set one.
-        const customOption = document.createElement('option');
-        customOption.value = CUSTOM_DURATION;
-        customOption.disabled = true;
-        customOption.setAttribute('data-localize', '__MSG_durationCustom__');
-        customOption.textContent = window.getLocalizedMessage('durationCustom') || 'Custom';
-        this.durationSelect.appendChild(customOption);
-
-        fields.appendChild(this._wrapSelect(this.durationSelect));
-
-        parentElement.appendChild(row);
-        this.timeRow = row;
+        parentElement.appendChild(time.row);
+        this.timeRow = time.row;
     }
 
     /**
@@ -499,15 +322,15 @@ export class LocalEventFormBuilder {
      * @private
      */
     _buildGoogleFields(parentElement) {
-        const row = this._createRow('fas fa-calendar-alt');
+        const row = createRow('fas fa-calendar-alt');
         row.hidden = true;
 
-        row.appendChild(this._createHiddenLabel('googleEventCalendar', 'targetCalendar', 'Calendar'));
+        row.appendChild(createHiddenLabel('googleEventCalendar', 'targetCalendar', 'Calendar'));
 
         this.calendarSelect = document.createElement('select');
         this.calendarSelect.id = 'googleEventCalendar';
         this.calendarSelect.className = 'event-form-field';
-        row.appendChild(this._wrapSelect(this.calendarSelect));
+        row.appendChild(wrapSelect(this.calendarSelect));
 
         parentElement.appendChild(row);
         this.googleFields = row;
@@ -536,7 +359,7 @@ export class LocalEventFormBuilder {
 
         // Auto-decline reaches outside the panel (organizers are notified), so
         // spell out the consequence next to the checkbox rather than hiding it.
-        const declineHint = this._createHint(
+        const declineHint = createHint(
             'autoDeclineHint',
             'Meetings you already accepted are declined too, and organizers are notified.'
         );
@@ -554,9 +377,9 @@ export class LocalEventFormBuilder {
      * @private
      */
     _buildDescriptionField(parentElement) {
-        const row = this._createRow('fas fa-align-left');
+        const row = createRow('fas fa-align-left');
 
-        row.appendChild(this._createHiddenLabel('eventDescription', 'eventDescription', 'Description'));
+        row.appendChild(createHiddenLabel('eventDescription', 'eventDescription', 'Description'));
 
         this.descriptionInput = document.createElement('textarea');
         this.descriptionInput.id = 'eventDescription';
@@ -607,7 +430,7 @@ export class LocalEventFormBuilder {
         toggle.setAttribute('aria-expanded', 'false');
         toggle.setAttribute('aria-controls', 'googleAdvancedBody');
 
-        toggle.appendChild(this._createIcon('fas fa-chevron-down accordion-chevron'));
+        toggle.appendChild(createIcon('fas fa-chevron-down accordion-chevron'));
 
         const toggleLabel = document.createElement('span');
         toggleLabel.setAttribute('data-localize', '__MSG_advancedSettings__');
@@ -623,8 +446,8 @@ export class LocalEventFormBuilder {
         body.hidden = true;
 
         // Location
-        const locationRow = this._createRow('fas fa-map-marker-alt');
-        locationRow.appendChild(this._createHiddenLabel('googleEventLocation', 'eventLocation', 'Location'));
+        const locationRow = createRow('fas fa-map-marker-alt');
+        locationRow.appendChild(createHiddenLabel('googleEventLocation', 'eventLocation', 'Location'));
 
         this.locationInput = document.createElement('input');
         this.locationInput.type = 'text';
@@ -636,8 +459,8 @@ export class LocalEventFormBuilder {
         body.appendChild(locationRow);
 
         // Notification (reminder)
-        const reminderRow = this._createRow('fas fa-bell');
-        reminderRow.appendChild(this._createHiddenLabel('googleEventReminder', 'notification', 'Notification'));
+        const reminderRow = createRow('fas fa-bell');
+        reminderRow.appendChild(createHiddenLabel('googleEventReminder', 'notification', 'Notification'));
 
         this.reminderSelect = document.createElement('select');
         this.reminderSelect.id = 'googleEventReminder';
@@ -656,7 +479,7 @@ export class LocalEventFormBuilder {
             option.textContent = `${minutes}${unit}`;
             this.reminderSelect.appendChild(option);
         });
-        reminderRow.appendChild(this._wrapSelect(this.reminderSelect));
+        reminderRow.appendChild(wrapSelect(this.reminderSelect));
         body.appendChild(reminderRow);
 
         // Google Meet
@@ -684,8 +507,8 @@ export class LocalEventFormBuilder {
         section.className = 'recurrence-section';
         this.recurrenceSection = section;
 
-        const row = this._createRow('fas fa-sync-alt');
-        row.appendChild(this._createHiddenLabel('recurrenceType', 'recurrence', 'Recurrence'));
+        const row = createRow('fas fa-sync-alt');
+        row.appendChild(createHiddenLabel('recurrenceType', 'recurrence', 'Recurrence'));
 
         this.recurrenceSelect = document.createElement('select');
         this.recurrenceSelect.id = 'recurrenceType';
@@ -707,7 +530,7 @@ export class LocalEventFormBuilder {
             this.recurrenceSelect.appendChild(option);
         });
 
-        row.appendChild(this._wrapSelect(this.recurrenceSelect));
+        row.appendChild(wrapSelect(this.recurrenceSelect));
         section.appendChild(row);
 
         // Weekly day selection, indented to line up with the controls above
@@ -747,7 +570,7 @@ export class LocalEventFormBuilder {
         endDateSection.hidden = true;
 
         endDateSection.appendChild(
-            this._createHiddenLabel('recurrenceEndDate', 'recurrenceEndDate', 'End date')
+            createHiddenLabel('recurrenceEndDate', 'recurrenceEndDate', 'End date')
         );
 
         this.endDateInput = document.createElement('input');
@@ -777,45 +600,23 @@ export class LocalEventFormBuilder {
         const footer = document.createElement('footer');
         footer.className = 'event-form-footer';
 
-        this.deleteButton = document.createElement('button');
-        this.deleteButton.type = 'button';
-        this.deleteButton.id = 'deleteEventButton';
-        this.deleteButton.className = 'event-form-delete';
-        this.deleteButton.appendChild(this._createIcon('fas fa-trash-alt'));
-
-        // In a language with long button labels this is the one that gives way
-        // (it truncates, down to the icon), so the tooltip keeps the full word.
-        this.deleteButton.setAttribute('data-localize-title', '__MSG_delete__');
-        this.deleteButton.title = window.getLocalizedMessage('delete') || 'Delete';
-
-        const deleteLabel = document.createElement('span');
-        deleteLabel.className = 'event-form-delete-label';
-        deleteLabel.setAttribute('data-localize', '__MSG_delete__');
-        deleteLabel.textContent = window.getLocalizedMessage('delete') || 'Delete';
-        this.deleteButton.appendChild(deleteLabel);
+        this.deleteButton = createDeleteButton(this.modal, { id: 'deleteEventButton' });
         footer.appendChild(this.deleteButton);
 
-        const spacer = document.createElement('div');
-        spacer.className = 'event-form-footer-spacer';
-        footer.appendChild(spacer);
+        footer.appendChild(createFooterSpacer());
 
-        this.cancelButton = document.createElement('button');
-        this.cancelButton.type = 'button';
-        this.cancelButton.id = 'cancelEventButton';
-        this.cancelButton.className = 'event-form-btn event-form-btn-secondary';
-        this.cancelButton.setAttribute('data-localize', '__MSG_cancel__');
-        this.cancelButton.textContent = window.getLocalizedMessage('cancel') || 'Cancel';
+        this.cancelButton = createButton(this.modal, {
+            id: 'cancelEventButton', variant: 'secondary', msgKey: 'cancel', fallback: 'Cancel'
+        });
         footer.appendChild(this.cancelButton);
 
-        this.saveButton = document.createElement('button');
-        this.saveButton.type = 'button';
-        this.saveButton.id = 'saveEventButton';
-        this.saveButton.className = 'event-form-btn event-form-btn-primary';
-        this.saveButton.setAttribute('data-localize', '__MSG_save__');
-        this.saveButton.textContent = window.getLocalizedMessage('save') || 'Save';
+        this.saveButton = createButton(this.modal, {
+            id: 'saveEventButton', variant: 'primary', msgKey: 'save', fallback: 'Save'
+        });
         footer.appendChild(this.saveButton);
 
         parentElement.appendChild(footer);
+        this.footer = footer;
     }
 
     /**
@@ -872,17 +673,8 @@ export class LocalEventFormBuilder {
      * @private
      */
     _applyDurationPreset() {
-        const minutes = Number(this.durationSelect?.value);
-        const start = timeStringToMinutes(this.startTimeInput?.value);
-
-        if (Number.isFinite(minutes) && minutes > 0 && start !== null) {
-            this.endTimeInput.value = minutesToTimeString(start + minutes);
-        }
-
-        // Re-read the times rather than trusting the preset: without a start
-        // time nothing was applied, and a duration crossing midnight is clamped.
-        this._syncDurationFromTimes();
-
+        if (!this.durationSelect) return;
+        applyDurationPreset(this.startTimeInput, this.endTimeInput, this.durationSelect);
         if (this._callbacks.onValidateTimes) this._callbacks.onValidateTimes();
     }
 
@@ -892,13 +684,7 @@ export class LocalEventFormBuilder {
      */
     _syncDurationFromTimes() {
         if (!this.durationSelect) return;
-
-        const start = timeStringToMinutes(this.startTimeInput?.value);
-        const end = timeStringToMinutes(this.endTimeInput?.value);
-        const diff = start !== null && end !== null ? end - start : null;
-        const matched = diff !== null && DURATION_PRESETS.some(preset => preset.minutes === diff);
-
-        this.durationSelect.value = matched ? String(diff) : CUSTOM_DURATION;
+        syncDurationFromTimes(this.startTimeInput, this.endTimeInput, this.durationSelect);
     }
 
     /**
@@ -983,11 +769,6 @@ export class LocalEventFormBuilder {
         const isGoogle = this.currentSource === 'google';
         const isOoo = isGoogle && this.currentEventType === 'outOfOffice';
 
-        const setPressed = (btn, pressed) => {
-            if (!btn) return;
-            btn.classList.toggle('active', pressed);
-            btn.setAttribute('aria-pressed', String(pressed));
-        };
         setPressed(this.sourceLocalBtn, !isGoogle);
         setPressed(this.sourceGoogleBtn, isGoogle);
         setPressed(this.typeDefaultBtn, !isOoo);

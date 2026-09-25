@@ -13,10 +13,10 @@
 - [ ] 共有カレンダー（writer 権限）上の外部主催者イベント: API 上は編集可能だが、`isEditableGoogleEvent()` の主催者ゲートが保守的に編集/削除を非表示にする（誤って招待コピーに編集を出すよりも安全側に倒した意図的な仕様）。必要なら accessRole=writer の場合の緩和を検討。
 - [ ] カレンダーリストの共有キャッシュ: 現状は作成モーダル（60秒TTL）のみキャッシュし、タイムラインフィルター・設定ページは都度取得。3箇所で共有するキャッシュ＋無効化契約を設計するリファクタ候補。
 - [ ] `sendUpdates` は未指定（API既定 "none"）— 編集・削除してもゲストに通知メールは送られない。ゲスト付きイベントの編集を本格対応する際に通知可否の UX を設計すること。
-- [ ] `.btn`/`.btn-success`/`.btn-danger`/`.btn-secondary` クラスは CSS 未定義（スタイルは `#id` セレクタ由来）。ローカルモーダルの既存パターン踏襲だが、ユーティリティクラスとして定義するか外すか整理する。
+- [x] `.btn`/`.btn-success`/`.btn-danger`/`.btn-secondary` クラスは CSS 未定義だった問題 — 予定の詳細・編集・削除確認を `event-dialog-dom.js` の共通部品（`.event-form-btn-*`）に置き換え、サイドパネルのモーダルからは使われなくなった（設定ページは Bootstrap を読み込むので対象外）。
 - [ ] `background.js` の `createEvent`/`updateEvent`/`deleteEvent` ハンドラ自体の単体テスト（現状はクライアント層のテストでカバー。ハンドラ専用テストの前例がないため未整備）。
 - [ ] `SidePanelUIController._getWritableCalendars()` の単体テスト（`googleIntegrated=false` で空配列を返すガードの検証。`side_panel.js` はトップレベルでDOM初期化するため import 不可 — コントローラのテスト基盤整備が前提）。
-- [ ] `GoogleEventModal` の編集・削除UI（`_isEditableEvent` ゲート、インライン削除確認、`GoogleEventEditFormBuilder`）のDOMテスト（jsdom + コンポーネント基盤が必要）。
+- [ ] `GoogleEventModal` の編集・削除UI（`_isEditableEvent` ゲート、フッターの出し分け `_setFooters`（操作 / 削除確認 / 出欠）、出欠の本文・フッター配置と送信結果の表示、`GoogleEventEditFormBuilder`）、`LocalEventModal` のインライン削除確認（表示・編集の両モード）、`DeleteRecurringDialog` のフォーカス・Escape・Tab 循環のDOMテスト（jsdom + コンポーネント基盤が必要）。実拡張での確認は Playwright の手元スクリプトで実施済み（2026-09、ja/en × ライト/ダーク × 384/320px）。
 - [ ] 不在（OOO）イベントの**編集**: `eventType` は作成後に変更できないため、patch できるのは summary / start / end / `outOfOfficeProperties` のみ。既存の Google 編集フォームは時刻＋場所＋通知が前提なので、不在専用の編集フォームが要る。現状は削除のみ対応（`isDeletableGoogleEvent()`）。
 - [ ] 不在の辞退設定の3値化: 現状は `declineNone` / `declineAllConflictingInvitations` のオン・オフのみ。Google 本体と揃えるなら `declineOnlyNewConflictingInvitations` と辞退メッセージ（`outOfOfficeProperties.declineMessage`）の入力欄が必要。
 - [ ] 複数日にまたがる不在: 現状の「終日」は1日単位（`00:00` → 翌 `00:00`）。日付範囲の指定 UI と、`createAllDayEventElement()` の Day X/Y バッジ（`start.date`/`end.date` 前提）の対応が必要。
@@ -26,7 +26,7 @@
 
 ## テスト
 
-- [ ] 予定モーダルの多言語レイアウト監査の自動化: 実拡張を Playwright で開き、各ステート（ローカル / 毎週 / Google＋詳細 / 不在 / メインなし / エラー / 編集）ではみ出し・折り返し・select の切れを検出する検査を ja / en / 疑似翻訳（+40%）× パネル幅 384 / 320px で回した（2026-09 実施、手元スクリプト）。`scripts/` に取り込んで `npm run` 化するか、jsdom では再現できないため Playwright 前提の別枠テストとして整備する。
+- [ ] 予定モーダルの多言語レイアウト監査の自動化: 実拡張を Playwright で開き、各ステート（ローカル / 毎週 / Google＋詳細 / 不在 / メインなし / エラー / 編集）ではみ出し・折り返し・select の切れを検出する検査を ja / en / 疑似翻訳（+40%）× パネル幅 384 / 320px で回した（2026-09 実施、手元スクリプト）。詳細・Google 編集・削除確認・出欠・繰り返し削除も同様にライト/ダーク込みで確認済み。`scripts/` に取り込んで `npm run` 化するか、jsdom では再現できないため Playwright 前提の別枠テストとして整備する。
 - [ ] `_showAuthExpiredBanner()` のDOMテスト（jsdom環境が必要）
 - [ ] `checkGoogleAuthStatus()` の設定ページ分岐テスト（コンポーネントモックが必要）
 - [ ] `buildCalendarErrorResponse()` のテスト（background.js からの export が必要）
@@ -75,6 +75,8 @@
 
 ## 用語統一
 
+- [ ] 日本語の「イベント」と「予定」の混在: 予定の作成・詳細・削除まわり（ダイアログ見出し、削除確認、繰り返し削除、出欠の結果表示）は「予定」に揃えたが、`_locales/ja/messages.json` には他に「イベント」表記が100件ほど残る（設定ページ、エラーメッセージ等）。どこまで「予定」に寄せるかを決めてまとめて置き換える。
+- [ ] 繰り返し予定の回への出欠: 「今回のみ」の補足は不参加にだけ付く（既存仕様）が、API にはインスタンス ID で送るため参加・未定も実際はその回だけに効く。補足を3択すべてに出すか、グループのラベル側（「今回の出欠」）で示すかを検討。
 - [x] リマインダー表現の統一: `remindMeBefore` を「開始前に通知する」/"Notify me before the event" に変更し、設定ページ・Google 用の「通知」表記と統一済み。通知タイミングは設定（`reminderMinutes`）で変わるため、ラベルに分数は書かない。
 
 ## 既知の不具合（要設計）

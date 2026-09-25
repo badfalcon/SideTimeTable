@@ -31,6 +31,74 @@
     "message": "Edit event",
     "description": "Header of the event dialog in edit mode"
   },
+  "openInGoogleCalendar": {
+    "message": "Open in Google Calendar",
+    "description": "Icon button in the event details header that opens the event in Google Calendar"
+  },
+  "guestCountOne": {
+    "message": "1 guest",
+    "description": "Guest summary in the event details, exactly one guest"
+  },
+  "guestCountMany": {
+    "message": "$1 guests",
+    "description": "Guest summary in the event details; $1 is the number of guests"
+  },
+  "guestSummaryYes": {
+    "message": "$1 yes",
+    "description": "Guest breakdown: how many accepted ($1)"
+  },
+  "guestSummaryNo": {
+    "message": "$1 no",
+    "description": "Guest breakdown: how many declined ($1)"
+  },
+  "guestSummaryMaybe": {
+    "message": "$1 maybe",
+    "description": "Guest breakdown: how many answered maybe ($1)"
+  },
+  "guestSummaryAwaiting": {
+    "message": "$1 awaiting",
+    "description": "Guest breakdown: how many have not answered ($1)"
+  },
+  "oooDeclineNewOnly": {
+    "message": "Decline only new conflicting invitations",
+    "description": "Out-of-office details: only new invitations are declined"
+  },
+  "googleEditElsewhereLead": {
+    "message": "Guests, repeat and Meet:",
+    "description": "Google edit form hint, before the link to Google Calendar"
+  },
+  "googleEditElsewhereLink": {
+    "message": "edit in Google Calendar",
+    "description": "Google edit form hint: link to the event in Google Calendar"
+  },
+  "localDeleteConfirm": {
+    "message": "Delete this event? This can't be undone.",
+    "description": "Inline confirmation before deleting a local event"
+  },
+  "deleteScopeLegend": {
+    "message": "What to delete",
+    "description": "Accessible name of the choice in the recurring delete dialog"
+  },
+  "deleteScopeThis": {
+    "message": "This event",
+    "description": "Recurring delete dialog: delete only the occurrence on screen"
+  },
+  "deleteScopeThisDetail": {
+    "message": "Only $1",
+    "description": "Recurring delete dialog: which occurrence; $1 is its date, e.g. \"Thu, Sep 25\""
+  },
+  "deleteScopeThisDetailNoDate": {
+    "message": "Only this occurrence",
+    "description": "Recurring delete dialog: which occurrence, when its date is unknown"
+  },
+  "deleteScopeAll": {
+    "message": "All events",
+    "description": "Recurring delete dialog: delete every occurrence"
+  },
+  "deleteScopeAllDetail": {
+    "message": "Every occurrence in this series",
+    "description": "Recurring delete dialog: what \"All events\" covers"
+  },
   "eventTitlePlaceholder": {
     "message": "Title",
     "description": "Placeholder of the event title input"
@@ -927,20 +995,8 @@
     "description": "Saturday abbreviation"
   },
   "deleteRecurringTitle": {
-    "message": "Delete recurring event?",
+    "message": "Delete recurring event",
     "description": "Title for delete recurring event dialog"
-  },
-  "deleteRecurringMessage": {
-    "message": "Do you want to delete this occurrence only or all occurrences?",
-    "description": "Message for delete recurring event dialog"
-  },
-  "deleteThisOccurrence": {
-    "message": "Delete this occurrence",
-    "description": "Delete this occurrence button"
-  },
-  "deleteAllOccurrences": {
-    "message": "Delete all occurrences",
-    "description": "Delete all occurrences button"
   },
   "endDateMustBeLater": {
     "message": "End date must be on or after start date",
@@ -1263,19 +1319,19 @@
     "description": "Help text for the thin scrollbar toggle"
   },
   "rsvpLabel": {
-    "message": "Your response",
+    "message": "Going?",
     "description": "Label for the RSVP response buttons"
   },
   "rsvpAccept": {
-    "message": "Accept",
+    "message": "Yes",
     "description": "Accept button for event RSVP"
   },
   "rsvpDecline": {
-    "message": "Decline",
+    "message": "No",
     "description": "Decline button for event RSVP"
   },
   "rsvpDeclineScope": {
-    "message": "(this only)",
+    "message": "this only",
     "description": "Sub-label appended below the Decline button on a recurring event instance to clarify scope"
   },
   "rsvpTentative": {
@@ -1805,9 +1861,5 @@
   "oooPrimaryOnly": {
     "message": "Out-of-office events can only be created on your primary calendar. Show it in the calendar filter first.",
     "description": "Shown when out-of-office cannot be created because the primary calendar is not displayed"
-  },
-  "googleEditOtherFields": {
-    "message": "Other fields can be edited in Google Calendar.",
-    "description": "Muted note in the Google event edit form about fields it does not cover"
   }
 }

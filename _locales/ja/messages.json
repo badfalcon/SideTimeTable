@@ -31,6 +31,74 @@
     "message": "予定を編集",
     "description": "Header of the event dialog in edit mode"
   },
+  "openInGoogleCalendar": {
+    "message": "Google カレンダーで開く",
+    "description": "Icon button in the event details header that opens the event in Google Calendar"
+  },
+  "guestCountOne": {
+    "message": "参加者 1人",
+    "description": "Guest summary in the event details, exactly one guest"
+  },
+  "guestCountMany": {
+    "message": "参加者 $1人",
+    "description": "Guest summary in the event details; $1 is the number of guests"
+  },
+  "guestSummaryYes": {
+    "message": "参加 $1",
+    "description": "Guest breakdown: how many accepted ($1)"
+  },
+  "guestSummaryNo": {
+    "message": "不参加 $1",
+    "description": "Guest breakdown: how many declined ($1)"
+  },
+  "guestSummaryMaybe": {
+    "message": "未定 $1",
+    "description": "Guest breakdown: how many answered maybe ($1)"
+  },
+  "guestSummaryAwaiting": {
+    "message": "未回答 $1",
+    "description": "Guest breakdown: how many have not answered ($1)"
+  },
+  "oooDeclineNewOnly": {
+    "message": "新しい招待のみ辞退する",
+    "description": "Out-of-office details: only new invitations are declined"
+  },
+  "googleEditElsewhereLead": {
+    "message": "ゲスト・繰り返し・Meet は",
+    "description": "Google edit form hint, before the link to Google Calendar"
+  },
+  "googleEditElsewhereLink": {
+    "message": "Google カレンダーで編集",
+    "description": "Google edit form hint: link to the event in Google Calendar"
+  },
+  "localDeleteConfirm": {
+    "message": "この予定を削除しますか？この操作は取り消せません。",
+    "description": "Inline confirmation before deleting a local event"
+  },
+  "deleteScopeLegend": {
+    "message": "削除する範囲",
+    "description": "Accessible name of the choice in the recurring delete dialog"
+  },
+  "deleteScopeThis": {
+    "message": "この予定のみ",
+    "description": "Recurring delete dialog: delete only the occurrence on screen"
+  },
+  "deleteScopeThisDetail": {
+    "message": "$1の回だけ",
+    "description": "Recurring delete dialog: which occurrence; $1 is its date, e.g. \"9月25日(木)\""
+  },
+  "deleteScopeThisDetailNoDate": {
+    "message": "この回だけ",
+    "description": "Recurring delete dialog: which occurrence, when its date is unknown"
+  },
+  "deleteScopeAll": {
+    "message": "すべての予定",
+    "description": "Recurring delete dialog: delete every occurrence"
+  },
+  "deleteScopeAllDetail": {
+    "message": "この繰り返しのすべての回",
+    "description": "Recurring delete dialog: what \"All events\" covers"
+  },
   "eventTitlePlaceholder": {
     "message": "タイトル",
     "description": "Placeholder of the event title input"
@@ -751,7 +819,7 @@
     "description": "参加者が招待を辞退したステータス"
   },
   "tentative": {
-    "message": "仮承諾",
+    "message": "未定",
     "description": "参加者が仮承諾したステータス"
   },
   "noResponse": {
@@ -927,20 +995,8 @@
     "description": "土曜日の略称"
   },
   "deleteRecurringTitle": {
-    "message": "繰り返しイベントを削除",
+    "message": "繰り返しの予定を削除",
     "description": "繰り返しイベント削除ダイアログのタイトル"
-  },
-  "deleteRecurringMessage": {
-    "message": "この予定のみ削除しますか、すべての予定を削除しますか？",
-    "description": "繰り返しイベント削除ダイアログのメッセージ"
-  },
-  "deleteThisOccurrence": {
-    "message": "この予定のみ削除",
-    "description": "この予定のみ削除ボタン"
-  },
-  "deleteAllOccurrences": {
-    "message": "すべての予定を削除",
-    "description": "すべての予定を削除ボタン"
   },
   "endDateMustBeLater": {
     "message": "終了日は開始日以降に設定してください",
@@ -1263,7 +1319,7 @@
     "description": "細いスクロールバーのヘルプテキスト"
   },
   "rsvpLabel": {
-    "message": "出欠の回答",
+    "message": "出欠",
     "description": "出欠回答ボタンのラベル"
   },
   "rsvpAccept": {
@@ -1275,7 +1331,7 @@
     "description": "出欠回答の不参加ボタン"
   },
   "rsvpDeclineScope": {
-    "message": "（今回のみ）",
+    "message": "今回のみ",
     "description": "繰り返しイベントインスタンスの不参加ボタン下に表示されるスコープ補足ラベル"
   },
   "rsvpTentative": {
@@ -1287,7 +1343,7 @@
     "description": "出欠回答が正常に送信された際のフィードバック"
   },
   "rsvpDeclinedFeedback": {
-    "message": "不参加にしました。イベントは非表示になります。",
+    "message": "不参加にしました。予定は非表示になります。",
     "description": "不参加を選択した際のフィードバック"
   },
   "rsvpErrorFeedback": {
@@ -1775,7 +1831,7 @@
     "description": "Googleカレンダーイベントの削除に失敗した際のエラーメッセージ"
   },
   "googleDeleteConfirm": {
-    "message": "このイベントをGoogleカレンダーから削除しますか？この操作は取り消せません。",
+    "message": "この予定をGoogleカレンダーから削除しますか？この操作は取り消せません。",
     "description": "Googleカレンダーイベント削除前のインライン確認メッセージ"
   },
   "confirmDelete": {
@@ -1805,9 +1861,5 @@
   "oooPrimaryOnly": {
     "message": "不在の予定はメインカレンダーにのみ作成できます。カレンダーフィルターでメインカレンダーを表示してください。",
     "description": "Shown when out-of-office cannot be created because the primary calendar is not displayed"
-  },
-  "googleEditOtherFields": {
-    "message": "その他の項目はGoogleカレンダーで編集できます。",
-    "description": "Googleイベント編集フォームで編集できない項目についての補足"
   }
 }

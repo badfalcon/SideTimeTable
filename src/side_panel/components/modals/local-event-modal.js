@@ -5,6 +5,16 @@ import { ModalComponent } from './modal-component.js';
 import { RECURRENCE_TYPES } from '../../../lib/constants.js';
 import { LocalEventFormBuilder } from './local-event-form-builder.js';
 import { DeleteRecurringDialog } from './delete-recurring-dialog.js';
+import {
+    createButton,
+    createDeleteButton,
+    createDeleteConfirmFooter,
+    createDetailHeader,
+    createDetailRow,
+    createFooterSpacer,
+    msg,
+    setLocalizedText
+} from './event-dialog-dom.js';
 import { buildGoogleEventResource } from '../../../lib/google-event-utils.js';
 import { buildRequestId } from '../../../lib/request-dedupe.js';
 
@@ -18,11 +28,19 @@ export class LocalEventModal extends ModalComponent {
         // View mode elements
         this.viewContent = null;
         this.viewTitleElement = null;
-        this.viewTimeElement = null;
-        this.viewDescriptionElement = null;
-        this.viewReminderElement = null;
-        this.viewRecurrenceElement = null;
-        this.viewButtons = null;
+        this.viewCloseButton = null;
+        this.viewTimeRow = null;
+        this.viewRecurrenceRow = null;
+        this.viewDescriptionRow = null;
+        this.viewReminderRow = null;
+        this.viewActionFooter = null;
+        this.viewEditButton = null;
+        this.viewDeleteButton = null;
+
+        // Delete confirmation footers (one per mode, swapped in for the
+        // mode's own footer)
+        this.viewConfirmFooter = null;
+        this.editConfirmFooter = null;
 
         // Edit mode container
         this.editContent = null;
@@ -53,8 +71,8 @@ export class LocalEventModal extends ModalComponent {
 
         // === View mode content ===
         this.viewContent = document.createElement('div');
-        this.viewContent.className = 'local-event-view-content';
-        this.viewContent.style.display = 'none';
+        this.viewContent.className = 'event-detail';
+        this.viewContent.hidden = true;
         this._createViewContent();
         content.appendChild(this.viewContent);
 
@@ -64,62 +82,86 @@ export class LocalEventModal extends ModalComponent {
         this._createEditContent();
         content.appendChild(this.editContent);
 
+        // Escape backs out of a pending delete confirmation instead of closing
+        // the dialog. Capture phase so this runs before ModalComponent's
+        // close-on-Escape; the recurring-delete dialog handles its own Escape.
+        this.addEventListener(document, 'keydown', (e) => {
+            if (e.key !== 'Escape' || !this.isVisible() || this.deleteDialog.isOpen()) {
+                return;
+            }
+            if (this._isConfirmingDelete()) {
+                e.preventDefault();
+                e.stopPropagation();
+                this._showDeleteConfirm(false);
+            }
+        }, true);
+
         return content;
     }
 
     /**
-     * Create view mode content (Google event modal style)
+     * Create view mode content: the same header, rows and footer as the
+     * Google event details.
      * @private
      */
     _createViewContent() {
-        // Event title
-        this.viewTitleElement = document.createElement('h2');
-        this.viewTitleElement.className = 'google-event-title';
-        this.viewContent.appendChild(this.viewTitleElement);
+        const header = createDetailHeader(this, { titleId: 'localEventViewTitle', onClose: () => this.hide() });
+        header.swatch.classList.add('is-local');
+        this.viewTitleElement = header.title;
+        this.viewCloseButton = header.closeButton;
+        this.viewContent.appendChild(header.header);
 
-        // Time row
-        this.viewTimeElement = document.createElement('div');
-        this.viewTimeElement.className = 'google-event-row mb-2';
-        this.viewContent.appendChild(this.viewTimeElement);
+        const body = document.createElement('div');
+        body.className = 'event-detail-body';
 
-        // Description row
-        this.viewDescriptionElement = document.createElement('div');
-        this.viewDescriptionElement.className = 'google-event-row mb-2';
-        this.viewContent.appendChild(this.viewDescriptionElement);
+        this.viewTimeRow = createDetailRow('fas fa-clock');
+        this.viewRecurrenceRow = createDetailRow('fas fa-sync-alt');
+        this.viewDescriptionRow = createDetailRow('fas fa-align-left');
+        this.viewDescriptionRow.content.classList.add('event-detail-description');
+        this.viewReminderRow = createDetailRow('fas fa-bell');
+        setLocalizedText(this.viewReminderRow.content, 'reminderOn', 'Reminder on');
+        [this.viewTimeRow, this.viewRecurrenceRow, this.viewDescriptionRow, this.viewReminderRow]
+            .forEach(({ row }) => body.appendChild(row));
+        this.viewContent.appendChild(body);
 
-        // Reminder row
-        this.viewReminderElement = document.createElement('div');
-        this.viewReminderElement.className = 'google-event-row mb-2';
-        this.viewContent.appendChild(this.viewReminderElement);
-
-        // Recurrence row
-        this.viewRecurrenceElement = document.createElement('div');
-        this.viewRecurrenceElement.className = 'google-event-row mb-2';
-        this.viewContent.appendChild(this.viewRecurrenceElement);
-
-        // View mode buttons
-        this.viewButtons = document.createElement('div');
-        this.viewButtons.className = 'modal-buttons';
-
-        const editButton = document.createElement('button');
-        editButton.className = 'btn btn-primary';
-        editButton.setAttribute('data-localize', '__MSG_editEvent__');
-        editButton.textContent = window.getLocalizedMessage('editEvent') || 'Edit';
-        this.addEventListener(editButton, 'click', () => {
-            this.showEdit(this.currentEvent);
+        // Delete on the left, Edit on the right
+        this.viewActionFooter = document.createElement('footer');
+        this.viewActionFooter.className = 'event-form-footer';
+        this.viewDeleteButton = createDeleteButton(this, {
+            id: 'localEventViewDeleteButton',
+            onClick: () => this._handleDelete()
         });
-
-        const deleteButton = document.createElement('button');
-        deleteButton.className = 'btn btn-danger';
-        deleteButton.setAttribute('data-localize', '__MSG_delete__');
-        deleteButton.textContent = window.getLocalizedMessage('delete');
-        this.addEventListener(deleteButton, 'click', () => {
-            this._handleDelete();
+        this.viewActionFooter.appendChild(this.viewDeleteButton);
+        this.viewActionFooter.appendChild(createFooterSpacer());
+        this.viewEditButton = createButton(this, {
+            id: 'localEventViewEditButton',
+            variant: 'secondary',
+            msgKey: 'editEvent',
+            fallback: 'Edit',
+            iconClass: 'fas fa-pen',
+            onClick: () => this.showEdit(this.currentEvent)
         });
+        this.viewActionFooter.appendChild(this.viewEditButton);
+        this.viewContent.appendChild(this.viewActionFooter);
 
-        this.viewButtons.appendChild(editButton);
-        this.viewButtons.appendChild(deleteButton);
-        this.viewContent.appendChild(this.viewButtons);
+        this.viewConfirmFooter = this._createConfirmFooter('localEventView');
+        this.viewContent.appendChild(this.viewConfirmFooter.footer);
+    }
+
+    /**
+     * The delete confirmation that stands in for a mode's footer.
+     * @param {string} idPrefix
+     * @returns {{footer: HTMLElement, cancelButton: HTMLButtonElement, confirmButton: HTMLButtonElement}}
+     * @private
+     */
+    _createConfirmFooter(idPrefix) {
+        return createDeleteConfirmFooter(this, {
+            idPrefix,
+            messageKey: 'localDeleteConfirm',
+            messageFallback: "Delete this event? This can't be undone.",
+            onConfirm: () => this._confirmDelete(),
+            onCancel: () => this._showDeleteConfirm(false)
+        });
     }
 
     /**
@@ -133,6 +175,9 @@ export class LocalEventModal extends ModalComponent {
             onCancel: () => this._handleCancel(),
             onValidateTimes: () => this._validateTimes()
         });
+
+        this.editConfirmFooter = this._createConfirmFooter('localEventEdit');
+        this.editContent.appendChild(this.editConfirmFooter.footer);
 
         // Expose form element references for backward compatibility within this class
         this.titleInput = this.formBuilder.titleInput;
@@ -175,11 +220,10 @@ export class LocalEventModal extends ModalComponent {
             this.createElement();
         }
 
-        // Show view content, hide edit content. The edit form brings its own
-        // header (and close button), so the base modal's "×" is only used here.
-        this.viewContent.style.display = '';
-        this.editContent.style.display = 'none';
-        this.modalContent.classList.remove('edit-mode');
+        // Show view content, hide edit content
+        this.viewContent.hidden = false;
+        this.editContent.hidden = true;
+        this._showDeleteConfirm(false);
 
         // Populate view content
         this._populateViewContent(event);
@@ -193,75 +237,22 @@ export class LocalEventModal extends ModalComponent {
      * @private
      */
     _populateViewContent(event) {
-        // Title
-        this.viewTitleElement.textContent = event.title || window.getLocalizedMessage('noTitle');
+        this.viewTitleElement.textContent = event.title || msg('noTitle', 'No Title');
 
-        // Time
-        this.viewTimeElement.innerHTML = '';
-        if (event.startTime && event.endTime) {
-            const icon = document.createElement('i');
-            icon.className = 'fas fa-clock';
+        const hasTime = !!(event.startTime && event.endTime);
+        this.viewTimeRow.content.textContent = hasTime
+            ? this._formatViewTime(event.startTime, event.endTime, this._getDisplayDate(event))
+            : '';
+        this.viewTimeRow.row.hidden = !hasTime;
 
-            const text = document.createElement('span');
-            text.textContent = this._formatViewTime(event.startTime, event.endTime, this._getDisplayDate(event));
-
-            this.viewTimeElement.appendChild(icon);
-            this.viewTimeElement.appendChild(text);
-            this.viewTimeElement.style.display = '';
-        } else {
-            this.viewTimeElement.style.display = 'none';
-        }
-
-        // Description
-        this.viewDescriptionElement.innerHTML = '';
-        if (event.description) {
-            const icon = document.createElement('i');
-            icon.className = 'fas fa-align-left';
-
-            const text = document.createElement('div');
-            text.className = 'google-event-detail-text';
-            text.textContent = event.description;
-
-            this.viewDescriptionElement.appendChild(icon);
-            this.viewDescriptionElement.appendChild(text);
-            this.viewDescriptionElement.style.display = '';
-        } else {
-            this.viewDescriptionElement.style.display = 'none';
-        }
-
-        // Reminder
-        this.viewReminderElement.innerHTML = '';
-        if (event.reminder !== false) {
-            const icon = document.createElement('i');
-            icon.className = 'fas fa-bell';
-
-            const text = document.createElement('span');
-            text.setAttribute('data-localize', '__MSG_reminderOn__');
-            text.textContent = window.getLocalizedMessage('reminderOn') || 'Reminder on';
-
-            this.viewReminderElement.appendChild(icon);
-            this.viewReminderElement.appendChild(text);
-            this.viewReminderElement.style.display = '';
-        } else {
-            this.viewReminderElement.style.display = 'none';
-        }
-
-        // Recurrence
-        this.viewRecurrenceElement.innerHTML = '';
         const recurrenceText = this._getRecurrenceDisplayText(event);
-        if (recurrenceText) {
-            const icon = document.createElement('i');
-            icon.className = 'fas fa-sync-alt';
+        this.viewRecurrenceRow.content.textContent = recurrenceText || '';
+        this.viewRecurrenceRow.row.hidden = !recurrenceText;
 
-            const text = document.createElement('span');
-            text.textContent = recurrenceText;
+        this.viewDescriptionRow.content.textContent = event.description || '';
+        this.viewDescriptionRow.row.hidden = !event.description;
 
-            this.viewRecurrenceElement.appendChild(icon);
-            this.viewRecurrenceElement.appendChild(text);
-            this.viewRecurrenceElement.style.display = '';
-        } else {
-            this.viewRecurrenceElement.style.display = 'none';
-        }
+        this.viewReminderRow.row.hidden = event.reminder === false;
     }
 
     /**
@@ -551,7 +542,8 @@ export class LocalEventModal extends ModalComponent {
     }
 
     /**
-     * Delete processing
+     * Delete processing. A recurring event first asks which occurrences to
+     * delete; any other event asks for confirmation in the footer.
      * @private
      */
     _handleDelete() {
@@ -559,9 +551,11 @@ export class LocalEventModal extends ModalComponent {
             return;
         }
 
-        // Check if this is a recurring event instance
         if (this.currentEvent.isRecurringInstance || this.currentEvent.recurrence) {
+            const opener = this.mode === 'view' ? this.viewDeleteButton : this.deleteButton;
             this.deleteDialog.show(this.currentEvent, {
+                date: this._getDisplayDate(this.currentEvent),
+                returnFocusTo: opener,
                 onDeleteThis: (event) => {
                     if (this.onDelete) {
                         this.onDelete(event, 'this');
@@ -578,10 +572,75 @@ export class LocalEventModal extends ModalComponent {
                 }
             });
         } else {
-            if (this.onDelete) {
-                this.onDelete(this.currentEvent);
-            }
-            this.hide();
+            this._showDeleteConfirm(true);
+        }
+    }
+
+    /**
+     * Delete the current (non-recurring) event once confirmed.
+     * @private
+     */
+    _confirmDelete() {
+        if (!this.currentEvent) {
+            return;
+        }
+        if (this.onDelete) {
+            this.onDelete(this.currentEvent);
+        }
+        this.hide();
+    }
+
+    /**
+     * The visible mode's own footer and its confirmation stand-in.
+     * @returns {{footer: HTMLElement, confirm: Object, deleteButton: HTMLElement}|null}
+     * @private
+     */
+    _footersForMode() {
+        if (this.mode === 'view') {
+            return { footer: this.viewActionFooter, confirm: this.viewConfirmFooter, deleteButton: this.viewDeleteButton };
+        }
+        if (this.mode === 'edit') {
+            return { footer: this.formBuilder.footer, confirm: this.editConfirmFooter, deleteButton: this.deleteButton };
+        }
+        return null;
+    }
+
+    /**
+     * Whether a delete confirmation is showing.
+     * @returns {boolean}
+     * @private
+     */
+    _isConfirmingDelete() {
+        return [this.viewConfirmFooter, this.editConfirmFooter].some(c => c && !c.footer.hidden);
+    }
+
+    /**
+     * Swap the visible mode's footer for the delete confirmation, or back.
+     * Focus follows: Cancel when it opens, Delete when it is dismissed.
+     * @param {boolean} confirming
+     * @private
+     */
+    _showDeleteConfirm(confirming) {
+        const wasConfirming = this._isConfirmingDelete();
+
+        // Only one confirmation at a time, and none outside view/edit
+        [
+            [this.viewActionFooter, this.viewConfirmFooter],
+            [this.formBuilder.footer, this.editConfirmFooter]
+        ].forEach(([footer, confirm]) => {
+            if (footer) footer.hidden = false;
+            if (confirm) confirm.footer.hidden = true;
+        });
+
+        const current = this._footersForMode();
+        if (!current) return;
+
+        if (confirming) {
+            current.footer.hidden = true;
+            current.confirm.footer.hidden = false;
+            current.confirm.cancelButton.focus();
+        } else if (wasConfirming) {
+            current.deleteButton.focus();
         }
     }
 
@@ -722,9 +781,9 @@ export class LocalEventModal extends ModalComponent {
         }
 
         // Show edit content, hide view content
-        this.viewContent.style.display = 'none';
-        this.editContent.style.display = '';
-        this.modalContent.classList.add('edit-mode');
+        this.viewContent.hidden = true;
+        this.editContent.hidden = false;
+        this._showDeleteConfirm(false);
 
         // Reset form via formBuilder
         this.formBuilder.resetForCreate(defaultStartTime, defaultEndTime);
@@ -766,9 +825,9 @@ export class LocalEventModal extends ModalComponent {
         }
 
         // Show edit content, hide view content
-        this.viewContent.style.display = 'none';
-        this.editContent.style.display = '';
-        this.modalContent.classList.add('edit-mode');
+        this.viewContent.hidden = true;
+        this.editContent.hidden = false;
+        this._showDeleteConfirm(false);
 
         // Editing is always a local event: hide the Google save destination toggle
         this.formBuilder.setGoogleAvailability([]);
@@ -805,7 +864,15 @@ export class LocalEventModal extends ModalComponent {
     }
 
     /**
-     * Apply localization to modal elements
+     * Place initial focus: Edit in view mode (the view has no inputs), the
+     * form's first field otherwise.
      * @private
      */
+    _focusFirstInput() {
+        if (this.mode === 'view') {
+            setTimeout(() => (this.viewEditButton || this.viewCloseButton)?.focus(), 100);
+            return;
+        }
+        super._focusFirstInput();
+    }
 }
