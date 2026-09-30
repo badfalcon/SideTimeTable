@@ -28,7 +28,7 @@ Main UI displayed in Chrome's side panel:
     - `event-dialog-dom.js`: Shared DOM builders for the event dialogs (sticky header/footer, icon-led rows, segmented controls, buttons, inline delete confirmation, status line, time row with duration picker)
     - `delete-recurring-dialog.js`: "This event / All events" choice before deleting a recurring local event
     - `guest-field.js`: Guests on the Google create form — address box with suggestions, chips (invalid ones in red), and the "email invitations" choice (`sendUpdates`)
-  - `memo/memo-component.js`: Collapsible memo panel with persistent storage and resizable height
+  - `memo/memo-component.js`: Collapsible memo panel with persistent storage and resizable height; collapsed, it is a full-width bar showing the memo's first line (`memo-summary.js`)
   - `setup/initial-setup-component.js`: First-time user setup wizard
   - `tutorial/tutorial-component.js`: Interactive tutorial for new users
   - `base/component.js`: Base component class with lifecycle management
