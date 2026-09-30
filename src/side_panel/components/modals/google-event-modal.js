@@ -22,6 +22,7 @@ import {
     createSegmented,
     createStatusLine,
     msg,
+    refreshDisplayPrefs,
     setLocalizedText,
     setPressed,
     showStatusLine
@@ -297,6 +298,13 @@ export class GoogleEventModal extends ModalComponent {
 
         // Apply the localization after showing the modal
         this._localizeModal();
+
+        // Write the time in the stored language / 12-24h setting once read
+        refreshDisplayPrefs().then((changed) => {
+            if (changed && this.currentEvent === event) {
+                this.timeRow.row.hidden = !this._contentBuilder.setTimeInfo(this.timeRow.content, event);
+            }
+        });
     }
 
     /**

@@ -13,6 +13,8 @@ import {
   formatHourLabel,
   formatTimeRange,
   formatStartTime,
+  formatClockTime,
+  formatDateTimeRange,
 } from '../../src/lib/time-utils.js';
 
 describe('createTimeOnDate', () => {
@@ -460,5 +462,42 @@ describe('formatStartTime', () => {
     expect(formatStartTime('09:05', '24h')).toBe('09:05');
     expect(formatStartTime('13:45', '12h')).toBe('1:45');
     expect(formatStartTime('00:15', '12h')).toBe('12:15');
+  });
+});
+
+describe('formatClockTime', () => {
+  test.each([
+    ['09:05', '24h', 'en', '09:05'],
+    ['09:05', '12h', 'en', '9:05 AM'],
+    ['13:30', '12h', 'en', '1:30 PM'],
+    ['13:30', '12h', 'ja', '午後1:30'],
+  ])('%s %s %s → %s', (hhmm, format, locale, expected) => {
+    expect(formatClockTime(hhmm, format, locale)).toBe(expected);
+  });
+});
+
+describe('formatDateTimeRange', () => {
+  const now = new Date(2026, 8, 30);
+
+  test('same day: the header date, then the block time range', () => {
+    expect(formatDateTimeRange(new Date(2026, 8, 30, 9, 0), new Date(2026, 8, 30, 10, 0), { locale: 'ja', timeFormat: '24h', now }))
+      .toBe('9月30日(水) 09:00–10:00');
+    expect(formatDateTimeRange(new Date(2026, 8, 30, 9, 0), new Date(2026, 8, 30, 10, 0), { locale: 'en', timeFormat: '12h', now }))
+      .toBe('Wed, Sep 30, 9:00–10:00 AM');
+  });
+
+  test('ending exactly at midnight stays one day', () => {
+    expect(formatDateTimeRange(new Date(2026, 8, 30, 23, 0), new Date(2026, 9, 1, 0, 0), { locale: 'ja', timeFormat: '24h', now }))
+      .toBe('9月30日(水) 23:00–00:00');
+  });
+
+  test('running into the next day names both days', () => {
+    expect(formatDateTimeRange(new Date(2026, 8, 30, 23, 0), new Date(2026, 9, 1, 1, 0), { locale: 'en', timeFormat: '12h', now }))
+      .toBe('Wed, Sep 30, 11:00 PM – Thu, Oct 1, 1:00 AM');
+  });
+
+  test('another year shows the year', () => {
+    expect(formatDateTimeRange(new Date(2027, 0, 5, 9, 0), new Date(2027, 0, 5, 9, 30), { locale: 'ja', timeFormat: '24h', now }))
+      .toBe('2027年1月5日(火) 09:00–09:30');
   });
 });

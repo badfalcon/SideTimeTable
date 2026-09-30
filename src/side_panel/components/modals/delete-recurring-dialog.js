@@ -7,7 +7,8 @@
  * This is a plain helper class (not a Component subclass): the dialog is an
  * overlay on top of the event dialog and lives only while it is open.
  */
-import { createButton, msg, msgWith, setLocalizedText } from './event-dialog-dom.js';
+import { createButton, getDisplayPrefs, msg, msgWith, setLocalizedText } from './event-dialog-dom.js';
+import { formatHeaderDate } from '../../../lib/time-utils.js';
 
 export class DeleteRecurringDialog {
     constructor() {
@@ -173,18 +174,16 @@ export class DeleteRecurringDialog {
     /**
      * "Only Thu, Sep 25" / "9月25日(木)の回だけ" for the occurrence on screen.
      * @param {Date} [date]
+     * @param {Date} [now] - Decides whether the year is shown
      * @returns {string}
      * @private
      */
-    _occurrenceDetail(date) {
+    _occurrenceDetail(date, now = new Date()) {
         if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
             return msg('deleteScopeThisDetailNoDate', 'Only this occurrence');
         }
-        const locale = navigator.language || 'en';
-        const isJa = locale.startsWith('ja');
-        const dateText = date.toLocaleDateString(isJa ? 'ja-JP' : 'en-US', isJa
-            ? { month: 'long', day: 'numeric', weekday: 'short' }
-            : { weekday: 'short', month: 'short', day: 'numeric' });
+        // Written like the header's date
+        const dateText = formatHeaderDate(date, getDisplayPrefs().locale, now);
         return msgWith('deleteScopeThisDetail', 'Only $1', dateText);
     }
 

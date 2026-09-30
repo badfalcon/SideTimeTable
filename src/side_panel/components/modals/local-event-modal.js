@@ -12,9 +12,12 @@ import {
     createDetailHeader,
     createDetailRow,
     createFooterSpacer,
+    getDisplayPrefs,
     msg,
+    refreshDisplayPrefs,
     setLocalizedText
 } from './event-dialog-dom.js';
+import { formatDateTimeRange } from '../../../lib/time-utils.js';
 import { buildGoogleEventResource } from '../../../lib/google-event-utils.js';
 import { buildAttendees } from '../../../lib/guest-utils.js';
 import { buildRequestId } from '../../../lib/request-dedupe.js';
@@ -234,6 +237,13 @@ export class LocalEventModal extends ModalComponent {
 
         this.show();
         this._localizeModal();
+
+        // Write the time in the stored language / 12-24h setting once read
+        refreshDisplayPrefs().then((changed) => {
+            if (changed && this.mode === 'view' && this.currentEvent === event) {
+                this._populateViewContent(event);
+            }
+        });
     }
 
     /**
@@ -277,28 +287,14 @@ export class LocalEventModal extends ModalComponent {
      * Format time for view mode display (locale-aware)
      * @private
      */
-    _formatViewTime(startTime, endTime, displayDate = new Date()) {
-        let dateStr = '';
+    _formatViewTime(startTime, endTime, displayDate = new Date(), prefs = getDisplayPrefs()) {
         try {
-            const locale = navigator.language || 'en';
-            const localeHint = locale.startsWith('ja') ? 'ja' : 'en';
-            const timeOptions = { hour: '2-digit', minute: '2-digit' };
-
-            dateStr = window.formatDateForLocale(displayDate, localeHint);
-
             const [sh, sm] = startTime.split(':').map(Number);
             const [eh, em] = endTime.split(':').map(Number);
-
-            const startDate = new Date(displayDate.getFullYear(), displayDate.getMonth(), displayDate.getDate(), sh, sm);
-            const endDate = new Date(displayDate.getFullYear(), displayDate.getMonth(), displayDate.getDate(), eh, em);
-
-            const startStr = startDate.toLocaleTimeString(locale, timeOptions);
-            const endStr = endDate.toLocaleTimeString(locale, timeOptions);
-            const separator = localeHint === 'ja' ? ' \uff5e ' : ' - ';
-
-            return `${dateStr} ${startStr}${separator}${endStr}`;
+            const on = (h, m) => new Date(displayDate.getFullYear(), displayDate.getMonth(), displayDate.getDate(), h, m);
+            return formatDateTimeRange(on(sh, sm), on(eh, em), prefs);
         } catch {
-            return dateStr ? `${dateStr} ${startTime} - ${endTime}` : `${startTime} - ${endTime}`;
+            return `${startTime}–${endTime}`;
         }
     }
 

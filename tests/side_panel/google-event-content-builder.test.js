@@ -23,6 +23,9 @@ const MESSAGES = {
 
 describe('GoogleEventContentBuilder.formatEventTime', () => {
   let builder;
+  const now = new Date(2026, 8, 30);
+  const EN = { locale: 'en', timeFormat: '12h', now };
+  const JA = { locale: 'ja', timeFormat: '24h', now };
 
   beforeEach(() => {
     window.getLocalizedMessage = (key) => MESSAGES[key] || key;
@@ -39,86 +42,57 @@ describe('GoogleEventContentBuilder.formatEventTime', () => {
   }
 
   describe('all-day events', () => {
-    test('single all-day event shows the date with year (en)', () => {
-      const result = builder.formatEventTime({
-        start: { date: '2026-06-01' },
-        end: { date: '2026-06-02' },
-      });
-      expect(result).toBe('06/01/2026 All day');
+    test('single all-day event: the header-style date and "All day"', () => {
+      const event = { start: { date: '2026-06-01' }, end: { date: '2026-06-02' } };
+      expect(builder.formatEventTime(event, EN)).toBe('Mon, Jun 1, All day');
+      expect(builder.formatEventTime(event, JA)).toBe('6月1日(月) All day');
     });
 
-    test('single all-day event shows the date with year (ja)', () => {
-      setNavigatorLanguage('ja-JP');
-      const result = builder.formatEventTime({
-        start: { date: '2026-06-01' },
-        end: { date: '2026-06-02' },
-      });
-      expect(result).toBe('2026/06/01 All day');
-    });
-
-    test('multi-day all-day event shows a full date range including years', () => {
+    test('multi-day all-day event shows the first and last day', () => {
       const result = builder.formatEventTime({
         start: { date: '2026-06-01' },
         end: { date: '2026-06-04' }, // exclusive end → last day is 06/03
-      });
-      expect(result).toBe('06/01/2026 – 06/03/2026 (3 days)');
+      }, EN);
+      expect(result).toBe('Mon, Jun 1 – Wed, Jun 3 (3 days)');
+    });
+
+    test('a day in another year shows the year', () => {
+      const result = builder.formatEventTime({ start: { date: '2027-01-05' }, end: { date: '2027-01-06' } }, JA);
+      expect(result).toBe('2027年1月5日(火) All day');
     });
   });
 
   describe('timed events', () => {
-    test('same-day event shows the start date only', () => {
-      const result = builder.formatEventTime(
-        timedEvent('2026-07-22T09:00:00', '2026-07-22T10:00:00')
-      );
-      expect(result).toContain('07/22/2026');
-      expect(result).not.toContain('07/23');
+    test('same-day event: the date once, then the range like the event blocks', () => {
+      const event = timedEvent('2026-07-22T09:00:00', '2026-07-22T10:00:00');
+      expect(builder.formatEventTime(event, EN)).toBe('Wed, Jul 22, 9:00–10:00 AM');
+      expect(builder.formatEventTime(event, JA)).toBe('7月22日(水) 09:00–10:00');
     });
 
     test('event ending exactly at midnight is treated as same-day', () => {
-      const result = builder.formatEventTime(
-        timedEvent('2026-07-22T23:00:00', '2026-07-23T00:00:00')
-      );
-      expect(result).toContain('07/22/2026');
-      expect(result).not.toContain('07/23/2026');
+      const result = builder.formatEventTime(timedEvent('2026-07-22T23:00:00', '2026-07-23T00:00:00'), JA);
+      expect(result).toBe('7月22日(水) 23:00–00:00');
     });
 
     test('event spanning past midnight shows both dates', () => {
-      const result = builder.formatEventTime(
-        timedEvent('2026-07-22T23:00:00', '2026-07-23T01:00:00')
-      );
-      expect(result).toContain('07/22/2026');
-      expect(result).toContain('07/23/2026');
+      const result = builder.formatEventTime(timedEvent('2026-07-22T23:00:00', '2026-07-23T01:00:00'), EN);
+      expect(result).toBe('Wed, Jul 22, 11:00 PM – Thu, Jul 23, 1:00 AM');
     });
 
-    test('zero-duration event shows the start date only', () => {
-      const result = builder.formatEventTime(
-        timedEvent('2026-07-22T09:00:00', '2026-07-22T09:00:00')
-      );
-      expect(result).toContain('07/22/2026');
-      expect(result).not.toContain('07/23');
+    test('zero-duration event shows one date', () => {
+      const result = builder.formatEventTime(timedEvent('2026-07-22T09:00:00', '2026-07-22T09:00:00'), JA);
+      expect(result).toBe('7月22日(水) 09:00–09:00');
     });
 
-    test('English date format stays MM/DD/YYYY even for en-GB browsers', () => {
+    test('follows the extension language and time format, not the browser', () => {
       setNavigatorLanguage('en-GB');
-      const result = builder.formatEventTime(
-        timedEvent('2026-07-22T09:00:00', '2026-07-22T10:00:00')
-      );
-      expect(result).toContain('07/22/2026');
-      expect(result).not.toContain('22/07/2026');
-    });
-
-    test('Japanese locale uses YYYY/MM/DD and the tilde separator', () => {
-      setNavigatorLanguage('ja-JP');
-      const result = builder.formatEventTime(
-        timedEvent('2026-07-22T09:00:00', '2026-07-22T10:00:00')
-      );
-      expect(result).toContain('2026/07/22');
-      expect(result).toContain('～');
+      const result = builder.formatEventTime(timedEvent('2026-07-22T13:00:00', '2026-07-22T14:30:00'), { locale: 'ja', timeFormat: '12h', now });
+      expect(result).toBe('7月22日(水) 午後1:00–2:30');
     });
   });
 
   test('missing time info returns the localized fallback', () => {
-    const result = builder.formatEventTime({ start: {}, end: {} });
+    const result = builder.formatEventTime({ start: {}, end: {} }, EN);
     expect(result).toBe('No time info');
   });
 });

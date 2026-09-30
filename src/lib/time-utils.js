@@ -306,3 +306,50 @@ export function formatStartTime(start, timeFormat) {
     const [h, m] = start.split(':').map(Number);
     return `${h % 12 === 0 ? 12 : h % 12}:${String(m).padStart(2, '0')}`;
 }
+
+/**
+ * One clock time: "09:00" (24-hour), "9:00 AM" or "午前9:00" (12-hour).
+ *
+ * @param {string} hhmm - "HH:MM"
+ * @param {string} timeFormat - '12h' or '24h'
+ * @param {string} locale - 'ja' or 'en'
+ * @returns {string}
+ */
+export function formatClockTime(hhmm, timeFormat, locale) {
+    if (timeFormat !== '12h') {
+        return hhmm;
+    }
+    const [h] = hhmm.split(':').map(Number);
+    const pm = h >= 12;
+    const text = formatStartTime(hhmm, '12h');
+    if (locale === 'ja') {
+        return `${pm ? '午後' : '午前'}${text}`;
+    }
+    return `${text} ${pm ? 'PM' : 'AM'}`;
+}
+
+/**
+ * When a timed event happens, as the event dialogs show it: the date the way
+ * the header writes it, then the times the way the event blocks do —
+ * "9月30日(水) 09:00–10:00", "Wed, Sep 30, 9:00–10:00 AM". An event that runs
+ * into another day names both days.
+ *
+ * @param {Date} start
+ * @param {Date} end
+ * @param {Object} prefs
+ * @param {string} prefs.locale - 'ja' or 'en' (the extension language)
+ * @param {string} prefs.timeFormat - '12h' or '24h'
+ * @param {Date} [prefs.now=new Date()] - Decides whether the year is shown
+ * @returns {string}
+ */
+export function formatDateTimeRange(start, end, { locale, timeFormat, now = new Date() }) {
+    const hhmm = (d) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    const joiner = locale === 'ja' ? ' ' : ', ';
+    // An event that ends exactly at midnight belongs to the day it started
+    const lastInstant = end > start ? new Date(end.getTime() - 1) : end;
+    if (isSameDay(start, lastInstant)) {
+        return `${formatHeaderDate(start, locale, now)}${joiner}${formatTimeRange(hhmm(start), hhmm(end), timeFormat, locale)}`;
+    }
+    return `${formatHeaderDate(start, locale, now)}${joiner}${formatClockTime(hhmm(start), timeFormat, locale)}`
+        + ` – ${formatHeaderDate(end, locale, now)}${joiner}${formatClockTime(hhmm(end), timeFormat, locale)}`;
+}

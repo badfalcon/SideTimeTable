@@ -6,7 +6,8 @@
  * there was anything to show so the caller can hide an empty row.
  */
 import { extractMeetUrl, extractVideoUrl } from '../../../lib/conference-url-utils.js';
-import { createIcon, msg, msgWith, setLocalizedText } from './event-dialog-dom.js';
+import { createIcon, getDisplayPrefs, msg, msgWith, setLocalizedText } from './event-dialog-dom.js';
+import { formatDateTimeRange, formatHeaderDate } from '../../../lib/time-utils.js';
 
 /** Guests at or under this count are listed straight away; more start folded. */
 const ATTENDEES_EXPANDED_MAX = 3;
@@ -53,11 +54,13 @@ export class GoogleEventContentBuilder {
     }
 
     /**
-     * Format event time
+     * When the event happens, written like the header's date and the event
+     * blocks' times (see formatDateTimeRange).
      * @param {Object} event - Google event data
+     * @param {{locale: string, timeFormat: string, now?: Date}} [prefs]
      * @returns {string} Formatted time string
      */
-    formatEventTime(event) {
+    formatEventTime(event, prefs = getDisplayPrefs()) {
         try {
             const start = event.start.dateTime || event.start.date;
             const end = event.end.dateTime || event.end.date;
@@ -66,11 +69,9 @@ export class GoogleEventContentBuilder {
                 return window.getLocalizedMessage('noTimeInfo');
             }
 
-            const startDate = new Date(start);
-            const endDate = new Date(end);
-
-            const locale = navigator.language || 'en';
-            const localeHint = locale.startsWith('ja') ? 'ja' : 'en';
+            const { locale } = prefs;
+            const now = prefs.now || new Date();
+            const joiner = locale === 'ja' ? ' ' : ', ';
 
             // For all-day events
             if (event.start.date && event.end.date) {
@@ -80,42 +81,20 @@ export class GoogleEventContentBuilder {
                 const localEnd = new Date(event.end.date + 'T00:00:00');
                 const dayCount = Math.round((localEnd - localStart) / MS_PER_DAY);
                 if (dayCount > 1) {
-                    // Show date range: "06/01/2026 – 06/03/2026 (3 days)" / "2026/06/01 〜 2026/06/03（3日間）"
                     // end.date is exclusive in Google Calendar API, so show (end - 1 day) as the last day
                     const lastDay = new Date(localEnd.getTime() - MS_PER_DAY);
-                    const startStr = window.formatDateForLocale(localStart, localeHint);
-                    const endStr = window.formatDateForLocale(lastDay, localeHint);
+                    const startStr = formatHeaderDate(localStart, locale, now);
+                    const endStr = formatHeaderDate(lastDay, locale, now);
                     const template = window.getLocalizedMessage('allDayDateRange');
                     if (template) {
                         return template.replace('$1', startStr).replace('$2', endStr).replace('$3', dayCount);
                     }
                     return `${startStr} – ${endStr} (${dayCount} days)`;
                 }
-                const dateStr = window.formatDateForLocale(localStart, localeHint);
-                return `${dateStr} ${window.getLocalizedMessage('allDay')}`;
+                return `${formatHeaderDate(localStart, locale, now)}${joiner}${window.getLocalizedMessage('allDay')}`;
             }
 
-            // For the timed events - use browser locale
-            const timeOptions = { hour: '2-digit', minute: '2-digit' };
-            const startTime = startDate.toLocaleTimeString(locale, timeOptions);
-            const endTime = endDate.toLocaleTimeString(locale, timeOptions);
-            const startDateStr = window.formatDateForLocale(startDate, localeHint);
-            const separator = localeHint === 'ja' ? ' ～ ' : ' - ';
-
-            // If the event spans multiple calendar days, show the end date as well.
-            // An event ending exactly at midnight belongs to the day it started,
-            // so compare against the last instant before the end time.
-            const lastInstant = endDate > startDate ? new Date(endDate.getTime() - 1) : endDate;
-            const sameDay = startDate.getFullYear() === lastInstant.getFullYear()
-                && startDate.getMonth() === lastInstant.getMonth()
-                && startDate.getDate() === lastInstant.getDate();
-
-            if (sameDay) {
-                return `${startDateStr} ${startTime}${separator}${endTime}`;
-            }
-
-            const endDateStr = window.formatDateForLocale(endDate, localeHint);
-            return `${startDateStr} ${startTime}${separator}${endDateStr} ${endTime}`;
+            return formatDateTimeRange(new Date(start), new Date(end), { ...prefs, now });
         } catch (error) {
             console.warn('Time format error:', error);
             return window.getLocalizedMessage('timeInfoError');

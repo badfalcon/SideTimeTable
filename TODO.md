@@ -27,6 +27,8 @@
 
 ## 通常画面（2026-09 のデザイン刷新の残り）
 
+- [x] ダイアログと通常画面のデザインの統一 — 角丸（`--side-calendar-radius-sm/md/lg/pill`）・影（`--side-calendar-shadow-float/popover/dialog`）・文字サイズ（`--side-calendar-font-caption/small/body/title/large`）・アイコンボタンの大きさを `side_panel.css` の `:root` に共通の値として定義し、ダイアログ・ヘッダー・予定ブロック・カレンダー絞り込み・メモ・チュートリアル・初期設定・レビュー依頼に当てた。レビュー依頼のモーダルは他のダイアログと同じ見出し・本文・フッターの形に作り直した。
+- [ ] 設定ページ（`options.css`、Bootstrap ベース）と更新履歴ページはサイドパネルの共通値を使っていない。サイドパネルと見た目を揃えるなら同じ値を `options.css` にも定義して寄せる。
 - [x] メモ欄を畳んだときの1行目プレビュー — 右下のタブ（`clip-path` で切り抜く方式）をやめ、全幅のバーに1行目（Markdown の記号は除く、`memo-summary.js`）を出す形にした。バーの高さ分はスペーサーで確保するので、畳んでもタイムラインの下端の予定を覆わない。
 - [ ] ランディングページ（`docs/`）のヒーローにある静的なモック（`2025/01/15(水)` の日付表示など）が旧ヘッダーのまま。スクリーンショット（`docs/img/`）は更新済み。
 - [ ] 英語で予定が4列以上重なる 320px 幅では、1列が約60pxになり長い単語が途中で折り返る。`hyphens: auto` を指定済みだが、効くかは Chrome のハイフネーション辞書しだい（ヘッドレスの Linux Chromium では効かないことを確認）。重なりが多いときの表示方式（重ねて表示・「+2」表示など）の検討。
@@ -91,11 +93,10 @@
 ## 既知の不具合（要設計）
 
 - [x] サイドパネル幅 320px（Chrome の最小幅）でヘッダーの更新アイコンと「前の日」ボタンが重なる — ヘッダーを3列グリッド（`1fr auto 1fr`）にし、日付は中央のまま、狭いときは左右のボタンに被らずにずれるようにした。幅 360px 以下では日付の文字と間隔を少し詰め、更新ボタンとの間を 12px 空ける（チュートリアルのハイライトが隣のボタンに掛からないように）。同じ幅でチュートリアルの吹き出しと初期設定のカードがはみ出していたのも修正（どちらも padding が幅の外に足されていた）。
-- [ ] 拡張機能の言語設定と Chrome の言語が違うと、日付・時刻の表記が混在する（2026-09 に実拡張で確認）。例: Chrome が米国英語・拡張機能が日本語だと、日本語の画面に「04:30 PM」（時刻欄）・「09/25/2026」（ヘッダーの日付）・「午前9:00」（タイムライン）が並ぶ。表記を決めている箇所が3系統に分かれているのが原因:
-  - 時刻欄・ヘッダーの日付（`<input type="time">` / `<input type="date">`）は Chrome の UI 言語に従う。ページの `lang` 属性では変わらない（実拡張で確認済み）ため、拡張機能からは制御できない。
-  - タイムライン・予定ブロックの時刻は、12h/24h を `determineDefaultTimeFormat()`（`locale-utils.js`: Chrome の UI 言語が en-US なら 12h）で、「午前/AM」などの言葉を拡張機能の言語で決めている。
-  - 詳細表示の日時（`formatEventTime()` / `_formatViewTime()`）と繰り返し削除ダイアログの日付は `navigator.language` で決めている。
-  言語設定が「自動」なら拡張機能の言語も Chrome に揃うため、混在するのは言語を手動で変えたときだけ。どれを基準にするか（Chrome の言語に全部揃える／拡張機能の言語に揃え、時刻欄は独自の入力部品に置き換える、等）を決めてから直す。`CLAUDE.md` の「12h for English, 24h for Japanese」の記述も実態（Chrome の言語で決まる）と合わせて見直す。
+- [ ] 拡張機能の言語設定と Chrome の言語が違うと、時刻欄の表記だけが混在する（2026-09 に実拡張で確認）。例: Chrome が米国英語・拡張機能が日本語だと、日本語の画面の時刻欄に「04:30 PM」が出る。
+  - 時刻欄（`<input type="time">`）は Chrome の UI 言語に従い、ページの `lang` 属性では変わらない（実拡張で確認済み）ため、拡張機能からは制御できない。
+  - 済: ヘッダーの日付は `formatHeaderDate()` で拡張機能の言語に、詳細表示の日時（`formatEventTime()` / `_formatViewTime()`）と繰り返し削除ダイアログの日付は `formatDateTimeRange()` / `formatHeaderDate()` で「拡張機能の言語＋時刻表記の設定（12h/24h）」に揃え、予定ブロック・時刻軸と同じ書き方になった（`getDisplayPrefs()` / `refreshDisplayPrefs()`）。
+  残るのは時刻欄のみ。拡張機能の言語に揃えるなら時刻欄を独自の入力部品に置き換える必要がある。`CLAUDE.md` の「12h for English, 24h for Japanese」の記述も実態（既定は Chrome の言語で決まり、設定で変えられる）と合わせて見直す。
 - [x] 高速な日付ナビゲーションでの表示レース: `fetchEvents()` と `fetchEventsForCalendars()` に `_fetchVersion` ガードを追加し、古いレスポンスの描画・DOMクリア・`currentFetchPromise` の誤クリアを防止（`tests/side_panel/event-handlers-race.test.js`）。残る極小レース: 古いフェッチの `_processEvents` 実行中に新しいフェッチが完了した場合の混在描画（発生条件が非常に狭いため保留）。
 - [x] 日跨ぎイベントのレイアウト崩れ（レーン割当）: `_areEventsOverlapping()` とグループ内ソートを、DOM が実際に描画する区間（開始の分単位 + 実所要時間 = `_getRenderInterval()`）で比較するよう変更。23:00→翌01:00 の重なり判定が正しくなり、かつ前日開始のイベント（23:00 の位置に描かれる）が深夜帯のイベントとグループ化されてレーンを奪う問題も回避（`tests/side_panel/time-manager.test.js` に日跨ぎスペック）。残: 前日開始イベントを閲覧中の日の先頭へクランプする／翌日にも継続表示する表示仕様（複数日ローカル予定を実装する際に設計）。レイアウトは描画位置に追随しているため、その時は `_getRenderInterval()` も合わせて更新すること。
 - [ ] 毎日繰り返しの DST 日数ずれ（潜在）: `event-storage.js` DAILY 分岐の `Math.floor((targetDateObj - eventStartDate) / 86400000)` がサマータイム境界で1日ずれる。現状 `interval` はUIで `1` 固定（`local-event-modal.js` / `local-event-form-builder.js`）のため `daysDiff % 1 === 0` で観測影響なし。`interval > 1` 機能を追加する場合は `Math.floor`→`Math.round`（WEEKLYと整合）に修正すること。

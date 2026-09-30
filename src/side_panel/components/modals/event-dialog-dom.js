@@ -367,6 +367,61 @@ export function showStatusLine(line, tone, message) {
  * This asks the same language for its hour cycle.
  * @returns {boolean}
  */
+/**
+ * The language and 12/24-hour choice the dialogs write dates and times in —
+ * the same ones the header and the event blocks use (the extension language
+ * and the time-format setting), so a time reads the same everywhere. Starts
+ * from a synchronous guess and is replaced once the settings are read.
+ */
+let displayPrefs = null;
+
+/**
+ * @returns {{locale: string, timeFormat: string}}
+ */
+export function getDisplayPrefs() {
+    if (!displayPrefs) {
+        const lang = globalThis.document?.documentElement?.lang;
+        displayPrefs = {
+            locale: lang === 'ja' ? 'ja' : 'en',
+            timeFormat: usesTwelveHourClock() ? '12h' : '24h'
+        };
+    }
+    return displayPrefs;
+}
+
+/**
+ * Use known preferences (tests, or a caller that has already read them).
+ * @param {{locale: string, timeFormat: string}} prefs
+ */
+export function setDisplayPrefs(prefs) {
+    displayPrefs = {
+        locale: prefs.locale === 'ja' ? 'ja' : 'en',
+        timeFormat: prefs.timeFormat === '12h' ? '12h' : '24h'
+    };
+}
+
+/**
+ * Read the stored language and time-format setting.
+ * @returns {Promise<boolean>} Whether they differ from what was assumed
+ */
+export async function refreshDisplayPrefs() {
+    const before = getDisplayPrefs();
+    try {
+        const [locale, timeFormat] = await Promise.all([
+            typeof window.getCurrentLocale === 'function' ? window.getCurrentLocale() : before.locale,
+            typeof window.getTimeFormatPreference === 'function' ? window.getTimeFormatPreference() : before.timeFormat
+        ]);
+        const next = {
+            locale: locale === 'ja' ? 'ja' : 'en',
+            timeFormat: timeFormat === '12h' ? '12h' : '24h'
+        };
+        displayPrefs = next;
+        return next.locale !== before.locale || next.timeFormat !== before.timeFormat;
+    } catch {
+        return false;
+    }
+}
+
 export function usesTwelveHourClock() {
     let language;
     try {
