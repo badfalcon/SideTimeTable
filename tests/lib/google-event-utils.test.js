@@ -236,6 +236,33 @@ describe('buildGoogleEventResource', () => {
 // - Meet (conferenceData) is never emitted — not editable
 // - Create mode (no options / forPatch:false) must be byte-for-byte unchanged
 // ---------------------------------------------------------------
+describe('buildGoogleEventResource attendees', () => {
+  const base = { summary: 'Review', date: new Date(2026, 6, 22), startTime: '11:00', endTime: '12:00' };
+
+  test('emits the guests as attendees on insert', () => {
+    const r = buildGoogleEventResource({
+      ...base,
+      attendees: [{ email: 'sato@example.com' }, { email: 'yamada@example.com', name: 'ignored' }],
+    });
+    expect(r.attendees).toEqual([{ email: 'sato@example.com' }, { email: 'yamada@example.com' }]);
+  });
+
+  test('omits attendees when there are none', () => {
+    expect(buildGoogleEventResource({ ...base, attendees: [] })).not.toHaveProperty('attendees');
+    expect(buildGoogleEventResource(base)).not.toHaveProperty('attendees');
+  });
+
+  test('never emits attendees in patch mode (guests are not edited here)', () => {
+    const r = buildGoogleEventResource({ ...base, attendees: [{ email: 'a@example.com' }] }, { forPatch: true });
+    expect(r).not.toHaveProperty('attendees');
+  });
+
+  test('drops attendees from an out-of-office event', () => {
+    const r = buildGoogleEventResource({ ...base, eventType: 'outOfOffice', attendees: [{ email: 'a@example.com' }] });
+    expect(r).not.toHaveProperty('attendees');
+  });
+});
+
 describe('buildGoogleEventResource forPatch', () => {
   const date = new Date(2026, 6, 23); // 2026-07-23 local
 

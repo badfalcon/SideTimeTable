@@ -241,7 +241,10 @@ class SidePanelUIController {
         // The modal components
         this.localEventModal = new LocalEventModal({
             onSave: (eventData, mode) => this._handleSaveLocalEvent(eventData, mode),
-            onSaveGoogle: (eventResource, calendarId, requestId) => this._handleSaveGoogleEvent(eventResource, calendarId, requestId),
+            onSaveGoogle: (eventResource, calendarId, requestId, options) =>
+                this._handleSaveGoogleEvent(eventResource, calendarId, requestId, options),
+            // People from the loaded events, suggested while adding guests
+            getGuestDirectory: () => this.googleEventManager?.guestDirectory || null,
             onDelete: (event) => this._handleDeleteLocalEvent(event),
             onCancel: () => this._handleCancelLocalEvent(),
             getCurrentDate: () => this.dateNavService.getDate()
@@ -716,7 +719,7 @@ class SidePanelUIController {
      * @returns {Promise<boolean>}
      * @private
      */
-    async _handleSaveGoogleEvent(eventResource, calendarId, requestId) {
+    async _handleSaveGoogleEvent(eventResource, calendarId, requestId, { sendUpdates } = {}) {
         try {
             // The modal supplies a retry-stable id; fall back for older callers
             requestId = requestId || `create-evt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -724,7 +727,8 @@ class SidePanelUIController {
                 action: 'createEvent',
                 calendarId,
                 event: eventResource,
-                requestId
+                requestId,
+                ...(sendUpdates ? { sendUpdates } : {})
             });
 
             if (!response || !response.success) {

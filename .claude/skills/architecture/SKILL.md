@@ -27,6 +27,7 @@ Main UI displayed in Chrome's side panel:
   - `modals/`: Modal dialog components (Google events, local events, alerts, What's New, review)
     - `event-dialog-dom.js`: Shared DOM builders for the event dialogs (sticky header/footer, icon-led rows, segmented controls, buttons, inline delete confirmation, status line, time row with duration picker)
     - `delete-recurring-dialog.js`: "This event / All events" choice before deleting a recurring local event
+    - `guest-field.js`: Guests on the Google create form — address box with suggestions, chips (invalid ones in red), and the "email invitations" choice (`sendUpdates`)
   - `memo/memo-component.js`: Collapsible memo panel with persistent storage and resizable height
   - `setup/initial-setup-component.js`: First-time user setup wizard
   - `tutorial/tutorial-component.js`: Interactive tutorial for new users
@@ -75,6 +76,7 @@ Shared functions and framework components:
 - `storage-helper.js`: Chrome storage API wrapper with async/await support
 - `alarm-manager.js`: Event reminder system using Chrome alarms API
 - `event-focus.js`: Parks/consumes "show me this event" requests handed from the service worker to the side panel
+- `guest-utils.js`: Guest address checks/parsing, `attendees` body, and `GuestDirectory` (people from loaded events, suggested when adding guests)
 - `release-notes.js`: Version history and update highlights for What's New modal
 - `google-button-helper.js`: Helper utilities for Google-style buttons
 - `chrome-messaging.js`: Chrome runtime message passing utilities

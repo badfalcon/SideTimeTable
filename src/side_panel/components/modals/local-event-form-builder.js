@@ -11,6 +11,7 @@
  * visually hidden, and empty fields name themselves through their placeholder.
  */
 import { RECURRENCE_TYPES } from '../../../lib/constants.js';
+import { GuestField } from './guest-field.js';
 import {
     applyDurationPreset,
     createButton,
@@ -32,9 +33,13 @@ import {
 export class LocalEventFormBuilder {
     /**
      * @param {import('./local-event-modal.js').LocalEventModal} modal - The parent modal component (used for addEventListener tracking)
+     * @param {Object} [options]
+     * @param {Function} [options.getGuestDirectory] - Returns the people to
+     *   suggest as guests (a GuestDirectory), or null
      */
-    constructor(modal) {
+    constructor(modal, { getGuestDirectory } = {}) {
         this.modal = modal;
+        this.getGuestDirectory = getGuestDirectory || (() => null);
 
         // Form elements
         this.editTitleElement = null;
@@ -88,6 +93,8 @@ export class LocalEventFormBuilder {
         // Google-only fields
         this.googleFields = null;
         this.calendarSelect = null;
+        this.guestField = null;
+        this.guestContainer = null;
         this.locationInput = null;
         this.meetCheckbox = null;
 
@@ -316,8 +323,8 @@ export class LocalEventFormBuilder {
     }
 
     /**
-     * Build Google-only fields (the target calendar picker). Hidden unless the
-     * save destination is Google.
+     * Build Google-only fields (the target calendar picker and the guests).
+     * Hidden unless the save destination is Google.
      * @param {HTMLElement} parentElement
      * @private
      */
@@ -334,6 +341,15 @@ export class LocalEventFormBuilder {
 
         parentElement.appendChild(row);
         this.googleFields = row;
+
+        // Guests follow the calendar: who is invited is the next thing a
+        // meeting needs, and neither applies to an absence.
+        this.guestField = new GuestField(this.modal, {
+            getDirectory: this.getGuestDirectory,
+            onChange: () => this._callbacks.onGuestsChanged?.()
+        });
+        this.guestContainer = this.guestField.build(parentElement);
+        this.guestContainer.hidden = true;
     }
 
     /**
@@ -414,7 +430,7 @@ export class LocalEventFormBuilder {
     /**
      * Build the collapsible "Advanced settings" accordion for Google events
      * (location, reminder). Hidden unless the save destination is Google;
-     * collapsed by default. Extra detail fields (colour, guests, …) go here.
+     * collapsed by default. Extra detail fields (colour, …) go here.
      * @param {HTMLElement} parentElement
      * @private
      */
@@ -622,7 +638,7 @@ export class LocalEventFormBuilder {
     /**
      * Build the edit mode content and append it to the parent element
      * @param {HTMLElement} parentElement - The container to append form elements to
-     * @param {Object} options - Callbacks: { onSave, onDelete, onCancel, onValidateTimes }
+     * @param {Object} options - Callbacks: { onSave, onDelete, onCancel, onValidateTimes, onGuestsChanged }
      */
     buildEditContent(parentElement, options = {}) {
         this._callbacks = options;
@@ -782,10 +798,13 @@ export class LocalEventFormBuilder {
             this.oooPrimaryHint.hidden = !(isGoogle && !this.primaryCalendar);
         }
 
-        // Target calendar, Meet, location and reminder do not apply to an
+        // Target calendar, guests, Meet, location and reminder do not apply to an
         // absence: it always lands on the primary calendar and is not a meeting.
         if (this.googleFields) {
             this.googleFields.hidden = !(isGoogle && !isOoo);
+        }
+        if (this.guestContainer) {
+            this.guestContainer.hidden = !(isGoogle && !isOoo);
         }
         if (this.googleAdvanced) {
             this.googleAdvanced.hidden = !(isGoogle && !isOoo);
@@ -1101,6 +1120,7 @@ export class LocalEventFormBuilder {
         if (this.meetCheckbox) this.meetCheckbox.checked = false;
         if (this.reminderSelect) this.reminderSelect.value = '';
         if (this.autoDeclineCheckbox) this.autoDeclineCheckbox.checked = false;
+        this.guestField?.reset();
         this.setAdvancedExpanded(false); // collapse the accordion
         // Resets the event type, the all-day state and the time row along with it
         this.setSource('local');

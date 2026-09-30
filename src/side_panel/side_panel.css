@@ -1166,6 +1166,187 @@ body {
     line-height: 1.45;
 }
 
+/* --- Guests (Google events): address box, suggestions, chips --- */
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .guest-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .guest-combobox {
+    position: relative;
+    display: flex;
+    flex-grow: 1;
+    min-width: 0;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .guest-suggest {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 5;
+    padding: 4px;
+    border: 1px solid var(--side-calendar-border-color);
+    border-radius: 10px;
+    background: var(--side-calendar-modal-bg);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.16);
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .guest-suggest-heading {
+    margin: 0;
+    padding: 4px 8px 2px;
+    color: var(--side-calendar-secondary-text-color);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .guest-suggest-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .guest-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 36px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .guest-option:hover,
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .guest-option.is-active {
+    background: var(--side-calendar-subtle-bg-hover);
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .guest-option-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.3;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .guest-option-name,
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .guest-option-email {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .guest-option-name {
+    font-size: 13px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .guest-option-email {
+    color: var(--side-calendar-secondary-text-color);
+    font-size: 11px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .guest-avatar {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--side-calendar-accent-color) 18%, var(--side-calendar-modal-bg));
+    color: var(--side-calendar-accent-hover-color);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+}
+
+[data-theme="dark"] :is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .guest-avatar {
+    background: color-mix(in srgb, var(--side-calendar-accent-color) 30%, var(--side-calendar-modal-bg));
+    color: inherit;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .guest-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 0 0 0 26px;
+    padding: 0;
+    list-style: none;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .guest-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    max-width: 100%;
+    height: 28px;
+    box-sizing: border-box;
+    padding: 0 2px 0 3px;
+    border: 1px solid var(--side-calendar-input-border);
+    border-radius: 14px;
+    background: var(--side-calendar-subtle-bg);
+    font-size: 12px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .guest-chip-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .guest-chip.is-invalid {
+    padding-left: 8px;
+    border-color: var(--side-calendar-danger-color);
+    background: color-mix(in srgb, var(--side-calendar-danger-color) 10%, var(--side-calendar-modal-bg));
+    color: var(--side-calendar-danger-color);
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .guest-chip-warning {
+    font-size: 11px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .guest-chip-remove {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    margin: 0;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--side-calendar-secondary-text-color);
+    font-size: 11px;
+    cursor: pointer;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .guest-chip.is-invalid .guest-chip-remove {
+    color: inherit;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .guest-chip-remove:hover {
+    background: var(--side-calendar-subtle-bg-hover);
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .guest-chip-remove:focus-visible {
+    outline: 2px solid var(--side-calendar-accent-color);
+    outline-offset: -2px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .guest-error {
+    margin: 0 0 0 26px;
+    color: var(--side-calendar-danger-color);
+    font-size: 11.5px;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+    word-break: auto-phrase;
+    text-wrap: pretty;
+}
+
 /* --- Google "advanced settings" accordion --- */
 
 :is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal) .google-advanced {

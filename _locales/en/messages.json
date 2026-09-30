@@ -123,6 +123,38 @@
     "message": "Add a location",
     "description": "Placeholder of the event location field"
   },
+  "guests": {
+    "message": "Guests",
+    "description": "Accessible name of the guests field and chip list when creating a Google event"
+  },
+  "addGuests": {
+    "message": "Add guests",
+    "description": "Placeholder of the guest address field when creating a Google event"
+  },
+  "guestSuggestHeading": {
+    "message": "From your recent events",
+    "description": "Heading over guest suggestions, which come from attendees of events already loaded"
+  },
+  "removeGuest": {
+    "message": "Remove $1",
+    "description": "Accessible name of a guest chip's remove button; $1 is the guest's name or address"
+  },
+  "guestInvalidEmail": {
+    "message": "“$1” is not an email address",
+    "description": "Shown under the guests when an entry is not an email address; $1 is what was typed"
+  },
+  "guestFixInvalid": {
+    "message": "Fix or remove the guest addresses marked in red.",
+    "description": "Save blocked because a guest entry is not an email address"
+  },
+  "notifyGuests": {
+    "message": "Email invitations to guests",
+    "description": "Checkbox: whether Google emails the guests an invitation (sendUpdates)"
+  },
+  "notifyGuestsHint": {
+    "message": "When off, the event is added without sending email.",
+    "description": "Explains the invitation checkbox being off"
+  },
   "duration": {
     "message": "Duration",
     "description": "Label of the duration picker next to the time inputs"

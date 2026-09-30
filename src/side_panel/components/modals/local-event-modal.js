@@ -16,6 +16,7 @@ import {
     setLocalizedText
 } from './event-dialog-dom.js';
 import { buildGoogleEventResource } from '../../../lib/google-event-utils.js';
+import { buildAttendees } from '../../../lib/guest-utils.js';
 import { buildRequestId } from '../../../lib/request-dedupe.js';
 
 export class LocalEventModal extends ModalComponent {
@@ -46,7 +47,9 @@ export class LocalEventModal extends ModalComponent {
         this.editContent = null;
 
         // Helper instances
-        this.formBuilder = new LocalEventFormBuilder(this);
+        this.formBuilder = new LocalEventFormBuilder(this, {
+            getGuestDirectory: options.getGuestDirectory
+        });
         this.deleteDialog = new DeleteRecurringDialog();
 
         // The event being edited
@@ -173,7 +176,8 @@ export class LocalEventModal extends ModalComponent {
             onSave: () => this._handleSave(),
             onDelete: () => this._handleDelete(),
             onCancel: () => this._handleCancel(),
-            onValidateTimes: () => this._validateTimes()
+            onValidateTimes: () => this._validateTimes(),
+            onGuestsChanged: () => this._handleGuestsChanged()
         });
 
         this.editConfirmFooter = this._createConfirmFooter('localEventEdit');
@@ -434,6 +438,7 @@ export class LocalEventModal extends ModalComponent {
             ? this.formBuilder.getPrimaryCalendarId()
             : (this.formBuilder.calendarSelect?.value || 'primary');
 
+        const attendees = isOutOfOffice ? [] : buildAttendees(this.formBuilder.guestField?.getValidGuests());
         const eventResource = buildGoogleEventResource({
             // createEvent requires a summary, so stand in Google's own default
             // title for an absence the user left untitled.
@@ -446,10 +451,16 @@ export class LocalEventModal extends ModalComponent {
             endTime: this.endTimeInput.value,
             addMeet: !!this.formBuilder.meetCheckbox?.checked,
             reminderMinutes: this.formBuilder.reminderSelect?.value,
+            attendees,
             eventType: isOutOfOffice ? 'outOfOffice' : undefined,
             allDay: this.formBuilder.isAllDay(),
             autoDecline: this.formBuilder.isAutoDecline()
         });
+        // Whether Google emails the guests. Only meaningful with guests; the
+        // API's own default for an insert is to send nothing.
+        const sendUpdates = attendees.length > 0
+            ? (this.formBuilder.guestField.shouldNotify() ? 'all' : 'none')
+            : undefined;
 
         if (!this.onSaveGoogle) {
             this.hide();
@@ -465,7 +476,7 @@ export class LocalEventModal extends ModalComponent {
         if (!this._googleCreateSeed) {
             this._googleCreateSeed = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
         }
-        const requestId = buildRequestId('create-evt', this._googleCreateSeed, [calendarId, eventResource]);
+        const requestId = buildRequestId('create-evt', this._googleCreateSeed, [calendarId, eventResource, sendUpdates]);
 
         // Keep the modal open until the create succeeds, so the user does not
         // lose their input on a network/API failure.
@@ -473,7 +484,7 @@ export class LocalEventModal extends ModalComponent {
         this._setSaving(true);
         let succeeded;
         try {
-            succeeded = await this.onSaveGoogle(eventResource, calendarId, requestId);
+            succeeded = await this.onSaveGoogle(eventResource, calendarId, requestId, { sendUpdates });
         } catch (error) {
             // The controller handler already catches and returns a boolean, so
             // this is defensive: never let a rejection escape as an unhandled
@@ -705,6 +716,20 @@ export class LocalEventModal extends ModalComponent {
             }
         }
 
+        // Guests (Google events only): an address still in the box counts, and
+        // one that is not an email address stops the save until it is fixed
+        // or removed, rather than being dropped without a word.
+        if (this.mode === 'create' && this.formBuilder.getSource() === 'google' && !isOutOfOffice) {
+            const guestField = this.formBuilder.guestField;
+            guestField?.commitPending();
+            if (guestField?.getFirstInvalid()) {
+                this._showError(window.getLocalizedMessage('guestFixInvalid') || 'Fix or remove the guest addresses marked in red.');
+                this._errorIsAboutGuests = true;
+                guestField.focus();
+                return false;
+            }
+        }
+
         // The time validity check
         return this._validateTimes();
     }
@@ -740,10 +765,22 @@ export class LocalEventModal extends ModalComponent {
     }
 
     /**
+     * Once the guest the save was refused over is fixed or removed, the
+     * refusal goes too.
+     * @private
+     */
+    _handleGuestsChanged() {
+        if (this._errorIsAboutGuests && !this.formBuilder.guestField?.getFirstInvalid()) {
+            this._clearError();
+        }
+    }
+
+    /**
      * Display error message
      * @private
      */
     _showError(message) {
+        this._errorIsAboutGuests = false;
         const errorElement = this.formBuilder?.errorContainer;
         if (!errorElement) {
             return;
@@ -759,6 +796,7 @@ export class LocalEventModal extends ModalComponent {
      * @private
      */
     _clearError() {
+        this._errorIsAboutGuests = false;
         const errorElement = this.formBuilder?.errorContainer;
         if (errorElement) {
             errorElement.textContent = '';

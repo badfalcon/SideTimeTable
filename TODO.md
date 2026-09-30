@@ -4,7 +4,7 @@
 
 ## Googleイベント作成（今後の拡張）
 
-- [ ] ゲスト招待（attendees）対応: 招待メール送信の副作用があるため UX を含め慎重に設計する（`sendUpdates` パラメータの扱い、確認ダイアログ等）。
+- [x] ゲスト招待（attendees）対応 — 作成フォームにゲスト欄を追加（`guest-field.js` / `guest-utils.js`）。招待メールは「ゲストに招待メールを送る」チェック（既定オン）で `sendUpdates=all|none` を選ぶ。候補は読み込み済みの予定の参加者（メモリ上のみ、自分と会議室は除外）。残: 既存予定のゲスト編集（下記 `sendUpdates` 項目と合わせて設計）、連絡先（People API）からの候補 — 追加スコープが要るため見送り。
 - [ ] Google ネイティブの繰り返し（RRULE）対応: 現状 v1 では繰り返しなしの単発イベントのみ作成可能。`recurrence: ['RRULE:...']` を組み立てる UI とロジックが必要。
 - [ ] 終日イベント（`start.date`/`end.date`）の作成・編集・削除対応（現状は時刻ありイベントのみ）。
 - [x] 作成した Google イベントの編集・削除 — 単発・書込可能カレンダーの時刻ありイベントに対応済み。編集可否は `isEditableGoogleEvent()`（`google-event-utils.js`）で判定: 主催者本人（`organizer.self`）または `guestsCanModify` のイベントのみ（招待コピーは403になるため非表示）、日跨ぎイベントは編集フォームが時刻のみのため除外。削除時の404/410（他クライアントで削除済み）は成功扱い。残: 繰り返しイベントの編集・削除（「この予定のみ/以降すべて/全体」の選択UI）、編集時の Meet 切替、カレンダー移動、ゲスト（attendees）編集と `sendUpdates`、日跨ぎイベントの編集対応。
@@ -20,6 +20,7 @@
 - [ ] 不在（OOO）イベントの**編集**: `eventType` は作成後に変更できないため、patch できるのは summary / start / end / `outOfOfficeProperties` のみ。既存の Google 編集フォームは時刻＋場所＋通知が前提なので、不在専用の編集フォームが要る。現状は削除のみ対応（`isDeletableGoogleEvent()`）。
 - [ ] 不在の辞退設定の3値化: 現状は `declineNone` / `declineAllConflictingInvitations` のオン・オフのみ。Google 本体と揃えるなら `declineOnlyNewConflictingInvitations` と辞退メッセージ（`outOfOfficeProperties.declineMessage`）の入力欄が必要。
 - [ ] 複数日にまたがる不在: 現状の「終日」は1日単位（`00:00` → 翌 `00:00`）。日付範囲の指定 UI と、`createAllDayEventElement()` の Day X/Y バッジ（`start.date`/`end.date` 前提）の対応が必要。
+- [ ] ゲスト欄（`GuestField`）の DOM テスト: 候補の矢印キー選択・Enter/区切り文字での確定・貼り付けの分割・Backspace での削除・Escape が候補だけを閉じること・不正アドレスでの保存拒否とその解除。純関数部分（`guest-utils.js`）は `tests/lib/guest-utils.test.js` でカバー済み、実拡張では Playwright の手元スクリプトで確認済み（2026-09、ja/en-320/ダーク）。jsdom 基盤が前提。
 - [ ] 保存先トグル・種別行（`_buildSourceToggle` / `_buildEventTypeRow`）、OOO フィールド（`_buildOooFields`）、`_applyFieldVisibility`、所要時間ピッカー（`_applyDurationPreset` / `_syncDurationFromTimes`）の DOM テスト: `jest.config.js` が `testEnvironment: 'node'` のため jsdom 基盤の整備が前提（既存のモーダル系 DOM テストと同じ理由）。時刻計算の純関数部分（`timeStringToMinutes` / `minutesToTimeString`）は `tests/lib/time-utils.test.js` でカバー済み。
 - [ ] `isAllDayLikeEvent()` の DST 分岐のテスト: 「翌日以降の現地 0:00 で終わる」判定は DST 移行日（23時間の日）でしか `>= 24h` 判定と挙動が分かれないが、Jest のワーカーはテストファイル実行前にタイムゾーンを UTC で確定させるため、ファイル内で `process.env.TZ` を設定しても効かない。スイート全体の TZ を変えると既存の時刻テストに影響するため保留。
 - [ ] `_fetchEventsForCalendarIds()` の `isWritableCalendar` 刻印のテスト（fetch モックが複雑なため未整備 — `getCalendarEvents` 系テスト整備と合わせて対応）。
