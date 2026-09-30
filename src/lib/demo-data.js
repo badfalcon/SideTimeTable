@@ -1071,7 +1071,7 @@ export function getDemoOptionsSettings() {
         timelineBackgroundColor: '#ffffff',
         panelBackgroundColor: '#ffffff',
         googleEventDefaultColor: '#fff0b8',
-        workTimeColor: '#e3e3e3',
+        workTimeColor: '#f1f3f5',
         breakTimeColor: '#bcdcfb',
         localEventColor: '#bbf2b1',
         currentTimeLineColor: '#ff0000',

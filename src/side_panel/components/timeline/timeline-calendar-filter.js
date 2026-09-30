@@ -1,6 +1,7 @@
 /**
- * TimelineCalendarFilter - A fixed button in the timeline top-right
- * that opens a popover for quick Google Calendar visibility toggling.
+ * TimelineCalendarFilter - A button that opens a popover for quick Google
+ * Calendar visibility toggling. It sits in the header (mountIn), or pinned to
+ * the timeline's top-right corner (attachTo) when no header slot is given.
  * Supports calendar groups for batch toggling.
  */
 import { Component } from '../base/component.js';
@@ -114,6 +115,33 @@ export class TimelineCalendarFilter extends Component {
     }
 
     /**
+     * Mount in a static place (the header) instead of floating over the
+     * timeline: no scroll tracking, and header-style button.
+     * @param {HTMLElement} target
+     */
+    mountIn(target) {
+        if (!this.element) {
+            this.createElement();
+        }
+        this.element.classList.add('is-in-header');
+        target.appendChild(this.element);
+        this._listenForWindowBlur();
+    }
+
+    /**
+     * Close the dropdown when the side panel loses focus (e.g., the user
+     * clicks on the main page).
+     * @private
+     */
+    _listenForWindowBlur() {
+        if (this._boundOnWindowBlur) return;
+        this._boundOnWindowBlur = () => {
+            if (this.isOpen) this._close();
+        };
+        window.addEventListener('blur', this._boundOnWindowBlur);
+    }
+
+    /**
      * Attach to the timeline scroll container and sync position on scroll
      * @param {HTMLElement} scrollContainer - The .side-time-table element
      */
@@ -138,11 +166,7 @@ export class TimelineCalendarFilter extends Component {
         };
         scrollContainer.addEventListener('scroll', this._boundOnScroll);
 
-        // Close dropdown when side panel loses focus (e.g., user clicks on main page)
-        this._boundOnWindowBlur = () => {
-            if (this.isOpen) this._close();
-        };
-        window.addEventListener('blur', this._boundOnWindowBlur);
+        this._listenForWindowBlur();
     }
 
     /**

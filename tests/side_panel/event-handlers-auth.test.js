@@ -28,7 +28,7 @@ jest.mock('../../src/side_panel/event-element-factory.js', () => ({
   EVENT_STYLING: { DEFAULT_VALUES: { ZERO_DURATION_MINUTES: 30 } },
   onClickOnly: jest.fn(),
   resolveLocaleSettings: jest.fn().mockResolvedValue(['en', '12h']),
-  EventElementFactory: { createEventElement: jest.fn(), createPrimaryLine: jest.fn() },
+  EventElementFactory: { createEventElement: jest.fn(), createEventBody: jest.fn(), buildTooltip: jest.fn() },
 }));
 
 import { GoogleEventManager } from '../../src/side_panel/event-handlers.js';

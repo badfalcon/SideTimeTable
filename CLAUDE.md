@@ -61,7 +61,7 @@ npm run build         # Verify production build succeeds
 - **Local events**: Chrome storage with date-scoped keys (`localEvents_YYYY-MM-DD`)
 - **EventLayoutManager**: overlap detection → lane assignment → width calculation
 - **Recurring events**: separate storage with daily/weekly/monthly/weekdays patterns and exception handling
-- **Adaptive padding**: basic (10px), compact (8px), micro (6px) based on lane density
+- **Adaptive padding**: basic (6px), compact (5px), micro (4px) based on lane density
 
 ## TODO管理
 

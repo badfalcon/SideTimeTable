@@ -9,6 +9,10 @@ import {
   buildRfc3339DateTime,
   timeStringToMinutes,
   minutesToTimeString,
+  formatHeaderDate,
+  formatHourLabel,
+  formatTimeRange,
+  formatStartTime,
 } from '../../src/lib/time-utils.js';
 
 describe('createTimeOnDate', () => {
@@ -396,5 +400,65 @@ describe('minutesToTimeString', () => {
     ['00:00', '07:45', '12:00', '23:59'].forEach((time) => {
       expect(minutesToTimeString(timeStringToMinutes(time))).toBe(time);
     });
+  });
+});
+
+describe('formatHeaderDate', () => {
+  const now = new Date(2026, 8, 30);
+
+  test('Japanese: month, day and weekday', () => {
+    expect(formatHeaderDate(new Date(2026, 8, 30), 'ja', now)).toBe('9月30日(水)');
+  });
+
+  test('English: weekday, month and day', () => {
+    expect(formatHeaderDate(new Date(2026, 8, 30), 'en', now)).toBe('Wed, Sep 30');
+  });
+
+  test('adds the year only when it is not the current one', () => {
+    expect(formatHeaderDate(new Date(2027, 0, 5), 'ja', now)).toBe('2027年1月5日(火)');
+    expect(formatHeaderDate(new Date(2025, 11, 31), 'en', now)).toBe('Wed, Dec 31, 2025');
+  });
+
+  test('an invalid date gives an empty string', () => {
+    expect(formatHeaderDate(new Date('nope'), 'en', now)).toBe('');
+    expect(formatHeaderDate(null, 'ja', now)).toBe('');
+  });
+});
+
+describe('formatHourLabel', () => {
+  test.each([
+    [9, '24h', 'ja', '9:00'],
+    [0, '24h', 'en', '0:00'],
+    [9, '12h', 'en', '9 AM'],
+    [12, '12h', 'en', '12 PM'],
+    [0, '12h', 'en', '12 AM'],
+    [24, '12h', 'en', '12 AM'],
+    [15, '12h', 'ja', '午後3時'],
+  ])('hour %i, %s, %s → %s', (hour, format, locale, expected) => {
+    expect(formatHourLabel(hour, format, locale)).toBe(expected);
+  });
+});
+
+describe('formatTimeRange', () => {
+  test('24-hour keeps the zero-padded times', () => {
+    expect(formatTimeRange('09:00', '10:30', '24h', 'ja')).toBe('09:00–10:30');
+  });
+
+  test('12-hour English names AM/PM once when both ends share it', () => {
+    expect(formatTimeRange('09:00', '10:30', '12h', 'en')).toBe('9:00–10:30 AM');
+    expect(formatTimeRange('11:30', '13:00', '12h', 'en')).toBe('11:30 AM–1:00 PM');
+  });
+
+  test('12-hour Japanese puts 午前/午後 in front', () => {
+    expect(formatTimeRange('13:00', '14:00', '12h', 'ja')).toBe('午後1:00–2:00');
+    expect(formatTimeRange('11:00', '12:30', '12h', 'ja')).toBe('午前11:00–午後12:30');
+  });
+});
+
+describe('formatStartTime', () => {
+  test('24-hour is unchanged, 12-hour drops the zero and AM/PM', () => {
+    expect(formatStartTime('09:05', '24h')).toBe('09:05');
+    expect(formatStartTime('13:45', '12h')).toBe('1:45');
+    expect(formatStartTime('00:15', '12h')).toBe('12:15');
   });
 });

@@ -34,7 +34,8 @@ export const COLOR_THEMES = [
             surface:        '#ffffff',
             primary:        '#fff0b8',
             secondary:      '#bbf2b1',
-            surfaceVariant: '#e3e3e3',
+            // Light enough that the tinted event blocks keep their colour on it
+            surfaceVariant: '#f1f3f5',
             outline:        '#bcdcfb',
             indicator:      '#ff0000'
         }

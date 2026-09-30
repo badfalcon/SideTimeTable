@@ -30,7 +30,8 @@ jest.mock('../../src/side_panel/event-element-factory.js', () => ({
       eventDiv: { style: {}, dataset: {}, classList: { add: jest.fn() }, appendChild: jest.fn(), innerHTML: '' },
       duration: 60
     })),
-    createPrimaryLine: jest.fn(() => ({ className: '' })),
+    createEventBody: jest.fn(() => ({ className: 'event-body' })),
+    buildTooltip: jest.fn(() => ''),
   },
 }));
 
@@ -48,17 +49,27 @@ beforeAll(() => {
   global.document = global.document || {};
   global.document.createElement = jest.fn(() => {
     const children = [];
-    return {
+    const el = {
       className: '',
       title: '',
       textContent: '',
-      style: {},
+      style: { setProperty: jest.fn((name, value) => { el.style[name] = value; }) },
       dataset: {},
       children,
       appendChild: jest.fn((child) => { children.push(child); return child; }),
     };
+    el.classList = {
+      add: jest.fn((name) => { el.className = `${el.className} ${name}`.trim(); }),
+      contains: (name) => el.className.split(' ').includes(name),
+    };
+    return el;
   });
 });
+
+// The chip's title (it sits in its own span, before any day badge)
+function chipTitle(chip) {
+  return chip.children.find((child) => child.className === 'all-day-event-chip-title')?.textContent;
+}
 
 function createManager() {
   return new GoogleEventManager(
@@ -126,8 +137,9 @@ describe('GoogleEventManager — all-day event routing', () => {
 
     expect(allDayContainer.appendChild).toHaveBeenCalledTimes(1);
     const chip = allDayContainer.appendChild.mock.calls[0][0];
-    expect(chip.className).toBe('all-day-event-chip');
-    expect(chip.textContent).toBe('Company Holiday');
+    expect(chip.className.split(' ')).toContain('all-day-event-chip');
+    expect(chip.className.split(' ')).not.toContain('all-day-event-chip-ooo');
+    expect(chipTitle(chip)).toBe('Company Holiday');
   });
 
   test('all-day event with undefined eventType still creates a chip (API may omit the field)', async () => {
@@ -135,7 +147,7 @@ describe('GoogleEventManager — all-day event routing', () => {
 
     expect(allDayContainer.appendChild).toHaveBeenCalledTimes(1);
     const chip = allDayContainer.appendChild.mock.calls[0][0];
-    expect(chip.textContent).toBe('Company Holiday');
+    expect(chipTitle(chip)).toBe('Company Holiday');
   });
 
   test('all-day outOfOffice event creates a chip with OOO styling', async () => {
@@ -143,15 +155,15 @@ describe('GoogleEventManager — all-day event routing', () => {
 
     expect(allDayContainer.appendChild).toHaveBeenCalledTimes(1);
     const chip = allDayContainer.appendChild.mock.calls[0][0];
-    expect(chip.className).toBe('all-day-event-chip all-day-event-chip-ooo');
-    expect(chip.textContent).toBe('PTO');
+    expect(chip.className.split(' ')).toEqual(expect.arrayContaining(['all-day-event-chip', 'all-day-event-chip-ooo']));
+    expect(chipTitle(chip)).toBe('PTO');
   });
 
   test('all-day outOfOffice event without summary falls back to localized "Out of office"', async () => {
     await manager._processEvents([allDayEvent({ eventType: 'outOfOffice', summary: '' })]);
 
     const chip = allDayContainer.appendChild.mock.calls[0][0];
-    expect(chip.textContent).toBe('Out of office');
+    expect(chipTitle(chip)).toBe('Out of office');
   });
 
   test('full-day outOfOffice event with dateTime (00:00→24:00) is routed to the all-day container', async () => {
@@ -170,7 +182,7 @@ describe('GoogleEventManager — all-day event routing', () => {
 
     expect(allDayContainer.appendChild).toHaveBeenCalledTimes(1);
     const chip = allDayContainer.appendChild.mock.calls[0][0];
-    expect(chip.className).toBe('all-day-event-chip all-day-event-chip-ooo');
+    expect(chip.className.split(' ')).toEqual(expect.arrayContaining(['all-day-event-chip', 'all-day-event-chip-ooo']));
   });
 
   // The "ends at a later local midnight" branch of isAllDayLikeEvent only
@@ -262,8 +274,8 @@ describe('GoogleEventManager — all-day event routing', () => {
 
     // Two all-day chips
     expect(allDayContainer.appendChild).toHaveBeenCalledTimes(2);
-    expect(allDayContainer.appendChild.mock.calls[0][0].textContent).toBe('Company Holiday');
-    expect(allDayContainer.appendChild.mock.calls[1][0].textContent).toBe('Off-site');
+    expect(chipTitle(allDayContainer.appendChild.mock.calls[0][0])).toBe('Company Holiday');
+    expect(chipTitle(allDayContainer.appendChild.mock.calls[1][0])).toBe('Off-site');
   });
 
   // -------------------------------------------------------------------
@@ -277,7 +289,7 @@ describe('GoogleEventManager — all-day event routing', () => {
     expect(chip.dataset.calendarId).toBe('work@team.com');
   });
 
-  test('chip applies Google Calendar colors when enabled', async () => {
+  test('chip is tinted with the Google Calendar color when enabled', async () => {
     manager.useGoogleCalendarColors = true;
     await manager._processEvents([allDayEvent({
       calendarBackgroundColor: '#FF0000',
@@ -285,16 +297,17 @@ describe('GoogleEventManager — all-day event routing', () => {
     })]);
 
     const chip = allDayContainer.appendChild.mock.calls[0][0];
-    expect(chip.style.backgroundColor).toBe('#FF0000');
-    expect(chip.style.color).toBe('#FFFFFF');
+    expect(chip.style['--event-color']).toBe('#FF0000');
+    expect(chip.classList.contains('has-calendar-color')).toBe(true);
   });
 
   test('chip does not apply colors when useGoogleCalendarColors is false', async () => {
     manager.useGoogleCalendarColors = false;
-    await manager._processEvents([allDayEvent()]);
+    await manager._processEvents([allDayEvent({ calendarBackgroundColor: '#FF0000' })]);
 
     const chip = allDayContainer.appendChild.mock.calls[0][0];
-    expect(chip.style.backgroundColor).toBeUndefined();
+    expect(chip.style['--event-color']).toBeUndefined();
+    expect(chip.classList.contains('has-calendar-color')).toBe(false);
   });
 
   test('chip registers a click handler via onClickOnly', async () => {
@@ -316,7 +329,7 @@ describe('GoogleEventManager — all-day event routing', () => {
     })]);
 
     const chip = allDayContainer.appendChild.mock.calls[0][0];
-    expect(chip.children.length).toBe(0);
+    expect(chip.children.map((child) => child.className)).toEqual(['all-day-event-chip-title']);
   });
 
   test('multi-day event shows a day progress badge (Day X/Y)', async () => {
@@ -328,8 +341,8 @@ describe('GoogleEventManager — all-day event routing', () => {
     })]);
 
     const chip = allDayContainer.appendChild.mock.calls[0][0];
-    expect(chip.appendChild).toHaveBeenCalledTimes(1);
-    const badge = chip.appendChild.mock.calls[0][0];
+    expect(chip.appendChild).toHaveBeenCalledTimes(2);
+    const badge = chip.appendChild.mock.calls[1][0];
     expect(badge.className).toBe('all-day-event-chip-days');
     expect(badge.textContent).toBe('Day 2/3');
   });
@@ -341,7 +354,7 @@ describe('GoogleEventManager — all-day event routing', () => {
       end: { date: '2025-06-04' },
     })]);
 
-    const badge = allDayContainer.appendChild.mock.calls[0][0].appendChild.mock.calls[0][0];
+    const badge = allDayContainer.appendChild.mock.calls[0][0].appendChild.mock.calls[1][0];
     expect(badge.textContent).toBe('Day 1/3');
   });
 

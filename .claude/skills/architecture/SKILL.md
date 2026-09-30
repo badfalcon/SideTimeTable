@@ -23,7 +23,7 @@ Main UI displayed in Chrome's side panel:
 - `side_panel.css`: Custom styling with CSS variables for theming
 - `components/`: Modular component-based UI architecture
   - `timeline/timeline-component.js`: Main timeline display with integrated event layout
-  - `header/header-component.js`: Date navigation and settings controls
+  - `header/header-component.js`: Date navigation (the date label opens the browser's date picker), add/sync/settings buttons, and the slot the calendar filter mounts into
   - `modals/`: Modal dialog components (Google events, local events, alerts, What's New, review)
     - `event-dialog-dom.js`: Shared DOM builders for the event dialogs (sticky header/footer, icon-led rows, segmented controls, buttons, inline delete confirmation, status line, time row with duration picker)
     - `delete-recurring-dialog.js`: "This event / All events" choice before deleting a recurring local event
@@ -143,7 +143,8 @@ Chrome alarm-based reminders:
 - **24-hour coordinate system**: Events positioned using `top: ${minutes_since_midnight + 30}px` (30px offset for top extension zone)
 - **Responsive width calculation**: Auto-adjusts to side panel width changes via ResizeObserver
 - **Business hours visualization**: Configurable work time highlighting with break time support
-- **Current time indicator**: Managed by `CurrentTimeLineManager` with date-aware visibility
+- **Current time indicator**: Managed by `CurrentTimeLineManager` with date-aware visibility; drawn over the events with the time in a pill, and its per-minute tick fades ended events (`is-past`)
+- **Event blocks**: a tint of the event's colour with a 3px bar of it (`--event-color`; `.has-calendar-color` for a Google calendar's own colour), text is title → time → place in one clamped box (`--event-lines`), no description
 - **Scroll positioning**: Smart scroll to current time or business hours
 - **Date navigation**: Integrated with header component for seamless date switching
 
@@ -161,7 +162,7 @@ Chrome alarm-based reminders:
 ### Responsive Design Features
 - **Auto-width adjustment**: ResizeObserver monitors side panel width changes
 - **Lane-based layout**: Events distributed across lanes when overlapping
-- **Adaptive padding**: Adjusts based on lane density (basic: 10px, compact: 8px, micro: 6px)
+- **Adaptive padding**: Adjusts based on lane density (basic: 6px, compact: 5px, micro: 4px)
 - **Minimum width enforcement**: Ensures readability even in narrow panels
 - **Content optimization**: Shows title-only for very narrow events
 

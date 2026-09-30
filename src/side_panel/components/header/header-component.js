@@ -2,6 +2,7 @@
  * HeaderComponent - Side panel header component
  */
 import { Component } from '../base/component.js';
+import { formatHeaderDate } from '../../../lib/time-utils.js';
 
 export class HeaderComponent extends Component {
     constructor(options = {}) {
@@ -21,9 +22,14 @@ export class HeaderComponent extends Component {
         this.addEventButton = null;
         this.prevDateButton = null;
         this.nextDateButton = null;
+        this.dateButton = null;
         this.dateInput = null;
         this.syncButton = null;
         this.settingsButton = null;
+        this.filterSlot = null;
+
+        // Language of the date label ('ja' / 'en'), resolved asynchronously
+        this.locale = document.documentElement.lang === 'ja' ? 'ja' : 'en';
 
         // Sync state
         this.isSyncing = false;
@@ -50,16 +56,16 @@ export class HeaderComponent extends Component {
         // Date navigation
         const dateNavigation = this._createDateNavigation();
 
-        // Right-side buttons container (settings)
+        // Right-side buttons: the calendar filter (mounted here by the
+        // timeline once it exists) and settings
         const rightButtons = document.createElement('div');
         rightButtons.className = 'action-buttons';
 
-        // Settings button
-        this.settingsButton = document.createElement('i');
-        this.settingsButton.className = 'fas fa-cog settings-icon';
-        this.settingsButton.id = 'settingsIcon';
-        this.settingsButton.setAttribute('data-localize-title', '__MSG_settings__');
+        this.filterSlot = document.createElement('div');
+        this.filterSlot.className = 'header-filter-slot';
+        rightButtons.appendChild(this.filterSlot);
 
+        this.settingsButton = this._createIconButton('settingsIcon', 'fas fa-cog', 'settings', 'Settings');
         rightButtons.appendChild(this.settingsButton);
 
         // Add the elements to the header
@@ -72,10 +78,49 @@ export class HeaderComponent extends Component {
         // Setup the event listeners
         this._setupEventListeners();
 
-        // Set the initial date
+        // Set the initial date, then again once the extension language is known
         this._updateDateDisplay();
+        this._resolveLocale();
 
         return wrapper;
+    }
+
+    /**
+     * A borderless icon button with a tooltip and an accessible name.
+     * @param {string} id
+     * @param {string} iconClass
+     * @param {string} msgKey
+     * @param {string} fallback
+     * @returns {HTMLButtonElement}
+     * @private
+     */
+    _createIconButton(id, iconClass, msgKey, fallback) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.id = id;
+        button.className = 'header-icon-btn';
+        const label = window.getLocalizedMessage?.(msgKey) || fallback;
+        button.title = label;
+        button.setAttribute('aria-label', label);
+        button.setAttribute('data-localize-title', `__MSG_${msgKey}__`);
+        button.setAttribute('data-localize-aria-label', `__MSG_${msgKey}__`);
+
+        const icon = document.createElement('i');
+        icon.className = iconClass;
+        icon.setAttribute('aria-hidden', 'true');
+        button.appendChild(icon);
+        return button;
+    }
+
+    /**
+     * Where the calendar filter button goes.
+     * @returns {HTMLElement|null}
+     */
+    getFilterSlot() {
+        if (!this.element) {
+            this.createElement();
+        }
+        return this.filterSlot;
     }
 
     /**
@@ -86,18 +131,12 @@ export class HeaderComponent extends Component {
         const container = document.createElement('div');
         container.className = 'action-buttons';
 
-        // Add button
-        this.addEventButton = document.createElement('i');
-        this.addEventButton.className = 'fas fa-plus-circle add-local-event-icon';
-        this.addEventButton.id = 'addLocalEventButton';
-        this.addEventButton.setAttribute('data-localize-title', '__MSG_addEvent__');
+        // Add button: the one filled button in the header
+        this.addEventButton = this._createIconButton('addLocalEventButton', 'fas fa-plus', 'addEvent', 'Add event');
+        this.addEventButton.classList.add('header-add-btn');
 
         // Sync button
-        this.syncButton = document.createElement('i');
-        this.syncButton.className = 'fas fa-sync sync-icon';
-        this.syncButton.id = 'syncReminderButton';
-        this.syncButton.setAttribute('data-localize-title', '__MSG_syncReminders__');
-        this.syncButton.title = window.getLocalizedMessage('syncReminders') || 'Sync Reminders';
+        this.syncButton = this._createIconButton('syncReminderButton', 'fas fa-sync-alt', 'syncReminders', 'Sync Reminders');
 
         container.appendChild(this.addEventButton);
         container.appendChild(this.syncButton);
@@ -106,7 +145,9 @@ export class HeaderComponent extends Component {
     }
 
     /**
-     * Create date navigation elements
+     * Create date navigation elements. The date is a button showing the day
+     * in words; it opens the browser's date picker through a date input that
+     * sits invisibly underneath it.
      * @private
      */
     _createDateNavigation() {
@@ -114,25 +155,36 @@ export class HeaderComponent extends Component {
         container.id = 'dateNavigation';
 
         // The previous day button
-        this.prevDateButton = document.createElement('i');
-        this.prevDateButton.className = 'fas fa-chevron-left nav-arrow';
-        this.prevDateButton.id = 'prevDateButton';
-        this.prevDateButton.setAttribute('data-localize-title', '__MSG_previousDay__');
+        this.prevDateButton = this._createIconButton('prevDateButton', 'fas fa-chevron-left', 'previousDay', 'Previous day');
+        this.prevDateButton.classList.add('header-nav-btn');
 
-        // Date input
+        const dateWrap = document.createElement('div');
+        dateWrap.className = 'header-date';
+
+        this.dateButton = document.createElement('button');
+        this.dateButton.type = 'button';
+        this.dateButton.id = 'currentDateLabel';
+        this.dateButton.className = 'header-date-btn';
+        const pickTitle = window.getLocalizedMessage?.('clickToSelectDate') || 'Click to select date';
+        this.dateButton.title = pickTitle;
+        this.dateButton.setAttribute('data-localize-title', '__MSG_clickToSelectDate__');
+        dateWrap.appendChild(this.dateButton);
+
+        // Date input: only the picker behind the button, never focused itself
         this.dateInput = document.createElement('input');
         this.dateInput.type = 'date';
         this.dateInput.id = 'currentDateDisplay';
-        this.dateInput.setAttribute('data-localize-title', '__MSG_clickToSelectDate__');
+        this.dateInput.className = 'header-date-input';
+        this.dateInput.tabIndex = -1;
+        this.dateInput.setAttribute('aria-hidden', 'true');
+        dateWrap.appendChild(this.dateInput);
 
         // The next day button
-        this.nextDateButton = document.createElement('i');
-        this.nextDateButton.className = 'fas fa-chevron-right nav-arrow';
-        this.nextDateButton.id = 'nextDateButton';
-        this.nextDateButton.setAttribute('data-localize-title', '__MSG_nextDay__');
+        this.nextDateButton = this._createIconButton('nextDateButton', 'fas fa-chevron-right', 'nextDay', 'Next day');
+        this.nextDateButton.classList.add('header-nav-btn');
 
         container.appendChild(this.prevDateButton);
-        container.appendChild(this.dateInput);
+        container.appendChild(dateWrap);
         container.appendChild(this.nextDateButton);
 
         return container;
@@ -159,6 +211,10 @@ export class HeaderComponent extends Component {
             this._navigateDate(1);
         });
 
+        this.addEventListener(this.dateButton, 'click', () => {
+            this._openDatePicker();
+        });
+
         this.addEventListener(this.dateInput, 'change', () => {
             this._handleDateInputChange();
         });
@@ -174,6 +230,35 @@ export class HeaderComponent extends Component {
                 this.onSettingsClick();
             }
         });
+    }
+
+    /**
+     * Open the browser's date picker under the date label.
+     * @private
+     */
+    _openDatePicker() {
+        if (!this.dateInput || this.dateInput.disabled) return;
+        try {
+            this.dateInput.showPicker();
+        } catch {
+            // showPicker() refuses when not triggered by the user; clicking
+            // the input is the older way to the same picker
+            this.dateInput.click();
+        }
+    }
+
+    /**
+     * Resolve the extension language for the date label.
+     * @private
+     */
+    _resolveLocale() {
+        if (typeof window.getCurrentLocale !== 'function') return;
+        Promise.resolve(window.getCurrentLocale())
+            .then((locale) => {
+                this.locale = locale === 'ja' ? 'ja' : 'en';
+                this._updateDateDisplay();
+            })
+            .catch(() => {});
     }
 
     /**
@@ -208,6 +293,12 @@ export class HeaderComponent extends Component {
             const month = String(this.currentDate.getMonth() + 1).padStart(2, '0');
             const day = String(this.currentDate.getDate()).padStart(2, '0');
             this.dateInput.value = `${year}-${month}-${day}`;
+        }
+        if (this.dateButton) {
+            this.dateButton.textContent = formatHeaderDate(this.currentDate, this.locale);
+            // Today reads in the accent colour, so another day is recognisable
+            // at a glance
+            this.dateButton.classList.toggle('is-today', this.isToday());
         }
     }
 
@@ -247,23 +338,18 @@ export class HeaderComponent extends Component {
      * @param {boolean} enabled Whether to enable
      */
     setButtonsEnabled(enabled) {
-        const buttons = [
+        [
             this.addEventButton,
             this.prevDateButton,
             this.nextDateButton,
-            this.settingsButton
-        ];
-
-        buttons.forEach(button => {
-            if (button) {
-                button.style.pointerEvents = enabled ? '' : 'none';
-                button.style.opacity = enabled ? '' : '0.5';
+            this.dateButton,
+            this.settingsButton,
+            this.dateInput
+        ].forEach(control => {
+            if (control) {
+                control.disabled = !enabled;
             }
         });
-
-        if (this.dateInput) {
-            this.dateInput.disabled = !enabled;
-        }
     }
 
     /**
@@ -338,17 +424,10 @@ export class HeaderComponent extends Component {
         this.isSyncing = syncing;
 
         if (this.syncButton) {
-            if (syncing) {
-                // Add spinning animation
-                this.syncButton.classList.add('fa-spin');
-                this.syncButton.style.pointerEvents = 'none';
-                this.syncButton.style.opacity = '0.6';
-            } else {
-                // Remove spinning animation
-                this.syncButton.classList.remove('fa-spin');
-                this.syncButton.style.pointerEvents = '';
-                this.syncButton.style.opacity = '';
-            }
+            // Spin the icon, not the button, so the focus ring stays still
+            this.syncButton.querySelector('i')?.classList.toggle('fa-spin', syncing);
+            this.syncButton.classList.toggle('is-syncing', syncing);
+            this.syncButton.setAttribute('aria-busy', String(syncing));
         }
     }
 }

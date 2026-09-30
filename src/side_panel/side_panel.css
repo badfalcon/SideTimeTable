@@ -1,11 +1,12 @@
 :root {
     --side-calendar-timeline-background-color: #ffffff;
     --side-calendar-panel-background-color: #ffffff;
-    --side-calendar-work-time-color: #e3e3e3;
+    --side-calendar-work-time-color: #f1f3f5;
     --side-calendar-break-time-color: #bcdcfb;
     --side-calendar-local-event-color: #bbf2b1;
     --side-calendar-google-event-default-color: #fff0b8;
     --side-calendar-current-time-line-color: #ff0000;
+    --side-calendar-current-time-line-text-color: #ffffff;
     /* Computed text colors (auto-set by JS based on background luminance) */
     --side-calendar-timeline-text-color: #000000;
     --side-calendar-panel-text-color: #000000;
@@ -162,12 +163,13 @@ body {
     opacity: 1;
 }
 
-/* All-day events section (between header and timeline) */
+/* All-day events section (between header and timeline). The chips line up
+   with the event column below (the time axis is 40px wide). */
 .all-day-events-section {
     flex: 0 0 auto;
-    padding: 4px 8px;
+    padding: 5px 8px 5px 40px;
     background: var(--side-calendar-panel-background-color);
-    border-bottom: 1px solid var(--side-calendar-border-color);
+    border-bottom: 1px solid var(--side-calendar-border-color-lighter);
     max-height: 80px;
     overflow-y: auto;
 }
@@ -178,41 +180,60 @@ body {
     gap: 4px;
 }
 
+/* Same colour grammar as the timed blocks (see .event) */
 .all-day-event-chip {
+    --event-color: var(--side-calendar-google-event-default-color);
+    --event-tint: 60%;
+    --event-bar-mix: 40%;
     display: inline-flex;
     align-items: center;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    cursor: pointer;
-    background: var(--side-calendar-google-event-default-color);
-    color: var(--side-calendar-google-event-default-text-color);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    gap: 5px;
+    height: 22px;
+    box-sizing: border-box;
     max-width: 100%;
-    box-shadow: 0 1px 2px var(--side-calendar-shadow-color);
-    line-height: 1.4;
+    padding: 0 8px 0 6px;
+    border-left: 3px solid color-mix(in oklab, var(--event-color), var(--side-calendar-panel-text-color) var(--event-bar-mix));
+    border-radius: 6px;
+    background-color: color-mix(in srgb, var(--event-color) var(--event-tint), var(--side-calendar-panel-background-color));
+    color: var(--side-calendar-panel-text-color);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
 }
 
 .all-day-event-chip:hover {
-    opacity: 0.85;
+    filter: brightness(0.96);
+}
+
+[data-theme="dark"] .all-day-event-chip:hover {
+    filter: brightness(1.15);
+}
+
+.all-day-event-chip-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .all-day-event-chip-days {
-    margin-left: 4px;
-    font-size: 10px;
-    opacity: 0.7;
+    flex-shrink: 0;
+    font-size: 10.5px;
+    font-weight: 400;
+    opacity: 0.75;
 }
 
 .all-day-event-chip-ooo {
-    text-decoration: line-through;
-    font-style: italic;
+    background-image: repeating-linear-gradient(
+        135deg,
+        transparent 0 6px,
+        color-mix(in srgb, var(--event-color) 25%, transparent) 6px 8px
+    );
 }
 
 .side-time-table {
     position: relative;
-    border: 1px solid var(--side-calendar-border-color);
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
@@ -221,10 +242,11 @@ body {
 
 #sideTimeTableHeaderWrapper{
     flex: 0 0 auto;
+    position: relative;
     z-index: 100;
     background-color: var(--side-calendar-panel-background-color);
     color: var(--side-calendar-panel-text-color);
-    padding: 8px 8px 10px;
+    border-bottom: 1px solid var(--side-calendar-border-color-lighter);
 }
 
 /* Three columns: buttons, date, buttons. The date stays centred while the
@@ -235,6 +257,9 @@ body {
     grid-template-columns: 1fr auto 1fr;
     align-items: center;
     column-gap: 8px;
+    height: 44px;
+    box-sizing: border-box;
+    padding: 0 6px 0 8px;
     background-color: var(--side-calendar-panel-background-color);
     width: 100%;
 }
@@ -250,13 +275,136 @@ body {
 .action-buttons {
     display: flex;
     align-items: center;
-    gap: 10px; /* Gap between add and sync buttons */
+    gap: 2px;
 }
 
 #dateNavigation {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 2px;
+}
+
+/* Every header control is the same quiet icon button; only "add" is filled */
+.header-icon-btn {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    margin: 0;
+    padding: 0;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--side-calendar-secondary-text-color);
+    font-size: 15px;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.header-icon-btn:hover:not(:disabled) {
+    background: var(--side-calendar-subtle-bg-hover);
+    color: var(--side-calendar-panel-text-color);
+}
+
+.header-icon-btn:focus-visible,
+.header-date-btn:focus-visible {
+    outline: 2px solid var(--side-calendar-accent-color);
+    outline-offset: -2px;
+}
+
+.header-icon-btn:disabled,
+.header-date-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.header-nav-btn {
+    width: 28px;
+    font-size: 13px;
+}
+
+.header-add-btn {
+    width: 30px;
+    height: 30px;
+    margin-right: 2px;
+    border-radius: 50%;
+    background: var(--side-calendar-accent-hover-color);
+    color: #ffffff;
+    font-size: 14px;
+}
+
+.header-add-btn:hover:not(:disabled) {
+    background: var(--side-calendar-accent-color);
+    color: #ffffff;
+}
+
+.header-add-btn:focus-visible {
+    outline-offset: 2px;
+}
+
+/* Dark: white on the lighter dark-theme blue is too faint (see the dialogs'
+   primary button) */
+[data-theme="dark"] .header-add-btn,
+[data-theme="dark"] .header-add-btn:hover:not(:disabled) {
+    background: var(--side-calendar-accent-color);
+    color: #0f1b2e;
+}
+
+.header-icon-btn.is-syncing {
+    color: var(--side-calendar-accent-color);
+}
+
+.header-date {
+    position: relative;
+}
+
+.header-date-btn {
+    display: inline-flex;
+    align-items: center;
+    height: 30px;
+    margin: 0;
+    padding: 0 6px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: inherit;
+    font-family: inherit;
+    font-size: 14.5px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.header-date-btn:hover:not(:disabled) {
+    background: var(--side-calendar-subtle-bg-hover);
+}
+
+.header-date-btn.is-today {
+    color: var(--side-calendar-accent-hover-color);
+}
+
+[data-theme="dark"] .header-date-btn.is-today {
+    color: var(--side-calendar-accent-color);
+}
+
+/* The picker behind the date label: present for showPicker(), never seen */
+.header-date-input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.header-filter-slot {
+    display: contents;
 }
 
 /* In a narrow panel (Chrome's minimum is 320px) the date would sit right
@@ -264,99 +412,19 @@ body {
    touch the button too; a slightly smaller date buys the gap back. */
 @media (max-width: 360px) {
     #sideTimeTableHeader {
-        column-gap: 12px;
+        column-gap: 10px;
     }
 
     #dateNavigation {
-        gap: 6px;
+        gap: 0;
     }
 
-    #currentDateDisplay {
-        font-size: 16px;
+    .header-date-btn {
+        padding: 0 4px;
+        font-size: 14px;
     }
 }
 
-.nav-arrow {
-    font-size: 16px;
-    cursor: pointer;
-    color: var(--side-calendar-secondary-text-color);
-    transition: color 0.2s ease;
-}
-
-.nav-arrow:hover {
-    color: var(--side-calendar-hover-color);
-}
-
-#currentDateDisplay {
-    font-size: 18px;
-    margin: 0;
-    text-align: center;
-    cursor: pointer;
-    transition: color 0.2s ease;
-    
-    /* Disable default input styles */
-    border: none;
-    background: none;
-    outline: none;
-    
-    /* Text styles */
-    font-family: inherit;
-    font-weight: normal;
-    color: inherit;
-}
-
-#currentDateDisplay:hover {
-    color: var(--side-calendar-hover-color);
-}
-
-#currentDateDisplay.today {
-    color: var(--side-calendar-hover-color);
-    font-weight: bold;
-}
-
-/* Make date picker calendar icon transparent while keeping functionality */
-#currentDateDisplay::-webkit-calendar-picker-indicator {
-    cursor: pointer;
-}
-
-#currentDateDisplay::-webkit-inner-spin-button,
-#currentDateDisplay::-webkit-outer-spin-button {
-    display: none;
-}
-
-.add-local-event-icon {
-    font-size: 24px;
-    cursor: pointer;     /* Change cursor to pointer */
-}
-
-#sideTimeTableHeader > h1 {
-    display: inline-block;
-    vertical-align: middle;
-}
-
-.add-local-event-icon:hover {
-}
-
-.sync-icon {
-    font-size: 20px;
-    color: var(--side-calendar-icon-color);
-    cursor: pointer;
-    transition: transform 0.3s ease, color 0.2s ease;
-}
-
-.sync-icon:hover {
-    color: var(--side-calendar-hover-color);
-}
-
-.sync-icon.fa-spin {
-    color: var(--side-calendar-hover-color);
-}
-
-.settings-icon {
-    font-size: 24px;
-    color: var(--side-calendar-icon-color);
-    cursor: pointer;
-}
 
 .side-time-table-base {
     position: absolute;
@@ -384,64 +452,153 @@ body {
 
 .work-time-background {
     position: absolute;
-    left: 0;
+    left: 40px;
     right: 0;
     z-index: 1;
+    background-color: var(--side-calendar-work-time-color);
     pointer-events: none;
 }
 
+/* Event blocks: a tint of the event's colour with a bar of it down the left
+   edge, and text in the timeline's own text colour, so many colours side by
+   side stay calm and readable in both light and dark themes.
+
+   Theme and local colours are fills (pastels in light themes, deep tones in
+   dark ones), so they are shown strongly and the bar is pulled toward the
+   text colour to still read as a line. A Google calendar's own colour is a
+   strong one: a light tint, and the bar in the colour itself. */
 .event {
+    --event-color: var(--side-calendar-google-event-default-color);
+    --event-tint: 60%;
+    --event-bar-mix: 40%;
     position: absolute;
     left: 40px; /* Matches LAYOUT_CONSTANTS.BASE_LEFT */
-    /* width: 200px; - Removed fixed width, dynamic width is set by EventLayoutManager */
+    /* width is set by EventLayoutManager */
     box-sizing: border-box;
-    padding: 5px 10px;
-    background: var(--side-calendar-google-event-default-color);
-    color: var(--side-calendar-google-event-default-text-color);
-    border-radius: 5px;
-    box-shadow: 0 1px 3px var(--side-calendar-shadow-color);
+    padding: 3px 6px 3px 5px;
+    border-left: 3px solid color-mix(in oklab, var(--event-color), var(--side-calendar-timeline-text-color) var(--event-bar-mix));
+    border-radius: 6px;
+    background-color: color-mix(in srgb, var(--event-color) var(--event-tint), var(--side-calendar-timeline-background-color));
+    color: var(--side-calendar-timeline-text-color);
     z-index: 21;
-    transition: left 0.3s, width 0.3s; /* Smooth transition for movement */
-    overflow: hidden; /* Prevent text from overflowing */
-    text-overflow: ellipsis; /* Show overflowed text with ellipsis */
+    overflow: hidden;
+    font-size: 12px;
+    line-height: 15px;
+    cursor: pointer;
+    transition: left 0.2s ease-out, width 0.2s ease-out;
+}
+
+.event.has-calendar-color,
+.all-day-event-chip.has-calendar-color {
+    --event-tint: 16%;
+    --event-bar-mix: 0%;
+}
+
+[data-theme="dark"] .event,
+[data-theme="dark"] .all-day-event-chip {
+    --event-tint: 85%;
+}
+
+[data-theme="dark"] .event.has-calendar-color,
+[data-theme="dark"] .all-day-event-chip.has-calendar-color {
+    --event-tint: 30%;
+}
+
+.event:hover {
+    filter: brightness(0.97);
+}
+
+[data-theme="dark"] .event:hover {
+    filter: brightness(1.15);
 }
 
 .event.no-transition {
     transition: none !important;
 }
 
-.google-event {
-    /* Background color is set dynamically from Google Calendar API */
-}
-
-.google-event-ooo {
-    --side-calendar-ooo-color: #9e9e9e;
-    background-color: color-mix(in srgb, var(--side-calendar-ooo-color) 15%, white);
-    color: color-mix(in srgb, var(--side-calendar-ooo-color) 70%, black);
-    background-image: repeating-linear-gradient(
-        135deg,
-        transparent,
-        transparent 4px,
-        color-mix(in srgb, var(--side-calendar-ooo-color) 25%, transparent) 4px,
-        color-mix(in srgb, var(--side-calendar-ooo-color) 25%, transparent) 8px
-    );
-}
-
-[data-theme="dark"] .google-event-ooo {
-    background-color: color-mix(in srgb, var(--side-calendar-ooo-color) 15%, black);
-    color: color-mix(in srgb, var(--side-calendar-ooo-color) 70%, white);
-    background-image: repeating-linear-gradient(
-        135deg,
-        transparent,
-        transparent 4px,
-        color-mix(in srgb, var(--side-calendar-ooo-color) 20%, transparent) 4px,
-        color-mix(in srgb, var(--side-calendar-ooo-color) 20%, transparent) 8px
-    );
-}
-
 .local-event {
-    background-color: var(--side-calendar-local-event-color);
-    color: var(--side-calendar-local-event-text-color);
+    --event-color: var(--side-calendar-local-event-color);
+}
+
+/* Out of office: hatched, with the plane in front of the title */
+.google-event-ooo {
+    --event-color: var(--side-calendar-ooo-color, #9e9e9e);
+    background-image: repeating-linear-gradient(
+        135deg,
+        transparent 0 7px,
+        color-mix(in srgb, var(--event-color) 28%, transparent) 7px 9px
+    );
+}
+
+/* Ended events on today's timeline step back */
+.event.is-past {
+    opacity: 0.55;
+}
+
+/* Title, time and place in one clamped box: the title wraps when there is
+   room (by phrase in Japanese) and the rest is cut at the block's last line.
+   --event-lines is set per block from its height. */
+.event-body {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: var(--event-lines, 2);
+    overflow: hidden;
+    word-break: auto-phrase;
+    overflow-wrap: break-word;
+    hyphens: auto;
+}
+
+.event-body > span {
+    display: block;
+}
+
+.event-title {
+    font-weight: 600;
+}
+
+.event-title-icon {
+    margin-right: 4px;
+    font-size: 0.85em;
+    opacity: 0.8;
+}
+
+.event-meta {
+    overflow: hidden;
+    color: color-mix(in srgb, currentColor 72%, transparent);
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Narrow lanes: the start time only */
+.event .event-body > .event-time-start,
+.event.narrow-display .event-body > .event-time-range {
+    display: none;
+}
+
+.event.narrow-display .event-body > .event-time-start {
+    display: block;
+}
+
+/* Blocks of a single line (30 minutes or less): title, then start time */
+.event.event-one-line .event-body {
+    display: block;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.event.event-one-line .event-body > span {
+    display: inline;
+}
+
+.event.event-one-line .event-body > .event-time-range,
+.event.event-one-line .event-body > .event-location {
+    display: none;
+}
+
+.event.event-one-line .event-body > .event-time-start {
+    display: inline;
+    margin-left: 5px;
 }
 
 /* Applied while an event is being pointed out, e.g. after the user clicks a
@@ -495,22 +652,103 @@ body {
     transition: none; /* override .event */
 }
 
+/* "Back to today": floats at the bottom of the visible timeline while another
+   day is shown (its top is kept in place by TimelineComponent) */
+.back-to-today-btn {
+    position: absolute;
+    left: 50%;
+    z-index: 2100;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 30px;
+    margin: 0;
+    padding: 0 12px 0 10px;
+    border: 1px solid var(--side-calendar-border-color);
+    border-radius: 15px;
+    background: var(--side-calendar-panel-background-color);
+    box-shadow: 0 2px 8px var(--side-calendar-shadow-color);
+    color: var(--side-calendar-accent-hover-color);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transform: translateX(-50%);
+}
+
+.back-to-today-btn[hidden] {
+    display: none;
+}
+
+.back-to-today-btn:hover {
+    background: var(--side-calendar-subtle-bg-hover);
+}
+
+.back-to-today-btn:focus-visible {
+    outline: 2px solid var(--side-calendar-accent-color);
+    outline-offset: 2px;
+}
+
+[data-theme="dark"] .back-to-today-btn {
+    color: var(--side-calendar-accent-color);
+}
+
+/* The current time: a line over the events from the time axis on, with the
+   time in a pill over the axis */
 .current-time-line {
     position: absolute;
-    width: 100%;
+    left: 38px;
+    right: 0;
     height: 2px;
+    margin-top: -1px;
     background-color: var(--side-calendar-current-time-line-color);
-    z-index: 10;
-    border-left: none;
+    /* Above every event (EventLayoutManager's inline z-index grows with the
+       start minute), but never in the way of a click */
+    z-index: 2000;
+    pointer-events: none;
+}
+
+.current-time-line::before {
+    content: '';
+    position: absolute;
+    left: -4px;
+    top: -3px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: inherit;
+}
+
+.current-time-label {
+    position: absolute;
+    right: calc(100% + 1px);
+    top: -7px;
+    min-width: 30px;
+    height: 16px;
+    box-sizing: border-box;
+    padding: 0 4px;
+    border-radius: 8px;
+    background-color: var(--side-calendar-current-time-line-color);
+    color: var(--side-calendar-current-time-line-text-color);
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 16px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
 }
 
 .hour-label {
     position: absolute;
     left: 0;
-    width: 35px;
+    width: 36px;
+    padding-right: 4px;
+    color: var(--side-calendar-secondary-text-color);
+    font-size: 10.5px;
+    font-variant-numeric: tabular-nums;
     text-align: right;
-    padding-right: 5px;
-    font-size: 12px;
+    white-space: nowrap;
     transform: translateY(-50%);
     z-index: 15;
 }
@@ -519,7 +757,7 @@ body {
     position: absolute;
     left: 40px;
     width: calc(100% - 40px);
-    border-top: 1px dashed var(--side-calendar-hour-line-color);
+    border-top: 1px solid color-mix(in srgb, var(--side-calendar-hour-line-color) 60%, transparent);
     z-index: 5;
 }
 
@@ -2165,85 +2403,34 @@ body {
     cursor: pointer;
 }
 
-/* Date picker calendar icon for dark mode */
-[data-theme="dark"] #currentDateDisplay::-webkit-calendar-picker-indicator {
-    filter: invert(1);
-}
-
 /* Time picker clock icon for dark mode */
 [data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator {
     filter: invert(1);
 }
 
-/* Event element flexbox adjustments */
-.event {
-    /* Smooth transition for flex positioning */
-    transition: left 0.2s ease-out, width 0.2s ease-out;
-    
-    /* Enhanced text ellipsis settings */
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    
-    /* Ensure minimum width */
-    min-width: 60px;
-    
-    /* Responsive font size */
-    font-size: clamp(0.75rem, 1vw, 1rem);
-}
-
 /* Lane-density-based: horizontal space optimization (managed by EventLayoutManager) */
 .event.compact {
-    padding-left: 8px;
-    padding-right: 8px;
+    padding-right: 5px;
+    padding-left: 5px;
 }
 
 .event.micro {
-    padding-left: 6px;
-    padding-right: 6px;
+    padding-right: 4px;
+    padding-left: 4px;
 }
 
 /* Duration-based: vertical space optimization (managed by applyDurationBasedStyling) */
 .event.event-compact {
-    padding-top: 2px;
-    padding-bottom: 2px;
-    font-size: 0.85em;
+    padding-top: 1px;
+    padding-bottom: 1px;
 }
 
 .event.event-micro {
     padding-top: 0;
     padding-bottom: 0;
     min-height: 15px;
-    font-size: 0.75em;
-}
-
-/* Detail display for longer events (>= 45 min) */
-.event.event-detailed {
-    white-space: normal;
-}
-
-.event-primary-line {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.event-detail-line {
-    font-size: 0.8em;
-    opacity: 0.75;
-    line-height: 1.3;
-    margin-top: 1px;
-    word-break: break-word;
-}
-
-.event-detail-line i {
-    font-size: 0.75em;
-    margin-right: 3px;
-}
-
-/* Title-only display for very narrow lanes */
-.event.narrow-display .event-time {
-    display: none;
+    font-size: 11px;
+    line-height: 14px;
 }
 
 /* What's New: the notes scroll between the dialog's sticky header and footer */
@@ -3248,6 +3435,57 @@ body {
 .timeline-calendar-filter-btn:focus-visible {
     outline: 2px solid var(--side-calendar-accent-color, #4285f4);
     outline-offset: 1px;
+}
+
+/* In the header: the same quiet icon button as its neighbours, tinted while
+   the popover is open */
+.timeline-calendar-filter.is-in-header {
+    position: relative;
+    right: auto;
+    z-index: auto;
+    display: flex;
+}
+
+.timeline-calendar-filter.is-in-header .timeline-calendar-filter-btn {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    max-width: 32px;
+    max-height: 32px;
+    border: none;
+    border-radius: 8px;
+    background-color: transparent;
+    box-shadow: none;
+    opacity: 1;
+    font-size: 15px;
+}
+
+.timeline-calendar-filter.is-in-header .timeline-calendar-filter-btn:hover {
+    background-color: var(--side-calendar-subtle-bg-hover);
+    color: var(--side-calendar-panel-text-color);
+}
+
+.timeline-calendar-filter.is-in-header .timeline-calendar-filter-btn[aria-expanded="true"] {
+    background-color: color-mix(in srgb, var(--side-calendar-accent-color) 14%, var(--side-calendar-panel-background-color));
+    color: var(--side-calendar-accent-hover-color);
+}
+
+[data-theme="dark"] .timeline-calendar-filter.is-in-header .timeline-calendar-filter-btn[aria-expanded="true"] {
+    color: var(--side-calendar-accent-color);
+}
+
+.timeline-calendar-filter.is-in-header .timeline-calendar-filter-btn:focus-visible {
+    outline-offset: -2px;
+}
+
+/* Hangs under the header, right-aligned with the settings button */
+.timeline-calendar-filter.is-in-header .timeline-calendar-filter-dropdown {
+    top: 40px;
+    right: -34px;
+    width: 240px;
+    border-radius: 10px;
+    box-shadow: 0 6px 20px var(--side-calendar-shadow-color);
 }
 
 .timeline-calendar-filter-backdrop {

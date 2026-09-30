@@ -805,6 +805,10 @@
     "message": "Next day",
     "description": "Next day button tooltip"
   },
+  "backToToday": {
+    "message": "Back to today",
+    "description": "Button over the timeline while another day is shown; returns to today"
+  },
   "noTitle": {
     "message": "No Title",
     "description": "Default text when event has no title"

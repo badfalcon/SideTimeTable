@@ -16,8 +16,22 @@ export class CurrentTimeLineManager {
      *
      * @param {HTMLElement} parentElement - The parent element to place the current time line
      * @param {Date} targetDate - The target date (today if omitted)
+     * @param {Object} [options]
+     * @param {Function} [options.formatLabel] - (now: Date) => the time shown
+     *   in the line's pill; "HH:MM" when omitted
+     * @param {Function} [options.onTick] - Called with the current time each
+     *   time the line moves (once a minute while today is shown)
      */
-    constructor(parentElement, targetDate = null) {
+    constructor(parentElement, targetDate = null, { formatLabel, onTick } = {}) {
+        this.formatLabel = formatLabel || ((now) =>
+            `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
+        this.onTick = onTick || null;
+
+        /**
+         * The pill with the current time, at the line's left end
+         */
+        this.labelElement = null;
+
         /**
          * The parent element to place the current time line
          */
@@ -85,6 +99,7 @@ export class CurrentTimeLineManager {
         if (this.timeLineElement) {
             this.timeLineElement.remove();
             this.timeLineElement = null;
+            this.labelElement = null;
         }
     }
 
@@ -103,6 +118,11 @@ export class CurrentTimeLineManager {
             this.timeLineElement = document.createElement('div');
             this.timeLineElement.id = 'currentTimeLine';
             this.timeLineElement.className = 'current-time-line';
+
+            this.labelElement = document.createElement('span');
+            this.labelElement.className = 'current-time-label';
+            this.timeLineElement.appendChild(this.labelElement);
+
             this.parentElement.appendChild(this.timeLineElement);
         }
     }
@@ -167,6 +187,13 @@ export class CurrentTimeLineManager {
         const topPosition = totalMinutes + TIMELINE_OFFSET;
 
         this.timeLineElement.style.top = `${topPosition}px`;
+
+        if (this.labelElement) {
+            this.labelElement.textContent = this.formatLabel(now);
+        }
+        if (this.onTick) {
+            this.onTick(now);
+        }
     }
 
     /**

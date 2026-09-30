@@ -232,7 +232,10 @@ class SidePanelUIController {
         this.timelineComponent = new TimelineComponent({
             showCurrentTimeLine: true,
             onDragCreate: (startTime, endTime) => this._handleAddLocalEvent(startTime, endTime),
-            onCalendarChange: (changeInfo) => this._handleCalendarToggle(changeInfo)
+            onCalendarChange: (changeInfo) => this._handleCalendarToggle(changeInfo),
+            // The calendar filter lives in the header, beside settings
+            getFilterMount: () => this.headerComponent.getFilterSlot(),
+            onBackToToday: () => this.headerComponent.setToday()
         });
 
         // The all-day events component (between header and timeline)
@@ -414,13 +417,12 @@ class SidePanelUIController {
         try {
             const settings = await loadSettings();
 
-            // Set the work time background
-            if (settings.openTime && settings.closeTime && settings.workTimeColor) {
-                this.timelineComponent.setWorkTimeBackground(
-                    settings.openTime,
-                    settings.closeTime,
-                    settings.workTimeColor
-                );
+            // Set the work time background. Its colour comes from the theme
+            // (--side-calendar-work-time-color), not the stored workTimeColor:
+            // that copy is only as fresh as the last time settings were saved,
+            // so it could paint a light band into a dark theme.
+            if (settings.openTime && settings.closeTime) {
+                this.timelineComponent.setWorkTimeBackground(settings.openTime, settings.closeTime);
             }
 
             // Apply theme and scrollbar settings via service

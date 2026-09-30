@@ -213,3 +213,96 @@ export function calculateWorkHours(date, openHour, closeHour) {
 
     return { openTime, closeTime, hourDiff };
 }
+
+/**
+ * The date as the side panel header shows it: short and with the weekday,
+ * in the extension's language — "9月30日(水)" / "Wed, Sep 30". The year is
+ * added only when it is not the current one.
+ *
+ * @param {Date} date - The date to show
+ * @param {string} locale - 'ja' or 'en' (the extension language)
+ * @param {Date} [now=new Date()] - Decides whether the year is needed
+ * @returns {string}
+ */
+export function formatHeaderDate(date, locale, now = new Date()) {
+    if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+        return '';
+    }
+    const isJa = locale === 'ja';
+    const options = isJa
+        ? { month: 'long', day: 'numeric', weekday: 'short' }
+        : { weekday: 'short', month: 'short', day: 'numeric' };
+    if (date.getFullYear() !== now.getFullYear()) {
+        options.year = 'numeric';
+    }
+    return date.toLocaleDateString(isJa ? 'ja-JP' : 'en-US', options);
+}
+
+/**
+ * An hour mark for the timeline's time axis: "9:00" (24-hour), "9 AM"
+ * (12-hour English) or "午前9時" (12-hour Japanese).
+ *
+ * @param {number} hour - 0 to 24
+ * @param {string} timeFormat - '12h' or '24h'
+ * @param {string} locale - 'ja' or 'en'
+ * @returns {string}
+ */
+export function formatHourLabel(hour, timeFormat, locale) {
+    if (timeFormat !== '12h') {
+        return `${hour}:00`;
+    }
+    const h = hour % 24;
+    const h12 = h % 12 === 0 ? 12 : h % 12;
+    const pm = h >= 12;
+    return locale === 'ja'
+        ? `${pm ? '午後' : '午前'}${h12}時`
+        : `${h12} ${pm ? 'PM' : 'AM'}`;
+}
+
+/**
+ * A start–end range for an event block, as short as it can be read:
+ * "09:00–10:00", "9:00–10:00 AM", "11:30 AM–1:00 PM", "午前9:00–10:00".
+ *
+ * @param {string} start - "HH:MM"
+ * @param {string} end - "HH:MM"
+ * @param {string} timeFormat - '12h' or '24h'
+ * @param {string} locale - 'ja' or 'en'
+ * @returns {string}
+ */
+export function formatTimeRange(start, end, timeFormat, locale) {
+    if (timeFormat !== '12h') {
+        return `${start}–${end}`;
+    }
+    const part = (hhmm) => {
+        const [h, m] = hhmm.split(':').map(Number);
+        return { text: `${h % 12 === 0 ? 12 : h % 12}:${String(m).padStart(2, '0')}`, pm: h >= 12 };
+    };
+    const mark = (pm) => (locale === 'ja' ? (pm ? '午後' : '午前') : (pm ? 'PM' : 'AM'));
+    const s = part(start);
+    const e = part(end);
+    if (locale === 'ja') {
+        return s.pm === e.pm
+            ? `${mark(s.pm)}${s.text}–${e.text}`
+            : `${mark(s.pm)}${s.text}–${mark(e.pm)}${e.text}`;
+    }
+    return s.pm === e.pm
+        ? `${s.text}–${e.text} ${mark(e.pm)}`
+        : `${s.text} ${mark(s.pm)}–${e.text} ${mark(e.pm)}`;
+}
+
+/**
+ * Just the start time, for lanes too narrow for a range. The AM/PM mark is
+ * left off: the time axis beside the block already says which half of the
+ * day it is.
+ *
+ * @param {string} start - "HH:MM"
+ * @param {string} timeFormat - '12h' or '24h'
+ * @returns {string}
+ */
+export function formatStartTime(start, timeFormat) {
+    if (timeFormat !== '12h') {
+        return start;
+    }
+    const [h, m] = start.split(':').map(Number);
+    return `${h % 12 === 0 ? 12 : h % 12}:${String(m).padStart(2, '0')}`;
+}
