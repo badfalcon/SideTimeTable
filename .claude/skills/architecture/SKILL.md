@@ -144,7 +144,7 @@ Chrome alarm-based reminders:
 - **Responsive width calculation**: Auto-adjusts to side panel width changes via ResizeObserver
 - **Business hours visualization**: Configurable work time highlighting with break time support
 - **Current time indicator**: Managed by `CurrentTimeLineManager` with date-aware visibility; drawn over the events with the time in a pill, and its per-minute tick fades ended events (`is-past`)
-- **Event blocks**: a tint of the event's colour with a 3px bar of it (`--event-color`; `.has-calendar-color` for a Google calendar's own colour), text is title → time → place in one clamped box (`--event-lines`), no description
+- **Event blocks**: a tint of the event's colour with the text in a deep shade of the same hue, no accent stripe (`--event-color`, `--event-tint`, `--event-ink-mix`; `.has-calendar-color` for a Google calendar's own colour), text is title → time → place in one clamped box (`--event-lines`), no description
 - **Scroll positioning**: Smart scroll to current time or business hours
 - **Date navigation**: Integrated with header component for seamless date switching
 

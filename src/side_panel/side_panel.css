@@ -198,18 +198,17 @@ body {
 .all-day-event-chip {
     --event-color: var(--side-calendar-google-event-default-color);
     --event-tint: 60%;
-    --event-bar-mix: 40%;
+    --event-ink-mix: 40%;
     display: inline-flex;
     align-items: center;
     gap: 5px;
     height: 22px;
     box-sizing: border-box;
     max-width: 100%;
-    padding: 0 8px 0 6px;
-    border-left: 3px solid color-mix(in oklab, var(--event-color), var(--side-calendar-panel-text-color) var(--event-bar-mix));
+    padding: 0 8px;
     border-radius: var(--side-calendar-radius-sm);
     background-color: color-mix(in srgb, var(--event-color) var(--event-tint), var(--side-calendar-panel-background-color));
-    color: var(--side-calendar-panel-text-color);
+    color: color-mix(in oklab, var(--event-color) var(--event-ink-mix), var(--side-calendar-panel-text-color));
     font-size: var(--side-calendar-font-small);
     font-weight: 600;
     line-height: 1;
@@ -472,27 +471,28 @@ body {
     pointer-events: none;
 }
 
-/* Event blocks: a tint of the event's colour with a bar of it down the left
-   edge, and text in the timeline's own text colour, so many colours side by
-   side stay calm and readable in both light and dark themes.
+/* Event blocks: a tint of the event's colour, with the text in a deep shade
+   of the same hue (the colour mixed toward the text colour, so it darkens in
+   light themes and lightens in dark ones). The colour is carried by the
+   block as a whole — no accent stripe — and many colours side by side stay
+   calm and readable.
 
    Theme and local colours are fills (pastels in light themes, deep tones in
-   dark ones), so they are shown strongly and the bar is pulled toward the
-   text colour to still read as a line. A Google calendar's own colour is a
-   strong one: a light tint, and the bar in the colour itself. */
+   dark ones), so they are shown strongly and the text keeps more of the text
+   colour. A Google calendar's own colour is a strong one: a light tint, and
+   more of the colour in the text. */
 .event {
     --event-color: var(--side-calendar-google-event-default-color);
     --event-tint: 60%;
-    --event-bar-mix: 40%;
+    --event-ink-mix: 40%;
     position: absolute;
     left: 40px; /* Matches LAYOUT_CONSTANTS.BASE_LEFT */
     /* width is set by EventLayoutManager */
     box-sizing: border-box;
-    padding: 3px 6px 3px 5px;
-    border-left: 3px solid color-mix(in oklab, var(--event-color), var(--side-calendar-timeline-text-color) var(--event-bar-mix));
+    padding: 3px 6px;
     border-radius: var(--side-calendar-radius-sm);
     background-color: color-mix(in srgb, var(--event-color) var(--event-tint), var(--side-calendar-timeline-background-color));
-    color: var(--side-calendar-timeline-text-color);
+    color: color-mix(in oklab, var(--event-color) var(--event-ink-mix), var(--side-calendar-timeline-text-color));
     z-index: 21;
     overflow: hidden;
     font-size: var(--side-calendar-font-small);
@@ -503,18 +503,21 @@ body {
 
 .event.has-calendar-color,
 .all-day-event-chip.has-calendar-color {
-    --event-tint: 16%;
-    --event-bar-mix: 0%;
+    --event-tint: 20%;
+    --event-ink-mix: 62%;
 }
 
 [data-theme="dark"] .event,
 [data-theme="dark"] .all-day-event-chip {
     --event-tint: 85%;
+    --event-ink-mix: 25%;
 }
 
 [data-theme="dark"] .event.has-calendar-color,
 [data-theme="dark"] .all-day-event-chip.has-calendar-color {
     --event-tint: 30%;
+    /* Dark blues and purples need more of the light text colour to read */
+    --event-ink-mix: 40%;
 }
 
 .event:hover {
@@ -576,8 +579,9 @@ body {
 }
 
 .event-meta {
+    /* Same colour as the title: the size and weight set it apart, so the
+       small text keeps the title's contrast */
     overflow: hidden;
-    color: color-mix(in srgb, currentColor 72%, transparent);
     font-size: var(--side-calendar-font-caption);
     text-overflow: ellipsis;
     white-space: nowrap;
