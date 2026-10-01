@@ -39,6 +39,7 @@
 
 ## テスト
 
+- [ ] 初期設定・チュートリアルの document レベルの Escape ハンドラの DOM テスト（表示していないときの Escape で `_finish()` が走らないこと）。`_isActive()` 単体は `tests/side_panel/onboarding-overlays.test.js` でカバー済み。jsdom 基盤が前提。
 - [ ] 予定モーダルの多言語レイアウト監査の自動化: 実拡張を Playwright で開き、各ステート（ローカル / 毎週 / Google＋詳細 / 不在 / メインなし / エラー / 編集）ではみ出し・折り返し・select の切れを検出する検査を ja / en / 疑似翻訳（+40%）× パネル幅 384 / 320px で回した（2026-09 実施、手元スクリプト）。詳細・Google 編集・削除確認・出欠・繰り返し削除も同様にライト/ダーク込みで確認済み。`scripts/` に取り込んで `npm run` 化するか、jsdom では再現できないため Playwright 前提の別枠テストとして整備する。
 - [ ] `_showAuthExpiredBanner()` のDOMテスト（jsdom環境が必要）
 - [ ] `checkGoogleAuthStatus()` の設定ページ分岐テスト（コンポーネントモックが必要）

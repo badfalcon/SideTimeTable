@@ -592,7 +592,11 @@ export class InitialSetupComponent extends Component {
      * @private
      */
     _isActive() {
-        return this.element && !this.element.hasAttribute('hidden');
+        // Created hidden through style.display (the base class), without the
+        // attribute: check both, or a stray Escape would "finish" it
+        return !!this.element
+            && !this.element.hasAttribute('hidden')
+            && this.element.style.display !== 'none';
     }
 
 }
