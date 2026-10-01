@@ -7,7 +7,7 @@
  * email addresses stay visible as red chips instead of being dropped, so the
  * user can see what to fix.
  */
-import { isValidEmail, normalizeEmail, parseGuestInput } from '../../../lib/guest-utils.js';
+import { guestTone, isValidEmail, normalizeEmail, parseGuestInput } from '../../../lib/guest-utils.js';
 import { createHiddenLabel, createHint, createIcon, createRow, msg, msgWith, setLocalizedText } from './event-dialog-dom.js';
 
 const SEPARATOR_KEYS = new Set([',', ';', '、']);
@@ -353,7 +353,7 @@ export class GuestField {
             option.setAttribute('aria-selected', 'false');
             option.dataset.index = String(index);
 
-            option.appendChild(this._createAvatar(person.name || person.email));
+            option.appendChild(this._createAvatar(person.name || person.email, person.email));
 
             const text = document.createElement('span');
             text.className = 'guest-option-text';
@@ -425,12 +425,13 @@ export class GuestField {
 
     /**
      * @param {string} label - Name or address the initial is taken from
+     * @param {string} email - Picks the colour
      * @returns {HTMLElement}
      * @private
      */
-    _createAvatar(label) {
+    _createAvatar(label, email) {
         const avatar = document.createElement('span');
-        avatar.className = 'guest-avatar';
+        avatar.className = `guest-avatar tone-${guestTone(email)}`;
         avatar.setAttribute('aria-hidden', 'true');
         avatar.textContent = [...String(label).trim()][0]?.toUpperCase() || '?';
         return avatar;
@@ -449,7 +450,7 @@ export class GuestField {
             chip.title = guest.email;
 
             if (guest.valid) {
-                chip.appendChild(this._createAvatar(guest.name || guest.email));
+                chip.appendChild(this._createAvatar(guest.name || guest.email, guest.email));
             } else {
                 chip.appendChild(createIcon('fas fa-exclamation-triangle guest-chip-warning'));
             }

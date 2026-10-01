@@ -833,6 +833,8 @@ export class LocalEventModal extends ModalComponent {
 
         // Apply the localization after showing the modal
         this._localizeModal();
+        // The reminder label names the lead time from the settings
+        this.formBuilder.refreshReminderLabel();
     }
 
     /**
@@ -877,6 +879,8 @@ export class LocalEventModal extends ModalComponent {
 
         // Apply the localization after showing the modal
         this._localizeModal();
+        // The reminder label names the lead time from the settings
+        this.formBuilder.refreshReminderLabel();
     }
 
     /**

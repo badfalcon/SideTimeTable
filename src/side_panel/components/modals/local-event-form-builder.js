@@ -10,7 +10,8 @@
  * decorative (`aria-hidden`); each control keeps a real `<label>` that is only
  * visually hidden, and empty fields name themselves through their placeholder.
  */
-import { RECURRENCE_TYPES } from '../../../lib/constants.js';
+import { DEFAULT_SETTINGS, RECURRENCE_TYPES } from '../../../lib/constants.js';
+import { loadSettings } from '../../../lib/settings-storage.js';
 import { GuestField } from './guest-field.js';
 import {
     applyDurationPreset,
@@ -25,6 +26,8 @@ import {
     createSegmentButton,
     createSegmented,
     createTimeRow,
+    msgWith,
+    reminderLeadText,
     setPressed,
     syncDurationFromTimes,
     wrapSelect
@@ -267,6 +270,16 @@ export class LocalEventFormBuilder {
         );
         this.oooPrimaryHint.hidden = true;
         parentElement.appendChild(this.oooPrimaryHint);
+
+        // Says where an absence goes, since the calendar picker is hidden for it
+        this.oooDestinationNote = document.createElement('p');
+        this.oooDestinationNote.id = 'oooDestinationNote';
+        this.oooDestinationNote.className = 'event-form-hint event-form-hint-with-icon';
+        this.oooDestinationNote.appendChild(createIcon('fas fa-circle-info'));
+        this.oooDestinationText = document.createElement('span');
+        this.oooDestinationNote.appendChild(this.oooDestinationText);
+        this.oooDestinationNote.hidden = true;
+        parentElement.appendChild(this.oooDestinationNote);
     }
 
     /**
@@ -423,8 +436,28 @@ export class LocalEventFormBuilder {
         );
         this.reminderCheckbox = reminder.input;
         this.reminderCheckbox.checked = true;
+        this.reminderLabel = reminder.row.querySelector('.event-form-check-label');
         parentElement.appendChild(reminder.row);
         this.reminderRow = reminder.row;
+    }
+
+    /**
+     * Put the lead time from the settings in the reminder label ("Notify me
+     * 5 min before"). Until it is read, the label stays the generic one.
+     * @returns {Promise<void>}
+     */
+    async refreshReminderLabel() {
+        let minutes;
+        try {
+            minutes = (await loadSettings()).reminderMinutes;
+        } catch {
+            minutes = undefined;
+        }
+        if (!this.reminderLabel) return;
+        // The text now depends on a setting, not just the language: keep a
+        // re-localization of the dialog from putting the generic text back
+        this.reminderLabel.removeAttribute('data-localize');
+        this.reminderLabel.textContent = reminderLeadText(minutes, DEFAULT_SETTINGS.reminderMinutes);
     }
 
     /**
@@ -796,6 +829,17 @@ export class LocalEventFormBuilder {
         }
         if (this.oooPrimaryHint) {
             this.oooPrimaryHint.hidden = !(isGoogle && !this.primaryCalendar);
+        }
+        if (this.oooDestinationNote) {
+            const showNote = isOoo && !!this.primaryCalendar;
+            this.oooDestinationNote.hidden = !showNote;
+            if (showNote) {
+                this.oooDestinationText.textContent = msgWith(
+                    'oooCreatedOnPrimary',
+                    'Created on your primary calendar, "$1"',
+                    this.primaryCalendar.summary
+                );
+            }
         }
 
         // Target calendar, guests, Meet, location and reminder do not apply to an

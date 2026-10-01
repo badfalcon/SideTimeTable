@@ -227,6 +227,18 @@
     "message": "Notify me before the event",
     "description": "Checkbox label for event reminder. No lead time in the text: it is configurable in the options page (reminderMinutes)"
   },
+  "remindMinutesBefore": {
+    "message": "Notify me $1 min before",
+    "description": "Reminder checkbox on the event form; $1 is the lead time in minutes from the options page (reminderMinutes)"
+  },
+  "remindHourBefore": {
+    "message": "Notify me 1 hour before",
+    "description": "Reminder checkbox on the event form when the lead time setting is 60 minutes"
+  },
+  "oooCreatedOnPrimary": {
+    "message": "Created on your primary calendar, “$1”",
+    "description": "Note under the event type when Out of office is chosen; $1 is the primary calendar's name"
+  },
   "eventReminder": {
     "message": "Event Reminder",
     "description": "Title for reminder notification"

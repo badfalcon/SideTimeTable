@@ -165,6 +165,7 @@ export class EventElementFactory {
      *     <span class="event-meta event-time-range">9:00–10:00</span>
      *     <span class="event-meta event-time-start">9:00</span>   (narrow lanes)
      *     <span class="event-meta event-location">{location}</span>
+     *     <span class="event-meta event-time-place">9:00–10:00 · {location}</span>   (wide lanes)
      *   </div>
      *
      * @param {Object} parts
@@ -198,10 +199,12 @@ export class EventElementFactory {
             span.textContent = text;
             body.appendChild(span);
         };
-        meta('event-time-range', formatTimeRange(start, end, timeFormat, locale));
+        const range = formatTimeRange(start, end, timeFormat, locale);
+        meta('event-time-range', range);
         meta('event-time-start', formatStartTime(start, timeFormat));
         if (location) {
             meta('event-location', location);
+            meta('event-time-place', `${range} · ${location}`);
         }
 
         return body;

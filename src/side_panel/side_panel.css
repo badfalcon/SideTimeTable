@@ -76,6 +76,14 @@
     --side-calendar-warning-btn-hover-bg: #bf360c;
     /* Review request stars */
     --side-calendar-rating-color: #e8a600;
+    /* Guest initials: one per person, picked from the address. Deep shades,
+       so the white initial stays above 5:1 on every one of them. */
+    --side-calendar-guest-tone-1: #c2185b;
+    --side-calendar-guest-tone-2: #7b1fa2;
+    --side-calendar-guest-tone-3: #2e7d32;
+    --side-calendar-guest-tone-4: #bf360c;
+    --side-calendar-guest-tone-5: #1565c0;
+    --side-calendar-guest-tone-6: #00695c;
 
     /* Shape, depth and type shared by the panel and every dialog, so the
        timeline, its popovers and the dialogs read as one interface */
@@ -98,6 +106,13 @@
     --side-calendar-danger-color: #ef9a9a;
     --side-calendar-success-color: #81c995;
     --side-calendar-rating-color: #fdd663;
+    /* Same deep shades: lighter ones would drop the white initial below 4.5:1 */
+    --side-calendar-guest-tone-1: #c2185b;
+    --side-calendar-guest-tone-2: #7b1fa2;
+    --side-calendar-guest-tone-3: #2e7d32;
+    --side-calendar-guest-tone-4: #bf360c;
+    --side-calendar-guest-tone-5: #1565c0;
+    --side-calendar-guest-tone-6: #00695c;
 }
 
 html {
@@ -589,7 +604,18 @@ body {
 
 /* Narrow lanes: the start time only */
 .event .event-body > .event-time-start,
+.event .event-body > .event-time-place,
 .event.narrow-display .event-body > .event-time-range {
+    display: none;
+}
+
+/* Wide lanes: time and place share one line, leaving the title more room */
+.event.wide-display .event-body > .event-time-place {
+    display: block;
+}
+
+.event.wide-display .event-body:has(> .event-time-place) > .event-time-range,
+.event.wide-display .event-body > .event-location {
     display: none;
 }
 
@@ -1248,6 +1274,17 @@ body {
     box-shadow: 0 1px 2px var(--side-calendar-shadow-color);
 }
 
+/* The picked side of a choice (Local / Google, Event / Out of office) is
+   named in the accent colour, as its border is. An RSVP answer keeps the
+   text colour: its icon carries the colour there. */
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-segmented-btn.active:not(.event-rsvp-btn) {
+    color: var(--side-calendar-accent-hover-color);
+}
+
+[data-theme="dark"] :is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-segmented-btn.active:not(.event-rsvp-btn) {
+    color: var(--side-calendar-accent-color);
+}
+
 :is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-segmented-btn:focus-visible {
     outline: 2px solid var(--side-calendar-accent-color);
     outline-offset: 1px;
@@ -1404,6 +1441,17 @@ body {
     line-height: 1.45;
 }
 
+/* A note led by an icon (where an absence is created) */
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-hint-with-icon {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-hint-with-icon[hidden] {
+    display: none;
+}
+
 /* A hint that belongs to the row above it reads better unboxed */
 :is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-hint-indented {
     margin-left: 26px;
@@ -1502,6 +1550,7 @@ body {
 }
 
 :is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-avatar {
+    --guest-tone: var(--side-calendar-guest-tone-5);
     display: inline-flex;
     flex-shrink: 0;
     align-items: center;
@@ -1509,17 +1558,21 @@ body {
     width: 22px;
     height: 22px;
     border-radius: 50%;
-    background: color-mix(in srgb, var(--side-calendar-accent-color) 18%, var(--side-calendar-modal-bg));
-    color: var(--side-calendar-accent-hover-color);
+    background: var(--guest-tone);
+    color: #fff;
     font-size: 11px;
     font-weight: 600;
     line-height: 1;
 }
 
-[data-theme="dark"] :is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-avatar {
-    background: color-mix(in srgb, var(--side-calendar-accent-color) 30%, var(--side-calendar-modal-bg));
-    color: inherit;
-}
+/* Each person keeps one colour (from their address), so the same guest is
+   recognisable in the suggestions and among the chips */
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-avatar.tone-1 { --guest-tone: var(--side-calendar-guest-tone-1); }
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-avatar.tone-2 { --guest-tone: var(--side-calendar-guest-tone-2); }
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-avatar.tone-3 { --guest-tone: var(--side-calendar-guest-tone-3); }
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-avatar.tone-4 { --guest-tone: var(--side-calendar-guest-tone-4); }
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-avatar.tone-5 { --guest-tone: var(--side-calendar-guest-tone-5); }
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-avatar.tone-6 { --guest-tone: var(--side-calendar-guest-tone-6); }
 
 :is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-chips {
     display: flex;

@@ -227,6 +227,18 @@
     "message": "開始前に通知する",
     "description": "イベントリマインダーのチェックボックスラベル。通知タイミングは設定ページで変更可能（reminderMinutes）のため分数は書かない"
   },
+  "remindMinutesBefore": {
+    "message": "開始$1分前に通知する",
+    "description": "予定フォームのリマインダーのチェックボックス。$1 は設定ページの通知タイミング（reminderMinutes）の分数"
+  },
+  "remindHourBefore": {
+    "message": "開始1時間前に通知する",
+    "description": "通知タイミングの設定が60分のときの、予定フォームのリマインダーのチェックボックス"
+  },
+  "oooCreatedOnPrimary": {
+    "message": "メインカレンダー「$1」に作成されます",
+    "description": "種別で不在を選んだときの案内。$1 はメインカレンダーの名前"
+  },
   "eventReminder": {
     "message": "イベント リマインダー",
     "description": "リマインダー通知のタイトル"

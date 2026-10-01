@@ -28,7 +28,7 @@ Main UI displayed in Chrome's side panel:
   - `modals/`: Modal dialog components (Google events, local events, alerts, What's New, review)
     - `event-dialog-dom.js`: Shared DOM builders for the event dialogs (sticky header/footer, icon-led rows, segmented controls, buttons, inline delete confirmation, status line, time row with duration picker)
     - `delete-recurring-dialog.js`: "This event / All events" choice before deleting a recurring local event
-    - `guest-field.js`: Guests on the Google create form — address box with suggestions, chips (invalid ones in red), and the "email invitations" choice (`sendUpdates`)
+    - `guest-field.js`: Guests on the Google create form — address box with suggestions, chips (invalid ones in red, each person's initial in a colour from their address — `guestTone()`), and the "email invitations" choice (`sendUpdates`)
   - `memo/memo-component.js`: Collapsible memo panel with persistent storage and resizable height; collapsed, it is a full-width bar showing the memo's first line (`memo-summary.js`)
   - `setup/initial-setup-component.js`: First-time user setup wizard
   - `tutorial/tutorial-component.js`: Interactive tutorial for new users
@@ -145,7 +145,7 @@ Chrome alarm-based reminders:
 - **Responsive width calculation**: Auto-adjusts to side panel width changes via ResizeObserver
 - **Business hours visualization**: Configurable work time highlighting with break time support
 - **Current time indicator**: Managed by `CurrentTimeLineManager` with date-aware visibility; drawn over the events with the time in a pill, and its per-minute tick fades ended events (`is-past`)
-- **Event blocks**: a tint of the event's colour with the text in a deep shade of the same hue, no accent stripe (`--event-color`, `--event-tint`, `--event-ink-mix`; `.has-calendar-color` for a Google calendar's own colour), text is title → time → place in one clamped box (`--event-lines`), no description
+- **Event blocks**: a tint of the event's colour with the text in a deep shade of the same hue, no accent stripe (`--event-color`, `--event-tint`, `--event-ink-mix`; `.has-calendar-color` for a Google calendar's own colour), text is title → time → place in one clamped box (`--event-lines`), no description; lanes 200px or wider (`wide-display`) put time · place on one line
 - **Scroll positioning**: Smart scroll to current time or business hours
 - **Date navigation**: Integrated with header component for seamless date switching
 

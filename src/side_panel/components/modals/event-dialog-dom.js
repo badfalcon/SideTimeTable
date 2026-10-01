@@ -52,6 +52,22 @@ export function msgWith(key, fallback, ...values) {
 }
 
 /**
+ * The reminder toggle's label with the lead time set in the options page,
+ * e.g. "Notify me 5 min before".
+ * @param {number} minutes - `reminderMinutes` setting (1–60); anything else
+ *   falls back to the default
+ * @param {number} [fallbackMinutes=5]
+ * @returns {string}
+ */
+export function reminderLeadText(minutes, fallbackMinutes = 5) {
+    const value = Number.isInteger(minutes) && minutes >= 1 && minutes <= 60 ? minutes : fallbackMinutes;
+    if (value === 60) {
+        return msg('remindHourBefore', 'Notify me 1 hour before');
+    }
+    return msgWith('remindMinutesBefore', 'Notify me $1 min before', value);
+}
+
+/**
  * Put localized text on an element, and mark it so a later re-localization
  * of the document (language switch) updates it too.
  * @param {HTMLElement} element

@@ -30,6 +30,24 @@ export function normalizeEmail(email) {
     return String(email || '').trim().toLowerCase();
 }
 
+// How many avatar colours there are (`.guest-avatar.tone-1` … `tone-6`)
+export const GUEST_TONE_COUNT = 6;
+
+/**
+ * The avatar colour for a person, from their address: the same person always
+ * gets the same one, wherever they appear.
+ * @param {string} email
+ * @returns {number} 1 … GUEST_TONE_COUNT
+ */
+export function guestTone(email) {
+    const key = normalizeEmail(email);
+    let hash = 0;
+    for (const char of key) {
+        hash = (hash * 31 + char.codePointAt(0)) >>> 0;
+    }
+    return (hash % GUEST_TONE_COUNT) + 1;
+}
+
 /**
  * Split typed or pasted text into guests. Accepts addresses separated by
  * commas, semicolons, whitespace or new lines, and the "Name <address>" form

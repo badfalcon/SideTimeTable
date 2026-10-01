@@ -4,8 +4,10 @@
  * from people on loaded events.
  */
 import {
+    GUEST_TONE_COUNT,
     GuestDirectory,
     buildAttendees,
+    guestTone,
     isValidEmail,
     normalizeEmail,
     parseGuestInput
@@ -133,5 +135,28 @@ describe('GuestDirectory', () => {
         const directory = new GuestDirectory();
         directory.addFromEvents([event({ email: 'not-an-address' }, null)]);
         expect(directory.people.size).toBe(0);
+    });
+});
+
+describe('guestTone', () => {
+    test('is a colour number from 1 to GUEST_TONE_COUNT', () => {
+        for (const email of ['a@example.com', 'sato@example.com', 'x', '']) {
+            const tone = guestTone(email);
+            expect(Number.isInteger(tone)).toBe(true);
+            expect(tone).toBeGreaterThanOrEqual(1);
+            expect(tone).toBeLessThanOrEqual(GUEST_TONE_COUNT);
+        }
+    });
+
+    test('is the same for the same person, whatever the case or spacing', () => {
+        expect(guestTone(' Sato@Example.com ')).toBe(guestTone('sato@example.com'));
+    });
+
+    test('spreads people over several colours', () => {
+        const tones = new Set(
+            ['sato', 'yamada', 'sasaki', 'sam.lee', 'tanaka', 'suzuki', 'kim', 'lee']
+                .map((name) => guestTone(`${name}@example.com`))
+        );
+        expect(tones.size).toBeGreaterThanOrEqual(4);
     });
 });

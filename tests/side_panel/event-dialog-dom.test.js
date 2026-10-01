@@ -8,6 +8,7 @@ import {
     applyDurationPreset,
     msg,
     msgWith,
+    reminderLeadText,
     syncDurationFromTimes,
     usesTwelveHourClock
 } from '../../src/side_panel/components/modals/event-dialog-dom.js';
@@ -104,5 +105,35 @@ describe('usesTwelveHourClock', () => {
             writable: true,
         });
         expect(usesTwelveHourClock()).toBe(false);
+    });
+});
+
+describe('reminderLeadText', () => {
+    beforeEach(() => {
+        window.getLocalizedMessage = (key) => ({
+            remindMinutesBefore: '開始$1分前に通知する',
+            remindHourBefore: '開始1時間前に通知する'
+        })[key] || key;
+    });
+
+    afterEach(() => {
+        delete global.window.getLocalizedMessage;
+    });
+
+    test('names the lead time from the settings', () => {
+        expect(reminderLeadText(10)).toBe('開始10分前に通知する');
+        expect(reminderLeadText(1)).toBe('開始1分前に通知する');
+    });
+
+    test('says an hour for 60 minutes', () => {
+        expect(reminderLeadText(60)).toBe('開始1時間前に通知する');
+    });
+
+    test('falls back to the default for a missing or out-of-range setting', () => {
+        expect(reminderLeadText(undefined)).toBe('開始5分前に通知する');
+        expect(reminderLeadText(0)).toBe('開始5分前に通知する');
+        expect(reminderLeadText(90)).toBe('開始5分前に通知する');
+        expect(reminderLeadText('15')).toBe('開始5分前に通知する');
+        expect(reminderLeadText(undefined, 3)).toBe('開始3分前に通知する');
     });
 });
