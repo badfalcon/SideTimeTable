@@ -16,6 +16,7 @@
 - [x] `.btn`/`.btn-success`/`.btn-danger`/`.btn-secondary` クラスは CSS 未定義だった問題 — 予定の詳細・編集・削除確認を `event-dialog-dom.js` の共通部品（`.event-form-btn-*`）に置き換え、サイドパネルのモーダルからは使われなくなった（設定ページは Bootstrap を読み込むので対象外）。
 - [ ] `background.js` の `createEvent`/`updateEvent`/`deleteEvent` ハンドラ自体の単体テスト（現状はクライアント層のテストでカバー。ハンドラ専用テストの前例がないため未整備）。
 - [ ] `SidePanelUIController._getWritableCalendars()` の単体テスト（`googleIntegrated=false` で空配列を返すガードの検証。`side_panel.js` はトップレベルでDOM初期化するため import 不可 — コントローラのテスト基盤整備が前提）。
+- [ ] `SidePanelUIController` が `LocalEventModal` の `onDelete(event, deleteType)` を `_handleDeleteLocalEvent` へ `deleteType` ごと転送することの単体テスト（「すべての予定を削除」が単一回の削除扱いになる不具合の回帰防止。`side_panel.js` はトップレベルでDOM初期化するため import 不可 — コントローラのテスト基盤整備が前提）。
 - [ ] `GoogleEventModal` の編集・削除UI（`_isEditableEvent` ゲート、フッターの出し分け `_setFooters`（操作 / 削除確認 / 出欠）、出欠の本文・フッター配置と送信結果の表示、`GoogleEventEditFormBuilder`）、`LocalEventModal` のインライン削除確認（表示・編集の両モード）、`DeleteRecurringDialog` のフォーカス・Escape・Tab 循環のDOMテスト（jsdom + コンポーネント基盤が必要）。実拡張での確認は Playwright の手元スクリプトで実施済み（2026-09、ja/en × ライト/ダーク × 384/320px）。
 - [ ] 不在（OOO）イベントの**編集**: `eventType` は作成後に変更できないため、patch できるのは summary / start / end / `outOfOfficeProperties` のみ。既存の Google 編集フォームは時刻＋場所＋通知が前提なので、不在専用の編集フォームが要る。現状は削除のみ対応（`isDeletableGoogleEvent()`）。
 - [ ] 不在の辞退設定の3値化: 現状は `declineNone` / `declineAllConflictingInvitations` のオン・オフのみ。Google 本体と揃えるなら `declineOnlyNewConflictingInvitations` と辞退メッセージ（`outOfOfficeProperties.declineMessage`）の入力欄が必要。

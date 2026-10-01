@@ -248,7 +248,7 @@ class SidePanelUIController {
                 this._handleSaveGoogleEvent(eventResource, calendarId, requestId, options),
             // People from the loaded events, suggested while adding guests
             getGuestDirectory: () => this.googleEventManager?.guestDirectory || null,
-            onDelete: (event) => this._handleDeleteLocalEvent(event),
+            onDelete: (event, deleteType) => this._handleDeleteLocalEvent(event, deleteType),
             onCancel: () => this._handleCancelLocalEvent(),
             getCurrentDate: () => this.dateNavService.getDate()
         });
