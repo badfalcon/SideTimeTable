@@ -242,7 +242,7 @@ class SidePanelUIController {
         this.localEventModal = new LocalEventModal({
             onSave: (eventData, mode) => this._handleSaveLocalEvent(eventData, mode),
             onSaveGoogle: (eventResource, calendarId, requestId) => this._handleSaveGoogleEvent(eventResource, calendarId, requestId),
-            onDelete: (event) => this._handleDeleteLocalEvent(event),
+            onDelete: (event, deleteType) => this._handleDeleteLocalEvent(event, deleteType),
             onCancel: () => this._handleCancelLocalEvent(),
             getCurrentDate: () => this.dateNavService.getDate()
         });
