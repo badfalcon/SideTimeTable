@@ -143,7 +143,7 @@ export class GoogleEventRenderer {
             if (config.onEventClick) config.onEventClick(event);
         });
 
-        // The calendar's colour tints the block and draws its left bar
+        // The calendar's colour tints the block and its text
         // (unless disabled by user setting; see .has-calendar-color)
         if (config.useGoogleCalendarColors && event.calendarBackgroundColor) {
             eventDiv.style.setProperty('--event-color', event.calendarBackgroundColor);
