@@ -16,6 +16,7 @@
 - [ ] `.btn`/`.btn-success`/`.btn-danger`/`.btn-secondary` クラスは CSS 未定義（スタイルは `#id` セレクタ由来）。ローカルモーダルの既存パターン踏襲だが、ユーティリティクラスとして定義するか外すか整理する。
 - [ ] `background.js` の `createEvent`/`updateEvent`/`deleteEvent` ハンドラ自体の単体テスト（現状はクライアント層のテストでカバー。ハンドラ専用テストの前例がないため未整備）。
 - [ ] `SidePanelUIController._getWritableCalendars()` の単体テスト（`googleIntegrated=false` で空配列を返すガードの検証。`side_panel.js` はトップレベルでDOM初期化するため import 不可 — コントローラのテスト基盤整備が前提）。
+- [ ] `SidePanelUIController` が `LocalEventModal` の `onDelete(event, deleteType)` を `_handleDeleteLocalEvent` へ `deleteType` ごと転送することの単体テスト（「すべての予定を削除」が単一回の削除扱いになる不具合の回帰防止。`side_panel.js` はトップレベルでDOM初期化するため import 不可 — コントローラのテスト基盤整備が前提）。
 - [ ] `GoogleEventModal` の編集・削除UI（`_isEditableEvent` ゲート、インライン削除確認、`GoogleEventEditFormBuilder`）のDOMテスト（jsdom + コンポーネント基盤が必要）。
 - [ ] 不在（OOO）イベントの**編集**: `eventType` は作成後に変更できないため、patch できるのは summary / start / end / `outOfOfficeProperties` のみ。既存の Google 編集フォームは時刻＋場所＋通知が前提なので、不在専用の編集フォームが要る。現状は削除のみ対応（`isDeletableGoogleEvent()`）。
 - [ ] 不在の辞退設定の3値化: 現状は `declineNone` / `declineAllConflictingInvitations` のオン・オフのみ。Google 本体と揃えるなら `declineOnlyNewConflictingInvitations` と辞退メッセージ（`outOfOfficeProperties.declineMessage`）の入力欄が必要。
