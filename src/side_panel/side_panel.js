@@ -235,6 +235,8 @@ class SidePanelUIController {
             onCalendarChange: (changeInfo) => this._handleCalendarToggle(changeInfo),
             // The calendar filter lives in the header, beside settings
             getFilterMount: () => this.headerComponent.getFilterSlot(),
+            // Its "Manage calendars in Settings" link
+            onManageCalendars: () => this._openSettings(),
             onBackToToday: () => this.headerComponent.setToday()
         });
 

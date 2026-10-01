@@ -3517,8 +3517,21 @@ body {
     border-radius: var(--side-calendar-radius-lg);
     box-shadow: var(--side-calendar-shadow-popover);
     display: none;
+    padding: 6px;
+    box-sizing: border-box;
     overflow: hidden;
     resize: both;
+}
+
+/* Focused on open when there is no search box; the focus ring would only
+   outline the whole popover */
+.timeline-calendar-filter-dropdown:focus {
+    outline: none;
+}
+
+/* Checkboxes and the search box follow the theme, as in the dialogs */
+[data-theme="dark"] .timeline-calendar-filter-dropdown {
+    color-scheme: dark;
 }
 
 .timeline-calendar-filter-dropdown.open {
@@ -3526,21 +3539,32 @@ body {
     flex-direction: column;
 }
 
-/* Toolbar: search + refresh. Same field and icon button as the dialogs. */
-.timeline-calendar-filter-toolbar {
+/* Title row: what the list is, and the refresh button */
+.timeline-calendar-filter-head {
     display: flex;
     align-items: center;
     gap: 4px;
-    padding: 6px;
-    border-bottom: 1px solid var(--side-calendar-border-color-lighter);
     flex-shrink: 0;
+    padding-left: 10px;
 }
 
-.timeline-calendar-filter-search {
+.timeline-calendar-filter-title {
     flex: 1;
     min-width: 0;
+    overflow: hidden;
+    color: var(--side-calendar-secondary-text-color);
+    font-size: var(--side-calendar-font-caption);
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Only there for long lists. Same field as the dialogs. */
+.timeline-calendar-filter-search {
+    flex-shrink: 0;
+    width: 100%;
     height: var(--side-calendar-icon-button-size);
-    margin: 0;
+    margin: 2px 0 4px;
     padding: 0 10px;
     border: 1px solid var(--side-calendar-input-border);
     border-radius: var(--side-calendar-radius-md);
@@ -3575,14 +3599,19 @@ body {
     border-radius: var(--side-calendar-radius-md);
     background-color: transparent;
     color: var(--side-calendar-secondary-text-color);
-    font-size: var(--side-calendar-font-body);
+    font-size: var(--side-calendar-font-small);
     cursor: pointer;
     transition: color 0.15s ease, background-color 0.15s ease;
 }
 
-.timeline-calendar-filter-refresh-btn:hover {
+.timeline-calendar-filter-refresh-btn:hover:not(:disabled) {
     color: var(--side-calendar-panel-text-color);
     background-color: var(--side-calendar-subtle-bg-hover);
+}
+
+.timeline-calendar-filter-refresh-btn:disabled {
+    color: var(--side-calendar-muted-text-color);
+    cursor: default;
 }
 
 .timeline-calendar-filter-refresh-btn:focus-visible {
@@ -3590,11 +3619,11 @@ body {
     outline-offset: -2px;
 }
 
-/* Calendar list (scrollable): rows like the dialogs' checkbox rows */
+/* Calendar list (scrollable): colour, name, checkbox on the right */
 .timeline-calendar-filter-list {
     overflow-y: auto;
     flex: 1;
-    padding: 4px;
+    min-height: 0;
 }
 
 .timeline-calendar-filter-item {
@@ -3603,7 +3632,7 @@ body {
     gap: 10px;
     min-height: 32px;
     margin: 0;
-    padding: 0 8px;
+    padding: 0 10px;
     border-radius: var(--side-calendar-radius-sm);
     color: inherit;
     font-size: var(--side-calendar-font-body);
@@ -3614,8 +3643,16 @@ body {
     background-color: var(--side-calendar-subtle-bg-hover);
 }
 
-.timeline-calendar-filter-checkbox,
-.timeline-calendar-filter-group-header input[type="checkbox"] {
+/* The main calendar is always shown */
+.timeline-calendar-filter-item.is-locked {
+    cursor: default;
+}
+
+.timeline-calendar-filter-item.is-locked:hover {
+    background-color: transparent;
+}
+
+.timeline-calendar-filter-checkbox {
     flex-shrink: 0;
     width: 16px;
     height: 16px;
@@ -3624,15 +3661,21 @@ body {
     accent-color: var(--side-calendar-accent-hover-color);
 }
 
+.timeline-calendar-filter-checkbox:disabled {
+    cursor: default;
+}
+
 .timeline-calendar-filter-color {
     width: 10px;
     height: 10px;
     border-radius: 3px;
     flex-shrink: 0;
+    background-color: var(--calendar-color, var(--side-calendar-muted-text-color));
 }
 
 .timeline-calendar-filter-name {
     flex: 1;
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -3649,53 +3692,111 @@ body {
     font-size: var(--side-calendar-font-small);
 }
 
-/* Group header: a section label with its own checkbox, not a grey bar */
+/* Group header: a section label that folds its calendars, with the
+   group's checkbox in line with theirs */
 .timeline-calendar-filter-group-header {
     display: flex;
     align-items: center;
     gap: 10px;
+    margin-top: 4px;
+    padding-right: 10px;
+}
+
+.timeline-calendar-filter-group-header:first-child {
+    margin-top: 0;
+}
+
+.timeline-calendar-filter-group-toggle {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
     min-height: 32px;
-    padding: 0 8px;
+    margin: 0;
+    padding: 0 10px;
+    border: none;
     border-radius: var(--side-calendar-radius-sm);
+    background-color: transparent;
     color: var(--side-calendar-secondary-text-color);
-    font-size: var(--side-calendar-font-small);
+    font-family: inherit;
+    font-size: var(--side-calendar-font-caption);
     font-weight: 600;
+    text-align: left;
     cursor: pointer;
-    user-select: none;
 }
 
-.timeline-calendar-filter-group-header:hover {
+.timeline-calendar-filter-group-toggle:hover {
     background-color: var(--side-calendar-subtle-bg-hover);
+    color: var(--side-calendar-panel-text-color);
 }
 
-.timeline-calendar-filter-group-header .group-name {
-    flex-grow: 1;
+.timeline-calendar-filter-group-toggle:focus-visible {
+    outline: 2px solid var(--side-calendar-accent-color);
+    outline-offset: -2px;
+}
+
+.timeline-calendar-filter-group-toggle .group-name {
+    flex: 1;
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.timeline-calendar-filter-group-header .group-collapse-icon {
-    width: 12px;
+/* Sits in the colour column, so group and calendar names line up */
+.timeline-calendar-filter-group-toggle .group-collapse-icon {
+    flex-shrink: 0;
+    width: 10px;
     color: var(--side-calendar-muted-text-color);
-    font-size: var(--side-calendar-font-caption);
+    font-size: 10px;
     text-align: center;
     transition: transform 0.15s;
 }
 
-.timeline-calendar-filter-group-header .group-collapse-icon.collapsed {
+.timeline-calendar-filter-group-toggle .group-collapse-icon.collapsed {
     transform: rotate(-90deg);
-}
-
-.timeline-calendar-filter-group-body {
-    overflow: hidden;
 }
 
 .timeline-calendar-filter-group-body.collapsed {
     display: none;
 }
 
-/* Calendars in a group line up under the group's name */
-.timeline-calendar-filter-group-body .timeline-calendar-filter-item {
-    padding-left: 34px;
+/* "Manage calendars in Settings" under a divider */
+.timeline-calendar-filter-footer {
+    flex-shrink: 0;
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px solid var(--side-calendar-border-color-lighter);
+}
+
+.timeline-calendar-filter-manage {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 32px;
+    margin: 0;
+    padding: 0 10px;
+    border: none;
+    border-radius: var(--side-calendar-radius-sm);
+    background-color: transparent;
+    color: var(--side-calendar-accent-hover-color);
+    font-family: inherit;
+    font-size: var(--side-calendar-font-small);
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+}
+
+.timeline-calendar-filter-manage:hover {
+    background-color: var(--side-calendar-subtle-bg-hover);
+}
+
+.timeline-calendar-filter-manage:focus-visible {
+    outline: 2px solid var(--side-calendar-accent-color);
+    outline-offset: -2px;
+}
+
+[data-theme="dark"] .timeline-calendar-filter-manage {
+    color: var(--side-calendar-link-color);
 }

@@ -1698,6 +1698,14 @@
     "message": "カレンダーを絞り込む",
     "description": "タイムライン内のカレンダーフィルターボタンのツールチップ"
   },
+  "calendarFilterTitle": {
+    "message": "表示するカレンダー",
+    "description": "サイドパネルのヘッダーにあるカレンダー絞り込みポップオーバーの見出し"
+  },
+  "calendarFilterManage": {
+    "message": "設定でカレンダーを管理",
+    "description": "カレンダー絞り込みポップオーバーの下部にある、設定ページを開くリンク"
+  },
   "calendarFilterLoading": {
     "message": "カレンダーを読み込み中...",
     "description": "カレンダーフィルターのドロップダウンに表示される読み込みメッセージ"

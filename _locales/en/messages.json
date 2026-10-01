@@ -1698,6 +1698,14 @@
     "message": "Filter calendars",
     "description": "Tooltip for the calendar filter button in the timeline"
   },
+  "calendarFilterTitle": {
+    "message": "Calendars to show",
+    "description": "Title of the calendar filter popover in the side panel header"
+  },
+  "calendarFilterManage": {
+    "message": "Manage calendars in Settings",
+    "description": "Link at the bottom of the calendar filter popover that opens the settings page"
+  },
   "calendarFilterLoading": {
     "message": "Loading calendars...",
     "description": "Loading message shown in the calendar filter dropdown"

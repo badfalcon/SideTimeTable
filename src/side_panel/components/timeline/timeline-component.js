@@ -55,6 +55,7 @@ export class TimelineComponent extends Component {
         // header) or over the timeline's top-right corner otherwise
         this.onCalendarChange = options.onCalendarChange || null;
         this.getFilterMount = options.getFilterMount || null;
+        this.onManageCalendars = options.onManageCalendars || null;
         this.calendarFilter = null;
 
         // Drag state
@@ -169,7 +170,8 @@ export class TimelineComponent extends Component {
      */
     _setupCalendarFilter(container) {
         this.calendarFilter = new TimelineCalendarFilter({
-            onCalendarChange: this.onCalendarChange
+            onCalendarChange: this.onCalendarChange,
+            onManageCalendars: this.onManageCalendars
         });
         const mount = this.getFilterMount?.();
         if (mount) {

@@ -23,6 +23,7 @@ Main UI displayed in Chrome's side panel:
 - `side_panel.css`: Custom styling with CSS variables for theming
 - `components/`: Modular component-based UI architecture
   - `timeline/timeline-component.js`: Main timeline display with integrated event layout
+  - `timeline/timeline-calendar-filter.js` + `calendar-filter-renderer.js`: Calendar filter popover in the header — title with refresh, calendars as colour / name / checkbox, folding groups with a group checkbox, search box only for long lists (9+), "Manage calendars in Settings" link
   - `header/header-component.js`: Date navigation (the date label opens the browser's date picker), add/sync/settings buttons, and the slot the calendar filter mounts into
   - `modals/`: Modal dialog components (Google events, local events, alerts, What's New, review)
     - `event-dialog-dom.js`: Shared DOM builders for the event dialogs (sticky header/footer, icon-led rows, segmented controls, buttons, inline delete confirmation, status line, time row with duration picker)

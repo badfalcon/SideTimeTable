@@ -225,6 +225,7 @@ describe('TimelineCalendarFilter — concurrent toggle serialization', () => {
       renderCalendarList: jest.fn(),
       updateGroupCheckboxStates: jest.fn(),
       renderDropdownContent: jest.fn(() => ({})),
+      renderStatus: jest.fn(() => ({})),
     };
 
     const pToggle = filter._handleToggle('cal-x', true);
@@ -233,5 +234,42 @@ describe('TimelineCalendarFilter — concurrent toggle serialization', () => {
 
     expect(order.indexOf('save')).toBeGreaterThanOrEqual(0);
     expect(order.indexOf('load')).toBeGreaterThan(order.indexOf('save'));
+  });
+});
+
+describe('TimelineCalendarFilter status and settings link', () => {
+  test('loading shows a busy status, a failed load an idle one so it can be retried', async () => {
+    sendMessage.mockResolvedValue({ error: 'boom' });
+    const filter = new TimelineCalendarFilter({});
+    filter.isOpen = true;
+    filter.dropdown = {};
+    filter.renderer = { renderStatus: jest.fn(() => ({ refreshBtn: 'refresh' })) };
+
+    await filter._fetchCalendars();
+
+    const calls = filter.renderer.renderStatus.mock.calls;
+    expect(calls.map(([, message]) => message)).toEqual(['calendarFilterLoading', 'calendarFilterError']);
+    expect(calls[0][2]).toEqual({ busy: true });
+    expect(calls[1][2]).toBeUndefined();
+    expect(filter.refreshBtn).toBe('refresh');
+    expect(filter.calendarList).toBeNull();
+  });
+
+  test('the settings link closes the popover, then calls onManageCalendars', () => {
+    const order = [];
+    const filter = new TimelineCalendarFilter({ onManageCalendars: () => order.push(`manage:${filter.isOpen}`) });
+    filter.isOpen = true;
+    filter.backdrop = { classList: { add: jest.fn(), remove: jest.fn() } };
+    filter.dropdown = { classList: { add: jest.fn(), remove: jest.fn() } };
+    filter.button = { setAttribute: jest.fn() };
+
+    filter.renderer._onManageClick();
+
+    expect(order).toEqual(['manage:false']);
+  });
+
+  test('without onManageCalendars the popover has no settings link', () => {
+    const filter = new TimelineCalendarFilter({});
+    expect(filter.renderer._onManageClick).toBeNull();
   });
 });
