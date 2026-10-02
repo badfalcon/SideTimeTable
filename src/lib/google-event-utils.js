@@ -154,6 +154,10 @@ export function isDeletableGoogleEvent(event) {
  *   untouched — pass it ONLY when the user actually changed the selection;
  *   blank/null reverts explicitly to {useDefault: true}. A non-numeric or
  *   negative value is ignored (treated as "no change") in both modes.
+ * @param {Array<{email: string}>} [fields.attendees] - Guests to invite.
+ *   Insert mode only (guests are not edited through this form); emitted when
+ *   non-empty, dropped for an out-of-office event. Whether Google emails them
+ *   is decided by the request's `sendUpdates`, not by the body.
  * @param {string} [fields.eventType] - Pass 'outOfOffice' to build an
  *   out-of-office event: `eventType`, `transparency: 'opaque'` and
  *   `outOfOfficeProperties` are emitted, and description/location/Meet/reminders
@@ -172,7 +176,7 @@ export function isDeletableGoogleEvent(event) {
  *   and never emits conferenceData (Meet is not editable).
  * @returns {Object} A Google Calendar event resource ({summary, start, end, ...})
  */
-export function buildGoogleEventResource({ summary, description, location, date, startTime, endTime, addMeet, meetRequestId, reminderMinutes, eventType, allDay, autoDecline }, { forPatch = false } = {}) {
+export function buildGoogleEventResource({ summary, description, location, date, startTime, endTime, addMeet, meetRequestId, reminderMinutes, attendees, eventType, allDay, autoDecline }, { forPatch = false } = {}) {
     // Out-of-office is an insert-only shape: `eventType` is immutable once the
     // event exists, so a patch body never carries it.
     const isOutOfOffice = !forPatch && eventType === 'outOfOffice';
@@ -228,6 +232,10 @@ export function buildGoogleEventResource({ summary, description, location, date,
                 conferenceSolutionKey: { type: 'hangoutsMeet' }
             }
         };
+    }
+
+    if (!forPatch && Array.isArray(attendees) && attendees.length > 0) {
+        resource.attendees = attendees.map(({ email }) => ({ email }));
     }
 
     if (reminderMinutes !== undefined && reminderMinutes !== null && reminderMinutes !== '') {

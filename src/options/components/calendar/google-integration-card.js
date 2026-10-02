@@ -1,46 +1,58 @@
 /**
  * GoogleIntegrationCard - The Google integration settings card component
+ *
+ * One row: the connection status (with what it allows) and the action. Not
+ * connected, the action is Google's own "Sign in with Google" button, as
+ * Google's branding rules ask; connected, a plain "Disconnect" button.
  */
 import { CardComponent } from '../base/card-component.js';
 import { createGoogleSignInButton } from '../../../lib/google-button-helper.js';
+import { createButton, createSettingRow, msg } from '../base/settings-dom.js';
 
 export class GoogleIntegrationCard extends CardComponent {
     constructor(onIntegrationChange) {
         super({
-            title: 'Google Calendar Integration',
-            titleLocalize: '__MSG_integration__',
-            subtitle: 'Integrate with Google Calendar to display events.',
+            title: 'Google Calendar',
+            titleLocalize: '__MSG_googleCalendarCardTitle__',
+            subtitle: 'Show your Google Calendar events in the side panel.',
             subtitleLocalize: '__MSG_googleIntegration__',
-            icon: 'fab fa-google',
-            iconColor: 'text-primary'
+            icon: 'fab fa-google'
         });
 
         this.onIntegrationChange = onIntegrationChange;
         this.isIntegrated = false;
         this.integrationButton = null;
+        this.disconnectButton = null;
         this.statusElement = null;
+        this.statusHint = null;
     }
 
     createElement() {
         const card = super.createElement();
 
-        // Create the Google integration button and status
-        const controlsDiv = document.createElement('div');
-        controlsDiv.className = 'd-flex align-items-center';
-
-        // The Google integration button
+        // Not connected: Google's sign-in button
         this.integrationButton = this._createGoogleButton();
-        controlsDiv.appendChild(this.integrationButton);
+        // Connected: a plain button
+        this.disconnectButton = createButton({
+            id: 'google-disconnect-button',
+            labelKey: 'googleDisconnect',
+            labelFallback: 'Disconnect'
+        });
+        this.disconnectButton.hidden = true;
 
-        // The status display
-        this.statusElement = document.createElement('span');
-        this.statusElement.id = 'google-integration-status';
-        this.statusElement.className = 'ms-2';
-        this.statusElement.setAttribute('data-localize', '__MSG_notIntegrated__');
-        this.statusElement.textContent = window.getLocalizedMessage('notIntegrated') || 'Not integrated';
-        controlsDiv.appendChild(this.statusElement);
+        const { row, label, hint } = createSettingRow({
+            labelKey: 'notIntegrated',
+            labelFallback: 'Not connected',
+            hintKey: 'googleNotConnectedHint',
+            hintFallback: 'Connect to show, create and edit your Google Calendar events.',
+            control: [this.integrationButton, this.disconnectButton]
+        });
+        label.classList.add('google-status');
+        label.id = 'google-integration-status';
+        this.statusElement = label;
+        this.statusHint = hint;
+        this.addContent(row);
 
-        this.addContent(controlsDiv);
         this._setupEventListeners();
 
         return card;
@@ -52,7 +64,13 @@ export class GoogleIntegrationCard extends CardComponent {
      * @returns {HTMLElement} The Google button element
      */
     _createGoogleButton() {
-        return createGoogleSignInButton({ id: 'google-integration-button' });
+        const button = createGoogleSignInButton({ id: 'google-integration-button' });
+        const textSpan = button.querySelector('.gsi-material-button-contents');
+        if (textSpan) {
+            textSpan.setAttribute('data-localize', '__MSG_signInWithGoogle__');
+            textSpan.textContent = msg('signInWithGoogle', 'Sign in with Google');
+        }
+        return button;
     }
 
     /**
@@ -60,11 +78,12 @@ export class GoogleIntegrationCard extends CardComponent {
      * @private
      */
     _setupEventListeners() {
-        if (this.integrationButton && this.onIntegrationChange) {
-            this.integrationButton.addEventListener('click', () => {
+        if (!this.onIntegrationChange) return;
+        [this.integrationButton, this.disconnectButton].forEach(button => {
+            button?.addEventListener('click', () => {
                 this.onIntegrationChange(!this.isIntegrated);
             });
-        }
+        });
     }
 
     /**
@@ -76,27 +95,30 @@ export class GoogleIntegrationCard extends CardComponent {
         this.isIntegrated = integrated;
 
         if (this.statusElement) {
+            this.statusElement.classList.toggle('is-connected', integrated && !statusText);
             if (statusText) {
                 this.statusElement.textContent = statusText;
                 this.statusElement.removeAttribute('data-localize');
-            } else if (integrated) {
-                this.statusElement.setAttribute('data-localize', '__MSG_integrated__');
-                this.statusElement.textContent = window.getLocalizedMessage('integrated');
             } else {
-                this.statusElement.setAttribute('data-localize', '__MSG_notIntegrated__');
-                this.statusElement.textContent = window.getLocalizedMessage('notIntegrated');
+                const key = integrated ? 'integrated' : 'notIntegrated';
+                this.statusElement.setAttribute('data-localize', `__MSG_${key}__`);
+                this.statusElement.textContent = msg(key, integrated ? 'Connected' : 'Not connected');
             }
         }
+        if (this.statusHint) {
+            const key = integrated ? 'googleConnectedHint' : 'googleNotConnectedHint';
+            this.statusHint.setAttribute('data-localize', `__MSG_${key}__`);
+            this.statusHint.textContent = integrated
+                ? msg(key, 'View, create and edit events, and reply to invitations.')
+                : msg(key, 'Connect to show, create and edit your Google Calendar events.');
+        }
 
-        // Update the button text
-        if (this.integrationButton) {
-            const textSpan = this.integrationButton.querySelector('.gsi-material-button-contents');
-            if (textSpan) {
-                textSpan.setAttribute('data-localize', integrated ? '__MSG_disconnectGoogle__' : '__MSG_signInWithGoogle__');
-                textSpan.textContent = integrated
-                    ? window.getLocalizedMessage('disconnectGoogle')
-                    : window.getLocalizedMessage('signInWithGoogle');
-            }
+        // Signed in: a plain button to disconnect; signed out: Google's button.
+        // A passing status ("Connecting…", an error) keeps the button that
+        // was pressed in place.
+        if (!statusText) {
+            if (this.integrationButton) this.integrationButton.hidden = integrated;
+            if (this.disconnectButton) this.disconnectButton.hidden = !integrated;
         }
     }
 
@@ -105,10 +127,9 @@ export class GoogleIntegrationCard extends CardComponent {
      * @param {boolean} enabled Whether to enable the button
      */
     setButtonEnabled(enabled) {
-        if (this.integrationButton) {
-            this.integrationButton.disabled = !enabled;
-            this.integrationButton.style.opacity = enabled ? '1' : '0.6';
-        }
+        [this.integrationButton, this.disconnectButton].forEach(button => {
+            if (button) button.disabled = !enabled;
+        });
     }
 
     /**

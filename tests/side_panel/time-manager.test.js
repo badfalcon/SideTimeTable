@@ -558,6 +558,38 @@ describe('EventLayoutManager', () => {
       expect(e1.element.classList.contains('narrow-display')).toBe(false);
     });
 
+    test('a single event at full width gets wide-display (time and place on one line)', () => {
+      const e1 = createEvent('e1', 10, 0, 11, 0);
+      manager.registerEvent(e1);
+      manager.calculateLayout();
+      expect(manager.maxWidth).toBeGreaterThanOrEqual(200);
+      expect(e1.element.classList.contains('wide-display')).toBe(true);
+    });
+
+    test('lanes narrower than 200px lose wide-display', () => {
+      const e1 = createEvent('e1', 10, 0, 11, 0);
+      manager.registerEvent(e1);
+      manager.calculateLayout();
+      const e2 = createEvent('e2', 10, 0, 11, 0);
+      manager.registerEvent(e2);
+      manager.calculateLayout();
+      expect(e1.element.classList.contains('wide-display')).toBe(false);
+      expect(e2.element.classList.contains('wide-display')).toBe(false);
+    });
+
+    test('lanes of 200px or more keep wide-display', () => {
+      const m = new EventLayoutManager({ getBoundingClientRect: () => ({ width: 500 }) });
+      const e1 = createEvent('e1', 10, 0, 11, 0);
+      const e2 = createEvent('e2', 10, 0, 11, 0);
+      m.registerEvent(e1);
+      m.registerEvent(e2);
+      m.calculateLayout();
+      expect(parseFloat(e1.element.style.width)).toBeGreaterThanOrEqual(200);
+      expect(e1.element.classList.contains('wide-display')).toBe(true);
+      expect(e2.element.classList.contains('wide-display')).toBe(true);
+      m.destroy();
+    });
+
     test('padding is reset to empty string on layout', () => {
       const e1 = createEvent('e1', 10, 0, 11, 0);
       e1.element.style.padding = '20px';

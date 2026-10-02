@@ -234,6 +234,21 @@ describe('localize', () => {
             expect(el2.innerHTML).toBe('Close');
         });
 
+        test('declares the shown language on the document', async () => {
+            setupDOM({});
+            global.document.documentElement = { lang: 'ja' };
+
+            await window.localizeWithLanguage('en');
+            expect(global.document.documentElement.lang).toBe('en');
+
+            await window.localizeWithLanguage('ja');
+            expect(global.document.documentElement.lang).toBe('ja');
+
+            // An unsupported language is shown in English, so it is declared as such
+            await window.localizeWithLanguage('fr');
+            expect(global.document.documentElement.lang).toBe('en');
+        });
+
         test('unknown language falls back to English messages', async () => {
             const el = createMockElement('data-localize', '__MSG_appTitle__');
             setupDOM({ '[data-localize]': [el] });

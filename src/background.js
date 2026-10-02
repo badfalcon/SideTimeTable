@@ -9,7 +9,7 @@ import { StorageHelper } from './lib/storage-helper.js';
 import { AlarmManager } from './lib/alarm-manager.js';
 import { selectNotificationUrl } from './lib/conference-url-utils.js';
 import { savePendingEventFocus } from './lib/event-focus.js';
-import { GoogleCalendarClient, AuthenticationError } from './services/google-calendar-client.js';
+import { GoogleCalendarClient, AuthenticationError, SEND_UPDATES_VALUES } from './services/google-calendar-client.js';
 import { ReminderSyncService } from './services/reminder-sync-service.js';
 import { logError, logWarn } from './lib/utils.js';
 import { runDeduped } from './lib/request-dedupe.js';
@@ -393,17 +393,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         case "createEvent":
             // Create a new event on a Google Calendar
             (async () => {
-                const invalid = validateWriteRequest(request, false, true);
+                const invalid = validateWriteRequest(request, false, true)
+                    || (request.sendUpdates !== undefined && !SEND_UPDATES_VALUES.includes(request.sendUpdates)
+                        ? 'Invalid sendUpdates' : null);
                 if (invalid) {
                     sendResponse({ success: false, error: invalid });
                     return;
                 }
                 try {
-                    const { calendarId, event } = request;
+                    const { calendarId, event, sendUpdates } = request;
                     // Deduped: a retry after a commit-then-crash must not
-                    // create the event a second time
+                    // create the event a second time (or email the guests twice)
                     const createdEvent = await runDeduped(request.requestId,
-                        () => calendarClient.createEvent(calendarId, event));
+                        () => calendarClient.createEvent(calendarId, event, { sendUpdates }));
                     // Ensure the new event gets a reminder alarm if reminders are enabled
                     reminderSync.syncAll().catch(() => {});
                     sendResponse({ success: true, event: createdEvent });

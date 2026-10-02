@@ -6,65 +6,68 @@
     <title data-localize="__MSG_optionsTitle__">SideTimeTableの設定</title>
     <!-- Font Awesome -->
     <link href="https://use.fontawesome.com/releases/v6.7.1/css/all.css" rel="stylesheet">
-    <!-- Bootstrap CSS -->
-    <link href="../vendor/bootstrap.min.css" rel="stylesheet">
-    <script src="../vendor/popper.min.js"></script>
-    <script src="../vendor/bootstrap.min.js"></script>
     <script src="../lib/localize.js"></script>
+    <script src="../lib/locale-utils.js"></script>
+    <link rel="stylesheet" href="settings-tokens.css">
     <link rel="stylesheet" href="options.css">
     <link rel="stylesheet" href="google_button.css">
     <script src="../../dist/options.bundle.js"></script>
 </head>
 <body style="opacity: 0;">
 
-<div class="container mt-4">
-    <h1 class="mb-4" data-localize="__MSG_optionsTitle__">SideTimeTable 設定</h1>
+<div class="settings-page">
+    <header class="settings-header">
+        <span class="settings-app-mark" aria-hidden="true"><i class="fas fa-calendar-day"></i></span>
+        <h1 class="settings-page-title" data-localize="__MSG_optionsTitle__">SideTimeTable settings</h1>
+        <span class="settings-version" id="settings-version"></span>
+    </header>
 
-    <div class="row g-4">
-        <!-- 左: nav-pills サイドバー -->
-        <div class="col-lg-3 col-md-12">
-            <div class="settings-sidebar">
-                <div class="nav flex-column nav-pills settings-nav" id="v-pills-tab" role="tablist"
-                     aria-orientation="vertical">
-                    <button class="nav-link active" id="tab-google-btn" type="button"
-                            data-bs-toggle="pill" data-bs-target="#tab-google"
-                            role="tab" aria-controls="tab-google" aria-selected="true"
-                            data-localize="__MSG_integration__">Google Calendar</button>
-                    <button class="nav-link" id="tab-display-btn" type="button"
-                            data-bs-toggle="pill" data-bs-target="#tab-display"
-                            role="tab" aria-controls="tab-display" aria-selected="false"
-                            data-localize="__MSG_displaySettings__">Display</button>
-                    <button class="nav-link" id="tab-general-btn" type="button"
-                            data-bs-toggle="pill" data-bs-target="#tab-general"
-                            role="tab" aria-controls="tab-general" aria-selected="false"
-                            data-localize="__MSG_generalSettings__">General</button>
-                    <!-- Developer: JS で条件付き表示 -->
-                    <button class="nav-link d-none" id="tab-developer-btn" type="button"
-                            data-bs-toggle="pill" data-bs-target="#tab-developer"
-                            role="tab" aria-controls="tab-developer" aria-selected="false"
-                            data-localize="__MSG_developerSettingsTab__">Developer</button>
-                </div>
-                <!-- コントロールボタン: サイドバー下部 -->
-                <div id="control-buttons-container" class="settings-sidebar-actions"></div>
-            </div>
-        </div>
+    <div class="settings-layout">
+        <!-- Sections: a list on the left, a segmented control in a narrow window -->
+        <nav class="settings-nav" id="settings-tablist" role="tablist" aria-orientation="vertical">
+            <button class="settings-nav-link" id="tab-google-btn" type="button"
+                    role="tab" aria-controls="tab-google" aria-selected="true">
+                <i class="fas fa-link" aria-hidden="true"></i><span data-localize="__MSG_integration__">Integration</span>
+            </button>
+            <button class="settings-nav-link" id="tab-display-btn" type="button"
+                    role="tab" aria-controls="tab-display" aria-selected="false">
+                <i class="fas fa-display" aria-hidden="true"></i><span data-localize="__MSG_displaySettings__">Display</span>
+            </button>
+            <button class="settings-nav-link" id="tab-general-btn" type="button"
+                    role="tab" aria-controls="tab-general" aria-selected="false">
+                <i class="fas fa-gear" aria-hidden="true"></i><span data-localize="__MSG_generalSettings__">General</span>
+            </button>
+            <!-- Developer: shown by JS when enabled -->
+            <button class="settings-nav-link" id="tab-developer-btn" type="button" hidden
+                    role="tab" aria-controls="tab-developer" aria-selected="false">
+                <i class="fas fa-code" aria-hidden="true"></i><span data-localize="__MSG_developerSettingsTab__">Developer</span>
+            </button>
+        </nav>
 
-        <!-- 右: タブコンテンツ -->
-        <div class="col-lg-9 col-md-12">
-            <div class="tab-content" id="v-pills-tabContent">
-                <div class="tab-pane fade show active" id="tab-google"
-                     role="tabpanel" aria-labelledby="tab-google-btn"></div>
-                <div class="tab-pane fade" id="tab-display"
-                     role="tabpanel" aria-labelledby="tab-display-btn"></div>
-                <div class="tab-pane fade" id="tab-general"
-                     role="tabpanel" aria-labelledby="tab-general-btn"></div>
-                <div class="tab-pane fade" id="tab-developer"
-                     role="tabpanel" aria-labelledby="tab-developer-btn"></div>
+        <!-- Tutorial, changelog and reset: under the sections, or at the
+             bottom of the page in a narrow window -->
+        <div id="control-buttons-container" class="settings-extras"></div>
+
+        <main class="settings-content" id="settings-panels">
+            <div class="settings-tab-panel" id="tab-google"
+                 role="tabpanel" aria-labelledby="tab-google-btn">
+                <h2 class="settings-section-title" data-localize="__MSG_integration__">Integration</h2>
             </div>
-        </div>
+            <div class="settings-tab-panel" id="tab-display" hidden
+                 role="tabpanel" aria-labelledby="tab-display-btn">
+                <h2 class="settings-section-title" data-localize="__MSG_displaySettings__">Display</h2>
+            </div>
+            <div class="settings-tab-panel" id="tab-general" hidden
+                 role="tabpanel" aria-labelledby="tab-general-btn">
+                <h2 class="settings-section-title" data-localize="__MSG_generalSettings__">General</h2>
+            </div>
+            <div class="settings-tab-panel" id="tab-developer" hidden
+                 role="tabpanel" aria-labelledby="tab-developer-btn">
+                <h2 class="settings-section-title" data-localize="__MSG_developerSettingsTab__">Developer</h2>
+            </div>
+        </main>
     </div>
 
-    <datalist id="time-list"></datalist>
 </div>
 
 </body>

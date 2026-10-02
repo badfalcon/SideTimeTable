@@ -109,7 +109,7 @@ describe('CalendarGroupManager', () => {
             await submitHandler('', []);
 
             expect(calendarGroups).toHaveLength(1);
-            expect(calendarGroups[0].name).toBe('New Group');
+            expect(calendarGroups[0].name).toBe('New group');
         });
 
         it('allows a retry after a failed save', async () => {

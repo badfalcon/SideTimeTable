@@ -1,8 +1,11 @@
 /**
- * ControlButtonsComponent - The reset button component
+ * ControlButtonsComponent - Replay the tutorial, open the changelog, reset
+ * all settings: quiet rows under the section list (at the bottom of the page
+ * in a narrow window). Reset is set apart and red.
  */
 import { StorageHelper } from '../../../lib/storage-helper.js';
 import { sendMessage } from '../../../lib/chrome-messaging.js';
+import { createIcon, createNotice, msg, setText } from './settings-dom.js';
 
 export class ControlButtonsComponent {
     constructor(onReset) {
@@ -14,31 +17,39 @@ export class ControlButtonsComponent {
 
     createElement() {
         const container = document.createElement('div');
-        container.className = 'd-flex gap-2 mt-4 flex-wrap';
+        container.className = 'settings-extras-list';
 
-        // The reset button
-        this.resetButton = document.createElement('button');
-        this.resetButton.id = 'resetButton';
-        this.resetButton.className = 'btn btn-outline-secondary';
-        this.resetButton.setAttribute('data-localize', '__MSG_resetToDefault__');
-        this.resetButton.textContent = window.getLocalizedMessage('resetToDefault') || 'Reset to Default';
-
-        container.appendChild(this.resetButton);
-
-        // Replay Tutorial button
+        // Replay Tutorial
         this.replayTutorialButton = document.createElement('button');
+        this.replayTutorialButton.type = 'button';
         this.replayTutorialButton.id = 'replayTutorialButton';
-        this.replayTutorialButton.className = 'btn btn-outline-primary';
-        this.replayTutorialButton.innerHTML = `<i class="fas fa-graduation-cap me-1"></i><span data-localize="__MSG_replayTutorial__">Replay Tutorial</span>`;
+        this.replayTutorialButton.className = 'settings-nav-item';
+        this.replayTutorialButton.appendChild(createIcon('fas fa-graduation-cap'));
+        this.replayTutorialButton.appendChild(setText(document.createElement('span'), 'replayTutorial', 'Replay tutorial'));
         container.appendChild(this.replayTutorialButton);
 
-        // Changelog link
+        // Changelog (opens in a new tab)
         const changelogLink = document.createElement('a');
         changelogLink.href = '../changelog/changelog.html';
         changelogLink.target = '_blank';
-        changelogLink.className = 'btn btn-outline-info';
-        changelogLink.innerHTML = `<i class="fas fa-list-ul me-1"></i><span data-localize="__MSG_changelogTitle__">Changelog</span>`;
+        changelogLink.className = 'settings-nav-item';
+        changelogLink.appendChild(createIcon('fas fa-list-ul'));
+        changelogLink.appendChild(setText(document.createElement('span'), 'changelogTitle', 'Changelog'));
+        const external = createIcon('fas fa-arrow-up-right-from-square settings-nav-item-trailing');
+        changelogLink.appendChild(external);
         container.appendChild(changelogLink);
+
+        const divider = document.createElement('div');
+        divider.className = 'settings-nav-divider';
+        container.appendChild(divider);
+
+        // Reset all settings
+        this.resetButton = document.createElement('button');
+        this.resetButton.type = 'button';
+        this.resetButton.id = 'resetButton';
+        this.resetButton.className = 'settings-nav-item is-danger';
+        this._renderResetLabel();
+        container.appendChild(this.resetButton);
 
         this.element = container;
         this._setupEventListeners();
@@ -104,17 +115,28 @@ export class ControlButtonsComponent {
         switch (state) {
             case 'resetting':
                 this.resetButton.disabled = true;
-                this.resetButton.innerHTML = `
-                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>
-                    ${window.getLocalizedMessage('resetting')}
-                `;
+                this.resetButton.replaceChildren(
+                    createIcon('fas fa-rotate-left fa-spin'),
+                    setText(document.createElement('span'), 'resetting', 'Resetting...')
+                );
                 break;
             case 'idle':
             default:
                 this.resetButton.disabled = false;
-                this.resetButton.innerHTML = window.getLocalizedMessage('resetToDefault');
+                this._renderResetLabel();
                 break;
         }
+    }
+
+    /**
+     * Icon and label of the reset row.
+     * @private
+     */
+    _renderResetLabel() {
+        this.resetButton.replaceChildren(
+            createIcon('fas fa-rotate-left'),
+            setText(document.createElement('span'), 'resetToDefault', 'Reset all settings')
+        );
     }
 
     _showSuccess(message) {
@@ -132,23 +154,16 @@ export class ControlButtonsComponent {
             existing.remove();
         }
 
-        const notification = document.createElement('div');
-        notification.className = `alert alert-${type} alert-dismissible fade show mt-2 control-notification`;
-        notification.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
+        const notification = createNotice({
+            content: message || msg(type === 'success' ? 'settingsReset' : 'resetFailed', ''),
+            tone: type === 'success' ? 'success' : 'danger',
+            duration: 3000,
+            className: 'control-notification'
+        });
 
         if (this.element?.parentElement) {
             this.element.parentElement.insertBefore(notification, this.element.nextSibling);
         }
-
-        // Auto-remove after 3 seconds
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.remove();
-            }
-        }, 3000);
     }
 
     appendTo(container) {

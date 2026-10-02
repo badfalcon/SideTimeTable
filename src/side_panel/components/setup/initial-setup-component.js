@@ -13,6 +13,7 @@ import { DEFAULT_SETTINGS } from '../../../lib/constants.js';
 import { saveSettings, loadSettings } from '../../../lib/settings-storage.js';
 import { sendMessage } from '../../../lib/chrome-messaging.js';
 import { createGoogleSignInButton } from '../../../lib/google-button-helper.js';
+import { createTimeField } from '../../../lib/time-field.js';
 
 const SETUP_STORAGE_KEY = 'initialSetupCompleted';
 
@@ -273,11 +274,11 @@ export class InitialSetupComponent extends Component {
         // Start time
         const startLabel = document.createElement('label');
         startLabel.className = 'setup-time-label';
+        startLabel.htmlFor = 'setupWorkStart';
         startLabel.textContent = this.getMessage('setupWorkStart');
 
-        const startInput = document.createElement('input');
-        startInput.type = 'time';
-        startInput.className = 'setup-time-input';
+        // In the extension's language and 12/24-hour setting
+        const startInput = createTimeField({ id: 'setupWorkStart', className: 'setup-time-input' });
         startInput.value = this.setupData.openTime;
         startInput.addEventListener('change', () => {
             this.setupData.openTime = startInput.value;
@@ -292,11 +293,10 @@ export class InitialSetupComponent extends Component {
         // End time
         const endLabel = document.createElement('label');
         endLabel.className = 'setup-time-label';
+        endLabel.htmlFor = 'setupWorkEnd';
         endLabel.textContent = this.getMessage('setupWorkEnd');
 
-        const endInput = document.createElement('input');
-        endInput.type = 'time';
-        endInput.className = 'setup-time-input';
+        const endInput = createTimeField({ id: 'setupWorkEnd', className: 'setup-time-input' });
         endInput.value = this.setupData.closeTime;
         endInput.addEventListener('change', () => {
             this.setupData.closeTime = endInput.value;
@@ -592,7 +592,11 @@ export class InitialSetupComponent extends Component {
      * @private
      */
     _isActive() {
-        return this.element && !this.element.hasAttribute('hidden');
+        // Created hidden through style.display (the base class), without the
+        // attribute: check both, or a stray Escape would "finish" it
+        return !!this.element
+            && !this.element.hasAttribute('hidden')
+            && this.element.style.display !== 'none';
     }
 
 }

@@ -22,30 +22,29 @@ describe('LocalEventModal formatting', () => {
   });
 
   describe('_formatViewTime', () => {
-    const format = (...args) => LocalEventModal.prototype._formatViewTime.call({}, ...args);
+    const now = new Date(2026, 8, 30);
+    const format = (start, end, date, prefs) =>
+      LocalEventModal.prototype._formatViewTime.call({}, start, end, date, { ...prefs, now });
 
-    test('prepends the display date in MM/DD/YYYY for English', () => {
-      const result = format('09:00', '10:30', new Date(2026, 6, 22));
-      expect(result.startsWith('07/22/2026 ')).toBe(true);
-      expect(result).toContain(' - ');
+    test('English: the header-style date, then the range like the event blocks', () => {
+      expect(format('09:00', '10:30', new Date(2026, 6, 22), { locale: 'en', timeFormat: '12h' }))
+        .toBe('Wed, Jul 22, 9:00–10:30 AM');
     });
 
-    test('English date format stays MM/DD/YYYY even for en-GB browsers', () => {
+    test('Japanese: 24-hour range after the date', () => {
+      expect(format('09:00', '10:30', new Date(2026, 6, 22), { locale: 'ja', timeFormat: '24h' }))
+        .toBe('7月22日(水) 09:00–10:30');
+    });
+
+    test('does not depend on the browser language', () => {
       setNavigatorLanguage('en-GB');
-      const result = format('09:00', '10:30', new Date(2026, 6, 22));
-      expect(result.startsWith('07/22/2026 ')).toBe(true);
+      expect(format('13:00', '14:00', new Date(2026, 6, 22), { locale: 'en', timeFormat: '24h' }))
+        .toBe('Wed, Jul 22, 13:00–14:00');
     });
 
-    test('uses YYYY/MM/DD and the tilde separator for Japanese', () => {
-      setNavigatorLanguage('ja-JP');
-      const result = format('09:00', '10:30', new Date(2026, 6, 22));
-      expect(result.startsWith('2026/07/22 ')).toBe(true);
-      expect(result).toContain('～');
-    });
-
-    test('fallback on malformed time input still includes the date', () => {
-      const result = format(12345, '10:00', new Date(2026, 6, 22));
-      expect(result).toBe('07/22/2026 12345 - 10:00');
+    test('malformed time input falls back to the raw times', () => {
+      expect(format(12345, '10:00', new Date(2026, 6, 22), { locale: 'en', timeFormat: '24h' }))
+        .toBe('12345–10:00');
     });
   });
 

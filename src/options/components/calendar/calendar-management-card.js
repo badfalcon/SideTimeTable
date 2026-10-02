@@ -10,17 +10,17 @@ import { loadSelectedCalendars, saveSelectedCalendars, loadCalendarGroups } from
 import { sendMessage } from '../../../lib/chrome-messaging.js';
 import { CalendarGroupManager } from './calendar-group-manager.js';
 import { CalendarListRenderer } from './calendar-list-renderer.js';
+import { createButton, createIcon, createIconButton, msg, setText } from '../base/settings-dom.js';
 
 export class CalendarManagementCard extends CardComponent {
     constructor(onCalendarSelectionChange) {
         super({
             id: 'calendar-management-card',
-            title: 'Calendar Management',
-            titleLocalize: '__MSG_calendarSelection__',
-            subtitle: 'Select Google Calendars to display and configure their colors.',
+            title: 'Calendars to show',
+            titleLocalize: '__MSG_calendarFilterTitle__',
+            subtitle: 'Choose the calendars shown in the side panel, and groups to switch together.',
             subtitleLocalize: '__MSG_calendarSelectionDescription__',
-            icon: 'fas fa-calendar-alt',
-            iconColor: 'text-success',
+            icon: 'fas fa-calendar-check',
             hidden: true
         });
 
@@ -64,17 +64,8 @@ export class CalendarManagementCard extends CardComponent {
     createElement() {
         const card = super.createElement();
 
-        // The control buttons
-        const controlsDiv = this._createControlsSection();
-        this.addContent(controlsDiv);
-
-        // The search field
-        const searchDiv = this._createSearchSection();
-        this.addContent(searchDiv);
-
-        // The group control section
-        const groupControlDiv = this._createGroupControlSection();
-        this.addContent(groupControlDiv);
+        // Search, refresh and "Add group" in one toolbar
+        this.addContent(this._createToolbar());
 
         // The calendar list container
         const listContainer = this._createListContainer();
@@ -86,105 +77,63 @@ export class CalendarManagementCard extends CardComponent {
     }
 
     /**
-     * Create the control section
+     * The toolbar: search box, refresh button, "Add group".
      * @private
      */
-    _createControlsSection() {
-        const controlsDiv = document.createElement('div');
-        controlsDiv.className = 'd-flex align-items-center mb-3';
+    _createToolbar() {
+        const toolbar = document.createElement('div');
+        toolbar.className = 'calendar-toolbar';
 
-        // The refresh button
-        this.refreshBtn = document.createElement('button');
-        this.refreshBtn.id = 'refresh-calendars-btn';
-        this.refreshBtn.className = 'btn btn-outline-primary btn-sm';
-        this.refreshBtn.innerHTML = `
-            <i class="fas fa-refresh me-1"></i>
-            <span data-localize="__MSG_refreshCalendars__">Refresh</span>
-        `;
+        // The search box, with its icon and a clear button inside
+        const search = document.createElement('div');
+        search.className = 'settings-search';
+        search.appendChild(createIcon('fas fa-magnifying-glass settings-search-icon'));
 
-        // The loading indicator
-        this.loadingIndicator = document.createElement('div');
-        this.loadingIndicator.id = 'calendar-loading-indicator';
-        this.loadingIndicator.className = 'ms-2';
-        this.loadingIndicator.style.display = 'none';
-        const spinner = document.createElement('div');
-        spinner.className = 'spinner-border spinner-border-sm text-primary';
-        spinner.setAttribute('role', 'status');
-        const srSpan = document.createElement('span');
-        srSpan.className = 'visually-hidden';
-        srSpan.textContent = window.getLocalizedMessage('screenReaderLoading') || 'Loading...';
-        spinner.appendChild(srSpan);
-        this.loadingIndicator.appendChild(spinner);
-
-        controlsDiv.appendChild(this.refreshBtn);
-        controlsDiv.appendChild(this.loadingIndicator);
-
-        return controlsDiv;
-    }
-
-    /**
-     * Create the search section
-     * @private
-     */
-    _createSearchSection() {
-        const searchDiv = document.createElement('div');
-        searchDiv.className = 'mb-3';
-
-        const inputGroup = document.createElement('div');
-        inputGroup.className = 'input-group';
-
-        // The search icon
-        const iconSpan = document.createElement('span');
-        iconSpan.className = 'input-group-text';
-        iconSpan.innerHTML = '<i class="fas fa-search text-muted" aria-hidden="true"></i>';
-
-        // The search input field
         this.searchInput = document.createElement('input');
         this.searchInput.type = 'text';
         this.searchInput.id = 'calendar-search';
-        this.searchInput.className = 'form-control';
-        this.searchInput.placeholder = window.getLocalizedMessage('searchCalendars') || 'Search calendars...';
-        this.searchInput.setAttribute('aria-label', window.getLocalizedMessage('searchCalendars') || 'Search calendars');
+        this.searchInput.className = 'settings-input settings-search-input';
+        this.searchInput.placeholder = msg('searchCalendars', 'Search calendars');
+        this.searchInput.setAttribute('aria-label', msg('searchCalendars', 'Search calendars'));
         this.searchInput.setAttribute('data-localize-placeholder', '__MSG_searchCalendars__');
+        this.searchInput.setAttribute('data-localize-aria-label', '__MSG_searchCalendars__');
+        search.appendChild(this.searchInput);
 
-        // The clear button
-        this.clearSearchBtn = document.createElement('button');
-        this.clearSearchBtn.id = 'clear-search-btn';
-        this.clearSearchBtn.className = 'btn btn-outline-secondary';
-        this.clearSearchBtn.type = 'button';
-        this.clearSearchBtn.style.display = 'none';
-        this.clearSearchBtn.setAttribute('aria-label', window.getLocalizedMessage('clearSearch') || 'Clear search');
-        this.clearSearchBtn.innerHTML = '<i class="fas fa-times"></i>';
+        this.clearSearchBtn = createIconButton({
+            id: 'clear-search-btn',
+            icon: 'fas fa-xmark',
+            labelKey: 'clearSearch',
+            labelFallback: 'Clear search'
+        });
+        this.clearSearchBtn.classList.add('settings-search-clear');
+        this.clearSearchBtn.hidden = true;
+        search.appendChild(this.clearSearchBtn);
 
-        inputGroup.appendChild(iconSpan);
-        inputGroup.appendChild(this.searchInput);
-        inputGroup.appendChild(this.clearSearchBtn);
-        searchDiv.appendChild(inputGroup);
+        // Refresh: the icon spins while the list loads
+        this.refreshBtn = createIconButton({
+            id: 'refresh-calendars-btn',
+            icon: 'fas fa-arrows-rotate',
+            labelKey: 'refreshCalendars',
+            labelFallback: 'Refresh calendar list'
+        });
 
-        return searchDiv;
-    }
+        // Announces loading to screen readers (the spinning icon says it visually)
+        this.loadingIndicator = document.createElement('span');
+        this.loadingIndicator.id = 'calendar-loading-indicator';
+        this.loadingIndicator.className = 'visually-hidden';
+        this.loadingIndicator.setAttribute('role', 'status');
 
-    /**
-     * Create the group control section
-     * @private
-     */
-    _createGroupControlSection() {
-        const div = document.createElement('div');
-        div.className = 'mb-3';
+        this.addGroupBtn = createButton({
+            labelKey: 'addGroup',
+            labelFallback: 'Add group',
+            icon: 'fas fa-folder-plus'
+        });
 
-        this.addGroupBtn = document.createElement('button');
-        this.addGroupBtn.className = 'btn btn-outline-secondary btn-sm';
-        this.addGroupBtn.type = 'button';
-        const addGroupIcon = document.createElement('i');
-        addGroupIcon.className = 'fas fa-folder-plus me-1';
-        const addGroupLabel = document.createElement('span');
-        addGroupLabel.setAttribute('data-localize', '__MSG_addGroup__');
-        addGroupLabel.textContent = window.getLocalizedMessage('addGroup') || 'Add Group';
-        this.addGroupBtn.appendChild(addGroupIcon);
-        this.addGroupBtn.appendChild(addGroupLabel);
-
-        div.appendChild(this.addGroupBtn);
-        return div;
+        toolbar.appendChild(search);
+        toolbar.appendChild(this.refreshBtn);
+        toolbar.appendChild(this.addGroupBtn);
+        toolbar.appendChild(this.loadingIndicator);
+        return toolbar;
     }
 
     /**
@@ -193,19 +142,19 @@ export class CalendarManagementCard extends CardComponent {
      */
     _createListContainer() {
         const container = document.createElement('div');
+        container.className = 'calendar-list-wrap';
 
         // The calendar list
         this.calendarList = document.createElement('div');
         this.calendarList.id = 'calendar-list';
-        this.calendarList.className = 'list-group';
+        this.calendarList.className = 'calendar-list';
 
         // The not found message
         this.noCalendarsMsg = document.createElement('div');
         this.noCalendarsMsg.id = 'no-calendars-msg';
-        this.noCalendarsMsg.className = 'text-muted';
+        this.noCalendarsMsg.className = 'settings-empty';
         this.noCalendarsMsg.style.display = 'none';
-        this.noCalendarsMsg.setAttribute('data-localize', '__MSG_noCalendarsFound__');
-        this.noCalendarsMsg.textContent = window.getLocalizedMessage('noCalendarsFound') || 'No calendars found.';
+        setText(this.noCalendarsMsg, 'noCalendarsFound', 'No calendars found.');
 
         container.appendChild(this.calendarList);
         container.appendChild(this.noCalendarsMsg);
@@ -417,6 +366,8 @@ export class CalendarManagementCard extends CardComponent {
         }
 
         const searchTerm = this.searchInput?.value.toLowerCase().trim() || '';
+        // The clear button shows with any search, including one with no results
+        this._listRenderer.updateSearchUI(searchTerm, this.clearSearchBtn);
         const renderData = this._prepareRenderData(searchTerm);
 
         if (renderData.filteredCalendars.length === 0 && searchTerm) {
@@ -444,8 +395,6 @@ export class CalendarManagementCard extends CardComponent {
             );
             this.calendarList.appendChild(ungroupedSection);
         }
-
-        this._listRenderer.updateSearchUI(searchTerm, this.clearSearchBtn);
     }
 
     /**

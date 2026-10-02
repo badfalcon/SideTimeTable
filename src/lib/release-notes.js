@@ -451,3 +451,18 @@ export function compareVersions(a, b) {
     }
     return 0;
 }
+
+/**
+ * A release date for the language shown: "2026年8月21日", "Aug 21, 2026".
+ * @param {string} isoDate - YYYY-MM-DD
+ * @param {string} lang
+ * @returns {string}
+ */
+export function formatReleaseDate(isoDate, lang) {
+    const [year, month, day] = String(isoDate).split('-').map(Number);
+    if (!year || !month || !day) return String(isoDate);
+    const date = new Date(year, month - 1, day);
+    return date.toLocaleDateString(lang === 'ja' ? 'ja-JP' : 'en-US', {
+        year: 'numeric', month: 'short', day: 'numeric'
+    });
+}

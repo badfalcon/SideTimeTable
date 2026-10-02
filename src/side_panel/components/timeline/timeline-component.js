@@ -4,6 +4,7 @@
 import { Component } from '../base/component.js';
 import { CurrentTimeLineManager } from '../../../lib/current-time-line-manager.js';
 import { getCurrentTime } from '../../../lib/demo-data.js';
+import { formatHourLabel, formatStartTime } from '../../../lib/time-utils.js';
 import { TimelineCalendarFilter } from './timeline-calendar-filter.js';
 
 export class TimelineComponent extends Component {
@@ -44,8 +45,17 @@ export class TimelineComponent extends Component {
         // Drag-to-create callback
         this.onDragCreate = options.onDragCreate || null;
 
-        // Calendar filter button
+        // "Back to today" pill, shown while another day is displayed
+        this.onBackToToday = options.onBackToToday || null;
+        this.backToTodayButton = null;
+        this._boundSyncBackToToday = null;
+        this._backToTodayObserver = null;
+
+        // Calendar filter button, mounted where getFilterMount() says (the
+        // header) or over the timeline's top-right corner otherwise
         this.onCalendarChange = options.onCalendarChange || null;
+        this.getFilterMount = options.getFilterMount || null;
+        this.onManageCalendars = options.onManageCalendars || null;
         this.calendarFilter = null;
 
         // Drag state
@@ -85,7 +95,72 @@ export class TimelineComponent extends Component {
         // Set up calendar filter button
         this._setupCalendarFilter(container);
 
+        this._setupBackToToday(container);
+
         return container;
+    }
+
+    /**
+     * The "Back to today" pill: floats at the bottom of the visible timeline
+     * (above the memo) while another day is displayed.
+     * @param {HTMLElement} container - The timeline scroll container
+     * @private
+     */
+    _setupBackToToday(container) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'back-to-today-btn';
+        button.hidden = true;
+
+        const icon = document.createElement('i');
+        icon.className = 'fas fa-chevron-left';
+        icon.setAttribute('aria-hidden', 'true');
+        button.appendChild(icon);
+
+        const label = document.createElement('span');
+        label.setAttribute('data-localize', '__MSG_backToToday__');
+        label.textContent = window.getLocalizedMessage?.('backToToday') || 'Back to today';
+        button.appendChild(label);
+
+        this.addEventListener(button, 'click', () => this.onBackToToday?.());
+        container.appendChild(button);
+        this.backToTodayButton = button;
+
+        // Kept at the bottom of what is visible: follows scrolling, and the
+        // timeline's height (the memo panel below it can be resized)
+        this._boundSyncBackToToday = () => this._syncBackToTodayPosition();
+        container.addEventListener('scroll', this._boundSyncBackToToday, { passive: true });
+        if (typeof ResizeObserver === 'function') {
+            this._backToTodayObserver = new ResizeObserver(this._boundSyncBackToToday);
+            this._backToTodayObserver.observe(container);
+        }
+    }
+
+    /**
+     * Show the pill for any day but today, pointing back toward today.
+     * @private
+     */
+    _updateBackToToday() {
+        if (!this.backToTodayButton) return;
+        const today = getCurrentTime();
+        const shown = this.currentDate.toDateString() !== today.toDateString();
+        this.backToTodayButton.hidden = !shown;
+        if (shown) {
+            const icon = this.backToTodayButton.querySelector('i');
+            icon.className = this.currentDate > today ? 'fas fa-chevron-left' : 'fas fa-chevron-right';
+            this._syncBackToTodayPosition();
+        }
+    }
+
+    /**
+     * @private
+     */
+    _syncBackToTodayPosition() {
+        const button = this.backToTodayButton;
+        const container = this.element;
+        if (!button || button.hidden || !container) return;
+        const BOTTOM_GAP = 12;
+        button.style.top = `${container.scrollTop + container.clientHeight - button.offsetHeight - BOTTOM_GAP}px`;
     }
 
     /**
@@ -95,9 +170,15 @@ export class TimelineComponent extends Component {
      */
     _setupCalendarFilter(container) {
         this.calendarFilter = new TimelineCalendarFilter({
-            onCalendarChange: this.onCalendarChange
+            onCalendarChange: this.onCalendarChange,
+            onManageCalendars: this.onManageCalendars
         });
-        this.calendarFilter.attachTo(container);
+        const mount = this.getFilterMount?.();
+        if (mount) {
+            this.calendarFilter.mountIn(mount);
+        } else {
+            this.calendarFilter.attachTo(container);
+        }
     }
 
     /**
@@ -180,6 +261,8 @@ export class TimelineComponent extends Component {
                             }
                         }
                         this._updateHourLabels();
+                        // The time in the current-time pill follows the format too
+                        this.currentTimeLineManager?.update();
                     })
                     .catch(() => {
                         this._updateHourLabels();
@@ -202,17 +285,7 @@ export class TimelineComponent extends Component {
         if (!this.hourLabels || this.hourLabels.length !== 25) return;
 
         for (let hour = 0; hour <= 24; hour++) {
-            const hh = hour.toString().padStart(2, '0');
-            const timeStr = `${hh}:00`;
-
-            let localized = null;
-            try {
-                localized = window.formatTime(timeStr, { format: this.timeFormat, locale: this.locale });
-            } catch (_) {
-                // ignore
-            }
-
-            this.hourLabels[hour].textContent = localized || timeStr;
+            this.hourLabels[hour].textContent = formatHourLabel(hour, this.timeFormat, this.locale);
         }
     }
 
@@ -247,9 +320,29 @@ export class TimelineComponent extends Component {
      */
     _setupCurrentTimeLine() {
         if (!this.currentTimeLineManager) {
-            this.currentTimeLineManager = new CurrentTimeLineManager(this.baseLayer, this.currentDate);
+            // On the events layer so the line runs over the blocks
+            this.currentTimeLineManager = new CurrentTimeLineManager(this.eventsLayer, this.currentDate, {
+                formatLabel: (now) => formatStartTime(
+                    `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
+                    this.timeFormat
+                ),
+                onTick: (now) => this.markPastEvents(now)
+            });
         }
         this.currentTimeLineManager.update();
+    }
+
+    /**
+     * Fade the events that have ended (today only; the renderers mark them
+     * when they are drawn, and this keeps the marks current as time passes).
+     * @param {Date} now
+     */
+    markPastEvents(now) {
+        if (!this.eventsLayer || !now || this.currentDate.toDateString() !== now.toDateString()) return;
+        const nowMs = now.getTime();
+        this.eventsLayer.querySelectorAll('.event[data-end-ms]').forEach((el) => {
+            el.classList.toggle('is-past', Number(el.dataset.endMs) <= nowMs);
+        });
     }
 
     /**
@@ -270,9 +363,10 @@ export class TimelineComponent extends Component {
      * Set work time background
      * @param {string} startTime Start time (HH:MM format)
      * @param {string} endTime End time (HH:MM format)
-     * @param {string} color Background color
+     * @param {string} [color] Background color; the theme's work-time colour
+     *   when omitted
      */
-    setWorkTimeBackground(startTime, endTime, color = '#f8f9fa') {
+    setWorkTimeBackground(startTime, endTime, color) {
         // Remove the existing work time background
         const existingBg = this.baseLayer?.querySelector('.work-time-background');
         if (existingBg) {
@@ -298,7 +392,9 @@ export class TimelineComponent extends Component {
             background.className = 'work-time-background';
             background.style.top = `${startMinutes}px`;
             background.style.height = `${endMinutes - startMinutes}px`;
-            background.style.backgroundColor = color;
+            if (color) {
+                background.style.backgroundColor = color;
+            }
 
             this.baseLayer?.appendChild(background);
         } catch (error) {
@@ -321,6 +417,7 @@ export class TimelineComponent extends Component {
      */
     setCurrentDate(date) {
         this.currentDate = date;
+        this._updateBackToToday();
 
         // Set the date for CurrentTimeLineManager as well
         if (this.currentTimeLineManager) {
@@ -630,6 +727,14 @@ export class TimelineComponent extends Component {
             this.eventsLayer?.removeEventListener('mousedown', this._boundMouseDown);
             this._boundMouseDown = null;
         }
+
+        if (this._boundSyncBackToToday) {
+            this.element?.removeEventListener('scroll', this._boundSyncBackToToday);
+            this._boundSyncBackToToday = null;
+        }
+        this._backToTodayObserver?.disconnect();
+        this._backToTodayObserver = null;
+        this.backToTodayButton = null;
 
         // Destroy the calendar filter
         if (this.calendarFilter) {

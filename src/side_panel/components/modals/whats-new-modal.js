@@ -1,7 +1,11 @@
 /**
  * WhatsNewModal - Modal to display release notes and update highlights
+ *
+ * Laid out like the event dialogs: a sticky header (title, close), the notes
+ * scrolling between it and a sticky footer ("don't show again", OK).
  */
 import { ModalComponent } from './modal-component.js';
+import { createButton, createCloseButton, setLocalizedText } from './event-dialog-dom.js';
 import { RELEASE_NOTES, getUnseenReleaseNotes } from '../../../lib/release-notes.js';
 import { StorageHelper } from '../../../lib/storage-helper.js';
 import { saveSettings } from '../../../lib/settings-storage.js';
@@ -24,50 +28,67 @@ export class WhatsNewModal extends ModalComponent {
         const content = document.createElement('div');
         content.className = 'whats-new-content';
 
-        // Title
+        const header = document.createElement('header');
+        header.className = 'event-form-header';
         const title = document.createElement('h2');
-        title.className = 'modal-title';
-        title.setAttribute('data-localize', '__MSG_whatsNewTitle__');
-        title.textContent = window.getLocalizedMessage('whatsNewTitle') || "What's New";
-        content.appendChild(title);
+        title.className = 'event-form-title';
+        title.id = 'whatsNewTitle';
+        header.appendChild(setLocalizedText(title, 'whatsNewTitle', "What's New"));
+        header.appendChild(createCloseButton(this, () => this.hide()));
+        content.appendChild(header);
 
-        // Release notes container (populated dynamically)
+        // Release notes (populated dynamically)
         this.contentContainer = document.createElement('div');
         this.contentContainer.className = 'whats-new-notes';
         content.appendChild(this.contentContainer);
 
-        // "Don't show again" checkbox
-        const dontShowWrapper = document.createElement('div');
-        dontShowWrapper.className = 'form-check whats-new-dont-show-again';
+        const footer = document.createElement('footer');
+        footer.className = 'event-form-footer whats-new-footer';
+
+        // "Don't show again" beside the button; the label may wrap in a
+        // narrow panel, so the footer grows rather than clipping it
+        const dontShow = document.createElement('label');
+        dontShow.className = 'whats-new-dont-show-again';
+        dontShow.htmlFor = 'whatsNewDontShowAgainToggle';
 
         this.dontShowAgainCheckbox = document.createElement('input');
         this.dontShowAgainCheckbox.type = 'checkbox';
-        this.dontShowAgainCheckbox.className = 'form-check-input';
+        this.dontShowAgainCheckbox.className = 'event-form-check-input';
         this.dontShowAgainCheckbox.id = 'whatsNewDontShowAgainToggle';
+        dontShow.appendChild(this.dontShowAgainCheckbox);
+        dontShow.appendChild(setLocalizedText(
+            document.createElement('span'), 'whatsNewDontShowAgain', "Don't show this again on updates"
+        ));
+        footer.appendChild(dontShow);
 
-        const dontShowLabel = document.createElement('label');
-        dontShowLabel.className = 'form-check-label';
-        dontShowLabel.htmlFor = 'whatsNewDontShowAgainToggle';
-        dontShowLabel.setAttribute('data-localize', '__MSG_whatsNewDontShowAgain__');
-        dontShowLabel.textContent = window.getLocalizedMessage('whatsNewDontShowAgain') || "Don't show this again on updates";
-
-        dontShowWrapper.appendChild(this.dontShowAgainCheckbox);
-        dontShowWrapper.appendChild(dontShowLabel);
-        content.appendChild(dontShowWrapper);
-
-        // Confirm button
-        this.confirmButton = document.createElement('button');
-        this.confirmButton.className = 'btn btn-primary whats-new-confirm-btn';
-        this.confirmButton.setAttribute('data-localize', '__MSG_whatsNewConfirm__');
-        this.confirmButton.textContent = window.getLocalizedMessage('whatsNewConfirm') || 'Got it';
-        content.appendChild(this.confirmButton);
-
-        // Event listeners
-        this.addEventListener(this.confirmButton, 'click', () => {
-            this.hide();
+        this.confirmButton = createButton(this, {
+            variant: 'primary',
+            msgKey: 'whatsNewConfirm',
+            fallback: 'Got it',
+            onClick: () => this.hide()
         });
+        this.confirmButton.classList.add('whats-new-confirm-btn');
+        footer.appendChild(this.confirmButton);
+        content.appendChild(footer);
 
         return content;
+    }
+
+    createElement() {
+        const element = super.createElement();
+        element.setAttribute('role', 'dialog');
+        element.setAttribute('aria-modal', 'true');
+        element.setAttribute('aria-labelledby', 'whatsNewTitle');
+        return element;
+    }
+
+    /**
+     * Focus the OK button rather than the checkbox, which is the base
+     * modal's "first input" and would open with a focus ring on it.
+     * @private
+     */
+    _focusFirstInput() {
+        setTimeout(() => this.confirmButton?.focus(), 100);
     }
 
     /**

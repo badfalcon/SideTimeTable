@@ -51,7 +51,10 @@ export class GoogleEventRenderer {
         }
 
         chip.title = title;
-        chip.textContent = title;
+        const titleSpan = document.createElement('span');
+        titleSpan.className = 'all-day-event-chip-title';
+        titleSpan.textContent = title;
+        chip.appendChild(titleSpan);
 
         if (dayCount > 1) {
             const badge = document.createElement('span');
@@ -71,10 +74,10 @@ export class GoogleEventRenderer {
             chip.dataset.eventId = event.id;
         }
 
-        // Apply Google Calendar colors
+        // The calendar's colour tints the chip (see .has-calendar-color)
         if (config.useGoogleCalendarColors && event.calendarBackgroundColor) {
-            chip.style.backgroundColor = event.calendarBackgroundColor;
-            chip.style.color = event.calendarForegroundColor || '';
+            chip.style.setProperty('--event-color', event.calendarBackgroundColor);
+            chip.classList.add('has-calendar-color');
         }
 
         // Open modal on click
@@ -120,7 +123,8 @@ export class GoogleEventRenderer {
             endDate,
             cssClass,
             tooltip: title,
-            initialWidth: config.maxWidth
+            initialWidth: config.maxWidth,
+            displayDate: config.currentTargetDate
         });
 
         // Add time information to data attributes
@@ -133,28 +137,21 @@ export class GoogleEventRenderer {
             eventDiv.dataset.eventId = event.id;
         }
 
-        // Save the event detail data
-        eventDiv.dataset.description = event.description || '';
-        eventDiv.dataset.location = event.location || '';
-        eventDiv.dataset.hangoutLink = event.hangoutLink || '';
 
         // Add the click event
         onClickOnly(eventDiv, () => {
             if (config.onEventClick) config.onEventClick(event);
         });
 
-        // Apply the Google colors directly (unless disabled by user setting)
+        // The calendar's colour tints the block and its text
+        // (unless disabled by user setting; see .has-calendar-color)
         if (config.useGoogleCalendarColors && event.calendarBackgroundColor) {
-            if (options.isOutOfOffice) {
-                eventDiv.style.setProperty('--side-calendar-ooo-color', event.calendarBackgroundColor);
-            } else {
-                eventDiv.style.backgroundColor = event.calendarBackgroundColor;
-                eventDiv.style.color = event.calendarForegroundColor;
-            }
+            eventDiv.style.setProperty('--event-color', event.calendarBackgroundColor);
+            eventDiv.classList.add('has-calendar-color');
         }
 
         // Set the locale-aware time display asynchronously
-        await this._setEventContentWithLocale(eventDiv, startDate, title, event);
+        await this._setEventContentWithLocale(eventDiv, startDate, endDate, title, event, options);
 
         return { element: eventDiv, startTime: startDate, endTime: endDate };
     }
@@ -163,53 +160,27 @@ export class GoogleEventRenderer {
      * Set event content with locale-aware time display
      * @param {HTMLElement} eventDiv - The event element
      * @param {Date} startDate - The start time
+     * @param {Date} endDate - The end time
      * @param {string} summary - The event title
      * @param {Object} event - The full event information
+     * @param {Object} options - Rendering options (isOutOfOffice)
      * @private
      */
-    async _setEventContentWithLocale(eventDiv, startDate, summary, event) {
+    async _setEventContentWithLocale(eventDiv, startDate, endDate, summary, event, options = {}) {
         const [locale, timeFormat] = await resolveLocaleSettings();
+        const hhmm = (date) => `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+        const parts = {
+            title: summary,
+            start: hhmm(startDate),
+            end: hhmm(endDate),
+            location: event.location || '',
+            iconClass: options.isOutOfOffice ? 'fa-solid fa-plane-departure' : '',
+            timeFormat,
+            locale
+        };
 
-        // Build HH:mm
-        const startHours = String(startDate.getHours()).padStart(2, '0');
-        const startMinutes = String(startDate.getMinutes()).padStart(2, '0');
-        const timeString = `${startHours}:${startMinutes}`;
-
-        const formattedTime = window.formatTime(timeString, { format: timeFormat, locale });
-
-        // Display time and title without attendance status
         eventDiv.innerHTML = '';
-
-        // Primary line: time + title (via factory)
-        const primaryLine = EventElementFactory.createPrimaryLine(formattedTime, summary);
-        eventDiv.appendChild(primaryLine);
-
-        // Detail lines for larger blocks
-        if (eventDiv.classList.contains('event-detailed')) {
-            if (event.location) {
-                const locationLine = document.createElement('div');
-                locationLine.className = 'event-detail-line';
-                const icon = document.createElement('i');
-                icon.className = 'fa-solid fa-location-dot';
-                icon.setAttribute('aria-hidden', 'true');
-                locationLine.appendChild(icon);
-                const text = document.createElement('span');
-                text.textContent = event.location;
-                locationLine.appendChild(text);
-                eventDiv.appendChild(locationLine);
-            }
-            if (event.description) {
-                const descLine = document.createElement('div');
-                descLine.className = 'event-detail-line';
-                const icon = document.createElement('i');
-                icon.className = 'fa-solid fa-align-left';
-                icon.setAttribute('aria-hidden', 'true');
-                descLine.appendChild(icon);
-                const text = document.createElement('span');
-                text.textContent = event.description.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-                descLine.appendChild(text);
-                eventDiv.appendChild(descLine);
-            }
-        }
+        eventDiv.appendChild(EventElementFactory.createEventBody(parts));
+        eventDiv.title = EventElementFactory.buildTooltip(parts);
     }
 }

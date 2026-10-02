@@ -6,7 +6,37 @@
  *
  * All data and DOM elements are passed directly as method parameters —
  * the renderer holds no references to external state.
+ *
+ * Rows read like the side panel's calendar filter: colour, name, then the
+ * checkbox on the right. A group header folds its calendars and carries the
+ * group's checkbox in the same column.
  */
+import { createIcon, createIconButton, createNotice, msg } from '../base/settings-dom.js';
+
+/**
+ * A checkbox for the calendar list.
+ * @param {string} label - Accessible name
+ * @returns {HTMLInputElement}
+ */
+function createListCheckbox(label) {
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.className = 'calendar-checkbox';
+    checkbox.setAttribute('aria-label', label || '');
+    return checkbox;
+}
+
+/**
+ * The number of calendars under a group header.
+ * @param {number} count
+ * @returns {HTMLElement}
+ */
+function createCount(count) {
+    const badge = document.createElement('span');
+    badge.className = 'group-count';
+    badge.textContent = String(count);
+    return badge;
+}
 
 export class CalendarListRenderer {
     /**
@@ -50,9 +80,7 @@ export class CalendarListRenderer {
         header.dataset.groupId = group.id;
 
         // Group checkbox
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.className = 'form-check-input';
+        const checkbox = createListCheckbox(group.name);
 
         // Determine check state using full group membership
         const fullGroupIds = group.calendarIds.filter(id =>
@@ -74,12 +102,8 @@ export class CalendarListRenderer {
             checkbox.setAttribute('aria-checked', 'mixed');
         }
 
-        checkbox.setAttribute('aria-label', group.name);
-
         // Collapse icon
-        const collapseIcon = document.createElement('i');
-        collapseIcon.className = `fas fa-chevron-down group-collapse-icon${group.collapsed ? ' collapsed' : ''}`;
-        collapseIcon.setAttribute('aria-hidden', 'true');
+        const collapseIcon = createIcon(`fas fa-chevron-down group-collapse-icon${group.collapsed ? ' collapsed' : ''}`);
 
         // Group name
         const nameSpan = document.createElement('span');
@@ -90,19 +114,11 @@ export class CalendarListRenderer {
         const actions = document.createElement('div');
         actions.className = 'group-actions';
 
-        const editBtn = document.createElement('button');
-        editBtn.type = 'button';
+        const editBtn = createIconButton({ icon: 'fas fa-pen', labelKey: 'editGroup', labelFallback: 'Edit' });
         editBtn.dataset.groupEdit = group.id;
-        editBtn.title = window.getLocalizedMessage('editGroup') || 'Edit';
-        editBtn.setAttribute('aria-label', editBtn.title);
-        editBtn.innerHTML = '<i class="fas fa-pencil-alt"></i>';
 
-        const deleteBtn = document.createElement('button');
-        deleteBtn.type = 'button';
+        const deleteBtn = createIconButton({ icon: 'fas fa-trash-can', labelKey: 'deleteGroup', labelFallback: 'Delete' });
         deleteBtn.dataset.groupDelete = group.id;
-        deleteBtn.title = window.getLocalizedMessage('deleteGroup') || 'Delete';
-        deleteBtn.setAttribute('aria-label', deleteBtn.title);
-        deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
 
         actions.appendChild(editBtn);
         actions.appendChild(deleteBtn);
@@ -110,10 +126,11 @@ export class CalendarListRenderer {
         header.setAttribute('role', 'button');
         header.setAttribute('tabindex', '0');
         header.setAttribute('aria-expanded', group.collapsed ? 'false' : 'true');
-        header.appendChild(checkbox);
         header.appendChild(collapseIcon);
         header.appendChild(nameSpan);
+        header.appendChild(createCount(fullGroupIds.length));
         header.appendChild(actions);
+        header.appendChild(checkbox);
 
         return header;
     }
@@ -130,25 +147,18 @@ export class CalendarListRenderer {
         header.className = 'calendar-group-header';
         header.dataset.groupId = '__ungrouped__';
 
-        const collapseIcon = document.createElement('i');
-        collapseIcon.className = 'fas fa-chevron-down group-collapse-icon';
-        collapseIcon.setAttribute('aria-hidden', 'true');
+        const collapseIcon = createIcon('fas fa-chevron-down group-collapse-icon');
 
         const nameSpan = document.createElement('span');
         nameSpan.className = 'group-name';
-        nameSpan.textContent = window.getLocalizedMessage('ungrouped') || 'Ungrouped';
-
-        // Spacer to align with grouped headers that have a checkbox
-        const spacer = document.createElement('span');
-        spacer.className = 'group-checkbox-spacer';
-        spacer.setAttribute('aria-hidden', 'true');
+        nameSpan.textContent = msg('ungrouped', 'Ungrouped');
 
         header.setAttribute('role', 'button');
         header.setAttribute('tabindex', '0');
         header.setAttribute('aria-expanded', 'true');
-        header.appendChild(spacer);
         header.appendChild(collapseIcon);
         header.appendChild(nameSpan);
+        header.appendChild(createCount(calendars.length));
         section.appendChild(header);
 
         const body = document.createElement('div');
@@ -169,55 +179,48 @@ export class CalendarListRenderer {
      */
     createCalendarItem(calendar, isSelected, calendarGroups) {
         const item = document.createElement('div');
-        item.className = 'list-group-item d-flex align-items-center py-2';
+        item.className = 'calendar-item';
         item.dataset.calendarId = calendar.id;
 
-        // The checkbox
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.className = 'form-check-input me-3';
-        checkbox.checked = isSelected;
-        checkbox.setAttribute('aria-label', calendar.summary || '');
+        // The colour (the calendar's own, so set from data)
+        const colorIndicator = document.createElement('span');
+        colorIndicator.className = 'calendar-color-indicator';
+        colorIndicator.setAttribute('aria-hidden', 'true');
+        if (calendar.backgroundColor) {
+            colorIndicator.style.setProperty('--calendar-color', calendar.backgroundColor);
+        }
 
+        // The name, and "Primary" for the main calendar (always shown)
+        const name = document.createElement('span');
+        name.className = 'calendar-name';
+        name.textContent = calendar.summary;
+        if (calendar.primary) {
+            item.classList.add('is-primary');
+            const badge = document.createElement('span');
+            badge.className = 'calendar-primary-badge';
+            badge.setAttribute('data-localize', '__MSG_primaryCalendar__');
+            badge.textContent = msg('primaryCalendar', 'Primary');
+            name.appendChild(badge);
+        }
+
+        // The checkbox, on the right
+        const checkbox = createListCheckbox(calendar.summary);
+        checkbox.checked = isSelected;
         if (calendar.primary) {
             checkbox.disabled = true;
             checkbox.checked = true;
         }
 
-        // The calendar information
-        const info = document.createElement('div');
-        info.className = 'flex-grow-1';
-
-        const name = document.createElement('div');
-        name.className = 'fw-bold';
-        name.textContent = calendar.summary;
-        if (calendar.primary) {
-            name.classList.add('text-primary');
-        }
-
-        info.appendChild(name);
+        item.appendChild(colorIndicator);
+        item.appendChild(name);
 
         // Group assign button (only if groups exist)
-        const assignBtn = document.createElement('button');
-        assignBtn.type = 'button';
-        assignBtn.className = 'calendar-group-assign-btn';
-        assignBtn.title = window.getLocalizedMessage('assignToGroups') || 'Assign to groups';
-        assignBtn.setAttribute('aria-label', assignBtn.title);
-        assignBtn.innerHTML = '<i class="fas fa-folder"></i>';
-
-        // The color indicator
-        const colorIndicator = document.createElement('div');
-        colorIndicator.className = 'calendar-color-indicator me-2';
-        if (calendar.backgroundColor) {
-            colorIndicator.style.backgroundColor = calendar.backgroundColor;
-        }
-
-        item.appendChild(checkbox);
-        item.appendChild(info);
         if (calendarGroups.length > 0 && !calendar.primary) {
+            const assignBtn = createIconButton({ icon: 'fas fa-folder', labelKey: 'assignToGroups', labelFallback: 'Assign to groups' });
+            assignBtn.classList.add('calendar-group-assign-btn');
             item.appendChild(assignBtn);
         }
-        item.appendChild(colorIndicator);
+        item.appendChild(checkbox);
 
         return item;
     }
@@ -227,10 +230,11 @@ export class CalendarListRenderer {
      */
     setLoading(loading, loadingIndicator, refreshBtn) {
         if (loadingIndicator) {
-            loadingIndicator.style.display = loading ? 'block' : 'none';
+            loadingIndicator.textContent = loading ? msg('screenReaderLoading', 'Loading...') : '';
         }
         if (refreshBtn) {
             refreshBtn.disabled = loading;
+            refreshBtn.querySelector('i')?.classList.toggle('fa-spin', loading);
         }
     }
 
@@ -249,7 +253,7 @@ export class CalendarListRenderer {
         const noResultsMsg = window.getLocalizedMessage('noSearchResults') || 'No search results found';
         calendarList.innerHTML = '';
         const div = document.createElement('div');
-        div.className = 'text-muted text-center p-3';
+        div.className = 'settings-empty';
         div.textContent = noResultsMsg;
         calendarList.appendChild(div);
         noCalendarsMsg.style.display = 'none';
@@ -267,7 +271,7 @@ export class CalendarListRenderer {
      */
     updateSearchUI(searchTerm, clearSearchBtn) {
         if (clearSearchBtn) {
-            clearSearchBtn.style.display = searchTerm ? 'block' : 'none';
+            clearSearchBtn.hidden = !searchTerm;
         }
     }
 
@@ -275,20 +279,7 @@ export class CalendarListRenderer {
      * Show error
      */
     showError(message, calendarList) {
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'alert alert-danger alert-dismissible fade show';
-
-        const strong = document.createElement('strong');
-        strong.textContent = (window.getLocalizedMessage('errorLabel') || 'Error') + ': ';
-        errorDiv.appendChild(strong);
-        errorDiv.appendChild(document.createTextNode(message));
-
-        const closeBtn = document.createElement('button');
-        closeBtn.type = 'button';
-        closeBtn.className = 'btn-close';
-        closeBtn.setAttribute('data-bs-dismiss', 'alert');
-        closeBtn.setAttribute('aria-label', window.getLocalizedMessage('close') || 'Close');
-        errorDiv.appendChild(closeBtn);
+        const errorDiv = createNotice({ content: message, tone: 'danger' });
 
         if (calendarList?.parentElement) {
             calendarList.parentElement.insertBefore(errorDiv, calendarList);

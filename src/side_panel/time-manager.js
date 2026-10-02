@@ -13,6 +13,7 @@ const LAYOUT_CONSTANTS = {
     DEFAULT_WIDTH: 200,      // The default maximum width (px)
     MIN_CONTENT_WIDTH: 20,   // The minimum content width (px)
     MIN_DISPLAY_WIDTH: 100,   // The threshold for the title-only display (px)
+    WIDE_DISPLAY_WIDTH: 200,  // From this width, time and place share one line (px)
     Z_INDEX: 21,             // The Z-index for the events
 
     // The thresholds by the number of lanes
@@ -465,6 +466,21 @@ export class EventLayoutManager {
         event.element.style.zIndex = LAYOUT_CONSTANTS.Z_INDEX;
         event.element.style.padding = '';
         event.element.classList.remove('compact', 'micro', 'narrow-display');
+        this._applyWideDisplay(event.element, this.maxWidth);
+    }
+
+    /**
+     * Wide lanes put the time and the place on one line.
+     * @param {HTMLElement} element
+     * @param {number} width - The lane width (px)
+     * @private
+     */
+    _applyWideDisplay(element, width) {
+        if (width >= LAYOUT_CONSTANTS.WIDE_DISPLAY_WIDTH) {
+            element.classList.add('wide-display');
+        } else {
+            element.classList.remove('wide-display');
+        }
     }
 
     /**
@@ -511,6 +527,7 @@ export class EventLayoutManager {
                 } else {
                     event.element.classList.remove('narrow-display');
                 }
+                this._applyWideDisplay(event.element, laneWidth);
             });
         } catch (error) {
             console.error('Error occurred while applying event layout:', error);

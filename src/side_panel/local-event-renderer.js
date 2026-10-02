@@ -40,8 +40,9 @@ export class LocalEventRenderer {
             startDate,
             endDate,
             cssClass: 'event local-event',
-            tooltip: event.description ? `${title}\n${event.description}` : title,
-            initialWidth: config.maxWidth
+            tooltip: title,
+            initialWidth: config.maxWidth,
+            displayDate: config.currentTargetDate
         });
 
         // Add time information to data attributes
@@ -57,7 +58,7 @@ export class LocalEventRenderer {
         const isRecurring = event.isRecurringInstance || (event.recurrence && event.recurrence.type !== RECURRENCE_TYPES.NONE);
 
         // Set locale-aware time display asynchronously
-        await this._setLocalEventContentWithLocale(eventDiv, startTime, endTime, title, isRecurring, event);
+        await this._setLocalEventContentWithLocale(eventDiv, startTime, endTime, title, isRecurring);
 
         // Setup the edit functionality
         this._setupEventEdit(eventDiv, event, config.onEventClick);
@@ -72,43 +73,22 @@ export class LocalEventRenderer {
      * @param {string} endTime - The end time (HH:mm format)
      * @param {string} title - The event title
      * @param {boolean} isRecurring - Whether this is a recurring event
-     * @param {Object} event - The full event object
      * @private
      */
-    async _setLocalEventContentWithLocale(eventDiv, startTime, endTime, title, isRecurring = false, event = {}) {
+    async _setLocalEventContentWithLocale(eventDiv, startTime, endTime, title, isRecurring = false) {
         const [locale, timeFormat] = await resolveLocaleSettings();
+        const parts = {
+            title,
+            start: startTime,
+            end: endTime,
+            iconClass: isRecurring ? 'fa-solid fa-repeat' : '',
+            timeFormat,
+            locale
+        };
 
-        const formattedStart = window.formatTime(startTime, { format: timeFormat, locale });
-
-        // Clear existing content
         eventDiv.innerHTML = '';
-
-        // Primary line: time + title (via factory, then prepend recurrence icon if needed)
-        const primaryLine = EventElementFactory.createPrimaryLine(formattedStart, title);
-
-        // Add recurrence indicator if this is a recurring event
-        if (isRecurring) {
-            const icon = document.createElement('i');
-            icon.className = 'fa-solid fa-repeat';
-            icon.style.cssText = 'margin-right: 4px; font-size: 0.85em;';
-            primaryLine.insertBefore(icon, primaryLine.firstChild);
-        }
-
-        eventDiv.appendChild(primaryLine);
-
-        // Detail lines for larger blocks
-        if (eventDiv.classList.contains('event-detailed') && event.description) {
-            const descLine = document.createElement('div');
-            descLine.className = 'event-detail-line';
-            const icon = document.createElement('i');
-            icon.className = 'fa-solid fa-align-left';
-            icon.setAttribute('aria-hidden', 'true');
-            descLine.appendChild(icon);
-            const text = document.createElement('span');
-            text.textContent = event.description;
-            descLine.appendChild(text);
-            eventDiv.appendChild(descLine);
-        }
+        eventDiv.appendChild(EventElementFactory.createEventBody(parts));
+        eventDiv.title = EventElementFactory.buildTooltip(parts);
     }
 
     /**

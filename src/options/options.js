@@ -30,6 +30,9 @@ import {
     ExtensionInfoCard,
     ControlButtonsComponent
 } from './components/index.js';
+import { createIcon, createNotice, msg } from './components/base/settings-dom.js';
+import { setupSettingsTabs } from './settings-tabs.js';
+import { refreshDisplayPrefs } from '../lib/display-prefs.js';
 
 /**
  * OptionsPageManager - The overall options page management class
@@ -60,6 +63,16 @@ class OptionsPageManager {
         const tabDisplay = document.getElementById('tab-display');
         const tabGeneral = document.getElementById('tab-general');
         const tabDeveloper = document.getElementById('tab-developer');
+
+        // The version beside the page title
+        const versionLabel = document.getElementById('settings-version');
+        if (versionLabel) {
+            try {
+                versionLabel.textContent = `v${chrome.runtime.getManifest().version}`;
+            } catch {
+                versionLabel.textContent = '';
+            }
+        }
         const controlContainer = document.getElementById('control-buttons-container');
 
         // --- Google Calendar タブ ---
@@ -155,7 +168,7 @@ class OptionsPageManager {
 
                 // nav-pills の Developer ボタンを表示
                 const devBtn = document.getElementById('tab-developer-btn');
-                if (devBtn) devBtn.classList.remove('d-none');
+                if (devBtn) devBtn.hidden = false;
             }
         } catch (e) {
             console.warn('Failed to read developer features flags:', e);
@@ -296,7 +309,7 @@ class OptionsPageManager {
         const demoSettings = getDemoOptionsSettings();
         this.calendarManagementCard.allCalendars = demoCalendars;
         this.calendarManagementCard.selectedCalendarIds = demoSettings.selectedCalendars;
-        this.calendarManagementCard.calendarGroups = getDemoCalendarGroups();
+        this.calendarManagementCard.calendarGroups = await getDemoCalendarGroups();
         this.calendarManagementCard.hasAutoFetched = true;
         this.calendarManagementCard.show();
         this.calendarManagementCard.render();
@@ -597,39 +610,28 @@ class OptionsPageManager {
             existingNotice.remove();
         }
 
-        // Create a notification message
-        const notice = document.createElement('div');
-        notice.className = 'alert alert-warning alert-dismissible fade show manual-revoke-notice mt-3';
-        const manualRevokeTitle = window.getLocalizedMessage('manualRevokeTitle') || 'Additional steps are required for complete disconnection';
-        const manualRevokeDescription = window.getLocalizedMessage('manualRevokeDescription') || 'We have removed the token from the extension, but to completely disconnect, please manually revoke permission in your Google account settings.';
-        const openGoogleAccountSettings = window.getLocalizedMessage('openGoogleAccountSettings') || 'Open Google Account Settings';
-        notice.innerHTML = `
-            <div class="d-flex align-items-start">
-                <i class="fas fa-exclamation-triangle me-2 mt-1"></i>
-                <div class="flex-grow-1">
-                    <strong>${manualRevokeTitle}</strong><br>
-                    <small class="text-muted">
-                        ${manualRevokeDescription}
-                    </small>
-                    <div class="mt-2">
-                        <a href="" target="_blank" class="btn btn-sm btn-outline-primary revoke-link">
-                            <i class="fas fa-external-link-alt me-1"></i>
-                            ${openGoogleAccountSettings}
-                        </a>
-                    </div>
-                </div>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        `;
-        const link = notice.querySelector('.revoke-link');
-        if (link) {
-            link.href = revokeUrl;
-        }
+        // Create a notification message: what is left to do, and the link
+        const content = document.createElement('div');
+        const title = document.createElement('strong');
+        title.className = 'settings-notice-title';
+        title.textContent = msg('manualRevokeTitle', 'Additional steps are required for complete disconnection');
+        const description = document.createElement('p');
+        description.className = 'settings-notice-text';
+        description.textContent = msg('manualRevokeDescription', 'We have removed the token from the extension, but to completely disconnect, please manually revoke permission in your Google account settings.');
+        const link = document.createElement('a');
+        link.className = 'settings-btn revoke-link';
+        link.href = revokeUrl;
+        link.target = '_blank';
+        link.rel = 'noopener';
+        link.appendChild(createIcon('fas fa-arrow-up-right-from-square'));
+        link.appendChild(document.createTextNode(msg('openGoogleAccountSettings', 'Open Google Account settings')));
+        content.append(title, description, link);
+        const notice = createNotice({ content, tone: 'info', className: 'manual-revoke-notice' });
 
-        // Insert after the first card
-        const firstCard = document.querySelector('.card');
-        if (firstCard && firstCard.parentNode) {
-            firstCard.parentNode.insertBefore(notice, firstCard.nextSibling);
+        // Inside the Google card, under its status
+        const googleCardBody = document.querySelector('#tab-google .settings-card .settings-card-body');
+        if (googleCardBody) {
+            googleCardBody.appendChild(notice);
         } else {
             document.body.appendChild(notice);
         }
@@ -653,6 +655,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.warn('Error in localization process:', error);
         }
     }
+
+    // Sections: one panel at a time
+    setupSettingsTabs(document.getElementById('settings-tablist'));
+
+    // The language and 12/24-hour setting the time fields write times in
+    await refreshDisplayPrefs();
 
     // Initialize the new component-based options page manager
     const optionsPageManager = new OptionsPageManager();

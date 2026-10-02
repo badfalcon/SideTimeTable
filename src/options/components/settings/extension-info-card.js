@@ -2,71 +2,58 @@
  * ExtensionInfoCard - Extension information card component
  */
 import { CardComponent } from '../base/card-component.js';
+import { createIconButton, createSettingRow, msg } from '../base/settings-dom.js';
 
 export class ExtensionInfoCard extends CardComponent {
     constructor() {
         super({
             id: 'extension-info-card',
-            title: window.getLocalizedMessage('extensionInfoCardTitle') || 'Extension Info',
-            subtitle: window.getLocalizedMessage('extensionInfoCardSubtitle') || 'Information about this extension.',
-            icon: 'fas fa-info-circle',
-            iconColor: 'text-secondary',
+            title: msg('extensionInfoCardTitle', 'Extension info'),
+            titleLocalize: '__MSG_extensionInfoCardTitle__',
+            subtitle: msg('extensionInfoCardSubtitle', 'Information about this extension.'),
+            subtitleLocalize: '__MSG_extensionInfoCardSubtitle__',
+            icon: 'fas fa-circle-info',
             hidden: true
         });
     }
 
     createElement() {
         const card = super.createElement();
-        this.addContent(this._createInfoSection());
+
+        const manifest = chrome.runtime?.getManifest?.() || {};
+        const unknown = msg('unknown', 'Unknown');
+        [
+            { key: 'extensionIdLabel', fallback: 'Extension ID', value: chrome.runtime?.id || msg('cannotRetrieve', 'Cannot retrieve'), copyable: !!chrome.runtime?.id },
+            { key: 'manifestVersionLabel', fallback: 'Manifest version', value: manifest.manifest_version || unknown },
+            { key: 'versionLabel', fallback: 'Version', value: manifest.version || unknown }
+        ].forEach(item => this.addContent(this._createInfoRow(item)));
+
         return card;
     }
 
-    _createInfoSection() {
-        const infoList = document.createElement('div');
-        infoList.className = 'small';
+    /**
+     * One fact: its name on the left, the value (and a copy button) on the right
+     * @private
+     */
+    _createInfoRow({ key, fallback, value, copyable }) {
+        const valueEl = document.createElement('span');
+        valueEl.className = 'settings-mono';
+        valueEl.textContent = String(value);
 
-        const manifest = chrome.runtime?.getManifest?.() || {};
-        const infoItems = [
-            { label: window.getLocalizedMessage('extensionIdLabel') || 'Extension ID', value: chrome.runtime?.id || (window.getLocalizedMessage('cannotRetrieve') || 'Cannot retrieve'), copyable: true },
-            { label: window.getLocalizedMessage('manifestVersionLabel') || 'Manifest Version', value: manifest.manifest_version || (window.getLocalizedMessage('unknown') || 'Unknown') },
-            { label: window.getLocalizedMessage('versionLabel') || 'Version', value: manifest.version || (window.getLocalizedMessage('unknown') || 'Unknown') }
-        ];
-
-        infoItems.forEach(item => infoList.appendChild(this._createInfoRow(item)));
-        return infoList;
-    }
-
-    _createInfoRow(item) {
-        const row = document.createElement('div');
-        row.className = 'd-flex justify-content-between align-items-center py-1 border-bottom gap-2';
-
-        const label = document.createElement('span');
-        label.className = 'fw-semibold';
-        label.textContent = item.label + ':';
-
-        const valueContainer = document.createElement('div');
-        valueContainer.className = 'd-flex align-items-center gap-2';
-
-        const value = document.createElement('code');
-        value.className = 'small';
-        value.textContent = String(item.value);
-        valueContainer.appendChild(value);
-
-        if (item.copyable) {
-            const copyBtn = document.createElement('button');
-            copyBtn.type = 'button';
-            copyBtn.className = 'btn btn-outline-secondary btn-sm';
-            copyBtn.innerHTML = '<i class="fas fa-copy"></i>';
-            copyBtn.title = window.getLocalizedMessage('copyToClipboard') || 'Copy to clipboard';
+        const control = [valueEl];
+        if (copyable) {
+            const copyBtn = createIconButton({
+                icon: 'fas fa-copy',
+                labelKey: 'copyToClipboard',
+                labelFallback: 'Copy to clipboard'
+            });
             copyBtn.addEventListener('click', () => {
-                this._copyToClipboard(item.value);
+                this._copyToClipboard(String(value));
                 this._showCopyNotification(copyBtn);
             });
-            valueContainer.appendChild(copyBtn);
+            control.push(copyBtn);
         }
 
-        row.appendChild(label);
-        row.appendChild(valueContainer);
-        return row;
+        return createSettingRow({ labelKey: key, labelFallback: fallback, control }).row;
     }
 }

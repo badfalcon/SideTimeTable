@@ -1,6 +1,7 @@
 /**
- * TimelineCalendarFilter - A fixed button in the timeline top-right
- * that opens a popover for quick Google Calendar visibility toggling.
+ * TimelineCalendarFilter - A button that opens a popover for quick Google
+ * Calendar visibility toggling. It sits in the header (mountIn), or pinned to
+ * the timeline's top-right corner (attachTo) when no header slot is given.
  * Supports calendar groups for batch toggling.
  */
 import { Component } from '../base/component.js';
@@ -18,6 +19,8 @@ export class TimelineCalendarFilter extends Component {
         });
 
         this.onCalendarChange = options.onCalendarChange || null;
+        // "Manage calendars in Settings" at the bottom of the popover
+        this.onManageCalendars = options.onManageCalendars || null;
         this.isOpen = false;
         this.calendars = [];
         this.selectedIds = [];
@@ -55,6 +58,12 @@ export class TimelineCalendarFilter extends Component {
             onRefreshClick: () => this._refreshCalendars(),
             onCalendarToggle: (calendarId, checked) => this._handleToggle(calendarId, checked),
             onGroupToggle: (group, calendars, checked) => this._handleGroupToggle(group, calendars, checked),
+            onManageClick: this.onManageCalendars
+                ? () => {
+                    this._close();
+                    this.onManageCalendars();
+                }
+                : null,
         });
     }
 
@@ -82,7 +91,10 @@ export class TimelineCalendarFilter extends Component {
         this.dropdown.className = 'timeline-calendar-filter-dropdown';
         this.dropdown.id = 'timeline-calendar-filter-dropdown';
         this.dropdown.setAttribute('role', 'region');
-        this.dropdown.setAttribute('aria-label', this.getMessage('calendarFilterTooltip'));
+        this.dropdown.setAttribute('aria-label', this.getMessage('calendarFilterTitle'));
+        // Takes the focus on open when there is no search box, so Escape
+        // and Tab work from there
+        this.dropdown.tabIndex = -1;
         this.button.setAttribute('aria-controls', 'timeline-calendar-filter-dropdown');
 
         // Transparent backdrop to block clicks on events behind the dropdown
@@ -114,6 +126,33 @@ export class TimelineCalendarFilter extends Component {
     }
 
     /**
+     * Mount in a static place (the header) instead of floating over the
+     * timeline: no scroll tracking, and header-style button.
+     * @param {HTMLElement} target
+     */
+    mountIn(target) {
+        if (!this.element) {
+            this.createElement();
+        }
+        this.element.classList.add('is-in-header');
+        target.appendChild(this.element);
+        this._listenForWindowBlur();
+    }
+
+    /**
+     * Close the dropdown when the side panel loses focus (e.g., the user
+     * clicks on the main page).
+     * @private
+     */
+    _listenForWindowBlur() {
+        if (this._boundOnWindowBlur) return;
+        this._boundOnWindowBlur = () => {
+            if (this.isOpen) this._close();
+        };
+        window.addEventListener('blur', this._boundOnWindowBlur);
+    }
+
+    /**
      * Attach to the timeline scroll container and sync position on scroll
      * @param {HTMLElement} scrollContainer - The .side-time-table element
      */
@@ -138,11 +177,7 @@ export class TimelineCalendarFilter extends Component {
         };
         scrollContainer.addEventListener('scroll', this._boundOnScroll);
 
-        // Close dropdown when side panel loses focus (e.g., user clicks on main page)
-        this._boundOnWindowBlur = () => {
-            if (this.isOpen) this._close();
-        };
-        window.addEventListener('blur', this._boundOnWindowBlur);
+        this._listenForWindowBlur();
     }
 
     /**
@@ -249,13 +284,13 @@ export class TimelineCalendarFilter extends Component {
     }
 
     /**
-     * Focus the search input when dropdown opens
+     * Focus the search box when the dropdown opens, or the dropdown itself
+     * when the list is short enough to go without one
      * @private
      */
     _focusDropdown() {
-        if (this.searchInput) {
-            this.searchInput.focus();
-        }
+        const target = this.searchInput || this.dropdown;
+        target?.focus?.();
     }
 
     /**
@@ -275,24 +310,10 @@ export class TimelineCalendarFilter extends Component {
      * @private
      */
     async _fetchCalendars() {
-        this.dropdown.innerHTML = '';
-        const loading = document.createElement('div');
-        loading.className = 'timeline-calendar-filter-status';
-        loading.setAttribute('role', 'status');
-        loading.textContent = this.getMessage('calendarFilterLoading');
-        this.dropdown.appendChild(loading);
+        this._renderStatus(this.getMessage('calendarFilterLoading'), { busy: true });
 
-        const showError = () => {
-            this.dropdown.innerHTML = '';
-            this.refreshBtn = null;
-            this.searchInput = null;
-            this.calendarList = null;
-            const errorEl = document.createElement('div');
-            errorEl.className = 'timeline-calendar-filter-status';
-            errorEl.setAttribute('role', 'status');
-            errorEl.textContent = this.getMessage('calendarFilterError');
-            this.dropdown.appendChild(errorEl);
-        };
+        // The refresh button stays, so a failed load can be retried
+        const showError = () => this._renderStatus(this.getMessage('calendarFilterError'));
 
         try {
             const requestId = `filter-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -338,6 +359,17 @@ export class TimelineCalendarFilter extends Component {
         } catch {
             showError();
         }
+    }
+
+    /**
+     * Show a status line (loading, error) in the dropdown.
+     * @private
+     */
+    _renderStatus(message, options) {
+        const refs = this.renderer.renderStatus(this.dropdown, message, options);
+        this.searchInput = null;
+        this.calendarList = null;
+        this.refreshBtn = refs?.refreshBtn || null;
     }
 
     /**
@@ -447,20 +479,20 @@ export class TimelineCalendarFilter extends Component {
      */
     async _refreshCalendars() {
         if (this._isFetching) return;
-        const spinIcon = this.refreshBtn?.querySelector('i');
-        if (spinIcon) {
-            spinIcon.classList.add('fa-spin');
-        }
+        // _fetchCalendars shows the loading state with a spinning refresh
+        // icon. It replaces the focused button, so keep the focus in the
+        // dropdown (Escape still closes it) and hand it back afterwards.
+        const hadFocus = !!this.dropdown?.contains?.(document.activeElement);
         this.hasFetched = false;
         this._isFetching = true;
         try {
-            await this._fetchCalendars();
+            const fetching = this._fetchCalendars();
+            if (hadFocus) this.dropdown.focus();
+            await fetching;
         } finally {
             this._isFetching = false;
-            if (spinIcon) {
-                spinIcon.classList.remove('fa-spin');
-            }
         }
+        if (hadFocus && this.isOpen) this.refreshBtn?.focus();
     }
 
     /**

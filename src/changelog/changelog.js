@@ -1,45 +1,61 @@
 /**
  * Changelog - Standalone release notes page
  */
-import { RELEASE_NOTES } from '../lib/release-notes.js';
+import { RELEASE_NOTES, formatReleaseDate } from '../lib/release-notes.js';
 import { loadSettings } from '../lib/settings-storage.js';
 import { getThemeById, resolveThemeColors } from '../lib/color-themes.js';
+
+function message(key, fallback) {
+    const text = window.getLocalizedMessage?.(key);
+    return text && text !== key ? text : fallback;
+}
 
 function renderReleaseNotes(lang) {
     const container = document.getElementById('release-notes-container');
     if (!container) return;
 
-    RELEASE_NOTES.forEach(entry => {
-        const section = document.createElement('div');
-        section.className = 'version-section';
+    RELEASE_NOTES.forEach((entry, index) => {
+        const section = document.createElement('article');
+        section.className = 'changelog-entry';
 
-        // Version + date header
-        const header = document.createElement('div');
-        header.className = 'd-flex align-items-center gap-2 mb-2';
+        // Version (the newest marked) and date
+        const meta = document.createElement('div');
+        meta.className = 'changelog-entry-meta';
 
-        const badge = document.createElement('span');
-        badge.className = 'badge bg-primary';
-        badge.textContent = `v${entry.version}`;
-        header.appendChild(badge);
+        const versionLine = document.createElement('div');
+        versionLine.className = 'changelog-entry-version';
 
-        const dateLabel = document.createElement('small');
-        dateLabel.className = 'text-muted';
-        dateLabel.textContent = entry.date;
-        header.appendChild(dateLabel);
+        const version = document.createElement('h2');
+        version.className = 'changelog-version-chip';
+        version.textContent = `v${entry.version}`;
+        versionLine.appendChild(version);
 
-        section.appendChild(header);
-
-        // Highlights list
-        const highlights = entry.highlights[lang] || entry.highlights['en'] || [];
-        if (highlights.length > 0) {
-            const list = document.createElement('ul');
-            highlights.forEach(item => {
-                const li = document.createElement('li');
-                li.textContent = item;
-                list.appendChild(li);
-            });
-            section.appendChild(list);
+        if (index === 0) {
+            const latest = document.createElement('span');
+            latest.className = 'changelog-latest';
+            latest.textContent = message('changelogLatest', 'Latest');
+            versionLine.appendChild(latest);
         }
+        meta.appendChild(versionLine);
+
+        const date = document.createElement('time');
+        date.className = 'changelog-date';
+        date.dateTime = entry.date;
+        date.textContent = formatReleaseDate(entry.date, lang);
+        meta.appendChild(date);
+
+        section.appendChild(meta);
+
+        // What changed
+        const highlights = entry.highlights[lang] || entry.highlights['en'] || [];
+        const list = document.createElement('ul');
+        list.className = 'changelog-entry-list';
+        highlights.forEach(item => {
+            const li = document.createElement('li');
+            li.textContent = item;
+            list.appendChild(li);
+        });
+        section.appendChild(list);
 
         container.appendChild(section);
     });

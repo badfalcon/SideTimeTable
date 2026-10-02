@@ -7,6 +7,14 @@ import {
   calculateTimeDifference,
   calculateWorkHours,
   buildRfc3339DateTime,
+  timeStringToMinutes,
+  minutesToTimeString,
+  formatHeaderDate,
+  formatHourLabel,
+  formatTimeRange,
+  formatStartTime,
+  formatClockTime,
+  formatDateTimeRange,
 } from '../../src/lib/time-utils.js';
 
 describe('createTimeOnDate', () => {
@@ -349,5 +357,147 @@ describe('parseDateString', () => {
     expect(parseDateString(null)).toBeNull();
     expect(parseDateString(undefined)).toBeNull();
     expect(parseDateString(new Date())).toBeNull();
+  });
+});
+describe('timeStringToMinutes', () => {
+  test('converts a time string to minutes since midnight', () => {
+    expect(timeStringToMinutes('00:00')).toBe(0);
+    expect(timeStringToMinutes('09:30')).toBe(570);
+    expect(timeStringToMinutes('23:59')).toBe(1439);
+  });
+
+  test('accepts single-digit hours and minutes', () => {
+    expect(timeStringToMinutes('9:5')).toBe(545);
+  });
+
+  test('returns null instead of throwing for an unusable value', () => {
+    expect(timeStringToMinutes('')).toBeNull();
+    expect(timeStringToMinutes(null)).toBeNull();
+    expect(timeStringToMinutes(undefined)).toBeNull();
+    expect(timeStringToMinutes('24:00')).toBeNull();
+    expect(timeStringToMinutes('10.5')).toBeNull();
+    expect(timeStringToMinutes('abc')).toBeNull();
+  });
+});
+
+describe('minutesToTimeString', () => {
+  test('formats minutes as a zero-padded time', () => {
+    expect(minutesToTimeString(0)).toBe('00:00');
+    expect(minutesToTimeString(545)).toBe('09:05');
+    expect(minutesToTimeString(1439)).toBe('23:59');
+  });
+
+  test('clamps past midnight to the end of the same day', () => {
+    // 23:30 plus two hours: a local event stores no end date, so it has to
+    // stop at 23:59 rather than wrap to 01:30.
+    expect(minutesToTimeString(23 * 60 + 30 + 120)).toBe('23:59');
+    expect(minutesToTimeString(24 * 60)).toBe('23:59');
+  });
+
+  test('clamps a negative value to midnight', () => {
+    expect(minutesToTimeString(-30)).toBe('00:00');
+  });
+
+  test('round-trips with timeStringToMinutes', () => {
+    ['00:00', '07:45', '12:00', '23:59'].forEach((time) => {
+      expect(minutesToTimeString(timeStringToMinutes(time))).toBe(time);
+    });
+  });
+});
+
+describe('formatHeaderDate', () => {
+  const now = new Date(2026, 8, 30);
+
+  test('Japanese: month, day and weekday', () => {
+    expect(formatHeaderDate(new Date(2026, 8, 30), 'ja', now)).toBe('9月30日(水)');
+  });
+
+  test('English: weekday, month and day', () => {
+    expect(formatHeaderDate(new Date(2026, 8, 30), 'en', now)).toBe('Wed, Sep 30');
+  });
+
+  test('adds the year only when it is not the current one', () => {
+    expect(formatHeaderDate(new Date(2027, 0, 5), 'ja', now)).toBe('2027年1月5日(火)');
+    expect(formatHeaderDate(new Date(2025, 11, 31), 'en', now)).toBe('Wed, Dec 31, 2025');
+  });
+
+  test('an invalid date gives an empty string', () => {
+    expect(formatHeaderDate(new Date('nope'), 'en', now)).toBe('');
+    expect(formatHeaderDate(null, 'ja', now)).toBe('');
+  });
+});
+
+describe('formatHourLabel', () => {
+  test.each([
+    [9, '24h', 'ja', '9:00'],
+    [0, '24h', 'en', '0:00'],
+    [9, '12h', 'en', '9 AM'],
+    [12, '12h', 'en', '12 PM'],
+    [0, '12h', 'en', '12 AM'],
+    [24, '12h', 'en', '12 AM'],
+    [15, '12h', 'ja', '午後3時'],
+  ])('hour %i, %s, %s → %s', (hour, format, locale, expected) => {
+    expect(formatHourLabel(hour, format, locale)).toBe(expected);
+  });
+});
+
+describe('formatTimeRange', () => {
+  test('24-hour keeps the zero-padded times', () => {
+    expect(formatTimeRange('09:00', '10:30', '24h', 'ja')).toBe('09:00–10:30');
+  });
+
+  test('12-hour English names AM/PM once when both ends share it', () => {
+    expect(formatTimeRange('09:00', '10:30', '12h', 'en')).toBe('9:00–10:30 AM');
+    expect(formatTimeRange('11:30', '13:00', '12h', 'en')).toBe('11:30 AM–1:00 PM');
+  });
+
+  test('12-hour Japanese puts 午前/午後 in front', () => {
+    expect(formatTimeRange('13:00', '14:00', '12h', 'ja')).toBe('午後1:00–2:00');
+    expect(formatTimeRange('11:00', '12:30', '12h', 'ja')).toBe('午前11:00–午後12:30');
+  });
+});
+
+describe('formatStartTime', () => {
+  test('24-hour is unchanged, 12-hour drops the zero and AM/PM', () => {
+    expect(formatStartTime('09:05', '24h')).toBe('09:05');
+    expect(formatStartTime('13:45', '12h')).toBe('1:45');
+    expect(formatStartTime('00:15', '12h')).toBe('12:15');
+  });
+});
+
+describe('formatClockTime', () => {
+  test.each([
+    ['09:05', '24h', 'en', '09:05'],
+    ['09:05', '12h', 'en', '9:05 AM'],
+    ['13:30', '12h', 'en', '1:30 PM'],
+    ['13:30', '12h', 'ja', '午後1:30'],
+  ])('%s %s %s → %s', (hhmm, format, locale, expected) => {
+    expect(formatClockTime(hhmm, format, locale)).toBe(expected);
+  });
+});
+
+describe('formatDateTimeRange', () => {
+  const now = new Date(2026, 8, 30);
+
+  test('same day: the header date, then the block time range', () => {
+    expect(formatDateTimeRange(new Date(2026, 8, 30, 9, 0), new Date(2026, 8, 30, 10, 0), { locale: 'ja', timeFormat: '24h', now }))
+      .toBe('9月30日(水) 09:00–10:00');
+    expect(formatDateTimeRange(new Date(2026, 8, 30, 9, 0), new Date(2026, 8, 30, 10, 0), { locale: 'en', timeFormat: '12h', now }))
+      .toBe('Wed, Sep 30, 9:00–10:00 AM');
+  });
+
+  test('ending exactly at midnight stays one day', () => {
+    expect(formatDateTimeRange(new Date(2026, 8, 30, 23, 0), new Date(2026, 9, 1, 0, 0), { locale: 'ja', timeFormat: '24h', now }))
+      .toBe('9月30日(水) 23:00–00:00');
+  });
+
+  test('running into the next day names both days', () => {
+    expect(formatDateTimeRange(new Date(2026, 8, 30, 23, 0), new Date(2026, 9, 1, 1, 0), { locale: 'en', timeFormat: '12h', now }))
+      .toBe('Wed, Sep 30, 11:00 PM – Thu, Oct 1, 1:00 AM');
+  });
+
+  test('another year shows the year', () => {
+    expect(formatDateTimeRange(new Date(2027, 0, 5, 9, 0), new Date(2027, 0, 5, 9, 30), { locale: 'ja', timeFormat: '24h', now }))
+      .toBe('2027年1月5日(火) 09:00–09:30');
   });
 });

@@ -247,7 +247,7 @@ export class AlarmManager {
             // Create the notification with a fallback for icon issues
             const notificationOptions = {
                 type: 'basic',
-                title: chrome.i18n.getMessage('eventReminder') || 'Event Reminder',
+                title: chrome.i18n.getMessage('eventReminder') || 'Event reminder',
                 message: message,
                 buttons: [
                     { title: primaryLabel },

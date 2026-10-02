@@ -3,16 +3,14 @@
  */
 import { CardComponent } from '../base/card-component.js';
 import { DEFAULT_SETTINGS, MEMO_FONT_SIZE_RANGE } from '../../../lib/constants.js';
+import { createSelect, createSettingRow, createSwitch, msg } from '../base/settings-dom.js';
 
 export class MemoSettingsCard extends CardComponent {
     constructor(onSettingsChange) {
         super({
-            title: 'Memo Settings',
+            title: 'Memo',
             titleLocalize: '__MSG_memoSettings__',
-            subtitle: 'Configure the memo panel behavior.',
-            subtitleLocalize: '__MSG_memoSettingsDescription__',
-            icon: 'fas fa-sticky-note',
-            iconColor: 'text-warning'
+            icon: 'fas fa-note-sticky'
         });
 
         this.onSettingsChange = onSettingsChange;
@@ -38,63 +36,35 @@ export class MemoSettingsCard extends CardComponent {
 
     _createForm() {
         const container = document.createElement('div');
+        container.className = 'settings-rows';
 
-        const checkWrapper = document.createElement('div');
-        checkWrapper.className = 'form-check form-switch';
-
-        this.markdownCheckbox = document.createElement('input');
-        this.markdownCheckbox.type = 'checkbox';
-        this.markdownCheckbox.className = 'form-check-input';
-        this.markdownCheckbox.id = 'memo-markdown-toggle';
-        this.markdownCheckbox.checked = this.settings.memoMarkdown;
-
-        const label = document.createElement('label');
-        label.className = 'form-check-label';
-        label.htmlFor = 'memo-markdown-toggle';
-        label.setAttribute('data-localize', '__MSG_memoMarkdownLabel__');
-        label.textContent = window.getLocalizedMessage('memoMarkdownLabel') || 'Enable Markdown rendering';
-
-        const helpText = document.createElement('small');
-        helpText.className = 'form-text text-muted d-block mt-1';
-        helpText.setAttribute('data-localize', '__MSG_memoMarkdownHelp__');
-        helpText.textContent = window.getLocalizedMessage('memoMarkdownHelp') || 'When enabled, memo content is rendered as Markdown when not editing.';
-
-        checkWrapper.appendChild(this.markdownCheckbox);
-        checkWrapper.appendChild(label);
-
-        container.appendChild(checkWrapper);
-        container.appendChild(helpText);
+        this.markdownCheckbox = createSwitch('memo-markdown-toggle', this.settings.memoMarkdown);
+        container.appendChild(createSettingRow({
+            labelKey: 'memoMarkdownLabel',
+            labelFallback: 'Show as Markdown',
+            labelFor: 'memo-markdown-toggle',
+            hintKey: 'memoMarkdownHelp',
+            hintFallback: 'When not editing, the memo is shown as Markdown; click it to edit.',
+            control: this.markdownCheckbox
+        }).row);
 
         // Font size dropdown
-        const fontSizeGroup = document.createElement('div');
-        fontSizeGroup.className = 'mt-3';
-
-        const fontSizeLabel = document.createElement('label');
-        fontSizeLabel.className = 'form-label';
-        fontSizeLabel.htmlFor = 'memo-font-size-select';
-        fontSizeLabel.setAttribute('data-localize', '__MSG_memoFontSizeLabel__');
-        fontSizeLabel.textContent = window.getLocalizedMessage('memoFontSizeLabel') || 'Font Size';
-
-        this.fontSizeSelect = document.createElement('select');
-        this.fontSizeSelect.className = 'form-select form-select-sm';
-        this.fontSizeSelect.id = 'memo-font-size-select';
-
-        const defaultLabel = window.getLocalizedMessage('memoFontSizeDefault') || 'Default';
+        const defaultLabel = msg('memoFontSizeDefault', 'default');
+        const sizes = [];
         for (let size = MEMO_FONT_SIZE_RANGE.min; size <= MEMO_FONT_SIZE_RANGE.max; size++) {
-            const option = document.createElement('option');
-            option.value = size;
-            option.textContent = size === DEFAULT_SETTINGS.memoFontSize
-                ? `${size}px (${defaultLabel})`
-                : `${size}px`;
-            if (size === this.settings.memoFontSize) {
-                option.selected = true;
-            }
-            this.fontSizeSelect.appendChild(option);
+            sizes.push({
+                value: size,
+                text: size === DEFAULT_SETTINGS.memoFontSize ? `${size}px${defaultLabel}` : `${size}px`
+            });
         }
-
-        fontSizeGroup.appendChild(fontSizeLabel);
-        fontSizeGroup.appendChild(this.fontSizeSelect);
-        container.appendChild(fontSizeGroup);
+        this.fontSizeSelect = createSelect('memo-font-size-select', sizes);
+        this.fontSizeSelect.value = this.settings.memoFontSize;
+        container.appendChild(createSettingRow({
+            labelKey: 'memoFontSizeLabel',
+            labelFallback: 'Text size',
+            labelFor: 'memo-font-size-select',
+            control: this.fontSizeSelect
+        }).row);
 
         return container;
     }

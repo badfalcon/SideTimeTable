@@ -43,13 +43,13 @@ const SHOTS = {
         },
         {
             out: 'image_2.png', theme: 'light',
-            tabTitle: 'SideTimeTableの設定',
+            tabTitle: 'SideTimeTable の設定',
             url: `${EXT_URL}/src/options/options.html`,
             pageImg: 'options-light.png', panelImg: null,
         },
         {
             out: 'image_3.png', theme: 'dark',
-            tabTitle: 'SideTimeTableの設定',
+            tabTitle: 'SideTimeTable の設定',
             url: `${EXT_URL}/src/options/options.html`,
             pageImg: 'options-dark.png', panelImg: 'panel-dark-modal.png',
         },
@@ -57,19 +57,19 @@ const SHOTS = {
     en: [
         {
             out: 'image_1_en.png', theme: 'light',
-            tabTitle: 'Changelog - SideTimeTable',
+            tabTitle: 'Changelog',
             url: `${EXT_URL}/src/changelog/changelog.html`,
             pageImg: 'changelog-en.png', panelImg: 'panel-light-en.png',
         },
         {
             out: 'image_2_en.png', theme: 'light',
-            tabTitle: 'SideTimeTable Settings',
+            tabTitle: 'SideTimeTable settings',
             url: `${EXT_URL}/src/options/options.html`,
             pageImg: 'options-light-en.png', panelImg: null,
         },
         {
             out: 'image_3_en.png', theme: 'dark',
-            tabTitle: 'SideTimeTable Settings',
+            tabTitle: 'SideTimeTable settings',
             url: `${EXT_URL}/src/options/options.html`,
             pageImg: 'options-dark-en.png', panelImg: 'panel-dark-modal-en.png',
         },
