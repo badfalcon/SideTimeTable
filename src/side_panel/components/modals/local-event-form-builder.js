@@ -13,6 +13,7 @@
 import { DEFAULT_SETTINGS, RECURRENCE_TYPES } from '../../../lib/constants.js';
 import { loadSettings } from '../../../lib/settings-storage.js';
 import { GuestField } from './guest-field.js';
+import { createDateField } from '../../../lib/date-field.js';
 import {
     applyDurationPreset,
     createButton,
@@ -622,10 +623,13 @@ export class LocalEventFormBuilder {
             createHiddenLabel('recurrenceEndDate', 'recurrenceEndDate', 'End date')
         );
 
-        this.endDateInput = document.createElement('input');
-        this.endDateInput.type = 'date';
-        this.endDateInput.id = 'recurrenceEndDate';
-        this.endDateInput.className = 'event-form-field';
+        // Written in the extension's language (a date input follows Chrome's)
+        this.endDateInput = createDateField({
+            id: 'recurrenceEndDate',
+            className: 'event-form-field event-date-input'
+        });
+        this.endDateInput.setAttribute('data-localize-placeholder', '__MSG_endDatePlaceholder__');
+        this.endDateInput.placeholder = window.getLocalizedMessage('endDatePlaceholder') || 'End date';
         endDateSection.appendChild(this.endDateInput);
 
         const noEnd = this._createChipToggle('noEndDate', 'noEndDate', 'No end date');

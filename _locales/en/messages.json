@@ -1077,6 +1077,22 @@
     "message": "No end date",
     "description": "No end date checkbox label"
   },
+  "endDatePlaceholder": {
+    "message": "End date",
+    "description": "Placeholder of the recurrence end date field"
+  },
+  "previousMonth": {
+    "message": "Previous month",
+    "description": "Calendar button: show the previous month"
+  },
+  "nextMonth": {
+    "message": "Next month",
+    "description": "Calendar button: show the next month"
+  },
+  "chooseDate": {
+    "message": "Choose a date",
+    "description": "Name of the calendar opened from the header date"
+  },
   "daySun": {
     "message": "Sun",
     "description": "Sunday abbreviation"

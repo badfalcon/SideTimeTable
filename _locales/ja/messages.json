@@ -1077,6 +1077,22 @@
     "message": "終了日なし",
     "description": "終了日なしチェックボックスのラベル"
   },
+  "endDatePlaceholder": {
+    "message": "終了日",
+    "description": "繰り返しの終了日欄のプレースホルダー"
+  },
+  "previousMonth": {
+    "message": "前の月",
+    "description": "カレンダーのボタン: 前の月を表示"
+  },
+  "nextMonth": {
+    "message": "次の月",
+    "description": "カレンダーのボタン: 次の月を表示"
+  },
+  "chooseDate": {
+    "message": "日付を選ぶ",
+    "description": "ヘッダーの日付から開くカレンダーの名前"
+  },
   "daySun": {
     "message": "日",
     "description": "日曜日の略称"

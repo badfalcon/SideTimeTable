@@ -24,7 +24,7 @@ Main UI displayed in Chrome's side panel:
 - `components/`: Modular component-based UI architecture
   - `timeline/timeline-component.js`: Main timeline display with integrated event layout
   - `timeline/timeline-calendar-filter.js` + `calendar-filter-renderer.js`: Calendar filter popover in the header — title with refresh, calendars as colour / name / checkbox, folding groups with a group checkbox, search box only for long lists (9+), "Manage calendars in Settings" link
-  - `header/header-component.js`: Date navigation (the date label opens the browser's date picker), add/sync/settings buttons, and the slot the calendar filter mounts into
+  - `header/header-component.js`: Date navigation (the date label opens a month calendar from `lib/date-field.js`), add/sync/settings buttons, and the slot the calendar filter mounts into
   - `modals/`: Modal dialog components (Google events, local events, alerts, What's New, review)
     - `event-dialog-dom.js`: Shared DOM builders for the event dialogs (sticky header/footer, icon-led rows, segmented controls, buttons, inline delete confirmation, status line, time row with duration picker)
     - `delete-recurring-dialog.js`: "This event / All events" choice before deleting a recurring local event
@@ -76,6 +76,7 @@ Shared functions and framework components:
 - `locale-utils.js`: Locale-aware date/time formatting (12h/24h format support); a plain script exposing `window.getCurrentLocale()` / `window.getTimeFormatPreference()` (loaded by the side panel and the settings page)
 - `display-prefs.js`: The language and 12/24-hour choice times are written in (`getDisplayPrefs()` / `refreshDisplayPrefs()`), shared by the dialogs, the setup and the settings page
 - `time-field.js`: Time field in the extension's language and 12/24-hour setting — a text box (`value` stays "HH:MM") that reads typed times ("930", "9:30pm", "午後3時") and opens a list of times every 15 minutes (a popover); replaces `<input type="time">`, which Chrome draws in its own language
+- `date-field.js`: Date field and month calendar in the extension's language — a text box (`value` stays "YYYY-MM-DD", `min` greys out earlier days) that shows the date like the header ("10月31日(土)" / "Sat, Oct 31"), reads typed dates ("10/31", "2026-10-31", "10月31日", "Oct 31") and opens a month calendar (a popover); the calendar alone (`createDateCalendar()`) is what the header's date label opens. Replaces `<input type="date">`, which Chrome draws in its own language
 - `demo-data.js`: Mock data system for development and screenshots
 - `current-time-line-manager.js`: Dedicated current time indicator management with date-aware visibility
 - `storage-helper.js`: Chrome storage API wrapper with async/await support

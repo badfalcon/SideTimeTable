@@ -53,7 +53,7 @@ npm run build         # Verify production build succeeds
 - **No debug logs in production code** — clean console output
 - i18n: `_locales/en/` and `_locales/ja/` with 400+ localized strings, `__MSG_key__` placeholders
 - Time formats: written in the extension's language with the 12h/24h setting (`timeFormat`; the default is 12h only for a US-English Chrome) — `formatClockTime()` / `formatTimeRange()` in `time-utils.js`, prefs from `lib/display-prefs.js`. Time inputs use `lib/time-field.js`, never `<input type="time">` (Chrome draws that in its own language, not the extension's)
-- Date formats: MM/DD/YYYY (English), YYYY/MM/DD (Japanese)
+- Date formats: in the extension's language as the header writes them (`formatHeaderDate()`: "10月31日(土)" / "Sat, Oct 31", with the year only when it is not this year). Date inputs use `lib/date-field.js` (a field, or `createDateCalendar()` for a month picker), never `<input type="date">` or `showPicker()`
 
 ## Event System
 

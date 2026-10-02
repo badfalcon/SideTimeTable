@@ -531,3 +531,20 @@ Alarm names are `${prefix}${YYYY-MM-DD}_${eventId}`.
 - Every `step` minutes from `00:00` to before `24:00` (96 for 15 minutes)
 - The highlighted option is the same time or the next one after it; the last one for later times; `-1` for no time
 
+## date-field (date inputs in the extension's language)
+
+### parseDateText(text, now)
+- ISO and slashed forms (`"2026-10-31"`, `"2026/10/31"`), US month/day/year (`"10/31/2026"`, `"1/5/27"`), month/day (`"10/31"`), 8 and 4 digits (`"20261031"`, `"1031"`)
+- Japanese 年 / 月 / 日 (`"2026年10月31日"`, `"10月31日"`), English month names (`"Oct 31"`, `"October 31, 2027"`, `"31 Oct"`), `today` / `今日`, `tomorrow` / `明日`, full-width digits
+- A weekday (`"(土)"`, `"土曜日"`, `"Sat, "`) is ignored; a date without a year is in the current one
+- Days that do not exist (`"2/30"`, `"2026-02-29"`, `"10月32日"`) or text that is not a date → `null`
+
+### formatDateText(ymd, prefs, now)
+- As the header writes it: `"10月31日(土)"` / `"Sat, Oct 31"`, with the year when it is not this year (`"2027年1月5日(火)"` / `"Tue, Jan 5, 2027"`)
+- Every day of two years reads back as the same day in both languages
+
+### Calendar helpers
+- Month title (`"2026年10月"` / `"October 2026"`), weekday names from Sunday
+- Six weeks from the Sunday on or before the 1st (42 days)
+- `addDays` across months and years; `addMonths` keeps the day or takes the last day of a shorter month
+

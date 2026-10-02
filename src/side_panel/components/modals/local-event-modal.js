@@ -821,6 +821,9 @@ export class LocalEventModal extends ModalComponent {
 
         // Reset form via formBuilder
         this.formBuilder.resetForCreate(defaultStartTime, defaultEndTime);
+        // The calendar greys out end dates before the event's day (saving
+        // refuses them)
+        this.endDateInput.min = this._getStartDateForRecurrence();
 
         // Enable/disable the Google save destination based on writable calendars
         this.formBuilder.setGoogleAvailability(writableCalendars);
@@ -870,6 +873,7 @@ export class LocalEventModal extends ModalComponent {
 
         // Populate form via formBuilder
         this.formBuilder.populateForm(event);
+        this.endDateInput.min = this._getStartDateForRecurrence();
 
         // Adjust the button display
         this.deleteButton.style.display = '';

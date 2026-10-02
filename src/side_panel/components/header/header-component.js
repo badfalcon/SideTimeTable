@@ -3,6 +3,7 @@
  */
 import { Component } from '../base/component.js';
 import { formatHeaderDate } from '../../../lib/time-utils.js';
+import { createDateCalendar, fromYmd, toYmd } from '../../../lib/date-field.js';
 
 export class HeaderComponent extends Component {
     constructor(options = {}) {
@@ -23,7 +24,9 @@ export class HeaderComponent extends Component {
         this.prevDateButton = null;
         this.nextDateButton = null;
         this.dateButton = null;
-        this.dateInput = null;
+        this.calendar = null;
+        this.minDate = '';
+        this.maxDate = '';
         this.syncButton = null;
         this.settingsButton = null;
         this.filterSlot = null;
@@ -146,8 +149,8 @@ export class HeaderComponent extends Component {
 
     /**
      * Create date navigation elements. The date is a button showing the day
-     * in words; it opens the browser's date picker through a date input that
-     * sits invisibly underneath it.
+     * in words; it opens a month calendar written in the extension's
+     * language (the browser's date picker follows Chrome's).
      * @private
      */
     _createDateNavigation() {
@@ -170,14 +173,26 @@ export class HeaderComponent extends Component {
         this.dateButton.setAttribute('data-localize-title', '__MSG_clickToSelectDate__');
         dateWrap.appendChild(this.dateButton);
 
-        // Date input: only the picker behind the button, never focused itself
-        this.dateInput = document.createElement('input');
-        this.dateInput.type = 'date';
-        this.dateInput.id = 'currentDateDisplay';
-        this.dateInput.className = 'header-date-input';
-        this.dateInput.tabIndex = -1;
-        this.dateInput.setAttribute('aria-hidden', 'true');
-        dateWrap.appendChild(this.dateInput);
+        this.calendar = createDateCalendar({
+            id: 'headerDateCalendar',
+            focusable: true,
+            align: 'center',
+            label: window.getLocalizedMessage?.('chooseDate') || 'Choose a date',
+            onPick: (ymd) => {
+                this.calendar.close();
+                this.dateButton.focus();
+                this.setCurrentDate(fromYmd(ymd));
+            },
+            onClose: (reason) => {
+                this.dateButton.setAttribute('aria-expanded', 'false');
+                if (reason === 'escape') {
+                    this.dateButton.focus();
+                }
+            }
+        });
+        this.dateButton.setAttribute('aria-haspopup', 'dialog');
+        this.dateButton.setAttribute('aria-expanded', 'false');
+        this.dateButton.setAttribute('aria-controls', this.calendar.element.id);
 
         // The next day button
         this.nextDateButton = this._createIconButton('nextDateButton', 'fas fa-chevron-right', 'nextDay', 'Next day');
@@ -212,11 +227,7 @@ export class HeaderComponent extends Component {
         });
 
         this.addEventListener(this.dateButton, 'click', () => {
-            this._openDatePicker();
-        });
-
-        this.addEventListener(this.dateInput, 'change', () => {
-            this._handleDateInputChange();
+            this._toggleDatePicker();
         });
 
         // Sync button
@@ -233,18 +244,22 @@ export class HeaderComponent extends Component {
     }
 
     /**
-     * Open the browser's date picker under the date label.
+     * Open or close the calendar under the date label.
      * @private
      */
-    _openDatePicker() {
-        if (!this.dateInput || this.dateInput.disabled) return;
-        try {
-            this.dateInput.showPicker();
-        } catch {
-            // showPicker() refuses when not triggered by the user; clicking
-            // the input is the older way to the same picker
-            this.dateInput.click();
+    _toggleDatePicker() {
+        if (!this.calendar || this.dateButton.disabled) return;
+        if (this.calendar.isOpen()) {
+            this.calendar.close();
+            return;
         }
+        this.calendar.open({
+            anchor: this.dateButton,
+            value: toYmd(this.currentDate),
+            min: this.minDate,
+            max: this.maxDate
+        });
+        this.dateButton.setAttribute('aria-expanded', String(this.calendar.isOpen()));
     }
 
     /**
@@ -272,28 +287,10 @@ export class HeaderComponent extends Component {
     }
 
     /**
-     * Handle date input change
-     * @private
-     */
-    _handleDateInputChange() {
-        const selectedDate = new Date(this.dateInput.value + 'T00:00:00');
-        if (!isNaN(selectedDate.getTime())) {
-            this.setCurrentDate(selectedDate);
-        }
-    }
-
-    /**
      * Update date display
      * @private
      */
     _updateDateDisplay() {
-        if (this.dateInput) {
-            // Set in YYYY-MM-DD format
-            const year = this.currentDate.getFullYear();
-            const month = String(this.currentDate.getMonth() + 1).padStart(2, '0');
-            const day = String(this.currentDate.getDate()).padStart(2, '0');
-            this.dateInput.value = `${year}-${month}-${day}`;
-        }
         if (this.dateButton) {
             this.dateButton.textContent = formatHeaderDate(this.currentDate, this.locale);
             // Today reads in the accent colour, so another day is recognisable
@@ -343,13 +340,15 @@ export class HeaderComponent extends Component {
             this.prevDateButton,
             this.nextDateButton,
             this.dateButton,
-            this.settingsButton,
-            this.dateInput
+            this.settingsButton
         ].forEach(control => {
             if (control) {
                 control.disabled = !enabled;
             }
         });
+        if (!enabled) {
+            this.calendar?.close();
+        }
     }
 
     /**
@@ -377,21 +376,8 @@ export class HeaderComponent extends Component {
      * @param {Date|null} maxDate Maximum date
      */
     setDateRange(minDate = null, maxDate = null) {
-        if (this.dateInput) {
-            if (minDate instanceof Date) {
-                const year = minDate.getFullYear();
-                const month = String(minDate.getMonth() + 1).padStart(2, '0');
-                const day = String(minDate.getDate()).padStart(2, '0');
-                this.dateInput.min = `${year}-${month}-${day}`;
-            }
-
-            if (maxDate instanceof Date) {
-                const year = maxDate.getFullYear();
-                const month = String(maxDate.getMonth() + 1).padStart(2, '0');
-                const day = String(maxDate.getDate()).padStart(2, '0');
-                this.dateInput.max = `${year}-${month}-${day}`;
-            }
-        }
+        this.minDate = minDate instanceof Date ? toYmd(minDate) : '';
+        this.maxDate = maxDate instanceof Date ? toYmd(maxDate) : '';
     }
 
     /**
@@ -429,5 +415,13 @@ export class HeaderComponent extends Component {
             this.syncButton.classList.toggle('is-syncing', syncing);
             this.syncButton.setAttribute('aria-busy', String(syncing));
         }
+    }
+
+    /**
+     * Clean up, closing the calendar first so its page listeners go too
+     */
+    destroy() {
+        this.calendar?.close();
+        super.destroy();
     }
 }

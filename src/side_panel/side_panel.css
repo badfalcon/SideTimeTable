@@ -418,19 +418,6 @@ body {
     color: var(--side-calendar-accent-color);
 }
 
-/* The picker behind the date label: present for showPicker(), never seen */
-.header-date-input {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    border: 0;
-    opacity: 0;
-    pointer-events: none;
-}
-
 .header-filter-slot {
     display: contents;
 }
@@ -1352,10 +1339,20 @@ body {
     margin-left: 26px;
 }
 
-/* Room for a full date plus Chrome's picker button; a long "No end date"
-   label wraps under it rather than squeezing the date */
-:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .end-date-section .event-form-field {
-    min-width: 7.5em;
+/* As wide as the date it shows, so "No end date" stays beside a short date
+   and wraps under a long one ("2027年12月31日(金)") rather than squeezing it;
+   it still grows to fill the row */
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .end-date-section .event-date-input {
+    width: auto;
+    min-width: 8em;
+    field-sizing: content;
+    padding: 0 8px;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .end-date-section .event-date-input:disabled {
+    cursor: default;
 }
 
 /* --- Settings-style rows: icon, label, checkbox on the right --- */
@@ -3863,3 +3860,144 @@ body {
     font-weight: 600;
 }
 
+/* ===== Date calendar (lib/date-field.js) =====
+   A month under the recurrence end date and the header's date, written in
+   the extension's language. A popover, like the time list. */
+.date-calendar {
+    position: fixed;
+    inset: auto;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 8px;
+    border: 1px solid var(--side-calendar-border-color);
+    border-radius: var(--side-calendar-radius-lg);
+    background: var(--side-calendar-modal-bg);
+    color: var(--side-calendar-panel-text-color);
+    box-shadow: var(--side-calendar-shadow-popover);
+    font-family: inherit;
+    font-size: var(--side-calendar-font-body);
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.date-calendar-head {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 4px;
+}
+
+.date-calendar-title {
+    flex-grow: 1;
+    font-size: var(--side-calendar-font-title);
+    font-weight: 600;
+    text-align: center;
+}
+
+.date-calendar-nav {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    margin: 0;
+    padding: 0;
+    border: none;
+    border-radius: var(--side-calendar-radius-md);
+    background: transparent;
+    color: var(--side-calendar-secondary-text-color);
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.date-calendar-nav:hover {
+    background: var(--side-calendar-subtle-bg-hover);
+    color: inherit;
+}
+
+.date-calendar-nav:focus-visible,
+.date-calendar-grid:focus-visible {
+    outline: 2px solid var(--side-calendar-accent-color);
+    outline-offset: 1px;
+}
+
+.date-calendar-grid {
+    border-radius: var(--side-calendar-radius-sm);
+}
+
+.date-calendar-row {
+    display: grid;
+    grid-template-columns: repeat(7, 32px);
+    justify-content: center;
+}
+
+.date-calendar-weekday {
+    height: 24px;
+    color: var(--side-calendar-muted-text-color);
+    font-size: var(--side-calendar-font-caption);
+    font-weight: 600;
+    line-height: 24px;
+    text-align: center;
+}
+
+.date-calendar-day {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    margin: 1px;
+    box-sizing: border-box;
+    border-radius: var(--side-calendar-radius-pill);
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+}
+
+.date-calendar-day:hover,
+.date-calendar-day.is-active {
+    background: var(--side-calendar-subtle-bg-hover);
+}
+
+.date-calendar-day.is-outside {
+    color: var(--side-calendar-muted-text-color);
+}
+
+/* Today in the accent colour, as the header writes it */
+.date-calendar-day.is-today {
+    color: var(--side-calendar-accent-hover-color);
+    font-weight: 600;
+}
+
+/* The chosen day is filled like the dialogs' primary button (the same
+   contrast reasoning: white on accent-hover, dark text on the dark accent) */
+.date-calendar-day.is-selected {
+    background: var(--side-calendar-accent-hover-color);
+    color: #ffffff;
+    font-weight: 600;
+}
+
+[data-theme="dark"] .date-calendar-day.is-today {
+    color: var(--side-calendar-accent-color);
+}
+
+[data-theme="dark"] .date-calendar-day.is-selected {
+    background: var(--side-calendar-accent-color);
+    color: #0f1b2e;
+}
+
+/* The highlighted day keeps a ring when it is also the chosen one */
+.date-calendar-day.is-selected.is-active {
+    box-shadow: 0 0 0 2px var(--side-calendar-modal-bg), 0 0 0 4px var(--side-calendar-accent-hover-color);
+}
+
+[data-theme="dark"] .date-calendar-day.is-selected.is-active {
+    box-shadow: 0 0 0 2px var(--side-calendar-modal-bg), 0 0 0 4px var(--side-calendar-accent-color);
+}
+
+.date-calendar-day.is-disabled {
+    background: transparent;
+    color: var(--side-calendar-muted-text-color);
+    opacity: 0.45;
+    cursor: default;
+}
