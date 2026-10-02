@@ -68,7 +68,7 @@
 - [x] `_fetchEventsForCalendarIds()` が `_fetchWithAuth()` を迂回して直接 `fetch()` している — calendarList取得部分は `_fetchWithAuth()` に統一済み
 - [x] `respondToEvent()` のGET/PATCHレスポンスが `_checkResponse()` を使っていない — `_checkResponse()` に統一済み
 - [ ] `localize.js` が `window` グローバルに関数を export している — ES6 module の `export` に移行して明示的な `import` に統一（34ファイルが `window.getLocalizedMessage()` を使用中）
-- [ ] 通知チェックボックスの文言に実際のリード時間を出す — 現状は `remindMeBefore`（「開始前に通知する」）固定。設定のリマインダー分数（既定5分）を差し込むには、プレースホルダ付きメッセージの新設と、設定値をフォームビルダーまで渡す配線が要る。
+- [x] 通知チェックボックスの文言に実際のリード時間を出す — 設定のリマインダー分数を出す（「開始5分前に通知する」、60分は「1時間前」。`remindMinutesBefore` / `remindHourBefore`、`event-dialog-dom.js`）。
 - [x] `background.js` の21箇所の `console.error/warn` 直接呼出を `logError()`/`logWarn()` に統一
 - [x] `StorageHelper` 直接利用とラッパー関数 (`settings-storage.js`, `event-storage.js`) の使い分け基準を storage-helper.js の JSDoc に明記
 
