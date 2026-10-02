@@ -240,7 +240,7 @@
     "description": "種別で不在を選んだときの案内。$1 はメインカレンダーの名前"
   },
   "eventReminder": {
-    "message": "イベント リマインダー",
+    "message": "予定の通知",
     "description": "リマインダー通知のタイトル"
   },
   "startsInMinutes": {
@@ -310,23 +310,23 @@
     "description": "エラーメッセージの接頭辞"
   },
   "eventSaved": {
-    "message": "イベントが保存されました",
+    "message": "予定を保存しました",
     "description": "イベント保存成功時のメッセージ"
   },
   "eventUpdated": {
-    "message": "イベントが更新されました",
+    "message": "予定を更新しました",
     "description": "イベント更新成功時のメッセージ"
   },
   "eventDeleted": {
-    "message": "イベントが削除されました",
+    "message": "予定を削除しました",
     "description": "イベント削除成功時のメッセージ"
   },
   "confirmDeleteEvent": {
-    "message": "このイベントを削除してもよろしいですか？",
+    "message": "この予定を削除しますか？",
     "description": "イベント削除確認メッセージ"
   },
   "newDayReset": {
-    "message": "新しい日になりました。前日のイベントをリセットします",
+    "message": "新しい日になりました。前日の予定をリセットします",
     "description": "日付変更時のリセットメッセージ"
   },
   "notAuthorized": {
@@ -454,7 +454,7 @@
     "description": "ヘッダおよびメモパネルの背景色入力のラベル"
   },
   "googleEventDefaultColor": {
-    "message": "Googleイベントのデフォルト",
+    "message": "Googleの予定のデフォルト",
     "description": "Googleイベントのデフォルト色入力のラベル"
   },
   "workTimeColor": {
@@ -462,7 +462,7 @@
     "description": "業務時間色入力のラベル"
   },
   "localEventColor": {
-    "message": "ローカルイベント",
+    "message": "ローカル予定",
     "description": "ローカルイベント色入力のラベル"
   },
   "breakTimeColor": {
@@ -1330,7 +1330,7 @@
     "description": "初期設定：通知ステップの説明"
   },
   "setupReminderToggle": {
-    "message": "イベントリマインダーを有効にする",
+    "message": "予定の通知を有効にする",
     "description": "初期設定：リマインダートグルラベル"
   },
   "setupReminderMinutes": {
@@ -1646,7 +1646,7 @@
     "description": "休憩時間が就業時間外の場合のバリデーションエラー"
   },
   "clearLocalEvents": {
-    "message": "ローカルイベントを削除",
+    "message": "ローカル予定を削除",
     "description": "ローカルイベント削除ボタンのラベル"
   },
   "clearMemo": {
