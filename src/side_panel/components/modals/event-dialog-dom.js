@@ -11,6 +11,11 @@
  * listener is removed when the component is destroyed.
  */
 import { timeStringToMinutes, minutesToTimeString } from '../../../lib/time-utils.js';
+import { createTimeField } from '../../../lib/time-field.js';
+
+// Language and 12/24-hour preferences live in lib/display-prefs.js (the
+// settings page uses them too); re-exported for the dialogs.
+export { getDisplayPrefs, setDisplayPrefs, refreshDisplayPrefs, usesTwelveHourClock } from '../../../lib/display-prefs.js';
 
 /** Duration presets offered next to the time inputs, in minutes. */
 export const DURATION_PRESETS = [
@@ -376,86 +381,6 @@ export function showStatusLine(line, tone, message) {
 // ===== Time row =====
 
 /**
- * Whether Chrome shows time fields with a 12-hour clock ("04:30 PM").
- *
- * A native `<input type="time">` takes its format from Chrome's UI language,
- * not from the page's `lang` (so not from the extension's language setting).
- * This asks the same language for its hour cycle.
- * @returns {boolean}
- */
-/**
- * The language and 12/24-hour choice the dialogs write dates and times in —
- * the same ones the header and the event blocks use (the extension language
- * and the time-format setting), so a time reads the same everywhere. Starts
- * from a synchronous guess and is replaced once the settings are read.
- */
-let displayPrefs = null;
-
-/**
- * @returns {{locale: string, timeFormat: string}}
- */
-export function getDisplayPrefs() {
-    if (!displayPrefs) {
-        const lang = globalThis.document?.documentElement?.lang;
-        displayPrefs = {
-            locale: lang === 'ja' ? 'ja' : 'en',
-            timeFormat: usesTwelveHourClock() ? '12h' : '24h'
-        };
-    }
-    return displayPrefs;
-}
-
-/**
- * Use known preferences (tests, or a caller that has already read them).
- * @param {{locale: string, timeFormat: string}} prefs
- */
-export function setDisplayPrefs(prefs) {
-    displayPrefs = {
-        locale: prefs.locale === 'ja' ? 'ja' : 'en',
-        timeFormat: prefs.timeFormat === '12h' ? '12h' : '24h'
-    };
-}
-
-/**
- * Read the stored language and time-format setting.
- * @returns {Promise<boolean>} Whether they differ from what was assumed
- */
-export async function refreshDisplayPrefs() {
-    const before = getDisplayPrefs();
-    try {
-        const [locale, timeFormat] = await Promise.all([
-            typeof window.getCurrentLocale === 'function' ? window.getCurrentLocale() : before.locale,
-            typeof window.getTimeFormatPreference === 'function' ? window.getTimeFormatPreference() : before.timeFormat
-        ]);
-        const next = {
-            locale: locale === 'ja' ? 'ja' : 'en',
-            timeFormat: timeFormat === '12h' ? '12h' : '24h'
-        };
-        displayPrefs = next;
-        return next.locale !== before.locale || next.timeFormat !== before.timeFormat;
-    } catch {
-        return false;
-    }
-}
-
-export function usesTwelveHourClock() {
-    let language;
-    try {
-        language = chrome.i18n.getUILanguage();
-    } catch {
-        language = undefined;
-    }
-    language = language || globalThis.navigator?.language || 'en-US';
-    try {
-        const { hourCycle, hour12 } = new Intl.DateTimeFormat(language, { hour: 'numeric' }).resolvedOptions();
-        if (hourCycle) return hourCycle === 'h11' || hourCycle === 'h12';
-        return hour12 === true;
-    } catch {
-        return false;
-    }
-}
-
-/**
  * The time row: start, end and a duration picker that writes the end time.
  * The three wrap as a group, so in a narrow panel the duration drops under
  * the times rather than the times being clipped.
@@ -467,20 +392,14 @@ export function createTimeRow(ids) {
 
     const fields = document.createElement('div');
     fields.className = 'event-time-fields';
-    // A 12-hour value has no room for Chrome's picker button (see the CSS)
-    if (usesTwelveHourClock()) {
-        fields.classList.add('is-12h');
-    }
     row.appendChild(fields);
 
+    // Times in the extension's language and 12/24-hour setting (a native
+    // time input would follow Chrome's language instead)
     const makeTimeInput = (id, msgKey, fallback) => {
         fields.appendChild(createHiddenLabel(id, msgKey, fallback));
 
-        const input = document.createElement('input');
-        input.type = 'time';
-        input.id = id;
-        input.className = 'event-form-field event-time-input';
-        input.setAttribute('list', 'time-list');
+        const input = createTimeField({ id, className: 'event-form-field event-time-input' });
         input.required = true;
         fields.appendChild(input);
         return input;

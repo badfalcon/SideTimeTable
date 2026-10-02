@@ -45,6 +45,7 @@
 
 ## テスト
 
+- [ ] 時刻欄（`createTimeField()`）の DOM テスト: 一覧の開閉（クリック・↓・Escape はダイアログを閉じない・Tab・スクロールで閉じる）、↑↓・PageUp/Down・Enter での選択、入力の確定（Enter / フォーカスが外れたとき）と不正な入力で元の時刻に戻ること、変更の通知が1回だけなこと。読み取り・書式は `tests/lib/time-field.test.js` でカバー済み、操作は実拡張で確認済み。jsdom 基盤が前提（popover と `:popover-open` も要る）。
 - [ ] 初期設定・チュートリアルの document レベルの Escape ハンドラの DOM テスト（表示していないときの Escape で `_finish()` が走らないこと）。`_isActive()` 単体は `tests/side_panel/onboarding-overlays.test.js` でカバー済み。jsdom 基盤が前提。
 - [ ] 予定モーダルの多言語レイアウト監査の自動化: 実拡張を Playwright で開き、各ステート（ローカル / 毎週 / Google＋詳細 / 不在 / メインなし / エラー / 編集）ではみ出し・折り返し・select の切れを検出する検査を ja / en / 疑似翻訳（+40%）× パネル幅 384 / 320px で回した（2026-09 実施、手元スクリプト）。詳細・Google 編集・削除確認・出欠・繰り返し削除も同様にライト/ダーク込みで確認済み。`scripts/` に取り込んで `npm run` 化するか、jsdom では再現できないため Playwright 前提の別枠テストとして整備する。
 - [ ] `_showAuthExpiredBanner()` のDOMテスト（jsdom環境が必要）
@@ -101,10 +102,8 @@
 ## 既知の不具合（要設計）
 
 - [x] サイドパネル幅 320px（Chrome の最小幅）でヘッダーの更新アイコンと「前の日」ボタンが重なる — ヘッダーを3列グリッド（`1fr auto 1fr`）にし、日付は中央のまま、狭いときは左右のボタンに被らずにずれるようにした。幅 360px 以下では日付の文字と間隔を少し詰め、更新ボタンとの間を 12px 空ける（チュートリアルのハイライトが隣のボタンに掛からないように）。同じ幅でチュートリアルの吹き出しと初期設定のカードがはみ出していたのも修正（どちらも padding が幅の外に足されていた）。
-- [ ] 拡張機能の言語設定と Chrome の言語が違うと、時刻欄の表記だけが混在する（2026-09 に実拡張で確認）。例: Chrome が米国英語・拡張機能が日本語だと、日本語の画面の時刻欄に「04:30 PM」が出る。
-  - 時刻欄（`<input type="time">`）は Chrome の UI 言語に従い、ページの `lang` 属性では変わらない（実拡張で確認済み）ため、拡張機能からは制御できない。
-  - 済: ヘッダーの日付は `formatHeaderDate()` で拡張機能の言語に、詳細表示の日時（`formatEventTime()` / `_formatViewTime()`）と繰り返し削除ダイアログの日付は `formatDateTimeRange()` / `formatHeaderDate()` で「拡張機能の言語＋時刻表記の設定（12h/24h）」に揃え、予定ブロック・時刻軸と同じ書き方になった（`getDisplayPrefs()` / `refreshDisplayPrefs()`）。
-  残るのは時刻欄のみ。拡張機能の言語に揃えるなら時刻欄を独自の入力部品に置き換える必要がある。`CLAUDE.md` の「12h for English, 24h for Japanese」の記述も実態（既定は Chrome の言語で決まり、設定で変えられる）と合わせて見直す。
+- [x] 拡張機能の言語設定と Chrome の言語が違うと、時刻欄の表記だけが混在していた（例: Chrome が米国英語・拡張機能が日本語で「04:30 PM」）— 時刻欄を `<input type="time">` から自前の部品（`src/lib/time-field.js`）に置き換えた。表記は予定ブロックと同じ「拡張機能の言語＋時刻表記の設定」（「09:00」「9:00 AM」「午前9:00」）で、「930」「9:30pm」「午後3時」なども読める。15分ごとの時刻の一覧（ポップオーバー）から選べる。対象: 予定の作成・編集（ローカル / Google）、初期設定の勤務時間、設定ページの勤務・休憩時間とデモの時刻。言語・時刻表記の取得は `src/lib/display-prefs.js` にまとめ、設定ページでも `locale-utils.js` を読み込む。`CLAUDE.md` の時刻表記の記述も実態に合わせた。
+- [ ] 日付欄（繰り返しの終了日 `<input type="date">`）も Chrome の言語で表示される（例: 米国英語の Chrome では日本語の画面でも「mm/dd/yyyy」）。揃えるなら時刻欄と同じく自前の部品（日付の入力＋カレンダー）が要る。ヘッダーの日付ラベルから開く日付選択（`showPicker()`）のカレンダーも Chrome の言語だが、表示だけなので優先度は低い。
 - [x] 高速な日付ナビゲーションでの表示レース: `fetchEvents()` と `fetchEventsForCalendars()` に `_fetchVersion` ガードを追加し、古いレスポンスの描画・DOMクリア・`currentFetchPromise` の誤クリアを防止（`tests/side_panel/event-handlers-race.test.js`）。残る極小レース: 古いフェッチの `_processEvents` 実行中に新しいフェッチが完了した場合の混在描画（発生条件が非常に狭いため保留）。
 - [x] 日跨ぎイベントのレイアウト崩れ（レーン割当）: `_areEventsOverlapping()` とグループ内ソートを、DOM が実際に描画する区間（開始の分単位 + 実所要時間 = `_getRenderInterval()`）で比較するよう変更。23:00→翌01:00 の重なり判定が正しくなり、かつ前日開始のイベント（23:00 の位置に描かれる）が深夜帯のイベントとグループ化されてレーンを奪う問題も回避（`tests/side_panel/time-manager.test.js` に日跨ぎスペック）。残: 前日開始イベントを閲覧中の日の先頭へクランプする／翌日にも継続表示する表示仕様（複数日ローカル予定を実装する際に設計）。レイアウトは描画位置に追随しているため、その時は `_getRenderInterval()` も合わせて更新すること。
 - [ ] 毎日繰り返しの DST 日数ずれ（潜在）: `event-storage.js` DAILY 分岐の `Math.floor((targetDateObj - eventStartDate) / 86400000)` がサマータイム境界で1日ずれる。現状 `interval` はUIで `1` 固定（`local-event-modal.js` / `local-event-form-builder.js`）のため `daysDiff % 1 === 0` で観測影響なし。`interval > 1` 機能を追加する場合は `Math.floor`→`Math.round`（WEEKLYと整合）に修正すること。

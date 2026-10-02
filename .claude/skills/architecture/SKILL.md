@@ -73,7 +73,9 @@ Shared functions and framework components:
 - `utils.js`: Core utilities (`generateTimeList`, `loadSettings`, `logError`, event storage, recurring events)
 - `time-utils.js`: Pure functions for time calculations (`calculateWorkHours`, `isToday`)
 - `localize.js`: i18n helper functions with Chrome extension API integration
-- `locale-utils.js`: Locale-aware date/time formatting (12h/24h format support)
+- `locale-utils.js`: Locale-aware date/time formatting (12h/24h format support); a plain script exposing `window.getCurrentLocale()` / `window.getTimeFormatPreference()` (loaded by the side panel and the settings page)
+- `display-prefs.js`: The language and 12/24-hour choice times are written in (`getDisplayPrefs()` / `refreshDisplayPrefs()`), shared by the dialogs, the setup and the settings page
+- `time-field.js`: Time field in the extension's language and 12/24-hour setting — a text box (`value` stays "HH:MM") that reads typed times ("930", "9:30pm", "午後3時") and opens a list of times every 15 minutes (a popover); replaces `<input type="time">`, which Chrome draws in its own language
 - `demo-data.js`: Mock data system for development and screenshots
 - `current-time-line-manager.js`: Dedicated current time indicator management with date-aware visibility
 - `storage-helper.js`: Chrome storage API wrapper with async/await support
@@ -119,7 +121,7 @@ Dedicated `CurrentTimeLineManager` system:
 Comprehensive i18n support:
 - `_locales/en/`, `_locales/en_US/`, `_locales/ja/` message files with 400+ localized strings
 - Language detection with auto/manual selection
-- Locale-aware time formatting (12h for English, 24h for Japanese)
+- Locale-aware time formatting: the extension language plus the 12h/24h setting (default 12h only for a US-English Chrome), the same in event blocks, the time axis, dialogs and time fields
 - Demo data localization for consistent experience across languages
 - Chrome's native i18n system with `__MSG_key__` placeholders
 - Custom locale utilities for complex formatting needs

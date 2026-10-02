@@ -3,6 +3,7 @@
  */
 import { CardComponent } from '../base/card-component.js';
 import { createIcon, createSelect, createSettingRow, createSwitch, msg, setText } from '../base/settings-dom.js';
+import { createTimeField } from '../../../lib/time-field.js';
 import {
     isDemoMode, setDemoMode,
     getDemoCurrentTimeString, setDemoCurrentTime,
@@ -57,10 +58,7 @@ export class DemoModeCard extends CardComponent {
     }
 
     _createTimeSection() {
-        this.timeInput = document.createElement('input');
-        this.timeInput.type = 'time';
-        this.timeInput.className = 'settings-input settings-time-input';
-        this.timeInput.id = 'demo-time-input';
+        this.timeInput = createTimeField({ id: 'demo-time-input', className: 'settings-input settings-time-input', step: 30 });
         this.timeInput.disabled = true;
 
         return createSettingRow({

@@ -52,7 +52,7 @@ npm run build         # Verify production build succeeds
 - CSS variable naming: `--side-calendar-*` (theme details in @.claude/rules/theme-support.md)
 - **No debug logs in production code** — clean console output
 - i18n: `_locales/en/` and `_locales/ja/` with 400+ localized strings, `__MSG_key__` placeholders
-- Time formats: 12h for English, 24h for Japanese
+- Time formats: written in the extension's language with the 12h/24h setting (`timeFormat`; the default is 12h only for a US-English Chrome) — `formatClockTime()` / `formatTimeRange()` in `time-utils.js`, prefs from `lib/display-prefs.js`. Time inputs use `lib/time-field.js`, never `<input type="time">` (Chrome draws that in its own language, not the extension's)
 - Date formats: MM/DD/YYYY (English), YYYY/MM/DD (Japanese)
 
 ## Event System

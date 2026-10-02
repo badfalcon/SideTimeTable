@@ -32,6 +32,7 @@ import {
 } from './components/index.js';
 import { createIcon, createNotice, msg } from './components/base/settings-dom.js';
 import { setupSettingsTabs } from './settings-tabs.js';
+import { refreshDisplayPrefs } from '../lib/display-prefs.js';
 
 /**
  * OptionsPageManager - The overall options page management class
@@ -657,6 +658,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Sections: one panel at a time
     setupSettingsTabs(document.getElementById('settings-tablist'));
+
+    // The language and 12/24-hour setting the time fields write times in
+    await refreshDisplayPrefs();
 
     // Initialize the new component-based options page manager
     const optionsPageManager = new OptionsPageManager();

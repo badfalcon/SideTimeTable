@@ -512,3 +512,22 @@ Alarm names are `${prefix}${YYYY-MM-DD}_${eventId}`.
 - `Home` / `End` → first / last visible tab
 - Hidden tabs (the developer section when it is off) are skipped
 - Any other key, or a tab not in the list → `null`
+
+---
+
+## time-field (time inputs in the extension's language)
+
+### parseTimeText(text)
+- Hours alone (`"9"`), 3–4 digits (`"930"`, `"2130"`), `H:MM` / `H.MM`, 24-hour values
+- am/pm in any common spelling (`"9:30pm"`, `"9 a.m."`, `"9p"`), `12am` → `00:00`, `12pm` → `12:00`
+- 午前 / 午後, 時 / 分 / 半 (`"午後3時"`, `"21時30分"`, `"9時半"`), full-width digits
+- Not a time (empty, letters, `24:00`, `9:60`, `13am`, seconds) → `null`
+
+### formatTimeText(hhmm, prefs)
+- As the timeline writes it: `"09:00"` (24h), `"9:00 AM"` / `"午前9:00"` (12h)
+- Reads back as the same time for every listed time, in all four language × format combinations
+
+### buildTimeOptions(step) / nearestTimeIndex(times, hhmm)
+- Every `step` minutes from `00:00` to before `24:00` (96 for 15 minutes)
+- The highlighted option is the same time or the next one after it; the last one for later times; `-1` for no time
+

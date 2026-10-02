@@ -2,7 +2,7 @@
  * TimeSettingsCard - Time settings card component
  */
 import { CardComponent } from '../base/card-component.js';
-import { generateTimeList } from '../../../lib/utils.js';
+import { createTimeField } from '../../../lib/time-field.js';
 import { createNotice, createSettingRow, createSwitch, msg } from '../base/settings-dom.js';
 
 export class TimeSettingsCard extends CardComponent {
@@ -21,7 +21,6 @@ export class TimeSettingsCard extends CardComponent {
         this.breakTimeFixedCheckbox = null;
         this.breakTimeStartInput = null;
         this.breakTimeEndInput = null;
-        this.timeDatalist = null;
 
         // The current settings values
         this.settings = {
@@ -39,9 +38,6 @@ export class TimeSettingsCard extends CardComponent {
         // Create the form elements
         const form = this._createForm();
         this.addContent(form);
-
-        // Generate the time list
-        this._generateTimeList();
 
         // Set up the event listeners
         this._setupEventListeners();
@@ -85,11 +81,6 @@ export class TimeSettingsCard extends CardComponent {
             ]
         }).row);
 
-        // The time selection list
-        this.timeDatalist = document.createElement('datalist');
-        this.timeDatalist.id = 'time-settings-time-list';
-        form.appendChild(this.timeDatalist);
-
         return form;
     }
 
@@ -101,13 +92,10 @@ export class TimeSettingsCard extends CardComponent {
      * @private
      */
     _createTimeInput(id, value, ariaKey) {
-        const input = document.createElement('input');
-        input.type = 'time';
-        input.className = 'settings-input settings-time-input';
-        input.id = id;
-        input.step = '900'; // 15-minute increments
+        // In the extension's language and 12/24-hour setting, with a list of
+        // times every 15 minutes
+        const input = createTimeField({ id, className: 'settings-input settings-time-input' });
         input.value = value;
-        input.setAttribute('list', 'time-settings-time-list');
         input.setAttribute('aria-label', msg(ariaKey, ariaKey === 'startTime' ? 'Start time' : 'End time'));
         input.setAttribute('data-localize-aria-label', `__MSG_${ariaKey}__`);
         return input;
@@ -128,16 +116,6 @@ export class TimeSettingsCard extends CardComponent {
         range.appendChild(dash);
         range.appendChild(end);
         return range;
-    }
-
-    /**
-     * Generate time selection list
-     * @private
-     */
-    _generateTimeList() {
-        if (this.timeDatalist) {
-            generateTimeList(this.timeDatalist);
-        }
     }
 
     /**

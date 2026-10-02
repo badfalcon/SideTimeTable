@@ -878,8 +878,7 @@ body {
     font-weight: bold;
 }
 
-.modal-content input[type="text"],
-.modal-content input[type="time"] {
+.modal-content input[type="text"] {
     width: calc(100% - 20px); /* Adjust width */
     padding: 10px;
     margin-bottom: 15px;
@@ -1130,38 +1129,11 @@ body {
 
 :is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-time-input {
     flex: 1 1 0;
-    /* Room for a 12-hour value such as "12:30 PM" */
+    /* Room for a 12-hour value such as "12:30 PM" or "午後12:30" */
     min-width: 6em;
-    padding: 0 6px;
+    padding: 0 8px;
     font-variant-numeric: tabular-nums;
-}
-
-/* Chrome's picker button costs ~22px. A 24-hour value ("16:30") has room for
-   it; a 12-hour one does not — with it, "04:30 PM" renders clipped to
-   "04:30 P" — so a 12-hour Chrome gets the field without the button. It still
-   takes typed input and arrow keys, and the duration presets cover quick
-   picking. */
-:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-time-fields.is-12h .event-time-input::-webkit-calendar-picker-indicator {
-    display: none;
-}
-
-:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-time-input::-webkit-calendar-picker-indicator {
-    margin: 0;
-    padding: 2px;
-    border-radius: 4px;
     cursor: pointer;
-    opacity: 0.6;
-}
-
-:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-time-input::-webkit-calendar-picker-indicator:hover {
-    background-color: var(--side-calendar-subtle-bg-hover);
-    opacity: 1;
-}
-
-/* The dialogs set color-scheme: dark, which already draws a light icon; the
-   global dark-mode invert would turn it back to dark-on-dark */
-[data-theme="dark"] :is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-time-input::-webkit-calendar-picker-indicator {
-    filter: none;
 }
 
 :is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-time-separator {
@@ -2467,10 +2439,6 @@ body {
     cursor: pointer;
 }
 
-/* Time picker clock icon for dark mode */
-[data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator {
-    filter: invert(1);
-}
 
 /* Lane-density-based: horizontal space optimization (managed by EventLayoutManager) */
 .event.compact {
@@ -2914,6 +2882,12 @@ body {
 }
 
 /* The dialogs' field: 36px, same border, corner and focus ring */
+.setup-time-input {
+    width: 7.5em;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+}
+
 .setup-time-input,
 .setup-select {
     height: 36px;
@@ -3847,3 +3821,45 @@ body {
 [data-theme="dark"] .timeline-calendar-filter-manage {
     color: var(--side-calendar-link-color);
 }
+
+/* ===== Time field list (lib/time-field.js) =====
+   Times every 15 minutes under a time field, written like the field. It is a
+   popover, so it sits above dialogs and is not clipped by their scrolling. */
+.time-field-list {
+    position: fixed;
+    inset: auto;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 4px;
+    overflow-y: auto;
+    list-style: none;
+    border: 1px solid var(--side-calendar-border-color);
+    border-radius: var(--side-calendar-radius-lg);
+    background: var(--side-calendar-modal-bg);
+    color: var(--side-calendar-panel-text-color);
+    box-shadow: var(--side-calendar-shadow-popover);
+    font-family: inherit;
+    font-size: var(--side-calendar-font-body);
+    scrollbar-width: thin;
+}
+
+.time-field-option {
+    display: flex;
+    align-items: center;
+    height: 32px;
+    padding: 0 10px;
+    border-radius: var(--side-calendar-radius-sm);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+}
+
+.time-field-option.is-active {
+    background: var(--side-calendar-subtle-bg-hover);
+}
+
+.time-field-option.is-selected {
+    color: var(--side-calendar-accent-color);
+    font-weight: 600;
+}
+

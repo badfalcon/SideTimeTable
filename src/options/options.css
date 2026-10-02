@@ -29,19 +29,6 @@ textarea {
     line-height: inherit;
 }
 
-/* Time fields: the hour and the separator sit flush, one line tall */
-::-webkit-datetime-edit-fields-wrapper,
-::-webkit-datetime-edit-text,
-::-webkit-datetime-edit-hour-field {
-    padding: 0;
-}
-
-::-webkit-date-and-time-value {
-    min-width: 85px;
-    height: 1.5em;
-    margin: 0;
-}
-
 /* Read by screen readers only (status text) */
 .visually-hidden {
     position: absolute !important;
@@ -444,11 +431,54 @@ body {
     gap: 8px;
 }
 
-/* Sized to its content: "09:00" (ja) or "09:00 AM" (en) */
+/* Room for "09:00", "12:30 PM" or "午後12:30" (lib/time-field.js) */
 .settings-time-input {
-    width: auto;
-    min-width: 104px;
+    width: 104px;
     font-variant-numeric: tabular-nums;
+    cursor: pointer;
+}
+
+.settings-time-input:disabled {
+    cursor: default;
+}
+
+/* Times every 15 minutes under a time field. A popover, so the cards'
+   rounded corners (overflow: hidden) do not clip it. */
+.time-field-list {
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    padding: 4px;
+    overflow-y: auto;
+    list-style: none;
+    border: 1px solid var(--settings-border);
+    border-radius: var(--side-calendar-radius-lg);
+    background: var(--settings-surface);
+    color: var(--settings-text);
+    box-shadow: var(--side-calendar-shadow-popover);
+    font-family: inherit;
+    font-size: var(--side-calendar-font-body);
+    scrollbar-width: thin;
+}
+
+.time-field-option {
+    display: flex;
+    align-items: center;
+    height: 32px;
+    padding: 0 10px;
+    border-radius: var(--side-calendar-radius-sm);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+}
+
+.time-field-option.is-active {
+    background: var(--settings-hover);
+}
+
+.time-field-option.is-selected {
+    color: var(--settings-accent-text);
+    font-weight: 600;
 }
 
 .settings-time-dash {

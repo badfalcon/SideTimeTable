@@ -34,7 +34,6 @@ import { consumePendingEventFocus } from '../lib/event-focus.js';
 import { AlarmManager } from '../lib/alarm-manager.js';
 import { ThemeService } from '../services/theme-service.js';
 import { OnboardingService } from '../services/onboarding-service.js';
-import { generateTimeList } from '../lib/utils.js';
 import { isSameDay, parseDateString } from '../lib/time-utils.js';
 import { loadSettings, loadSelectedCalendars } from '../lib/settings-storage.js';
 import { migrateEventDataToLocal } from '../lib/event-storage.js';
@@ -42,6 +41,7 @@ import { cleanupObsoleteStorageKeys } from '../lib/storage-cleanup.js';
 import { sendMessage } from '../lib/chrome-messaging.js';
 import { setDemoMode, isDemoMode } from '../lib/demo-data.js';
 import { filterWritableCalendars } from '../lib/google-event-utils.js';
+import { refreshDisplayPrefs } from '../lib/display-prefs.js';
 
 // The reload message listener
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -109,6 +109,9 @@ class SidePanelUIController {
             if (window.loadLocalizedMessages) {
                 await window.loadLocalizedMessages();
             }
+
+            // The language and 12/24-hour setting times are written in
+            await refreshDisplayPrefs();
 
             // Migrate event data from sync to local storage (one-time)
             await migrateEventDataToLocal();
@@ -208,11 +211,7 @@ class SidePanelUIController {
 
         // Remove the other potentially duplicate elements
         const duplicateElements = document.querySelectorAll('[id*="sideTimeTable"], [id*="EventDialog"], [id*="Modal"]');
-        duplicateElements.forEach(element => {
-            if (element.id !== 'time-list') { // Keep time-list
-                element.remove();
-            }
-        });
+        duplicateElements.forEach(element => element.remove());
     }
 
     /**
@@ -360,10 +359,6 @@ class SidePanelUIController {
      * @private
      */
     async _initializeManagers() {
-        // Generate the time list
-        const timeListElement = document.getElementById('time-list');
-        generateTimeList(timeListElement);
-
         // Initialize the layout manager
         const timeTableBase = document.getElementById('sideTimeTableBase') || this.timelineComponent.element?.querySelector('.side-time-table-base');
         this.eventLayoutManager = new EventLayoutManager(timeTableBase);
