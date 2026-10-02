@@ -380,8 +380,8 @@ export class GoogleEventModal extends ModalComponent {
      */
     _buildRsvp(event, container, inFooter) {
         const selfAttendee = event.attendees.find(a => a.self);
-        // A reply to one occurrence of a series only applies to that one;
-        // say so on the choice that hides the event.
+        // A reply to one occurrence of a series (any of the three answers)
+        // only applies to that one; say so once, beside the control.
         const isRecurringInstance = !!event.recurringEventId;
 
         this.rsvpStatusLine = createStatusLine();
@@ -389,13 +389,29 @@ export class GoogleEventModal extends ModalComponent {
         const row = document.createElement('div');
         row.className = 'event-rsvp-row';
 
+        let scope = null;
+        if (isRecurringInstance) {
+            scope = document.createElement('span');
+            scope.className = 'event-rsvp-scope';
+            scope.id = 'googleEventRsvpScope';
+            setLocalizedText(scope, 'rsvpScope', 'This event only');
+        }
+
         if (inFooter) {
             const label = document.createElement('span');
             label.className = 'event-rsvp-label';
             label.id = 'googleEventRsvpLabel';
-            row.appendChild(setLocalizedText(label, 'rsvpLabel', 'Going?'));
+            label.appendChild(setLocalizedText(document.createElement('span'), 'rsvpLabel', 'Going?'));
+            if (scope) label.appendChild(scope);
+            row.appendChild(label);
         } else {
             row.appendChild(createIcon('fas fa-reply event-form-row-icon'));
+            if (scope) {
+                const label = document.createElement('span');
+                label.className = 'event-rsvp-label';
+                label.appendChild(scope);
+                row.appendChild(label);
+            }
         }
 
         this.rsvpGroup = createSegmented('rsvpLabel', 'Going?');
@@ -405,6 +421,8 @@ export class GoogleEventModal extends ModalComponent {
             this.rsvpGroup.removeAttribute('aria-label');
             this.rsvpGroup.removeAttribute('data-localize-aria-label');
             this.rsvpGroup.setAttribute('aria-labelledby', 'googleEventRsvpLabel');
+        } else if (scope) {
+            this.rsvpGroup.setAttribute('aria-describedby', scope.id);
         }
 
         RSVP_CHOICES.forEach(choice => {
@@ -417,12 +435,6 @@ export class GoogleEventModal extends ModalComponent {
             const text = document.createElement('span');
             text.className = 'event-rsvp-text';
             text.appendChild(setLocalizedText(document.createElement('span'), choice.labelKey, choice.fallback));
-            if (choice.response === 'declined' && isRecurringInstance) {
-                const scope = document.createElement('span');
-                scope.className = 'event-rsvp-scope';
-                text.appendChild(setLocalizedText(scope, 'rsvpDeclineScope', 'this only'));
-                this.rsvpGroup.classList.add('has-scope');
-            }
             button.appendChild(text);
 
             setPressed(button, selfAttendee.responseStatus === choice.response);

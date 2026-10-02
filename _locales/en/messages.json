@@ -1445,9 +1445,9 @@
     "message": "No",
     "description": "Decline button for event RSVP"
   },
-  "rsvpDeclineScope": {
-    "message": "this only",
-    "description": "Sub-label appended below the Decline button on a recurring event instance to clarify scope"
+  "rsvpScope": {
+    "message": "This event only",
+    "description": "Under the RSVP label for one occurrence of a recurring event: any answer applies to that occurrence only"
   },
   "rsvpTentative": {
     "message": "Maybe",

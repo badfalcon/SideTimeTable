@@ -1445,9 +1445,9 @@
     "message": "不参加",
     "description": "出欠回答の不参加ボタン"
   },
-  "rsvpDeclineScope": {
+  "rsvpScope": {
     "message": "今回のみ",
-    "description": "繰り返しイベントインスタンスの不参加ボタン下に表示されるスコープ補足ラベル"
+    "description": "繰り返し予定の1回分への出欠で、出欠のラベルの下に出す補足（3つの回答どれもその回だけに効く）"
   },
   "rsvpTentative": {
     "message": "未定",

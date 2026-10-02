@@ -2214,10 +2214,13 @@ body {
 }
 
 :is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-rsvp-label {
+    display: flex;
     flex-shrink: 0;
+    flex-direction: column;
     color: var(--side-calendar-secondary-text-color);
     font-size: 12px;
     font-weight: 600;
+    line-height: 1.25;
 }
 
 :is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-rsvp-group {
@@ -2225,17 +2228,8 @@ body {
     min-width: 0;
 }
 
-/* Room for the second line under "No" on one occurrence of a series */
-:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-rsvp-group.has-scope {
-    height: 40px;
-}
-
 :is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-rsvp-footer .event-rsvp-group {
     height: 36px;
-}
-
-:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-rsvp-footer .event-rsvp-group.has-scope {
-    height: 40px;
 }
 
 :is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-rsvp-btn {
