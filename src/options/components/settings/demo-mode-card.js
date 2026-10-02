@@ -2,6 +2,7 @@
  * DemoModeCard - Demo mode settings card component
  */
 import { CardComponent } from '../base/card-component.js';
+import { createIcon, createSelect, createSettingRow, createSwitch, msg, setText } from '../base/settings-dom.js';
 import {
     isDemoMode, setDemoMode,
     getDemoCurrentTimeString, setDemoCurrentTime,
@@ -13,10 +14,9 @@ export class DemoModeCard extends CardComponent {
     constructor(onSettingsChange) {
         super({
             id: 'demo-mode-card',
-            title: window.getLocalizedMessage('demoModeCardTitle') || 'Demo Mode',
-            subtitle: window.getLocalizedMessage('demoModeCardSubtitle') || 'Display sample data (no API access will be made).',
+            title: msg('demoModeCardTitle', 'Demo Mode'),
+            titleLocalize: '__MSG_demoModeCardTitle__',
             icon: 'fas fa-flask',
-            iconColor: 'text-warning',
             hidden: true
         });
 
@@ -45,86 +45,56 @@ export class DemoModeCard extends CardComponent {
     }
 
     _createDemoModeSection() {
-        const section = document.createElement('div');
-        section.className = 'form-check mb-3';
-
-        this.demoModeToggle = document.createElement('input');
-        this.demoModeToggle.type = 'checkbox';
-        this.demoModeToggle.className = 'form-check-input';
-        this.demoModeToggle.id = 'demo-mode-toggle';
-
-        const label = document.createElement('label');
-        label.className = 'form-check-label';
-        label.htmlFor = 'demo-mode-toggle';
-
-        const labelText = document.createElement('span');
-        labelText.textContent = window.getLocalizedMessage('demoMode') || 'Demo Mode';
-
-        const helpText = document.createElement('small');
-        helpText.className = 'text-muted d-block';
-        helpText.textContent = window.getLocalizedMessage('demoModeHelp') || 'Display sample data (no API access will be made)';
-
-        label.appendChild(labelText);
-        label.appendChild(helpText);
-        section.appendChild(this.demoModeToggle);
-        section.appendChild(label);
-        return section;
+        this.demoModeToggle = createSwitch('demo-mode-toggle');
+        return createSettingRow({
+            labelKey: 'demoModeToggleLabel',
+            labelFallback: 'Use demo data',
+            labelFor: 'demo-mode-toggle',
+            hintKey: 'demoModeHelp',
+            hintFallback: 'Display sample data (no API access will be made)',
+            control: this.demoModeToggle
+        }).row;
     }
 
     _createTimeSection() {
-        const section = document.createElement('div');
-        section.className = 'mb-3';
-
-        const label = document.createElement('label');
-        label.className = 'form-label small mb-1';
-        label.htmlFor = 'demo-time-input';
-        label.textContent = window.getLocalizedMessage('demoTimeLabel') || 'Current time line position';
-
         this.timeInput = document.createElement('input');
         this.timeInput.type = 'time';
-        this.timeInput.className = 'form-control form-control-sm';
+        this.timeInput.className = 'settings-input settings-time-input';
         this.timeInput.id = 'demo-time-input';
-        this.timeInput.style.width = '130px';
         this.timeInput.disabled = true;
 
-        const helpText = document.createElement('small');
-        helpText.className = 'text-muted d-block mt-1';
-        helpText.textContent = window.getLocalizedMessage('demoTimeHelp') || 'Time shown by the current time line in demo mode';
-
-        section.appendChild(label);
-        section.appendChild(this.timeInput);
-        section.appendChild(helpText);
-        return section;
+        return createSettingRow({
+            labelKey: 'demoTimeLabel',
+            labelFallback: 'Current time line position',
+            labelFor: 'demo-time-input',
+            hintKey: 'demoTimeHelp',
+            hintFallback: 'Time shown by the current time line in demo mode',
+            control: this.timeInput
+        }).row;
     }
 
     _createScenarioSection() {
-        const section = document.createElement('div');
-        section.className = 'mb-1';
-        section.id = 'demo-scenario-section';
-
-        const label = document.createElement('label');
-        label.className = 'form-label small mb-1';
-        label.htmlFor = 'demo-scenario-select';
-        label.textContent = window.getLocalizedMessage('demoScenarioLabel') || 'Scenario';
-
-        this.scenarioSelect = document.createElement('select');
-        this.scenarioSelect.className = 'form-select form-select-sm';
-        this.scenarioSelect.id = 'demo-scenario-select';
-        this.scenarioSelect.style.maxWidth = '260px';
+        this.scenarioSelect = createSelect('demo-scenario-select');
         this.scenarioSelect.disabled = true;
 
-        this._scenarioDescEl = document.createElement('small');
-        this._scenarioDescEl.className = 'text-muted d-block mt-1';
+        const { row, hint } = createSettingRow({
+            labelKey: 'demoScenarioLabel',
+            labelFallback: 'Scenario',
+            labelFor: 'demo-scenario-select',
+            hintKey: 'demoScenarioHelp',
+            hintFallback: 'Reload the side panel to apply changes.',
+            control: this.scenarioSelect
+        });
+        row.id = 'demo-scenario-section';
 
-        const helpText = document.createElement('small');
-        helpText.className = 'text-muted d-block mt-1';
-        helpText.textContent = window.getLocalizedMessage('demoScenarioHelp') || 'Reload the side panel to apply changes.';
-
-        section.appendChild(label);
-        section.appendChild(this.scenarioSelect);
-        section.appendChild(this._scenarioDescEl);
-        section.appendChild(helpText);
-        return section;
+        // The hint: what the chosen scenario shows, then how to apply it
+        const help = setText(document.createElement('span'), 'demoScenarioHelp', 'Reload the side panel to apply changes.');
+        help.className = 'setting-row-hint-line';
+        this._scenarioDescEl = document.createElement('span');
+        this._scenarioDescEl.className = 'setting-row-hint-line';
+        hint.removeAttribute('data-localize');
+        hint.replaceChildren(this._scenarioDescEl, help);
+        return row;
     }
 
     async _loadScenarioOptions() {
@@ -153,65 +123,55 @@ export class DemoModeCard extends CardComponent {
     }
 
     _createLanguageSection() {
-        const section = document.createElement('div');
-        section.className = 'mb-3';
-        section.id = 'demo-language-section';
-
-        const label = document.createElement('label');
-        label.className = 'form-label small mb-1';
-        label.htmlFor = 'demo-lang-select';
-        label.textContent = window.getLocalizedMessage('demoLanguageLabel') || 'Demo language';
-
-        this.langSelect = document.createElement('select');
-        this.langSelect.className = 'form-select form-select-sm';
-        this.langSelect.id = 'demo-lang-select';
-        this.langSelect.style.maxWidth = '180px';
+        this.langSelect = createSelect('demo-lang-select', [
+            { value: 'auto', text: msg('demoLanguageAuto', 'Auto (follow extension setting)'), key: '__MSG_demoLanguageAuto__' },
+            { value: 'en', text: 'English' },
+            { value: 'ja', text: '日本語' }
+        ]);
         this.langSelect.disabled = true;
-
-        [
-            { value: 'auto', label: window.getLocalizedMessage('demoLanguageAuto') || 'Auto (follow extension setting)' },
-            { value: 'en', label: 'English' },
-            { value: 'ja', label: '日本語' }
-        ].forEach(({ value, label: text }) => {
-            const opt = document.createElement('option');
-            opt.value = value;
-            opt.textContent = text;
-            this.langSelect.appendChild(opt);
-        });
         this.langSelect.value = getDemoLang();
 
-        const helpText = document.createElement('small');
-        helpText.className = 'text-muted d-block mt-1';
-        helpText.textContent = window.getLocalizedMessage('demoLanguageHelp') || 'Override language used in demo data (for screenshots etc.)';
-
-        section.appendChild(label);
-        section.appendChild(this.langSelect);
-        section.appendChild(helpText);
-        return section;
+        const { row } = createSettingRow({
+            labelKey: 'demoLanguageLabel',
+            labelFallback: 'Demo language',
+            labelFor: 'demo-lang-select',
+            hintKey: 'demoLanguageHelp',
+            hintFallback: 'Override language used in demo data (for screenshots etc.)',
+            control: this.langSelect
+        });
+        row.id = 'demo-language-section';
+        return row;
     }
 
+    /**
+     * While demo mode is on: this page with ?demo=true, to preview the demo
+     * settings
+     * @private
+     */
     _createDemoLinkSection() {
-        const section = document.createElement('div');
-        section.className = 'mt-3 p-2 bg-light rounded d-none';
-        section.id = 'demo-link-section';
-
         const demoUrl = window.location.pathname + '?demo=true';
 
-        const demoLinkInfoMsg = window.getLocalizedMessage('demoLinkInfo') || 'Open with <code>?demo=true</code> to preview demo settings:';
-        section.innerHTML = `
-            <small class="text-muted d-block mb-2">
-                <i class="fas fa-info-circle me-1"></i>
-                ${demoLinkInfoMsg}
-            </small>
-            <div class="d-flex align-items-center gap-2">
-                <code class="flex-grow-1 text-truncate small border rounded px-2 py-1 bg-white">${demoUrl}</code>
-                <a href="${demoUrl}" target="_blank" class="btn btn-sm btn-outline-warning text-nowrap">
-                    <i class="fas fa-external-link-alt me-1"></i>${window.getLocalizedMessage('demoLinkOpen') || 'Open'}
-                </a>
-            </div>
-        `;
+        const link = document.createElement('a');
+        link.href = demoUrl;
+        link.target = '_blank';
+        link.rel = 'noopener';
+        link.className = 'settings-btn';
+        link.appendChild(createIcon('fas fa-arrow-up-right-from-square'));
+        link.appendChild(setText(document.createElement('span'), 'demoLinkOpen', 'Open'));
 
-        return section;
+        const { row } = createSettingRow({
+            labelKey: 'demoLinkLabel',
+            labelFallback: 'Preview the demo settings',
+            control: link
+        });
+        row.id = 'demo-link-section';
+
+        // The address it opens, under the name
+        const path = document.createElement('p');
+        path.className = 'setting-row-hint settings-mono';
+        path.textContent = demoUrl;
+        row.querySelector('.setting-row-text').appendChild(path);
+        return row;
     }
 
     _updateUI() {
@@ -230,7 +190,7 @@ export class DemoModeCard extends CardComponent {
             this.langSelect.disabled = !isDemo;
         }
         if (this.demoLinkSection) {
-            this.demoLinkSection.classList.toggle('d-none', !isDemo);
+            this.demoLinkSection.hidden = !isDemo;
         }
     }
 
@@ -240,13 +200,9 @@ export class DemoModeCard extends CardComponent {
             setDemoMode(enabled);
             this._updateUI();
             const demoMsg = enabled
-                ? (window.getLocalizedMessage('demoModeEnabled') || 'Demo mode enabled')
-                : (window.getLocalizedMessage('demoModeDisabled') || 'Demo mode disabled');
-            this._showAlert(
-                `<i class="fas fa-${enabled ? 'flask' : 'globe'} me-1"></i>` +
-                `<strong>${demoMsg}</strong>`,
-                'info', 3000
-            );
+                ? msg('demoModeEnabled', 'Demo mode enabled')
+                : msg('demoModeDisabled', 'Demo mode disabled');
+            this._showAlert(demoMsg, 'info', 3000);
             if (this.onSettingsChange) this.onSettingsChange({ demoMode: enabled });
         });
 
@@ -258,20 +214,14 @@ export class DemoModeCard extends CardComponent {
         this.langSelect?.addEventListener('change', (e) => {
             setDemoLang(e.target.value);
             this._loadScenarioOptions();
-            this._showAlert(
-                `<i class="fas fa-language me-1"></i>${window.getLocalizedMessage('demoLanguageChanged') || 'Language changed — reload the side panel to apply.'}`,
-                'info', 4000
-            );
+            this._showAlert(msg('demoLanguageChanged', 'Language changed — reload the side panel to apply.'), 'info', 4000);
         });
 
         this.scenarioSelect?.addEventListener('change', (e) => {
             const id = e.target.value;
             setDemoScenario(id);
             this._updateScenarioDesc(this._scenarioOptions, id);
-            this._showAlert(
-                `<i class="fas fa-users me-1"></i>${window.getLocalizedMessage('demoScenarioChanged') || 'Scenario changed — reload the side panel to apply.'}`,
-                'info', 4000
-            );
+            this._showAlert(msg('demoScenarioChanged', 'Scenario changed — reload the side panel to apply.'), 'info', 4000);
             if (this.onSettingsChange) this.onSettingsChange({ demoScenario: id });
         });
     }

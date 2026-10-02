@@ -2,97 +2,100 @@
  * StorageCard - Chrome storage inspector and management card
  */
 import { CardComponent } from '../base/card-component.js';
+import { createButton, createIcon, createIconButton, msg, setText } from '../base/settings-dom.js';
 import { StorageHelper } from '../../../lib/storage-helper.js';
 import { STORAGE_KEYS } from '../../../lib/constants.js';
 
 export class StorageCard extends CardComponent {
-    // 階層ごとの縦線の色
-    static DEPTH_COLORS = Object.freeze(['#6c757d', '#0d6efd', '#198754', '#dc3545', '#fd7e14', '#6f42c1']);
+    // Nesting levels cycle through this many line colours (.storage-depth-N)
+    static DEPTH_LEVELS = 4;
     static SYNC_QUOTA = 102400;
     static LOCAL_QUOTA = 10485760;
 
     constructor() {
         super({
             id: 'storage-card',
-            title: window.getLocalizedMessage('storageCardTitle') || 'Storage',
-            subtitle: window.getLocalizedMessage('storageCardSubtitle') || 'Inspect and manage Chrome storage data.',
+            title: msg('storageCardTitle', 'Storage'),
+            titleLocalize: '__MSG_storageCardTitle__',
+            subtitle: msg('storageCardSubtitle', 'Inspect and manage Chrome storage data.'),
+            subtitleLocalize: '__MSG_storageCardSubtitle__',
             icon: 'fas fa-database',
-            iconColor: 'text-info',
             hidden: true
         });
     }
 
     createElement() {
         const card = super.createElement();
-        this.addContent(this._createContent());
+        this.addContent(this._createStorageActionsSection());
+        this.addContent(this._createStorageViewerSection());
         return card;
     }
 
-    _createContent() {
-        const container = document.createElement('div');
-        container.appendChild(this._createStorageActionsSection());
-        container.appendChild(this._createStorageViewerSection());
-        return container;
+    /**
+     * A block's small heading, with an optional control on the right
+     * @private
+     */
+    _createBlockHead(key, fallback, control = null) {
+        const head = document.createElement('div');
+        head.className = 'settings-block-head';
+        const title = setText(document.createElement('h3'), key, fallback);
+        title.className = 'settings-block-title';
+        head.appendChild(title);
+        if (control) head.appendChild(control);
+        return head;
     }
 
     // ------------------------------------------------------------------ Actions
 
     _createStorageActionsSection() {
         const section = document.createElement('div');
-        section.className = 'mb-4';
-
-        const title = document.createElement('h6');
-        title.className = 'mb-3 text-secondary';
-        title.innerHTML = `<i class="fas fa-tools me-1"></i>${window.getLocalizedMessage('storageActions') || 'Actions'}`;
+        section.className = 'settings-block';
+        section.appendChild(this._createBlockHead('storageActions', 'Actions'));
 
         const btnGroup = document.createElement('div');
-        btnGroup.className = 'd-flex flex-wrap gap-2';
+        btnGroup.className = 'settings-button-row';
 
-        btnGroup.appendChild(this._createActionBtn('trash', window.getLocalizedMessage('clearLocalEvents') || 'Clear Local Events', 'danger', async () => {
-            if (!window.confirm(window.getLocalizedMessage('confirmClearLocalEvents') || 'Delete all localEvents_* keys?')) return;
+        btnGroup.appendChild(this._createActionBtn('fas fa-trash-can', 'clearLocalEvents', 'Clear Local Events', 'danger', async () => {
+            if (!window.confirm(msg('confirmClearLocalEvents', 'Delete all localEvents_* keys?'))) return;
             try {
                 const localData = await StorageHelper.getLocal(null);
                 const keys = Object.keys(localData).filter(k => k.startsWith(STORAGE_KEYS.LOCAL_EVENTS_PREFIX));
                 if (keys.length > 0) await chrome.storage.local.remove(keys);
-                this._showAlert(window.getLocalizedMessage('clearLocalEventsSuccess') || 'Local Events deleted.', 'success');
+                this._showAlert(msg('clearLocalEventsSuccess', 'Local Events deleted.'), 'success');
                 await this._refreshViewer();
             } catch (e) {
-                this._showAlert((window.getLocalizedMessage('deleteFailed') || 'Deletion failed: ') + e.message, 'danger');
+                this._showAlert(msg('deleteFailed', 'Deletion failed: ') + e.message, 'danger');
             }
         }));
 
-        btnGroup.appendChild(this._createActionBtn('eraser', window.getLocalizedMessage('clearMemo') || 'Clear Memo', 'warning', async () => {
-            if (!window.confirm(window.getLocalizedMessage('confirmClearMemo') || 'Delete memoContent / memoCollapsed / memoHeight?')) return;
+        btnGroup.appendChild(this._createActionBtn('fas fa-eraser', 'clearMemo', 'Clear Memo', 'danger', async () => {
+            if (!window.confirm(msg('confirmClearMemo', 'Delete memoContent / memoCollapsed / memoHeight?'))) return;
             try {
                 await chrome.storage.local.remove(['memoContent', 'memoCollapsed', 'memoHeight']);
-                this._showAlert(window.getLocalizedMessage('clearMemoSuccess') || 'Memo data deleted.', 'success');
+                this._showAlert(msg('clearMemoSuccess', 'Memo data deleted.'), 'success');
                 await this._refreshViewer();
             } catch (e) {
-                this._showAlert((window.getLocalizedMessage('deleteFailed') || 'Deletion failed: ') + e.message, 'danger');
+                this._showAlert(msg('deleteFailed', 'Deletion failed: ') + e.message, 'danger');
             }
         }));
 
-        btnGroup.appendChild(this._createActionBtn('download', window.getLocalizedMessage('exportSettings') || 'Export Settings', 'primary', async (e) => {
+        btnGroup.appendChild(this._createActionBtn('fas fa-download', 'exportSettings', 'Export Settings', 'secondary', async (e) => {
             const btn = e.currentTarget;
             try {
                 const syncData = await StorageHelper.get(null);
                 await this._copyToClipboard(JSON.stringify(syncData, null, 2));
                 this._showCopyNotification(btn);
             } catch (err) {
-                this._showAlert((window.getLocalizedMessage('exportFailed') || 'Export failed: ') + err.message, 'danger');
+                this._showAlert(msg('exportFailed', 'Export failed: ') + err.message, 'danger');
             }
         }));
 
-        section.appendChild(title);
         section.appendChild(btnGroup);
         return section;
     }
 
-    _createActionBtn(icon, label, variant, handler) {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = `btn btn-outline-${variant} btn-sm`;
-        btn.innerHTML = `<i class="fas fa-${icon} me-1"></i>${label}`;
+    _createActionBtn(icon, labelKey, labelFallback, kind, handler) {
+        const btn = createButton({ icon, labelKey, labelFallback, kind });
         btn.addEventListener('click', handler);
         return btn;
     }
@@ -101,31 +104,18 @@ export class StorageCard extends CardComponent {
 
     _createStorageViewerSection() {
         const section = document.createElement('div');
+        section.className = 'settings-block';
 
-        const header = document.createElement('div');
-        header.className = 'd-flex justify-content-between align-items-center mb-2';
-
-        const title = document.createElement('h6');
-        title.className = 'mb-0 text-secondary';
-        title.innerHTML = `<i class="fas fa-eye me-1"></i>${window.getLocalizedMessage('storageViewer') || 'Viewer'}`;
-
-        const refreshBtn = document.createElement('button');
-        refreshBtn.type = 'button';
-        refreshBtn.className = 'btn btn-outline-secondary btn-sm';
-        refreshBtn.innerHTML = `<i class="fas fa-sync-alt me-1"></i>${window.getLocalizedMessage('storageRefresh') || 'Refresh'}`;
+        const refreshBtn = createIconButton({ icon: 'fas fa-arrows-rotate', labelKey: 'storageRefresh', labelFallback: 'Refresh' });
         refreshBtn.addEventListener('click', () => this._refreshViewer());
-
-        header.appendChild(title);
-        header.appendChild(refreshBtn);
+        section.appendChild(this._createBlockHead('storageViewer', 'Viewer', refreshBtn));
 
         this._viewerContent = document.createElement('div');
-        this._viewerContent.className = 'small';
-        this._viewerContent.textContent = window.getLocalizedMessage('storageLoading') || 'Loading…';
-
-        section.appendChild(header);
+        this._viewerContent.className = 'storage-viewer';
+        this._viewerContent.textContent = msg('storageLoading', 'Loading…');
         section.appendChild(this._viewerContent);
 
-        // DOM に追加された後に非同期で読み込む
+        // Load once the card is in the page
         queueMicrotask(() => this._refreshViewer());
         return section;
     }
@@ -133,7 +123,7 @@ export class StorageCard extends CardComponent {
     async _refreshViewer() {
         const content = this._viewerContent;
         if (!content) return;
-        content.textContent = window.getLocalizedMessage('storageLoading') || 'Loading…';
+        content.textContent = msg('storageLoading', 'Loading…');
 
         try {
             const syncQuota = chrome.storage.sync.QUOTA_BYTES || StorageCard.SYNC_QUOTA;
@@ -149,42 +139,47 @@ export class StorageCard extends CardComponent {
             content.innerHTML = '';
 
             // Usage summary
-            const usageDiv = document.createElement('div');
-            usageDiv.className = 'text-muted mb-3 p-2 bg-light rounded small';
-            const syncPct = ((syncBytesInUse / syncQuota) * 100).toFixed(1);
-            const localPct = ((localBytesInUse / localQuota) * 100).toFixed(1);
-            usageDiv.innerHTML =
-                `<i class="fas fa-hdd me-1"></i>` +
-                `${window.getLocalizedMessage('storageSyncLabel') || 'Sync'}: <strong>${syncBytesInUse.toLocaleString()}</strong> / ${syncQuota.toLocaleString()} bytes (${syncPct}%)&nbsp;&nbsp;` +
-                `${window.getLocalizedMessage('storageLocalLabel') || 'Local'}: <strong>${localBytesInUse.toLocaleString()}</strong> / ${localQuota.toLocaleString()} bytes (${localPct}%)`;
-            content.appendChild(usageDiv);
+            const usage = document.createElement('div');
+            usage.className = 'storage-usage';
+            usage.appendChild(createIcon('fas fa-hard-drive'));
+            const usageText = document.createElement('span');
+            usageText.textContent = [
+                this._formatUsage(msg('storageSyncLabel', 'Sync'), syncBytesInUse, syncQuota),
+                this._formatUsage(msg('storageLocalLabel', 'Local'), localBytesInUse, localQuota)
+            ].join('   ');
+            usage.appendChild(usageText);
+            content.appendChild(usage);
 
-            content.appendChild(this._createStorageBlock(window.getLocalizedMessage('syncStorageLabel') || 'Sync Storage (Settings)', syncData));
-            content.appendChild(this._createStorageBlock(window.getLocalizedMessage('localStorageLabel') || 'Local Storage', localData));
+            content.appendChild(this._createStorageBlock(msg('syncStorageLabel', 'Sync Storage (Settings)'), syncData));
+            content.appendChild(this._createStorageBlock(msg('localStorageLabel', 'Local Storage'), localData));
         } catch (e) {
-            content.textContent = (window.getLocalizedMessage('storageLoadFailed') || 'Failed to load storage: ') + e.message;
+            content.textContent = msg('storageLoadFailed', 'Failed to load storage: ') + e.message;
         }
+    }
+
+    /**
+     * "Sync: 571 / 102,400 bytes (0.6%)"
+     * @private
+     */
+    _formatUsage(label, used, quota) {
+        return `${label}: ${used.toLocaleString()} / ${quota.toLocaleString()} bytes (${((used / quota) * 100).toFixed(1)}%)`;
     }
 
     _createStorageBlock(label, data) {
         const details = document.createElement('details');
-        details.className = 'mb-2';
+        details.className = 'storage-block';
         details.open = true;
 
         const summary = document.createElement('summary');
-        summary.className = 'fw-semibold text-secondary d-flex align-items-center gap-2';
-        summary.style.listStyle = 'none';
+        summary.className = 'storage-summary';
 
-        const chevron = this._makeChevron(details, { open: true });
         const count = Array.isArray(data) ? data.length : Object.keys(data).length;
-        const countLabel = Array.isArray(data)
-            ? (window.getLocalizedMessage('storageItems') || 'items')
-            : (window.getLocalizedMessage('storageKeys') || 'keys');
+        const countLabel = Array.isArray(data) ? msg('storageItems', 'items') : msg('storageKeys', 'keys');
 
         const labelEl = document.createElement('span');
         labelEl.textContent = `${label} (${count} ${countLabel})`;
 
-        summary.appendChild(chevron);
+        summary.appendChild(this._makeChevron());
         summary.appendChild(labelEl);
         details.appendChild(summary);
         details.appendChild(this._createEntriesTable(data));
@@ -199,26 +194,23 @@ export class StorageCard extends CardComponent {
     _createEntriesTable(data, depth = 0) {
         if (depth > 10) {
             const el = document.createElement('div');
-            el.className = 'text-muted fst-italic small';
-            el.textContent = window.getLocalizedMessage('storageDeeplyNested') || '(deeply nested, truncated)';
+            el.className = 'storage-note';
+            el.textContent = msg('storageDeeplyNested', '(deeply nested, truncated)');
             return el;
         }
 
         const table = document.createElement('div');
-        table.style.borderLeft = `2px solid ${StorageCard.DEPTH_COLORS[depth % StorageCard.DEPTH_COLORS.length]}`;
-        table.style.marginLeft = '6px';
-        table.style.paddingLeft = '8px';
-        table.style.marginTop = '2px';
+        table.className = `storage-tree storage-depth-${depth % StorageCard.DEPTH_LEVELS}`;
 
         const entries = Array.isArray(data)
             ? data.map((v, i) => [String(i), v])
             : Object.entries(data);
 
         if (entries.length === 0) {
-            table.style.borderLeft = 'none';
+            table.classList.add('is-empty');
             const empty = document.createElement('div');
-            empty.className = 'text-muted fst-italic';
-            empty.textContent = window.getLocalizedMessage('storageEmpty') || '(empty)';
+            empty.className = 'storage-note';
+            empty.textContent = msg('storageEmpty', '(empty)');
             table.appendChild(empty);
             return table;
         }
@@ -226,28 +218,24 @@ export class StorageCard extends CardComponent {
         entries.forEach(([key, value]) => {
             const isNested = typeof value === 'object' && value !== null;
 
+            const keyEl = document.createElement('span');
+            keyEl.className = 'storage-key';
+            keyEl.textContent = key;
+
             if (isNested) {
                 const details = document.createElement('details');
-                details.className = 'py-1 border-bottom';
+                details.className = 'storage-entry-group';
 
                 const summary = document.createElement('summary');
-                summary.className = 'd-flex justify-content-between align-items-center gap-2';
-                summary.style.listStyle = 'none';
+                summary.className = 'storage-entry';
 
-                const color = StorageCard.DEPTH_COLORS[(depth + 1) % StorageCard.DEPTH_COLORS.length];
-                const chevron = this._makeChevron(details, { color });
-
-                const keyEl = document.createElement('span');
-                keyEl.className = 'fw-semibold text-nowrap';
-                keyEl.textContent = key;
-
-                const metaEl = document.createElement('code');
-                metaEl.className = 'text-muted small ms-auto';
+                const metaEl = document.createElement('span');
+                metaEl.className = 'storage-value';
                 metaEl.textContent = Array.isArray(value)
-                    ? `[${value.length} ${window.getLocalizedMessage('storageItems') || 'items'}]`
-                    : `{${Object.keys(value).length} ${window.getLocalizedMessage('storageKeys') || 'keys'}}`;
+                    ? `[${value.length} ${msg('storageItems', 'items')}]`
+                    : `{${Object.keys(value).length} ${msg('storageKeys', 'keys')}}`;
 
-                summary.appendChild(chevron);
+                summary.appendChild(this._makeChevron());
                 summary.appendChild(keyEl);
                 summary.appendChild(metaEl);
                 summary.appendChild(this._makeCopyBtn(JSON.stringify(value)));
@@ -256,24 +244,17 @@ export class StorageCard extends CardComponent {
                 table.appendChild(details);
             } else {
                 const row = document.createElement('div');
-                row.className = 'd-flex justify-content-between align-items-center py-1 border-bottom gap-2';
+                row.className = 'storage-entry';
 
-                const keyEl = document.createElement('span');
-                keyEl.className = 'fw-semibold text-nowrap';
-                keyEl.textContent = key;
-
-                const valContainer = document.createElement('div');
-                valContainer.className = 'd-flex align-items-center gap-1';
-
-                const valEl = document.createElement('code');
-                valEl.className = 'text-break';
+                const valEl = document.createElement('span');
+                valEl.className = 'storage-value';
                 const str = String(value);
                 valEl.textContent = str.length > 80 ? str.slice(0, 80) + '…' : str;
+                valEl.title = str;
 
-                valContainer.appendChild(valEl);
-                valContainer.appendChild(this._makeCopyBtn(String(value)));
                 row.appendChild(keyEl);
-                row.appendChild(valContainer);
+                row.appendChild(valEl);
+                row.appendChild(this._makeCopyBtn(str));
                 table.appendChild(row);
             }
         });
@@ -282,34 +263,21 @@ export class StorageCard extends CardComponent {
     }
 
     /**
-     * Create a chevron icon and bind it to a details element's toggle.
-     * @param {HTMLDetailsElement} details
-     * @param {{ color?: string, open?: boolean }} options
+     * A chevron for a summary; it turns when its details opens (CSS).
      */
-    _makeChevron(details, { color, open = false } = {}) {
-        const chevron = document.createElement('i');
-        chevron.className = 'fas fa-chevron-right fa-xs flex-shrink-0';
-        chevron.style.transition = 'transform 0.15s';
-        if (color) chevron.style.color = color;
-        if (open) chevron.style.transform = 'rotate(90deg)';
-        details.addEventListener('toggle', () => {
-            chevron.style.transform = details.open ? 'rotate(90deg)' : '';
-        });
-        return chevron;
+    _makeChevron() {
+        return createIcon('fas fa-chevron-right storage-chevron');
     }
 
     _makeCopyBtn(rawValue) {
-        const copyBtn = document.createElement('button');
-        copyBtn.type = 'button';
-        copyBtn.className = 'btn btn-outline-secondary btn-sm py-0 px-1 flex-shrink-0';
-        copyBtn.innerHTML = '<i class="fas fa-copy fa-xs"></i>';
-        copyBtn.title = window.getLocalizedMessage('storageCopy') || 'Copy';
+        const copyBtn = createIconButton({ icon: 'fas fa-copy', labelKey: 'storageCopy', labelFallback: 'Copy' });
+        copyBtn.classList.add('storage-copy-btn');
         copyBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
             e.stopPropagation();
             await this._copyToClipboard(rawValue);
             this._showCopyNotification(copyBtn);
         });
         return copyBtn;
     }
-
 }

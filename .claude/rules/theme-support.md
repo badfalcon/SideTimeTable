@@ -21,6 +21,9 @@ Use the shared tokens in `:root` of `side_panel.css` instead of literal values, 
 - Type: `--side-calendar-font-caption` (11px), `-small` (12px), `-body` (13px), `-title` (14px), `-large` (15px)
 - Icon buttons: `--side-calendar-icon-button-size` (32px), transparent, `radius-md`, `subtle-bg-hover` on hover
 
+## Options and changelog pages
+These pages keep their own colours, `--settings-*` in `src/options/settings-tokens.css` (light in `:root`, dark under `[data-theme="dark"]`), because the side panel's `--side-calendar-*` colours are rewritten at runtime when a theme is picked. Use `--settings-*` for colours there; the shape and type values use the same `--side-calendar-radius-*` / `--side-calendar-font-*` names as the side panel. Build settings with the parts in `src/options/components/base/settings-dom.js` (row, switch, select, button, notice) rather than new markup.
+
 ## When Adding New UI Elements
 1. Define styles in the appropriate CSS file (`side_panel.css` or `options.css`), **NOT** as inline `style.cssText`
 2. Use existing CSS variables for colors, backgrounds, and borders

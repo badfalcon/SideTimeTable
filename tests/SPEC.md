@@ -290,6 +290,10 @@ Returns: `[...recurringInstances, ...dateSpecificEvents]`
 - Equal versions → `0`
 - Different lengths padded with 0: `1.0 == 1.0.0`
 
+### formatReleaseDate(isoDate, lang)
+- Changelog page date for the language shown: `2026-08-21` → `2026年8月21日` (ja), `Aug 21, 2026` (en)
+- Read as a local date (no time-zone shift); a value that is not `YYYY-MM-DD` is returned as is
+
 ---
 
 ## chrome-messaging

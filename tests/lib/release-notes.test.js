@@ -1,4 +1,4 @@
-import { RELEASE_NOTES, getUnseenReleaseNotes, compareVersions } from '../../src/lib/release-notes.js';
+import { RELEASE_NOTES, getUnseenReleaseNotes, compareVersions, formatReleaseDate } from '../../src/lib/release-notes.js';
 
 describe('release-notes', () => {
     // ---------------------------------------------------------------
@@ -107,6 +107,29 @@ describe('release-notes', () => {
             const latest = RELEASE_NOTES[0].version;
             const result = getUnseenReleaseNotes('0.0.1', latest);
             expect(result.length).toBe(RELEASE_NOTES.length);
+        });
+    });
+
+    // ---------------------------------------------------------------
+    // SPEC: Release date on the changelog page
+    // - Written for the language shown, from the YYYY-MM-DD date
+    // - The day is the one written, whatever the time zone
+    // ---------------------------------------------------------------
+    describe('SPEC: formatReleaseDate', () => {
+        test('Japanese: year, month and day in kanji', () => {
+            expect(formatReleaseDate('2026-08-21', 'ja')).toBe('2026年8月21日');
+        });
+
+        test('English: short month, day, year', () => {
+            expect(formatReleaseDate('2026-08-21', 'en')).toBe('Aug 21, 2026');
+        });
+
+        test('keeps the first of the month (no time-zone shift)', () => {
+            expect(formatReleaseDate('2026-03-01', 'en')).toBe('Mar 1, 2026');
+        });
+
+        test('returns the input when it is not a date', () => {
+            expect(formatReleaseDate('soon', 'en')).toBe('soon');
         });
     });
 });

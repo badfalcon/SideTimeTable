@@ -3,14 +3,14 @@
  */
 import { CardComponent } from '../base/card-component.js';
 import { generateTimeList } from '../../../lib/utils.js';
+import { createNotice, createSettingRow, createSwitch, msg } from '../base/settings-dom.js';
 
 export class TimeSettingsCard extends CardComponent {
     constructor(onSettingsChange) {
         super({
-            title: 'Time Settings',
+            title: 'Time',
             titleLocalize: '__MSG_timeSettings__',
-            icon: 'fas fa-clock',
-            iconColor: 'text-info'
+            icon: 'fas fa-clock'
         });
 
         this.onSettingsChange = onSettingsChange;
@@ -50,19 +50,40 @@ export class TimeSettingsCard extends CardComponent {
     }
 
     /**
-     * Create form
+     * Create form: work hours, then break time with its on/off switch
      * @private
      */
     _createForm() {
         const form = document.createElement('form');
+        form.className = 'settings-rows';
 
-        // The work hours section
-        const workHoursSection = this._createWorkHoursSection();
-        form.appendChild(workHoursSection);
+        this.openTimeInput = this._createTimeInput('time-settings-open-time', this.settings.openTime, 'startTime');
+        this.closeTimeInput = this._createTimeInput('time-settings-close-time', this.settings.closeTime, 'endTime');
+        form.appendChild(createSettingRow({
+            labelKey: 'workHoursLabel',
+            labelFallback: 'Work hours',
+            labelFor: 'time-settings-open-time',
+            hintKey: 'workHoursHint',
+            hintFallback: 'Shown as a band on the timeline.',
+            control: this._createTimeRange(this.openTimeInput, this.closeTimeInput)
+        }).row);
 
-        // The break time section
-        const breakTimeSection = this._createBreakTimeSection();
-        form.appendChild(breakTimeSection);
+        this.breakTimeStartInput = this._createTimeInput('time-settings-break-time-start', this.settings.breakTimeStart, 'startTime');
+        this.breakTimeEndInput = this._createTimeInput('time-settings-break-time-end', this.settings.breakTimeEnd, 'endTime');
+        this.breakTimeStartInput.disabled = !this.settings.breakTimeFixed;
+        this.breakTimeEndInput.disabled = !this.settings.breakTimeFixed;
+        this.breakTimeFixedCheckbox = createSwitch('time-settings-break-time-fixed', this.settings.breakTimeFixed);
+        form.appendChild(createSettingRow({
+            labelKey: 'breakTimeLabel',
+            labelFallback: 'Break',
+            labelFor: 'time-settings-break-time-fixed',
+            hintKey: 'breakTimeHint',
+            hintFallback: 'Shows the same break on the timeline every day.',
+            control: [
+                this._createTimeRange(this.breakTimeStartInput, this.breakTimeEndInput),
+                this.breakTimeFixedCheckbox
+            ]
+        }).row);
 
         // The time selection list
         this.timeDatalist = document.createElement('datalist');
@@ -73,135 +94,40 @@ export class TimeSettingsCard extends CardComponent {
     }
 
     /**
-     * Create work hours section
+     * @param {string} id
+     * @param {string} value
+     * @param {string} ariaKey - 'startTime' or 'endTime'
+     * @returns {HTMLInputElement}
      * @private
      */
-    _createWorkHoursSection() {
-        const section = document.createElement('div');
-        section.className = 'mb-3';
-
-        // The label
-        const label = document.createElement('label');
-        label.htmlFor = 'time-settings-open-time';
-        label.className = 'form-label';
-        label.setAttribute('data-localize', '__MSG_workHours__');
-        label.textContent = window.getLocalizedMessage('workHours') || 'Work Hours:';
-
-        // The input group
-        const inputGroup = document.createElement('div');
-        inputGroup.className = 'input-group';
-
-        // The start time
-        this.openTimeInput = document.createElement('input');
-        this.openTimeInput.type = 'time';
-        this.openTimeInput.className = 'form-control';
-        this.openTimeInput.id = 'time-settings-open-time';
-        this.openTimeInput.step = '900'; // 15-minute increments
-        this.openTimeInput.value = this.settings.openTime;
-        this.openTimeInput.setAttribute('list', 'time-settings-time-list');
-        this.openTimeInput.setAttribute('data-localize-aria-label', '__MSG_startTime__');
-
-        // The separator
-        const separator = document.createElement('span');
-        separator.className = 'input-group-text';
-        separator.setAttribute('data-localize', '__MSG_to__');
-        separator.textContent = window.getLocalizedMessage('to');
-
-        // The end time
-        this.closeTimeInput = document.createElement('input');
-        this.closeTimeInput.type = 'time';
-        this.closeTimeInput.className = 'form-control';
-        this.closeTimeInput.id = 'time-settings-close-time';
-        this.closeTimeInput.step = '900';
-        this.closeTimeInput.value = this.settings.closeTime;
-        this.closeTimeInput.setAttribute('list', 'time-settings-time-list');
-        this.closeTimeInput.setAttribute('data-localize-aria-label', '__MSG_endTime__');
-
-        inputGroup.appendChild(this.openTimeInput);
-        inputGroup.appendChild(separator);
-        inputGroup.appendChild(this.closeTimeInput);
-
-        section.appendChild(label);
-        section.appendChild(inputGroup);
-
-        return section;
+    _createTimeInput(id, value, ariaKey) {
+        const input = document.createElement('input');
+        input.type = 'time';
+        input.className = 'settings-input settings-time-input';
+        input.id = id;
+        input.step = '900'; // 15-minute increments
+        input.value = value;
+        input.setAttribute('list', 'time-settings-time-list');
+        input.setAttribute('aria-label', msg(ariaKey, ariaKey === 'startTime' ? 'Start time' : 'End time'));
+        input.setAttribute('data-localize-aria-label', `__MSG_${ariaKey}__`);
+        return input;
     }
 
     /**
-     * Create break time section
+     * Start – end.
      * @private
      */
-    _createBreakTimeSection() {
-        const section = document.createElement('div');
-        section.className = 'mb-3';
-
-        // The label
-        const label = document.createElement('label');
-        label.htmlFor = 'time-settings-break-time-fixed';
-        label.className = 'form-label';
-        label.setAttribute('data-localize', '__MSG_breakTime__');
-        label.textContent = window.getLocalizedMessage('breakTime') || 'Break Time:';
-
-        // The checkbox
-        const checkboxDiv = document.createElement('div');
-        checkboxDiv.className = 'form-check mb-2';
-
-        this.breakTimeFixedCheckbox = document.createElement('input');
-        this.breakTimeFixedCheckbox.type = 'checkbox';
-        this.breakTimeFixedCheckbox.className = 'form-check-input';
-        this.breakTimeFixedCheckbox.id = 'time-settings-break-time-fixed';
-        this.breakTimeFixedCheckbox.checked = this.settings.breakTimeFixed;
-
-        const checkboxLabel = document.createElement('label');
-        checkboxLabel.className = 'form-check-label';
-        checkboxLabel.htmlFor = 'time-settings-break-time-fixed';
-        checkboxLabel.setAttribute('data-localize', '__MSG_fixed__');
-        checkboxLabel.textContent = window.getLocalizedMessage('fixed') || 'Fixed';
-
-        checkboxDiv.appendChild(this.breakTimeFixedCheckbox);
-        checkboxDiv.appendChild(checkboxLabel);
-
-        // The time input group
-        const inputGroup = document.createElement('div');
-        inputGroup.className = 'input-group';
-
-        // The start time
-        this.breakTimeStartInput = document.createElement('input');
-        this.breakTimeStartInput.type = 'time';
-        this.breakTimeStartInput.className = 'form-control';
-        this.breakTimeStartInput.id = 'time-settings-break-time-start';
-        this.breakTimeStartInput.step = '900';
-        this.breakTimeStartInput.value = this.settings.breakTimeStart;
-        this.breakTimeStartInput.disabled = !this.settings.breakTimeFixed;
-        this.breakTimeStartInput.setAttribute('list', 'time-settings-time-list');
-        this.breakTimeStartInput.setAttribute('data-localize-aria-label', '__MSG_startTime__');
-
-        // The separator
-        const separator = document.createElement('span');
-        separator.className = 'input-group-text';
-        separator.setAttribute('data-localize', '__MSG_to__');
-        separator.textContent = window.getLocalizedMessage('to');
-
-        // The end time
-        this.breakTimeEndInput = document.createElement('input');
-        this.breakTimeEndInput.type = 'time';
-        this.breakTimeEndInput.className = 'form-control';
-        this.breakTimeEndInput.id = 'time-settings-break-time-end';
-        this.breakTimeEndInput.step = '900';
-        this.breakTimeEndInput.value = this.settings.breakTimeEnd;
-        this.breakTimeEndInput.disabled = !this.settings.breakTimeFixed;
-        this.breakTimeEndInput.setAttribute('list', 'time-settings-time-list');
-        this.breakTimeEndInput.setAttribute('data-localize-aria-label', '__MSG_endTime__');
-
-        inputGroup.appendChild(this.breakTimeStartInput);
-        inputGroup.appendChild(separator);
-        inputGroup.appendChild(this.breakTimeEndInput);
-
-        section.appendChild(label);
-        section.appendChild(checkboxDiv);
-        section.appendChild(inputGroup);
-
-        return section;
+    _createTimeRange(start, end) {
+        const range = document.createElement('div');
+        range.className = 'settings-time-range';
+        const dash = document.createElement('span');
+        dash.className = 'settings-time-dash';
+        dash.setAttribute('aria-hidden', 'true');
+        dash.textContent = '–';
+        range.appendChild(start);
+        range.appendChild(dash);
+        range.appendChild(end);
+        return range;
     }
 
     /**
@@ -291,12 +217,8 @@ export class TimeSettingsCard extends CardComponent {
      */
     _showValidationError(message) {
         this.bodyElement?.querySelector('.time-validation-error')?.remove();
-        const el = document.createElement('div');
-        el.className = 'alert alert-warning alert-dismissible fade show time-validation-error mt-2';
-        const warningLabel = window.getLocalizedMessage('validationWarning') || 'Warning:';
-        el.innerHTML = `<small><strong>${warningLabel}</strong> ${message}</small><button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+        const el = createNotice({ content: message, tone: 'danger', duration: 3000, className: 'time-validation-error' });
         this.bodyElement.appendChild(el);
-        setTimeout(() => { if (el.parentNode) el.remove(); }, 3000);
     }
 
     /**

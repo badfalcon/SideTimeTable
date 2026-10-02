@@ -338,15 +338,59 @@
     "description": "設定保存時のメッセージ"
   },
   "optionsTitle": {
-    "message": "SideTimeTable 設定",
+    "message": "SideTimeTable の設定",
     "description": "オプションページのタイトル"
+  },
+  "googleCalendarCardTitle": {
+    "message": "Google カレンダー",
+    "description": "設定ページ: Google 連携のカードの見出し"
+  },
+  "googleDisconnect": {
+    "message": "連携を解除",
+    "description": "設定ページ: Google カレンダーとの連携を解除するボタン"
+  },
+  "googleConnectedHint": {
+    "message": "予定の表示・作成・編集と、出欠の返信ができます。",
+    "description": "設定ページ: 「連携済み」の下の説明"
+  },
+  "googleNotConnectedHint": {
+    "message": "連携すると、Google カレンダーの予定を表示・作成できます。",
+    "description": "設定ページ: 「未連携」の下の説明"
+  },
+  "workHoursLabel": {
+    "message": "勤務時間",
+    "description": "設定ページ: 勤務時間の設定"
+  },
+  "workHoursHint": {
+    "message": "タイムラインに勤務時間の帯を表示します。",
+    "description": "設定ページ: 勤務時間の説明"
+  },
+  "breakTimeLabel": {
+    "message": "休憩時間",
+    "description": "設定ページ: 休憩時間の設定"
+  },
+  "breakTimeHint": {
+    "message": "毎日同じ時間に休憩の帯を表示します。",
+    "description": "設定ページ: 休憩時間のスイッチの説明"
+  },
+  "browserLanguageIs": {
+    "message": "いまのブラウザーの言語は $1 です。",
+    "description": "設定ページ: 言語設定の下。$1 は「日本語 (ja)」など"
+  },
+  "shortcutOpenPanel": {
+    "message": "サイドパネルを開く",
+    "description": "設定ページ: キーボードショートカットの行"
+  },
+  "shortcutUrlCopied": {
+    "message": "URL をコピーしました。アドレスバーに貼り付けて開いてください。",
+    "description": "設定ページ：ショートカット設定の URL をコピーしたときの表示"
   },
   "integration": {
     "message": "連携",
     "description": "連携セクションのタイトル"
   },
   "googleIntegration": {
-    "message": "Google カレンダーと連携して予定を表示します。",
+    "message": "Google カレンダーの予定をサイドパネルに表示します。",
     "description": "Googleカレンダー連携説明"
   },
   "notIntegrated": {
@@ -370,16 +414,12 @@
     "description": "開発者設定タブのナビゲーションラベル"
   },
   "timeSettings": {
-    "message": "時間設定",
+    "message": "時間",
     "description": "時間設定セクションのタイトル"
   },
   "workHours": {
     "message": "就業時間:",
     "description": "就業時間入力のラベル"
-  },
-  "breakTime": {
-    "message": "休憩時間:",
-    "description": "休憩時間入力のラベル"
   },
   "fixed": {
     "message": "固定",
@@ -394,15 +434,15 @@
     "description": "カラーテーマ選択カードのタイトル"
   },
   "colorThemeDescription": {
-    "message": "拡張機能のカラーセットを選択します。",
+    "message": "サイドパネルの配色を選びます。",
     "description": "カラーテーマ選択カードの説明"
   },
   "useGoogleCalendarColorsLabel": {
-    "message": "Googleカレンダーの色を使用する",
+    "message": "Google カレンダーの色を使う",
     "description": "Googleカレンダーのカレンダーごとの色を使用するトグルのラベル"
   },
   "useGoogleCalendarColorsHelp": {
-    "message": "無効にすると、すべてのGoogleイベントにテーマのデフォルト色が使用されます。",
+    "message": "オフにすると、Google の予定はすべてテーマの色で表示されます。",
     "description": "Googleカレンダーの色トグルのヘルプテキスト"
   },
   "timelineBackgroundColor": {
@@ -438,15 +478,15 @@
     "description": "カレンダー管理セクションのタイトル"
   },
   "calendarSelectionDescription": {
-    "message": "表示するGoogleカレンダーを選択し、色を設定できます。",
+    "message": "サイドパネルに表示するカレンダーと、まとめて切り替えるグループを設定します。",
     "description": "カレンダー選択と色設定の説明"
   },
   "refreshCalendars": {
-    "message": "更新",
+    "message": "カレンダー一覧を更新",
     "description": "カレンダーリスト更新ボタンのラベル"
   },
   "searchCalendars": {
-    "message": "カレンダーを検索...",
+    "message": "カレンダーを検索",
     "description": "カレンダー検索入力のプレースホルダーテキスト"
   },
   "noSearchResults": {
@@ -458,7 +498,7 @@
     "description": "カレンダーが見つからない場合のメッセージ"
   },
   "resetToDefault": {
-    "message": "デフォルトに戻す",
+    "message": "設定を初期値に戻す",
     "description": "設定をデフォルトに戻すボタンのテキスト"
   },
   "confirmResetSettings": {
@@ -494,15 +534,15 @@
     "description": "現在のショートカット表示のラベル"
   },
   "configureShortcuts": {
-    "message": "設定",
+    "message": "変更",
     "description": "ショートカット設定ボタンのテキスト"
   },
   "shortcutHelp": {
-    "message": "設定を変更する場合は、Chrome の拡張機能管理ページ（chrome://extensions/shortcuts）で行ってください。",
+    "message": "変更は Chrome の拡張機能のショートカット設定で行います。",
     "description": "ショートカット設定のヘルプテキスト"
   },
   "languageSettings": {
-    "message": "言語設定",
+    "message": "言語",
     "description": "言語設定セクションのタイトル"
   },
   "languageDescription": {
@@ -510,7 +550,7 @@
     "description": "言語設定セクションの説明"
   },
   "selectLanguage": {
-    "message": "言語選択:",
+    "message": "表示言語",
     "description": "言語選択ドロップダウンのラベル"
   },
   "languageAuto": {
@@ -526,12 +566,8 @@
     "description": "日本語言語のオプション"
   },
   "languageHelp": {
-    "message": "言語を変更した場合、変更を適用するために拡張機能を再読み込みする必要があります。",
+    "message": "変更は、ページを読み込み直すと反映されます。",
     "description": "言語変更のヘルプテキスト"
-  },
-  "currentLanguage": {
-    "message": "現在のブラウザー言語:",
-    "description": "現在の言語表示のラベル"
   },
   "languageDetected": {
     "message": "検出された言語",
@@ -841,17 +877,32 @@
     "message": "$1/$2日目",
     "description": "複数日にまたがる終日イベントの進捗表示（例: 2/3日目）",
     "placeholders": {
-      "1": { "content": "$1", "example": "2" },
-      "2": { "content": "$2", "example": "3" }
+      "1": {
+        "content": "$1",
+        "example": "2"
+      },
+      "2": {
+        "content": "$2",
+        "example": "3"
+      }
     }
   },
   "allDayDateRange": {
     "message": "$1 〜 $2（$3日間）",
     "description": "モーダルに表示する複数日終日イベントの日付範囲",
     "placeholders": {
-      "1": { "content": "$1", "example": "06/01" },
-      "2": { "content": "$2", "example": "06/03" },
-      "3": { "content": "$3", "example": "3" }
+      "1": {
+        "content": "$1",
+        "example": "06/01"
+      },
+      "2": {
+        "content": "$2",
+        "example": "06/03"
+      },
+      "3": {
+        "content": "$3",
+        "example": "3"
+      }
     }
   },
   "timeInfoError": {
@@ -911,63 +962,63 @@
     "description": "初期化失敗時のエラーメッセージ"
   },
   "reminderSettings": {
-    "message": "リマインダー設定",
+    "message": "リマインダー",
     "description": "リマインダー設定カードのタイトル"
   },
   "reminderDescription": {
-    "message": "イベントの自動リマインダーを設定します。",
+    "message": "予定の開始前に Chrome の通知でお知らせします。サイドパネルを閉じていても届きます。",
     "description": "リマインダー設定カードの説明"
   },
   "googleEventReminderLabel": {
-    "message": "Googleカレンダーイベントのリマインダーを有効にする",
+    "message": "Google カレンダーの予定を通知する",
     "description": "Googleイベントリマインダートグルのラベル"
   },
   "googleEventReminderHelp": {
-    "message": "メインカレンダーのイベント開始前に通知を受け取ります。サイドパネルを閉じていても通知されます。",
+    "message": "メインカレンダーの予定が対象です。",
     "description": "Googleイベントリマインダー機能のヘルプテキスト"
   },
   "reminderTimeLabel": {
-    "message": "次の時間前に通知:",
+    "message": "通知のタイミング",
     "description": "リマインダー時間選択のラベル"
   },
   "reminderTimeHelp": {
-    "message": "Googleカレンダーとローカルイベントのどちらにも適用されます。",
+    "message": "Google とローカルの予定の両方に使われます。",
     "description": "リマインダー時間設定のヘルプテキスト"
   },
   "reminderTime1Min": {
-    "message": "1分",
+    "message": "1分前",
     "description": "1分のリマインダーオプション"
   },
   "reminderTime3Min": {
-    "message": "3分",
+    "message": "3分前",
     "description": "3分のリマインダーオプション"
   },
   "reminderTime5Min": {
-    "message": "5分",
+    "message": "5分前",
     "description": "5分のリマインダーオプション"
   },
   "reminderTime10Min": {
-    "message": "10分",
+    "message": "10分前",
     "description": "10分のリマインダーオプション"
   },
   "reminderTime15Min": {
-    "message": "15分",
+    "message": "15分前",
     "description": "15分のリマインダーオプション"
   },
   "reminderTime30Min": {
-    "message": "30分",
+    "message": "30分前",
     "description": "30分のリマインダーオプション"
   },
   "reminderTime60Min": {
-    "message": "1時間",
+    "message": "1時間前",
     "description": "1時間のリマインダーオプション"
   },
   "reminderSyncIntervalLabel": {
-    "message": "Googleカレンダーの変更を確認する頻度:",
+    "message": "変更を確認する頻度",
     "description": "リマインダー同期間隔設定のラベル"
   },
   "reminderSyncIntervalHelp": {
-    "message": "新しく追加・変更されたGoogleカレンダーの予定を確認し、リマインダーを最新に保つ頻度です。",
+    "message": "追加・変更された予定を確認して、通知を最新に保ちます。",
     "description": "リマインダー同期間隔設定のヘルプテキスト"
   },
   "syncInterval15Min": {
@@ -1083,7 +1134,7 @@
     "description": "What's Newモーダル内で、今後のバージョンアップ時に自動表示を抑止するチェックボックスのラベル"
   },
   "whatsNewSettings": {
-    "message": "更新通知",
+    "message": "更新情報",
     "description": "オプションページのWhat's New自動表示設定カードのタイトル"
   },
   "whatsNewSettingsDescription": {
@@ -1091,11 +1142,11 @@
     "description": "オプションページのWhat's New自動表示設定カードのサブタイトル"
   },
   "whatsNewAutoShowLabel": {
-    "message": "更新時に「更新情報」を表示する",
+    "message": "更新後にお知らせを表示",
     "description": "バージョン更新時にWhat's Newモーダルを自動表示するトグルのラベル"
   },
   "whatsNewAutoShowHelp": {
-    "message": "有効にすると、拡張機能の更新後に新機能のサマリーが自動で表示されます。",
+    "message": "拡張機能が更新されたとき、新しい機能の紹介を自動で表示します。",
     "description": "What's New自動表示トグルの補足説明"
   },
   "changelogTitle": {
@@ -1103,8 +1154,12 @@
     "description": "変更履歴ページのタイトル"
   },
   "changelogDescription": {
-    "message": "バージョン履歴とリリースノート。",
+    "message": "SideTimeTable のバージョンごとの変更点",
     "description": "変更履歴ページの説明"
+  },
+  "changelogLatest": {
+    "message": "最新",
+    "description": "変更履歴ページで最新バージョンに付けるラベル"
   },
   "changelogContextMenu": {
     "message": "変更履歴",
@@ -1339,7 +1394,7 @@
     "description": "メモテキストエリアのプレースホルダー"
   },
   "memoSettings": {
-    "message": "メモ設定",
+    "message": "メモ",
     "description": "メモ設定カードのタイトル"
   },
   "memoSettingsDescription": {
@@ -1347,19 +1402,19 @@
     "description": "メモ設定カードのサブタイトル"
   },
   "memoMarkdownLabel": {
-    "message": "Markdown表示を有効にする",
+    "message": "Markdown で表示",
     "description": "Markdownトグルスイッチのラベル"
   },
   "memoMarkdownHelp": {
-    "message": "有効にすると、編集していないときにメモがMarkdown形式で表示されます。クリックすると編集モードに切り替わります。",
+    "message": "編集していないときは Markdown として表示し、クリックで編集に戻ります。",
     "description": "Markdownトグルのヘルプテキスト"
   },
   "memoFontSizeLabel": {
-    "message": "フォントサイズ",
+    "message": "文字サイズ",
     "description": "メモのフォントサイズドロップダウンのラベル"
   },
   "memoFontSizeDefault": {
-    "message": "デフォルト",
+    "message": "（標準）",
     "description": "デフォルトフォントサイズの横に表示されるラベル"
   },
   "scrollbarSettings": {
@@ -1371,11 +1426,11 @@
     "description": "スクロールバー設定カードの説明文"
   },
   "thinScrollbarLabel": {
-    "message": "細いスクロールバーを使用する",
+    "message": "細いスクロールバー",
     "description": "細いスクロールバーのトグルラベル"
   },
   "thinScrollbarHelp": {
-    "message": "サイドパネルのスクロールバーを細く表示して、すっきりした見た目にします。",
+    "message": "サイドパネルのスクロールバーを細くして、すっきり見せます。",
     "description": "細いスクロールバーのヘルプテキスト"
   },
   "rsvpLabel": {
@@ -1414,10 +1469,6 @@
     "message": "閉じる",
     "description": "閉じるボタンテキスト"
   },
-  "darkBadge": {
-    "message": "ダーク",
-    "description": "ダークテーマのバッジラベル"
-  },
   "detectingLanguage": {
     "message": "検出中...",
     "description": "ブラウザ言語検出中のステータステキスト"
@@ -1454,6 +1505,10 @@
     "message": "サンプルデータを表示します（APIアクセスは行いません）",
     "description": "デモモードトグルのヘルプテキスト"
   },
+  "demoModeToggleLabel": {
+    "message": "デモデータを使う",
+    "description": "開発者設定：デモモードのスイッチ"
+  },
   "demoTimeLabel": {
     "message": "現在時刻ラインの位置",
     "description": "デモモードの時刻入力ラベル"
@@ -1481,10 +1536,6 @@
   "demoLanguageAuto": {
     "message": "自動（拡張機能の設定に従う）",
     "description": "デモ言語選択の自動オプション"
-  },
-  "demoLinkInfo": {
-    "message": "<code>?demo=true</code> で開くとデモ設定をプレビューできます：",
-    "description": "デモリンクセクションの情報テキスト"
   },
   "demoModeEnabled": {
     "message": "デモモードを有効にしました",
@@ -1582,10 +1633,6 @@
     "message": "エクスポートに失敗しました: ",
     "description": "エクスポート失敗時のエラーメッセージ"
   },
-  "validationWarning": {
-    "message": "警告:",
-    "description": "バリデーション警告メッセージのプレフィックス"
-  },
   "validationEndTimeAfterStart": {
     "message": "終了時刻は開始時刻より後にしてください",
     "description": "終了時刻が開始時刻より前の場合のバリデーションエラー"
@@ -1646,10 +1693,6 @@
     "message": "デモモード",
     "description": "開発者設定のデモモードカードのタイトル"
   },
-  "demoModeCardSubtitle": {
-    "message": "サンプルデータを表示します（APIアクセスは行いません）。",
-    "description": "開発者設定のデモモードカードのサブタイトル"
-  },
   "extensionInfoCardTitle": {
     "message": "拡張機能情報",
     "description": "開発者設定の拡張機能情報カードのタイトル"
@@ -1706,6 +1749,10 @@
     "message": "開く",
     "description": "デモモードリンクを開くボタンラベル"
   },
+  "demoLinkLabel": {
+    "message": "設定画面をデモで開く",
+    "description": "開発者設定：?demo=true 付きで設定画面を開く行"
+  },
   "calendarFilterTooltip": {
     "message": "カレンダーを絞り込む",
     "description": "タイムライン内のカレンダーフィルターボタンのツールチップ"
@@ -1759,11 +1806,11 @@
     "description": "グループ名入力のプレースホルダー"
   },
   "editGroup": {
-    "message": "編集",
+    "message": "グループを編集",
     "description": "カレンダーグループ名を編集するツールチップ"
   },
   "deleteGroup": {
-    "message": "削除",
+    "message": "グループを削除",
     "description": "カレンダーグループを削除するツールチップ"
   },
   "assignToGroups": {
@@ -1809,10 +1856,6 @@
   "removeCalendar": {
     "message": "削除",
     "description": "グループ選択からカレンダーを削除するボタンのアリアラベル接頭辞"
-  },
-  "errorLabel": {
-    "message": "エラー",
-    "description": "エラーメッセージのラベル接頭辞"
   },
   "calendarLoadError": {
     "message": "カレンダーデータの読み込みに失敗しました",

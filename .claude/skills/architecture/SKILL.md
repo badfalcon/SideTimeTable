@@ -40,20 +40,22 @@ Main UI displayed in Chrome's side panel:
 > Services section below.
 
 ### Options Page (`src/options/`)
-Extension settings and calendar management:
+Extension settings and calendar management, in the side panel's design language:
 - `options.js`: Settings management with component-based architecture
-- `options.html`: Settings interface with nav-pills sidebar navigation layout
-- `options.css`: Styling for settings page with Google-style buttons and sidebar nav
+- `options.html`: Header (app mark, title, version), the sections on the left (Integration / Display / General / Developer; Bootstrap pill tabs) with tutorial, changelog and reset under them, and the cards on the right. At 760px or narrower the sections become the dialogs' segmented control and the extras move to the bottom
+- `settings-tokens.css`: The page colours (`--settings-*`, light and `[data-theme="dark"]`) and the shape/type values, shared with the changelog page. The side panel's `--side-calendar-*` colours are rewritten at runtime when a theme is picked, so these pages keep their own
+- `options.css`: Layout, cards, setting rows and controls (switch, select, buttons, notices), calendar list/groups, theme previews
 - `components/`:
-  - `calendar/`: Google integration and calendar management components
-  - `settings/`: Time, color (with color blindness presets), language, shortcut, reminder, memo, scrollbar, storage, extension info, and developer settings components
-  - `base/`: Base card and control button components
+  - `base/settings-dom.js`: Shared builders — `createSettingRow()` (name and hint on the left, control on the right), `createSwitch()`, `createSelect()`, `createButton()`, `createIconButton()`, `createNotice()`
+  - `base/card-component.js`: A card — single-colour icon, title, optional description, then the rows
+  - `calendar/`: Google connection (Google's own sign-in button when not connected, "Disconnect" when connected) and calendar management (search, groups, assign popover, create-group dialog)
+  - `settings/`: Time, color (theme cards with a small preview), language, shortcut, reminder, memo, scrollbar, What's New, and the developer tab cards (extension info, demo mode, reminder debug, storage viewer)
 
 ### Changelog Page (`src/changelog/`)
-Standalone changelog page:
-- `changelog.js`: Changelog display logic with version history rendering
-- `changelog.html`: Changelog page structure
-- `changelog.css`: Changelog page styling
+Standalone changelog page, in the options page's design:
+- `changelog.js`: Renders each version as a row in one card — version chip (the newest marked "Latest"), the date in the language shown (`formatReleaseDate()` in `release-notes.js`), and what changed
+- `changelog.html`: Header (app mark, title, subtitle) and the card
+- `changelog.css`: Changelog page styling (colours from `../options/settings-tokens.css`)
 
 ### Services (`src/services/`)
 All service modules live here in a single flat directory (background and side-panel scope alike):

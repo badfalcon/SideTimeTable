@@ -2,16 +2,14 @@
  * LanguageSettingsCard - Language settings card component
  */
 import { CardComponent } from '../base/card-component.js';
+import { createNotice, createSelect, createSettingRow, msg, msgWith, setText } from '../base/settings-dom.js';
 
 export class LanguageSettingsCard extends CardComponent {
     constructor(onSettingsChange) {
         super({
-            title: 'Language Settings',
+            title: 'Language',
             titleLocalize: '__MSG_languageSettings__',
-            subtitle: 'Select the display language for the extension.',
-            subtitleLocalize: '__MSG_languageDescription__',
-            icon: 'fas fa-language',
-            iconColor: 'text-primary'
+            icon: 'fas fa-globe'
         });
 
         this.onSettingsChange = onSettingsChange;
@@ -51,110 +49,37 @@ export class LanguageSettingsCard extends CardComponent {
 
 
     /**
-     * Create form
+     * Create form: the language select, with the browser's language in its hint
      * @private
      */
     _createForm() {
         const form = document.createElement('form');
+        form.className = 'settings-rows';
 
-        // The grid layout
-        const row = document.createElement('div');
-        row.className = 'row';
+        this.languageSelect = createSelect('language-settings-select', this.availableLanguages);
+        this.languageSelect.value = this.settings.language;
 
-        // The language selection column
-        const selectCol = this._createLanguageSelectColumn();
-        row.appendChild(selectCol);
-
-        // The current language display column
-        const displayCol = this._createCurrentLanguageColumn();
-        row.appendChild(displayCol);
-
-        form.appendChild(row);
-
-        return form;
-    }
-
-    /**
-     * Create language selection column
-     * @private
-     */
-    _createLanguageSelectColumn() {
-        const col = document.createElement('div');
-        col.className = 'col-md-6 mb-3';
-
-        // The label
-        const label = document.createElement('label');
-        label.htmlFor = 'language-settings-select';
-        label.className = 'form-label fw-semibold';
-        label.setAttribute('data-localize', '__MSG_selectLanguage__');
-        label.textContent = window.getLocalizedMessage('selectLanguage') || 'Select Language:';
-
-        // The select box
-        this.languageSelect = document.createElement('select');
-        this.languageSelect.className = 'form-select';
-        this.languageSelect.id = 'language-settings-select';
-
-        // Add the options
-        this.availableLanguages.forEach(lang => {
-            const option = document.createElement('option');
-            option.value = lang.value;
-            option.setAttribute('data-localize', lang.key);
-            option.textContent = lang.text;
-
-            if (lang.value === this.settings.language) {
-                option.selected = true;
-            }
-
-            this.languageSelect.appendChild(option);
+        const { row, hint } = createSettingRow({
+            labelKey: 'selectLanguage',
+            labelFallback: 'Display language',
+            labelFor: 'language-settings-select',
+            hintKey: 'languageHelp',
+            hintFallback: 'Changing it reloads the extension.',
+            control: this.languageSelect
         });
 
-        // The help text
-        const helpText = document.createElement('small');
-        helpText.className = 'form-text text-muted mt-1';
-        helpText.setAttribute('data-localize', '__MSG_languageHelp__');
-        helpText.textContent = window.getLocalizedMessage('languageHelp') || 'If the language is changed, you need to reload the extension to apply the changes.';
-
-        col.appendChild(label);
-        col.appendChild(this.languageSelect);
-        col.appendChild(helpText);
-
-        return col;
-    }
-
-    /**
-     * Create current language display column
-     * @private
-     */
-    _createCurrentLanguageColumn() {
-        const col = document.createElement('div');
-        col.className = 'col-md-6 mb-3';
-
-        // The label
-        const label = document.createElement('label');
-        label.className = 'form-label fw-semibold';
-        label.setAttribute('data-localize', '__MSG_currentLanguage__');
-        label.textContent = window.getLocalizedMessage('currentLanguage') || 'Current Browser Language:';
-
-        // The display area
-        const display = document.createElement('div');
-        display.className = 'p-2 bg-light rounded';
-
-        // The icon and display text
-        const icon = document.createElement('i');
-        icon.className = 'fas fa-info-circle text-info me-1';
-
+        // "Your browser's language is …", on its own line under the hint
         this.currentLanguageDisplay = document.createElement('span');
         this.currentLanguageDisplay.id = 'current-language-display';
-        this.currentLanguageDisplay.className = 'text-dark';
-        this.currentLanguageDisplay.textContent = window.getLocalizedMessage('detectingLanguage') || 'Detecting...';
+        this.currentLanguageDisplay.className = 'setting-row-hint-line';
+        this.currentLanguageDisplay.textContent = msg('detectingLanguage', 'Detecting...');
+        // The hint's own text keeps its data-localize; the line is a sibling
+        const hintText = setText(document.createElement('span'), 'languageHelp', 'Changing it reloads the extension.');
+        hint.removeAttribute('data-localize');
+        hint.replaceChildren(hintText, this.currentLanguageDisplay);
 
-        display.appendChild(icon);
-        display.appendChild(this.currentLanguageDisplay);
-
-        col.appendChild(label);
-        col.appendChild(display);
-
-        return col;
+        form.appendChild(row);
+        return form;
     }
 
     /**
@@ -165,7 +90,7 @@ export class LanguageSettingsCard extends CardComponent {
         if (this.currentLanguageDisplay) {
             const browserLang = navigator.language || navigator.userLanguage || 'unknown';
             const displayText = this._formatLanguageDisplay(browserLang);
-            this.currentLanguageDisplay.textContent = displayText;
+            this.currentLanguageDisplay.textContent = msgWith('browserLanguageIs', 'Your browser\'s language is $1.', displayText);
         }
     }
 
@@ -239,35 +164,30 @@ export class LanguageSettingsCard extends CardComponent {
             existingNotice.remove();
         }
 
-        // Create the confirmation message
-        const notice = document.createElement('div');
-        notice.className = 'alert alert-info alert-dismissible fade show language-reload-notice mt-3';
-        const langChangedTitle = window.getLocalizedMessage('languageChanged') || 'Language setting changed';
-        const langReloadDesc = window.getLocalizedMessage('languageReloadRequired') || 'A page reload is required to apply the changes.';
-        const reloadPageText = window.getLocalizedMessage('reloadPage') || 'Reload Page';
-        notice.innerHTML = `
-            <div class="d-flex align-items-center">
-                <i class="fas fa-sync-alt me-2"></i>
-                <div class="flex-grow-1">
-                    <strong>${langChangedTitle}</strong><br>
-                    <small>${langReloadDesc}</small>
-                </div>
-                <button type="button" class="btn btn-sm btn-primary ms-2" id="reload-page-btn">
-                    ${reloadPageText}
-                </button>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        `;
+        // Create the confirmation message, with a button to reload now
+        const content = document.createElement('div');
+        content.className = 'settings-notice-split';
+        const text = document.createElement('div');
+        const title = document.createElement('strong');
+        title.textContent = msg('languageChanged', 'Language setting changed');
+        const desc = document.createElement('div');
+        desc.textContent = msg('languageReloadRequired', 'A page reload is required to apply the changes.');
+        text.appendChild(title);
+        text.appendChild(desc);
+        const reloadBtn = document.createElement('button');
+        reloadBtn.type = 'button';
+        reloadBtn.id = 'reload-page-btn';
+        reloadBtn.className = 'settings-btn is-primary';
+        reloadBtn.textContent = msg('reloadPage', 'Reload Page');
+        content.appendChild(text);
+        content.appendChild(reloadBtn);
+        const notice = createNotice({ content, tone: 'info', className: 'language-reload-notice' });
 
         this.bodyElement.appendChild(notice);
 
-        // The reload button event
-        const reloadBtn = notice.querySelector('#reload-page-btn');
-        if (reloadBtn) {
-            reloadBtn.addEventListener('click', () => {
-                window.location.reload();
-            });
-        }
+        reloadBtn.addEventListener('click', () => {
+            window.location.reload();
+        });
     }
 
     /**

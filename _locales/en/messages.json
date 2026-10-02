@@ -338,23 +338,67 @@
     "description": "Message displayed when settings are saved"
   },
   "optionsTitle": {
-    "message": "SideTimeTable Settings",
+    "message": "SideTimeTable settings",
     "description": "Title of the options page"
+  },
+  "googleCalendarCardTitle": {
+    "message": "Google Calendar",
+    "description": "Options page: title of the Google connection card"
+  },
+  "googleDisconnect": {
+    "message": "Disconnect",
+    "description": "Options page: button that disconnects Google Calendar"
+  },
+  "googleConnectedHint": {
+    "message": "View, create and edit events, and reply to invitations.",
+    "description": "Options page: under the 'Connected' status"
+  },
+  "googleNotConnectedHint": {
+    "message": "Connect to show, create and edit your Google Calendar events.",
+    "description": "Options page: under the 'Not connected' status"
+  },
+  "workHoursLabel": {
+    "message": "Work hours",
+    "description": "Options page: work hours setting"
+  },
+  "workHoursHint": {
+    "message": "Shown as a band on the timeline.",
+    "description": "Options page: explains the work hours setting"
+  },
+  "breakTimeLabel": {
+    "message": "Break",
+    "description": "Options page: break time setting"
+  },
+  "breakTimeHint": {
+    "message": "Shows the same break on the timeline every day.",
+    "description": "Options page: explains the break time switch"
+  },
+  "browserLanguageIs": {
+    "message": "Your browser's language is $1.",
+    "description": "Options page: under the language setting; $1 is e.g. 'English (en-US)'"
+  },
+  "shortcutOpenPanel": {
+    "message": "Open the side panel",
+    "description": "Options page: the keyboard shortcut row"
+  },
+  "shortcutUrlCopied": {
+    "message": "URL copied. Paste it into the address bar to open it.",
+    "description": "Options page: shown after copying the shortcut settings URL"
   },
   "integration": {
     "message": "Integration",
     "description": "Title of the integration section"
   },
   "googleIntegration": {
-    "message": "Integrate with Google Calendar to display events.",
+    "message": "Show your Google Calendar events in the side panel.",
     "description": "Google Calendar integration description"
   },
   "notIntegrated": {
-    "message": "Not Integrated",
+    "message": "Not connected",
     "description": "Label when Google Calendar is not integrated"
   },
   "integrated": {
-    "message": "Integrated",
+    "message": "Connected",
     "description": "Label when Google Calendar is integrated"
   },
   "displaySettings": {
@@ -370,16 +414,12 @@
     "description": "Nav tab label for developer settings"
   },
   "timeSettings": {
-    "message": "Time Settings",
+    "message": "Time",
     "description": "Section title for time settings"
   },
   "workHours": {
     "message": "Work Hours:",
     "description": "Label for work hours input"
-  },
-  "breakTime": {
-    "message": "Break Time:",
-    "description": "Label for break time input"
   },
   "fixed": {
     "message": "Fixed",
@@ -394,7 +434,7 @@
     "description": "Title for colour theme selection card"
   },
   "colorThemeDescription": {
-    "message": "Choose a colour set for the extension.",
+    "message": "Choose the colours of the side panel.",
     "description": "Subtitle for colour theme selection card"
   },
   "useGoogleCalendarColorsLabel": {
@@ -402,7 +442,7 @@
     "description": "Label for toggle to use per-calendar colors from Google Calendar"
   },
   "useGoogleCalendarColorsHelp": {
-    "message": "When disabled, all Google events use the theme's default color.",
+    "message": "When off, every Google event uses the theme colour.",
     "description": "Help text for Google Calendar colors toggle"
   },
   "timelineBackgroundColor": {
@@ -438,15 +478,15 @@
     "description": "Title of the calendar management section"
   },
   "calendarSelectionDescription": {
-    "message": "Select which Google Calendars to display and set their colors.",
+    "message": "Choose the calendars shown in the side panel, and groups to switch together.",
     "description": "Description for calendar selection and color settings"
   },
   "refreshCalendars": {
-    "message": "Refresh",
+    "message": "Refresh calendar list",
     "description": "Label for calendar list refresh button"
   },
   "searchCalendars": {
-    "message": "Search calendars...",
+    "message": "Search calendars",
     "description": "Placeholder text for calendar search input"
   },
   "noSearchResults": {
@@ -458,7 +498,7 @@
     "description": "Message when no calendars are found"
   },
   "resetToDefault": {
-    "message": "Reset to Default",
+    "message": "Reset all settings",
     "description": "Text for reset to default button"
   },
   "confirmResetSettings": {
@@ -494,15 +534,15 @@
     "description": "Label for current shortcut display"
   },
   "configureShortcuts": {
-    "message": "Configure",
+    "message": "Change",
     "description": "Button text to configure shortcuts"
   },
   "shortcutHelp": {
-    "message": "To change the shortcut, visit Chrome's extension management page (chrome://extensions/shortcuts).",
+    "message": "Change it in Chrome's keyboard shortcuts for extensions.",
     "description": "Help text for shortcut configuration"
   },
   "languageSettings": {
-    "message": "Language Settings",
+    "message": "Language",
     "description": "Section title for language settings"
   },
   "languageDescription": {
@@ -510,7 +550,7 @@
     "description": "Description for language settings section"
   },
   "selectLanguage": {
-    "message": "Select Language:",
+    "message": "Display language",
     "description": "Label for language selection dropdown"
   },
   "languageAuto": {
@@ -526,12 +566,8 @@
     "description": "Option for Japanese language"
   },
   "languageHelp": {
-    "message": "After changing the language, you may need to reload the extension for changes to take effect.",
+    "message": "Takes effect when the page reloads.",
     "description": "Help text for language change"
-  },
-  "currentLanguage": {
-    "message": "Current Browser Language:",
-    "description": "Label for current language display"
   },
   "languageDetected": {
     "message": "Detected Language",
@@ -841,17 +877,32 @@
     "message": "Day $1/$2",
     "description": "Day progress for multi-day all-day events (e.g. Day 2/3)",
     "placeholders": {
-      "1": { "content": "$1", "example": "2" },
-      "2": { "content": "$2", "example": "3" }
+      "1": {
+        "content": "$1",
+        "example": "2"
+      },
+      "2": {
+        "content": "$2",
+        "example": "3"
+      }
     }
   },
   "allDayDateRange": {
     "message": "$1 – $2 ($3 days)",
     "description": "Date range displayed in modal for multi-day all-day events",
     "placeholders": {
-      "1": { "content": "$1", "example": "06/01" },
-      "2": { "content": "$2", "example": "06/03" },
-      "3": { "content": "$3", "example": "3" }
+      "1": {
+        "content": "$1",
+        "example": "06/01"
+      },
+      "2": {
+        "content": "$2",
+        "example": "06/03"
+      },
+      "3": {
+        "content": "$3",
+        "example": "3"
+      }
     }
   },
   "timeInfoError": {
@@ -911,63 +962,63 @@
     "description": "Error message when initialization fails"
   },
   "reminderSettings": {
-    "message": "Reminder Settings",
+    "message": "Reminders",
     "description": "Title for reminder settings card"
   },
   "reminderDescription": {
-    "message": "Configure automatic reminders for your events.",
+    "message": "Chrome notifications before events start, even with the side panel closed.",
     "description": "Description for reminder settings card"
   },
   "googleEventReminderLabel": {
-    "message": "Enable reminders for Google Calendar events",
+    "message": "Notify me about Google Calendar events",
     "description": "Label for Google event reminder toggle"
   },
   "googleEventReminderHelp": {
-    "message": "You will receive notifications before each event in your primary calendar starts, even when the side panel is closed.",
+    "message": "Events on your primary calendar.",
     "description": "Help text for Google event reminder feature"
   },
   "reminderTimeLabel": {
-    "message": "Notify me before:",
+    "message": "When to notify",
     "description": "Label for reminder time selection"
   },
   "reminderTimeHelp": {
-    "message": "This applies to both Google Calendar events and local events.",
+    "message": "Used for both Google and local events.",
     "description": "Help text for reminder time setting"
   },
   "reminderTime1Min": {
-    "message": "1 minute",
+    "message": "1 minute before",
     "description": "1 minute reminder option"
   },
   "reminderTime3Min": {
-    "message": "3 minutes",
+    "message": "3 minutes before",
     "description": "3 minutes reminder option"
   },
   "reminderTime5Min": {
-    "message": "5 minutes",
+    "message": "5 minutes before",
     "description": "5 minutes reminder option"
   },
   "reminderTime10Min": {
-    "message": "10 minutes",
+    "message": "10 minutes before",
     "description": "10 minutes reminder option"
   },
   "reminderTime15Min": {
-    "message": "15 minutes",
+    "message": "15 minutes before",
     "description": "15 minutes reminder option"
   },
   "reminderTime30Min": {
-    "message": "30 minutes",
+    "message": "30 minutes before",
     "description": "30 minutes reminder option"
   },
   "reminderTime60Min": {
-    "message": "1 hour",
+    "message": "1 hour before",
     "description": "1 hour reminder option"
   },
   "reminderSyncIntervalLabel": {
-    "message": "Check Google Calendar for changes:",
+    "message": "Check for changes",
     "description": "Label for the reminder sync interval setting"
   },
   "reminderSyncIntervalHelp": {
-    "message": "How often to look for newly added or rescheduled Google Calendar events so their reminders stay up to date.",
+    "message": "Picks up new and changed events so reminders stay current.",
     "description": "Help text for the reminder sync interval setting"
   },
   "syncInterval15Min": {
@@ -1083,7 +1134,7 @@
     "description": "Checkbox label inside What's New modal to opt out of auto-display on future version updates"
   },
   "whatsNewSettings": {
-    "message": "Update Notifications",
+    "message": "What's new",
     "description": "Title of the What's New auto-show settings card on the options page"
   },
   "whatsNewSettingsDescription": {
@@ -1091,11 +1142,11 @@
     "description": "Subtitle of the What's New auto-show settings card on the options page"
   },
   "whatsNewAutoShowLabel": {
-    "message": "Show What's New on updates",
+    "message": "Show what's new after updates",
     "description": "Toggle label for enabling the What's New modal on version updates"
   },
   "whatsNewAutoShowHelp": {
-    "message": "When enabled, a summary of new features is shown automatically after the extension updates.",
+    "message": "When the extension updates, a short tour of the new features opens.",
     "description": "Help text for the What's New auto-show toggle"
   },
   "changelogTitle": {
@@ -1103,8 +1154,12 @@
     "description": "Title of the Changelog page"
   },
   "changelogDescription": {
-    "message": "Version history and release notes.",
+    "message": "What changed in each version of SideTimeTable",
     "description": "Subtitle for Changelog page"
+  },
+  "changelogLatest": {
+    "message": "Latest",
+    "description": "Label next to the newest version on the changelog page"
   },
   "changelogContextMenu": {
     "message": "Changelog",
@@ -1339,7 +1394,7 @@
     "description": "Placeholder text for the memo textarea"
   },
   "memoSettings": {
-    "message": "Memo Settings",
+    "message": "Memo",
     "description": "Title for the memo settings card"
   },
   "memoSettingsDescription": {
@@ -1347,19 +1402,19 @@
     "description": "Subtitle for the memo settings card"
   },
   "memoMarkdownLabel": {
-    "message": "Enable Markdown rendering",
+    "message": "Show as Markdown",
     "description": "Label for the Markdown toggle switch"
   },
   "memoMarkdownHelp": {
-    "message": "When enabled, memo content is rendered as Markdown when not editing. Click the memo to switch to edit mode.",
+    "message": "When not editing, the memo is shown as Markdown; click it to edit.",
     "description": "Help text for the Markdown toggle"
   },
   "memoFontSizeLabel": {
-    "message": "Font Size",
+    "message": "Text size",
     "description": "Label for the memo font size dropdown"
   },
   "memoFontSizeDefault": {
-    "message": "Default",
+    "message": " (default)",
     "description": "Default label shown next to the default font size option"
   },
   "scrollbarSettings": {
@@ -1371,11 +1426,11 @@
     "description": "Subtitle for the scrollbar settings card"
   },
   "thinScrollbarLabel": {
-    "message": "Use thin scrollbar",
+    "message": "Thin scrollbar",
     "description": "Label for the thin scrollbar toggle"
   },
   "thinScrollbarHelp": {
-    "message": "Display a narrow scrollbar in the side panel for a cleaner look.",
+    "message": "A narrow scrollbar in the side panel, for a cleaner look.",
     "description": "Help text for the thin scrollbar toggle"
   },
   "rsvpLabel": {
@@ -1414,10 +1469,6 @@
     "message": "Close",
     "description": "Close button text"
   },
-  "darkBadge": {
-    "message": "Dark",
-    "description": "Badge label for dark themes"
-  },
   "detectingLanguage": {
     "message": "Detecting...",
     "description": "Status text while detecting browser language"
@@ -1454,6 +1505,10 @@
     "message": "Display sample data (no API access will be made)",
     "description": "Demo mode toggle help text"
   },
+  "demoModeToggleLabel": {
+    "message": "Use demo data",
+    "description": "Developer settings: the demo mode switch"
+  },
   "demoTimeLabel": {
     "message": "Current time line position",
     "description": "Label for demo mode time input"
@@ -1481,10 +1536,6 @@
   "demoLanguageAuto": {
     "message": "Auto (follow extension setting)",
     "description": "Auto option in demo language select"
-  },
-  "demoLinkInfo": {
-    "message": "Open with <code>?demo=true</code> to preview demo settings:",
-    "description": "Info text for demo link section"
   },
   "demoModeEnabled": {
     "message": "Demo mode enabled",
@@ -1582,10 +1633,6 @@
     "message": "Export failed: ",
     "description": "Error message when export fails"
   },
-  "validationWarning": {
-    "message": "Warning:",
-    "description": "Prefix for validation warning messages"
-  },
   "validationEndTimeAfterStart": {
     "message": "End time must be after start time",
     "description": "Validation error when end time is before start time"
@@ -1646,10 +1693,6 @@
     "message": "Demo Mode",
     "description": "Title for the demo mode card in developer settings"
   },
-  "demoModeCardSubtitle": {
-    "message": "Display sample data (no API access will be made).",
-    "description": "Subtitle for the demo mode card in developer settings"
-  },
   "extensionInfoCardTitle": {
     "message": "Extension Info",
     "description": "Title for the extension info card in developer settings"
@@ -1706,6 +1749,10 @@
     "message": "Open",
     "description": "Button label to open demo mode link"
   },
+  "demoLinkLabel": {
+    "message": "Open the settings in demo mode",
+    "description": "Developer settings: row that opens this page with ?demo=true"
+  },
   "calendarFilterTooltip": {
     "message": "Filter calendars",
     "description": "Tooltip for the calendar filter button in the timeline"
@@ -1759,11 +1806,11 @@
     "description": "Placeholder for group name input"
   },
   "editGroup": {
-    "message": "Edit",
+    "message": "Edit group",
     "description": "Tooltip for editing a calendar group name"
   },
   "deleteGroup": {
-    "message": "Delete",
+    "message": "Delete group",
     "description": "Tooltip for deleting a calendar group"
   },
   "assignToGroups": {
@@ -1809,10 +1856,6 @@
   "removeCalendar": {
     "message": "Remove",
     "description": "Aria label prefix for removing a calendar from group selection"
-  },
-  "errorLabel": {
-    "message": "Error",
-    "description": "Label prefix for error messages"
   },
   "calendarLoadError": {
     "message": "Failed to load calendar data",
