@@ -397,6 +397,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; }
 
 .panel-mockup {
     width: 268px;
+    text-align: left;
     background: var(--clr-card);
     border: 1px solid var(--clr-border);
     border-radius: var(--radius-xl);
@@ -423,35 +424,61 @@ button { cursor: pointer; background: none; border: none; font: inherit; }
     z-index: -1;
 }
 
-/* Panel header */
+/* Panel header: add and sync, the date in the middle, filter and settings
+   (as in the extension) */
 .pm-header {
-    padding: 12px 16px;
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
+    gap: 6px;
+    padding: 10px 12px;
     border-bottom: 1px solid var(--clr-border);
     background: rgba(255,255,255,0.03);
 }
 
-.pm-date {
+.pm-tools {
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 0.7rem;
-    font-weight: 600;
+    gap: 10px;
+}
+
+.pm-tools--end {
+    justify-content: flex-end;
+}
+
+.pm-add {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--clr-indigo);
+    color: #fff;
+}
+
+.pm-icon {
+    display: inline-flex;
     color: var(--clr-muted);
 }
 
-.pm-nav {
+.pm-datenav {
     display: flex;
-    gap: 4px;
+    align-items: center;
+    gap: 6px;
+}
+
+.pm-date {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--clr-indigo-lt);
+    white-space: nowrap;
 }
 
 .pm-btn {
     color: var(--clr-sub);
-    font-size: 1rem;
-    padding: 0 4px;
-    transition: color var(--dur) var(--ease);
+    font-size: 0.9rem;
+    line-height: 1;
 }
 
 /* Panel body / timeline */
@@ -493,32 +520,38 @@ button { cursor: pointer; background: none; border: none; font: inherit; }
     font-feature-settings: "tnum";
 }
 
+/* The current time in a pill at the start of the line */
 .tl-time--now {
-    color: var(--clr-red);
+    padding: 2px 0;
+    border-radius: 999px;
+    background: var(--clr-red);
+    color: #fff;
     font-weight: 700;
-    padding-top: 0;
+    text-align: center;
 }
 
-/* Event blocks */
+/* Event blocks: a tint of the event's colour, the text in a light shade of
+   the same hue (the extension's dark theme), no stripe */
 .tl-event {
     flex: 1;
+    min-width: 0;
     border-radius: 6px;
-    padding: 7px 10px;
+    padding: 6px 9px;
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    border-left: 2.5px solid transparent;
+    gap: 1px;
+    background: color-mix(in srgb, var(--ev) 28%, var(--clr-card));
 }
 
-.ev-indigo  { background: rgba(99,102,241,0.2);  border-color: #6366f1; }
-.ev-emerald { background: rgba(16,185,129,0.2);  border-color: #10b981; }
-.ev-violet  { background: rgba(139,92,246,0.2);  border-color: #8b5cf6; }
-.ev-amber   { background: rgba(245,158,11,0.18); border-color: #f59e0b; }
+.ev-indigo  { --ev: #6366f1; }
+.ev-emerald { --ev: #10b981; }
+.ev-violet  { --ev: #8b5cf6; }
+.ev-amber   { --ev: #f59e0b; }
 
 .ev-name {
     font-size: 0.68rem;
     font-weight: 600;
-    color: var(--clr-text);
+    color: color-mix(in srgb, var(--ev) 30%, #ffffff);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -526,29 +559,17 @@ button { cursor: pointer; background: none; border: none; font: inherit; }
 
 .ev-dur {
     font-size: 0.59rem;
-    color: var(--clr-muted);
+    color: color-mix(in srgb, var(--ev) 45%, #ffffff);
+    font-feature-settings: "tnum";
 }
 
 /* Current time line */
 .now-line {
     flex: 1;
     height: 2px;
+    margin-left: -8px;
     background: var(--clr-red);
     border-radius: 1px;
-    display: flex;
-    align-items: center;
-    position: relative;
-}
-
-.now-dot {
-    position: absolute;
-    left: -1px;
-    width: 8px;
-    height: 8px;
-    background: var(--clr-red);
-    border-radius: 50%;
-    flex-shrink: 0;
-    box-shadow: 0 0 6px rgba(239,68,68,0.7);
 }
 
 /* =====================================================

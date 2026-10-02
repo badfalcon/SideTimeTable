@@ -33,7 +33,7 @@
 - [x] 設定ページから Bootstrap（CSS＋JS・Popper）を外した — タブは `settings-tabs.js`（`aria-selected` と `hidden`、矢印・Home・End キー）、Bootstrap の基本スタイルのうち使っていたもの（`box-sizing`、`[hidden]`、`.visually-hidden`、時刻欄の内側の余白）は `options.css` に置いた。外す前後で22の状態のスクリーンショットが1ピクセルも変わらないことを確認。
 - [x] 英語の文言の大文字の書き方を文頭だけ大文字（sentence case）に揃えた — ボタン・見出し・ラベル49件（「Add group」「Replay tutorial」「Color theme」など）とコード内の同じ既定値。固有名詞（Google Calendar、Google Account、What's New など）とデモの予定名はそのまま。
 - [x] メモ欄を畳んだときの1行目プレビュー — 右下のタブ（`clip-path` で切り抜く方式）をやめ、全幅のバーに1行目（Markdown の記号は除く、`memo-summary.js`）を出す形にした。バーの高さ分はスペーサーで確保するので、畳んでもタイムラインの下端の予定を覆わない。
-- [ ] ランディングページ（`docs/`）のヒーローにある静的なモック（`2025/01/15(水)` の日付表示など）が旧ヘッダーのまま。スクリーンショット（`docs/img/`）は更新済み。
+- [x] ランディングページ（`docs/`）のヒーローの静的なモックを新しい画面に — ヘッダー（＋・更新・日付「1月15日(水)」・絞り込み・設定）、色の帯のない淡色の予定ブロック、時刻の入ったピルつきの現在時刻線。英語版（`docs/en/`）も `npm run build:landing` で再生成。
 - [ ] 英語で予定が4列以上重なる 320px 幅では、1列が約60pxになり長い単語が途中で折り返る。`hyphens: auto` を指定済みだが、効くかは Chrome のハイフネーション辞書しだい（ヘッドレスの Linux Chromium では効かないことを確認）。重なりが多いときの表示方式（重ねて表示・「+2」表示など）の検討。
 - [ ] 日本語の文節折り返し（`word-break: auto-phrase`）はヘッドレスの Chromium では効かず、検証環境では「割り込/み禁止」のように切れる。通常の Chrome での見え方を実機で確認すること。
 - [ ] ヘッダー（日付ラベル・`showPicker()`）、「今日に戻る」ボタンの表示と位置追従、`markPastEvents()`、予定ブロックの行数計算（`--event-lines`）、メモの畳んだバー（高さ・スペーサー・`aria-expanded`）の DOM テスト: jsdom 基盤が前提。実拡張では Playwright の手元スクリプトで確認済み（2026-09、ja/en-320/ダーク）。
