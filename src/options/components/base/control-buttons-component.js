@@ -25,7 +25,7 @@ export class ControlButtonsComponent {
         this.replayTutorialButton.id = 'replayTutorialButton';
         this.replayTutorialButton.className = 'settings-nav-item';
         this.replayTutorialButton.appendChild(createIcon('fas fa-graduation-cap'));
-        this.replayTutorialButton.appendChild(setText(document.createElement('span'), 'replayTutorial', 'Replay Tutorial'));
+        this.replayTutorialButton.appendChild(setText(document.createElement('span'), 'replayTutorial', 'Replay tutorial'));
         container.appendChild(this.replayTutorialButton);
 
         // Changelog (opens in a new tab)

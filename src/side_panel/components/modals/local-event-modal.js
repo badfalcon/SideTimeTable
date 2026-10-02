@@ -251,7 +251,7 @@ export class LocalEventModal extends ModalComponent {
      * @private
      */
     _populateViewContent(event) {
-        this.viewTitleElement.textContent = event.title || msg('noTitle', 'No Title');
+        this.viewTitleElement.textContent = event.title || msg('noTitle', 'No title');
 
         const hasTime = !!(event.startTime && event.endTime);
         this.viewTimeRow.content.textContent = hasTime

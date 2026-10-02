@@ -42,7 +42,7 @@ Main UI displayed in Chrome's side panel:
 ### Options Page (`src/options/`)
 Extension settings and calendar management, in the side panel's design language:
 - `options.js`: Settings management with component-based architecture
-- `options.html`: Header (app mark, title, version), the sections on the left (Integration / Display / General / Developer; Bootstrap pill tabs) with tutorial, changelog and reset under them, and the cards on the right. At 760px or narrower the sections become the dialogs' segmented control and the extras move to the bottom
+- `options.html`: Header (app mark, title, version), the sections on the left (Integration / Display / General / Developer; tabs from `settings-tabs.js`, no Bootstrap) with tutorial, changelog and reset under them, and the cards on the right. At 760px or narrower the sections become the dialogs' segmented control and the extras move to the bottom
 - `settings-tokens.css`: The page colours (`--settings-*`, light and `[data-theme="dark"]`) and the shape/type values, shared with the changelog page. The side panel's `--side-calendar-*` colours are rewritten at runtime when a theme is picked, so these pages keep their own
 - `options.css`: Layout, cards, setting rows and controls (switch, select, buttons, notices), calendar list/groups, theme previews
 - `components/`:

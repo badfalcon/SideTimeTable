@@ -502,3 +502,13 @@ Alarm names are `${prefix}${YYYY-MM-DD}_${eventId}`.
 - Non-existent dates (`"2025-02-30"`, `"2025-13-01"`) → `null`
 - Malformed strings (`"15-03-2025"`, `"2025-3-15"`, `""`) → `null`
 - Non-string input → `null`
+
+---
+
+## settings-tabs (options page sections)
+
+### tabForKey(tabs, current, key)
+- `ArrowDown` / `ArrowRight` → next visible tab, `ArrowUp` / `ArrowLeft` → previous, wrapping around
+- `Home` / `End` → first / last visible tab
+- Hidden tabs (the developer section when it is off) are skipped
+- Any other key, or a tab not in the list → `null`

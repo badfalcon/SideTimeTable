@@ -8,7 +8,7 @@
     "description": "Title of the timeline page"
   },
   "addEvent": {
-    "message": "Add Event",
+    "message": "Add event",
     "description": "Tooltip for add event button"
   },
   "settings": {
@@ -20,7 +20,7 @@
     "description": "Tooltip for date picker input"
   },
   "eventDialogTitle": {
-    "message": "Create/Edit Event",
+    "message": "Create/edit event",
     "description": "Title of event dialog"
   },
   "eventDialogTitleCreate": {
@@ -204,11 +204,11 @@
     "description": "Label for event description input"
   },
   "startTime": {
-    "message": "Start Time:",
+    "message": "Start time:",
     "description": "Label for start time input"
   },
   "endTime": {
-    "message": "End Time:",
+    "message": "End time:",
     "description": "Label for end time input"
   },
   "save": {
@@ -240,7 +240,7 @@
     "description": "Note under the event type when Out of office is chosen; $1 is the primary calendar's name"
   },
   "eventReminder": {
-    "message": "Event Reminder",
+    "message": "Event reminder",
     "description": "Title for reminder notification"
   },
   "startsInMinutes": {
@@ -418,7 +418,7 @@
     "description": "Section title for time settings"
   },
   "workHours": {
-    "message": "Work Hours:",
+    "message": "Work hours:",
     "description": "Label for work hours input"
   },
   "fixed": {
@@ -426,11 +426,11 @@
     "description": "Label for fixed break time checkbox"
   },
   "colorSettings": {
-    "message": "Color Settings",
+    "message": "Color settings",
     "description": "Section title for color settings"
   },
   "colorThemeSettings": {
-    "message": "Color Theme",
+    "message": "Color theme",
     "description": "Title for colour theme selection card"
   },
   "colorThemeDescription": {
@@ -446,35 +446,35 @@
     "description": "Help text for Google Calendar colors toggle"
   },
   "timelineBackgroundColor": {
-    "message": "Timeline Background",
+    "message": "Timeline background",
     "description": "Label for timeline (body) background color input"
   },
   "panelBackgroundColor": {
-    "message": "Header/Memo Background",
+    "message": "Header/memo background",
     "description": "Label for header and memo panel background color input"
   },
   "googleEventDefaultColor": {
-    "message": "Google Event Default",
+    "message": "Google event default",
     "description": "Label for default Google event color input"
   },
   "workTimeColor": {
-    "message": "Work Time Color",
+    "message": "Work time color",
     "description": "Label for work time color input"
   },
   "localEventColor": {
-    "message": "Local Event Color",
+    "message": "Local event color",
     "description": "Label for local event color input"
   },
   "breakTimeColor": {
-    "message": "Break Time Color",
+    "message": "Break time color",
     "description": "Label for break time color input"
   },
   "currentTimeLineColor": {
-    "message": "Current Time Line Color",
+    "message": "Current time line color",
     "description": "Label for current time line color input"
   },
   "calendarSelection": {
-    "message": "Calendar Management",
+    "message": "Calendar management",
     "description": "Title of the calendar management section"
   },
   "calendarSelectionDescription": {
@@ -522,7 +522,7 @@
     "description": "Tooltip for date display click action"
   },
   "shortcutSettings": {
-    "message": "Keyboard Shortcut",
+    "message": "Keyboard shortcut",
     "description": "Section title for keyboard shortcut"
   },
   "shortcutDescription": {
@@ -530,7 +530,7 @@
     "description": "Description for keyboard shortcut"
   },
   "currentShortcut": {
-    "message": "Current Shortcut:",
+    "message": "Current shortcut:",
     "description": "Label for current shortcut display"
   },
   "configureShortcuts": {
@@ -554,7 +554,7 @@
     "description": "Label for language selection dropdown"
   },
   "languageAuto": {
-    "message": "Auto (Browser Language)",
+    "message": "Auto (browser language)",
     "description": "Option for automatic language detection"
   },
   "languageEnglish": {
@@ -570,7 +570,7 @@
     "description": "Help text for language change"
   },
   "languageDetected": {
-    "message": "Detected Language",
+    "message": "Detected language",
     "description": "Text for detected language"
   },
   "languageChangeConfirm": {
@@ -778,7 +778,7 @@
     "description": "Preview label for color settings"
   },
   "colorPresets": {
-    "message": "Color Presets",
+    "message": "Color presets",
     "description": "Color presets section title"
   },
   "presetDefault": {
@@ -838,7 +838,7 @@
     "description": "Description of the manual revoke notification"
   },
   "openGoogleAccountSettings": {
-    "message": "Open Google Account Settings",
+    "message": "Open Google Account settings",
     "description": "Button text to open Google account settings for manual revoke"
   },
   "to": {
@@ -858,7 +858,7 @@
     "description": "Button over the timeline while another day is shown; returns to today"
   },
   "noTitle": {
-    "message": "No Title",
+    "message": "No title",
     "description": "Default text when event has no title"
   },
   "outOfOffice": {
@@ -1042,7 +1042,7 @@
     "description": "Sync interval option: 6 hours"
   },
   "syncReminders": {
-    "message": "Sync Reminders",
+    "message": "Sync reminders",
     "description": "Tooltip for sync reminders button"
   },
   "recurrence": {
@@ -1174,7 +1174,7 @@
     "description": "Tutorial: welcome step description"
   },
   "tutorialAddEventTitle": {
-    "message": "Add an Event",
+    "message": "Add an event",
     "description": "Tutorial: add event step title"
   },
   "tutorialAddEventDesc": {
@@ -1182,7 +1182,7 @@
     "description": "Tutorial: add event step description"
   },
   "tutorialDateNavTitle": {
-    "message": "Date Navigation",
+    "message": "Date navigation",
     "description": "Tutorial: date navigation step title"
   },
   "tutorialDateNavDesc": {
@@ -1190,7 +1190,7 @@
     "description": "Tutorial: date navigation step description"
   },
   "tutorialSyncTitle": {
-    "message": "Sync Events",
+    "message": "Sync events",
     "description": "Tutorial: sync step title"
   },
   "tutorialSyncDesc": {
@@ -1222,7 +1222,7 @@
     "description": "Tutorial: memo step description"
   },
   "tutorialFinishTitle": {
-    "message": "You're All Set!",
+    "message": "You're all set!",
     "description": "Tutorial: finish step title"
   },
   "tutorialFinishDesc": {
@@ -1250,7 +1250,7 @@
     "description": "Help button tooltip"
   },
   "setupLanguageTitle": {
-    "message": "Choose Your Language",
+    "message": "Choose your language",
     "description": "Initial setup: language step title"
   },
   "setupLanguageDesc": {
@@ -1258,7 +1258,7 @@
     "description": "Initial setup: language step description"
   },
   "setupLanguageAuto": {
-    "message": "Auto-detect (Browser language)",
+    "message": "Auto-detect (browser language)",
     "description": "Initial setup: auto language option"
   },
   "setupLanguageEn": {
@@ -1270,7 +1270,7 @@
     "description": "Initial setup: Japanese option"
   },
   "setupWorkHoursTitle": {
-    "message": "Set Work Hours",
+    "message": "Set work hours",
     "description": "Initial setup: work hours step title"
   },
   "setupWorkHoursDesc": {
@@ -1354,7 +1354,7 @@
     "description": "Initial setup: complete button"
   },
   "replayTutorial": {
-    "message": "Replay Tutorial",
+    "message": "Replay tutorial",
     "description": "Button to replay the onboarding tutorial"
   },
   "replayTutorialSuccess": {
@@ -1374,7 +1374,7 @@
     "description": "Message body of the review request modal"
   },
   "reviewRateNow": {
-    "message": "Write a Review",
+    "message": "Write a review",
     "description": "Button to open the Chrome Web Store review page"
   },
   "reviewLater": {
@@ -1490,7 +1490,7 @@
     "description": "Description for language change notification"
   },
   "reloadPage": {
-    "message": "Reload Page",
+    "message": "Reload page",
     "description": "Button to reload page after language change"
   },
   "screenReaderLoading": {
@@ -1498,7 +1498,7 @@
     "description": "Screen reader text for loading spinner"
   },
   "demoMode": {
-    "message": "Demo Mode",
+    "message": "Demo mode",
     "description": "Demo mode toggle label"
   },
   "demoModeHelp": {
@@ -1554,15 +1554,15 @@
     "description": "Notification when demo scenario is changed"
   },
   "testNotification": {
-    "message": "Test Notification",
+    "message": "Test notification",
     "description": "Button to test notification"
   },
   "forceSyncNow": {
-    "message": "Force Sync Now",
+    "message": "Force sync now",
     "description": "Button to force sync reminders"
   },
   "showDebugInfo": {
-    "message": "Show Debug Info",
+    "message": "Show debug info",
     "description": "Button to show debug info"
   },
   "testNotificationSent": {
@@ -1646,23 +1646,23 @@
     "description": "Validation error when break time is outside work hours"
   },
   "clearLocalEvents": {
-    "message": "Clear Local Events",
+    "message": "Clear local events",
     "description": "Button label for clearing local events"
   },
   "clearMemo": {
-    "message": "Clear Memo",
+    "message": "Clear memo",
     "description": "Button label for clearing memo data"
   },
   "exportSettings": {
-    "message": "Export Settings",
+    "message": "Export settings",
     "description": "Button label for exporting settings"
   },
   "syncStorageLabel": {
-    "message": "Sync Storage (Settings)",
+    "message": "Sync storage (settings)",
     "description": "Label for sync storage section in viewer"
   },
   "localStorageLabel": {
-    "message": "Local Storage",
+    "message": "Local storage",
     "description": "Label for local storage section in viewer"
   },
   "editEvent": {
@@ -1670,7 +1670,7 @@
     "description": "Edit button label in local event view mode"
   },
   "localEventDetailTitle": {
-    "message": "Event Details",
+    "message": "Event details",
     "description": "Title of local event view mode dialog"
   },
   "reminderOn": {
@@ -1678,7 +1678,7 @@
     "description": "Reminder enabled status in event view"
   },
   "reminderDebugTitle": {
-    "message": "Reminder Debug & Test",
+    "message": "Reminder debug & test",
     "description": "Title for the reminder debug card in developer settings"
   },
   "storageCardTitle": {
@@ -1690,11 +1690,11 @@
     "description": "Subtitle for the storage card in developer settings"
   },
   "demoModeCardTitle": {
-    "message": "Demo Mode",
+    "message": "Demo mode",
     "description": "Title for the demo mode card in developer settings"
   },
   "extensionInfoCardTitle": {
-    "message": "Extension Info",
+    "message": "Extension info",
     "description": "Title for the extension info card in developer settings"
   },
   "extensionInfoCardSubtitle": {
@@ -1706,7 +1706,7 @@
     "description": "Label for extension ID in info card"
   },
   "manifestVersionLabel": {
-    "message": "Manifest Version",
+    "message": "Manifest version",
     "description": "Label for manifest version in info card"
   },
   "versionLabel": {
@@ -1786,11 +1786,11 @@
     "description": "Tooltip for the refresh button in the calendar filter"
   },
   "addGroup": {
-    "message": "Add Group",
+    "message": "Add group",
     "description": "Button label to add a new calendar group"
   },
   "newGroupName": {
-    "message": "New Group",
+    "message": "New group",
     "description": "Default name for a newly created calendar group"
   },
   "ungrouped": {
@@ -1822,19 +1822,19 @@
     "description": "Message shown when no groups exist for assignment"
   },
   "createGroupTitle": {
-    "message": "Create Group",
+    "message": "Create group",
     "description": "Title for the create group modal"
   },
   "editGroupTitle": {
-    "message": "Edit Group",
+    "message": "Edit group",
     "description": "Title for the edit group modal"
   },
   "groupNameLabel": {
-    "message": "Group Name",
+    "message": "Group name",
     "description": "Label for the group name input in create modal"
   },
   "selectCalendarsLabel": {
-    "message": "Select Calendars",
+    "message": "Select calendars",
     "description": "Label for the calendar selection section in create modal"
   },
   "createGroupButton": {

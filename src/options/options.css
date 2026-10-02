@@ -9,6 +9,52 @@
 
 /* ---------- Page ---------- */
 
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+button,
+input,
+select,
+textarea {
+    margin: 0;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+}
+
+/* Time fields: the hour and the separator sit flush, one line tall */
+::-webkit-datetime-edit-fields-wrapper,
+::-webkit-datetime-edit-text,
+::-webkit-datetime-edit-hour-field {
+    padding: 0;
+}
+
+::-webkit-date-and-time-value {
+    min-width: 85px;
+    height: 1.5em;
+    margin: 0;
+}
+
+/* Read by screen readers only (status text) */
+.visually-hidden {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
 body {
     margin: 0;
     padding: 0;
@@ -81,7 +127,7 @@ body {
     max-width: 720px;
 }
 
-.settings-content > .tab-pane > * + * {
+.settings-content > .settings-tab-panel > * + * {
     margin-top: 16px;
 }
 
@@ -116,7 +162,7 @@ body {
     gap: 2px;
 }
 
-.settings-nav .nav-link,
+.settings-nav-link,
 .settings-nav-item {
     display: flex;
     align-items: center;
@@ -139,7 +185,7 @@ body {
     transition: background-color 0.15s, color 0.15s;
 }
 
-.settings-nav .nav-link > i,
+.settings-nav-link > i,
 .settings-nav-item > i:first-child {
     flex-shrink: 0;
     width: 16px;
@@ -148,23 +194,23 @@ body {
     text-align: center;
 }
 
-.settings-nav .nav-link:hover,
+.settings-nav-link:hover,
 .settings-nav-item:hover {
     background: var(--settings-hover);
     color: var(--settings-text);
 }
 
-.settings-nav .nav-link.active {
+.settings-nav-link[aria-selected="true"] {
     background: var(--settings-accent-tint);
     color: var(--settings-accent-text);
     font-weight: 600;
 }
 
-.settings-nav .nav-link.active > i {
+.settings-nav-link[aria-selected="true"] > i {
     color: var(--settings-accent-text);
 }
 
-.settings-nav .nav-link:focus-visible,
+.settings-nav-link:focus-visible,
 .settings-nav-item:focus-visible {
     outline: 2px solid var(--settings-accent);
     outline-offset: -2px;
@@ -1150,6 +1196,7 @@ body {
 
 .settings-block-title {
     margin: 0;
+    line-height: 1.2;
     color: var(--settings-text-secondary);
     font-size: var(--side-calendar-font-small);
     font-weight: 600;
@@ -1348,7 +1395,7 @@ summary.storage-entry {
         background: var(--settings-subtle);
     }
 
-    .settings-nav .nav-link {
+    .settings-nav-link {
         flex: 1 1 0;
         justify-content: center;
         gap: 6px;
@@ -1363,24 +1410,24 @@ summary.storage-entry {
         white-space: nowrap;
     }
 
-    .settings-nav .nav-link > i {
+    .settings-nav-link > i {
         width: auto;
         color: inherit;
         font-size: 12px;
     }
 
-    .settings-nav .nav-link:hover {
+    .settings-nav-link:hover {
         background: var(--settings-hover);
     }
 
-    .settings-nav .nav-link.active {
+    .settings-nav-link[aria-selected="true"] {
         border-color: var(--settings-accent);
         background: var(--settings-surface);
         box-shadow: 0 1px 2px var(--settings-shadow-color);
         color: var(--settings-accent-text);
     }
 
-    .settings-nav .nav-link.active > i {
+    .settings-nav-link[aria-selected="true"] > i {
         color: inherit;
     }
 
@@ -1389,11 +1436,11 @@ summary.storage-entry {
         display: none;
     }
 
-    .settings-content > .tab-pane > .settings-section-title + * {
+    .settings-content > .settings-tab-panel > .settings-section-title + * {
         margin-top: 0;
     }
 
-    .settings-content > .tab-pane > * + * {
+    .settings-content > .settings-tab-panel > * + * {
         margin-top: 12px;
     }
 

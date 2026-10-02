@@ -25,7 +25,7 @@ export class LanguageSettingsCard extends CardComponent {
 
         // The available languages
         this.availableLanguages = [
-            { value: 'auto', key: '__MSG_languageAuto__', text: 'Auto (Browser Language)' },
+            { value: 'auto', key: '__MSG_languageAuto__', text: 'Auto (browser language)' },
             { value: 'en', key: '__MSG_languageEnglish__', text: 'English' },
             { value: 'ja', key: '__MSG_languageJapanese__', text: 'Japanese (日本語)' }
         ];
@@ -178,7 +178,7 @@ export class LanguageSettingsCard extends CardComponent {
         reloadBtn.type = 'button';
         reloadBtn.id = 'reload-page-btn';
         reloadBtn.className = 'settings-btn is-primary';
-        reloadBtn.textContent = msg('reloadPage', 'Reload Page');
+        reloadBtn.textContent = msg('reloadPage', 'Reload page');
         content.appendChild(text);
         content.appendChild(reloadBtn);
         const notice = createNotice({ content, tone: 'info', className: 'language-reload-notice' });

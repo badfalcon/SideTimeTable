@@ -234,7 +234,7 @@ export class CalendarGroupManager {
         }
         this._isSubmittingGroup = true;
 
-        const groupName = name || (window.getLocalizedMessage('newGroupName') || 'New Group');
+        const groupName = name || (window.getLocalizedMessage('newGroupName') || 'New group');
         const selectedCalIds = checkboxes
             .filter(cb => cb.checked)
             .map(cb => cb.value);
@@ -461,8 +461,8 @@ export class CalendarGroupManager {
     _buildGroupModal(editingGroup, allCalendars, onClose, onSubmit) {
         const isEdit = !!editingGroup;
         const modalTitle = isEdit
-            ? (window.getLocalizedMessage('editGroupTitle') || 'Edit Group')
-            : (window.getLocalizedMessage('createGroupTitle') || 'Create Group');
+            ? (window.getLocalizedMessage('editGroupTitle') || 'Edit group')
+            : (window.getLocalizedMessage('createGroupTitle') || 'Create group');
         const submitLabel = isEdit
             ? (window.getLocalizedMessage('saveGroupButton') || 'Save')
             : (window.getLocalizedMessage('createGroupButton') || 'Create');
@@ -536,7 +536,7 @@ export class CalendarGroupManager {
         const nameLabel = document.createElement('label');
         nameLabel.className = 'settings-field-label';
         nameLabel.htmlFor = 'create-group-name-input';
-        nameLabel.textContent = window.getLocalizedMessage('groupNameLabel') || 'Group Name';
+        nameLabel.textContent = window.getLocalizedMessage('groupNameLabel') || 'Group name';
         const nameInput = document.createElement('input');
         nameInput.type = 'text';
         nameInput.id = 'create-group-name-input';
@@ -549,7 +549,7 @@ export class CalendarGroupManager {
 
         const calLabel = document.createElement('label');
         calLabel.className = 'settings-field-label';
-        calLabel.textContent = window.getLocalizedMessage('selectCalendarsLabel') || 'Select Calendars';
+        calLabel.textContent = window.getLocalizedMessage('selectCalendarsLabel') || 'Select calendars';
         body.appendChild(calLabel);
 
         const chipArea = document.createElement('div');

@@ -55,7 +55,7 @@ export class StorageCard extends CardComponent {
         const btnGroup = document.createElement('div');
         btnGroup.className = 'settings-button-row';
 
-        btnGroup.appendChild(this._createActionBtn('fas fa-trash-can', 'clearLocalEvents', 'Clear Local Events', 'danger', async () => {
+        btnGroup.appendChild(this._createActionBtn('fas fa-trash-can', 'clearLocalEvents', 'Clear local events', 'danger', async () => {
             if (!window.confirm(msg('confirmClearLocalEvents', 'Delete all localEvents_* keys?'))) return;
             try {
                 const localData = await StorageHelper.getLocal(null);
@@ -68,7 +68,7 @@ export class StorageCard extends CardComponent {
             }
         }));
 
-        btnGroup.appendChild(this._createActionBtn('fas fa-eraser', 'clearMemo', 'Clear Memo', 'danger', async () => {
+        btnGroup.appendChild(this._createActionBtn('fas fa-eraser', 'clearMemo', 'Clear memo', 'danger', async () => {
             if (!window.confirm(msg('confirmClearMemo', 'Delete memoContent / memoCollapsed / memoHeight?'))) return;
             try {
                 await chrome.storage.local.remove(['memoContent', 'memoCollapsed', 'memoHeight']);
@@ -79,7 +79,7 @@ export class StorageCard extends CardComponent {
             }
         }));
 
-        btnGroup.appendChild(this._createActionBtn('fas fa-download', 'exportSettings', 'Export Settings', 'secondary', async (e) => {
+        btnGroup.appendChild(this._createActionBtn('fas fa-download', 'exportSettings', 'Export settings', 'secondary', async (e) => {
             const btn = e.currentTarget;
             try {
                 const syncData = await StorageHelper.get(null);
@@ -150,8 +150,8 @@ export class StorageCard extends CardComponent {
             usage.appendChild(usageText);
             content.appendChild(usage);
 
-            content.appendChild(this._createStorageBlock(msg('syncStorageLabel', 'Sync Storage (Settings)'), syncData));
-            content.appendChild(this._createStorageBlock(msg('localStorageLabel', 'Local Storage'), localData));
+            content.appendChild(this._createStorageBlock(msg('syncStorageLabel', 'Sync storage (settings)'), syncData));
+            content.appendChild(this._createStorageBlock(msg('localStorageLabel', 'Local storage'), localData));
         } catch (e) {
             content.textContent = msg('storageLoadFailed', 'Failed to load storage: ') + e.message;
         }

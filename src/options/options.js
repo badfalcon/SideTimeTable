@@ -31,6 +31,7 @@ import {
     ControlButtonsComponent
 } from './components/index.js';
 import { createIcon, createNotice, msg } from './components/base/settings-dom.js';
+import { setupSettingsTabs } from './settings-tabs.js';
 
 /**
  * OptionsPageManager - The overall options page management class
@@ -166,7 +167,7 @@ class OptionsPageManager {
 
                 // nav-pills の Developer ボタンを表示
                 const devBtn = document.getElementById('tab-developer-btn');
-                if (devBtn) devBtn.classList.remove('d-none');
+                if (devBtn) devBtn.hidden = false;
             }
         } catch (e) {
             console.warn('Failed to read developer features flags:', e);
@@ -307,7 +308,7 @@ class OptionsPageManager {
         const demoSettings = getDemoOptionsSettings();
         this.calendarManagementCard.allCalendars = demoCalendars;
         this.calendarManagementCard.selectedCalendarIds = demoSettings.selectedCalendars;
-        this.calendarManagementCard.calendarGroups = getDemoCalendarGroups();
+        this.calendarManagementCard.calendarGroups = await getDemoCalendarGroups();
         this.calendarManagementCard.hasAutoFetched = true;
         this.calendarManagementCard.show();
         this.calendarManagementCard.render();
@@ -622,7 +623,7 @@ class OptionsPageManager {
         link.target = '_blank';
         link.rel = 'noopener';
         link.appendChild(createIcon('fas fa-arrow-up-right-from-square'));
-        link.appendChild(document.createTextNode(msg('openGoogleAccountSettings', 'Open Google Account Settings')));
+        link.appendChild(document.createTextNode(msg('openGoogleAccountSettings', 'Open Google Account settings')));
         content.append(title, description, link);
         const notice = createNotice({ content, tone: 'info', className: 'manual-revoke-notice' });
 
@@ -653,6 +654,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.warn('Error in localization process:', error);
         }
     }
+
+    // Sections: one panel at a time
+    setupSettingsTabs(document.getElementById('settings-tablist'));
 
     // Initialize the new component-based options page manager
     const optionsPageManager = new OptionsPageManager();

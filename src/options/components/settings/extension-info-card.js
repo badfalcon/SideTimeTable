@@ -8,7 +8,7 @@ export class ExtensionInfoCard extends CardComponent {
     constructor() {
         super({
             id: 'extension-info-card',
-            title: msg('extensionInfoCardTitle', 'Extension Info'),
+            title: msg('extensionInfoCardTitle', 'Extension info'),
             titleLocalize: '__MSG_extensionInfoCardTitle__',
             subtitle: msg('extensionInfoCardSubtitle', 'Information about this extension.'),
             subtitleLocalize: '__MSG_extensionInfoCardSubtitle__',
@@ -24,7 +24,7 @@ export class ExtensionInfoCard extends CardComponent {
         const unknown = msg('unknown', 'Unknown');
         [
             { key: 'extensionIdLabel', fallback: 'Extension ID', value: chrome.runtime?.id || msg('cannotRetrieve', 'Cannot retrieve'), copyable: !!chrome.runtime?.id },
-            { key: 'manifestVersionLabel', fallback: 'Manifest Version', value: manifest.manifest_version || unknown },
+            { key: 'manifestVersionLabel', fallback: 'Manifest version', value: manifest.manifest_version || unknown },
             { key: 'versionLabel', fallback: 'Version', value: manifest.version || unknown }
         ].forEach(item => this.addContent(this._createInfoRow(item)));
 

@@ -319,7 +319,7 @@ export class GoogleEventModal extends ModalComponent {
 
         this.titleElement.textContent = event.summary || (event.eventType === 'outOfOffice'
             ? msg('outOfOffice', 'Out of office')
-            : msg('noTitle', 'No Title'));
+            : msg('noTitle', 'No title'));
 
         this.openLink.hidden = !event.htmlLink;
         if (event.htmlLink) {

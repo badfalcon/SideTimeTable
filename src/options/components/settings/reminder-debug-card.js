@@ -8,7 +8,7 @@ import { sendMessage } from '../../../lib/chrome-messaging.js';
 export class ReminderDebugCard extends CardComponent {
     constructor() {
         super({
-            title: msg('reminderDebugTitle', 'Reminder Debug & Test'),
+            title: msg('reminderDebugTitle', 'Reminder debug & test'),
             titleLocalize: '__MSG_reminderDebugTitle__',
             icon: 'fas fa-bug',
         });
@@ -33,15 +33,15 @@ export class ReminderDebugCard extends CardComponent {
         const actions = document.createElement('div');
         actions.className = 'settings-button-row';
 
-        const testButton = createButton({ labelKey: 'testNotification', labelFallback: 'Test Notification', icon: 'fas fa-bell' });
+        const testButton = createButton({ labelKey: 'testNotification', labelFallback: 'Test notification', icon: 'fas fa-bell' });
         testButton.addEventListener('click', () => this._testNotification());
         actions.appendChild(testButton);
 
-        const syncButton = createButton({ labelKey: 'forceSyncNow', labelFallback: 'Force Sync Now', icon: 'fas fa-arrows-rotate' });
+        const syncButton = createButton({ labelKey: 'forceSyncNow', labelFallback: 'Force sync now', icon: 'fas fa-arrows-rotate' });
         syncButton.addEventListener('click', () => this._forceSyncReminders());
         actions.appendChild(syncButton);
 
-        const debugButton = createButton({ labelKey: 'showDebugInfo', labelFallback: 'Show Debug Info', icon: 'fas fa-magnifying-glass' });
+        const debugButton = createButton({ labelKey: 'showDebugInfo', labelFallback: 'Show debug info', icon: 'fas fa-magnifying-glass' });
         debugButton.addEventListener('click', () => this._showDebugInfo());
         actions.appendChild(debugButton);
 

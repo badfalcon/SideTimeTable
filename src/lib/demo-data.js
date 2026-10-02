@@ -1010,17 +1010,18 @@ const _DEMO_SELECTED_CALENDARS = {
     manager:    ['primary', 'alex@eng.com', 'riley@eng.com', 'morgan@eng.com', 'jamie@eng.com', 'hr@eng.com', 'company@eng.com']
 };
 
+// Group names are [English, Japanese]; getDemoCalendarGroups() picks one
 const _DEMO_CALENDAR_GROUPS = {
     dev_team: [
         {
             id: 'group_demo_members',
-            name: 'Team Members',
+            name: ['Team Members', 'チームメンバー'],
             calendarIds: ['jordan@team.com', 'sam@team.com', 'jamie@team.com', 'casey@team.com'],
             collapsed: false
         },
         {
             id: 'group_demo_shared',
-            name: 'Shared Calendars',
+            name: ['Shared Calendars', '共有カレンダー'],
             calendarIds: ['eng-team@team.com', 'product@team.com', 'research@team.com'],
             collapsed: false
         }
@@ -1028,13 +1029,13 @@ const _DEMO_CALENDAR_GROUPS = {
     sales_team: [
         {
             id: 'group_demo_sales',
-            name: 'Sales Team',
+            name: ['Sales Team', '営業チーム'],
             calendarIds: ['mike@sales.com', 'tom@sales.com', 'lisa@sales.com', 'emma@sales.com'],
             collapsed: false
         },
         {
             id: 'group_demo_mkt',
-            name: 'Marketing',
+            name: ['Marketing', 'マーケティング'],
             calendarIds: ['mkt@sales.com'],
             collapsed: false
         }
@@ -1042,22 +1043,28 @@ const _DEMO_CALENDAR_GROUPS = {
     manager: [
         {
             id: 'group_demo_eng',
-            name: 'Engineering',
+            name: ['Engineering', '開発部'],
             calendarIds: ['alex@eng.com', 'riley@eng.com', 'morgan@eng.com', 'jamie@eng.com'],
             collapsed: false
         },
         {
             id: 'group_demo_org',
-            name: 'Organization',
+            name: ['Organization', '組織'],
             calendarIds: ['hr@eng.com', 'company@eng.com'],
             collapsed: false
         }
     ]
 };
 
-export function getDemoCalendarGroups() {
+export async function getDemoCalendarGroups() {
     const scenario = getDemoScenario();
-    return _DEMO_CALENDAR_GROUPS[scenario] || _DEMO_CALENDAR_GROUPS.dev_team;
+    const locale = await getLocale();
+    const groups = _DEMO_CALENDAR_GROUPS[scenario] || _DEMO_CALENDAR_GROUPS.dev_team;
+    return groups.map(group => ({
+        ...group,
+        name: L(locale, ...group.name),
+        calendarIds: [...group.calendarIds]
+    }));
 }
 
 export function getDemoOptionsSettings() {

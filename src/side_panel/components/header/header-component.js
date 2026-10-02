@@ -136,7 +136,7 @@ export class HeaderComponent extends Component {
         this.addEventButton.classList.add('header-add-btn');
 
         // Sync button
-        this.syncButton = this._createIconButton('syncReminderButton', 'fas fa-sync-alt', 'syncReminders', 'Sync Reminders');
+        this.syncButton = this._createIconButton('syncReminderButton', 'fas fa-sync-alt', 'syncReminders', 'Sync reminders');
 
         container.appendChild(this.addEventButton);
         container.appendChild(this.syncButton);

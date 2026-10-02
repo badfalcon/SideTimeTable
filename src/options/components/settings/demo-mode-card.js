@@ -14,7 +14,7 @@ export class DemoModeCard extends CardComponent {
     constructor(onSettingsChange) {
         super({
             id: 'demo-mode-card',
-            title: msg('demoModeCardTitle', 'Demo Mode'),
+            title: msg('demoModeCardTitle', 'Demo mode'),
             titleLocalize: '__MSG_demoModeCardTitle__',
             icon: 'fas fa-flask',
             hidden: true

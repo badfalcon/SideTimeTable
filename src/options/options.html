@@ -6,10 +6,6 @@
     <title data-localize="__MSG_optionsTitle__">SideTimeTableの設定</title>
     <!-- Font Awesome -->
     <link href="https://use.fontawesome.com/releases/v6.7.1/css/all.css" rel="stylesheet">
-    <!-- Bootstrap CSS -->
-    <link href="../vendor/bootstrap.min.css" rel="stylesheet">
-    <script src="../vendor/popper.min.js"></script>
-    <script src="../vendor/bootstrap.min.js"></script>
     <script src="../lib/localize.js"></script>
     <link rel="stylesheet" href="settings-tokens.css">
     <link rel="stylesheet" href="options.css">
@@ -27,25 +23,21 @@
 
     <div class="settings-layout">
         <!-- Sections: a list on the left, a segmented control in a narrow window -->
-        <nav class="nav settings-nav" id="v-pills-tab" role="tablist" aria-orientation="vertical">
-            <button class="nav-link active" id="tab-google-btn" type="button"
-                    data-bs-toggle="pill" data-bs-target="#tab-google"
+        <nav class="settings-nav" id="settings-tablist" role="tablist" aria-orientation="vertical">
+            <button class="settings-nav-link" id="tab-google-btn" type="button"
                     role="tab" aria-controls="tab-google" aria-selected="true">
                 <i class="fas fa-link" aria-hidden="true"></i><span data-localize="__MSG_integration__">Integration</span>
             </button>
-            <button class="nav-link" id="tab-display-btn" type="button"
-                    data-bs-toggle="pill" data-bs-target="#tab-display"
+            <button class="settings-nav-link" id="tab-display-btn" type="button"
                     role="tab" aria-controls="tab-display" aria-selected="false">
                 <i class="fas fa-display" aria-hidden="true"></i><span data-localize="__MSG_displaySettings__">Display</span>
             </button>
-            <button class="nav-link" id="tab-general-btn" type="button"
-                    data-bs-toggle="pill" data-bs-target="#tab-general"
+            <button class="settings-nav-link" id="tab-general-btn" type="button"
                     role="tab" aria-controls="tab-general" aria-selected="false">
                 <i class="fas fa-gear" aria-hidden="true"></i><span data-localize="__MSG_generalSettings__">General</span>
             </button>
             <!-- Developer: shown by JS when enabled -->
-            <button class="nav-link d-none" id="tab-developer-btn" type="button"
-                    data-bs-toggle="pill" data-bs-target="#tab-developer"
+            <button class="settings-nav-link" id="tab-developer-btn" type="button" hidden
                     role="tab" aria-controls="tab-developer" aria-selected="false">
                 <i class="fas fa-code" aria-hidden="true"></i><span data-localize="__MSG_developerSettingsTab__">Developer</span>
             </button>
@@ -55,20 +47,20 @@
              bottom of the page in a narrow window -->
         <div id="control-buttons-container" class="settings-extras"></div>
 
-        <main class="tab-content settings-content" id="v-pills-tabContent">
-            <div class="tab-pane fade show active" id="tab-google"
+        <main class="settings-content" id="settings-panels">
+            <div class="settings-tab-panel" id="tab-google"
                  role="tabpanel" aria-labelledby="tab-google-btn">
                 <h2 class="settings-section-title" data-localize="__MSG_integration__">Integration</h2>
             </div>
-            <div class="tab-pane fade" id="tab-display"
+            <div class="settings-tab-panel" id="tab-display" hidden
                  role="tabpanel" aria-labelledby="tab-display-btn">
                 <h2 class="settings-section-title" data-localize="__MSG_displaySettings__">Display</h2>
             </div>
-            <div class="tab-pane fade" id="tab-general"
+            <div class="settings-tab-panel" id="tab-general" hidden
                  role="tabpanel" aria-labelledby="tab-general-btn">
                 <h2 class="settings-section-title" data-localize="__MSG_generalSettings__">General</h2>
             </div>
-            <div class="tab-pane fade" id="tab-developer"
+            <div class="settings-tab-panel" id="tab-developer" hidden
                  role="tabpanel" aria-labelledby="tab-developer-btn">
                 <h2 class="settings-section-title" data-localize="__MSG_developerSettingsTab__">Developer</h2>
             </div>
