@@ -225,7 +225,7 @@
   },
   "remindMeBefore": {
     "message": "開始前に通知する",
-    "description": "イベントリマインダーのチェックボックスラベル。通知タイミングは設定ページで変更可能（reminderMinutes）のため分数は書かない"
+    "description": "予定フォームのリマインダーのチェックボックスの仮のラベル（設定の分数を読むまで表示。読んだあとは remindMinutesBefore / remindHourBefore に置き換わる）"
   },
   "remindMinutesBefore": {
     "message": "開始$1分前に通知する",

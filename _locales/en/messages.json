@@ -225,7 +225,7 @@
   },
   "remindMeBefore": {
     "message": "Notify me before the event",
-    "description": "Checkbox label for event reminder. No lead time in the text: it is configurable in the options page (reminderMinutes)"
+    "description": "Placeholder label of the reminder checkbox on the event form, shown until the lead time setting is read (then remindMinutesBefore / remindHourBefore replace it)"
   },
   "remindMinutesBefore": {
     "message": "Notify me $1 min before",
