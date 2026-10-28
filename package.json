@@ -17,6 +17,7 @@
     "prepare-release": "node scripts/prepare-release.js",
     "validate-version": "node scripts/validate-version.js",
     "screenshots": "node scripts/screenshots/generate.js",
+    "announce-card": "node scripts/announce-card/render.js",
     "build:landing": "node scripts/build-landing-en.js"
   },
   "repository": {

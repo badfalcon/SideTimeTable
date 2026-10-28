@@ -17,6 +17,7 @@ npm run build         # Production build (output to dist/)
 npm run dev           # Development mode with file watching
 npm run package       # Create release zip file (builds + packages)
 npm run screenshots   # Regenerate landing page / web store screenshots (docs/img/, requires Playwright — see scripts/screenshots/README.md)
+npm run announce-card # Render the release announcement card images (see scripts/announce-card/README.md — requires Playwright; normally run by the release announcement workflow)
 npm run build:landing # Regenerate static English landing pages (docs/en/) + sitemap.xml — run after changing landing page copy or scripts/landing-en-data.js (requires Playwright; a Jest test guards against forgetting)
 ```
 

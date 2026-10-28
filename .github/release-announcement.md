@@ -1,7 +1,8 @@
 # リリース告知ワークフロー 運用ガイド
 
 `.github/workflows/release-announce.yml` の使い方・セットアップ手順。
-Claude が告知文を生成し、**手動承認後**に X / LinkedIn / Reddit へ自動投稿する。
+Claude が X / LinkedIn / Reddit 向けの告知文と添付用のカード画像を生成する。
+**投稿は手動**（自動投稿は削除済み。理由はワークフロー冒頭のコメント参照）。
 
 ## 全体の流れ
 
@@ -10,14 +11,15 @@ Claude が告知文を生成し、**手動承認後**に X / LinkedIn / Reddit �
   └─ ci.yml がビルド → GitHub リリースを作成
        ↓（※ここは自動で繋がらない。下記「発火のしかた」参照）
 Actions → Release Announcement → Run workflow（tag 入力・空なら最新リリース）
-  └─ release-announce.yml
-       ├─ generate : 対象リリースを解決 → Claude が媒体別の告知文を生成し Step Summary に下書き表示
-       └─ post     : 「announce」環境の承認ゲートで待機
-                       └─ Approve 後に X / LinkedIn / Reddit へ投稿
+  └─ release-announce.yml / generate
+       ├─ 対象リリースを解決
+       ├─ Claude が媒体別の告知文＋カード画像用の文言を生成
+       ├─ カード画像を描画（announce_card_ja.png / _en.png）
+       └─ Step Summary に下書きを表示し、announcement アーティファクトに一式を保存
 ```
 
-承認ゲートが「**Chrome ウェブストア公開後に告知する**」タイミング制御を兼ねる。
-ストアの掲載がライブになったのを確認してから Approve する。
+Chrome ウェブストアの掲載がライブになったのを確認してから投稿する
+（run するタイミングは自由。下書きはアーティファクトに残る）。
 
 ## 発火のしかた
 
@@ -37,36 +39,11 @@ Actions → Release Announcement → Run workflow（tag 入力・空なら最新
 
 ## 一度だけ行うセットアップ
 
-### 1. `announce` 環境を作成
-Settings → Environments → New environment → 名前 `announce`。
-**Required reviewers** に自分を追加（これで投稿前に承認待ちになる）。
+リポジトリのシークレット（Settings → Secrets and variables → Actions）に
+`CLAUDE_CODE_OAUTH_TOKEN` を登録する（`claude setup-token` で発行）。生成に使うのはこれだけ。
 
-### 2. シークレットを登録
-
-**リポジトリ**（Settings → Secrets and variables → Actions）:
-
-| シークレット | 用途 |
-|---|---|
-| `ANTHROPIC_API_KEY` | generate ジョブの告知文生成（environment 不可・リポジトリ必須） |
-
-**`announce` 環境**（使う媒体のぶんだけ。未設定の媒体は自動でスキップされる）:
-
-| 媒体 | シークレット |
-|---|---|
-| X | `X_CONSUMER_KEY`, `X_CONSUMER_SECRET`, `X_ACCESS_TOKEN`, `X_ACCESS_SECRET` |
-| LinkedIn | `LINKEDIN_ACCESS_TOKEN`, `LINKEDIN_PERSON_ID` |
-| Reddit | `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET`, `REDDIT_USERNAME`, `REDDIT_PASSWORD` |
-
-### 3. 各プラットフォームの開発者設定
-
-- **X**: [developer.x.com](https://developer.x.com) でアプリ作成 →
-  「User authentication settings」を **Read and write** に →
-  Consumer Keys と Access Token/Secret を発行（無料枠で投稿可・月次/24h上限あり）。
-- **LinkedIn**: [developer.linkedin.com](https://developer.linkedin.com) でアプリ作成 →
-  製品「**Share on LinkedIn**」を追加して `w_member_social` を取得 → 3-legged OAuth で
-  アクセストークン発行（**約60日で失効**）。`LINKEDIN_PERSON_ID` は `GET /v2/userinfo` の `sub`。
-- **Reddit**: [reddit.com/prefs/apps](https://www.reddit.com/prefs/apps) で **script** タイプの
-  アプリを作成 → client_id / secret を取得（API 利用申請の承認が要る場合あり）。
+> 各SNSのAPIキーや `announce` 環境（承認ゲート）は自動投稿を削除した際に不要になった。
+> 復活させる場合は git 履歴の `post` ジョブと、そのときの本ガイドを参照。
 
 ## リリースのたびの操作
 
@@ -75,14 +52,31 @@ Settings → Environments → New environment → 名前 `announce`。
 3. Actions → **Release Announcement** → **Run workflow**
    （`tag` は空でよい＝最新リリースが対象。古いリリースを告知し直すときだけタグを入れる）
 4. **generate の Step Summary** で3媒体の下書きを確認
-5. `post` ジョブを **Approve**（または Reject）→ 投稿後、Summary に ✅/⏭️/❌ が出る
+5. **announcement** アーティファクトからカード画像をダウンロード
+6. 下書きをコピーし、画像を添付して各SNSへ手動投稿（投稿の自動化は削除済み）
 
-> 各媒体の結果: **✅ posted** / **⏭️ skipped（secret 未設定）** / **❌ failed（設定済みだが失敗）**。
-> ❌ が1つでもあると run は赤くなる（未設定スキップでは赤くならない）。
+## 🖼 添付画像（告知カード）
+
+告知文と一緒に、**今回の更新内容から作ったカード画像**（1200x630）も生成される。
+
+| ファイル | 添付先 |
+|---|---|
+| `announce_card_ja.png` | X 日本語の**本文**（リプライではなく本文側）／Reddit 日本語 |
+| `announce_card_en.png` | X English の**本文**／Reddit English |
+
+- 中身は「見出し＋更新の要点（最大3行）＋バージョン＋更新内容に近い製品スクショ」。
+  スクショは Claude が `image_1`（タイムライン+メモ）/ `image_2`（設定・Google連携）/
+  `image_3`（設定ダーク+予定作成）から選ぶ
+- **announcement** アーティファクト（run のページ下部）からダウンロードして、
+  投稿画面にドラッグ&ドロップする
+- **LinkedIn**: 画像を付けるとURLのリンクプレビューが出なくなる。どちらか一方を選ぶ
+- **Reddit**: リンク投稿には画像を添付できない。画像投稿にするなら本文にストアURLを書く
+- 画像生成に失敗しても run は落とさない（告知文の下書きは残る）。サマリーに ⚠️ が出る
+- 生成の仕組みとローカルでの試し方: [`scripts/announce-card/README.md`](../scripts/announce-card/README.md)
 
 ## ⏰ 推奨投稿時間（JST・目安）
 
-告知文は日本語なので主対象は日本のユーザー。承認＝投稿のため、下記の時間帯に Approve する。
+手動投稿なので、下書きができたら下記の時間帯に貼る。
 （出典の数値は「対象オーディエンスのローカル時間」基準。詳細は下部リンク参照）
 
 | 媒体 | 推奨曜日 | 推奨時間（JST） | 補足 |
@@ -93,16 +87,14 @@ Settings → Environments → New environment → 名前 `announce`。
 
 横断的な無難ライン: **平日（火〜木）の昼または夕方**。
 
-## 注意点（コードで吸収できない仕様上の制約）
+## 注意点
 
-- **LinkedIn トークンは約60日で失効** → 失効後は LinkedIn だけ ❌ になる（他は投稿継続）。
-  定期的に `LINKEDIN_ACCESS_TOKEN` を再発行・更新する。
-- **`LinkedIn-Version`（YYYYMM）は約1年で sunset** → ワークフロー内の値（現在 `202605`）を
-  ときどき新しい月次へ更新する。
-- **Reddit**: アカウントが 2FA 有効だと password は `password:TOTP` 形式が必要。
-  新規アカウントはスパムフィルタに留まる場合あり。
-- **再実行＝二重投稿**: `post` を再実行する／同じタグで再度 Run workflow すると同じ内容を
-  再投稿する。1リリース＝1回 Approve で運用。
+- **下書きの作り直しは自由**: 投稿は手動なので、同じタグで何度 Run workflow しても
+  二重投稿にはならない。文言や画像が気に入らなければ再実行すればよい。
+- **X の画像は本文側に付ける**: リンクはリプライへ回す運用なので、画像はリプライではなく
+  本文の投稿に添付する。
+- **アーティファクトの保持期間**: `announcement` はリポジトリの既定期間で消える。
+  必要なら手元にダウンロードしておく。
 
 ## 参考リンク（投稿時間の出典）
 - Sprout Social「Best Times to Post on Social Media 2026」

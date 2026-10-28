@@ -36,6 +36,9 @@ jobs:
       contents: read
       id-token: write
     steps:
+      # カード画像の生成に scripts/announce-card/ と docs/img/ のスクリーンショットを使う
+      - uses: actions/checkout@v7
+
       # release イベントならペイロードから、手動実行なら API から取得。
       # どちらの経路でも同じファイル（名前・URL・本文）に正規化して後続へ渡す。
       - name: Resolve release info
@@ -96,8 +99,8 @@ jobs:
             - ${{ github.workspace }}/release_name.txt … 製品/リリース名
             - ${{ github.workspace }}/release_notes.txt … リリースノート
 
-            内容をもとに X(旧Twitter)・LinkedIn・Reddit 向けの告知文を作成し、
-            次の5ファイルを絶対パスで書き出してください。
+            内容をもとに X(旧Twitter)・LinkedIn・Reddit 向けの告知文と、
+            投稿に添付するカード画像用の文言を作成し、次の8ファイルを絶対パスで書き出してください。
 
             X（日本語版と英語版を別々の投稿にするため2ファイル）:
             - ${{ github.workspace }}/x.txt … X向け本文。全角140字以内（XはCJKを2カウントするため）。URLやリンクは含めない。絵文字は1〜2個まで。
@@ -111,6 +114,16 @@ jobs:
             - ${{ github.workspace }}/reddit_title.txt … Reddit投稿のタイトル。300字以内。URLは含めない。
             - ${{ github.workspace }}/reddit_title_en.txt … 上記の英語版。300字以内。
 
+            カード画像（投稿に添付する画像に載せる文言。本文とは別に短くまとめる）:
+            - ${{ github.workspace }}/card_ja.txt … 1行目=見出し（全角22字以内・体言止めで訴求点をひとことで）、
+              2〜4行目=更新の要点（各全角20字以内・最大3行・1行1項目）。箇条書き記号や絵文字は付けない。
+            - ${{ github.workspace }}/card_en.txt … 上記の英語版。1行目=見出し（42字以内）、2〜4行目=要点（各38字以内・最大3行）。
+            - ${{ github.workspace }}/card_image.txt … カードに載せるスクリーンショットの選択。
+              image_1 / image_2 / image_3 のいずれか1語だけを書く（説明は書かない）。
+              image_1=サイドパネルのタイムラインとメモ、image_2=設定ページ（Google連携・カレンダー管理）、
+              image_3=設定ページ（ダークテーマ）と予定作成モーダル。
+              今回の更新内容に最も近いものを選ぶ。判断できなければ image_1。
+
             英語は日本語の逐語訳ではなく、英語圏の開発者に自然に読める表現で書いてください。
             製品名 SideTimeTable とバージョン番号は両言語で共通です。
 
@@ -119,7 +132,8 @@ jobs:
 
             文字数はツールで数えないでください（Bash / PowerShell は使えません）。
             目測で上限に収め、書き出したら確認せずに終了してください。字数はこの後の
-            ステップで検証されるので、超過していればそこで落ちます。
+            ステップで検証されるので、超過していればそこで落ちます（カード画像の文言は
+            超過しても落ちませんが、カード内の文字が小さくなるので上限を守ってください）。
 
       # 生成物の存在と字数を検証する。字数は Claude に数えさせるとツール拒否の
       # 往復でターンを使い切るため、ここで担保する。
@@ -155,6 +169,29 @@ jobs:
               sys.exit(1)
           print('検証OK')
           PY
+
+      # 投稿に添付するカード画像（更新内容の見出し＋要点＋関連スクショ）を作る。
+      # 画像はあくまで添え物なので、ここで失敗しても本文の下書きは残す
+      # （continue-on-error）。失敗時はサマリーにその旨が出る。
+      - name: Render announcement card
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          # 原稿の検証を先に済ませる（ブラウザの用意は時間がかかるため）
+          node scripts/announce-card/check-card.js
+          # 日本語のカードが豆腐にならないよう CJK フォントを入れる
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq fonts-noto-cjk
+          # Playwright は devDependency ではない（scripts/screenshots/pw.js 参照）ので
+          # ここで入れる。グローバル導入でも pw.js が解決できる。
+          npm install -g playwright
+          playwright install --with-deps chromium
+          node scripts/announce-card/render.js \
+            --name "$(cat release_name.txt)" \
+            --card-ja card_ja.txt \
+            --card-en card_en.txt \
+            --screenshot "$(cat card_image.txt 2>/dev/null || echo image_1)" \
+            --out-dir .
 
       # コピペしやすいよう媒体ごとにまとめて表示する
       - name: Show draft in summary
@@ -211,6 +248,25 @@ jobs:
             echo "リンク: $(cat link_en.txt)"
             echo ""
 
+            echo "## 🖼 添付画像"
+            if [ -f announce_card_ja.png ] && [ -f announce_card_en.png ]; then
+              echo "今回の更新内容から作ったカード画像（1200x630）です。**announcement** アーティファクトから"
+              echo "ダウンロードして、投稿画面にドラッグ&ドロップで添付してください。"
+              echo ""
+              echo "| ファイル | 添付先 |"
+              echo "|---|---|"
+              echo '| `announce_card_ja.png` | X 日本語の**本文**（リプライではなく本文側）／Reddit 日本語 |'
+              echo '| `announce_card_en.png` | X English の**本文**／Reddit English |'
+              echo ""
+              echo "掲載スクリーンショット: \`$(cat card_image.txt 2>/dev/null || echo image_1)\`"
+              echo ""
+              echo "- **LinkedIn**: 画像を添付するとURLのリンクプレビューは出なくなります。どちらか一方を選んでください（画像のほうが目を引きます）。"
+              echo "- **Reddit**: リンク投稿には画像を添付できません。画像投稿にする場合は本文にストアURLを書き添えてください。"
+            else
+              echo "⚠️ 画像を生成できませんでした（ログの **Render announcement card** を参照）。テキストだけでも投稿できます。"
+            fi
+            echo ""
+
             echo "### ⏰ 推奨投稿時間（JST・目安）"
             echo "ストア公開を確認のうえ、下記の時間帯に投稿するのが目安です。"
             echo "- **X**: 平日 火〜木。昼 12時前後 / 夜 20〜23時"
@@ -222,12 +278,19 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: announcement
+          # 画像は best-effort なので、無くてもアップロード自体は成功させる
+          if-no-files-found: warn
           path: |
             x.txt
             x_en.txt
             linkedin.txt
             reddit_title.txt
             reddit_title_en.txt
+            card_ja.txt
+            card_en.txt
+            card_image.txt
+            announce_card_ja.png
+            announce_card_en.png
             link.txt
             link_ja.txt
             link_en.txt

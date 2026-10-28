@@ -64,6 +64,7 @@
 
 - [ ] `prepare-release.js` が `package-lock.json` のバージョンを更新しないため、`npm install` するたびに lockfile が差分として出る（現在 lockfile は 1.10.2、`package.json` は 1.11.0）。`validate-version.js` のチェック対象にも含まれていない。
 - [x] `build-zip.js` がリリースzipに `docs/` ディレクトリ全体を同梱していた問題 — 拡張機能は実行時に読み込まないため、リリースzipから除外済み
+- [ ] `npm run lint` の対象が `src/` のみで `scripts/` が未チェック — ビルド/告知系スクリプトが増えたので lint 対象に含めるか検討（Node 向けの globals 設定が必要）
 
 ## リファクタリング（既存コード）
 
