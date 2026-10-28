@@ -6,6 +6,24 @@
  */
 export const RELEASE_NOTES = [
     {
+        version: '2.0.0',
+        date: '2026-10-28',
+        highlights: {
+            en: [
+                'A fresh new look for the side panel, event dialogs, and settings page',
+                'Invite guests and create out-of-office events from Google Calendar event creation',
+                'Tap a reminder notification to jump straight to that event',
+                'Bug fixes and stability improvements'
+            ],
+            ja: [
+                'サイドパネル・予定ダイアログ・設定ページのデザインを刷新',
+                'Google予定の作成でゲストの招待や不在予定の作成ができるように',
+                '通知をタップすると該当の予定まで移動して表示',
+                'バグ修正と安定性の向上'
+            ]
+        }
+    },
+    {
         version: '1.11.0',
         date: '2026-08-21',
         highlights: {
