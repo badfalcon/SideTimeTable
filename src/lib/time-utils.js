@@ -55,6 +55,44 @@ export function parseTimeString(timeString) {
     return { hour, minute };
 }
 
+/** Minutes in a day, the ceiling for same-day time arithmetic. */
+const MINUTES_IN_DAY = 24 * 60;
+
+/**
+ * Convert an "HH:MM" time string to minutes since midnight.
+ *
+ * Unlike parseTimeString this reports failure instead of throwing: a form's
+ * time input is routinely empty or half-typed, which is an ordinary state.
+ *
+ * @param {string} timeString - The time string (e.g. "09:30")
+ * @returns {number|null} Minutes since midnight, or null when unparseable
+ */
+export function timeStringToMinutes(timeString) {
+    try {
+        const { hour, minute } = parseTimeString(timeString);
+        return hour * 60 + minute;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Format minutes since midnight as an "HH:MM" time string.
+ *
+ * Clamped to the same day: an event pushed past midnight ends at 23:59
+ * instead, since local events store an end time with no date attached and
+ * cannot express a next-day end.
+ *
+ * @param {number} minutes - Minutes since midnight
+ * @returns {string} The time in "HH:MM" format
+ */
+export function minutesToTimeString(minutes) {
+    const clamped = Math.max(0, Math.min(MINUTES_IN_DAY - 1, Math.round(minutes)));
+    const hour = String(Math.floor(clamped / 60)).padStart(2, '0');
+    const minute = String(clamped % 60).padStart(2, '0');
+    return `${hour}:${minute}`;
+}
+
 /**
  * Build an RFC3339 date-time string (with local timezone offset) for a given
  * date and "HH:MM" time. Suitable for the Google Calendar API `dateTime` field.
@@ -174,4 +212,144 @@ export function calculateWorkHours(date, openHour, closeHour) {
     const hourDiff = calculateTimeDifference(openTime, closeTime) / (60 * 60 * 1000);
 
     return { openTime, closeTime, hourDiff };
+}
+
+/**
+ * The date as the side panel header shows it: short and with the weekday,
+ * in the extension's language — "9月30日(水)" / "Wed, Sep 30". The year is
+ * added only when it is not the current one.
+ *
+ * @param {Date} date - The date to show
+ * @param {string} locale - 'ja' or 'en' (the extension language)
+ * @param {Date} [now=new Date()] - Decides whether the year is needed
+ * @returns {string}
+ */
+export function formatHeaderDate(date, locale, now = new Date()) {
+    if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+        return '';
+    }
+    const isJa = locale === 'ja';
+    const options = isJa
+        ? { month: 'long', day: 'numeric', weekday: 'short' }
+        : { weekday: 'short', month: 'short', day: 'numeric' };
+    if (date.getFullYear() !== now.getFullYear()) {
+        options.year = 'numeric';
+    }
+    return date.toLocaleDateString(isJa ? 'ja-JP' : 'en-US', options);
+}
+
+/**
+ * An hour mark for the timeline's time axis: "9:00" (24-hour), "9 AM"
+ * (12-hour English) or "午前9時" (12-hour Japanese).
+ *
+ * @param {number} hour - 0 to 24
+ * @param {string} timeFormat - '12h' or '24h'
+ * @param {string} locale - 'ja' or 'en'
+ * @returns {string}
+ */
+export function formatHourLabel(hour, timeFormat, locale) {
+    if (timeFormat !== '12h') {
+        return `${hour}:00`;
+    }
+    const h = hour % 24;
+    const h12 = h % 12 === 0 ? 12 : h % 12;
+    const pm = h >= 12;
+    return locale === 'ja'
+        ? `${pm ? '午後' : '午前'}${h12}時`
+        : `${h12} ${pm ? 'PM' : 'AM'}`;
+}
+
+/**
+ * A start–end range for an event block, as short as it can be read:
+ * "09:00–10:00", "9:00–10:00 AM", "11:30 AM–1:00 PM", "午前9:00–10:00".
+ *
+ * @param {string} start - "HH:MM"
+ * @param {string} end - "HH:MM"
+ * @param {string} timeFormat - '12h' or '24h'
+ * @param {string} locale - 'ja' or 'en'
+ * @returns {string}
+ */
+export function formatTimeRange(start, end, timeFormat, locale) {
+    if (timeFormat !== '12h') {
+        return `${start}–${end}`;
+    }
+    const part = (hhmm) => {
+        const [h, m] = hhmm.split(':').map(Number);
+        return { text: `${h % 12 === 0 ? 12 : h % 12}:${String(m).padStart(2, '0')}`, pm: h >= 12 };
+    };
+    const mark = (pm) => (locale === 'ja' ? (pm ? '午後' : '午前') : (pm ? 'PM' : 'AM'));
+    const s = part(start);
+    const e = part(end);
+    if (locale === 'ja') {
+        return s.pm === e.pm
+            ? `${mark(s.pm)}${s.text}–${e.text}`
+            : `${mark(s.pm)}${s.text}–${mark(e.pm)}${e.text}`;
+    }
+    return s.pm === e.pm
+        ? `${s.text}–${e.text} ${mark(e.pm)}`
+        : `${s.text} ${mark(s.pm)}–${e.text} ${mark(e.pm)}`;
+}
+
+/**
+ * Just the start time, for lanes too narrow for a range. The AM/PM mark is
+ * left off: the time axis beside the block already says which half of the
+ * day it is.
+ *
+ * @param {string} start - "HH:MM"
+ * @param {string} timeFormat - '12h' or '24h'
+ * @returns {string}
+ */
+export function formatStartTime(start, timeFormat) {
+    if (timeFormat !== '12h') {
+        return start;
+    }
+    const [h, m] = start.split(':').map(Number);
+    return `${h % 12 === 0 ? 12 : h % 12}:${String(m).padStart(2, '0')}`;
+}
+
+/**
+ * One clock time: "09:00" (24-hour), "9:00 AM" or "午前9:00" (12-hour).
+ *
+ * @param {string} hhmm - "HH:MM"
+ * @param {string} timeFormat - '12h' or '24h'
+ * @param {string} locale - 'ja' or 'en'
+ * @returns {string}
+ */
+export function formatClockTime(hhmm, timeFormat, locale) {
+    if (timeFormat !== '12h') {
+        return hhmm;
+    }
+    const [h] = hhmm.split(':').map(Number);
+    const pm = h >= 12;
+    const text = formatStartTime(hhmm, '12h');
+    if (locale === 'ja') {
+        return `${pm ? '午後' : '午前'}${text}`;
+    }
+    return `${text} ${pm ? 'PM' : 'AM'}`;
+}
+
+/**
+ * When a timed event happens, as the event dialogs show it: the date the way
+ * the header writes it, then the times the way the event blocks do —
+ * "9月30日(水) 09:00–10:00", "Wed, Sep 30, 9:00–10:00 AM". An event that runs
+ * into another day names both days.
+ *
+ * @param {Date} start
+ * @param {Date} end
+ * @param {Object} prefs
+ * @param {string} prefs.locale - 'ja' or 'en' (the extension language)
+ * @param {string} prefs.timeFormat - '12h' or '24h'
+ * @param {Date} [prefs.now=new Date()] - Decides whether the year is shown
+ * @returns {string}
+ */
+export function formatDateTimeRange(start, end, { locale, timeFormat, now = new Date() }) {
+    const hhmm = (d) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    const joiner = locale === 'ja' ? ' ' : ', ';
+    // An event that ends exactly at midnight belongs to the day it started
+    const lastInstant = end > start ? new Date(end.getTime() - 1) : end;
+    if (isSameDay(start, lastInstant)) {
+        return `${formatHeaderDate(start, locale, now)}${joiner}${formatTimeRange(hhmm(start), hhmm(end), timeFormat, locale)}`;
+    }
+    return `${formatHeaderDate(start, locale, now)}${joiner}${formatClockTime(hhmm(start), timeFormat, locale)}`
+        + ` – ${formatHeaderDate(end, locale, now)}${joiner}${formatClockTime(hhmm(end), timeFormat, locale)}`;
 }

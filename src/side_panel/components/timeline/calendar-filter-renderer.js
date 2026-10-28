@@ -8,7 +8,14 @@
  * All data is passed directly as method parameters — the renderer holds
  * no references to external state. Event callbacks are retained as an
  * observer hook from the parent component.
+ *
+ * Layout: a title row (with the refresh button), the search box when the
+ * list is long, the calendars (colour, name, checkbox on the right), and a
+ * link to the settings page at the bottom.
  */
+
+// The search box only earns its place once the list no longer fits at a glance
+export const SEARCH_MIN_CALENDARS = 9;
 
 export class CalendarFilterRenderer {
     /**
@@ -17,12 +24,15 @@ export class CalendarFilterRenderer {
      * @param {Function} options.onRefreshClick - Called when refresh button is clicked
      * @param {Function} options.onCalendarToggle - Called when a single calendar is toggled (calendarId, checked)
      * @param {Function} options.onGroupToggle - Called when a group checkbox is toggled (group, calendars, checked)
+     * @param {Function} [options.onManageClick] - Called by the "Manage calendars in Settings" link;
+     *   the link is left out without it
      */
     constructor(options) {
         this._onSearchInput = options.onSearchInput;
         this._onRefreshClick = options.onRefreshClick;
         this._onCalendarToggle = options.onCalendarToggle;
         this._onGroupToggle = options.onGroupToggle;
+        this._onManageClick = options.onManageClick || null;
 
         // DOM references owned by the parent; set after each render
         this.searchInput = null;
@@ -35,45 +45,33 @@ export class CalendarFilterRenderer {
     // ------------------------------------------------------------------
 
     /**
-     * Render the full dropdown content (toolbar + calendar list) into the
-     * given container. Returns references to key DOM nodes.
+     * Render the full dropdown content (title, search, calendar list,
+     * settings link) into the given container. Returns references to key
+     * DOM nodes.
      * @param {HTMLElement} dropdown - The dropdown container element
      * @param {string} searchTerm - Current search term value
      * @param {Array} calendars - Full calendars array
      * @param {Array<string>} selectedIds - Current selectedIds array
      * @param {Array} calendarGroups - Current calendarGroups array
-     * @returns {{ searchInput: HTMLElement, refreshBtn: HTMLElement, calendarList: HTMLElement }}
+     * @returns {{ searchInput: HTMLElement|null, refreshBtn: HTMLElement, calendarList: HTMLElement }}
      */
     renderDropdownContent(dropdown, searchTerm, calendars, selectedIds, calendarGroups) {
         dropdown.innerHTML = '';
+        dropdown.appendChild(this._createHead());
 
-        // Toolbar: search + refresh
-        const toolbar = document.createElement('div');
-        toolbar.className = 'timeline-calendar-filter-toolbar';
-
-        this.searchInput = document.createElement('input');
-        this.searchInput.type = 'text';
-        this.searchInput.className = 'timeline-calendar-filter-search';
-        this.searchInput.placeholder = window.getLocalizedMessage('calendarFilterSearchPlaceholder');
-        this.searchInput.setAttribute('aria-label', window.getLocalizedMessage('calendarFilterSearchPlaceholder'));
-        this.searchInput.value = searchTerm;
-        this.searchInput.addEventListener('input', () => {
-            this._onSearchInput(this.searchInput.value);
-        });
-
-        this.refreshBtn = document.createElement('button');
-        this.refreshBtn.type = 'button';
-        this.refreshBtn.className = 'timeline-calendar-filter-refresh-btn';
-        this.refreshBtn.title = window.getLocalizedMessage('calendarFilterRefreshTooltip');
-        this.refreshBtn.setAttribute('aria-label', window.getLocalizedMessage('calendarFilterRefreshTooltip'));
-        this.refreshBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i>';
-        this.refreshBtn.addEventListener('click', () => {
-            this._onRefreshClick();
-        });
-
-        toolbar.appendChild(this.searchInput);
-        toolbar.appendChild(this.refreshBtn);
-        dropdown.appendChild(toolbar);
+        this.searchInput = null;
+        if ((calendars || []).length >= SEARCH_MIN_CALENDARS || searchTerm) {
+            this.searchInput = document.createElement('input');
+            this.searchInput.type = 'search';
+            this.searchInput.className = 'timeline-calendar-filter-search';
+            this.searchInput.placeholder = window.getLocalizedMessage('calendarFilterSearchPlaceholder');
+            this.searchInput.setAttribute('aria-label', window.getLocalizedMessage('calendarFilterSearchPlaceholder'));
+            this.searchInput.value = searchTerm;
+            this.searchInput.addEventListener('input', () => {
+                this._onSearchInput(this.searchInput.value);
+            });
+            dropdown.appendChild(this.searchInput);
+        }
 
         // Calendar list container
         this.calendarList = document.createElement('div');
@@ -82,11 +80,38 @@ export class CalendarFilterRenderer {
 
         this.renderCalendarList(calendars, selectedIds, calendarGroups, searchTerm);
 
+        this._appendFooter(dropdown);
+
         return {
             searchInput: this.searchInput,
             refreshBtn: this.refreshBtn,
             calendarList: this.calendarList,
         };
+    }
+
+    /**
+     * Render a status line (loading, error) in place of the list, keeping
+     * the title and the settings link around it.
+     * @param {HTMLElement} dropdown - The dropdown container element
+     * @param {string} message - Text to show
+     * @param {Object} [options]
+     * @param {boolean} [options.busy=false] - Spin and disable the refresh button
+     * @returns {{ refreshBtn: HTMLElement }}
+     */
+    renderStatus(dropdown, message, { busy = false } = {}) {
+        dropdown.innerHTML = '';
+        dropdown.appendChild(this._createHead({ busy }));
+        this.searchInput = null;
+        this.calendarList = null;
+
+        const status = document.createElement('div');
+        status.className = 'timeline-calendar-filter-status';
+        status.setAttribute('role', 'status');
+        status.textContent = message;
+        dropdown.appendChild(status);
+
+        this._appendFooter(dropdown);
+        return { refreshBtn: this.refreshBtn };
     }
 
     /**
@@ -209,21 +234,107 @@ export class CalendarFilterRenderer {
     // ------------------------------------------------------------------
 
     /**
+     * Title row: "Calendars to show" and the refresh button.
+     * @private
+     */
+    _createHead({ busy = false } = {}) {
+        const head = document.createElement('div');
+        head.className = 'timeline-calendar-filter-head';
+
+        const title = document.createElement('div');
+        title.className = 'timeline-calendar-filter-title';
+        title.id = 'timeline-calendar-filter-title';
+        title.textContent = window.getLocalizedMessage('calendarFilterTitle');
+
+        this.refreshBtn = document.createElement('button');
+        this.refreshBtn.type = 'button';
+        this.refreshBtn.className = 'timeline-calendar-filter-refresh-btn';
+        this.refreshBtn.title = window.getLocalizedMessage('calendarFilterRefreshTooltip');
+        this.refreshBtn.setAttribute('aria-label', window.getLocalizedMessage('calendarFilterRefreshTooltip'));
+        const icon = document.createElement('i');
+        icon.className = busy ? 'fa-solid fa-arrows-rotate fa-spin' : 'fa-solid fa-arrows-rotate';
+        icon.setAttribute('aria-hidden', 'true');
+        this.refreshBtn.appendChild(icon);
+        this.refreshBtn.disabled = busy;
+        this.refreshBtn.addEventListener('click', () => {
+            this._onRefreshClick();
+        });
+
+        head.appendChild(title);
+        head.appendChild(this.refreshBtn);
+        return head;
+    }
+
+    /**
+     * "Manage calendars in Settings" under a divider.
+     * @private
+     */
+    _appendFooter(dropdown) {
+        if (!this._onManageClick) return;
+        const footer = document.createElement('div');
+        footer.className = 'timeline-calendar-filter-footer';
+
+        const link = document.createElement('button');
+        link.type = 'button';
+        link.className = 'timeline-calendar-filter-manage';
+        link.textContent = window.getLocalizedMessage('calendarFilterManage');
+        link.addEventListener('click', () => {
+            this._onManageClick();
+        });
+
+        footer.appendChild(link);
+        dropdown.appendChild(footer);
+    }
+
+    /**
+     * Group header: a disclosure button (chevron and name) and, on the
+     * right in line with the calendars' checkboxes, one checkbox for the
+     * whole group.
+     * @private
+     */
+    _createGroupHeader(name, groupId) {
+        const header = document.createElement('div');
+        header.className = 'timeline-calendar-filter-group-header';
+        if (groupId !== undefined) {
+            header.dataset.groupId = groupId;
+        }
+
+        const toggle = document.createElement('button');
+        toggle.type = 'button';
+        toggle.className = 'timeline-calendar-filter-group-toggle';
+        toggle.setAttribute('aria-expanded', 'true');
+
+        const collapseIcon = document.createElement('i');
+        collapseIcon.className = 'fa-solid fa-chevron-down group-collapse-icon';
+        collapseIcon.setAttribute('aria-hidden', 'true');
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'group-name';
+        nameSpan.textContent = name;
+
+        toggle.appendChild(collapseIcon);
+        toggle.appendChild(nameSpan);
+        toggle.addEventListener('click', () => {
+            const body = header.nextElementSibling;
+            if (body) body.classList.toggle('collapsed');
+            collapseIcon.classList.toggle('collapsed');
+            toggle.setAttribute('aria-expanded', String(!collapseIcon.classList.contains('collapsed')));
+        });
+
+        header.appendChild(toggle);
+        return header;
+    }
+
+    /**
      * Render a group section in the filter dropdown
      * @private
      */
     _renderGroupSection(group, calendars, allCalendars, selectedIds) {
-        // Group header
-        const header = document.createElement('div');
-        header.className = 'timeline-calendar-filter-group-header';
-        header.dataset.groupId = group.id;
-
-        header.setAttribute('role', 'button');
-        header.setAttribute('tabindex', '0');
-        header.setAttribute('aria-expanded', 'true');
+        const header = this._createGroupHeader(group.name, group.id);
 
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
+        checkbox.className = 'timeline-calendar-filter-checkbox';
         checkbox.setAttribute('aria-label', group.name);
 
         // Determine check state using full group membership (not search-filtered view)
@@ -242,44 +353,11 @@ export class CalendarFilterRenderer {
             checkbox.setAttribute('aria-checked', 'mixed');
         }
 
-        checkbox.addEventListener('change', (e) => {
-            e.stopPropagation();
+        checkbox.addEventListener('change', () => {
             this._onGroupToggle(group, calendars, checkbox.checked);
         });
 
-        const nameSpan = document.createElement('span');
-        nameSpan.className = 'group-name';
-        nameSpan.textContent = group.name;
-
-        const collapseIcon = document.createElement('i');
-        collapseIcon.className = 'fa-solid fa-chevron-down group-collapse-icon';
-        collapseIcon.setAttribute('aria-hidden', 'true');
-
         header.appendChild(checkbox);
-        header.appendChild(nameSpan);
-        header.appendChild(collapseIcon);
-
-        const toggleCollapse = () => {
-            const body = header.nextElementSibling;
-            if (body) body.classList.toggle('collapsed');
-            collapseIcon.classList.toggle('collapsed');
-            const expanded = !collapseIcon.classList.contains('collapsed');
-            header.setAttribute('aria-expanded', String(expanded));
-        };
-
-        header.addEventListener('click', (e) => {
-            if (e.target === checkbox) return;
-            toggleCollapse();
-        });
-
-        header.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                if (e.target === checkbox) return;
-                e.preventDefault();
-                toggleCollapse();
-            }
-        });
-
         this.calendarList.appendChild(header);
 
         // Group body
@@ -304,40 +382,7 @@ export class CalendarFilterRenderer {
      * @private
      */
     _renderUngroupedSection(calendars, selectedIds) {
-        const header = document.createElement('div');
-        header.className = 'timeline-calendar-filter-group-header';
-        header.setAttribute('role', 'button');
-        header.setAttribute('tabindex', '0');
-        header.setAttribute('aria-expanded', 'true');
-
-        const nameSpan = document.createElement('span');
-        nameSpan.className = 'group-name';
-        nameSpan.textContent = window.getLocalizedMessage('ungrouped') || 'Ungrouped';
-
-        const collapseIcon = document.createElement('i');
-        collapseIcon.className = 'fa-solid fa-chevron-down group-collapse-icon';
-        collapseIcon.setAttribute('aria-hidden', 'true');
-
-        header.appendChild(nameSpan);
-        header.appendChild(collapseIcon);
-
-        const toggleCollapse = () => {
-            const body = header.nextElementSibling;
-            if (body) body.classList.toggle('collapsed');
-            collapseIcon.classList.toggle('collapsed');
-            const expanded = !collapseIcon.classList.contains('collapsed');
-            header.setAttribute('aria-expanded', String(expanded));
-        };
-
-        header.addEventListener('click', () => toggleCollapse());
-
-        header.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                toggleCollapse();
-            }
-        });
-
+        const header = this._createGroupHeader(window.getLocalizedMessage('ungrouped') || 'Ungrouped');
         this.calendarList.appendChild(header);
 
         const body = document.createElement('div');
@@ -351,7 +396,7 @@ export class CalendarFilterRenderer {
     }
 
     /**
-     * Render a single calendar item
+     * Render a single calendar item: colour, name, checkbox on the right
      * @private
      */
     _renderCalendarItem(container, calendar, selectedIds) {
@@ -359,22 +404,12 @@ export class CalendarFilterRenderer {
         const item = document.createElement('label');
         item.className = 'timeline-calendar-filter-item';
 
-        // Checkbox
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.className = 'timeline-calendar-filter-checkbox';
-        checkbox.checked = isSelected || calendar.primary;
-        if (calendar.primary) {
-            checkbox.disabled = true;
-        }
-        checkbox.addEventListener('change', () => {
-            this._onCalendarToggle(calendar.id, checkbox.checked);
-        });
-
-        // Color indicator
+        // Color indicator (the calendar's own colour is data, not theme)
         const color = document.createElement('span');
         color.className = 'timeline-calendar-filter-color';
-        color.style.backgroundColor = calendar.backgroundColor || '#ccc';
+        if (calendar.backgroundColor) {
+            color.style.setProperty('--calendar-color', calendar.backgroundColor);
+        }
         color.setAttribute('aria-hidden', 'true');
 
         // Name
@@ -385,9 +420,22 @@ export class CalendarFilterRenderer {
             name.classList.add('timeline-calendar-filter-primary');
         }
 
-        item.appendChild(checkbox);
+        // Checkbox (the main calendar is always shown)
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'timeline-calendar-filter-checkbox';
+        checkbox.checked = isSelected || calendar.primary;
+        if (calendar.primary) {
+            checkbox.disabled = true;
+            item.classList.add('is-locked');
+        }
+        checkbox.addEventListener('change', () => {
+            this._onCalendarToggle(calendar.id, checkbox.checked);
+        });
+
         item.appendChild(color);
         item.appendChild(name);
+        item.appendChild(checkbox);
         container.appendChild(item);
     }
 }

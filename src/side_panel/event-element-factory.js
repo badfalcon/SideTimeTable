@@ -7,6 +7,8 @@
  */
 
 import { TIME_CONSTANTS } from '../lib/constants.js';
+import { getCurrentTime } from '../lib/demo-data.js';
+import { formatStartTime, formatTimeRange, isSameDay } from '../lib/time-utils.js';
 
 // ── constants ────────────────────────────────────────────────────────
 
@@ -21,11 +23,12 @@ export const TIMELINE_OFFSET = 30;
 export const EVENT_STYLING = {
     DURATION_THRESHOLDS: {
         MICRO: 15,     // 15 minutes or less → no vertical padding
-        COMPACT: 30,   // 30 minutes or less → reduced vertical padding
-        DETAILED: 45   // 45 minutes or more → show location/description details
+        COMPACT: 30    // 30 minutes or less → reduced vertical padding
     },
     HEIGHT: {
         MIN_HEIGHT: 15,      // Minimum clickable height in pixels
+        LINE: 15,            // One line of block text (title or meta)
+        PADDING_Y: 6         // Top + bottom padding of a regular block
     },
     CSS_CLASSES: {
         MICRO: 'event-micro',       // Duration-based: controls vertical padding only
@@ -73,10 +76,13 @@ export function applyDurationBasedStyling(eventDiv, duration, baseClasses) {
 
     eventDiv.className = `${baseClasses} ${sizeClass}`.trim();
 
-    // Add detailed class for longer events (shows location/description)
-    if (duration >= EVENT_STYLING.DURATION_THRESHOLDS.DETAILED) {
-        eventDiv.classList.add('event-detailed');
-    }
+    // How many lines of text fit: title, then time, then place. A block of
+    // one line shows the title and start time side by side instead.
+    const lines = Math.max(1, Math.floor(
+        (Math.max(duration, EVENT_STYLING.HEIGHT.MIN_HEIGHT) - EVENT_STYLING.HEIGHT.PADDING_Y) / EVENT_STYLING.HEIGHT.LINE
+    ));
+    eventDiv.style.setProperty('--event-lines', String(lines));
+    eventDiv.classList.toggle('event-one-line', lines < 2);
 }
 
 /**
@@ -113,9 +119,10 @@ export class EventElementFactory {
      * @param {string} options.cssClass    - Base CSS class string (e.g. 'event google-event')
      * @param {string} options.tooltip     - Value for the element's title attribute
      * @param {number} options.initialWidth - Initial width in pixels (from eventLayoutManager.maxWidth)
+     * @param {Date} [options.displayDate] - The day the timeline shows (defaults to the start's day)
      * @returns {{ eventDiv: HTMLElement, duration: number }}
      */
-    static createEventElement({ startDate, endDate, cssClass, tooltip, initialWidth }) {
+    static createEventElement({ startDate, endDate, cssClass, tooltip, initialWidth, displayDate }) {
         const eventDiv = document.createElement('div');
         eventDiv.className = cssClass;
         eventDiv.title = tooltip || '';
@@ -129,6 +136,14 @@ export class EventElementFactory {
         // Apply duration-based styling (height + size classes)
         applyDurationBasedStyling(eventDiv, duration, cssClass);
 
+        // Ended events on today's timeline are drawn faded; the timeline
+        // re-checks every minute (see markPastEvents)
+        eventDiv.dataset.endMs = String(endDate.getTime());
+        const now = getCurrentTime();
+        if (isSameDay(displayDate || startDate, now) && endDate.getTime() <= now.getTime()) {
+            eventDiv.classList.add('is-past');
+        }
+
         // Position
         eventDiv.style.top = `${startOffset}px`;
         eventDiv.style.left = `${EVENT_STYLING.DEFAULT_VALUES.INITIAL_LEFT_OFFSET}px`;
@@ -141,30 +156,69 @@ export class EventElementFactory {
     }
 
     /**
-     * Build the primary line DOM fragment shared by both event types:
-     *   <div class="event-primary-line">
-     *     <span class="event-time">{formattedTime} - </span>
-     *     <span class="event-title">{title}</span>
+     * Build the text of an event block, shared by both event types. One
+     * clamped box holds the title, the time and the place in that order, so
+     * the title wraps (by phrase in Japanese) when there is room and the rest
+     * is cut at whatever line the block ends on:
+     *   <div class="event-body">
+     *     <span class="event-title">[icon]{title}</span>
+     *     <span class="event-meta event-time-range">9:00–10:00</span>
+     *     <span class="event-meta event-time-start">9:00</span>   (narrow lanes)
+     *     <span class="event-meta event-location">{location}</span>
+     *     <span class="event-meta event-time-place">9:00–10:00 · {location}</span>   (wide lanes)
      *   </div>
      *
-     * @param {string} formattedTime - Already locale-formatted time string
-     * @param {string} title         - Event title text
+     * @param {Object} parts
+     * @param {string} parts.title
+     * @param {string} parts.start - "HH:MM"
+     * @param {string} parts.end - "HH:MM"
+     * @param {string} [parts.location]
+     * @param {string} [parts.iconClass] - Icon before the title (recurring, absence)
+     * @param {string} parts.timeFormat - '12h' or '24h'
+     * @param {string} parts.locale - 'ja' or 'en'
      * @returns {HTMLElement}
      */
-    static createPrimaryLine(formattedTime, title) {
-        const primaryLine = document.createElement('div');
-        primaryLine.className = 'event-primary-line';
-
-        const timeSpan = document.createElement('span');
-        timeSpan.className = 'event-time';
-        timeSpan.textContent = `${formattedTime} - `;
-        primaryLine.appendChild(timeSpan);
+    static createEventBody({ title, start, end, location, iconClass, timeFormat, locale }) {
+        const body = document.createElement('div');
+        body.className = 'event-body';
 
         const titleSpan = document.createElement('span');
         titleSpan.className = 'event-title';
-        titleSpan.textContent = title;
-        primaryLine.appendChild(titleSpan);
+        if (iconClass) {
+            const icon = document.createElement('i');
+            icon.className = `${iconClass} event-title-icon`;
+            icon.setAttribute('aria-hidden', 'true');
+            titleSpan.appendChild(icon);
+        }
+        titleSpan.appendChild(document.createTextNode(title));
+        body.appendChild(titleSpan);
 
-        return primaryLine;
+        const meta = (className, text) => {
+            const span = document.createElement('span');
+            span.className = `event-meta ${className}`;
+            span.textContent = text;
+            body.appendChild(span);
+        };
+        const range = formatTimeRange(start, end, timeFormat, locale);
+        meta('event-time-range', range);
+        meta('event-time-start', formatStartTime(start, timeFormat));
+        if (location) {
+            meta('event-location', location);
+            meta('event-time-place', `${range} · ${location}`);
+        }
+
+        return body;
+    }
+
+    /**
+     * Tooltip for a block: the time and title, and the place when there is
+     * one — the parts the block itself may have had to cut.
+     * @param {Object} parts
+     * @returns {string}
+     */
+    static buildTooltip({ title, start, end, location, timeFormat, locale }) {
+        const lines = [`${formatTimeRange(start, end, timeFormat, locale)} ${title}`];
+        if (location) lines.push(location);
+        return lines.join('\n');
     }
 }

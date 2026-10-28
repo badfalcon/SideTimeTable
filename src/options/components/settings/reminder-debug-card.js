@@ -2,14 +2,15 @@
  * ReminderDebugCard - Reminder debug & test card for the Developer tab
  */
 import { CardComponent } from '../base/card-component.js';
+import { createButton, msg } from '../base/settings-dom.js';
 import { sendMessage } from '../../../lib/chrome-messaging.js';
 
 export class ReminderDebugCard extends CardComponent {
     constructor() {
         super({
-            title: window.getLocalizedMessage('reminderDebugTitle') || 'Reminder Debug & Test',
+            title: msg('reminderDebugTitle', 'Reminder debug & test'),
+            titleLocalize: '__MSG_reminderDebugTitle__',
             icon: 'fas fa-bug',
-            iconColor: 'text-warning'
         });
 
         this.debugOutput = null;
@@ -17,51 +18,41 @@ export class ReminderDebugCard extends CardComponent {
 
     createElement() {
         const card = super.createElement();
-
-        const container = this._createDebugSection();
-        this.addContent(container);
-
+        this.addContent(this._createDebugSection());
         return card;
     }
 
     /**
-     * Create debug/test section
+     * The test actions, and the output of "Show debug info"
      * @private
      */
     _createDebugSection() {
-        const container = document.createElement('div');
+        const block = document.createElement('div');
+        block.className = 'settings-block';
 
-        // Test notification button
-        const testButton = document.createElement('button');
-        testButton.type = 'button';
-        testButton.className = 'btn btn-sm btn-outline-primary me-2';
-        testButton.textContent = window.getLocalizedMessage('testNotification') || 'Test Notification';
-        testButton.onclick = () => this._testNotification();
-        container.appendChild(testButton);
+        const actions = document.createElement('div');
+        actions.className = 'settings-button-row';
 
-        // Force sync button
-        const syncButton = document.createElement('button');
-        syncButton.type = 'button';
-        syncButton.className = 'btn btn-sm btn-outline-secondary me-2';
-        syncButton.textContent = window.getLocalizedMessage('forceSyncNow') || 'Force Sync Now';
-        syncButton.onclick = () => this._forceSyncReminders();
-        container.appendChild(syncButton);
+        const testButton = createButton({ labelKey: 'testNotification', labelFallback: 'Test notification', icon: 'fas fa-bell' });
+        testButton.addEventListener('click', () => this._testNotification());
+        actions.appendChild(testButton);
 
-        // Debug info button
-        const debugButton = document.createElement('button');
-        debugButton.type = 'button';
-        debugButton.className = 'btn btn-sm btn-outline-info';
-        debugButton.textContent = window.getLocalizedMessage('showDebugInfo') || 'Show Debug Info';
-        debugButton.onclick = () => this._showDebugInfo();
-        container.appendChild(debugButton);
+        const syncButton = createButton({ labelKey: 'forceSyncNow', labelFallback: 'Force sync now', icon: 'fas fa-arrows-rotate' });
+        syncButton.addEventListener('click', () => this._forceSyncReminders());
+        actions.appendChild(syncButton);
 
-        // Debug output area
+        const debugButton = createButton({ labelKey: 'showDebugInfo', labelFallback: 'Show debug info', icon: 'fas fa-magnifying-glass' });
+        debugButton.addEventListener('click', () => this._showDebugInfo());
+        actions.appendChild(debugButton);
+
+        block.appendChild(actions);
+
         this.debugOutput = document.createElement('pre');
-        this.debugOutput.className = 'mt-2 p-2 bg-white border rounded';
-        this.debugOutput.style.cssText = 'font-size: 11px; max-height: 200px; overflow-y: auto; display: none;';
-        container.appendChild(this.debugOutput);
+        this.debugOutput.className = 'settings-code-block';
+        this.debugOutput.hidden = true;
+        block.appendChild(this.debugOutput);
 
-        return container;
+        return block;
     }
 
     /**
@@ -112,7 +103,7 @@ export class ReminderDebugCard extends CardComponent {
                     timestamp: new Date().toLocaleString()
                 };
                 this.debugOutput.textContent = JSON.stringify(info, null, 2);
-                this.debugOutput.style.display = 'block';
+                this.debugOutput.hidden = false;
             } else {
                 alert((window.getLocalizedMessage('debugInfoFailed') || 'Failed to get debug info: ') + response.error);
             }

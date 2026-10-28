@@ -2,16 +2,16 @@
  * ReminderSettingsCard - Reminder settings card component
  */
 import { CardComponent } from '../base/card-component.js';
+import { createSelect, createSettingRow, createSwitch } from '../base/settings-dom.js';
 
 export class ReminderSettingsCard extends CardComponent {
     constructor(onSettingsChange) {
         super({
-            title: 'Reminder Settings',
+            title: 'Reminders',
             titleLocalize: '__MSG_reminderSettings__',
-            subtitle: 'Configure automatic reminders for your events.',
+            subtitle: 'Chrome notifications before events start, even with the side panel closed.',
             subtitleLocalize: '__MSG_reminderDescription__',
-            icon: 'fas fa-bell',
-            iconColor: 'text-primary'
+            icon: 'fas fa-bell'
         });
 
         this.onSettingsChange = onSettingsChange;
@@ -63,158 +63,46 @@ export class ReminderSettingsCard extends CardComponent {
     }
 
     /**
-     * Create form
+     * Create form: one row per setting
      * @private
      */
     _createForm() {
         const form = document.createElement('form');
+        form.className = 'settings-rows';
 
-        // Google event reminder toggle
-        const googleReminderSection = this._createGoogleReminderToggle();
-        form.appendChild(googleReminderSection);
+        this.googleReminderToggle = createSwitch('google-reminder-toggle', this.settings.googleEventReminder);
+        form.appendChild(createSettingRow({
+            labelKey: 'googleEventReminderLabel',
+            labelFallback: 'Notify me about Google Calendar events',
+            labelFor: 'google-reminder-toggle',
+            hintKey: 'googleEventReminderHelp',
+            hintFallback: 'Events on your primary calendar.',
+            control: this.googleReminderToggle
+        }).row);
 
-        // Reminder time selection
-        const reminderTimeSection = this._createReminderTimeSelect();
-        form.appendChild(reminderTimeSection);
+        this.reminderMinutesSelect = createSelect('reminder-minutes-select', this.reminderOptions);
+        this.reminderMinutesSelect.value = this.settings.reminderMinutes;
+        form.appendChild(createSettingRow({
+            labelKey: 'reminderTimeLabel',
+            labelFallback: 'When to notify',
+            labelFor: 'reminder-minutes-select',
+            hintKey: 'reminderTimeHelp',
+            hintFallback: 'Used for both Google and local events.',
+            control: this.reminderMinutesSelect
+        }).row);
 
-        // Sync interval selection
-        const syncIntervalSection = this._createSyncIntervalSelect();
-        form.appendChild(syncIntervalSection);
+        this.syncIntervalSelect = createSelect('reminder-sync-interval-select', this.syncIntervalOptions);
+        this.syncIntervalSelect.value = this.settings.reminderSyncInterval;
+        form.appendChild(createSettingRow({
+            labelKey: 'reminderSyncIntervalLabel',
+            labelFallback: 'Check for changes',
+            labelFor: 'reminder-sync-interval-select',
+            hintKey: 'reminderSyncIntervalHelp',
+            hintFallback: 'Picks up new and changed events so reminders stay current.',
+            control: this.syncIntervalSelect
+        }).row);
 
         return form;
-    }
-
-    /**
-     * Create sync interval selection
-     * @private
-     */
-    _createSyncIntervalSelect() {
-        const container = document.createElement('div');
-        container.className = 'mb-3';
-
-        // Label
-        const label = document.createElement('label');
-        label.className = 'form-label fw-semibold';
-        label.htmlFor = 'reminder-sync-interval-select';
-        label.setAttribute('data-localize', '__MSG_reminderSyncIntervalLabel__');
-        label.textContent = window.getLocalizedMessage('reminderSyncIntervalLabel') || 'Check Google Calendar for changes:';
-
-        // Select box
-        this.syncIntervalSelect = document.createElement('select');
-        this.syncIntervalSelect.className = 'form-select';
-        this.syncIntervalSelect.id = 'reminder-sync-interval-select';
-
-        // Add options
-        this.syncIntervalOptions.forEach(option => {
-            const optionElement = document.createElement('option');
-            optionElement.value = option.value;
-            optionElement.setAttribute('data-localize', option.key);
-            optionElement.textContent = option.text;
-
-            if (option.value === this.settings.reminderSyncInterval) {
-                optionElement.selected = true;
-            }
-
-            this.syncIntervalSelect.appendChild(optionElement);
-        });
-
-        // Help text
-        const helpText = document.createElement('small');
-        helpText.className = 'form-text text-muted mt-1';
-        helpText.setAttribute('data-localize', '__MSG_reminderSyncIntervalHelp__');
-        helpText.textContent = window.getLocalizedMessage('reminderSyncIntervalHelp') || 'How often to look for newly added or rescheduled Google Calendar events so their reminders stay up to date.';
-
-        container.appendChild(label);
-        container.appendChild(this.syncIntervalSelect);
-        container.appendChild(helpText);
-
-        return container;
-    }
-
-    /**
-     * Create Google event reminder toggle
-     * @private
-     */
-    _createGoogleReminderToggle() {
-        const container = document.createElement('div');
-        container.className = 'mb-3';
-
-        const formCheck = document.createElement('div');
-        formCheck.className = 'form-check form-switch';
-
-        // Checkbox
-        this.googleReminderToggle = document.createElement('input');
-        this.googleReminderToggle.type = 'checkbox';
-        this.googleReminderToggle.className = 'form-check-input';
-        this.googleReminderToggle.id = 'google-reminder-toggle';
-        this.googleReminderToggle.checked = this.settings.googleEventReminder;
-
-        // Label
-        const label = document.createElement('label');
-        label.className = 'form-check-label fw-semibold';
-        label.htmlFor = 'google-reminder-toggle';
-        label.setAttribute('data-localize', '__MSG_googleEventReminderLabel__');
-        label.textContent = window.getLocalizedMessage('googleEventReminderLabel') || 'Enable reminders for Google Calendar events';
-
-        // Help text
-        const helpText = document.createElement('small');
-        helpText.className = 'form-text text-muted d-block mt-1';
-        helpText.setAttribute('data-localize', '__MSG_googleEventReminderHelp__');
-        helpText.textContent = window.getLocalizedMessage('googleEventReminderHelp') || 'You will receive notifications 5 minutes before each event starts, even when the side panel is closed.';
-
-        formCheck.appendChild(this.googleReminderToggle);
-        formCheck.appendChild(label);
-        container.appendChild(formCheck);
-        container.appendChild(helpText);
-
-        return container;
-    }
-
-    /**
-     * Create reminder time selection
-     * @private
-     */
-    _createReminderTimeSelect() {
-        const container = document.createElement('div');
-        container.className = 'mb-3';
-
-        // Label
-        const label = document.createElement('label');
-        label.className = 'form-label fw-semibold';
-        label.htmlFor = 'reminder-minutes-select';
-        label.setAttribute('data-localize', '__MSG_reminderTimeLabel__');
-        label.textContent = window.getLocalizedMessage('reminderTimeLabel') || 'Notify me before:';
-
-        // Select box
-        this.reminderMinutesSelect = document.createElement('select');
-        this.reminderMinutesSelect.className = 'form-select';
-        this.reminderMinutesSelect.id = 'reminder-minutes-select';
-
-        // Add options
-        this.reminderOptions.forEach(option => {
-            const optionElement = document.createElement('option');
-            optionElement.value = option.value;
-            optionElement.setAttribute('data-localize', option.key);
-            optionElement.textContent = option.text;
-
-            if (option.value === this.settings.reminderMinutes) {
-                optionElement.selected = true;
-            }
-
-            this.reminderMinutesSelect.appendChild(optionElement);
-        });
-
-        // Help text
-        const helpText = document.createElement('small');
-        helpText.className = 'form-text text-muted mt-1';
-        helpText.setAttribute('data-localize', '__MSG_reminderTimeHelp__');
-        helpText.textContent = window.getLocalizedMessage('reminderTimeHelp') || 'This applies to both Google Calendar events and local events.';
-
-        container.appendChild(label);
-        container.appendChild(this.reminderMinutesSelect);
-        container.appendChild(helpText);
-
-        return container;
     }
 
     /**

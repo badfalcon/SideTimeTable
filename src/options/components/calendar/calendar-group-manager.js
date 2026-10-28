@@ -67,25 +67,25 @@ export class CalendarGroupManager {
             popover.setAttribute('tabindex', '-1');
         } else {
             calendarGroups.forEach(group => {
-                const wrapper = document.createElement('div');
-                wrapper.className = 'form-check';
+                // A row like the list's: the group's name, its checkbox on the right
+                const wrapper = document.createElement('label');
+                wrapper.className = 'calendar-group-assign-item';
 
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
-                checkbox.className = 'form-check-input';
+                checkbox.className = 'calendar-checkbox';
                 checkbox.id = `assign-${calendarId}-${group.id}`;
                 checkbox.checked = group.calendarIds.includes(calendarId);
                 checkbox.addEventListener('change', () => {
                     this._handleCalendarGroupAssignment(calendarId, group.id, checkbox.checked, calendarGroups, allCalendars);
                 });
 
-                const label = document.createElement('label');
-                label.className = 'form-check-label';
-                label.htmlFor = checkbox.id;
-                label.textContent = group.name;
+                const name = document.createElement('span');
+                name.className = 'calendar-name';
+                name.textContent = group.name;
 
+                wrapper.appendChild(name);
                 wrapper.appendChild(checkbox);
-                wrapper.appendChild(label);
                 popover.appendChild(wrapper);
             });
         }
@@ -234,7 +234,7 @@ export class CalendarGroupManager {
         }
         this._isSubmittingGroup = true;
 
-        const groupName = name || (window.getLocalizedMessage('newGroupName') || 'New Group');
+        const groupName = name || (window.getLocalizedMessage('newGroupName') || 'New group');
         const selectedCalIds = checkboxes
             .filter(cb => cb.checked)
             .map(cb => cb.value);
@@ -461,8 +461,8 @@ export class CalendarGroupManager {
     _buildGroupModal(editingGroup, allCalendars, onClose, onSubmit) {
         const isEdit = !!editingGroup;
         const modalTitle = isEdit
-            ? (window.getLocalizedMessage('editGroupTitle') || 'Edit Group')
-            : (window.getLocalizedMessage('createGroupTitle') || 'Create Group');
+            ? (window.getLocalizedMessage('editGroupTitle') || 'Edit group')
+            : (window.getLocalizedMessage('createGroupTitle') || 'Create group');
         const submitLabel = isEdit
             ? (window.getLocalizedMessage('saveGroupButton') || 'Save')
             : (window.getLocalizedMessage('createGroupButton') || 'Create');
@@ -514,14 +514,16 @@ export class CalendarGroupManager {
     _buildModalHeader(title, onClose) {
         const header = document.createElement('div');
         header.className = 'create-group-modal-header';
-        const h5 = document.createElement('h5');
-        h5.textContent = title;
+        const heading = document.createElement('h2');
+        heading.className = 'create-group-modal-title';
+        heading.textContent = title;
         const closeBtn = document.createElement('button');
         closeBtn.type = 'button';
-        closeBtn.className = 'btn-close';
+        closeBtn.className = 'settings-icon-btn';
         closeBtn.setAttribute('aria-label', window.getLocalizedMessage('close') || 'Close');
+        closeBtn.innerHTML = '<i class="fas fa-xmark" aria-hidden="true"></i>';
         closeBtn.addEventListener('click', () => onClose());
-        header.appendChild(h5);
+        header.appendChild(heading);
         header.appendChild(closeBtn);
         return header;
     }
@@ -532,13 +534,13 @@ export class CalendarGroupManager {
         body.className = 'create-group-modal-body';
 
         const nameLabel = document.createElement('label');
-        nameLabel.className = 'form-label fw-bold';
+        nameLabel.className = 'settings-field-label';
         nameLabel.htmlFor = 'create-group-name-input';
-        nameLabel.textContent = window.getLocalizedMessage('groupNameLabel') || 'Group Name';
+        nameLabel.textContent = window.getLocalizedMessage('groupNameLabel') || 'Group name';
         const nameInput = document.createElement('input');
         nameInput.type = 'text';
         nameInput.id = 'create-group-name-input';
-        nameInput.className = 'form-control mb-3';
+        nameInput.className = 'settings-input create-group-name-input';
         nameInput.placeholder = window.getLocalizedMessage('groupNamePlaceholder') || 'Enter group name';
         nameInput.maxLength = 50;
         if (editingGroup) nameInput.value = editingGroup.name;
@@ -546,8 +548,8 @@ export class CalendarGroupManager {
         body.appendChild(nameInput);
 
         const calLabel = document.createElement('label');
-        calLabel.className = 'form-label fw-bold';
-        calLabel.textContent = window.getLocalizedMessage('selectCalendarsLabel') || 'Select Calendars';
+        calLabel.className = 'settings-field-label';
+        calLabel.textContent = window.getLocalizedMessage('selectCalendarsLabel') || 'Select calendars';
         body.appendChild(calLabel);
 
         const chipArea = document.createElement('div');
@@ -556,7 +558,7 @@ export class CalendarGroupManager {
 
         const searchInput = document.createElement('input');
         searchInput.type = 'text';
-        searchInput.className = 'form-control form-control-sm mb-2';
+        searchInput.className = 'settings-input create-group-modal-search';
         searchInput.placeholder = window.getLocalizedMessage('searchCalendars') || 'Search calendars...';
         searchInput.setAttribute('aria-label', window.getLocalizedMessage('searchCalendars') || 'Search calendars');
         body.appendChild(searchInput);
@@ -589,32 +591,31 @@ export class CalendarGroupManager {
 
         if (sortedCalendars.length === 0) {
             const empty = document.createElement('div');
-            empty.className = 'text-muted p-2';
+            empty.className = 'settings-empty';
             empty.textContent = window.getLocalizedMessage('noCalendarsToAdd') || 'No calendars available. Refresh the calendar list first.';
             calList.appendChild(empty);
         } else {
             for (const cal of sortedCalendars) {
-                const wrapper = document.createElement('div');
-                wrapper.className = 'form-check create-group-modal-cal-item';
+                // Same row as the calendar list: colour, name, checkbox on the right
+                const wrapper = document.createElement('label');
+                wrapper.className = 'create-group-modal-cal-item';
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
-                checkbox.className = 'form-check-input';
+                checkbox.className = 'calendar-checkbox';
                 checkbox.id = `create-group-cal-${cal.id}`;
                 checkbox.value = cal.id;
                 if (existingCalendarIds.has(cal.id)) checkbox.checked = true;
                 checkbox.addEventListener('change', () => renderChips());
-                const label = document.createElement('label');
-                label.className = 'form-check-label';
-                label.htmlFor = checkbox.id;
                 const colorDot = document.createElement('span');
-                colorDot.className = 'calendar-color-indicator-inline';
-                if (cal.backgroundColor) colorDot.style.backgroundColor = cal.backgroundColor;
+                colorDot.className = 'calendar-color-indicator';
+                colorDot.setAttribute('aria-hidden', 'true');
+                if (cal.backgroundColor) colorDot.style.setProperty('--calendar-color', cal.backgroundColor);
                 const nameSpan = document.createElement('span');
+                nameSpan.className = 'calendar-name';
                 nameSpan.textContent = cal.summary || cal.id;
-                label.appendChild(colorDot);
-                label.appendChild(nameSpan);
+                wrapper.appendChild(colorDot);
+                wrapper.appendChild(nameSpan);
                 wrapper.appendChild(checkbox);
-                wrapper.appendChild(label);
                 calList.appendChild(wrapper);
                 checkboxes.push(checkbox);
                 calItems.push({ element: wrapper, name: (cal.summary || cal.id).toLowerCase() });
@@ -640,8 +641,9 @@ export class CalendarGroupManager {
         chip.className = 'create-group-modal-chip';
         if (info.color) {
             const dot = document.createElement('span');
-            dot.className = 'calendar-color-indicator-inline';
-            dot.style.backgroundColor = info.color;
+            dot.className = 'calendar-color-indicator';
+            dot.setAttribute('aria-hidden', 'true');
+            dot.style.setProperty('--calendar-color', info.color);
             chip.appendChild(dot);
         }
         const nameText = document.createElement('span');
@@ -651,7 +653,7 @@ export class CalendarGroupManager {
         removeBtn.type = 'button';
         removeBtn.className = 'create-group-modal-chip-remove';
         removeBtn.setAttribute('aria-label', `${window.getLocalizedMessage('removeCalendar') || 'Remove'} ${info.name}`);
-        removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+        removeBtn.innerHTML = '<i class="fas fa-xmark" aria-hidden="true"></i>';
         removeBtn.addEventListener('click', () => {
             const cb = checkboxes.find(c => c.value === id);
             if (cb) cb.checked = false;
@@ -667,12 +669,12 @@ export class CalendarGroupManager {
         footer.className = 'create-group-modal-footer';
         const cancelBtn = document.createElement('button');
         cancelBtn.type = 'button';
-        cancelBtn.className = 'btn btn-outline-secondary btn-sm';
+        cancelBtn.className = 'settings-btn';
         cancelBtn.textContent = window.getLocalizedMessage('cancelButton') || 'Cancel';
         cancelBtn.addEventListener('click', () => onClose());
         const submitBtn = document.createElement('button');
         submitBtn.type = 'button';
-        submitBtn.className = 'btn btn-primary btn-sm';
+        submitBtn.className = 'settings-btn is-primary';
         submitBtn.textContent = submitLabel;
         submitBtn.addEventListener('click', onSubmitClick);
         footer.appendChild(cancelBtn);

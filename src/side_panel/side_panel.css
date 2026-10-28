@@ -1,11 +1,12 @@
 :root {
     --side-calendar-timeline-background-color: #ffffff;
     --side-calendar-panel-background-color: #ffffff;
-    --side-calendar-work-time-color: #e3e3e3;
+    --side-calendar-work-time-color: #f1f3f5;
     --side-calendar-break-time-color: #bcdcfb;
     --side-calendar-local-event-color: #bbf2b1;
     --side-calendar-google-event-default-color: #fff0b8;
     --side-calendar-current-time-line-color: #ff0000;
+    --side-calendar-current-time-line-text-color: #ffffff;
     /* Computed text colors (auto-set by JS based on background luminance) */
     --side-calendar-timeline-text-color: #000000;
     --side-calendar-panel-text-color: #000000;
@@ -40,15 +41,14 @@
     --side-calendar-btn-secondary-hover-bg: #dee2e6;
     /* Close hover */
     --side-calendar-close-hover-color: #000;
-    /* Review modal */
-    --side-calendar-review-message-color: #555;
-    --side-calendar-review-later-text: #666;
-    --side-calendar-review-later-border: #ddd;
-    --side-calendar-review-never-text: #bbb;
     /* Accent / focus color */
     --side-calendar-accent-color: #007bff;
     --side-calendar-accent-hover-color: #0056b3;
     --side-calendar-accent-shadow: rgba(0, 123, 255, 0.15);
+    /* Destructive actions and validation errors */
+    --side-calendar-danger-color: #b3261e;
+    /* Positive outcomes (an accepted invitation, a sent reply) */
+    --side-calendar-success-color: #1e7e34;
     /* Toggle switch */
     --side-calendar-toggle-bg: #ccc;
     --side-calendar-toggle-knob: #fff;
@@ -74,6 +74,45 @@
     --side-calendar-warning-icon: #e65100;
     --side-calendar-warning-btn-bg: #e65100;
     --side-calendar-warning-btn-hover-bg: #bf360c;
+    /* Review request stars */
+    --side-calendar-rating-color: #e8a600;
+    /* Guest initials: one per person, picked from the address. Deep shades,
+       so the white initial stays above 5:1 on every one of them. */
+    --side-calendar-guest-tone-1: #c2185b;
+    --side-calendar-guest-tone-2: #7b1fa2;
+    --side-calendar-guest-tone-3: #2e7d32;
+    --side-calendar-guest-tone-4: #bf360c;
+    --side-calendar-guest-tone-5: #1565c0;
+    --side-calendar-guest-tone-6: #00695c;
+
+    /* Shape, depth and type shared by the panel and every dialog, so the
+       timeline, its popovers and the dialogs read as one interface */
+    --side-calendar-radius-sm: 6px;       /* event blocks, chips, list rows */
+    --side-calendar-radius-md: 8px;       /* buttons, fields, icon buttons */
+    --side-calendar-radius-lg: 12px;      /* dialogs, popovers, cards */
+    --side-calendar-radius-pill: 999px;   /* floating pills, person chips */
+    --side-calendar-shadow-float: 0 2px 8px var(--side-calendar-shadow-color);
+    --side-calendar-shadow-popover: 0 6px 20px var(--side-calendar-shadow-color);
+    --side-calendar-shadow-dialog: 0 12px 32px var(--side-calendar-shadow-color);
+    --side-calendar-font-caption: 11px;   /* hints, time axis, meta lines */
+    --side-calendar-font-small: 12px;     /* labels, chips, event titles */
+    --side-calendar-font-body: 13px;      /* fields, lists, buttons */
+    --side-calendar-font-title: 14px;     /* dialog titles, the date */
+    --side-calendar-font-large: 15px;     /* an event's own title */
+    --side-calendar-icon-button-size: 32px;
+}
+
+[data-theme="dark"] {
+    --side-calendar-danger-color: #ef9a9a;
+    --side-calendar-success-color: #81c995;
+    --side-calendar-rating-color: #fdd663;
+    /* Same deep shades: lighter ones would drop the white initial below 4.5:1 */
+    --side-calendar-guest-tone-1: #c2185b;
+    --side-calendar-guest-tone-2: #7b1fa2;
+    --side-calendar-guest-tone-3: #2e7d32;
+    --side-calendar-guest-tone-4: #bf360c;
+    --side-calendar-guest-tone-5: #1565c0;
+    --side-calendar-guest-tone-6: #00695c;
 }
 
 html {
@@ -126,7 +165,7 @@ body {
     background-color: var(--side-calendar-warning-btn-bg);
     color: #fff;
     border: none;
-    border-radius: 4px;
+    border-radius: var(--side-calendar-radius-md);
     padding: 4px 10px;
     font-size: 12px;
     cursor: pointer;
@@ -153,12 +192,13 @@ body {
     opacity: 1;
 }
 
-/* All-day events section (between header and timeline) */
+/* All-day events section (between header and timeline). The chips line up
+   with the event column below (the time axis is 40px wide). */
 .all-day-events-section {
     flex: 0 0 auto;
-    padding: 4px 8px;
+    padding: 5px 8px 5px 40px;
     background: var(--side-calendar-panel-background-color);
-    border-bottom: 1px solid var(--side-calendar-border-color);
+    border-bottom: 1px solid var(--side-calendar-border-color-lighter);
     max-height: 80px;
     overflow-y: auto;
 }
@@ -169,41 +209,59 @@ body {
     gap: 4px;
 }
 
+/* Same colour grammar as the timed blocks (see .event) */
 .all-day-event-chip {
+    --event-color: var(--side-calendar-google-event-default-color);
+    --event-tint: 60%;
+    --event-ink-mix: 40%;
     display: inline-flex;
     align-items: center;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    cursor: pointer;
-    background: var(--side-calendar-google-event-default-color);
-    color: var(--side-calendar-google-event-default-text-color);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    gap: 5px;
+    height: 22px;
+    box-sizing: border-box;
     max-width: 100%;
-    box-shadow: 0 1px 2px var(--side-calendar-shadow-color);
-    line-height: 1.4;
+    padding: 0 8px;
+    border-radius: var(--side-calendar-radius-sm);
+    background-color: color-mix(in srgb, var(--event-color) var(--event-tint), var(--side-calendar-panel-background-color));
+    color: color-mix(in oklab, var(--event-color) var(--event-ink-mix), var(--side-calendar-panel-text-color));
+    font-size: var(--side-calendar-font-small);
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
 }
 
 .all-day-event-chip:hover {
-    opacity: 0.85;
+    filter: brightness(0.96);
+}
+
+[data-theme="dark"] .all-day-event-chip:hover {
+    filter: brightness(1.15);
+}
+
+.all-day-event-chip-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .all-day-event-chip-days {
-    margin-left: 4px;
-    font-size: 10px;
-    opacity: 0.7;
+    flex-shrink: 0;
+    font-size: var(--side-calendar-font-caption);
+    font-weight: 400;
+    opacity: 0.75;
 }
 
 .all-day-event-chip-ooo {
-    text-decoration: line-through;
-    font-style: italic;
+    background-image: repeating-linear-gradient(
+        135deg,
+        transparent 0 6px,
+        color-mix(in srgb, var(--event-color) 25%, transparent) 6px 8px
+    );
 }
 
 .side-time-table {
     position: relative;
-    border: 1px solid var(--side-calendar-border-color);
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
@@ -212,117 +270,175 @@ body {
 
 #sideTimeTableHeaderWrapper{
     flex: 0 0 auto;
+    position: relative;
     z-index: 100;
     background-color: var(--side-calendar-panel-background-color);
     color: var(--side-calendar-panel-text-color);
-    padding: 8px 8px 10px;
+    border-bottom: 1px solid var(--side-calendar-border-color-lighter);
 }
 
+/* Three columns: buttons, date, buttons. The date stays centred while the
+   side columns have room, and moves over rather than covering the buttons
+   when they do not (a 320px panel in English). */
 #sideTimeTableHeader{
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
+    column-gap: 8px;
+    height: 44px;
+    box-sizing: border-box;
+    padding: 0 6px 0 8px;
     background-color: var(--side-calendar-panel-background-color);
     width: 100%;
-    position: relative; /* For absolute positioning of date navigation */
+}
+
+#sideTimeTableHeader > .action-buttons:first-child {
+    justify-self: start;
+}
+
+#sideTimeTableHeader > .action-buttons:last-child {
+    justify-self: end;
 }
 
 .action-buttons {
     display: flex;
     align-items: center;
-    gap: 10px; /* Gap between add and sync buttons */
+    gap: 2px;
 }
 
 #dateNavigation {
     display: flex;
     align-items: center;
-    gap: 10px;
-    position: absolute; /* Absolute positioning for centering */
-    left: 50%;
-    transform: translateX(-50%); /* Center horizontally */
+    gap: 2px;
 }
 
-.nav-arrow {
-    font-size: 16px;
-    cursor: pointer;
-    color: var(--side-calendar-secondary-text-color);
-    transition: color 0.2s ease;
-}
-
-.nav-arrow:hover {
-    color: var(--side-calendar-hover-color);
-}
-
-#currentDateDisplay {
-    font-size: 18px;
+/* Every header control is the same quiet icon button; only "add" is filled */
+.header-icon-btn {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: var(--side-calendar-icon-button-size);
+    height: var(--side-calendar-icon-button-size);
     margin: 0;
-    text-align: center;
-    cursor: pointer;
-    transition: color 0.2s ease;
-    
-    /* Disable default input styles */
+    padding: 0;
     border: none;
-    background: none;
-    outline: none;
-    
-    /* Text styles */
-    font-family: inherit;
-    font-weight: normal;
+    border-radius: var(--side-calendar-radius-md);
+    background: transparent;
+    color: var(--side-calendar-secondary-text-color);
+    font-size: 15px;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.header-icon-btn:hover:not(:disabled) {
+    background: var(--side-calendar-subtle-bg-hover);
+    color: var(--side-calendar-panel-text-color);
+}
+
+.header-icon-btn:focus-visible,
+.header-date-btn:focus-visible {
+    outline: 2px solid var(--side-calendar-accent-color);
+    outline-offset: -2px;
+}
+
+.header-icon-btn:disabled,
+.header-date-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.header-nav-btn {
+    width: 28px;
+    font-size: 13px;
+}
+
+.header-add-btn {
+    width: 30px;
+    height: 30px;
+    margin-right: 2px;
+    border-radius: 50%;
+    background: var(--side-calendar-accent-hover-color);
+    color: #ffffff;
+    font-size: 14px;
+}
+
+.header-add-btn:hover:not(:disabled) {
+    background: var(--side-calendar-accent-color);
+    color: #ffffff;
+}
+
+.header-add-btn:focus-visible {
+    outline-offset: 2px;
+}
+
+/* Dark: white on the lighter dark-theme blue is too faint (see the dialogs'
+   primary button) */
+[data-theme="dark"] .header-add-btn,
+[data-theme="dark"] .header-add-btn:hover:not(:disabled) {
+    background: var(--side-calendar-accent-color);
+    color: #0f1b2e;
+}
+
+.header-icon-btn.is-syncing {
+    color: var(--side-calendar-accent-color);
+}
+
+.header-date {
+    position: relative;
+}
+
+.header-date-btn {
+    display: inline-flex;
+    align-items: center;
+    height: 30px;
+    margin: 0;
+    padding: 0 6px;
+    border: none;
+    border-radius: var(--side-calendar-radius-md);
+    background: transparent;
     color: inherit;
-}
-
-#currentDateDisplay:hover {
-    color: var(--side-calendar-hover-color);
-}
-
-#currentDateDisplay.today {
-    color: var(--side-calendar-hover-color);
-    font-weight: bold;
-}
-
-/* Make date picker calendar icon transparent while keeping functionality */
-#currentDateDisplay::-webkit-calendar-picker-indicator {
+    font-family: inherit;
+    font-size: var(--side-calendar-font-title);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
     cursor: pointer;
 }
 
-#currentDateDisplay::-webkit-inner-spin-button,
-#currentDateDisplay::-webkit-outer-spin-button {
-    display: none;
+.header-date-btn:hover:not(:disabled) {
+    background: var(--side-calendar-subtle-bg-hover);
 }
 
-.add-local-event-icon {
-    font-size: 24px;
-    cursor: pointer;     /* Change cursor to pointer */
+.header-date-btn.is-today {
+    color: var(--side-calendar-accent-hover-color);
 }
 
-#sideTimeTableHeader > h1 {
-    display: inline-block;
-    vertical-align: middle;
+[data-theme="dark"] .header-date-btn.is-today {
+    color: var(--side-calendar-accent-color);
 }
 
-.add-local-event-icon:hover {
+.header-filter-slot {
+    display: contents;
 }
 
-.sync-icon {
-    font-size: 20px;
-    color: var(--side-calendar-icon-color);
-    cursor: pointer;
-    transition: transform 0.3s ease, color 0.2s ease;
+/* In a narrow panel (Chrome's minimum is 320px) the date would sit right
+   against the refresh button, and the tutorial's highlight around it would
+   touch the button too; a slightly smaller date buys the gap back. */
+@media (max-width: 360px) {
+    #sideTimeTableHeader {
+        column-gap: 10px;
+    }
+
+    #dateNavigation {
+        gap: 0;
+    }
+
+    .header-date-btn {
+        padding: 0 4px;
+    }
 }
 
-.sync-icon:hover {
-    color: var(--side-calendar-hover-color);
-}
-
-.sync-icon.fa-spin {
-    color: var(--side-calendar-hover-color);
-}
-
-.settings-icon {
-    font-size: 24px;
-    color: var(--side-calendar-icon-color);
-    cursor: pointer;
-}
 
 .side-time-table-base {
     position: absolute;
@@ -350,64 +466,169 @@ body {
 
 .work-time-background {
     position: absolute;
-    left: 0;
+    left: 40px;
     right: 0;
     z-index: 1;
+    background-color: var(--side-calendar-work-time-color);
     pointer-events: none;
 }
 
+/* Event blocks: a tint of the event's colour, with the text in a deep shade
+   of the same hue (the colour mixed toward the text colour, so it darkens in
+   light themes and lightens in dark ones). The colour is carried by the
+   block as a whole — no accent stripe — and many colours side by side stay
+   calm and readable.
+
+   Theme and local colours are fills (pastels in light themes, deep tones in
+   dark ones), so they are shown strongly and the text keeps more of the text
+   colour. A Google calendar's own colour is a strong one: a light tint, and
+   more of the colour in the text. */
 .event {
+    --event-color: var(--side-calendar-google-event-default-color);
+    --event-tint: 60%;
+    --event-ink-mix: 40%;
     position: absolute;
     left: 40px; /* Matches LAYOUT_CONSTANTS.BASE_LEFT */
-    /* width: 200px; - Removed fixed width, dynamic width is set by EventLayoutManager */
+    /* width is set by EventLayoutManager */
     box-sizing: border-box;
-    padding: 5px 10px;
-    background: var(--side-calendar-google-event-default-color);
-    color: var(--side-calendar-google-event-default-text-color);
-    border-radius: 5px;
-    box-shadow: 0 1px 3px var(--side-calendar-shadow-color);
+    padding: 3px 6px;
+    border-radius: var(--side-calendar-radius-sm);
+    background-color: color-mix(in srgb, var(--event-color) var(--event-tint), var(--side-calendar-timeline-background-color));
+    color: color-mix(in oklab, var(--event-color) var(--event-ink-mix), var(--side-calendar-timeline-text-color));
     z-index: 21;
-    transition: left 0.3s, width 0.3s; /* Smooth transition for movement */
-    overflow: hidden; /* Prevent text from overflowing */
-    text-overflow: ellipsis; /* Show overflowed text with ellipsis */
+    overflow: hidden;
+    font-size: var(--side-calendar-font-small);
+    line-height: 15px;
+    cursor: pointer;
+    transition: left 0.2s ease-out, width 0.2s ease-out;
+}
+
+.event.has-calendar-color,
+.all-day-event-chip.has-calendar-color {
+    --event-tint: 20%;
+    --event-ink-mix: 62%;
+}
+
+[data-theme="dark"] .event,
+[data-theme="dark"] .all-day-event-chip {
+    --event-tint: 85%;
+    --event-ink-mix: 25%;
+}
+
+[data-theme="dark"] .event.has-calendar-color,
+[data-theme="dark"] .all-day-event-chip.has-calendar-color {
+    --event-tint: 30%;
+    /* Dark blues and purples need more of the light text colour to read */
+    --event-ink-mix: 40%;
+}
+
+.event:hover {
+    filter: brightness(0.97);
+}
+
+[data-theme="dark"] .event:hover {
+    filter: brightness(1.15);
 }
 
 .event.no-transition {
     transition: none !important;
 }
 
-.google-event {
-    /* Background color is set dynamically from Google Calendar API */
-}
-
-.google-event-ooo {
-    --side-calendar-ooo-color: #9e9e9e;
-    background-color: color-mix(in srgb, var(--side-calendar-ooo-color) 15%, white);
-    color: color-mix(in srgb, var(--side-calendar-ooo-color) 70%, black);
-    background-image: repeating-linear-gradient(
-        135deg,
-        transparent,
-        transparent 4px,
-        color-mix(in srgb, var(--side-calendar-ooo-color) 25%, transparent) 4px,
-        color-mix(in srgb, var(--side-calendar-ooo-color) 25%, transparent) 8px
-    );
-}
-
-[data-theme="dark"] .google-event-ooo {
-    background-color: color-mix(in srgb, var(--side-calendar-ooo-color) 15%, black);
-    color: color-mix(in srgb, var(--side-calendar-ooo-color) 70%, white);
-    background-image: repeating-linear-gradient(
-        135deg,
-        transparent,
-        transparent 4px,
-        color-mix(in srgb, var(--side-calendar-ooo-color) 20%, transparent) 4px,
-        color-mix(in srgb, var(--side-calendar-ooo-color) 20%, transparent) 8px
-    );
-}
-
 .local-event {
-    background-color: var(--side-calendar-local-event-color);
-    color: var(--side-calendar-local-event-text-color);
+    --event-color: var(--side-calendar-local-event-color);
+}
+
+/* Out of office: hatched, with the plane in front of the title */
+.google-event-ooo {
+    --event-color: var(--side-calendar-ooo-color, #9e9e9e);
+    background-image: repeating-linear-gradient(
+        135deg,
+        transparent 0 7px,
+        color-mix(in srgb, var(--event-color) 28%, transparent) 7px 9px
+    );
+}
+
+/* Ended events on today's timeline step back */
+.event.is-past {
+    opacity: 0.55;
+}
+
+/* Title, time and place in one clamped box: the title wraps when there is
+   room (by phrase in Japanese) and the rest is cut at the block's last line.
+   --event-lines is set per block from its height. */
+.event-body {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: var(--event-lines, 2);
+    overflow: hidden;
+    word-break: auto-phrase;
+    overflow-wrap: break-word;
+    hyphens: auto;
+}
+
+.event-body > span {
+    display: block;
+}
+
+.event-title {
+    font-weight: 600;
+}
+
+.event-title-icon {
+    margin-right: 4px;
+    font-size: 0.85em;
+    opacity: 0.8;
+}
+
+.event-meta {
+    /* Same colour as the title: the size and weight set it apart, so the
+       small text keeps the title's contrast */
+    overflow: hidden;
+    font-size: var(--side-calendar-font-caption);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Narrow lanes: the start time only */
+.event .event-body > .event-time-start,
+.event .event-body > .event-time-place,
+.event.narrow-display .event-body > .event-time-range {
+    display: none;
+}
+
+/* Wide lanes: time and place share one line, leaving the title more room */
+.event.wide-display .event-body > .event-time-place {
+    display: block;
+}
+
+.event.wide-display .event-body:has(> .event-time-place) > .event-time-range,
+.event.wide-display .event-body > .event-location {
+    display: none;
+}
+
+.event.narrow-display .event-body > .event-time-start {
+    display: block;
+}
+
+/* Blocks of a single line (30 minutes or less): title, then start time */
+.event.event-one-line .event-body {
+    display: block;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.event.event-one-line .event-body > span {
+    display: inline;
+}
+
+.event.event-one-line .event-body > .event-time-range,
+.event.event-one-line .event-body > .event-location {
+    display: none;
+}
+
+.event.event-one-line .event-body > .event-time-start {
+    display: inline;
+    margin-left: 5px;
 }
 
 /* Applied while an event is being pointed out, e.g. after the user clicks a
@@ -448,7 +669,7 @@ body {
     right: 4px;
     background: var(--side-calendar-accent-shadow);
     border: 2px dashed var(--side-calendar-accent-color);
-    border-radius: 4px;
+    border-radius: var(--side-calendar-radius-sm);
     pointer-events: none;
     z-index: 30;
     font-size: 11px;
@@ -461,22 +682,103 @@ body {
     transition: none; /* override .event */
 }
 
+/* "Back to today": floats at the bottom of the visible timeline while another
+   day is shown (its top is kept in place by TimelineComponent) */
+.back-to-today-btn {
+    position: absolute;
+    left: 50%;
+    z-index: 2100;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 30px;
+    margin: 0;
+    padding: 0 12px 0 10px;
+    border: 1px solid var(--side-calendar-border-color);
+    border-radius: var(--side-calendar-radius-pill);
+    background: var(--side-calendar-panel-background-color);
+    box-shadow: var(--side-calendar-shadow-float);
+    color: var(--side-calendar-accent-hover-color);
+    font-family: inherit;
+    font-size: var(--side-calendar-font-small);
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transform: translateX(-50%);
+}
+
+.back-to-today-btn[hidden] {
+    display: none;
+}
+
+.back-to-today-btn:hover {
+    background: var(--side-calendar-subtle-bg-hover);
+}
+
+.back-to-today-btn:focus-visible {
+    outline: 2px solid var(--side-calendar-accent-color);
+    outline-offset: 2px;
+}
+
+[data-theme="dark"] .back-to-today-btn {
+    color: var(--side-calendar-accent-color);
+}
+
+/* The current time: a line over the events from the time axis on, with the
+   time in a pill over the axis */
 .current-time-line {
     position: absolute;
-    width: 100%;
+    left: 38px;
+    right: 0;
     height: 2px;
+    margin-top: -1px;
     background-color: var(--side-calendar-current-time-line-color);
-    z-index: 10;
-    border-left: none;
+    /* Above every event (EventLayoutManager's inline z-index grows with the
+       start minute), but never in the way of a click */
+    z-index: 2000;
+    pointer-events: none;
+}
+
+.current-time-line::before {
+    content: '';
+    position: absolute;
+    left: -4px;
+    top: -3px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: inherit;
+}
+
+.current-time-label {
+    position: absolute;
+    right: calc(100% + 1px);
+    top: -7px;
+    min-width: 30px;
+    height: 16px;
+    box-sizing: border-box;
+    padding: 0 4px;
+    border-radius: var(--side-calendar-radius-pill);
+    background-color: var(--side-calendar-current-time-line-color);
+    color: var(--side-calendar-current-time-line-text-color);
+    font-size: var(--side-calendar-font-caption);
+    font-weight: 600;
+    line-height: 16px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
 }
 
 .hour-label {
     position: absolute;
     left: 0;
-    width: 35px;
+    width: 36px;
+    padding-right: 4px;
+    color: var(--side-calendar-secondary-text-color);
+    font-size: var(--side-calendar-font-caption);
+    font-variant-numeric: tabular-nums;
     text-align: right;
-    padding-right: 5px;
-    font-size: 12px;
+    white-space: nowrap;
     transform: translateY(-50%);
     z-index: 15;
 }
@@ -485,18 +787,10 @@ body {
     position: absolute;
     left: 40px;
     width: calc(100% - 40px);
-    border-top: 1px dashed var(--side-calendar-hour-line-color);
+    border-top: 1px solid color-mix(in srgb, var(--side-calendar-hour-line-color) 60%, transparent);
     z-index: 5;
 }
 
-
-/* Google event action row (Meet and Map buttons side by side) */
-.google-event-meet {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-}
 
 .btn-primary {
     background-color: var(--side-calendar-accent-color);
@@ -534,8 +828,8 @@ body {
     width: 90%; /* Easy to use even on small screens */
     max-width: 500px; /* Set maximum width */
     max-height: 90vh; /* Height restriction */
-    border-radius: 10px; /* Slightly larger rounded corners */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add shadow */
+    border-radius: var(--side-calendar-radius-lg);
+    box-shadow: var(--side-calendar-shadow-dialog);
     position: relative;
     overflow-y: auto; /* Scroll when content is long */
 }
@@ -571,702 +865,1730 @@ body {
     font-weight: bold;
 }
 
-.modal-content input[type="text"],
-.modal-content input[type="time"] {
+.modal-content input[type="text"] {
     width: calc(100% - 20px); /* Adjust width */
     padding: 10px;
     margin-bottom: 15px;
     border: 1px solid var(--side-calendar-input-border);
-    border-radius: 5px;
+    border-radius: var(--side-calendar-radius-md);
     background-color: var(--side-calendar-input-bg);
     color: inherit;
 }
 
-/* Time inputs side by side layout */
-.time-input-row {
+/* ===== Event dialogs: local and Google details, create and edit forms =====
+   Laid out for the ~384px side panel: one icon-led row per field instead of a
+   label line above every control, which costs 46px per field instead of 79px
+   and keeps every state inside the 90vh cap without scrolling. The icons are
+   decorative; each control keeps a visually hidden <label>.
+
+   Scoped by id so these rules outrank the generic .modal-content
+   input/label/button ones that the other modals still use. */
+
+/* A real label that only assistive technology gets */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* The form toggles sections with the `hidden` property, which the display
+   rules below would otherwise override. */
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) [hidden] {
+    display: none !important;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .modal-content {
+    padding: 0;
+}
+
+/* Every view of these dialogs has a header with its own close button */
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .modal-content > .close {
+    display: none;
+}
+
+/* --- Header, body, footer --- */
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-header,
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-footer {
+    position: sticky;
+    z-index: 2;
     display: flex;
-    gap: 10px;
+    align-items: center;
+    flex-shrink: 0;
+    background: var(--side-calendar-modal-bg);
 }
 
-.time-input-group {
-    flex: 1;
-    min-width: 0;
-}
-
-.time-input-group label {
-    display: block;
-}
-
-.time-input-group input[type="time"] {
-    width: 100%;
-    box-sizing: border-box;
-}
-
-.event-description-input {
-    width: calc(100% - 20px);
-    padding: 10px;
-    margin-bottom: 15px;
-    border: 1px solid var(--side-calendar-input-border);
-    border-radius: 5px;
-    background-color: var(--side-calendar-input-bg);
-    color: inherit;
-    resize: vertical;
-    font-family: inherit;
-}
-
-/* Segmented controls: save destination (Local / Google), event type (Event / Out of office) */
-.event-source-toggle,
-.event-type-toggle {
-    display: none; /* Shown via JS when writable Google calendars exist */
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-header {
+    top: 0;
     gap: 4px;
-    margin: 6px 0 16px;
-    padding: 3px;
-    border: 1px solid var(--side-calendar-input-border);
-    border-radius: 8px;
-    background: var(--side-calendar-subtle-bg);
+    height: 44px;
+    padding: 0 6px 0 16px;
+    border-bottom: 1px solid var(--side-calendar-border-color-lighter);
 }
 
-.event-source-toggle .event-source-btn,
-.event-type-toggle .event-type-btn {
-    flex: 1;
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-title {
+    flex-grow: 1;
+    margin: 0;
+    font-size: var(--side-calendar-font-title);
+    font-weight: 600;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-close {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    margin-top: 0;
-    padding: 7px 10px;
-    border: 1px solid transparent;
-    border-radius: 6px;
+    width: var(--side-calendar-icon-button-size);
+    height: var(--side-calendar-icon-button-size);
+    margin: 0;
+    padding: 0;
+    border: none;
+    border-radius: var(--side-calendar-radius-md);
     background: transparent;
     color: var(--side-calendar-secondary-text-color);
-    font-size: 0.9em;
-    font-weight: 600;
+    font-size: 15px;
     cursor: pointer;
-    transition: background-color 0.15s, color 0.15s, box-shadow 0.15s;
 }
 
-.event-source-toggle .event-source-btn:hover:not(.active),
-.event-type-toggle .event-type-btn:hover:not(.active):not(:disabled) {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-close:hover {
     background: var(--side-calendar-subtle-bg-hover);
     color: inherit;
 }
 
-.event-source-toggle .event-source-btn.active,
-.event-type-toggle .event-type-btn.active {
-    background: var(--side-calendar-modal-bg);
-    /* accent-hover is darker (#0056b3) → meets WCAG AA (4.5:1) on white */
-    color: var(--side-calendar-accent-hover-color);
-    /* accent border delineates the selected pill in both themes (a dark
-       drop-shadow is invisible on the dark surface, so the border carries it) */
-    border-color: var(--side-calendar-accent-color);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-close:focus-visible {
+    outline: 2px solid var(--side-calendar-accent-color);
+    outline-offset: -2px;
 }
 
-.event-source-toggle .event-source-btn:focus-visible,
-.event-type-toggle .event-type-btn:focus-visible {
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 16px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-footer {
+    bottom: 0;
+    gap: 8px;
+    height: 52px;
+    padding: 0 12px 0 8px;
+    border-top: 1px solid var(--side-calendar-border-color-lighter);
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-footer-spacer {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+/* --- Icon-led rows --- */
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-row-icon {
+    flex-shrink: 0;
+    width: 16px;
+    color: var(--side-calendar-secondary-text-color);
+    font-size: 14px;
+    text-align: center;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-field {
+    flex-grow: 1;
+    width: 0;
+    min-width: 0;
+    height: 36px;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0 10px;
+    border: 1px solid var(--side-calendar-input-border);
+    border-radius: var(--side-calendar-radius-md);
+    background: var(--side-calendar-input-bg);
+    color: inherit;
+    font-family: inherit;
+    font-size: var(--side-calendar-font-body);
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) select.event-form-field {
+    width: 100%;
+    padding-right: 30px;
+    appearance: none;
+    cursor: pointer;
+    /* Calendar names, and option labels in wordier languages, can outgrow
+       the field */
+    text-overflow: ellipsis;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-field:focus-visible {
+    outline: none;
+    border-color: var(--side-calendar-accent-color);
+    box-shadow: 0 0 0 3px var(--side-calendar-accent-shadow);
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-field:disabled {
+    background: var(--side-calendar-subtle-bg);
+    color: var(--side-calendar-muted-text-color);
+    cursor: not-allowed;
+}
+
+/* One line exactly fills the 36px box (1px border + 7px padding + 20px line),
+   so an empty or one-line note never shows a scrollbar */
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-textarea {
+    height: 36px;
+    min-height: 36px;
+    padding: 7px 10px;
+    line-height: 20px;
+    resize: vertical;
+}
+
+/* Editing an existing description: show its first lines (the rows count) */
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-textarea.is-multiline {
+    height: auto;
+}
+
+/* Wrapper so the chevron can be drawn over a native select */
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-select-wrap {
+    position: relative;
+    flex-grow: 1;
+    min-width: 0;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-select-chevron {
+    position: absolute;
+    top: 50%;
+    right: 11px;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: var(--side-calendar-secondary-text-color);
+    font-size: 11px;
+}
+
+/* --- Title: the one field that leads the form, so no icon and no box --- */
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-title-input {
+    width: 100%;
+    height: 42px;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0 2px;
+    border: none;
+    border-bottom: 1px solid var(--side-calendar-input-border);
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
+    font-family: inherit;
+    font-size: var(--side-calendar-font-large);
+    font-weight: 600;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-title-input:focus-visible {
+    outline: none;
+    border-bottom: 2px solid var(--side-calendar-accent-color);
+}
+
+/* --- Time row: start, end and duration --- */
+
+/* The three controls wrap as a group. At the usual panel width they share one
+   line; in a narrow panel the duration picker drops under the times rather
+   than the times being clipped. */
+/* When the fields wrap, keep the clock beside the first line of them */
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-row:has(> .event-time-fields) > .event-form-row-icon {
+    align-self: flex-start;
+    margin-top: 11px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-time-fields {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    flex-grow: 1;
+    min-width: 0;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-time-input {
+    flex: 1 1 0;
+    /* Room for a 12-hour value such as "12:30 PM" or "午後12:30" */
+    min-width: 6em;
+    padding: 0 8px;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-time-separator {
+    flex-shrink: 0;
+    color: var(--side-calendar-muted-text-color);
+    font-size: 12px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-duration-select {
+    /* Sized by its own longest label rather than a fixed width, so the time
+       inputs keep whatever is left over in every locale. */
+    width: auto;
+    max-width: 88px;
+    height: 36px;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0 20px 0 7px;
+    text-overflow: ellipsis;
+    border: 1px solid var(--side-calendar-accent-color);
+    border-radius: var(--side-calendar-radius-md);
+    /* Tinted rather than accent-coloured text: the tint reads as "derived from
+       the times" in every theme without risking the text contrast. */
+    background: color-mix(in srgb, var(--side-calendar-accent-color) 14%, var(--side-calendar-modal-bg));
+    color: inherit;
+    font-family: inherit;
+    font-size: var(--side-calendar-font-small);
+    font-weight: 600;
+    appearance: none;
+    cursor: pointer;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-duration-select:focus-visible {
     outline: 2px solid var(--side-calendar-accent-color);
     outline-offset: 1px;
 }
 
-/* The event-type control sits right under the destination one */
-.event-type-toggle {
-    margin-top: -8px;
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-select-wrap:has(.event-duration-select) {
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-select-wrap:has(.event-duration-select) .event-form-select-chevron {
+    right: 7px;
+}
+
+/* --- Segmented controls: save destination (Local / Google) and, under
+       Google, the event type (Event / Out of office) --- */
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-segmented {
+    display: flex;
+    gap: 2px;
+    height: 32px;
+    box-sizing: border-box;
+    padding: 2px;
+    border: 1px solid var(--side-calendar-input-border);
+    border-radius: 9px;
+    background: var(--side-calendar-subtle-bg);
+}
+
+/* The event-type control sits in an icon row, beside the icon column */
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-row > .event-segmented {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-segmented-btn {
+    flex-grow: 1;
+    flex-basis: 0;
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    margin: 0;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--side-calendar-secondary-text-color);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-segmented-btn i {
+    flex-shrink: 0;
+    font-size: 11px;
+}
+
+/* A label longer than its half of the control ends in an ellipsis rather
+   than wrapping inside the 32px button or pushing the dialog wider */
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-segmented-btn > span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-segmented-btn:hover:not(.active):not(:disabled) {
+    background: var(--side-calendar-subtle-bg-hover);
+    color: inherit;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-segmented-btn.active {
+    border-color: var(--side-calendar-accent-color);
+    background: var(--side-calendar-modal-bg);
+    color: inherit;
+    box-shadow: 0 1px 2px var(--side-calendar-shadow-color);
+}
+
+/* The picked side of a choice (Local / Google, Event / Out of office) is
+   named in the accent colour, as its border is. An RSVP answer keeps the
+   text colour: its icon carries the colour there. */
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-segmented-btn.active:not(.event-rsvp-btn) {
+    color: var(--side-calendar-accent-hover-color);
+}
+
+[data-theme="dark"] :is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-segmented-btn.active:not(.event-rsvp-btn) {
+    color: var(--side-calendar-accent-color);
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-segmented-btn:focus-visible {
+    outline: 2px solid var(--side-calendar-accent-color);
+    outline-offset: 1px;
 }
 
 /* A disabled "Out of office" (no primary calendar to write to) still reads as
    a choice that exists, just not right now. */
-.event-type-toggle .event-type-btn:disabled {
-    opacity: 0.5;
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-segmented-btn:disabled {
+    opacity: 0.45;
     cursor: not-allowed;
 }
 
-/* Out-of-office-only fields (all day + auto-decline) */
-.ooo-event-fields {
-    margin-bottom: 15px;
-}
+/* --- Chips that toggle a checkbox (weekdays, no end date) --- */
 
-/* Google "advanced settings" accordion */
-.google-advanced {
-    margin: 6px 0 4px;
-}
-
-.google-advanced .accordion-toggle {
-    display: flex;
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .chip-toggle {
+    position: relative;
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
-    width: 100%;
-    margin: 0;
-    padding: 10px 2px;
-    background: transparent;
-    border: none;
-    border-top: 1px solid var(--side-calendar-border-color);
-    border-radius: 0;
-    color: inherit;
-    font-weight: 600;
-    font-size: 0.92em;
-    cursor: pointer;
-}
-
-.google-advanced .accordion-chevron {
-    font-size: 0.8em;
-    opacity: 0.7;
-    transition: transform 0.15s ease;
-}
-
-.google-advanced .accordion-toggle[aria-expanded="true"] .accordion-chevron {
-    transform: rotate(90deg);
-}
-
-.google-advanced .accordion-toggle:focus-visible {
-    outline: 2px solid var(--side-calendar-accent-color);
-    outline-offset: 1px;
-}
-
-.google-advanced .accordion-body {
-    padding-top: 2px;
-}
-
-/* Hint when writable Google calendars exist but none are displayed */
-.google-destination-hint {
-    margin: 4px 0 10px;
-    padding: 6px 10px;
-    border-radius: 5px;
-    background: var(--side-calendar-subtle-bg);
-    color: var(--side-calendar-secondary-text-color);
-    font-size: 0.85em;
-    line-height: 1.4;
-}
-
-/* Muted note in the Google edit form about fields it does not cover */
-.google-edit-note {
-    margin: 8px 0 0;
-    color: var(--side-calendar-secondary-text-color);
-    font-size: 0.82em;
-}
-
-/* Google Meet toggle row */
-.google-meet-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 4px 0 15px;
-}
-
-.google-meet-row input[type="checkbox"] {
-    margin: 0;
+    justify-content: center;
     flex-shrink: 0;
-}
-
-.google-meet-row label {
+    height: 36px;
     margin: 0;
-    font-weight: normal;
+    padding: 0 12px;
+    border: 1px solid var(--side-calendar-input-border);
+    border-radius: var(--side-calendar-radius-md);
+    background: var(--side-calendar-input-bg);
+    color: inherit;
+    font-size: var(--side-calendar-font-small);
+    font-weight: 600;
+    white-space: nowrap;
     cursor: pointer;
     user-select: none;
 }
 
-/* Google event target-calendar picker (matches text input metrics) */
-.modal-content select.event-form-select {
-    width: calc(100% - 20px);
-    padding: 10px;
-    margin-bottom: 15px;
+/* The checkbox stays real so `.checked` keeps working; only its box is hidden */
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .chip-toggle-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    border: 0;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .chip-toggle:hover {
+    background: var(--side-calendar-subtle-bg-hover);
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .chip-toggle:has(.chip-toggle-input:checked) {
+    border-color: var(--side-calendar-accent-color);
+    background: color-mix(in srgb, var(--side-calendar-accent-color) 14%, var(--side-calendar-modal-bg));
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .chip-toggle:has(.chip-toggle-input:focus-visible) {
+    outline: 2px solid var(--side-calendar-accent-color);
+    outline-offset: 1px;
+}
+
+/* --- Recurrence: type row, then the parts that depend on it, indented to
+       line up with the controls beside the icon column --- */
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .recurrence-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .weekday-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-left: 26px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .weekday-chip {
+    flex-grow: 1;
+    flex-basis: 0;
+    /* Never narrower than the day name: longer abbreviations push the chips
+       onto a second row instead of spilling out of them */
+    min-width: min-content;
+    height: 32px;
+    padding: 0 4px;
+    font-size: 12px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .end-date-section {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-left: 26px;
+}
+
+/* As wide as the date it shows, so "No end date" stays beside a short date
+   and wraps under a long one ("2027年12月31日(金)") rather than squeezing it;
+   it still grows to fill the row */
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .end-date-section .event-date-input {
+    width: auto;
+    min-width: 8em;
+    field-sizing: content;
+    padding: 0 8px;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .end-date-section .event-date-input:disabled {
+    cursor: default;
+}
+
+/* --- Settings-style rows: icon, label, checkbox on the right --- */
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-check-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    /* min-height, not height: a label that wraps in a wordier language grows
+       the row instead of spilling out of it */
+    min-height: 32px;
+    margin: 0;
+    font-weight: normal;
+    line-height: 1.35;
+    cursor: pointer;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-check-label {
+    flex-grow: 1;
+    font-size: 13px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-check-input {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: var(--side-calendar-accent-hover-color);
+    cursor: pointer;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .ooo-event-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+/* --- Hints and errors --- */
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-hint,
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-check-label,
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-error {
+    /* Long compound words (German) or pasted URLs break instead of widening
+       the dialog */
+    overflow-wrap: anywhere;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-hint {
+    margin: 0;
+    padding: 6px 10px;
+    border-radius: var(--side-calendar-radius-md);
+    background: var(--side-calendar-subtle-bg);
+    color: var(--side-calendar-secondary-text-color);
+    font-size: var(--side-calendar-font-caption);
+    line-height: 1.45;
+}
+
+/* A note led by an icon (where an absence is created) */
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-hint-with-icon {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-hint-with-icon[hidden] {
+    display: none;
+}
+
+/* A hint that belongs to the row above it reads better unboxed */
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-hint-indented {
+    margin-left: 26px;
+    padding: 0;
+    background: transparent;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-error {
+    margin: 0;
+    padding: 8px 10px;
+    border-radius: var(--side-calendar-radius-md);
+    background: color-mix(in srgb, var(--side-calendar-danger-color) 12%, var(--side-calendar-modal-bg));
+    color: var(--side-calendar-danger-color);
+    font-size: var(--side-calendar-font-small);
+    line-height: 1.45;
+}
+
+/* --- Guests (Google events): address box, suggestions, chips --- */
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-combobox {
+    position: relative;
+    display: flex;
+    flex-grow: 1;
+    min-width: 0;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-suggest {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 5;
+    padding: 4px;
+    border: 1px solid var(--side-calendar-border-color);
+    border-radius: var(--side-calendar-radius-lg);
+    background: var(--side-calendar-modal-bg);
+    box-shadow: var(--side-calendar-shadow-popover);
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-suggest-heading {
+    margin: 0;
+    padding: 4px 8px 2px;
+    color: var(--side-calendar-secondary-text-color);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-suggest-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 36px;
+    padding: 3px 8px;
+    border-radius: var(--side-calendar-radius-sm);
+    cursor: pointer;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-option:hover,
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-option.is-active {
+    background: var(--side-calendar-subtle-bg-hover);
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-option-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.3;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-option-name,
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-option-email {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-option-name {
+    font-size: 13px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-option-email {
+    color: var(--side-calendar-secondary-text-color);
+    font-size: 11px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-avatar {
+    --guest-tone: var(--side-calendar-guest-tone-5);
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--guest-tone);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+}
+
+/* Each person keeps one colour (from their address), so the same guest is
+   recognisable in the suggestions and among the chips */
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-avatar.tone-1 { --guest-tone: var(--side-calendar-guest-tone-1); }
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-avatar.tone-2 { --guest-tone: var(--side-calendar-guest-tone-2); }
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-avatar.tone-3 { --guest-tone: var(--side-calendar-guest-tone-3); }
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-avatar.tone-4 { --guest-tone: var(--side-calendar-guest-tone-4); }
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-avatar.tone-5 { --guest-tone: var(--side-calendar-guest-tone-5); }
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-avatar.tone-6 { --guest-tone: var(--side-calendar-guest-tone-6); }
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 0 0 0 26px;
+    padding: 0;
+    list-style: none;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    max-width: 100%;
+    height: 28px;
+    box-sizing: border-box;
+    padding: 0 2px 0 3px;
     border: 1px solid var(--side-calendar-input-border);
-    border-radius: 5px;
-    background-color: var(--side-calendar-input-bg);
+    border-radius: var(--side-calendar-radius-pill);
+    background: var(--side-calendar-subtle-bg);
+    font-size: 12px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-chip-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-chip.is-invalid {
+    padding-left: 8px;
+    border-color: var(--side-calendar-danger-color);
+    background: color-mix(in srgb, var(--side-calendar-danger-color) 10%, var(--side-calendar-modal-bg));
+    color: var(--side-calendar-danger-color);
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-chip-warning {
+    font-size: 11px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-chip-remove {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    margin: 0;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--side-calendar-secondary-text-color);
+    font-size: 11px;
+    cursor: pointer;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-chip.is-invalid .guest-chip-remove {
     color: inherit;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-chip-remove:hover {
+    background: var(--side-calendar-subtle-bg-hover);
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-chip-remove:focus-visible {
+    outline: 2px solid var(--side-calendar-accent-color);
+    outline-offset: -2px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .guest-error {
+    margin: 0 0 0 26px;
+    color: var(--side-calendar-danger-color);
+    font-size: var(--side-calendar-font-small);
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+    word-break: auto-phrase;
+    text-wrap: pretty;
+}
+
+/* --- Google "advanced settings" accordion --- */
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .google-advanced {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 2px;
+    border-top: 1px solid var(--side-calendar-border-color-lighter);
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .accordion-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    height: 36px;
+    margin: 0;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
+    font-family: inherit;
+    font-size: var(--side-calendar-font-body);
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .accordion-chevron {
+    flex-shrink: 0;
+    width: 16px;
+    color: var(--side-calendar-secondary-text-color);
+    font-size: 11px;
+    text-align: center;
+    transition: transform 0.15s ease;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .accordion-toggle[aria-expanded="false"] .accordion-chevron {
+    transform: rotate(-90deg);
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .accordion-toggle:focus-visible {
+    outline: 2px solid var(--side-calendar-accent-color);
+    outline-offset: 1px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .accordion-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* --- Footer buttons --- */
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal, .delete-recurring-dialog) .event-form-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex-shrink: 0;
+    height: 40px;
+    margin: 0;
+    padding: 0 16px;
+    white-space: nowrap;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s, border-color 0.15s;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal, .delete-recurring-dialog) .event-form-btn:focus-visible {
+    outline: 2px solid var(--side-calendar-accent-color);
+    outline-offset: 2px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal, .delete-recurring-dialog) .event-form-btn-secondary {
+    border-color: var(--side-calendar-modal-btn-border);
+    background: var(--side-calendar-modal-btn-bg);
+    color: var(--side-calendar-modal-btn-text);
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal, .delete-recurring-dialog) .event-form-btn-secondary:hover {
+    border-color: var(--side-calendar-modal-btn-hover-border);
+    background: var(--side-calendar-modal-btn-hover-bg);
+}
+
+/* The only filled button in the dialog. It uses accent-hover rather than
+   accent because white on #007bff is 3.1:1; on #0056b3 it is 6.8:1. */
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal, .delete-recurring-dialog) .event-form-btn-primary {
+    padding: 0 20px;
+    border-color: var(--side-calendar-accent-hover-color);
+    background: var(--side-calendar-accent-hover-color);
+    color: #ffffff;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal, .delete-recurring-dialog) .event-form-btn-primary:hover:not(:disabled) {
+    border-color: var(--side-calendar-accent-color);
+    background: var(--side-calendar-accent-color);
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal, .delete-recurring-dialog) .event-form-btn-primary:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+/* Delete sits apart from save, and reads as text rather than a third pill */
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-delete {
+    display: inline-flex;
+    /* When the three labels do not fit (long translations), this button is
+       the one that shrinks. Its label then wraps onto a second line that the
+       fixed height clips, so it disappears whole instead of showing a sliver;
+       the icon stays, and the button's title keeps the full word. */
+    flex-wrap: wrap;
+    align-content: flex-start;
+    align-items: center;
+    column-gap: 6px;
+    flex-shrink: 1;
+    min-width: 40px;
+    height: 40px;
+    overflow: hidden;
+    margin: 0;
+    padding: 0 10px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--side-calendar-danger-color);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-delete > i,
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-delete-label {
+    line-height: 40px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-delete-label {
+    white-space: nowrap;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-delete:hover {
+    background: color-mix(in srgb, var(--side-calendar-danger-color) 12%, var(--side-calendar-modal-bg));
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-delete:focus-visible {
+    outline: 2px solid var(--side-calendar-danger-color);
+    outline-offset: 1px;
+}
+
+/* Dark mode: the filled button flips its text colour, because #0f1b2e on
+   #5b9dff is 5.7:1 where white on it would be 3.4:1. */
+[data-theme="dark"] :is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal, .delete-recurring-dialog) .event-form-btn-primary {
+    border-color: var(--side-calendar-accent-color);
+    background: var(--side-calendar-accent-color);
+    color: #0f1b2e;
+}
+
+[data-theme="dark"] :is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal, .delete-recurring-dialog) .event-form-btn-primary:hover:not(:disabled) {
+    border-color: var(--side-calendar-accent-hover-color);
+    background: var(--side-calendar-accent-hover-color);
+}
+
+/* The destructive twin of the primary button, only ever shown once the user
+   has asked to delete. White on #b3261e is 6.5:1. */
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal, .delete-recurring-dialog) .event-form-btn-danger {
+    padding: 0 18px;
+    border-color: var(--side-calendar-danger-color);
+    background: var(--side-calendar-danger-color);
+    color: #ffffff;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal, .delete-recurring-dialog) .event-form-btn-danger:hover:not(:disabled) {
+    filter: brightness(0.9);
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal, .delete-recurring-dialog) .event-form-btn-danger:focus-visible {
+    outline-color: var(--side-calendar-danger-color);
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal, .delete-recurring-dialog) .event-form-btn-danger:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+/* Native controls (radios, checkboxes, select menus, date pickers) follow the
+   dialog's theme */
+[data-theme="dark"] :is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal, .delete-recurring-dialog) {
+    color-scheme: dark;
+}
+
+/* Dark mode: light red with dark text (7.7:1), as the primary button does */
+[data-theme="dark"] :is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal, .delete-recurring-dialog) .event-form-btn-danger {
+    color: #3b0a07;
+}
+
+/* Japanese sentences break between phrases rather than mid-word (Chrome 119+;
+   elsewhere this falls back to normal breaking). */
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal, .delete-recurring-dialog) :is(
+    .event-form-hint, .event-form-error, .event-confirm-message,
+    .event-status-line, .event-detail-ooo-message, .delete-scope-detail
+) {
+    word-break: auto-phrase;
+    text-wrap: pretty;
+}
+
+/* --- Google edit form extras --- */
+
+/* The calendar an edited event lives on: shown, not changeable here */
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-calendar-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 1;
+    min-width: 0;
+    max-width: 45%;
+    height: 22px;
+    margin-right: 4px;
+    padding: 0 8px;
+    border-radius: var(--side-calendar-radius-pill);
+    background: var(--side-calendar-subtle-bg);
+    color: var(--side-calendar-secondary-text-color);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-calendar-chip > span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-link {
+    color: var(--side-calendar-accent-hover-color);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-link:hover {
+    text-decoration: underline;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-link-icon {
+    margin-left: 4px;
+    font-size: 0.85em;
+}
+
+[data-theme="dark"] :is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-form-link {
+    color: var(--side-calendar-link-color);
+}
+
+/* --- Detail view --- */
+
+/* The title can run to two lines, so the header grows instead of clipping */
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-header {
+    height: auto;
+    min-height: 44px;
+    gap: 2px;
+    padding: 0 4px 0 16px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-swatch {
+    flex-shrink: 0;
+    width: 10px;
+    height: 10px;
+    margin-right: 8px;
+    border-radius: 3px;
+    box-shadow: inset 0 0 0 1px var(--side-calendar-shadow-color);
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-swatch.is-local {
+    background: var(--side-calendar-local-event-color);
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-title {
+    flex-grow: 1;
+    min-width: 0;
+    margin: 0;
+    padding: 11px 0;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-header-actions {
+    display: flex;
+    flex-shrink: 0;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--side-calendar-icon-button-size);
+    height: var(--side-calendar-icon-button-size);
+    border-radius: var(--side-calendar-radius-md);
+    color: var(--side-calendar-secondary-text-color);
+    font-size: 14px;
+    text-decoration: none;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-icon-btn:hover {
+    background: var(--side-calendar-subtle-bg-hover);
+    color: inherit;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-icon-btn:focus-visible {
+    outline: 2px solid var(--side-calendar-accent-color);
+    outline-offset: -2px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 16px;
+    font-size: var(--side-calendar-font-body);
+    line-height: 20px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+/* Icons line up with the first line of text beside them */
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-row > .event-form-row-icon {
+    line-height: 20px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-row-center {
+    align-items: center;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-text {
+    flex-grow: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-text.is-secondary {
+    color: var(--side-calendar-secondary-text-color);
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-description {
+    white-space: pre-wrap;
+}
+
+/* Join buttons for the event's video call */
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-joins {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-join {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    box-sizing: border-box;
+    padding: 0 12px;
+    border: 1px solid var(--side-calendar-accent-color);
+    border-radius: var(--side-calendar-radius-md);
+    background: color-mix(in srgb, var(--side-calendar-accent-color) 14%, var(--side-calendar-modal-bg));
+    color: var(--side-calendar-accent-hover-color);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-join:hover {
+    background: color-mix(in srgb, var(--side-calendar-accent-color) 22%, var(--side-calendar-modal-bg));
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-join:focus-visible {
+    outline: 2px solid var(--side-calendar-accent-color);
+    outline-offset: 1px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-join-label {
+    flex-grow: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-join-meta {
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--side-calendar-secondary-text-color);
+    font-size: 11px;
+    font-weight: 500;
+}
+
+/* On the dark tint, the link blue reads where accent-hover would not (4.9:1) */
+[data-theme="dark"] :is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-join {
+    color: var(--side-calendar-link-color);
+}
+
+/* Out of office: type, auto-decline, decline message */
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-ooo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-ooo-type {
+    font-weight: 600;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-ooo-decline {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    color: var(--side-calendar-secondary-text-color);
+    font-size: var(--side-calendar-font-small);
+    line-height: 18px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-ooo-decline > i {
+    flex-shrink: 0;
+    font-size: 11px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-ooo-message {
+    margin: 2px 0 0;
+    padding: 2px 0 2px 10px;
+    border-left: 2px solid var(--side-calendar-input-border);
+    color: var(--side-calendar-secondary-text-color);
+    font-size: var(--side-calendar-font-small);
+    line-height: 18px;
+    white-space: pre-wrap;
+}
+
+/* Guests: a summary line that folds the list */
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-attendees {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-attendees-toggle {
+    display: flex;
+    flex-grow: 1;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 6px;
+    min-width: 0;
+    min-height: 24px;
+    margin: 0;
+    padding: 0;
+    border: none;
+    border-radius: var(--side-calendar-radius-sm);
+    background: transparent;
+    color: inherit;
+    font-family: inherit;
+    font-size: var(--side-calendar-font-body);
+    line-height: 20px;
+    text-align: left;
+    cursor: pointer;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-attendees-toggle:focus-visible {
+    outline: 2px solid var(--side-calendar-accent-color);
+    outline-offset: 2px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-attendees-breakdown {
+    flex-grow: 1;
+    color: var(--side-calendar-secondary-text-color);
+    font-size: var(--side-calendar-font-caption);
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-attendees-chevron {
+    flex-shrink: 0;
+    color: var(--side-calendar-secondary-text-color);
+    font-size: var(--side-calendar-font-caption);
+    transition: transform 0.15s ease;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-attendees-toggle[aria-expanded="true"] .event-detail-attendees-chevron {
+    transform: rotate(90deg);
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-attendee-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0 0 0 26px;
+    padding: 0;
+    list-style: none;
+    font-size: 13px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-attendee {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 24px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-attendee-name {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-attendee.is-declined .event-detail-attendee-name {
+    color: var(--side-calendar-secondary-text-color);
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-badge {
+    flex-shrink: 0;
+    padding: 0 6px;
+    border-radius: var(--side-calendar-radius-sm);
+    background: var(--side-calendar-subtle-bg);
+    color: var(--side-calendar-secondary-text-color);
+    font-size: var(--side-calendar-font-caption);
+    line-height: 16px;
+}
+
+/* Response icons: filled and coloured for an answer, outlined for none */
+.attendee-status {
+    flex-shrink: 0;
+    width: 14px;
+    font-size: 14px;
+    text-align: center;
+}
+.attendee-status-accepted { color: var(--side-calendar-success-color); }
+.attendee-status-declined { color: var(--side-calendar-danger-color); }
+.attendee-status-tentative { color: var(--side-calendar-secondary-text-color); }
+.attendee-status-needsAction { color: var(--side-calendar-muted-text-color); }
+
+/* --- RSVP --- */
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-detail-rsvp {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-rsvp-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-rsvp-label {
+    display: flex;
+    flex-shrink: 0;
+    flex-direction: column;
+    color: var(--side-calendar-secondary-text-color);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-rsvp-group {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-rsvp-footer .event-rsvp-group {
+    height: 36px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-rsvp-btn {
+    gap: 4px;
+    padding: 0 2px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-rsvp-text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1.15;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-rsvp-scope {
+    color: var(--side-calendar-secondary-text-color);
+    font-size: var(--side-calendar-font-caption);
+    font-weight: 500;
+}
+
+/* The answer's icon only marks the picked choice */
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-segmented-btn .event-rsvp-icon {
+    display: none;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-segmented-btn.active .event-rsvp-icon {
+    display: inline-block;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-rsvp-btn.is-accepted .event-rsvp-icon {
+    color: var(--side-calendar-success-color);
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-rsvp-btn.is-declined .event-rsvp-icon {
+    color: var(--side-calendar-danger-color);
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-rsvp-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    height: auto;
+    padding: 8px 16px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-rsvp-footer .event-rsvp-row {
+    min-height: 36px;
+}
+
+/* --- Outcome lines and the delete confirmation --- */
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-status-line {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin: 0;
+    padding: 7px 10px;
+    border-radius: var(--side-calendar-radius-md);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-status-line > i {
+    flex-shrink: 0;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-status-line > span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-status-line.is-success {
+    background: color-mix(in srgb, var(--side-calendar-success-color) 12%, var(--side-calendar-modal-bg));
+    color: var(--side-calendar-success-color);
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-status-line.is-neutral {
+    background: var(--side-calendar-subtle-bg);
+    color: inherit;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-status-line.is-error {
+    background: color-mix(in srgb, var(--side-calendar-danger-color) 12%, var(--side-calendar-modal-bg));
+    color: var(--side-calendar-danger-color);
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-confirm-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    height: auto;
+    padding: 12px 16px 14px;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-confirm-message {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin: 0;
+    padding: 8px 10px;
+    border-radius: var(--side-calendar-radius-md);
+    background: color-mix(in srgb, var(--side-calendar-danger-color) 12%, var(--side-calendar-modal-bg));
+    color: var(--side-calendar-danger-color);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-confirm-message > i {
+    flex-shrink: 0;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-confirm-message > span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+:is(#localEventDialog, #googleEventDialog, #alertModal, #whatsNewModal, #reviewModal) .event-confirm-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+/* ===== Recurring event: which occurrences to delete ===== */
+
+.delete-recurring-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.delete-recurring-dialog {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    max-width: 320px;
+    box-sizing: border-box;
+    padding: 18px 18px 16px;
+    border: 1px solid var(--side-calendar-border-color-lighter);
+    border-radius: var(--side-calendar-radius-lg);
+    background: var(--side-calendar-modal-bg);
+    box-shadow: var(--side-calendar-shadow-dialog);
+    color: inherit;
+}
+
+.delete-recurring-title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.delete-scope-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+.delete-scope-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--side-calendar-input-border);
+    border-radius: var(--side-calendar-radius-md);
+    cursor: pointer;
+}
+
+.delete-scope-option:hover {
+    background: var(--side-calendar-subtle-bg);
+}
+
+.delete-scope-option:has(input:checked) {
+    border-color: var(--side-calendar-accent-color);
+    background: color-mix(in srgb, var(--side-calendar-accent-color) 14%, var(--side-calendar-modal-bg));
+}
+
+.delete-scope-option:has(input:focus-visible) {
+    outline: 2px solid var(--side-calendar-accent-color);
+    outline-offset: 1px;
+}
+
+.delete-scope-option input {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    margin: 2px 0 0;
+    accent-color: var(--side-calendar-accent-hover-color);
+}
+
+.delete-scope-option input:focus-visible {
+    outline: none;
+}
+
+.delete-scope-text {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.delete-scope-main {
+    font-size: var(--side-calendar-font-body);
+    font-weight: 600;
+}
+
+.delete-scope-detail {
+    color: var(--side-calendar-secondary-text-color);
+    font-size: var(--side-calendar-font-caption);
+    overflow-wrap: anywhere;
+}
+
+.delete-recurring-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 4px;
 }
 
 .modal-content button {
     margin-top: 10px;
     padding: 10px 20px;
     border: none;
-    border-radius: 5px;
+    border-radius: var(--side-calendar-radius-md);
     cursor: pointer;
 }
 
-/* Local event modal buttons - unified style with Google event buttons */
-.modal-buttons {
-    display: flex;
-    gap: 8px;
-    margin-top: 15px;
-    justify-content: flex-end;
-}
-
-.modal-buttons button {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 6px 16px;
-    border: 1px solid var(--side-calendar-modal-btn-border);
-    border-radius: 16px;
-    background: var(--side-calendar-modal-btn-bg);
-    color: var(--side-calendar-modal-btn-text);
-    font-size: 0.9em;
-    cursor: pointer;
-    margin-top: 0;
-    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
-}
-
-.modal-buttons button:hover {
-    background-color: var(--side-calendar-modal-btn-hover-bg);
-    border-color: var(--side-calendar-modal-btn-hover-border);
-}
-
-#saveEventButton,
-#googleEditSaveButton {
-    background-color: var(--side-calendar-success-badge-bg);
-    border-color: var(--side-calendar-success-badge-border);
-    color: var(--side-calendar-success-badge-text);
-}
-
-/* Save/delete hover: intentionally hardcoded semantic colors with dark overrides below */
-#saveEventButton:hover,
-#saveEventButton:focus,
-#googleEditSaveButton:hover,
-#googleEditSaveButton:focus {
-    background-color: #c8e6c9;
-    border-color: #388e3c;
-}
-
-#deleteEventButton,
-#googleEventDeleteButton,
-#googleEventConfirmDeleteButton {
-    background-color: #fce4ec;
-    border-color: #ef5350;
-    color: #c62828;
-}
-
-#deleteEventButton:hover,
-#deleteEventButton:focus,
-#googleEventDeleteButton:hover,
-#googleEventDeleteButton:focus,
-#googleEventConfirmDeleteButton:hover,
-#googleEventConfirmDeleteButton:focus {
-    background-color: #f8bbd0;
-    border-color: #e53935;
-}
-
-#cancelEventButton,
-#googleEditCancelButton,
-#googleEventCancelDeleteButton {
-    background-color: var(--side-calendar-modal-btn-bg);
-    border-color: var(--side-calendar-modal-btn-border);
-    color: var(--side-calendar-modal-btn-text);
-}
-
-#cancelEventButton:hover,
-#cancelEventButton:focus,
-#googleEditCancelButton:hover,
-#googleEditCancelButton:focus,
-#googleEventCancelDeleteButton:hover,
-#googleEventCancelDeleteButton:focus {
-    background-color: var(--side-calendar-modal-btn-hover-bg);
-    border-color: var(--side-calendar-modal-btn-hover-border);
-}
-
-/* Local event modal buttons - dark mode (semantic save/delete keep explicit overrides) */
-
-[data-theme="dark"] #deleteEventButton,
-[data-theme="dark"] #googleEventDeleteButton,
-[data-theme="dark"] #googleEventConfirmDeleteButton {
-    background-color: #3a1a1a;
-    border-color: #ef5350;
-    color: #ef9a9a;
-}
-
-[data-theme="dark"] #deleteEventButton:hover,
-[data-theme="dark"] #deleteEventButton:focus,
-[data-theme="dark"] #googleEventDeleteButton:hover,
-[data-theme="dark"] #googleEventDeleteButton:focus,
-[data-theme="dark"] #googleEventConfirmDeleteButton:hover,
-[data-theme="dark"] #googleEventConfirmDeleteButton:focus {
-    background-color: #4a2020;
-    border-color: #f44336;
-}
-
-[data-theme="dark"] #saveEventButton,
-[data-theme="dark"] #googleEditSaveButton {
-    background-color: #1b3a2a;
-    border-color: #4caf50;
-    color: #81c784;
-}
-
-[data-theme="dark"] #saveEventButton:hover,
-[data-theme="dark"] #saveEventButton:focus,
-[data-theme="dark"] #googleEditSaveButton:hover,
-[data-theme="dark"] #googleEditSaveButton:focus {
-    background-color: #245a38;
-    border-color: #66bb6a;
-}
-
-/* Inline delete confirmation in the Google event modal */
-.google-event-delete-confirm span {
-    align-self: center;
-    font-size: 0.9em;
-}
-
-/* Modal error message (semantic color, dark override below) */
-.modal-content .error-message {
-    color: #c62828;
-    font-size: 0.9em;
-    margin-top: 5px;
-}
-
-[data-theme="dark"] .modal-content .error-message {
-    color: #ef9a9a;
-}
-
-
-/* Google event details calendar name */
-.google-event-calendar {
-    font-size: 0.9em;
-    color: var(--side-calendar-secondary-text-color);
-    font-style: italic;
-}
-
-.google-event-title-color {
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    border-radius: 4px;
-    margin-right: 8px;
-    align-self: center;
-}
-
-/* Google event detail rows (icon + text alignment) */
-.google-event-row {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-}
-
-.google-event-row i {
-    width: 16px;
-    flex: 0 0 16px;
-    text-align: center;
-    color: var(--side-calendar-secondary-text-color);
-}
-
-.google-event-detail-text {
-    flex: 1 1 auto;
-    min-width: 0;
-    white-space: pre-wrap;
-    word-break: break-word;
-}
-
-.google-event-attendee-row {
-    display: flex;
-    align-items: center;
-    margin-bottom: 3px;
-    line-height: 1.2;
-}
-
-.google-event-attendee-name {
-    line-height: 1.2;
-}
-
-/* RSVP response buttons */
-.google-event-rsvp {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-}
-
-.google-event-rsvp-wrapper {
-    flex: 1 1 auto;
-}
-
-.google-event-rsvp-label {
-    font-size: 0.85em;
-    color: var(--side-calendar-muted-text-color);
-    margin-bottom: 6px;
-}
-
-.google-event-rsvp-buttons {
-    display: flex;
-    gap: 6px;
-}
-
-.google-event-rsvp-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 4px 10px;
-    border: 1px solid var(--side-calendar-modal-btn-border);
-    border-radius: 16px;
-    background: var(--side-calendar-modal-btn-bg);
-    color: var(--side-calendar-modal-btn-text);
-    font-size: 0.8em;
-    cursor: pointer;
-    margin-top: 0;
-    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
-}
-
-.google-event-rsvp-btn-text {
-    display: inline-flex;
-    flex-direction: column;
-    align-items: center;
-    line-height: 1.15;
-}
-
-.google-event-rsvp-btn-text-sub {
-    font-size: 0.85em;
-    opacity: 0.85;
-}
-
-.google-event-rsvp-btn:hover {
-    background-color: var(--side-calendar-modal-btn-hover-bg);
-    border-color: var(--side-calendar-modal-btn-hover-border);
-}
-
-.google-event-rsvp-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-.google-event-rsvp-btn.active {
-    background-color: var(--side-calendar-success-badge-bg);
-    border-color: var(--side-calendar-success-badge-border);
-    color: var(--side-calendar-success-badge-text);
-}
-
-.google-event-rsvp-btn[data-response="tentative"].active {
-    background-color: #fff8e1;
-    border-color: #ffc107;
-    color: #f57f17;
-}
-
-.google-event-rsvp-btn[data-response="declined"].active {
-    background-color: #fce4ec;
-    border-color: #ef5350;
-    color: #c62828;
-}
-
-/* RSVP feedback message */
-.google-event-rsvp-feedback {
-    font-size: 0.8em;
-    margin-top: 6px;
-    padding: 4px 8px;
-    border-radius: 4px;
-}
-
-.rsvp-feedback-success {
-    color: var(--side-calendar-success-badge-text);
-    background-color: var(--side-calendar-success-badge-bg);
-}
-
-.rsvp-feedback-declined,
-.rsvp-feedback-error {
-    color: #c62828;
-    background-color: #fce4ec;
-}
-
-/* Attendee response status icon colours */
-.attendee-status-accepted { color: #28a745; }
-.attendee-status-declined { color: #dc3545; }
-.attendee-status-tentative { color: #ffc107; }
-.attendee-status-default { color: #6c757d; }
-
-[data-theme="dark"] .attendee-status-accepted { color: #81c784; }
-[data-theme="dark"] .attendee-status-declined { color: #ef9a9a; }
-[data-theme="dark"] .attendee-status-tentative { color: #ffd54f; }
-[data-theme="dark"] .attendee-status-default { color: #aaa; }
-
-/* RSVP dark mode */
-/* RSVP semantic dark overrides (tentative/declined only — accepted uses success-badge variables) */
-[data-theme="dark"] .google-event-rsvp-btn[data-response="tentative"].active {
-    background-color: #3a3520;
-    border-color: #ffc107;
-    color: #ffd54f;
-}
-
-[data-theme="dark"] .google-event-rsvp-btn[data-response="declined"].active {
-    background-color: #3a1a1a;
-    border-color: #ef5350;
-    color: #ef9a9a;
-}
-
-[data-theme="dark"] .rsvp-feedback-declined,
-[data-theme="dark"] .rsvp-feedback-error {
-    color: #ef9a9a;
-    background-color: #3a1a1a;
-}
-
-/* Date picker calendar icon for dark mode */
-[data-theme="dark"] #currentDateDisplay::-webkit-calendar-picker-indicator {
-    filter: invert(1);
-}
-
-/* Time picker clock icon for dark mode */
-[data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator {
-    filter: invert(1);
-}
-
-/* Links within Google event details */
-.google-event-description a,
-.google-event-location a {
-    color: var(--side-calendar-link-color);
-    text-decoration: underline;
-}
-
-.google-event-description a:hover,
-.google-event-location a:hover {
-    color: var(--side-calendar-link-hover-color);
-    text-decoration: none;
-}
-
-/* Event element flexbox adjustments */
-.event {
-    /* Smooth transition for flex positioning */
-    transition: left 0.2s ease-out, width 0.2s ease-out;
-    
-    /* Enhanced text ellipsis settings */
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    
-    /* Ensure minimum width */
-    min-width: 60px;
-    
-    /* Responsive font size */
-    font-size: clamp(0.75rem, 1vw, 1rem);
-}
 
 /* Lane-density-based: horizontal space optimization (managed by EventLayoutManager) */
 .event.compact {
-    padding-left: 8px;
-    padding-right: 8px;
+    padding-right: 5px;
+    padding-left: 5px;
 }
 
 .event.micro {
-    padding-left: 6px;
-    padding-right: 6px;
+    padding-right: 4px;
+    padding-left: 4px;
 }
 
 /* Duration-based: vertical space optimization (managed by applyDurationBasedStyling) */
 .event.event-compact {
-    padding-top: 2px;
-    padding-bottom: 2px;
-    font-size: 0.85em;
+    padding-top: 1px;
+    padding-bottom: 1px;
 }
 
 .event.event-micro {
     padding-top: 0;
     padding-bottom: 0;
     min-height: 15px;
-    font-size: 0.75em;
+    font-size: 11px;
+    line-height: 14px;
 }
 
-/* Detail display for longer events (>= 45 min) */
-.event.event-detailed {
-    white-space: normal;
+/* What's New: the notes scroll between the dialog's sticky header and footer */
+#whatsNewModal .whats-new-notes {
+    padding: 12px 16px 4px;
 }
 
-.event-primary-line {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.event-detail-line {
-    font-size: 0.8em;
-    opacity: 0.75;
-    line-height: 1.3;
-    margin-top: 1px;
-    word-break: break-word;
-}
-
-.event-detail-line i {
-    font-size: 0.75em;
-    margin-right: 3px;
-}
-
-/* Title-only display for very narrow lanes */
-.event.narrow-display .event-time {
-    display: none;
-}
-
-/* What's New modal styles */
-.whats-new-content {
-    text-align: left;
-}
-
-.whats-new-content .modal-title {
-    margin-bottom: 16px;
-    font-size: 1.3em;
-    color: var(--side-calendar-icon-color);
-}
-
-.whats-new-notes {
-    max-height: 50vh;
-    overflow-y: auto;
-    margin-bottom: 16px;
-}
-
-.whats-new-version-section {
+#whatsNewModal .whats-new-version-section {
     margin-bottom: 12px;
 }
 
-.whats-new-version-header {
+#whatsNewModal .whats-new-version-header {
     display: flex;
-    align-items: center;
+    align-items: baseline;
     gap: 10px;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
-.whats-new-version-label {
-    font-weight: bold;
-    font-size: 1.05em;
-    color: var(--side-calendar-hover-color);
+#whatsNewModal .whats-new-version-label {
+    color: var(--side-calendar-accent-hover-color);
+    font-size: 14px;
+    font-weight: 600;
 }
 
-.whats-new-version-date {
-    font-size: 0.85em;
+[data-theme="dark"] #whatsNewModal .whats-new-version-label {
+    color: var(--side-calendar-link-color);
+}
+
+#whatsNewModal .whats-new-version-date {
     color: var(--side-calendar-muted-text-color);
+    font-size: 12px;
 }
 
-.whats-new-highlights {
+#whatsNewModal .whats-new-highlights {
     margin: 0;
     padding-left: 20px;
     list-style-type: disc;
 }
 
-.whats-new-highlights li {
+#whatsNewModal .whats-new-highlights li {
     margin-bottom: 4px;
-    font-size: 0.93em;
-    line-height: 1.5;
     color: var(--side-calendar-secondary-text-color);
+    font-size: 13px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
 }
 
-.whats-new-separator {
+#whatsNewModal .whats-new-separator {
+    margin: 12px 0 0;
     border: none;
     border-top: 1px solid var(--side-calendar-border-color-lighter);
-    margin: 12px 0;
 }
 
-.whats-new-dont-show-again {
+/* "Don't show again" shares the footer with OK; its label wraps in a narrow
+   panel and the footer grows with it */
+#whatsNewModal .whats-new-footer {
+    height: auto;
+    min-height: 52px;
+    gap: 12px;
+    padding: 6px 12px 6px 16px;
+}
+
+#whatsNewModal .whats-new-dont-show-again {
     display: flex;
+    flex: 1 1 auto;
     align-items: center;
     gap: 8px;
-    margin: 12px 0;
-    padding-left: 0;
-    color: inherit;
+    min-width: 0;
+    margin: 0;
+    font-size: var(--side-calendar-font-small);
+    font-weight: normal;
+    line-height: 1.35;
+    cursor: pointer;
 }
 
-.whats-new-dont-show-again .form-check-input {
-    float: none;
-    margin: 0;
+/* ===== Alert: a short message to acknowledge ===== */
+
+#alertModal .modal-content {
+    max-width: 320px;
+}
+
+#alertModal .alert-body {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 20px 20px 12px;
+}
+
+#alertModal .alert-tone-icon {
     flex-shrink: 0;
+    margin-top: 1px;
+    font-size: 20px;
+    line-height: 1;
 }
 
-.whats-new-dont-show-again .form-check-label {
-    color: inherit;
-    font-size: 0.9em;
+#alertModal .alert-tone-icon.is-error { color: var(--side-calendar-danger-color); }
+#alertModal .alert-tone-icon.is-warning { color: var(--side-calendar-warning-icon); }
+#alertModal .alert-tone-icon.is-success { color: var(--side-calendar-success-color); }
+#alertModal .alert-tone-icon.is-info { color: var(--side-calendar-accent-hover-color); }
+[data-theme="dark"] #alertModal .alert-tone-icon.is-info { color: var(--side-calendar-link-color); }
+
+#alertModal .alert-text {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+#alertModal .alert-message {
     margin: 0;
+    font-size: 14px;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+    word-break: auto-phrase;
+    text-wrap: pretty;
 }
 
-.whats-new-confirm-btn {
-    display: block;
-    width: 100%;
+#alertModal .alert-detail {
+    margin: 6px 0 0;
+    color: var(--side-calendar-secondary-text-color);
+    font-size: 12px;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+
+/* A one-button card: no divider, the button sits in the corner */
+#alertModal .event-form-footer {
+    position: static;
+    height: auto;
+    padding: 0 16px 16px;
+    border-top: none;
 }
 
 /* Tutorial overlay styles */
@@ -1302,12 +2624,15 @@ body {
 
 .tutorial-tooltip {
     position: fixed;
+    /* Padding inside the width: at 90% of a 320px panel a content-box tooltip
+       is 328px wide and the edge clamp cannot keep it on screen */
+    box-sizing: border-box;
     background: var(--side-calendar-modal-bg);
-    border-radius: 10px;
-    padding: 20px;
+    border-radius: var(--side-calendar-radius-lg);
+    padding: 16px;
     max-width: 320px;
     width: 90%;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    box-shadow: var(--side-calendar-shadow-dialog);
     z-index: 202;
     pointer-events: auto;
     animation: tutorialFadeIn 0.3s ease;
@@ -1319,20 +2644,20 @@ body {
 }
 
 .tutorial-step-counter {
-    font-size: 0.8em;
+    font-size: var(--side-calendar-font-caption);
     color: var(--side-calendar-muted-text-color);
     margin-bottom: 6px;
 }
 
 .tutorial-tooltip-title {
     margin: 0 0 8px 0;
-    font-size: 1.1em;
-    color: var(--side-calendar-icon-color);
+    font-size: var(--side-calendar-font-large);
+    color: var(--side-calendar-panel-text-color);
 }
 
 .tutorial-tooltip-desc {
     margin: 0 0 16px 0;
-    font-size: 0.9em;
+    font-size: var(--side-calendar-font-body);
     color: var(--side-calendar-secondary-text-color);
     line-height: 1.5;
 }
@@ -1345,31 +2670,59 @@ body {
 }
 
 .tutorial-btn {
-    padding: 6px 16px;
-    border: none;
-    border-radius: 6px;
-    font-size: 0.85em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 40px;
+    margin: 0;
+    padding: 0 16px;
+    border: 1px solid transparent;
+    border-radius: var(--side-calendar-radius-md);
+    font-family: inherit;
+    font-size: var(--side-calendar-font-body);
+    font-weight: 600;
+    white-space: nowrap;
     cursor: pointer;
-    transition: background-color 0.2s;
-    margin-top: 0;
+    transition: background-color 0.15s, border-color 0.15s;
 }
 
+.tutorial-btn:focus-visible {
+    outline: 2px solid var(--side-calendar-accent-color);
+    outline-offset: 2px;
+}
+
+
+/* Same filled button as the event dialogs: white on accent-hover is 6.8:1,
+   where white on the lighter accent would be 3.1:1 */
 .tutorial-btn-primary {
-    background-color: var(--side-calendar-accent-color);
+    background-color: var(--side-calendar-accent-hover-color);
     color: #fff;
 }
 
 .tutorial-btn-primary:hover {
+    background-color: var(--side-calendar-accent-color);
+}
+
+/* Dark mode: dark text on the light accent (5.7:1), as in the event dialogs */
+[data-theme="dark"] .tutorial-btn-primary {
+    background-color: var(--side-calendar-accent-color);
+    color: #0f1b2e;
+}
+
+[data-theme="dark"] .tutorial-btn-primary:hover {
     background-color: var(--side-calendar-accent-hover-color);
 }
 
 .tutorial-btn-secondary {
-    background-color: var(--side-calendar-btn-secondary-bg);
-    color: var(--side-calendar-btn-secondary-text);
+    border-color: var(--side-calendar-modal-btn-border);
+    background-color: var(--side-calendar-modal-btn-bg);
+    color: var(--side-calendar-modal-btn-text);
 }
 
 .tutorial-btn-secondary:hover {
-    background-color: var(--side-calendar-btn-secondary-hover-bg);
+    border-color: var(--side-calendar-modal-btn-hover-border);
+    background-color: var(--side-calendar-modal-btn-hover-bg);
 }
 
 .tutorial-btn-skip {
@@ -1406,12 +2759,15 @@ body {
 
 .setup-card {
     position: relative;
+    /* The padding counts inside the width, so the card keeps its side margins
+       in a narrow panel instead of running into the edges */
+    box-sizing: border-box;
     background: var(--side-calendar-modal-bg);
-    border-radius: 12px;
+    border-radius: var(--side-calendar-radius-lg);
     padding: 24px 20px 20px;
     max-width: 340px;
     width: 92%;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--side-calendar-shadow-dialog);
     z-index: 211;
     animation: setupFadeIn 0.3s ease;
     max-height: 90vh;
@@ -1456,14 +2812,14 @@ body {
 
 .setup-step-title {
     margin: 0 0 8px 0;
-    font-size: 1.15em;
+    font-size: var(--side-calendar-font-large);
     color: var(--side-calendar-icon-color);
     font-weight: 600;
 }
 
 .setup-step-desc {
     margin: 0 0 16px 0;
-    font-size: 0.88em;
+    font-size: var(--side-calendar-font-body);
     color: var(--side-calendar-secondary-text-color);
     line-height: 1.5;
 }
@@ -1481,10 +2837,10 @@ body {
     gap: 10px;
     padding: 10px 14px;
     border: 2px solid var(--side-calendar-btn-secondary-bg);
-    border-radius: 8px;
+    border-radius: var(--side-calendar-radius-md);
     cursor: pointer;
     transition: all 0.2s ease;
-    font-size: 0.92em;
+    font-size: var(--side-calendar-font-body);
 }
 
 .setup-radio-label:hover {
@@ -1517,27 +2873,37 @@ body {
 }
 
 .setup-time-label {
-    font-size: 0.9em;
+    font-size: var(--side-calendar-font-body);
     color: var(--side-calendar-secondary-text-color);
     font-weight: 500;
 }
 
+/* The dialogs' field: 36px, same border, corner and focus ring */
+.setup-time-input {
+    width: 7.5em;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+}
+
 .setup-time-input,
 .setup-select {
-    padding: 6px 10px;
+    height: 36px;
+    box-sizing: border-box;
+    padding: 0 10px;
     border: 1px solid var(--side-calendar-input-border);
-    border-radius: 6px;
-    font-size: 0.9em;
+    border-radius: var(--side-calendar-radius-md);
+    font-family: inherit;
+    font-size: var(--side-calendar-font-body);
     background: var(--side-calendar-input-bg);
     color: inherit;
     outline: none;
     transition: border-color 0.2s;
 }
 
-.setup-time-input:focus,
-.setup-select:focus {
+.setup-time-input:focus-visible,
+.setup-select:focus-visible {
     border-color: var(--side-calendar-accent-color);
-    box-shadow: 0 0 0 2px var(--side-calendar-accent-shadow);
+    box-shadow: 0 0 0 3px var(--side-calendar-accent-shadow);
 }
 
 /* Toggle switch */
@@ -1552,7 +2918,7 @@ body {
     align-items: center;
     gap: 12px;
     cursor: pointer;
-    font-size: 0.92em;
+    font-size: var(--side-calendar-font-body);
 }
 
 .setup-toggle-input {
@@ -1596,7 +2962,7 @@ body {
 }
 
 .setup-note {
-    font-size: 0.8em;
+    font-size: var(--side-calendar-font-caption);
     color: var(--side-calendar-muted-text-color);
     margin: 0;
     line-height: 1.4;
@@ -1615,31 +2981,59 @@ body {
 }
 
 .setup-btn {
-    padding: 8px 18px;
-    border: none;
-    border-radius: 6px;
-    font-size: 0.88em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 40px;
+    margin: 0;
+    padding: 0 16px;
+    border: 1px solid transparent;
+    border-radius: var(--side-calendar-radius-md);
+    font-family: inherit;
+    font-size: var(--side-calendar-font-body);
+    font-weight: 600;
+    white-space: nowrap;
     cursor: pointer;
-    transition: all 0.2s;
-    font-weight: 500;
+    transition: background-color 0.15s, border-color 0.15s;
 }
 
+.setup-btn:focus-visible {
+    outline: 2px solid var(--side-calendar-accent-color);
+    outline-offset: 2px;
+}
+
+
+/* Same filled button as the event dialogs: white on accent-hover is 6.8:1,
+   where white on the lighter accent would be 3.1:1 */
 .setup-btn-primary {
-    background-color: var(--side-calendar-accent-color);
+    background-color: var(--side-calendar-accent-hover-color);
     color: #fff;
 }
 
 .setup-btn-primary:hover {
+    background-color: var(--side-calendar-accent-color);
+}
+
+/* Dark mode: dark text on the light accent (5.7:1), as in the event dialogs */
+[data-theme="dark"] .setup-btn-primary {
+    background-color: var(--side-calendar-accent-color);
+    color: #0f1b2e;
+}
+
+[data-theme="dark"] .setup-btn-primary:hover {
     background-color: var(--side-calendar-accent-hover-color);
 }
 
 .setup-btn-secondary {
-    background-color: var(--side-calendar-btn-secondary-bg);
-    color: var(--side-calendar-btn-secondary-text);
+    border-color: var(--side-calendar-modal-btn-border);
+    background-color: var(--side-calendar-modal-btn-bg);
+    color: var(--side-calendar-modal-btn-text);
 }
 
 .setup-btn-secondary:hover {
-    background-color: var(--side-calendar-btn-secondary-hover-bg);
+    border-color: var(--side-calendar-modal-btn-hover-border);
+    background-color: var(--side-calendar-modal-btn-hover-bg);
 }
 
 .setup-btn-skip {
@@ -1659,10 +3053,10 @@ body {
     padding: 10px 16px;
     background: var(--side-calendar-success-badge-bg);
     border: 1px solid var(--side-calendar-success-badge-border);
-    border-radius: 8px;
+    border-radius: var(--side-calendar-radius-md);
     color: var(--side-calendar-success-badge-text);
     font-weight: 600;
-    font-size: 0.95em;
+    font-size: var(--side-calendar-font-body);
     max-width: 260px;
     margin: 0 auto;
 }
@@ -1674,128 +3068,63 @@ body {
 }
 
 /* ===== Review Request Modal ===== */
+/* The dialog shell, header and footer come from the shared dialog rules
+   (#reviewModal is in their selector lists); only the body is its own. */
 #reviewModal .modal-content {
-    padding: 0;
-    overflow: hidden;
-    max-width: 400px;
-    border: none;
-    border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    max-width: 360px;
 }
 
-#reviewModal .close {
-    position: absolute;
-    top: 10px;
-    right: 14px;
-    float: none;
-    color: rgba(255, 255, 255, 0.75);
-    font-size: 26px;
-    z-index: 1;
-    line-height: 1;
+#reviewModal .review-body {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 16px 16px 12px;
 }
 
-#reviewModal .close:hover {
-    color: #fff;
+#reviewModal .review-stars {
+    display: flex;
+    gap: 3px;
+    color: var(--side-calendar-rating-color);
+    font-size: var(--side-calendar-font-large);
 }
 
-.review-modal-header {
-    background: linear-gradient(135deg, #6366f1, #06b6d4);
-    padding: 32px 24px 24px;
-    text-align: center;
-}
-
-.review-modal-stars {
-    font-size: 1.8rem;
-    letter-spacing: 3px;
-    color: #fff;
-    margin-bottom: 10px;
-    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-}
-
-.review-modal-title {
-    color: #fff;
-    font-size: 1.05rem;
-    font-weight: 700;
+#reviewModal .review-message {
     margin: 0;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
-}
-
-.review-modal-body {
-    padding: 20px 20px 18px;
-    text-align: center;
-}
-
-.review-modal-message {
-    font-size: 0.85rem;
-    color: var(--side-calendar-review-message-color);
+    color: var(--side-calendar-secondary-text-color);
+    font-size: var(--side-calendar-font-body);
+    line-height: 1.55;
     white-space: pre-line;
-    margin-bottom: 18px;
-    line-height: 1.6;
+    word-break: auto-phrase;
+    text-wrap: pretty;
 }
 
-.review-btn-rate {
-    display: block;
-    width: 100%;
-    padding: 11px;
-    background: linear-gradient(135deg, #6366f1, #06b6d4);
-    color: #fff;
-    font-weight: 600;
-    font-size: 0.9rem;
+#reviewModal .review-never {
+    margin: 0 0 0 -6px;
+    padding: 4px 6px;
     border: none;
-    border-radius: 10px;
+    border-radius: var(--side-calendar-radius-sm);
+    background: none;
+    color: var(--side-calendar-muted-text-color);
+    font-family: inherit;
+    font-size: var(--side-calendar-font-small);
     cursor: pointer;
-    margin-bottom: 10px;
-    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.38);
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.review-btn-rate:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 28px rgba(99, 102, 241, 0.52);
-}
-
-.review-btn-later {
-    display: block;
-    width: 100%;
-    padding: 10px;
-    background: transparent;
-    color: var(--side-calendar-review-later-text);
-    font-size: 0.85rem;
-    border: 1.5px solid var(--side-calendar-review-later-border);
-    border-radius: 10px;
-    cursor: pointer;
-    margin-bottom: 12px;
-    transition: border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.review-btn-later:hover {
-    border-color: var(--side-calendar-border-color);
+#reviewModal .review-never:hover {
+    background: var(--side-calendar-subtle-bg-hover);
     color: var(--side-calendar-secondary-text-color);
 }
 
-.review-btn-never {
-    display: block;
-    width: 100%;
-    font-size: 0.75rem;
-    color: var(--side-calendar-review-never-text);
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 2px 0;
-    transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.review-btn-never:hover {
-    color: var(--side-calendar-muted-text-color);
+#reviewModal .review-never:focus-visible {
+    outline: 2px solid var(--side-calendar-accent-color);
+    outline-offset: -2px;
 }
 
 .setup-google-status {
     text-align: center;
     margin-top: 12px;
-    font-size: 0.85em;
+    font-size: var(--side-calendar-font-small);
     color: var(--side-calendar-secondary-text-color);
 }
 
@@ -1814,30 +3143,14 @@ body {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    clip-path: inset(0 0 0 0 round 0px);
-    transition: height 0.4s cubic-bezier(0.34, 1.15, 0.64, 1),
-                clip-path 0.4s cubic-bezier(0.34, 1.15, 0.64, 1),
-                filter 0.3s ease;
+    transition: height 0.4s cubic-bezier(0.34, 1.15, 0.64, 1);
     background-color: var(--side-calendar-panel-background-color);
-    border-top: 1px solid var(--side-calendar-border-color);
-    filter: drop-shadow(0 -1px 4px rgba(0, 0, 0, 0.08));
+    /* The same divider as under the header: the panel sits beside the
+       timeline (the spacer keeps its room), it does not float over it */
+    border-top: 1px solid var(--side-calendar-border-color-lighter);
     z-index: 100;
 }
 
-#memoPanelWrapper.memo-collapsed {
-    align-items: flex-end;
-    filter: drop-shadow(-2px -3px 8px rgba(0, 0, 0, 0.14));
-}
-
-#memoPanelWrapper.memo-collapsed .memo-toggle-btn {
-    width: auto;
-    border-radius: 0;
-    padding: 4px 16px;
-    margin-right: 20px;
-    background: none;
-    border: none;
-    box-shadow: none;
-}
 
 .memo-drag-handle {
     flex: 0 0 6px;
@@ -1866,26 +3179,54 @@ body {
     flex: 0 0 auto;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 8px;
     width: 100%;
+    min-height: 32px;
     margin: 0;
-    padding: 4px 10px;
+    padding: 0 12px;
     background: none;
     border: none;
     cursor: pointer;
-    font-size: 0.85em;
-    font-weight: bold;
+    font-family: inherit;
+    font-size: var(--side-calendar-font-small);
+    font-weight: 600;
     color: var(--side-calendar-secondary-text-color);
-    transition: padding 0.3s ease;
     text-align: left;
     box-sizing: border-box;
 }
 
 .memo-toggle-btn:hover {
-    background-color: var(--side-calendar-memo-toggle-hover-bg);
+    background-color: var(--side-calendar-subtle-bg-hover);
+}
+
+.memo-toggle-btn:focus-visible {
+    outline: 2px solid var(--side-calendar-accent-color);
+    outline-offset: -2px;
+}
+
+.memo-toggle-label {
+    flex-shrink: 0;
+}
+
+/* Only in the collapsed bar, and only when the memo has text */
+.memo-toggle-preview {
+    display: none;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--side-calendar-muted-text-color);
+    font-weight: 400;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#memoPanelWrapper.memo-collapsed .memo-toggle-preview:not(:empty) {
+    display: block;
 }
 
 .memo-toggle-icon {
+    flex-shrink: 0;
+    margin-left: auto;
     font-size: 0.75em;
     color: var(--side-calendar-muted-text-color);
 }
@@ -1896,7 +3237,7 @@ body {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    padding: 0 8px 8px;
+    padding: 3px 8px 8px;
     transform: translateY(0);
     transition: transform 0.35s cubic-bezier(0, 0, 0.2, 1);
 }
@@ -1911,18 +3252,20 @@ body {
     overflow: hidden;
 }
 
+/* The memo is a field like the dialogs' fields: same border, corner, padding
+   and focus ring */
 #memoTextarea,
 #memoPreview {
     flex: 1 1 auto;
     min-height: 0;
     width: 100%;
     box-sizing: border-box;
-    border: 1px solid var(--side-calendar-textarea-border);
-    border-radius: 10px;
-    padding: 6px 8px;
+    border: 1px solid var(--side-calendar-input-border);
+    border-radius: var(--side-calendar-radius-md);
+    padding: 7px 10px;
     font-size: 0.82em;
-    font-family: Arial, sans-serif;
-    background-color: var(--side-calendar-textarea-bg);
+    font-family: inherit;
+    background-color: var(--side-calendar-input-bg);
     color: var(--side-calendar-panel-text-color);
     outline: none;
 }
@@ -1931,8 +3274,9 @@ body {
     resize: none;
 }
 
-#memoTextarea:focus {
+#memoTextarea:focus-visible {
     border-color: var(--side-calendar-accent-color);
+    box-shadow: 0 0 0 3px var(--side-calendar-accent-shadow);
 }
 
 .memo-body > .memo-hidden {
@@ -2114,6 +3458,55 @@ body {
     outline-offset: 1px;
 }
 
+/* In the header: the same quiet icon button as its neighbours, tinted while
+   the popover is open */
+.timeline-calendar-filter.is-in-header {
+    position: relative;
+    right: auto;
+    z-index: auto;
+    display: flex;
+}
+
+.timeline-calendar-filter.is-in-header .timeline-calendar-filter-btn {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    max-width: 32px;
+    max-height: 32px;
+    border: none;
+    border-radius: 8px;
+    background-color: transparent;
+    box-shadow: none;
+    opacity: 1;
+    font-size: 15px;
+}
+
+.timeline-calendar-filter.is-in-header .timeline-calendar-filter-btn:hover {
+    background-color: var(--side-calendar-subtle-bg-hover);
+    color: var(--side-calendar-panel-text-color);
+}
+
+.timeline-calendar-filter.is-in-header .timeline-calendar-filter-btn[aria-expanded="true"] {
+    background-color: color-mix(in srgb, var(--side-calendar-accent-color) 14%, var(--side-calendar-panel-background-color));
+    color: var(--side-calendar-accent-hover-color);
+}
+
+[data-theme="dark"] .timeline-calendar-filter.is-in-header .timeline-calendar-filter-btn[aria-expanded="true"] {
+    color: var(--side-calendar-accent-color);
+}
+
+.timeline-calendar-filter.is-in-header .timeline-calendar-filter-btn:focus-visible {
+    outline-offset: -2px;
+}
+
+/* Hangs under the header, right-aligned with the settings button */
+.timeline-calendar-filter.is-in-header .timeline-calendar-filter-dropdown {
+    top: 40px;
+    right: -34px;
+    width: 240px;
+}
+
 .timeline-calendar-filter-backdrop {
     display: none;
     position: fixed;
@@ -2139,11 +3532,24 @@ body {
     max-height: 400px;
     background-color: var(--side-calendar-modal-bg);
     border: 1px solid var(--side-calendar-border-color);
-    border-radius: 6px;
-    box-shadow: 0 4px 12px var(--side-calendar-shadow-color);
+    border-radius: var(--side-calendar-radius-lg);
+    box-shadow: var(--side-calendar-shadow-popover);
     display: none;
+    padding: 6px;
+    box-sizing: border-box;
     overflow: hidden;
     resize: both;
+}
+
+/* Focused on open when there is no search box; the focus ring would only
+   outline the whole popover */
+.timeline-calendar-filter-dropdown:focus {
+    outline: none;
+}
+
+/* Checkboxes and the search box follow the theme, as in the dialogs */
+[data-theme="dark"] .timeline-calendar-filter-dropdown {
+    color-scheme: dark;
 }
 
 .timeline-calendar-filter-dropdown.open {
@@ -2151,33 +3557,46 @@ body {
     flex-direction: column;
 }
 
-/* Toolbar: search + refresh */
-.timeline-calendar-filter-toolbar {
+/* Title row: what the list is, and the refresh button */
+.timeline-calendar-filter-head {
     display: flex;
     align-items: center;
-    gap: 3px;
-    padding: 4px 6px;
-    border-bottom: 1px solid var(--side-calendar-border-color-lighter);
+    gap: 4px;
     flex-shrink: 0;
+    padding-left: 10px;
 }
 
-.timeline-calendar-filter-search {
+.timeline-calendar-filter-title {
     flex: 1;
     min-width: 0;
-    height: 22px;
-    padding: 1px 6px;
+    overflow: hidden;
+    color: var(--side-calendar-secondary-text-color);
+    font-size: var(--side-calendar-font-caption);
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Only there for long lists. Same field as the dialogs. */
+.timeline-calendar-filter-search {
+    flex-shrink: 0;
+    width: 100%;
+    height: var(--side-calendar-icon-button-size);
+    margin: 2px 0 4px;
+    padding: 0 10px;
     border: 1px solid var(--side-calendar-input-border);
-    border-radius: 3px;
+    border-radius: var(--side-calendar-radius-md);
     background-color: var(--side-calendar-input-bg);
     color: inherit;
-    font-size: 11px;
+    font-family: inherit;
+    font-size: var(--side-calendar-font-body);
     outline: none;
     box-sizing: border-box;
 }
 
-.timeline-calendar-filter-search:focus {
+.timeline-calendar-filter-search:focus-visible {
     border-color: var(--side-calendar-accent-color);
-    box-shadow: 0 0 0 1px var(--side-calendar-accent-shadow);
+    box-shadow: 0 0 0 3px var(--side-calendar-accent-shadow);
 }
 
 .timeline-calendar-filter-search::placeholder {
@@ -2185,135 +3604,400 @@ body {
 }
 
 .timeline-calendar-filter-refresh-btn {
-    width: 22px;
-    height: 22px;
-    min-width: 22px;
-    padding: 0;
-    box-sizing: border-box;
-    border: 1px solid var(--side-calendar-input-border);
-    border-radius: 3px;
-    background-color: var(--side-calendar-input-bg);
-    color: var(--side-calendar-secondary-text-color);
-    cursor: pointer;
     display: flex;
+    flex-shrink: 0;
     align-items: center;
     justify-content: center;
-    font-size: 10px;
-    transition: color 0.2s ease, background-color 0.2s ease;
+    width: var(--side-calendar-icon-button-size);
+    height: var(--side-calendar-icon-button-size);
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    border: none;
+    border-radius: var(--side-calendar-radius-md);
+    background-color: transparent;
+    color: var(--side-calendar-secondary-text-color);
+    font-size: var(--side-calendar-font-small);
+    cursor: pointer;
+    transition: color 0.15s ease, background-color 0.15s ease;
 }
 
-.timeline-calendar-filter-refresh-btn:hover {
-    color: var(--side-calendar-hover-color);
+.timeline-calendar-filter-refresh-btn:hover:not(:disabled) {
+    color: var(--side-calendar-panel-text-color);
     background-color: var(--side-calendar-subtle-bg-hover);
 }
 
-/* Calendar list (scrollable) */
+.timeline-calendar-filter-refresh-btn:disabled {
+    color: var(--side-calendar-muted-text-color);
+    cursor: default;
+}
+
+.timeline-calendar-filter-refresh-btn:focus-visible {
+    outline: 2px solid var(--side-calendar-accent-color);
+    outline-offset: -2px;
+}
+
+/* Calendar list (scrollable): colour, name, checkbox on the right */
 .timeline-calendar-filter-list {
     overflow-y: auto;
     flex: 1;
-    padding: 2px 0;
+    min-height: 0;
 }
 
 .timeline-calendar-filter-item {
     display: flex;
     align-items: center;
-    padding: 6px 10px;
-    cursor: pointer;
-    gap: 8px;
-    font-size: 13px;
-    color: inherit;
+    gap: 10px;
+    min-height: 32px;
     margin: 0;
+    padding: 0 10px;
+    border-radius: var(--side-calendar-radius-sm);
+    color: inherit;
+    font-size: var(--side-calendar-font-body);
+    cursor: pointer;
 }
 
 .timeline-calendar-filter-item:hover {
     background-color: var(--side-calendar-subtle-bg-hover);
 }
 
+/* The main calendar is always shown */
+.timeline-calendar-filter-item.is-locked {
+    cursor: default;
+}
+
+.timeline-calendar-filter-item.is-locked:hover {
+    background-color: transparent;
+}
+
 .timeline-calendar-filter-checkbox {
     flex-shrink: 0;
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
     margin: 0;
     cursor: pointer;
-    accent-color: var(--side-calendar-accent-color);
+    accent-color: var(--side-calendar-accent-hover-color);
+}
+
+.timeline-calendar-filter-checkbox:disabled {
+    cursor: default;
 }
 
 .timeline-calendar-filter-color {
     width: 10px;
     height: 10px;
-    border-radius: 50%;
+    border-radius: 3px;
     flex-shrink: 0;
-    border: 1px solid var(--side-calendar-border-color-light);
+    background-color: var(--calendar-color, var(--side-calendar-muted-text-color));
 }
 
 .timeline-calendar-filter-name {
     flex: 1;
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
 .timeline-calendar-filter-primary {
-    font-weight: bold;
+    font-weight: 600;
 }
 
 .timeline-calendar-filter-status {
     padding: 12px;
     text-align: center;
     color: var(--side-calendar-muted-text-color);
-    font-size: 12px;
+    font-size: var(--side-calendar-font-small);
 }
 
-/* Calendar filter group header */
+/* Group header: a section label that folds its calendars, with the
+   group's checkbox in line with theirs */
 .timeline-calendar-filter-group-header {
     display: flex;
     align-items: center;
-    padding: 6px 10px;
-    background-color: var(--side-calendar-subtle-bg, #f5f5f5);
-    cursor: pointer;
-    user-select: none;
-    gap: 6px;
-    font-size: 11px;
+    gap: 10px;
+    margin-top: 4px;
+    padding-right: 10px;
+}
+
+.timeline-calendar-filter-group-header:first-child {
+    margin-top: 0;
+}
+
+.timeline-calendar-filter-group-toggle {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    min-height: 32px;
+    margin: 0;
+    padding: 0 10px;
+    border: none;
+    border-radius: var(--side-calendar-radius-sm);
+    background-color: transparent;
+    color: var(--side-calendar-secondary-text-color);
+    font-family: inherit;
+    font-size: var(--side-calendar-font-caption);
     font-weight: 600;
-    color: inherit;
-    border-bottom: 1px solid var(--side-calendar-border-color, #eee);
-}
-
-.timeline-calendar-filter-group-header input[type="checkbox"] {
-    width: 13px;
-    height: 13px;
+    text-align: left;
     cursor: pointer;
-    flex-shrink: 0;
-    accent-color: var(--side-calendar-accent-color);
 }
 
-.timeline-calendar-filter-group-header .group-name {
-    flex-grow: 1;
+.timeline-calendar-filter-group-toggle:hover {
+    background-color: var(--side-calendar-subtle-bg-hover);
+    color: var(--side-calendar-panel-text-color);
+}
+
+.timeline-calendar-filter-group-toggle:focus-visible {
+    outline: 2px solid var(--side-calendar-accent-color);
+    outline-offset: -2px;
+}
+
+.timeline-calendar-filter-group-toggle .group-name {
+    flex: 1;
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.timeline-calendar-filter-group-header .group-collapse-icon {
-    font-size: 9px;
-    transition: transform 0.15s;
-    width: 12px;
-    text-align: center;
+/* Sits in the colour column, so group and calendar names line up */
+.timeline-calendar-filter-group-toggle .group-collapse-icon {
+    flex-shrink: 0;
+    width: 10px;
     color: var(--side-calendar-muted-text-color);
+    font-size: 10px;
+    text-align: center;
+    transition: transform 0.15s;
 }
 
-.timeline-calendar-filter-group-header .group-collapse-icon.collapsed {
+.timeline-calendar-filter-group-toggle .group-collapse-icon.collapsed {
     transform: rotate(-90deg);
-}
-
-.timeline-calendar-filter-group-body {
-    overflow: hidden;
 }
 
 .timeline-calendar-filter-group-body.collapsed {
     display: none;
 }
 
-.timeline-calendar-filter-group-body .timeline-calendar-filter-item {
-    padding-left: 28px;
+/* "Manage calendars in Settings" under a divider */
+.timeline-calendar-filter-footer {
+    flex-shrink: 0;
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px solid var(--side-calendar-border-color-lighter);
+}
+
+.timeline-calendar-filter-manage {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 32px;
+    margin: 0;
+    padding: 0 10px;
+    border: none;
+    border-radius: var(--side-calendar-radius-sm);
+    background-color: transparent;
+    color: var(--side-calendar-accent-hover-color);
+    font-family: inherit;
+    font-size: var(--side-calendar-font-small);
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+}
+
+.timeline-calendar-filter-manage:hover {
+    background-color: var(--side-calendar-subtle-bg-hover);
+}
+
+.timeline-calendar-filter-manage:focus-visible {
+    outline: 2px solid var(--side-calendar-accent-color);
+    outline-offset: -2px;
+}
+
+[data-theme="dark"] .timeline-calendar-filter-manage {
+    color: var(--side-calendar-link-color);
+}
+
+/* ===== Time field list (lib/time-field.js) =====
+   Times every 15 minutes under a time field, written like the field. It is a
+   popover, so it sits above dialogs and is not clipped by their scrolling. */
+.time-field-list {
+    position: fixed;
+    inset: auto;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 4px;
+    overflow-y: auto;
+    list-style: none;
+    border: 1px solid var(--side-calendar-border-color);
+    border-radius: var(--side-calendar-radius-lg);
+    background: var(--side-calendar-modal-bg);
+    color: var(--side-calendar-panel-text-color);
+    box-shadow: var(--side-calendar-shadow-popover);
+    font-family: inherit;
+    font-size: var(--side-calendar-font-body);
+    scrollbar-width: thin;
+}
+
+.time-field-option {
+    display: flex;
+    align-items: center;
+    height: 32px;
+    padding: 0 10px;
+    border-radius: var(--side-calendar-radius-sm);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+}
+
+.time-field-option.is-active {
+    background: var(--side-calendar-subtle-bg-hover);
+}
+
+.time-field-option.is-selected {
+    color: var(--side-calendar-accent-color);
+    font-weight: 600;
+}
+
+/* ===== Date calendar (lib/date-field.js) =====
+   A month under the recurrence end date and the header's date, written in
+   the extension's language. A popover, like the time list. */
+.date-calendar {
+    position: fixed;
+    inset: auto;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 8px;
+    border: 1px solid var(--side-calendar-border-color);
+    border-radius: var(--side-calendar-radius-lg);
+    background: var(--side-calendar-modal-bg);
+    color: var(--side-calendar-panel-text-color);
+    box-shadow: var(--side-calendar-shadow-popover);
+    font-family: inherit;
+    font-size: var(--side-calendar-font-body);
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.date-calendar-head {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 4px;
+}
+
+.date-calendar-title {
+    flex-grow: 1;
+    font-size: var(--side-calendar-font-title);
+    font-weight: 600;
+    text-align: center;
+}
+
+.date-calendar-nav {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    margin: 0;
+    padding: 0;
+    border: none;
+    border-radius: var(--side-calendar-radius-md);
+    background: transparent;
+    color: var(--side-calendar-secondary-text-color);
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.date-calendar-nav:hover {
+    background: var(--side-calendar-subtle-bg-hover);
+    color: inherit;
+}
+
+.date-calendar-nav:focus-visible,
+.date-calendar-grid:focus-visible {
+    outline: 2px solid var(--side-calendar-accent-color);
+    outline-offset: 1px;
+}
+
+.date-calendar-grid {
+    border-radius: var(--side-calendar-radius-sm);
+}
+
+.date-calendar-row {
+    display: grid;
+    grid-template-columns: repeat(7, 32px);
+    justify-content: center;
+}
+
+.date-calendar-weekday {
+    height: 24px;
+    color: var(--side-calendar-muted-text-color);
+    font-size: var(--side-calendar-font-caption);
+    font-weight: 600;
+    line-height: 24px;
+    text-align: center;
+}
+
+.date-calendar-day {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    margin: 1px;
+    box-sizing: border-box;
+    border-radius: var(--side-calendar-radius-pill);
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+}
+
+.date-calendar-day:hover,
+.date-calendar-day.is-active {
+    background: var(--side-calendar-subtle-bg-hover);
+}
+
+.date-calendar-day.is-outside {
+    color: var(--side-calendar-muted-text-color);
+}
+
+/* Today in the accent colour, as the header writes it */
+.date-calendar-day.is-today {
+    color: var(--side-calendar-accent-hover-color);
+    font-weight: 600;
+}
+
+/* The chosen day is filled like the dialogs' primary button (the same
+   contrast reasoning: white on accent-hover, dark text on the dark accent) */
+.date-calendar-day.is-selected {
+    background: var(--side-calendar-accent-hover-color);
+    color: #ffffff;
+    font-weight: 600;
+}
+
+[data-theme="dark"] .date-calendar-day.is-today {
+    color: var(--side-calendar-accent-color);
+}
+
+[data-theme="dark"] .date-calendar-day.is-selected {
+    background: var(--side-calendar-accent-color);
+    color: #0f1b2e;
+}
+
+/* The highlighted day keeps a ring when it is also the chosen one */
+.date-calendar-day.is-selected.is-active {
+    box-shadow: 0 0 0 2px var(--side-calendar-modal-bg), 0 0 0 4px var(--side-calendar-accent-hover-color);
+}
+
+[data-theme="dark"] .date-calendar-day.is-selected.is-active {
+    box-shadow: 0 0 0 2px var(--side-calendar-modal-bg), 0 0 0 4px var(--side-calendar-accent-color);
+}
+
+.date-calendar-day.is-disabled {
+    background: transparent;
+    color: var(--side-calendar-muted-text-color);
+    opacity: 0.45;
+    cursor: default;
 }

@@ -9,6 +9,9 @@ import { isWritableCalendar } from '../lib/google-event-utils.js';
 
 const CALENDAR_API_BASE = 'https://www.googleapis.com/calendar/v3';
 
+// events.insert's sendUpdates values (who Google emails about the change)
+export const SEND_UPDATES_VALUES = ['all', 'externalOnly', 'none'];
+
 /**
  * Custom error for authentication failures (token expired, revoked, etc.)
  */
@@ -406,17 +409,30 @@ export class GoogleCalendarClient {
      * @param {string} calendarId - The target calendar ID (defaults to 'primary')
      * @param {Object} eventResource - The event resource in Google Calendar API format
      *   (must contain summary, start and end)
+     * @param {Object} [options]
+     * @param {string} [options.sendUpdates] - Who Google emails about the new
+     *   event: 'all', 'externalOnly' or 'none'. Omitted, the API sends nothing.
      * @returns {Promise<Object>} The created event object
      */
-    async createEvent(calendarId, eventResource) {
+    async createEvent(calendarId, eventResource, { sendUpdates } = {}) {
         if (!eventResource || !eventResource.summary || !eventResource.start || !eventResource.end) {
             throw new Error('Missing required parameters');
         }
+        if (sendUpdates !== undefined && !SEND_UPDATES_VALUES.includes(sendUpdates)) {
+            throw new Error('Invalid sendUpdates');
+        }
 
         const targetCalendarId = calendarId || 'primary';
+        const params = new URLSearchParams();
         // conferenceData.createRequest (Google Meet) is only honored when the
         // insert is sent with conferenceDataVersion=1.
-        const query = eventResource.conferenceData ? '?conferenceDataVersion=1' : '';
+        if (eventResource.conferenceData) {
+            params.set('conferenceDataVersion', '1');
+        }
+        if (sendUpdates) {
+            params.set('sendUpdates', sendUpdates);
+        }
+        const query = params.toString() ? `?${params}` : '';
         const eventsUrl = `${CALENDAR_API_BASE}/calendars/${encodeURIComponent(targetCalendarId)}/events${query}`;
 
         const res = await this._fetchWithAuth(eventsUrl, {

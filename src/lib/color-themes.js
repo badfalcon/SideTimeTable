@@ -34,7 +34,8 @@ export const COLOR_THEMES = [
             surface:        '#ffffff',
             primary:        '#fff0b8',
             secondary:      '#bbf2b1',
-            surfaceVariant: '#e3e3e3',
+            // Light enough that the tinted event blocks keep their colour on it
+            surfaceVariant: '#f1f3f5',
             outline:        '#bcdcfb',
             indicator:      '#ff0000'
         }
@@ -237,10 +238,6 @@ function _lightChromeVars(palette) {
         '--side-calendar-btn-secondary-text': _adjustBrightness(textColor, textColor === '#000000' ? 0.2 : -0.2),
         '--side-calendar-btn-secondary-hover-bg': _adjustBrightness(bg, -0.13),
         '--side-calendar-close-hover-color': textColor,
-        '--side-calendar-review-message-color': secondaryText,
-        '--side-calendar-review-later-text': secondaryText,
-        '--side-calendar-review-later-border': _adjustBrightness(bg, -0.13),
-        '--side-calendar-review-never-text': mutedText,
         '--side-calendar-accent-color': '#007bff',
         '--side-calendar-accent-hover-color': '#0056b3',
         '--side-calendar-accent-shadow': 'rgba(0, 123, 255, 0.15)',
@@ -295,10 +292,6 @@ function _darkChromeVars(palette) {
         '--side-calendar-btn-secondary-text': _adjustBrightness('#ffffff', -0.2),
         '--side-calendar-btn-secondary-hover-bg': _adjustBrightness(surface, 0.14),
         '--side-calendar-close-hover-color': '#ffffff',
-        '--side-calendar-review-message-color': _adjustBrightness('#ffffff', -0.33),
-        '--side-calendar-review-later-text': _adjustBrightness('#ffffff', -0.33),
-        '--side-calendar-review-later-border': _adjustBrightness(bg, 0.22),
-        '--side-calendar-review-never-text': '#777777',
         '--side-calendar-accent-color': '#5b9dff',
         '--side-calendar-accent-hover-color': '#4a8af0',
         '--side-calendar-accent-shadow': 'rgba(91, 157, 255, 0.2)',

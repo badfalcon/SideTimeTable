@@ -34,7 +34,6 @@ import { consumePendingEventFocus } from '../lib/event-focus.js';
 import { AlarmManager } from '../lib/alarm-manager.js';
 import { ThemeService } from '../services/theme-service.js';
 import { OnboardingService } from '../services/onboarding-service.js';
-import { generateTimeList } from '../lib/utils.js';
 import { isSameDay, parseDateString } from '../lib/time-utils.js';
 import { loadSettings, loadSelectedCalendars } from '../lib/settings-storage.js';
 import { migrateEventDataToLocal } from '../lib/event-storage.js';
@@ -42,6 +41,7 @@ import { cleanupObsoleteStorageKeys } from '../lib/storage-cleanup.js';
 import { sendMessage } from '../lib/chrome-messaging.js';
 import { setDemoMode, isDemoMode } from '../lib/demo-data.js';
 import { filterWritableCalendars } from '../lib/google-event-utils.js';
+import { refreshDisplayPrefs } from '../lib/display-prefs.js';
 
 // The reload message listener
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -110,6 +110,9 @@ class SidePanelUIController {
                 await window.loadLocalizedMessages();
             }
 
+            // The language and 12/24-hour setting times are written in
+            await refreshDisplayPrefs();
+
             // Migrate event data from sync to local storage (one-time)
             await migrateEventDataToLocal();
 
@@ -143,7 +146,7 @@ class SidePanelUIController {
 
         } catch (error) {
             console.error('Side panel UI initialization error:', error);
-            this._showError((window.getLocalizedMessage?.('initializationError') || 'Initialization error') + ': ' + error.message);
+            this._showError(window.getLocalizedMessage?.('initializationError') || 'Initialization error', error.message);
         }
     }
 
@@ -208,11 +211,7 @@ class SidePanelUIController {
 
         // Remove the other potentially duplicate elements
         const duplicateElements = document.querySelectorAll('[id*="sideTimeTable"], [id*="EventDialog"], [id*="Modal"]');
-        duplicateElements.forEach(element => {
-            if (element.id !== 'time-list') { // Keep time-list
-                element.remove();
-            }
-        });
+        duplicateElements.forEach(element => element.remove());
     }
 
     /**
@@ -232,7 +231,12 @@ class SidePanelUIController {
         this.timelineComponent = new TimelineComponent({
             showCurrentTimeLine: true,
             onDragCreate: (startTime, endTime) => this._handleAddLocalEvent(startTime, endTime),
-            onCalendarChange: (changeInfo) => this._handleCalendarToggle(changeInfo)
+            onCalendarChange: (changeInfo) => this._handleCalendarToggle(changeInfo),
+            // The calendar filter lives in the header, beside settings
+            getFilterMount: () => this.headerComponent.getFilterSlot(),
+            // Its "Manage calendars in Settings" link
+            onManageCalendars: () => this._openSettings(),
+            onBackToToday: () => this.headerComponent.setToday()
         });
 
         // The all-day events component (between header and timeline)
@@ -241,7 +245,10 @@ class SidePanelUIController {
         // The modal components
         this.localEventModal = new LocalEventModal({
             onSave: (eventData, mode) => this._handleSaveLocalEvent(eventData, mode),
-            onSaveGoogle: (eventResource, calendarId, requestId) => this._handleSaveGoogleEvent(eventResource, calendarId, requestId),
+            onSaveGoogle: (eventResource, calendarId, requestId, options) =>
+                this._handleSaveGoogleEvent(eventResource, calendarId, requestId, options),
+            // People from the loaded events, suggested while adding guests
+            getGuestDirectory: () => this.googleEventManager?.guestDirectory || null,
             onDelete: (event, deleteType) => this._handleDeleteLocalEvent(event, deleteType),
             onCancel: () => this._handleCancelLocalEvent(),
             getCurrentDate: () => this.dateNavService.getDate()
@@ -352,10 +359,6 @@ class SidePanelUIController {
      * @private
      */
     async _initializeManagers() {
-        // Generate the time list
-        const timeListElement = document.getElementById('time-list');
-        generateTimeList(timeListElement);
-
         // Initialize the layout manager
         const timeTableBase = document.getElementById('sideTimeTableBase') || this.timelineComponent.element?.querySelector('.side-time-table-base');
         this.eventLayoutManager = new EventLayoutManager(timeTableBase);
@@ -411,13 +414,12 @@ class SidePanelUIController {
         try {
             const settings = await loadSettings();
 
-            // Set the work time background
-            if (settings.openTime && settings.closeTime && settings.workTimeColor) {
-                this.timelineComponent.setWorkTimeBackground(
-                    settings.openTime,
-                    settings.closeTime,
-                    settings.workTimeColor
-                );
+            // Set the work time background. Its colour comes from the theme
+            // (--side-calendar-work-time-color), not the stored workTimeColor:
+            // that copy is only as fresh as the last time settings were saved,
+            // so it could paint a light band into a dark theme.
+            if (settings.openTime && settings.closeTime) {
+                this.timelineComponent.setWorkTimeBackground(settings.openTime, settings.closeTime);
             }
 
             // Apply theme and scrollbar settings via service
@@ -716,7 +718,7 @@ class SidePanelUIController {
      * @returns {Promise<boolean>}
      * @private
      */
-    async _handleSaveGoogleEvent(eventResource, calendarId, requestId) {
+    async _handleSaveGoogleEvent(eventResource, calendarId, requestId, { sendUpdates } = {}) {
         try {
             // The modal supplies a retry-stable id; fall back for older callers
             requestId = requestId || `create-evt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -724,7 +726,8 @@ class SidePanelUIController {
                 action: 'createEvent',
                 calendarId,
                 event: eventResource,
-                requestId
+                requestId,
+                ...(sendUpdates ? { sendUpdates } : {})
             });
 
             if (!response || !response.success) {
@@ -835,7 +838,7 @@ class SidePanelUIController {
 
         } catch (error) {
             console.error('Local event save error:', error);
-            this.alertModal.showError('Failed to save event: ' + error.message);
+            this.alertModal.showError(window.getLocalizedMessage('localEventSaveFailed'), null, { detail: error.message });
         }
     }
 
@@ -857,7 +860,7 @@ class SidePanelUIController {
 
         } catch (error) {
             console.error('Local event deletion error:', error);
-            this.alertModal.showError('Failed to delete event: ' + error.message);
+            this.alertModal.showError(window.getLocalizedMessage('localEventDeleteFailed'), null, { detail: error.message });
         }
     }
 
@@ -881,10 +884,10 @@ class SidePanelUIController {
             if (response.success) {
                 await this._loadEventsForCurrentDate();
             } else {
-                this.alertModal.showError('Failed to sync reminders: ' + (response.error || 'Unknown error'));
+                this.alertModal.showError(window.getLocalizedMessage('reminderSyncFailed'), null, { detail: response.error });
             }
         } catch (error) {
-            this.alertModal.showError('Failed to sync reminders: ' + error.message);
+            this.alertModal.showError(window.getLocalizedMessage('reminderSyncFailed'), null, { detail: error.message });
         }
     }
 
@@ -1045,13 +1048,15 @@ class SidePanelUIController {
 
     /**
      * Show error
+     * @param {string} message - What went wrong, for the user
+     * @param {string} [detail] - Technical cause, shown smaller underneath
      * @private
      */
-    _showError(message) {
+    _showError(message, detail) {
         if (this.alertModal) {
-            this.alertModal.showError(message);
+            this.alertModal.showError(message, null, { detail });
         } else {
-            console.error(message);
+            console.error(message, detail ?? '');
         }
     }
 
