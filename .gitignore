@@ -22,3 +22,6 @@ coverage/
 
 # IDE MCP server config (per-machine)
 /.mcp.json
+
+# JetBrains IDE (migrated to VS Code)
+/.idea/
