@@ -69,7 +69,7 @@
 
 - [x] `_fetchEventsForCalendarIds()` が `_fetchWithAuth()` を迂回して直接 `fetch()` している — calendarList取得部分は `_fetchWithAuth()` に統一済み
 - [x] `respondToEvent()` のGET/PATCHレスポンスが `_checkResponse()` を使っていない — `_checkResponse()` に統一済み
-- [ ] カレンダー検索のメアド対応を他の2箇所へ展開するか検討: グループ作成/編集モーダルは `calendarMatchesSearch()`（`src/lib/calendar-search.js`）で表示名とカレンダーID（＝メールアドレス）の両方を検索するが、設定ページのカレンダー一覧検索（`CalendarManagementCard._prepareRenderData()`）とサイドパネルのカレンダーフィルター（`CalendarFilterRenderer.renderCalendarList()`）は表示名のみ。揃えるなら同じヘルパーに置き換える。
+- [x] カレンダー検索のメアド対応を他の2箇所へ展開 — 設定ページのカレンダー一覧検索（`CalendarManagementCard._prepareRenderData()`）とサイドパネルのカレンダーフィルター（`CalendarFilterRenderer.renderCalendarList()`）も `calendarMatchesSearch()`（`src/lib/calendar-search.js`）に統一済み
 - [ ] `localize.js` が `window` グローバルに関数を export している — ES6 module の `export` に移行して明示的な `import` に統一（34ファイルが `window.getLocalizedMessage()` を使用中）
 - [x] 通知チェックボックスの文言に実際のリード時間を出す — 設定のリマインダー分数を出す（「開始5分前に通知する」、60分は「1時間前」。`remindMinutesBefore` / `remindHourBefore`、`event-dialog-dom.js`）。
 - [x] `background.js` の21箇所の `console.error/warn` 直接呼出を `logError()`/`logWarn()` に統一

@@ -14,6 +14,8 @@
  * link to the settings page at the bottom.
  */
 
+import { calendarMatchesSearch } from '../../../lib/calendar-search.js';
+
 // The search box only earns its place once the list no longer fits at a glance
 export const SEARCH_MIN_CALENDARS = 9;
 
@@ -130,10 +132,10 @@ export class CalendarFilterRenderer {
             return;
         }
 
-        // Filter by search term
+        // Filter by search term (display name or calendar address)
         const term = (searchTerm || '').toLowerCase().trim();
         const filtered = term
-            ? calendars.filter(c => (c.summary || '').toLowerCase().includes(term))
+            ? calendars.filter(c => calendarMatchesSearch(c, term))
             : calendars;
 
         if (filtered.length === 0) {

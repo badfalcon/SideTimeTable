@@ -10,6 +10,7 @@ import { loadSelectedCalendars, saveSelectedCalendars, loadCalendarGroups } from
 import { sendMessage } from '../../../lib/chrome-messaging.js';
 import { CalendarGroupManager } from './calendar-group-manager.js';
 import { CalendarListRenderer } from './calendar-list-renderer.js';
+import { calendarMatchesSearch } from '../../../lib/calendar-search.js';
 import { createButton, createIcon, createIconButton, msg, setText } from '../base/settings-dom.js';
 
 export class CalendarManagementCard extends CardComponent {
@@ -404,10 +405,9 @@ export class CalendarManagementCard extends CardComponent {
      * @returns {{ filteredCalendars: Array, groupedSections: Array<{group, calendars}>, ungroupedCalendars: Array }}
      */
     _prepareRenderData(searchTerm) {
-        // Apply search filter
+        // Apply search filter (display name or calendar address)
         const filteredCalendars = searchTerm
-            ? this.allCalendars.filter(calendar =>
-                (calendar.summary || '').toLowerCase().includes(searchTerm))
+            ? this.allCalendars.filter(calendar => calendarMatchesSearch(calendar, searchTerm))
             : this.allCalendars;
 
         // Build lookup map
