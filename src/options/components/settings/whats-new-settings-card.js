@@ -2,16 +2,14 @@
  * WhatsNewSettingsCard - Toggle to control auto-display of the What's New modal
  */
 import { CardComponent } from '../base/card-component.js';
+import { createSettingRow, createSwitch } from '../base/settings-dom.js';
 
 export class WhatsNewSettingsCard extends CardComponent {
     constructor(onSettingsChange) {
         super({
-            title: 'Update Notifications',
+            title: "What's new",
             titleLocalize: '__MSG_whatsNewSettings__',
-            subtitle: "Control whether the What's New modal appears on version updates.",
-            subtitleLocalize: '__MSG_whatsNewSettingsDescription__',
-            icon: 'fas fa-bullhorn',
-            iconColor: 'text-info'
+            icon: 'fas fa-wand-magic-sparkles'
         });
 
         this.onSettingsChange = onSettingsChange;
@@ -35,32 +33,17 @@ export class WhatsNewSettingsCard extends CardComponent {
 
     _createForm() {
         const container = document.createElement('div');
+        container.className = 'settings-rows';
 
-        const checkWrapper = document.createElement('div');
-        checkWrapper.className = 'form-check form-switch';
-
-        this.autoShowCheckbox = document.createElement('input');
-        this.autoShowCheckbox.type = 'checkbox';
-        this.autoShowCheckbox.className = 'form-check-input';
-        this.autoShowCheckbox.id = 'whats-new-auto-show-toggle';
-        this.autoShowCheckbox.checked = this.settings.whatsNewAutoShow;
-
-        const label = document.createElement('label');
-        label.className = 'form-check-label';
-        label.htmlFor = 'whats-new-auto-show-toggle';
-        label.setAttribute('data-localize', '__MSG_whatsNewAutoShowLabel__');
-        label.textContent = window.getLocalizedMessage('whatsNewAutoShowLabel') || "Show What's New on updates";
-
-        const helpText = document.createElement('small');
-        helpText.className = 'form-text text-muted d-block mt-1';
-        helpText.setAttribute('data-localize', '__MSG_whatsNewAutoShowHelp__');
-        helpText.textContent = window.getLocalizedMessage('whatsNewAutoShowHelp') || 'When enabled, a summary of new features is shown automatically after the extension updates.';
-
-        checkWrapper.appendChild(this.autoShowCheckbox);
-        checkWrapper.appendChild(label);
-
-        container.appendChild(checkWrapper);
-        container.appendChild(helpText);
+        this.autoShowCheckbox = createSwitch('whats-new-auto-show-toggle', this.settings.whatsNewAutoShow);
+        container.appendChild(createSettingRow({
+            labelKey: 'whatsNewAutoShowLabel',
+            labelFallback: 'Show what\'s new after updates',
+            labelFor: 'whats-new-auto-show-toggle',
+            hintKey: 'whatsNewAutoShowHelp',
+            hintFallback: 'When the extension updates, a short tour of the new features opens.',
+            control: this.autoShowCheckbox
+        }).row);
 
         return container;
     }

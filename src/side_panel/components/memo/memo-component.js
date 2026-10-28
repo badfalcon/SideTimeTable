@@ -7,12 +7,13 @@ import { isDemoMode, getDemoMemoContent } from '../../../lib/demo-data.js';
 import { loadSettings } from '../../../lib/settings-storage.js';
 import { DEFAULT_SETTINGS, MEMO_FONT_SIZE_RANGE } from '../../../lib/constants.js';
 import { MemoEditor } from './memo-editor.js';
+import { summarizeMemo } from './memo-summary.js';
 
 const DEFAULT_HEIGHT = 150;
 const MIN_HEIGHT = 80;
 const MAX_HEIGHT_RATIO = 0.8;
 const AUTO_EXPAND_THRESHOLD = 10;
-const COLLAPSED_HEIGHT_FALLBACK = 34;
+const COLLAPSED_HEIGHT_FALLBACK = 32;
 const ANIM_DURATION = 420;
 const ICON_CLASS_DOWN = 'fas fa-chevron-down memo-toggle-icon';
 const ICON_CLASS_UP = 'fas fa-chevron-up memo-toggle-icon';
@@ -33,7 +34,7 @@ export class MemoComponent extends Component {
         this._spacer = document.createElement('div');
         this._spacer.id = 'memoPanelSpacer';
         this._collapsedHeight = null; // cached to avoid reflow on every mousemove
-        this._collapsedClipPath = null; // cached when valid DOM measurement available
+        this._previewLine = null; // the memo's first line, shown while collapsed
         this._timeline = null; // cached reference to .side-time-table
         this._collapsed = false;
         this._panelHeight = DEFAULT_HEIGHT;
@@ -55,17 +56,26 @@ export class MemoComponent extends Component {
         this._dragHandle.className = 'memo-drag-handle';
 
         this._toggleBtn = document.createElement('button');
+        this._toggleBtn.type = 'button';
         this._toggleBtn.className = 'memo-toggle-btn';
         this._toggleBtn.setAttribute('data-localize-title', '__MSG_memoSectionTitle__');
+        this._toggleBtn.setAttribute('aria-expanded', 'true');
 
         const labelSpan = document.createElement('span');
+        labelSpan.className = 'memo-toggle-label';
         labelSpan.setAttribute('data-localize', '__MSG_memoSectionTitle__');
         labelSpan.textContent = this.getMessage('memoSectionTitle');
 
+        // Collapsed, the bar still says what the memo is about
+        this._previewLine = document.createElement('span');
+        this._previewLine.className = 'memo-toggle-preview';
+
         this.toggleIcon = document.createElement('i');
         this.toggleIcon.className = ICON_CLASS_DOWN;
+        this.toggleIcon.setAttribute('aria-hidden', 'true');
 
         this._toggleBtn.appendChild(labelSpan);
+        this._toggleBtn.appendChild(this._previewLine);
         this._toggleBtn.appendChild(this.toggleIcon);
 
         const body = document.createElement('div');
@@ -219,22 +229,24 @@ export class MemoComponent extends Component {
             void this.element.offsetHeight;
         }
 
+        // Collapsed, the panel is a full-width bar (its header) that keeps
+        // its own room below the timeline, so it never covers an event
         if (this._collapsed) {
-            const clipPath = this._getCollapsedClipPath(); // measure BEFORE state changes
-            this.element.style.height = this._getCollapsedHeight() + 'px';
+            this._updatePreviewLine();
             this.element.classList.add('memo-collapsed');
-            this.element.style.clipPath = clipPath;
-            this.toggleIcon.className = ICON_CLASS_UP;
             if (this._dragHandle) this._dragHandle.style.display = 'none';
-            this._spacer.style.height = '0px';
+            const barHeight = this._getCollapsedHeight();
+            this.element.style.height = barHeight + 'px';
+            this.toggleIcon.className = ICON_CLASS_UP;
+            this._spacer.style.height = barHeight + 'px';
         } else {
             this.element.style.height = this._panelHeight + 'px';
             this.element.classList.remove('memo-collapsed');
-            this.element.style.clipPath = '';
             this.toggleIcon.className = ICON_CLASS_DOWN;
             if (this._dragHandle) this._dragHandle.style.display = '';
             this._spacer.style.height = this._panelHeight + 'px';
         }
+        this._toggleBtn?.setAttribute('aria-expanded', String(!this._collapsed));
 
         if (!animate) {
             void this.element.offsetHeight;
@@ -242,29 +254,23 @@ export class MemoComponent extends Component {
         }
     }
 
-    _getCollapsedClipPath() {
-        if (this._collapsedClipPath) return this._collapsedClipPath;
-
-        const RIGHT_MARGIN = 20;
-        const COLLAPSED_PADDING = 32; // 2 * 16px horizontal padding in collapsed state
-        const labelSpan = this._toggleBtn ? this._toggleBtn.querySelector('span') : null;
-        const labelWidth = labelSpan ? labelSpan.offsetWidth : 0;
-        const iconWidth = this.toggleIcon ? this.toggleIcon.offsetWidth : 0;
-        // No gap: width:auto flex container with space-between packs items directly
-        const btnWidth = Math.max(labelWidth + iconWidth + COLLAPSED_PADDING, 40);
-        const result = `inset(0 ${RIGHT_MARGIN}px 0 calc(100% - ${btnWidth + RIGHT_MARGIN}px) round 8px 8px 0 0)`;
-        // Cache only when we have a real DOM measurement (avoid caching zero-width pre-render)
-        if (labelWidth > 0 || iconWidth > 0) {
-            this._collapsedClipPath = result;
+    /**
+     * Put the memo's first line in the collapsed bar.
+     * @private
+     */
+    _updatePreviewLine() {
+        if (this._previewLine && this.textarea) {
+            this._previewLine.textContent = summarizeMemo(this.textarea.value);
         }
-        return result;
     }
 
     _getCollapsedHeight() {
         if (this._collapsedHeight === null) {
-            this._collapsedHeight = this._toggleBtn
-                ? this._toggleBtn.offsetHeight
-                : COLLAPSED_HEIGHT_FALLBACK;
+            const measured = this._toggleBtn ? this._toggleBtn.offsetHeight : 0;
+            // Not laid out yet (before the panel is in the page): use the
+            // fallback now and measure again next time
+            if (!measured) return COLLAPSED_HEIGHT_FALLBACK;
+            this._collapsedHeight = measured;
         }
         return this._collapsedHeight;
     }

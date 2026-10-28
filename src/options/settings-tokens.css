@@ -1,0 +1,85 @@
+/* ==========================================================================
+   Settings-page tokens — shared by the options page and the changelog page
+   ========================================================================== */
+
+/* Colours of these pages. The side panel's own theme variables
+   (--side-calendar-*) are rewritten at runtime when a theme is picked, so
+   the pages keep their own: light, and dark under [data-theme="dark"]. */
+:root {
+    --settings-page-bg: #f6f7f9;
+    --settings-surface: #ffffff;
+    --settings-border: #e4e7eb;
+    --settings-divider: #eceff2;
+    --settings-text: #16181d;
+    --settings-text-secondary: #5b6470;   /* 6.0:1 on white */
+    --settings-text-muted: #8a929c;       /* icons, chevrons only */
+    --settings-icon: #5b6470;
+    --settings-input-bg: #ffffff;
+    --settings-input-border: #d7dce2;
+    --settings-subtle: #f1f3f5;
+    --settings-subtle-border: #e3e6ea;
+    --settings-hover: #eef1f4;
+    --settings-accent: #007bff;           /* borders and focus */
+    --settings-accent-strong: #0056b3;    /* fills: 7.0:1 with white text */
+    --settings-accent-tint: #eaf2fd;
+    --settings-accent-text: #0056b3;
+    --settings-accent-ring: rgba(0, 123, 255, 0.18);
+    --settings-on-accent: #ffffff;
+    --settings-danger: #b3261e;
+    --settings-danger-tint: #f9e9e8;
+    --settings-success: #1e7e34;
+    --settings-success-tint: #e7f4ea;
+    --settings-switch-off: #c9cfd6;
+    --settings-switch-knob: #ffffff;
+    --settings-switch-knob-off: #ffffff;
+    --settings-shadow-color: rgba(16, 24, 40, 0.14);
+    --settings-overlay: rgba(0, 0, 0, 0.4);
+    --settings-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%235b6470' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.8 6.2 8 10.4l4.2-4.2'/%3E%3C/svg%3E");
+
+    /* Shape, depth and type: the same values as the side panel */
+    --side-calendar-radius-sm: 6px;
+    --side-calendar-radius-md: 8px;
+    --side-calendar-radius-lg: 12px;
+    --side-calendar-radius-pill: 999px;
+    --side-calendar-shadow-popover: 0 6px 20px var(--settings-shadow-color);
+    --side-calendar-shadow-dialog: 0 12px 32px var(--settings-shadow-color);
+    --side-calendar-font-caption: 11px;
+    --side-calendar-font-small: 12px;
+    --side-calendar-font-body: 13px;
+    --side-calendar-font-title: 14px;
+    --side-calendar-font-large: 15px;
+    --side-calendar-icon-button-size: 32px;
+}
+
+[data-theme="dark"] {
+    --settings-page-bg: #1e1e2e;
+    --settings-surface: #2a2a3c;
+    --settings-border: #444454;
+    --settings-divider: #383848;
+    --settings-text: #f2f2f6;
+    --settings-text-secondary: #ababab;   /* 6.1:1 on the cards */
+    --settings-text-muted: #8a8a9c;
+    --settings-icon: #b8b8c6;
+    --settings-input-bg: #1e1e2e;
+    --settings-input-border: #565666;
+    --settings-subtle: #373749;
+    --settings-subtle-border: #484858;
+    --settings-hover: #33334a;
+    --settings-accent: #5b9dff;
+    --settings-accent-strong: #5b9dff;    /* fills take dark text: 6.3:1 */
+    --settings-accent-tint: #24354f;
+    --settings-accent-text: #a8cbff;
+    --settings-accent-ring: rgba(91, 157, 255, 0.25);
+    --settings-on-accent: #0f1b2e;
+    --settings-danger: #ef9a9a;
+    --settings-danger-tint: #3b2a35;
+    --settings-success: #81c995;
+    --settings-success-tint: #1f3326;
+    --settings-switch-off: #565666;
+    --settings-switch-knob: #0f1b2e;
+    --settings-switch-knob-off: #d4d4de;
+    --settings-shadow-color: rgba(0, 0, 0, 0.5);
+    --settings-overlay: rgba(0, 0, 0, 0.55);
+    --settings-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23b8b8c6' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.8 6.2 8 10.4l4.2-4.2'/%3E%3C/svg%3E");
+    color-scheme: dark;
+}

@@ -12,6 +12,13 @@
  */
 import {ModalComponent} from './modal-component.js';
 import {StorageHelper} from '../../../lib/storage-helper.js';
+import {
+    createButton,
+    createCloseButton,
+    createFooterSpacer,
+    createIcon,
+    setLocalizedText
+} from './event-dialog-dom.js';
 
 // Storage key for review tracking data
 const REVIEW_STATS_KEY = 'reviewStats';
@@ -40,65 +47,90 @@ export class ReviewModal extends ModalComponent {
     }
 
     createContent() {
+        // The same header / body / footer as the other dialogs
         const content = document.createElement('div');
-        content.className = 'review-modal-content';
+        content.className = 'review-dialog';
 
-        // Header section (gradient background)
-        const header = document.createElement('div');
-        header.className = 'review-modal-header';
-
-        const stars = document.createElement('div');
-        stars.className = 'review-modal-stars';
-        stars.textContent = '★★★★★';
-        header.appendChild(stars);
-
+        const header = document.createElement('header');
+        header.className = 'event-form-header';
         const title = document.createElement('h2');
-        title.className = 'modal-title review-modal-title';
-        title.setAttribute('data-localize', '__MSG_reviewTitle__');
-        title.textContent = window.getLocalizedMessage('reviewTitle') || 'How are you finding SideTimeTable?';
+        title.className = 'event-form-title';
+        title.id = 'reviewTitle';
+        setLocalizedText(title, 'reviewTitle', 'How are you finding SideTimeTable?');
         header.appendChild(title);
-
+        // Closing only puts the request away for now, like the old ×
+        header.appendChild(createCloseButton(this, () => this.hide()));
         content.appendChild(header);
 
-        // Body section
         const body = document.createElement('div');
-        body.className = 'review-modal-body';
+        body.className = 'review-body';
+
+        const stars = document.createElement('div');
+        stars.className = 'review-stars';
+        stars.setAttribute('aria-hidden', 'true');
+        for (let i = 0; i < 5; i++) {
+            stars.appendChild(createIcon('fas fa-star'));
+        }
+        body.appendChild(stars);
 
         const message = document.createElement('p');
-        message.className = 'review-modal-message';
-        message.setAttribute('data-localize', '__MSG_reviewMessage__');
-        message.textContent = window.getLocalizedMessage('reviewMessage') || "Thank you for using SideTimeTable!\nWe'd love to hear about your experience.";
+        message.className = 'review-message';
+        message.id = 'reviewMessage';
+        setLocalizedText(message, 'reviewMessage', "Thank you for using SideTimeTable!\nWe'd love to hear about your experience.");
         body.appendChild(message);
 
-        // Rate Now button
-        this.rateButton = document.createElement('button');
-        this.rateButton.className = 'review-btn-rate';
-        this.rateButton.setAttribute('data-localize', '__MSG_reviewRateNow__');
-        this.rateButton.innerHTML = `<i class="fas fa-star"></i> ${window.getLocalizedMessage('reviewRateNow') || 'Write a Review'}`;
-        body.appendChild(this.rateButton);
-
-        // Later button
-        this.laterButton = document.createElement('button');
-        this.laterButton.className = 'review-btn-later';
-        this.laterButton.setAttribute('data-localize', '__MSG_reviewLater__');
-        this.laterButton.textContent = window.getLocalizedMessage('reviewLater') || 'Maybe Later';
-        body.appendChild(this.laterButton);
-
-        // Never button
+        // A quiet way out, apart from the two answers in the footer
         this.neverButton = document.createElement('button');
-        this.neverButton.className = 'review-btn-never';
-        this.neverButton.setAttribute('data-localize', '__MSG_reviewNever__');
-        this.neverButton.textContent = window.getLocalizedMessage('reviewNever') || "Don't ask again";
+        this.neverButton.type = 'button';
+        this.neverButton.id = 'reviewNeverButton';
+        this.neverButton.className = 'review-never';
+        setLocalizedText(this.neverButton, 'reviewNever', "Don't ask again");
         body.appendChild(this.neverButton);
 
         content.appendChild(body);
 
-        // Event listeners
-        this.addEventListener(this.rateButton, 'click', () => this._handleRate());
-        this.addEventListener(this.laterButton, 'click', () => this._handleLater());
+        const footer = document.createElement('footer');
+        footer.className = 'event-form-footer';
+        footer.appendChild(createFooterSpacer());
+        this.laterButton = createButton(this, {
+            id: 'reviewLaterButton',
+            variant: 'secondary',
+            msgKey: 'reviewLater',
+            fallback: 'Maybe Later',
+            onClick: () => this._handleLater()
+        });
+        footer.appendChild(this.laterButton);
+        this.rateButton = createButton(this, {
+            id: 'reviewRateButton',
+            variant: 'primary',
+            msgKey: 'reviewRateNow',
+            fallback: 'Write a Review',
+            iconClass: 'fas fa-star',
+            onClick: () => this._handleRate()
+        });
+        footer.appendChild(this.rateButton);
+        content.appendChild(footer);
+
         this.addEventListener(this.neverButton, 'click', () => this._handleNever());
 
         return content;
+    }
+
+    createElement() {
+        const element = super.createElement();
+        element.setAttribute('role', 'dialog');
+        element.setAttribute('aria-modal', 'true');
+        element.setAttribute('aria-labelledby', 'reviewTitle');
+        element.setAttribute('aria-describedby', 'reviewMessage');
+        return element;
+    }
+
+    /**
+     * Focus the main answer: the dialog has no input.
+     * @private
+     */
+    _focusFirstInput() {
+        setTimeout(() => this.rateButton?.focus(), 100);
     }
 
     /**

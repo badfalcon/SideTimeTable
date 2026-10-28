@@ -183,10 +183,15 @@ async function capture(lang, { rawDir, landingUrl }) {
                 if (!el) throw new Error(`missing ${sel}`);
                 el.value = v;
                 el.dispatchEvent(new Event('input', { bubbles: true }));
+                // The form reacts on change (e.g. the duration picker follows the times)
+                el.dispatchEvent(new Event('change', { bubbles: true }));
             };
             set('#eventTitle', title);
-            set('#eventStartTime', '16:30');
+            // End first, so the start never lands after the end in between
             set('#eventEndTime', '17:00');
+            set('#eventStartTime', '16:30');
+            // No focus ring or selected time segment in the capture
+            document.activeElement?.blur();
         }, L.eventTitle);
         await page.screenshot({ path: out('panel-dark-modal'), animations: 'disabled' });
         // restore light theme before the options captures

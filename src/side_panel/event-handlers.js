@@ -12,6 +12,7 @@ import { sendMessage } from '../lib/chrome-messaging.js';
 import {getDemoEvents, getDemoLocalEvents, isDemoMode} from '../lib/demo-data.js';
 import { GoogleEventRenderer } from './google-event-renderer.js';
 import { LocalEventRenderer } from './local-event-renderer.js';
+import { GuestDirectory } from '../lib/guest-utils.js';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -69,6 +70,9 @@ export class GoogleEventManager {
         this.allDayEventsContainer = null; // Container for all-day event chips
         this._currentTargetDate = null; // The date currently being displayed
         this._renderer = new GoogleEventRenderer();
+        // People seen on loaded events, suggested when adding guests. Kept in
+        // memory only, for as long as the panel is open.
+        this.guestDirectory = new GuestDirectory();
     }
 
     /**
@@ -321,6 +325,8 @@ export class GoogleEventManager {
      * @private
      */
     async _processEvents(events) {
+        this.guestDirectory.addFromEvents(events);
+
         const renderConfig = {
             useGoogleCalendarColors: this.useGoogleCalendarColors,
             currentTargetDate: this._currentTargetDate,

@@ -52,8 +52,8 @@ npm run build         # Verify production build succeeds
 - CSS variable naming: `--side-calendar-*` (theme details in @.claude/rules/theme-support.md)
 - **No debug logs in production code** — clean console output
 - i18n: `_locales/en/` and `_locales/ja/` with 400+ localized strings, `__MSG_key__` placeholders
-- Time formats: 12h for English, 24h for Japanese
-- Date formats: MM/DD/YYYY (English), YYYY/MM/DD (Japanese)
+- Time formats: written in the extension's language with the 12h/24h setting (`timeFormat`; the default is 12h only for a US-English Chrome) — `formatClockTime()` / `formatTimeRange()` in `time-utils.js`, prefs from `lib/display-prefs.js`. Time inputs use `lib/time-field.js`, never `<input type="time">` (Chrome draws that in its own language, not the extension's)
+- Date formats: in the extension's language as the header writes them (`formatHeaderDate()`: "10月31日(土)" / "Sat, Oct 31", with the year only when it is not this year). Date inputs use `lib/date-field.js` (a field, or `createDateCalendar()` for a month picker), never `<input type="date">` or `showPicker()`
 
 ## Event System
 
@@ -61,7 +61,7 @@ npm run build         # Verify production build succeeds
 - **Local events**: Chrome storage with date-scoped keys (`localEvents_YYYY-MM-DD`)
 - **EventLayoutManager**: overlap detection → lane assignment → width calculation
 - **Recurring events**: separate storage with daily/weekly/monthly/weekdays patterns and exception handling
-- **Adaptive padding**: basic (10px), compact (8px), micro (6px) based on lane density
+- **Adaptive padding**: basic (6px), compact (5px), micro (4px) based on lane density
 
 ## TODO管理
 

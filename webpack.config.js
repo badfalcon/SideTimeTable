@@ -74,6 +74,13 @@ module.exports = (env = {}, argv) => {
     optimization: {
       minimize: argv.mode === 'production'
     },
+    // The bundles load from the extension's own files, not over a network, so
+    // webpack's web-page budget (244 KiB) does not apply. Warn only well past
+    // the current size (side_panel ~250 KiB), to still catch real bloat.
+    performance: {
+      maxAssetSize: 400 * 1024,
+      maxEntrypointSize: 400 * 1024
+    },
     plugins
   };
 };

@@ -1,8 +1,12 @@
 /**
- * CardComponent - The Bootstrap card base class
+ * CardComponent - The settings card base class
  *
- * The base class for the reusable card UI components
+ * A card is a titled group of settings in the side panel's design language:
+ * a heading (single-colour icon, title, optional description) and a body of
+ * setting rows (see settings-dom.js).
  */
+import { createNotice } from './settings-dom.js';
+
 export class CardComponent {
     constructor(options = {}) {
         this.options = {
@@ -10,7 +14,6 @@ export class CardComponent {
             title: options.title || '',
             subtitle: options.subtitle || '',
             icon: options.icon || '',
-            iconColor: options.iconColor || 'text-primary',
             classes: options.classes || '',
             hidden: options.hidden || false,
             ...options
@@ -27,8 +30,8 @@ export class CardComponent {
      * @returns {HTMLElement} The created card element
      */
     createElement() {
-        const card = document.createElement('div');
-        card.className = `card mb-4 ${this.options.classes}`;
+        const card = document.createElement('section');
+        card.className = `settings-card ${this.options.classes}`.trim();
         if (this.options.id) {
             card.id = this.options.id;
         }
@@ -36,53 +39,44 @@ export class CardComponent {
             card.style.display = 'none';
         }
 
-        const cardBody = document.createElement('div');
-        cardBody.className = 'card-body';
-
-        // Create the title element
         if (this.options.title) {
+            const head = document.createElement('div');
+            head.className = 'settings-card-head';
+
             if (this.options.icon) {
-                // The title with the icon
-                const titleContainer = document.createElement('div');
-                titleContainer.className = 'd-flex align-items-center mb-3';
-
                 const iconElement = document.createElement('i');
-                iconElement.className = `${this.options.icon} me-2 ${this.options.iconColor}`;
-                iconElement.style.fontSize = '1.5rem';
-
-                this.titleElement = document.createElement('h2');
-                this.titleElement.className = 'card-title mb-0';
-                this.titleElement.textContent = this.options.title;
-                if (this.options.titleLocalize) {
-                    this.titleElement.setAttribute('data-localize', this.options.titleLocalize);
-                }
-
-                titleContainer.appendChild(iconElement);
-                titleContainer.appendChild(this.titleElement);
-                cardBody.appendChild(titleContainer);
-            } else {
-                // The regular title
-                this.titleElement = document.createElement('h2');
-                this.titleElement.className = 'card-title';
-                this.titleElement.textContent = this.options.title;
-                if (this.options.titleLocalize) {
-                    this.titleElement.setAttribute('data-localize', this.options.titleLocalize);
-                }
-                cardBody.appendChild(this.titleElement);
+                iconElement.className = `${this.options.icon} settings-card-icon`;
+                iconElement.setAttribute('aria-hidden', 'true');
+                head.appendChild(iconElement);
             }
+
+            const heading = document.createElement('div');
+            heading.className = 'settings-card-heading';
+
+            this.titleElement = document.createElement('h2');
+            this.titleElement.className = 'settings-card-title';
+            this.titleElement.textContent = this.options.title;
+            if (this.options.titleLocalize) {
+                this.titleElement.setAttribute('data-localize', this.options.titleLocalize);
+            }
+            heading.appendChild(this.titleElement);
+
+            if (this.options.subtitle) {
+                this.subtitleElement = document.createElement('p');
+                this.subtitleElement.className = 'settings-card-desc';
+                this.subtitleElement.textContent = this.options.subtitle;
+                if (this.options.subtitleLocalize) {
+                    this.subtitleElement.setAttribute('data-localize', this.options.subtitleLocalize);
+                }
+                heading.appendChild(this.subtitleElement);
+            }
+
+            head.appendChild(heading);
+            card.appendChild(head);
         }
 
-        // Create the subtitle element
-        if (this.options.subtitle) {
-            this.subtitleElement = document.createElement('p');
-            this.subtitleElement.className = 'card-text';
-            this.subtitleElement.textContent = this.options.subtitle;
-            if (this.options.subtitleLocalize) {
-                this.subtitleElement.setAttribute('data-localize', this.options.subtitleLocalize);
-            }
-            cardBody.appendChild(this.subtitleElement);
-        }
-
+        const cardBody = document.createElement('div');
+        cardBody.className = 'settings-card-body';
         card.appendChild(cardBody);
 
         this.element = card;
@@ -188,20 +182,14 @@ export class CardComponent {
     }
 
     /**
-     * Show an alert notification in the card body
-     * @param {string} html - Inner HTML content
-     * @param {string} type - Bootstrap alert variant (info, success, warning, danger)
+     * Show a notice at the bottom of the card body
+     * @param {string} text - Plain text (error messages included, so never HTML)
+     * @param {string} type - 'info', 'success', 'warning' or 'danger'
      * @param {number} duration - Auto-dismiss delay in ms (0 = no auto-dismiss)
      */
-    _showAlert(html, type = 'info', duration = 4000) {
-        const notification = document.createElement('div');
-        notification.className = `alert alert-${type} alert-dismissible fade show mt-3`;
-        notification.innerHTML = `${html}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
-        this.bodyElement.appendChild(notification);
-        if (duration > 0) {
-            const timer = setTimeout(() => { if (notification.parentNode) notification.remove(); }, duration);
-            notification.addEventListener('closed.bs.alert', () => clearTimeout(timer), { once: true });
-        }
+    _showAlert(text, type = 'info', duration = 4000) {
+        const tone = type === 'success' ? 'success' : type === 'danger' || type === 'warning' ? 'danger' : 'info';
+        this.bodyElement.appendChild(createNotice({ content: text, tone, duration }));
     }
 
     /**
@@ -210,7 +198,7 @@ export class CardComponent {
      */
     _showCopyNotification(button) {
         const originalHTML = button.innerHTML;
-        button.innerHTML = '<i class="fas fa-check text-success"></i>';
+        button.innerHTML = '<i class="fas fa-check settings-copied-icon"></i>';
         button.disabled = true;
         setTimeout(() => {
             button.innerHTML = originalHTML;

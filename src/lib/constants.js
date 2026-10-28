@@ -39,10 +39,14 @@ export const DEFAULT_SETTINGS = {
     googleIntegrated: false,
     openTime: TIME_CONSTANTS.DEFAULT_OPEN_HOUR,
     closeTime: TIME_CONSTANTS.DEFAULT_CLOSE_HOUR,
+    // The seven colours below are a copy of the chosen theme's palette,
+    // written when the theme is saved. The side panel draws from colorTheme
+    // (color-themes.js) and never reads them back; they stay in the schema
+    // so sync storage shared with older versions keeps them.
     timelineBackgroundColor: '#ffffff', // Timeline (body) background color
     panelBackgroundColor: '#ffffff', // Header and memo panel background color
     googleEventDefaultColor: '#fff0b8', // Default Google event color
-    workTimeColor: '#e3e3e3',
+    workTimeColor: '#f1f3f5',
     breakTimeFixed: false,
     breakTimeStart: TIME_CONSTANTS.DEFAULT_BREAK_START,
     breakTimeEnd: TIME_CONSTANTS.DEFAULT_BREAK_END,
@@ -123,5 +127,6 @@ export const TEXT_COLOR_CSS_VARS = {
     timelineBackgroundColor: '--side-calendar-timeline-text-color',
     panelBackgroundColor: '--side-calendar-panel-text-color',
     googleEventDefaultColor: '--side-calendar-google-event-default-text-color',
-    localEventColor: '--side-calendar-local-event-text-color'
+    localEventColor: '--side-calendar-local-event-text-color',
+    currentTimeLineColor: '--side-calendar-current-time-line-text-color'
 };

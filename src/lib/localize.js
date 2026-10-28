@@ -91,6 +91,12 @@ async function localizeWithLanguage(targetLang) {
     };
 
     try {
+        // The pages ship with lang="ja"; declare the language actually shown
+        // so screen readers pick the right voice and Chrome the right fonts.
+        if (document.documentElement) {
+            document.documentElement.lang = messageFiles[targetLang] ? targetLang : 'en';
+        }
+
         // Get the message file for the specified language
         const messagesUrl = chrome.runtime.getURL(messageFiles[targetLang] || messageFiles['en']);
         const response = await fetch(messagesUrl);
