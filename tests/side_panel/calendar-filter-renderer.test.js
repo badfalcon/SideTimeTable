@@ -159,6 +159,15 @@ describe('CalendarFilterRenderer', () => {
     expect(refs.searchInput.value).toBe('cal');
   });
 
+  test('a search finds a calendar by its address as well as its name', () => {
+    const cals = [...calendars(2), { id: 'tanaka@example.com', summary: '田中' }];
+    const names = term => all(render({ cals, searchTerm: term }).dropdown, 'timeline-calendar-filter-name')
+      .map(n => n.textContent);
+
+    expect(names('tanaka@')).toEqual(['田中']);
+    expect(names('田中')).toEqual(['田中']);
+  });
+
   test('no settings link without a handler for it', () => {
     const { dropdown } = render({ onManageClick: null });
     expect(one(dropdown, 'timeline-calendar-filter-footer')).toBeUndefined();
