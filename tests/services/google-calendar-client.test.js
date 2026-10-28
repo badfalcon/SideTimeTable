@@ -334,6 +334,41 @@ describe('SPEC: createEvent', () => {
     expect(JSON.parse(options.body).conferenceData.createRequest.conferenceSolutionKey.type).toBe('hangoutsMeet');
   });
 
+  test('sends sendUpdates when told whether to email the guests', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true, status: 200, json: () => Promise.resolve({ id: 'e' }),
+    });
+
+    await client.createEvent('cal1', validResource(), { sendUpdates: 'all' });
+    await client.createEvent('cal1', validResource(), { sendUpdates: 'none' });
+
+    expect(global.fetch.mock.calls[0][0]).toBe('https://www.googleapis.com/calendar/v3/calendars/cal1/events?sendUpdates=all');
+    expect(global.fetch.mock.calls[1][0]).toBe('https://www.googleapis.com/calendar/v3/calendars/cal1/events?sendUpdates=none');
+  });
+
+  test('combines sendUpdates with conferenceDataVersion', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true, status: 200, json: () => Promise.resolve({ id: 'e' }),
+    });
+
+    const resource = {
+      ...validResource(),
+      conferenceData: { createRequest: { requestId: 'r1', conferenceSolutionKey: { type: 'hangoutsMeet' } } },
+    };
+    await client.createEvent('cal1', resource, { sendUpdates: 'all' });
+
+    const [url] = global.fetch.mock.calls[0];
+    expect(url).toBe('https://www.googleapis.com/calendar/v3/calendars/cal1/events?conferenceDataVersion=1&sendUpdates=all');
+  });
+
+  test('rejects an unknown sendUpdates value without calling the API', async () => {
+    global.fetch = jest.fn();
+
+    await expect(client.createEvent('cal1', validResource(), { sendUpdates: 'everyone' }))
+      .rejects.toThrow('Invalid sendUpdates');
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
   test('classifies a 403 response as an authentication error', async () => {
     global.fetch = jest.fn().mockResolvedValue({
       ok: false,

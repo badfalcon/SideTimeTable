@@ -12,6 +12,7 @@ import { sendMessage } from '../lib/chrome-messaging.js';
 import {getDemoEvents, getDemoLocalEvents, isDemoMode} from '../lib/demo-data.js';
 import { GoogleEventRenderer } from './google-event-renderer.js';
 import { LocalEventRenderer } from './local-event-renderer.js';
+import { GuestDirectory } from '../lib/guest-utils.js';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -21,7 +22,8 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000;
  * Returns true for the standard date-only format, and for OOO events that
  * Google Calendar returns with dateTime but which span a full day starting
  * at local midnight (Google's OOO UI uses time ranges, so "out for the day"
- * comes back as 00:00 → 24:00 timed events).
+ * comes back as 00:00 → 24:00 timed events — as do the whole-day absences
+ * this panel creates).
  *
  * @param {Object} event
  * @returns {boolean}
@@ -36,7 +38,12 @@ export function isAllDayLikeEvent(event) {
         if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return false;
         const startsAtLocalMidnight =
             start.getHours() === 0 && start.getMinutes() === 0 && start.getSeconds() === 0;
-        return startsAtLocalMidnight && (end.getTime() - start.getTime()) >= MS_PER_DAY;
+        const endsAtLocalMidnight =
+            end.getHours() === 0 && end.getMinutes() === 0 && end.getSeconds() === 0;
+        // Ending on a later local midnight counts even when the span is under
+        // 24h: on a DST spring-forward day midnight→midnight is only 23 hours.
+        return startsAtLocalMidnight && end.getTime() > start.getTime() &&
+            (endsAtLocalMidnight || (end.getTime() - start.getTime()) >= MS_PER_DAY);
     }
 
     return false;
@@ -63,6 +70,9 @@ export class GoogleEventManager {
         this.allDayEventsContainer = null; // Container for all-day event chips
         this._currentTargetDate = null; // The date currently being displayed
         this._renderer = new GoogleEventRenderer();
+        // People seen on loaded events, suggested when adding guests. Kept in
+        // memory only, for as long as the panel is open.
+        this.guestDirectory = new GuestDirectory();
     }
 
     /**
@@ -315,6 +325,8 @@ export class GoogleEventManager {
      * @private
      */
     async _processEvents(events) {
+        this.guestDirectory.addFromEvents(events);
+
         const renderConfig = {
             useGoogleCalendarColors: this.useGoogleCalendarColors,
             currentTargetDate: this._currentTargetDate,

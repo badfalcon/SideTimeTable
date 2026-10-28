@@ -27,7 +27,11 @@ export const RECURRENCE_TYPES = {
 // Storage key constants
 export const STORAGE_KEYS = {
     RECURRING_EVENTS: 'recurringEvents',
-    LOCAL_EVENTS_PREFIX: 'localEvents_'
+    LOCAL_EVENTS_PREFIX: 'localEvents_',
+    GOOGLE_EVENT_DATA_PREFIX: 'googleEventData_',
+    // Handover slot for "open the side panel on this event" requests
+    // (written when a reminder notification is clicked)
+    PENDING_EVENT_FOCUS: 'pendingEventFocus'
 };
 
 // Default settings
@@ -35,10 +39,14 @@ export const DEFAULT_SETTINGS = {
     googleIntegrated: false,
     openTime: TIME_CONSTANTS.DEFAULT_OPEN_HOUR,
     closeTime: TIME_CONSTANTS.DEFAULT_CLOSE_HOUR,
+    // The seven colours below are a copy of the chosen theme's palette,
+    // written when the theme is saved. The side panel draws from colorTheme
+    // (color-themes.js) and never reads them back; they stay in the schema
+    // so sync storage shared with older versions keeps them.
     timelineBackgroundColor: '#ffffff', // Timeline (body) background color
     panelBackgroundColor: '#ffffff', // Header and memo panel background color
     googleEventDefaultColor: '#fff0b8', // Default Google event color
-    workTimeColor: '#e3e3e3',
+    workTimeColor: '#f1f3f5',
     breakTimeFixed: false,
     breakTimeStart: TIME_CONSTANTS.DEFAULT_BREAK_START,
     breakTimeEnd: TIME_CONSTANTS.DEFAULT_BREAK_END,
@@ -100,13 +108,18 @@ export const VALID_LOCAL_KEYS = new Set([
     'reviewStats',
     'eventDataMigratedToLocal_v2',
     'enableDeveloperFeatures',
-    'enableReminderDebug'
+    'enableReminderDebug',
+    STORAGE_KEYS.PENDING_EVENT_FOCUS
 ]);
 
 // Valid local storage key patterns (for dynamic keys like localEvents_2025-03-21)
 // Each regex must match the entire key.
 export const VALID_LOCAL_KEY_PATTERNS = [
-    new RegExp(`^${STORAGE_KEYS.LOCAL_EVENTS_PREFIX}\\d{4}-\\d{2}-\\d{2}$`)
+    new RegExp(`^${STORAGE_KEYS.LOCAL_EVENTS_PREFIX}\\d{4}-\\d{2}-\\d{2}$`),
+    // Reminder payloads for Google events (googleEventData_<alarm name>).
+    // Cleanup must not touch these: the alarm outlives the side panel, and
+    // dropping the payload leaves the reminder unable to build a notification.
+    new RegExp(`^${STORAGE_KEYS.GOOGLE_EVENT_DATA_PREFIX}.+$`)
 ];
 
 // Background color keys that need a corresponding computed text color CSS variable
@@ -114,5 +127,6 @@ export const TEXT_COLOR_CSS_VARS = {
     timelineBackgroundColor: '--side-calendar-timeline-text-color',
     panelBackgroundColor: '--side-calendar-panel-text-color',
     googleEventDefaultColor: '--side-calendar-google-event-default-text-color',
-    localEventColor: '--side-calendar-local-event-text-color'
+    localEventColor: '--side-calendar-local-event-text-color',
+    currentTimeLineColor: '--side-calendar-current-time-line-text-color'
 };

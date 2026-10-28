@@ -18,26 +18,6 @@ export function getContrastColor(hexColor) {
 }
 
 /**
- * Generate the time selection list
- * @param {HTMLElement} timeListElement - The datalist DOM element
- */
-export function generateTimeList(timeListElement) {
-    if (!timeListElement) return;
-
-    timeListElement.innerHTML = ''; // Clear the existing options
-
-    for (let hour = 7; hour < 21; hour++) {
-        for (let minute = 0; minute < 60; minute += 15) {
-            const time = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-            const option = document.createElement('option');
-            option.value = time;
-            option.textContent = time;
-            timeListElement.appendChild(option);
-        }
-    }
-}
-
-/**
  * Get the specified date (YYYY-MM-DD format)
  * @param {Date} date - The target date
  * @returns {string} The date string in YYYY-MM-DD format

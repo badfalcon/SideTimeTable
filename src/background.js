@@ -8,7 +8,8 @@
 import { StorageHelper } from './lib/storage-helper.js';
 import { AlarmManager } from './lib/alarm-manager.js';
 import { selectNotificationUrl } from './lib/conference-url-utils.js';
-import { GoogleCalendarClient, AuthenticationError } from './services/google-calendar-client.js';
+import { savePendingEventFocus } from './lib/event-focus.js';
+import { GoogleCalendarClient, AuthenticationError, SEND_UPDATES_VALUES } from './services/google-calendar-client.js';
 import { ReminderSyncService } from './services/reminder-sync-service.js';
 import { logError, logWarn } from './lib/utils.js';
 import { runDeduped } from './lib/request-dedupe.js';
@@ -392,17 +393,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         case "createEvent":
             // Create a new event on a Google Calendar
             (async () => {
-                const invalid = validateWriteRequest(request, false, true);
+                const invalid = validateWriteRequest(request, false, true)
+                    || (request.sendUpdates !== undefined && !SEND_UPDATES_VALUES.includes(request.sendUpdates)
+                        ? 'Invalid sendUpdates' : null);
                 if (invalid) {
                     sendResponse({ success: false, error: invalid });
                     return;
                 }
                 try {
-                    const { calendarId, event } = request;
+                    const { calendarId, event, sendUpdates } = request;
                     // Deduped: a retry after a commit-then-crash must not
-                    // create the event a second time
+                    // create the event a second time (or email the guests twice)
                     const createdEvent = await runDeduped(request.requestId,
-                        () => calendarClient.createEvent(calendarId, event));
+                        () => calendarClient.createEvent(calendarId, event, { sendUpdates }));
                     // Ensure the new event gets a reminder alarm if reminders are enabled
                     reminderSync.syncAll().catch(() => {});
                     sendResponse({ success: true, event: createdEvent });
@@ -485,16 +488,50 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
     }
 });
 
+/**
+ * Open the side panel in the active tab.
+ *
+ * Callback style on purpose: chrome.sidePanel.open() must be reached without
+ * an intervening await, or Chrome no longer treats it as user-initiated.
+ */
+function openSidePanel() {
+    chrome.tabs.query({ active: true, currentWindow: true }, ([activeTab]) => {
+        if (activeTab) {
+            chrome.sidePanel.open({ tabId: activeTab.id });
+        }
+    });
+}
+
+/**
+ * Open the side panel showing the event a reminder notification is about.
+ *
+ * The request is parked in storage for the side panel to pick up when it
+ * starts; a panel that is already open has long finished its startup read, so
+ * it is nudged with a message as well (no listener → the panel is closed and
+ * the storage handover applies).
+ *
+ * @param {string} notificationId The clicked notification's ID
+ */
+async function openSidePanelForNotification(notificationId) {
+    const focus = AlarmManager.parseAlarmName(notificationId.replace('reminder_', ''));
+
+    openSidePanel();
+
+    if (!focus) {
+        return;
+    }
+
+    await savePendingEventFocus(focus);
+    chrome.runtime.sendMessage({ action: 'focusEvent' }).catch(() => {});
+}
+
 // Notification click handler
-// User preference: Clicking the notification body should open the Side Panel
+// User preference: Clicking the notification body opens the Side Panel and
+// scrolls to the event the reminder is about
 chrome.notifications.onClicked.addListener(async (notificationId) => {
     if (notificationId.startsWith('reminder_')) {
         try {
-            chrome.tabs.query({ active: true, currentWindow: true }, ([activeTab]) => {
-                if (activeTab) {
-                    chrome.sidePanel.open({ tabId: activeTab.id });
-                }
-            });
+            await openSidePanelForNotification(notificationId);
         } catch (e) {
             logError('Notification click', e);
         } finally {
@@ -517,19 +554,11 @@ chrome.notifications.onButtonClicked.addListener(async (notificationId, buttonIn
                     if (urlToOpen) {
                         await chrome.tabs.create({ url: urlToOpen, active: true });
                     } else {
-                        chrome.tabs.query({ active: true, currentWindow: true }, ([activeTab]) => {
-                            if (activeTab) {
-                                chrome.sidePanel.open({ tabId: activeTab.id });
-                            }
-                        });
+                        await openSidePanelForNotification(notificationId);
                     }
                 } else {
-                    // Local events: open side panel
-                    chrome.tabs.query({ active: true, currentWindow: true }, ([activeTab]) => {
-                        if (activeTab) {
-                            chrome.sidePanel.open({ tabId: activeTab.id });
-                        }
-                    });
+                    // Local events: open side panel on the event
+                    await openSidePanelForNotification(notificationId);
                 }
             }
         } catch (e) {

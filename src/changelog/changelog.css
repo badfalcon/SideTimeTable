@@ -1,53 +1,153 @@
-.container {
-    max-width: 720px;
-}
+/* ==========================================================================
+   Changelog page — the options page's design: the app mark and a heading,
+   then one card where each version is a row (version and date on the left,
+   what changed on the right). Colours come from settings-tokens.css.
+   ========================================================================== */
 
 body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--settings-page-bg);
+    color: var(--settings-text);
     font-family: Arial, sans-serif;
-    padding: 20px;
-    background-color: var(--side-calendar-timeline-background-color, #ffffff);
-    color: var(--side-calendar-timeline-text-color, #212529);
+    font-size: var(--side-calendar-font-body);
+    line-height: 1.5;
 }
 
-.version-section {
-    border-left: 3px solid var(--side-calendar-accent-color, #0d6efd);
-    padding-left: 1rem;
-    margin-bottom: 1.5rem;
+.changelog-page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 32px 48px 40px;
+    box-sizing: content-box;
 }
 
-.version-section:last-child {
-    margin-bottom: 0;
+.changelog-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
 }
 
-.version-section ul {
-    margin-bottom: 0;
-    padding-left: 1.2rem;
+.changelog-app-mark {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--side-calendar-radius-md);
+    background: var(--settings-accent-strong);
+    color: var(--settings-on-accent);
+    font-size: 16px;
 }
 
-.version-section li {
-    margin-bottom: 0.25rem;
-    color: var(--side-calendar-secondary-text-color, #555);
+.changelog-heading {
+    flex-grow: 1;
+    min-width: 0;
 }
 
-.text-muted {
-    color: var(--side-calendar-secondary-text-color, #6c757d) !important;
+.changelog-title {
+    margin: 0;
+    color: var(--settings-text);
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.3;
 }
 
-h1 {
-    color: var(--side-calendar-timeline-text-color, #212529);
+.changelog-subtitle {
+    margin: 2px 0 0;
+    color: var(--settings-text-secondary);
+    font-size: var(--side-calendar-font-small);
 }
 
-/* Dark mode overrides for Bootstrap classes */
-[data-theme="dark"] .badge.bg-primary {
-    background-color: var(--side-calendar-accent-color, #5b9dff) !important;
+.changelog-card {
+    display: block;
+    padding: 0 24px;
+    border: 1px solid var(--settings-border);
+    border-radius: var(--side-calendar-radius-lg);
+    background: var(--settings-surface);
 }
 
-[data-theme="dark"] .text-info {
-    color: var(--side-calendar-accent-color, #5b9dff) !important;
+.changelog-entry {
+    display: grid;
+    grid-template-columns: 132px minmax(0, 1fr);
+    column-gap: 20px;
+    padding: 18px 0;
 }
 
-@media (max-width: 576px) {
-    body {
-        padding: 12px;
+.changelog-entry + .changelog-entry {
+    border-top: 1px solid var(--settings-divider);
+}
+
+.changelog-entry-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+}
+
+.changelog-entry-version {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.changelog-version-chip {
+    margin: 0;
+    padding: 2px 8px;
+    border-radius: var(--side-calendar-radius-pill);
+    background: var(--settings-accent-tint);
+    color: var(--settings-accent-text);
+    font-size: var(--side-calendar-font-small);
+    font-weight: 700;
+    line-height: 1.5;
+    font-variant-numeric: tabular-nums;
+}
+
+.changelog-latest {
+    color: var(--settings-success);
+    font-size: var(--side-calendar-font-caption);
+    font-weight: 600;
+}
+
+.changelog-date {
+    color: var(--settings-text-secondary);
+    font-size: var(--side-calendar-font-small);
+    font-variant-numeric: tabular-nums;
+}
+
+.changelog-entry-list {
+    margin: 0;
+    padding: 0 0 0 18px;
+    color: var(--settings-text);
+    font-size: var(--side-calendar-font-body);
+    line-height: 1.7;
+}
+
+.changelog-entry-list li {
+    padding-left: 2px;
+}
+
+/* A narrow window: the version and date sit above what changed */
+@media (max-width: 600px) {
+    .changelog-page {
+        padding: 20px 16px 32px;
+    }
+
+    .changelog-card {
+        padding: 0 16px;
+    }
+
+    .changelog-entry {
+        grid-template-columns: minmax(0, 1fr);
+        row-gap: 8px;
+        padding: 14px 0;
+    }
+
+    .changelog-entry-meta {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
     }
 }
