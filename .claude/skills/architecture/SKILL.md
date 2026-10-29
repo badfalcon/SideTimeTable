@@ -192,7 +192,7 @@ Chrome alarm-based reminders:
 - `src/side_panel/components/base/component.js`: Base component class
 
 ### UI and Styling
-- `src/side_panel/side_panel.html`: Main UI structure with Bootstrap components
+- `src/side_panel/side_panel.html`: Main UI structure
 - `src/side_panel/side_panel.css`: Custom styling with CSS variables for theming
 - `src/options/options.html`: Settings page interface
 - `src/options/options.css`: Settings page styling
@@ -207,9 +207,7 @@ Chrome alarm-based reminders:
 
 ## Dependencies and Libraries
 
-### UI Framework
-- **Bootstrap 5.3.0**: Complete UI framework (loaded locally from `src/vendor/`)
-- **Popper.js**: Tooltip and popover positioning (loaded locally from `src/vendor/`)
+### UI Libraries
 - **Font Awesome 6.7.1**: Icon library (loaded via CDN)
 
 ### Chrome Extension APIs

@@ -13,7 +13,7 @@
 - [ ] 共有カレンダー（writer 権限）上の外部主催者イベント: API 上は編集可能だが、`isEditableGoogleEvent()` の主催者ゲートが保守的に編集/削除を非表示にする（誤って招待コピーに編集を出すよりも安全側に倒した意図的な仕様）。必要なら accessRole=writer の場合の緩和を検討。
 - [ ] カレンダーリストの共有キャッシュ: 現状は作成モーダル（60秒TTL）のみキャッシュし、タイムラインフィルター・設定ページは都度取得。3箇所で共有するキャッシュ＋無効化契約を設計するリファクタ候補。
 - [ ] `sendUpdates` は未指定（API既定 "none"）— 編集・削除してもゲストに通知メールは送られない。ゲスト付きイベントの編集を本格対応する際に通知可否の UX を設計すること。
-- [x] `.btn`/`.btn-success`/`.btn-danger`/`.btn-secondary` クラスは CSS 未定義だった問題 — 予定の詳細・編集・削除確認を `event-dialog-dom.js` の共通部品（`.event-form-btn-*`）に置き換え、サイドパネルのモーダルからは使われなくなった（設定ページは Bootstrap を読み込むので対象外）。
+- [x] `.btn`/`.btn-success`/`.btn-danger`/`.btn-secondary` クラスは CSS 未定義だった問題 — 予定の詳細・編集・削除確認を `event-dialog-dom.js` の共通部品（`.event-form-btn-*`）に置き換え、サイドパネルのモーダルからは使われなくなった（設定ページも 2.0.0 で Bootstrap を外した）。
 - [ ] `background.js` の `createEvent`/`updateEvent`/`deleteEvent` ハンドラ自体の単体テスト（現状はクライアント層のテストでカバー。ハンドラ専用テストの前例がないため未整備）。
 - [ ] `SidePanelUIController._getWritableCalendars()` の単体テスト（`googleIntegrated=false` で空配列を返すガードの検証。`side_panel.js` はトップレベルでDOM初期化するため import 不可 — コントローラのテスト基盤整備が前提）。
 - [ ] `SidePanelUIController` が `LocalEventModal` の `onDelete(event, deleteType)` を `_handleDeleteLocalEvent` へ `deleteType` ごと転送することの単体テスト（「すべての予定を削除」が単一回の削除扱いになる不具合の回帰防止。`side_panel.js` はトップレベルでDOM初期化するため import 不可 — コントローラのテスト基盤整備が前提）。
