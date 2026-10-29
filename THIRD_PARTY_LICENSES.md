@@ -59,7 +59,7 @@ Full text: https://github.com/popperjs/popper-core/blob/master/LICENSE.md
   - Icons: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
   - Fonts: SIL OFL 1.1 (https://scripts.sil.org/OFL)
   - Code: MIT
-- Distribution: vendored at `src/vendor/fontawesome/` (`fontawesome.css` and `webfonts/*.woff2`, trimmed to the icons the extension uses by `scripts/build-icons.js` from the `@fortawesome/fontawesome-free` package; the package's `LICENSE.txt` is included alongside)
+- Distribution: vendored at `src/vendor/fontawesome/` from the `@fortawesome/fontawesome-free` package by `scripts/build-icons.js`: `fontawesome.css` (trimmed to the icons the extension uses) and the unmodified `webfonts/*.woff2`, with the package's `LICENSE.txt` alongside
 
 Attribution: Icons by Font Awesome — https://fontawesome.com
 

@@ -18,7 +18,7 @@ npm run dev           # Development mode with file watching
 npm run package       # Create release zip file (builds + packages)
 npm run screenshots   # Regenerate landing page / web store screenshots (docs/img/, requires Playwright — see scripts/screenshots/README.md)
 npm run announce-card # Render the release announcement card images (see scripts/announce-card/README.md — requires Playwright; normally run by the release announcement workflow)
-npm run build:icons   # Regenerate the vendored Font Awesome subset (src/vendor/fontawesome/) — run after adding or changing an fa-* icon (a Jest test guards against forgetting)
+npm run build:icons   # Regenerate the vendored Font Awesome stylesheet (src/vendor/fontawesome/) — run after adding or changing an fa-* icon (a Jest test guards against forgetting)
 npm run build:landing # Regenerate static English landing pages (docs/en/) + sitemap.xml — run after changing landing page copy or scripts/landing-en-data.js (requires Playwright; a Jest test guards against forgetting)
 ```
 

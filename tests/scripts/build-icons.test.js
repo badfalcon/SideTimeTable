@@ -1,15 +1,15 @@
 /**
  * Staleness guard for the vendored Font Awesome subset (src/vendor/fontawesome/).
  *
- * The stylesheet and fonts are produced by `npm run build:icons` from the
- * `fa-*` classes used in src/. Because they are committed artifacts, this test
+ * The stylesheet is produced by `npm run build:icons` from the `fa-*` classes
+ * used in src/, next to the package's fonts. Because they are committed artifacts, this test
  * fails if an icon was added or changed without regenerating them (the icon
  * would render blank), or if src/ uses a class Font Awesome does not have.
  */
 
 const fs = require('fs');
 const path = require('path');
-const { buildIcons, OUT_DIR } = require('../../scripts/build-icons');
+const { buildIcons, packageDir, OUT_DIR } = require('../../scripts/build-icons');
 
 const SRC = path.join(__dirname, '..', '..', 'src');
 
@@ -19,12 +19,15 @@ describe('vendored Font Awesome (src/vendor/fontawesome/)', () => {
         expect(committed).toBe(buildIcons().css);
     });
 
-    test('the fonts the stylesheet references exist', () => {
+    // The fonts are SIL OFL with the Reserved Font Name "Font Awesome": a
+    // modified (e.g. subset) font may not keep that name, so ship them as is.
+    test('the fonts the stylesheet references are the unmodified package fonts', () => {
         const css = fs.readFileSync(path.join(OUT_DIR, 'fontawesome.css'), 'utf8');
         const urls = [...css.matchAll(/url\("([^"]+)"\)/g)].map((match) => match[1]);
         expect(urls).toHaveLength(3);
         for (const url of urls) {
-            expect(fs.statSync(path.join(OUT_DIR, url)).size).toBeGreaterThan(0);
+            const shipped = fs.readFileSync(path.join(OUT_DIR, url));
+            expect(shipped.equals(fs.readFileSync(path.join(packageDir(), url)))).toBe(true);
         }
     });
 
