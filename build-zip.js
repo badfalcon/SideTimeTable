@@ -53,6 +53,10 @@ archive.directory('src/img/', 'src/img');
 archive.file('src/lib/localize.js', { name: 'src/lib/localize.js' });
 archive.file('src/lib/locale-utils.js', { name: 'src/lib/locale-utils.js' });
 
+// src/vendor/fontawesome/ - icon fonts and license (the stylesheet is in the *.css glob above)
+console.log('  ✓ src/vendor/fontawesome/ (fonts, license)');
+archive.glob('**/*.{woff2,txt}', { cwd: 'src/vendor/fontawesome' }, { prefix: 'src/vendor/fontawesome' });
+
 // _locales/
 console.log('  ✓ _locales/');
 archive.directory('_locales/', '_locales');

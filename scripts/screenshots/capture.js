@@ -55,38 +55,6 @@ const LOCALES = {
     },
 };
 
-const FONT_MIME = {
-    '.css': 'text/css',
-    '.woff2': 'font/woff2',
-    '.woff': 'font/woff',
-    '.ttf': 'font/ttf',
-};
-
-/**
- * Serve Font Awesome from the @fortawesome/fontawesome-free devDependency so
- * captures are deterministic and work offline. Fails loudly when the package
- * is missing - a silent CDN fallback could commit icon-less screenshots.
- */
-async function routeFontAwesome(ctx) {
-    let faDir;
-    try {
-        faDir = path.dirname(require.resolve('@fortawesome/fontawesome-free/package.json', { paths: [ROOT] }));
-    } catch {
-        throw new Error('@fortawesome/fontawesome-free is not installed - run `npm install` first.');
-    }
-
-    await ctx.route('https://use.fontawesome.com/**', async (route) => {
-        const url = new URL(route.request().url());
-        const m = url.pathname.match(/\/(css|webfonts)\/([^/]+)$/);
-        const file = m ? path.join(faDir, m[1], m[2]) : null;
-        if (!file || !fs.existsSync(file)) return route.abort();
-        await route.fulfill({
-            body: fs.readFileSync(file),
-            contentType: FONT_MIME[path.extname(file)] || 'application/octet-stream',
-        });
-    });
-}
-
 /** Wait until the side panel has rendered demo events and layout has settled. */
 async function waitForTimeline(page) {
     try {
@@ -140,8 +108,6 @@ async function capture(lang, { rawDir, landingUrl }) {
     });
 
     try {
-        await routeFontAwesome(ctx);
-
         let [sw] = ctx.serviceWorkers();
         if (!sw) sw = await ctx.waitForEvent('serviceworker', { timeout: 15000 });
         const extId = new URL(sw.url()).host;
@@ -201,6 +167,9 @@ async function capture(lang, { rawDir, landingUrl }) {
             set('#googleEventGuests', guests.join(', '));
             document.querySelector('#googleEventGuests').dispatchEvent(new Event('blur'));
         }, { title: L.googleEventTitle, guests: DEMO_GUESTS });
+        // The dialog focuses its first field 100ms after opening; let that
+        // land so the blur below clears it rather than running first.
+        await page.waitForTimeout(200);
         // Keep the top of the dialog (Local / Google, event type) in view
         await page.evaluate(() => {
             document.activeElement?.blur();

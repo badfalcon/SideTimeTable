@@ -25,7 +25,7 @@ Get it from the [Chrome Web Store](https://chromewebstore.google.com/detail/side
 If SideTimeTable is useful to you, you can support its development through [GitHub Sponsors](https://github.com/sponsors/badfalcon). The extension stays free either way.
 
 ### License
-[Apache License 2.0](./LICENSE). Third-party notices are in [`THIRD_PARTY_LICENSES.md`](./THIRD_PARTY_LICENSES.md).
+[Apache License 2.0](./LICENSE). Third-party notices are in [`THIRD_PARTY_LICENSES.md`](./THIRD_PARTY_LICENSES.md). Icons by [Font Awesome](https://fontawesome.com) (CC BY 4.0), bundled with the extension.
 
 ---
 
@@ -46,4 +46,4 @@ If SideTimeTable is useful to you, you can support its development through [GitH
 SideTimeTable が役に立ったら、[GitHub Sponsors](https://github.com/sponsors/badfalcon) から開発を支援できます。拡張機能は今後も無料です。
 
 ### ライセンス
-[Apache License 2.0](./LICENSE)。第三者ライブラリの表示は [`THIRD_PARTY_LICENSES.md`](./THIRD_PARTY_LICENSES.md) にあります。
+[Apache License 2.0](./LICENSE)。第三者ライブラリの表示は [`THIRD_PARTY_LICENSES.md`](./THIRD_PARTY_LICENSES.md) にあります。アイコンは [Font Awesome](https://fontawesome.com) (CC BY 4.0) で、拡張機能に同梱しています。
