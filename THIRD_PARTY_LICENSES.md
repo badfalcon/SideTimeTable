@@ -1,7 +1,7 @@
 # Third-Party Licenses
 
 SideTimeTable is distributed under the Apache License 2.0 (see `LICENSE`).
-It bundles or references the following third-party software. Each library is the property of its respective copyright holders and is used under the terms of its own license, summarized below.
+It bundles the following third-party software. Each library is the property of its respective copyright holders and is used under the terms of its own license, summarized below.
 
 ---
 
@@ -59,7 +59,7 @@ Full text: https://github.com/popperjs/popper-core/blob/master/LICENSE.md
   - Icons: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
   - Fonts: SIL OFL 1.1 (https://scripts.sil.org/OFL)
   - Code: MIT
-- Distribution: loaded via CDN (`https://use.fontawesome.com/releases/v6.7.1/css/all.css`)
+- Distribution: vendored at `src/vendor/fontawesome/` (`fontawesome.css` and `webfonts/*.woff2`, trimmed to the icons the extension uses by `scripts/build-icons.js` from the `@fortawesome/fontawesome-free` package; the package's `LICENSE.txt` is included alongside)
 
 Attribution: Icons by Font Awesome — https://fontawesome.com
 

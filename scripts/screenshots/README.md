@@ -47,8 +47,8 @@ npm run screenshots -- --out <dir>    # 出力先を変更
 
 ## 注意
 
-- Font Awesome は `@fortawesome/fontawesome-free` (devDependency) から
-  ローカル配信されるため、オフライン環境でも撮影可能
+- Font Awesome は拡張機能に同梱 (`src/vendor/fontawesome/`、`npm run build:icons`
+  で生成) されているため、オフライン環境でも撮影可能
 - 実行後の `dist/` と `manifest.json` はデモデータ入りの開発ビルドになる。
   リリース作業前に `npm run build` で本番ビルドに戻すこと
   (build-zip.js 側にも dev マニフェスト検出ガードあり)
