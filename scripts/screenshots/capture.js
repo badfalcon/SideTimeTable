@@ -7,6 +7,7 @@
  *
  *   panel-light[-en].png       side panel timeline (light theme)
  *   panel-dark-modal[-en].png  side panel with the local event modal (dark)
+ *   panel-google-modal[-en].png  side panel creating a Google event with guests (light)
  *   options-light[-en].png     options page, integration section (light)
  *   options-dark[-en].png      options page, display section (dark)
  *   landing.png / changelog-en.png   backdrop page for shot 1
@@ -29,6 +30,8 @@ const ROOT = path.resolve(__dirname, '..', '..');
 const FIXED_DATE = '2026-07-15';
 const FIXED_TIME = '10:25';
 const DEMO_SCENARIO = 'dev_team';
+// Teammates from the dev_team scenario, invited in the Google create dialog
+const DEMO_GUESTS = ['jordan@team.com', 'sam@team.com', 'jamie@team.com'];
 
 const LOCALES = {
     ja: {
@@ -36,6 +39,8 @@ const LOCALES = {
         chromeLang: 'ja', locale: 'ja-JP', tz: 'Asia/Tokyo',
         fixedTime: `${FIXED_DATE}T${FIXED_TIME}:00+09:00`,
         eventTitle: 'デザインレビュー',
+        googleEventTitle: '新機能の仕様すり合わせ',
+        primaryCalendar: 'マイカレンダー',
         suffix: '',
     },
     en: {
@@ -43,6 +48,8 @@ const LOCALES = {
         chromeLang: 'en-US', locale: 'en-US', tz: 'America/New_York',
         fixedTime: `${FIXED_DATE}T${FIXED_TIME}:00-04:00`,
         eventTitle: 'Design review',
+        googleEventTitle: 'Feature spec sync',
+        primaryCalendar: 'My Calendar',
         suffix: '-en',
     },
 };
@@ -166,6 +173,43 @@ async function capture(lang, { rawDir, landingUrl }) {
         await page.reload({ waitUntil: 'load' });
         await waitForTimeline(page);
         await page.screenshot({ path: out('panel-light'), animations: 'disabled' });
+
+        // Side panel with the create dialog saving to Google (light), with guests
+        await page.locator('#addLocalEventButton').click({ force: true });
+        await page.locator('#eventTitle').waitFor({ state: 'visible', timeout: 5000 });
+        // Demo mode offers no Google save destination (saving would call the
+        // real API), so hand the dialog the demo primary calendar directly.
+        await page.evaluate((summary) => {
+            window.sidePanelController.localEventModal.setGoogleAvailability([
+                { id: 'primary', summary, primary: true },
+            ]);
+        }, L.primaryCalendar);
+        await page.locator('.event-segmented-btn:has(.fa-google)').click();
+        await page.evaluate(({ title, guests }) => {
+            const set = (sel, v) => {
+                const el = document.querySelector(sel);
+                if (!el) throw new Error(`missing ${sel}`);
+                el.value = v;
+                el.dispatchEvent(new Event('input', { bubbles: true }));
+                el.dispatchEvent(new Event('change', { bubbles: true }));
+            };
+            set('#eventTitle', title);
+            set('#eventEndTime', '15:00');
+            set('#eventStartTime', '14:00');
+            // blur turns the typed addresses into chips
+            set('#googleEventGuests', guests.join(', '));
+            document.querySelector('#googleEventGuests').dispatchEvent(new Event('blur'));
+        }, { title: L.googleEventTitle, guests: DEMO_GUESTS });
+        // Keep the top of the dialog (Local / Google, event type) in view
+        await page.evaluate(() => {
+            document.activeElement?.blur();
+            document.querySelectorAll('.modal-content, .modal-body, .event-dialog-body')
+                .forEach(el => { el.scrollTop = 0; });
+        });
+        await page.waitForTimeout(200);
+        await page.screenshot({ path: out('panel-google-modal'), animations: 'disabled' });
+        await page.reload({ waitUntil: 'load' });
+        await waitForTimeline(page);
 
         // Side panel with local-event modal (dark)
         await page.evaluate(async () => {

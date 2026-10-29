@@ -5,7 +5,7 @@
  * frame (tab strip, toolbar, omnibox, optional side-panel header) and renders
  * the result at 1280x800 - the Chrome Web Store standard screenshot size.
  *
- * Output: image_1[_en].png .. image_3[_en].png
+ * Output: image_1[_en].png .. image_4[_en].png
  */
 
 const fs = require('fs');
@@ -53,6 +53,12 @@ const SHOTS = {
             url: `${EXT_URL}/src/options/options.html`,
             pageImg: 'options-dark.png', panelImg: 'panel-dark-modal.png',
         },
+        {
+            out: 'image_4.png', theme: 'light',
+            tabTitle: 'SideTimeTable - サイドパネルで今日を管理する',
+            url: 'sidetimetable.com',
+            pageImg: 'landing.png', panelImg: 'panel-google-modal.png',
+        },
     ],
     en: [
         {
@@ -72,6 +78,12 @@ const SHOTS = {
             tabTitle: 'SideTimeTable settings',
             url: `${EXT_URL}/src/options/options.html`,
             pageImg: 'options-dark-en.png', panelImg: 'panel-dark-modal-en.png',
+        },
+        {
+            out: 'image_4_en.png', theme: 'light',
+            tabTitle: 'Changelog',
+            url: `${EXT_URL}/src/changelog/changelog.html`,
+            pageImg: 'changelog-en.png', panelImg: 'panel-google-modal-en.png',
         },
     ],
 };
