@@ -3,7 +3,9 @@
 ## 日本語版 (Japanese)
 
 ### 短い説明 (Short Description)
-日々のスケジュール管理をサイドパネルで。Googleカレンダー連携とリマインダー通知に対応した便利なタイムテーブル拡張機能。
+ストアの概要はパッケージの manifest の `description`（`_locales/ja/messages.json` の `appDesc`）から取られ、ダッシュボードでは編集できません。変えるときはそちらを直してパッケージを上げ直します。
+
+今日の予定をサイドパネルにタイムライン表示。Googleカレンダーの予定の確認・作成・編集とリマインダー通知に対応。
 
 ### 詳細説明 (Detailed Description) - プレーンテキスト版
 
@@ -25,7 +27,9 @@ SideTimeTable は、その日の予定を Chrome のサイドパネルにタイ�
 ## English Version
 
 ### Short Description
-Daily schedule management in your side panel. Timetable extension with Google Calendar integration and reminder notifications.
+The store summary comes from the package's manifest `description` (`appDesc` in `_locales/en/messages.json`) and can't be edited in the dashboard. Change it there and upload a new package.
+
+See your day as a timeline in Chrome's side panel. View, create, and edit Google Calendar events and get reminders.
 
 ### Detailed Description - Plain Text Version
 
