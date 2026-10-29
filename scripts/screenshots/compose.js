@@ -5,7 +5,7 @@
  * frame (tab strip, toolbar, omnibox, optional side-panel header) and renders
  * the result at 1280x800 - the Chrome Web Store standard screenshot size.
  *
- * Output: image_1[_en].png .. image_4[_en].png
+ * Output: image_1[_en].png .. image_5[_en].png
  */
 
 const fs = require('fs');
@@ -33,14 +33,14 @@ const THEMES = {
     },
 };
 
+const LANDING_JA = { tabTitle: 'SideTimeTable - サイドパネルで今日を管理する', url: 'sidetimetable.com' };
+const LANDING_EN = { tabTitle: 'SideTimeTable - Manage your day in the side panel', url: 'sidetimetable.com/en/' };
+const CHANGELOG_JA = { tabTitle: '変更履歴', url: `${EXT_URL}/src/changelog/changelog.html` };
+const CHANGELOG_EN = { tabTitle: 'Changelog', url: `${EXT_URL}/src/changelog/changelog.html` };
+
 const SHOTS = {
     ja: [
-        {
-            out: 'image_1.png', theme: 'light',
-            tabTitle: 'SideTimeTable - サイドパネルで今日を管理する',
-            url: 'sidetimetable.com',
-            pageImg: 'landing.png', panelImg: 'panel-light.png',
-        },
+        { out: 'image_1.png', theme: 'light', ...LANDING_JA, pageImg: 'landing.png', panelImg: 'panel-light.png' },
         {
             out: 'image_2.png', theme: 'light',
             tabTitle: 'SideTimeTable の設定',
@@ -51,22 +51,13 @@ const SHOTS = {
             out: 'image_3.png', theme: 'dark',
             tabTitle: 'SideTimeTable の設定',
             url: `${EXT_URL}/src/options/options.html`,
-            pageImg: 'options-dark.png', panelImg: 'panel-dark-modal.png',
+            pageImg: 'options-dark.png', panelImg: 'panel-dark.png',
         },
-        {
-            out: 'image_4.png', theme: 'light',
-            tabTitle: 'SideTimeTable - サイドパネルで今日を管理する',
-            url: 'sidetimetable.com',
-            pageImg: 'landing.png', panelImg: 'panel-google-modal.png',
-        },
+        { out: 'image_4.png', theme: 'light', ...CHANGELOG_JA, pageImg: 'changelog.png', panelImg: 'panel-google-modal.png' },
+        { out: 'image_5.png', theme: 'light', ...LANDING_JA, pageImg: 'landing.png', panelImg: 'panel-google-detail.png' },
     ],
     en: [
-        {
-            out: 'image_1_en.png', theme: 'light',
-            tabTitle: 'Changelog',
-            url: `${EXT_URL}/src/changelog/changelog.html`,
-            pageImg: 'changelog-en.png', panelImg: 'panel-light-en.png',
-        },
+        { out: 'image_1_en.png', theme: 'light', ...CHANGELOG_EN, pageImg: 'changelog-en.png', panelImg: 'panel-light-en.png' },
         {
             out: 'image_2_en.png', theme: 'light',
             tabTitle: 'SideTimeTable settings',
@@ -77,14 +68,10 @@ const SHOTS = {
             out: 'image_3_en.png', theme: 'dark',
             tabTitle: 'SideTimeTable settings',
             url: `${EXT_URL}/src/options/options.html`,
-            pageImg: 'options-dark-en.png', panelImg: 'panel-dark-modal-en.png',
+            pageImg: 'options-dark-en.png', panelImg: 'panel-dark-en.png',
         },
-        {
-            out: 'image_4_en.png', theme: 'light',
-            tabTitle: 'Changelog',
-            url: `${EXT_URL}/src/changelog/changelog.html`,
-            pageImg: 'changelog-en.png', panelImg: 'panel-google-modal-en.png',
-        },
+        { out: 'image_4_en.png', theme: 'light', ...LANDING_EN, pageImg: 'landing-en.png', panelImg: 'panel-google-modal-en.png' },
+        { out: 'image_5_en.png', theme: 'light', ...CHANGELOG_EN, pageImg: 'changelog-en.png', panelImg: 'panel-google-detail-en.png' },
     ],
 };
 

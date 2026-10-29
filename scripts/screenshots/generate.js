@@ -116,19 +116,19 @@ async function main() {
     }
 
     const rawDir = fs.mkdtempSync(path.join(os.tmpdir(), 'stt-screenshot-raw-'));
-    const docsServer = langs.includes('ja') ? await serveDocs() : null;
+    const docsServer = await serveDocs();
 
     try {
         for (const lang of langs) {
             console.log(`Capturing ${lang} screenshots...`);
-            await capture(lang, { rawDir, landingUrl: docsServer?.url });
+            await capture(lang, { rawDir, landingUrl: docsServer.url });
             console.log(`Composing ${lang} screenshots...`);
             await compose(lang, { rawDir, outDir });
         }
         console.log(`Done. Screenshots written to ${outDir}`);
         console.log('Note: dist/ now contains a demo development build - run `npm run build` before packaging a release.');
     } finally {
-        docsServer?.close();
+        docsServer.close();
         fs.rmSync(rawDir, { recursive: true, force: true });
     }
 }

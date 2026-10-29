@@ -6,11 +6,12 @@
  * captures the raw page images that compose.js later frames:
  *
  *   panel-light[-en].png       side panel timeline (light theme)
- *   panel-dark-modal[-en].png  side panel with the local event modal (dark)
+ *   panel-dark[-en].png        side panel timeline (dark)
  *   panel-google-modal[-en].png  side panel creating a Google event with guests (light)
+ *   panel-google-detail[-en].png side panel showing a meeting's details (light)
  *   options-light[-en].png     options page, integration section (light)
  *   options-dark[-en].png      options page, display section (dark)
- *   landing.png / changelog-en.png   backdrop page for shot 1
+ *   landing[-en].png / changelog[-en].png   backdrop pages
  *
  * The page clock is fixed (Playwright Clock API) so the demo date/time in the
  * output is stable across runs - re-running with no UI change reproduces the
@@ -38,7 +39,7 @@ const LOCALES = {
         env: { LANGUAGE: 'ja_JP', LANG: 'ja_JP.UTF-8', LC_ALL: 'ja_JP.UTF-8' },
         chromeLang: 'ja', locale: 'ja-JP', tz: 'Asia/Tokyo',
         fixedTime: `${FIXED_DATE}T${FIXED_TIME}:00+09:00`,
-        eventTitle: 'デザインレビュー',
+        meetingTitle: 'チーム定例MTG',
         googleEventTitle: '新機能の仕様すり合わせ',
         primaryCalendar: 'マイカレンダー',
         suffix: '',
@@ -47,7 +48,7 @@ const LOCALES = {
         env: { LANGUAGE: 'en_US', LANG: 'en_US.UTF-8', LC_ALL: 'en_US.UTF-8' },
         chromeLang: 'en-US', locale: 'en-US', tz: 'America/New_York',
         fixedTime: `${FIXED_DATE}T${FIXED_TIME}:00-04:00`,
-        eventTitle: 'Design review',
+        meetingTitle: 'Weekly Team Meeting',
         googleEventTitle: 'Feature spec sync',
         primaryCalendar: 'My Calendar',
         suffix: '-en',
@@ -110,7 +111,7 @@ function waitForTheme(page, dark) {
  * @param {'ja'|'en'} lang - Target language
  * @param {Object} opts
  * @param {string} opts.rawDir - Directory for the raw PNGs
- * @param {string} [opts.landingUrl] - Local URL of the landing page (ja shot 1)
+ * @param {string} opts.landingUrl - Local URL of the landing page (served docs/)
  */
 async function capture(lang, { rawDir, landingUrl }) {
     const L = LOCALES[lang];
@@ -211,33 +212,24 @@ async function capture(lang, { rawDir, landingUrl }) {
         await page.reload({ waitUntil: 'load' });
         await waitForTimeline(page);
 
-        // Side panel with local-event modal (dark)
+        // Side panel with a Google meeting's details (light): Meet, guests, RSVP
+        await page.locator('.google-event', { hasText: L.meetingTitle }).first().click({ force: true });
+        await page.locator('.event-detail-join').first().waitFor({ state: 'visible', timeout: 5000 });
+        // Unfold the guest list so each reply shows
+        await page.locator('.event-detail-attendees-toggle').click();
+        await page.waitForTimeout(200);
+        // No focus ring on the close button or the toggle in the capture
+        await page.evaluate(() => document.activeElement?.blur());
+        await page.screenshot({ path: out('panel-google-detail'), animations: 'disabled' });
+
+        // Side panel timeline (dark)
         await page.evaluate(async () => {
             await chrome.storage.sync.set({ colorTheme: 'dark' });
         });
         await page.reload({ waitUntil: 'load' });
         await waitForTimeline(page);
         await waitForTheme(page, true);
-        await page.locator('#addLocalEventButton').click({ force: true });
-        await page.locator('#eventTitle').waitFor({ state: 'visible', timeout: 5000 });
-        // pre-fill the form so the modal looks lived-in
-        await page.evaluate((title) => {
-            const set = (sel, v) => {
-                const el = document.querySelector(sel);
-                if (!el) throw new Error(`missing ${sel}`);
-                el.value = v;
-                el.dispatchEvent(new Event('input', { bubbles: true }));
-                // The form reacts on change (e.g. the duration picker follows the times)
-                el.dispatchEvent(new Event('change', { bubbles: true }));
-            };
-            set('#eventTitle', title);
-            // End first, so the start never lands after the end in between
-            set('#eventEndTime', '17:00');
-            set('#eventStartTime', '16:30');
-            // No focus ring or selected time segment in the capture
-            document.activeElement?.blur();
-        }, L.eventTitle);
-        await page.screenshot({ path: out('panel-dark-modal'), animations: 'disabled' });
+        await page.screenshot({ path: out('panel-dark'), animations: 'disabled' });
         // restore light theme before the options captures
         await page.evaluate(async () => {
             await chrome.storage.sync.set({ colorTheme: 'default' });
@@ -267,21 +259,18 @@ async function capture(lang, { rawDir, landingUrl }) {
             await chrome.storage.sync.set({ colorTheme: 'default' });
         });
 
-        // Backdrop page for shot 1: landing page (ja) / changelog page (en)
+        // Backdrop pages: the landing page and the changelog page
+        if (!landingUrl) throw new Error('landingUrl is required');
         const backdrop = await ctx.newPage();
         await backdrop.clock.setFixedTime(fixedTime);
         await backdrop.setViewportSize({ width: PAGE_W, height: CONTENT_H });
-        if (lang === 'ja') {
-            if (!landingUrl) throw new Error('landingUrl is required for the ja capture');
-            await backdrop.goto(landingUrl, { waitUntil: 'load' });
-            await backdrop.waitForTimeout(1500); // hero entrance animations finish
-            await backdrop.screenshot({ path: path.join(rawDir, 'landing.png'), animations: 'disabled' });
-        } else {
-            await backdrop.goto(changelogUrl, { waitUntil: 'load' });
-            await backdrop.waitForSelector('h1', { timeout: 10000 });
-            await waitForTheme(backdrop, false);
-            await backdrop.screenshot({ path: path.join(rawDir, 'changelog-en.png'), animations: 'disabled' });
-        }
+        await backdrop.goto(lang === 'ja' ? landingUrl : new URL('en/index.html', landingUrl).href, { waitUntil: 'load' });
+        await backdrop.waitForTimeout(1500); // hero entrance animations finish
+        await backdrop.screenshot({ path: out('landing'), animations: 'disabled' });
+        await backdrop.goto(changelogUrl, { waitUntil: 'load' });
+        await backdrop.waitForSelector('h1', { timeout: 10000 });
+        await waitForTheme(backdrop, false);
+        await backdrop.screenshot({ path: out('changelog'), animations: 'disabled' });
     } finally {
         await ctx.close();
         try {
