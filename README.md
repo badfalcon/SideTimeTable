@@ -55,7 +55,7 @@
   - `src/side_panel/time-manager.js`: `TimeTableManager` and `EventLayoutManager` classes
   - `src/side_panel/event-handlers.js`: `GoogleEventManager` and `LocalEventManager` classes
   - `src/options/options.js`: Settings management with `CalendarManager` for calendar search functionality
-- **Styling**: Modify styles in `side_panel.css` with Bootstrap 5.3.0 framework
+- **Styling**: Modify styles in `side_panel.css` (CSS variables, see `.claude/rules/theme-support.md`)
 - **IntelliJ IDEA**: Pre-configured run configurations available (Build, Dev, Package)
 - **Development Workflow**:
   1. Run `npm run dev` to start file watching
@@ -100,7 +100,7 @@ If SideTimeTable is useful to you, you can support its development through [GitH
 This plugin is released under the [Apache License 2.0]. See the `LICENSE` file for details.
 
 ### Third-Party Software
-SideTimeTable bundles or references third-party libraries (Bootstrap, Popper.js, Font Awesome, marked, DOMPurify). See [`THIRD_PARTY_LICENSES.md`](./THIRD_PARTY_LICENSES.md) for copyright notices and license terms.
+SideTimeTable bundles or references third-party libraries (Font Awesome, marked, DOMPurify). See [`THIRD_PARTY_LICENSES.md`](./THIRD_PARTY_LICENSES.md) for copyright notices and license terms.
 
 ---
 
@@ -194,7 +194,7 @@ chrome.storage.local.set({ enableDeveloperFeatures: false, enableReminderDebug: 
   - `src/side_panel/time-manager.js`: `TimeTableManager` と `EventLayoutManager` クラス
   - `src/side_panel/event-handlers.js`: `GoogleEventManager` と `LocalEventManager` クラス
   - `src/options/options.js`: カレンダー検索機能付き `CalendarManager` による設定管理
-- **スタイリング**: Bootstrap 5.3.0フレームワークで `side_panel.css` のスタイルを変更
+- **スタイリング**: `side_panel.css` のスタイルを変更（CSS 変数、`.claude/rules/theme-support.md` 参照）
 - **IntelliJ IDEA**: 実行設定が事前構成済み（Build、Dev、Package）
 - **開発ワークフロー**:
   1. `npm run dev` でファイル監視を開始
@@ -209,5 +209,5 @@ SideTimeTable が役に立ったら、[GitHub Sponsors](https://github.com/spons
 このプラグインは[Apache License 2.0]の下で公開されています。詳細は`LICENSE`ファイルを参照してください。
 
 ### サードパーティソフトウェア
-SideTimeTable は Bootstrap、Popper.js、Font Awesome、marked、DOMPurify などの第三者ライブラリを同梱・参照しています。著作権表示および各ライセンス条項は [`THIRD_PARTY_LICENSES.md`](./THIRD_PARTY_LICENSES.md) を参照してください。
+SideTimeTable は Font Awesome、marked、DOMPurify などの第三者ライブラリを同梱・参照しています。著作権表示および各ライセンス条項は [`THIRD_PARTY_LICENSES.md`](./THIRD_PARTY_LICENSES.md) を参照してください。
 
