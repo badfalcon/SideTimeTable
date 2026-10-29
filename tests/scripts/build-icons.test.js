@@ -39,6 +39,11 @@ describe('vendored Font Awesome (src/vendor/fontawesome/)', () => {
         }
     });
 
+    test('the release ZIP packages the fonts and license', () => {
+        const buildZip = fs.readFileSync(path.join(__dirname, '..', '..', 'build-zip.js'), 'utf8');
+        expect(buildZip).toContain("cwd: 'src/vendor/fontawesome'");
+    });
+
     test('an unknown fa-* class fails the build', () => {
         expect(() => buildIcons(['fa-xmark', 'fa-not-a-real-icon'])).toThrow('fa-not-a-real-icon');
     });

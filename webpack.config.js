@@ -38,7 +38,8 @@ module.exports = (env = {}, argv) => {
   ];
 
   return {
-    devtool: 'source-map',
+    // No source maps in the store package; dev builds keep them for debugging.
+    devtool: argv.mode === 'production' ? false : 'source-map',
     entry: {
       background: './src/background.js',
       side_panel: './src/side_panel/side_panel.js',
