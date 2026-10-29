@@ -15,10 +15,11 @@ SideTimeTableは、Chromeのサイドパネルで今日の予定を素早く確�
 
 • サイドパネル表示: ワンクリックで今日のスケジュールをサイドパネルに表示
 • Googleカレンダー連携: 複数のGoogleカレンダーを同期し、個人・チーム予定を一元管理
+• Google予定の作成・編集: サイドパネルからGoogle予定を作成・編集・削除（ゲストの招待、Google Meetリンクの追加、不在予定の作成、出欠の回答にも対応）
 • カレンダーグループ: 「仕事」「プライベート」などグループを作成し、ワンクリックで表示切替
 • ローカルイベント管理: Google以外の予定も直接追加・編集可能（タイムライン上のドラッグで即座に作成も可能）
 • 繰り返しイベント: 毎日・毎週・毎月・平日の繰り返し予定を簡単作成
-• リマインダー通知: 予定の◯分前にデスクトップ通知でお知らせ（Google予定の自動リマインドにも対応）
+• リマインダー通知: 予定の◯分前にデスクトップ通知でお知らせ。通知をクリックするとその予定を表示（Google予定の自動リマインドにも対応）
 • メモパネル: サイドパネル下部に折りたたみ可能なメモ欄を常備
 • ダークモード: ダークテーマに完全対応、テキスト色も自動調整
 • カスタマイズ設定: カラーテーマ、作業時間、休憩時間などを自由に設定（色覚対応プリセット付き）
@@ -41,7 +42,7 @@ SideTimeTableは、Chromeのサイドパネルで今日の予定を素早く確�
 
 【プライバシー】
 
-カレンダーデータは安全に処理され、必要最小限のアクセス権限（通知、アラーム、ID/カレンダー連携 など）のみを使用します。カレンダーへの書き込みは出欠回答の更新のみに使用されます。データは外部サーバーに送信されません。
+カレンダーデータは安全に処理され、必要最小限のアクセス権限（通知、アラーム、ID/カレンダー連携 など）のみを使用します。カレンダーへの書き込みは、ご自身で操作した予定の作成・編集・削除と出欠回答にのみ使用されます。データは外部サーバーに送信されません。
 
 ---
 
@@ -60,10 +61,11 @@ SideTimeTable is a Chrome extension that lets you quickly view and manage today'
 
 • Side Panel Display: View today's schedule in the side panel with one click
 • Google Calendar Integration: Sync multiple Google Calendars to manage personal and team schedules in one place
+• Create and Edit Google Events: Create, edit, and delete Google Calendar events from the side panel, including guest invitations, Google Meet links, out-of-office events, and RSVP responses
 • Calendar Grouping: Create groups like "Work" or "Personal" and switch views with one click
 • Local Event Management: Add and edit non-Google events directly, or drag on the timeline to create instantly
 • Recurring Events: Easily create daily, weekly, monthly, or weekday recurring events
-• Reminder Notifications: Get desktop alerts before events (with auto-reminders for Google events)
+• Reminder Notifications: Get desktop alerts before events, and click one to jump to that event (with auto-reminders for Google events)
 • Memo Panel: A collapsible memo area at the bottom of the side panel for quick note-taking
 • Dark Mode: Full dark theme support with automatic text color contrast
 • Customizable Settings: Color themes, work hours, break times, and more (with color blindness presets)
@@ -86,7 +88,7 @@ SideTimeTable is a Chrome extension that lets you quickly view and manage today'
 
 [Privacy]
 
-Your calendar data is processed securely with minimal required permissions (notifications, alarms, identity/calendar integration, etc.). Calendar write access is used only for updating RSVP responses. Data is not transmitted to external servers.
+Your calendar data is processed securely with minimal required permissions (notifications, alarms, identity/calendar integration, etc.). Calendar write access is used only for events you create, edit, or delete yourself and for RSVP responses. Data is not transmitted to external servers.
 
 ---
 

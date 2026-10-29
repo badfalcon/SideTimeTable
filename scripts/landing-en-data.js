@@ -114,7 +114,7 @@ const EN = {
     'privacy.accessItem2': 'Attendee information',
     'privacy.accessItem3': 'Google Meet links',
     'privacy.accessItem4': 'Your list of calendars (read-only)',
-    'privacy.accessNote': 'The extension also uses write access to calendar events for the RSVP feature. Writes are strictly limited to updating your attendance status.',
+    'privacy.accessNote': 'The extension also uses write access to calendar events to create, edit, and delete events from the side panel and to respond to invitations (RSVP). Writes happen only when you take these actions; the extension never changes your calendar on its own.',
     'privacy.retentionTitle': 'Retention and Deletion of Google User Data',
     'privacy.retentionDesc': 'SideTimeTable keeps Google user data only on your local device and never stores it on external servers. When you uninstall the extension or disconnect your Google account, all Google user data is deleted from your device.',
     'privacy.useTitle': 'Use of Information',
