@@ -16,7 +16,7 @@
  *   --name <text>          Release name; the version badge is extracted from it
  *   --card-ja <file>       Japanese card source (line 1 headline, then highlights)
  *   --card-en <file>       English card source
- *   --screenshot <base>    image_1 | image_2 | image_3 (default: image_1)
+ *   --screenshot <base>    image_1 .. image_5 (default: image_1)
  *   --out-dir <dir>        Where the PNGs are written (default: cwd)
  *   --lang <ja|en>         Render one language only
  *   --html-only            Write the card HTML instead of PNGs (no Playwright needed)

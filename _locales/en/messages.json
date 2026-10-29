@@ -1,6 +1,6 @@
 {
   "appDesc": {
-    "message": "A side panel extension that shows your today's events.",
+    "message": "See your day as a timeline in Chrome's side panel. View, create, and edit Google Calendar events and get reminders.",
     "description": "The description of the application"
   },
   "timelineTitle": {

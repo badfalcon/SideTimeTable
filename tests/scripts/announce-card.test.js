@@ -69,6 +69,7 @@ describe('resolveScreenshot', () => {
     test('accepts the known screenshot bases', () => {
         expect(resolveScreenshot('image_2')).toBe('image_2');
         expect(resolveScreenshot(' image_3 ')).toBe('image_3');
+        expect(resolveScreenshot('image_5')).toBe('image_5');
     });
 
     test('falls back to the default for anything else', () => {

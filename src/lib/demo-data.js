@@ -128,7 +128,16 @@ function _devTeamEvents(today, locale) {
             calendarBackgroundColor: '#3F51B5',
             calendarForegroundColor: '#FFFFFF',
             hangoutLink: 'https://meet.google.com/demo-meeting-1',
-            htmlLink: 'https://calendar.google.com/calendar/event?eid=demo1'
+            htmlLink: 'https://calendar.google.com/calendar/event?eid=demo1',
+            // Guests with mixed replies, and the user still to answer (RSVP)
+            isOwnedCalendar: true,
+            attendees: [
+                { email: 'jordan@team.com', displayName: T('Jordan Lee', '山田 翔'), organizer: true, responseStatus: 'accepted' },
+                { email: 'me@team.com', self: true, responseStatus: 'needsAction' },
+                { email: 'sam@team.com', displayName: T('Sam Chen', '佐藤 誠'), responseStatus: 'accepted' },
+                { email: 'jamie@team.com', displayName: T('Jamie Kim', '鈴木 花'), responseStatus: 'tentative' },
+                { email: 'casey@team.com', displayName: T('Casey Morgan', '中村 真由美'), responseStatus: 'declined' }
+            ]
         },
         // 10:30–12:00  Deep work
         {

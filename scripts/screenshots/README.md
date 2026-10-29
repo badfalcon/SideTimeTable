@@ -8,23 +8,27 @@
 # 前提: Playwright (devDependency ではないため個別インストール)
 npm i -D playwright && npx playwright install chromium
 
-# 日英 6 枚を docs/img/ に生成
+# 日英 10 枚を docs/img/ に生成
 npm run screenshots
 
 # オプション
-npm run screenshots -- --lang ja      # 日本語 3 枚のみ
-npm run screenshots -- --lang en      # 英語 3 枚のみ
+npm run screenshots -- --lang ja      # 日本語 5 枚のみ
+npm run screenshots -- --lang en      # 英語 5 枚のみ
 npm run screenshots -- --skip-build   # dist/ の既存ビルドを再利用
 npm run screenshots -- --out <dir>    # 出力先を変更
 ```
 
 ## 生成される画像 (1280x800, Chrome Web Store 標準サイズ)
 
+番号は Chrome ウェブストアにアップロードする順。
+
 | ファイル | 内容 |
 |---|---|
-| `image_1.png` / `image_1_en.png` | サイドパネルのタイムライン+メモ(ライト)。背景は ja=ランディングページ / en=変更履歴ページ |
-| `image_2.png` / `image_2_en.png` | 設定ページ: Google連携+カレンダー管理(ライト) |
-| `image_3.png` / `image_3_en.png` | 設定ページ(ダーク)+予定作成モーダルを開いたサイドパネル |
+| `image_1.png` / `image_1_en.png` | サイドパネルのタイムライン+メモ(ライト)。背景はランディングページ |
+| `image_2.png` / `image_2_en.png` | Google予定の作成ダイアログ(ゲスト3人)。背景は変更履歴ページ |
+| `image_3.png` / `image_3_en.png` | 会議の詳細(Meet参加ボタン・参加者の出欠・出欠ボタン)。背景はランディングページ |
+| `image_4.png` / `image_4_en.png` | 設定ページ(ダーク)+サイドパネルのタイムライン(ダーク) |
+| `image_5.png` / `image_5_en.png` | 設定ページ: Google連携+カレンダー管理(ライト) |
 
 日本語版は `docs/index.html` が参照。英語版はウェブストアの英語リスティング用
 (ダッシュボードから手動アップロード)。
