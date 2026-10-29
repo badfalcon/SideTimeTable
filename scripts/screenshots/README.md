@@ -20,13 +20,15 @@ npm run screenshots -- --out <dir>    # 出力先を変更
 
 ## 生成される画像 (1280x800, Chrome Web Store 標準サイズ)
 
+番号は Chrome ウェブストアにアップロードする順。
+
 | ファイル | 内容 |
 |---|---|
-| `image_1.png` / `image_1_en.png` | サイドパネルのタイムライン+メモ(ライト)。背景は ja=ランディングページ / en=変更履歴ページ |
-| `image_2.png` / `image_2_en.png` | 設定ページ: Google連携+カレンダー管理(ライト) |
-| `image_3.png` / `image_3_en.png` | 設定ページ(ダーク)+サイドパネルのタイムライン(ダーク) |
-| `image_4.png` / `image_4_en.png` | Google予定の作成ダイアログ(ゲスト3人)。背景は ja=変更履歴ページ / en=ランディングページ |
-| `image_5.png` / `image_5_en.png` | 会議の詳細(Meet参加ボタン・参加者の出欠・出欠ボタン)。背景は image_1 と同じ |
+| `image_1.png` / `image_1_en.png` | サイドパネルのタイムライン+メモ(ライト)。背景はランディングページ |
+| `image_2.png` / `image_2_en.png` | Google予定の作成ダイアログ(ゲスト3人)。背景は変更履歴ページ |
+| `image_3.png` / `image_3_en.png` | 会議の詳細(Meet参加ボタン・参加者の出欠・出欠ボタン)。背景はランディングページ |
+| `image_4.png` / `image_4_en.png` | 設定ページ(ダーク)+サイドパネルのタイムライン(ダーク) |
+| `image_5.png` / `image_5_en.png` | 設定ページ: Google連携+カレンダー管理(ライト) |
 
 日本語版は `docs/index.html` が参照。英語版はウェブストアの英語リスティング用
 (ダッシュボードから手動アップロード)。

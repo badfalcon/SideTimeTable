@@ -65,8 +65,8 @@ Chrome ウェブストアの掲載がライブになったのを確認してか�
 | `announce_card_en.png` | X English の**本文**／Reddit English |
 
 - 中身は「見出し＋更新の要点（最大3行）＋バージョン＋更新内容に近い製品スクショ」。
-  スクショは Claude が `image_1`（タイムライン+メモ）/ `image_2`（設定・Google連携）/
-  `image_3`（設定ダーク+予定作成）から選ぶ
+  スクショは Claude が `image_1`（タイムライン+メモ）/ `image_2`（Google予定の作成）/
+  `image_3`（会議の詳細）/ `image_4`（ダークテーマ）/ `image_5`（設定・Google連携）から選ぶ
 - **announcement** アーティファクト（run のページ下部）からダウンロードして、
   投稿画面にドラッグ&ドロップする
 - **LinkedIn**: 画像を付けるとURLのリンクプレビューが出なくなる。どちらか一方を選ぶ

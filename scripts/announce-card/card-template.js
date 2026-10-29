@@ -16,7 +16,7 @@ const HEIGHT = 630;
 const MAX_HIGHLIGHTS = 3;
 
 /** Screenshots the card may inset, matched to docs/img/<base>.png (ja) / <base>_en.png (en). */
-const SCREENSHOTS = ['image_1', 'image_2', 'image_3'];
+const SCREENSHOTS = ['image_1', 'image_2', 'image_3', 'image_4', 'image_5'];
 const DEFAULT_SCREENSHOT = 'image_1';
 
 const TEXT = {

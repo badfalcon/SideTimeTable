@@ -13,7 +13,7 @@
 
 カードの中身は「アイコン＋製品名＋バージョン」「見出し」「更新の要点（最大3行）」
 「ストア導線の一文」と、更新内容に近い製品スクリーンショット
-（`docs/img/image_{1..3}.png`）。デザインはランディングページ (`docs/style.css`) の
+（`docs/img/image_{1..5}.png`）。デザインはランディングページ (`docs/style.css`) の
 配色に合わせている。
 
 ## 使い方（ローカル）
@@ -42,7 +42,7 @@ npm run announce-card -- --card-ja card_ja.txt --html-only --out-dir .
 ```
 
 主なオプション: `--lang ja|en`（片方だけ生成）、`--scale`（既定 2 = Retina 相当）、
-`--screenshot image_1|image_2|image_3`。
+`--screenshot image_1`〜`image_5`。
 
 ## 文字数の目安
 
