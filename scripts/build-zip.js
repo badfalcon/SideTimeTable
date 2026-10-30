@@ -2,11 +2,14 @@ const fs = require('fs');
 const path = require('path');
 const archiver = require('archiver');
 
+// All paths below are relative to the repository root.
+process.chdir(path.join(__dirname, '..'));
+
 // Guard: manifest.json must be the production manifest. A dev/demo build
 // (npm run dev, npm run screenshots) leaves manifest.dev.json contents at the
 // root, and packaging that would ship the wrong OAuth client and dev key.
-const manifest = fs.readFileSync(path.join(__dirname, 'manifest.json'), 'utf8');
-const prodManifest = fs.readFileSync(path.join(__dirname, 'manifest.prod.json'), 'utf8');
+const manifest = fs.readFileSync('manifest.json', 'utf8');
+const prodManifest = fs.readFileSync('manifest.prod.json', 'utf8');
 if (manifest !== prodManifest) {
   console.error('❌ manifest.json does not match manifest.prod.json (development build detected).');
   console.error('   Run `npm run build` first, or use `npm run package`.');
@@ -15,7 +18,7 @@ if (manifest !== prodManifest) {
 
 // Output filename
 const outputFilename = 'SideTimeTable-release.zip';
-const output = fs.createWriteStream(path.join(__dirname, outputFilename));
+const output = fs.createWriteStream(outputFilename);
 const archive = archiver('zip', {
   zlib: { level: 9 } // Maximum compression
 });

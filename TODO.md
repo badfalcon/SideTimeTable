@@ -4,16 +4,15 @@
 
 ## Googleイベント作成（今後の拡張）
 
-- [x] ゲスト招待（attendees）対応 — 作成フォームにゲスト欄を追加（`guest-field.js` / `guest-utils.js`）。招待メールは「ゲストに招待メールを送る」チェック（既定オン）で `sendUpdates=all|none` を選ぶ。候補は読み込み済みの予定の参加者（メモリ上のみ、自分と会議室は除外）。残: 既存予定のゲスト編集（下記 `sendUpdates` 項目と合わせて設計）、連絡先（People API）からの候補 — 追加スコープが要るため見送り。
+- [ ] ゲスト候補を連絡先（People API）からも出す — 現状は読み込み済みの予定の参加者のみ。追加スコープが要るため見送り中。
 - [ ] Google ネイティブの繰り返し（RRULE）対応: 現状 v1 では繰り返しなしの単発イベントのみ作成可能。`recurrence: ['RRULE:...']` を組み立てる UI とロジックが必要。
 - [ ] 終日イベント（`start.date`/`end.date`）の作成・編集・削除対応（現状は時刻ありイベントのみ）。
-- [x] 作成した Google イベントの編集・削除 — 単発・書込可能カレンダーの時刻ありイベントに対応済み。編集可否は `isEditableGoogleEvent()`（`google-event-utils.js`）で判定: 主催者本人（`organizer.self`）または `guestsCanModify` のイベントのみ（招待コピーは403になるため非表示）、日跨ぎイベントは編集フォームが時刻のみのため除外。削除時の404/410（他クライアントで削除済み）は成功扱い。残: 繰り返しイベントの編集・削除（「この予定のみ/以降すべて/全体」の選択UI）、編集時の Meet 切替、カレンダー移動、ゲスト（attendees）編集と `sendUpdates`、日跨ぎイベントの編集対応。
+- [ ] Google 予定の編集の残り: 繰り返し予定の編集・削除（「この予定のみ/以降すべて/全体」の選択UI）、編集時の Meet 切替、カレンダー移動、既存予定のゲスト（attendees）編集（下記 `sendUpdates` 項目と合わせて設計）、日跨ぎ予定の編集（現状は `isEditableGoogleEvent()` で除外）。
 - [ ] Google イベント編集の競合制御（ETag/If-Match）: 現状は last-write-wins。他クライアントでの変更を上書きし得る。
-- [x] 書き込みの冪等性: `runDeduped`（`src/lib/request-dedupe.js`）で対応済み — モーダルがリトライ間で安定な `requestId` を保持し、background が `chrome.storage.session` の台帳（SW再起動を跨いで有効）＋in-flight共有で重複実行を防ぐ。`requestId` はペイロードのハッシュを含む（`buildRequestId()`）ため、失敗後にフォームを修正して再送した場合は別リクエストとして実行される。台帳の read-modify-write はモジュール内で直列化済み。残る既知の穴: APIコミット直後〜台帳書き込み前に SW が死んだ場合のみ重複し得る（極小ウィンドウ）。
+- [ ] 書き込みの冪等性（`runDeduped`）の既知の穴: API コミット直後〜台帳書き込み前に SW が死んだ場合のみ重複し得る（極小ウィンドウ）。
 - [ ] 共有カレンダー（writer 権限）上の外部主催者イベント: API 上は編集可能だが、`isEditableGoogleEvent()` の主催者ゲートが保守的に編集/削除を非表示にする（誤って招待コピーに編集を出すよりも安全側に倒した意図的な仕様）。必要なら accessRole=writer の場合の緩和を検討。
 - [ ] カレンダーリストの共有キャッシュ: 現状は作成モーダル（60秒TTL）のみキャッシュし、タイムラインフィルター・設定ページは都度取得。3箇所で共有するキャッシュ＋無効化契約を設計するリファクタ候補。
 - [ ] `sendUpdates` は未指定（API既定 "none"）— 編集・削除してもゲストに通知メールは送られない。ゲスト付きイベントの編集を本格対応する際に通知可否の UX を設計すること。
-- [x] `.btn`/`.btn-success`/`.btn-danger`/`.btn-secondary` クラスは CSS 未定義だった問題 — 予定の詳細・編集・削除確認を `event-dialog-dom.js` の共通部品（`.event-form-btn-*`）に置き換え、サイドパネルのモーダルからは使われなくなった（設定ページも 2.0.0 で Bootstrap を外した）。
 - [ ] `background.js` の `createEvent`/`updateEvent`/`deleteEvent` ハンドラ自体の単体テスト（現状はクライアント層のテストでカバー。ハンドラ専用テストの前例がないため未整備）。
 - [ ] `SidePanelUIController._getWritableCalendars()` の単体テスト（`googleIntegrated=false` で空配列を返すガードの検証。`side_panel.js` はトップレベルでDOM初期化するため import 不可 — コントローラのテスト基盤整備が前提）。
 - [ ] `SidePanelUIController` が `LocalEventModal` の `onDelete(event, deleteType)` を `_handleDeleteLocalEvent` へ `deleteType` ごと転送することの単体テスト（「すべての予定を削除」が単一回の削除扱いになる不具合の回帰防止。`side_panel.js` はトップレベルでDOM初期化するため import 不可 — コントローラのテスト基盤整備が前提）。
@@ -28,20 +27,10 @@
 
 ## 通常画面（2026-09 のデザイン刷新の残り）
 
-- [x] ダイアログと通常画面のデザインの統一 — 角丸（`--side-calendar-radius-sm/md/lg/pill`）・影（`--side-calendar-shadow-float/popover/dialog`）・文字サイズ（`--side-calendar-font-caption/small/body/title/large`）・アイコンボタンの大きさを `side_panel.css` の `:root` に共通の値として定義し、ダイアログ・ヘッダー・予定ブロック・カレンダー絞り込み・メモ・チュートリアル・初期設定・レビュー依頼に当てた。レビュー依頼のモーダルは他のダイアログと同じ見出し・本文・フッターの形に作り直した。
-- [x] 設定ページと変更履歴ページをサイドパネルのデザインに揃えた（キャンバスの案 S-*/C-* のとおり）— 見出しにアプリのマーク、左に項目の一覧（狭い画面ではダイアログと同じセグメント）、カードの中は「名前と説明が左・スイッチや選択が右」の1行ずつ（`settings-dom.js`）。色は `settings-tokens.css` の `--settings-*`（ライト/ダーク）を両ページで共有し、角丸・文字サイズはサイドパネルと同じ名前の値を使う。Google 未連携のときは Google の公式ボタンのまま、連携中は「連携を解除」。開発者タブも同じ部品に置き換えた。
-- [x] 設定ページから Bootstrap（CSS＋JS・Popper）を外した — タブは `settings-tabs.js`（`aria-selected` と `hidden`、矢印・Home・End キー）、Bootstrap の基本スタイルのうち使っていたもの（`box-sizing`、`[hidden]`、`.visually-hidden`、時刻欄の内側の余白）は `options.css` に置いた。外す前後で22の状態のスクリーンショットが1ピクセルも変わらないことを確認。
-- [x] 英語の文言の大文字の書き方を文頭だけ大文字（sentence case）に揃えた — ボタン・見出し・ラベル49件（「Add group」「Replay tutorial」「Color theme」など）とコード内の同じ既定値。固有名詞（Google Calendar、Google Account、What's New など）とデモの予定名はそのまま。
-- [x] メモ欄を畳んだときの1行目プレビュー — 右下のタブ（`clip-path` で切り抜く方式）をやめ、全幅のバーに1行目（Markdown の記号は除く、`memo-summary.js`）を出す形にした。バーの高さ分はスペーサーで確保するので、畳んでもタイムラインの下端の予定を覆わない。
-- [x] ランディングページ（`docs/`）のヒーローの静的なモックを新しい画面に — ヘッダー（＋・更新・日付「1月15日(水)」・絞り込み・設定）、色の帯のない淡色の予定ブロック、時刻の入ったピルつきの現在時刻線。英語版（`docs/en/`）も `npm run build:landing` で再生成。
 - [ ] 英語で予定が4列以上重なる 320px 幅では、1列が約60pxになり長い単語が途中で折り返る。`hyphens: auto` を指定済みだが、効くかは Chrome のハイフネーション辞書しだい（ヘッドレスの Linux Chromium では効かないことを確認）。重なりが多いときの表示方式（重ねて表示・「+2」表示など）の検討。
 - [ ] 日本語の文節折り返し（`word-break: auto-phrase`）はヘッドレスの Chromium では効かず、検証環境では「割り込/み禁止」のように切れる。通常の Chrome での見え方を実機で確認すること。
 - [ ] ヘッダー（日付ラベルとそのカレンダー）、「今日に戻る」ボタンの表示と位置追従、`markPastEvents()`、予定ブロックの行数計算（`--event-lines`）、メモの畳んだバー（高さ・スペーサー・`aria-expanded`）の DOM テスト: jsdom 基盤が前提。実拡張では Playwright の手元スクリプトで確認済み（2026-09、ja/en-320/ダーク）。
-- [x] カレンダー絞り込みのポップオーバーを案（M-Filter）の形に作り直した — 見出し「表示するカレンダー」＋更新ボタン、各行は色・名前・右端のチェックボックス、下に「設定でカレンダーを管理」。検索欄はカレンダーが9件以上のときだけ出す。グループ見出しは折りたたみボタン（矢印＋名前）とグループのチェックボックス（各行と同じ列）。
-- [x] キャンバスの案のうち未適用だった細部を入れた — 不在を選んだときの「メインカレンダー「○○」に作成されます」、通知の「開始5分前に通知する」（設定の分数）、選択中のセグメントの文字色、ゲストの頭文字の色（人ごと）、幅のある予定ブロックの「時刻 · 場所」1行表示。終日チップは案（1行で省略）ではなく折り返しのまま（名前が読めなくなるため）。
-- [x] キャンバス（デザイン案、https://claude.ai/artifact/HcFpGLovY8o9bATYDjQ1UF）を実装に合わせた — 予定ブロックの色（色バーなし）、幅による時刻・場所の出し方、絞り込みの更新ボタン、終日チップの折り返し、編集画面の保存先の切り替えの削除、Google 作成のゲスト欄、Google のアイコン、詳細の日付表記、仕様ボードの高さ・トークン・コントラスト（2026-10 実測）。デザインを変えたらキャンバスも更新する。
 - [ ] デモデータのカレンダーグループ名（`Team Members` / `Shared Calendars` など、`_DEMO_CALENDAR_GROUPS`）が日本語表示でも英語のまま。カレンダー名と同じく `L(locale, en, ja)` で訳す。
-- [x] 保存される色の設定（`workTimeColor` を含む7色）の扱い — どれもテーマを保存したときの写しで、サイドパネルは `colorTheme` から色を決め、読み戻していない。同期ストレージを古い版と共有する端末があるため、項目は消さずに残すと決め、`constants.js` にその旨を書いた。
 
 ## テスト
 
@@ -63,30 +52,11 @@
 ## ビルド・パッケージング
 
 - [ ] `prepare-release.js` が `package-lock.json` のバージョンを更新しないため、`npm install` するたびに lockfile が差分として出る（現在 lockfile は 1.10.2、`package.json` は 1.11.0）。`validate-version.js` のチェック対象にも含まれていない。
-- [x] `build-zip.js` がリリースzipに `docs/` ディレクトリ全体を同梱していた問題 — 拡張機能は実行時に読み込まないため、リリースzipから除外済み
 - [ ] `npm run lint` の対象が `src/` のみで `scripts/` が未チェック — ビルド/告知系スクリプトが増えたので lint 対象に含めるか検討（Node 向けの globals 設定が必要）
 
 ## リファクタリング（既存コード）
 
-- [x] `_fetchEventsForCalendarIds()` が `_fetchWithAuth()` を迂回して直接 `fetch()` している — calendarList取得部分は `_fetchWithAuth()` に統一済み
-- [x] `respondToEvent()` のGET/PATCHレスポンスが `_checkResponse()` を使っていない — `_checkResponse()` に統一済み
-- [x] カレンダー検索のメアド対応を他の2箇所へ展開 — 設定ページのカレンダー一覧検索（`CalendarManagementCard._prepareRenderData()`）とサイドパネルのカレンダーフィルター（`CalendarFilterRenderer.renderCalendarList()`）も `calendarMatchesSearch()`（`src/lib/calendar-search.js`）に統一済み
 - [ ] `localize.js` が `window` グローバルに関数を export している — ES6 module の `export` に移行して明示的な `import` に統一（34ファイルが `window.getLocalizedMessage()` を使用中）
-- [x] 通知チェックボックスの文言に実際のリード時間を出す — 設定のリマインダー分数を出す（「開始5分前に通知する」、60分は「1時間前」。`remindMinutesBefore` / `remindHourBefore`、`event-dialog-dom.js`）。
-- [x] `background.js` の21箇所の `console.error/warn` 直接呼出を `logError()`/`logWarn()` に統一
-- [x] `StorageHelper` 直接利用とラッパー関数 (`settings-storage.js`, `event-storage.js`) の使い分け基準を storage-helper.js の JSDoc に明記
-
-## リファクタリング（設計改善）
-
-- [x] `CalendarListRenderer` の getter コールバックパターンをメソッドパラメータ直接渡しに変更済み
-- [x] `EventLoadingService` の DI を `setDeps()` によるコンストラクタ注入に変更済み
-- [x] `GoogleEventRenderer` の返り値を `{ element }` に統一済み
-- [x] `CalendarManagementCard.render()` から `_prepareRenderData()` を抽出済み
-- [x] `CalendarGroupManager` / `CalendarFilterRenderer` の getter コールバックパターンも同様にメソッドパラメータ直接渡しに変更済み
-
-## ランディングページ
-
-- [x] 英語版のSEO対応: `npm run build:landing`（`scripts/build-landing-en.js`）で静的な英語ページ（`docs/en/`）を生成し、`hreflang` 相互リンク・canonical・OGP・JSON-LD・`sitemap.xml`・`robots.txt` を追加済み。ルートは日本語専用で非日本語ブラウザは `/en/` へリダイレクトする方式（ランタイム言語切替は廃止）。**文言（ルートの日本語）や `scripts/landing-en-data.js`（英語辞書）を変更したら `npm run build:landing` で `docs/en/` を再生成すること**（`tests/docs/landing-en.test.js` が再生成忘れを検知する）。
 
 ## 将来対応（機能）
 
@@ -96,17 +66,8 @@
 
 - [ ] `saveLocalEventsForDate()` の保存方式を上書き→マージベースに変更するか検討（現状は上書き方式。呼び出し元がload→edit→saveする必要あり）
 
-## 用語統一
-
-- [x] 日本語の「イベント」と「予定」の混在 — 画面の文言は「予定」に揃えた（通知のタイトル「予定の通知」、初期設定の「予定の通知を有効にする」、開発者設定の「ローカル予定を削除」など。`_locales/ja` に「イベント」は残っていない）。過去のリリースノート（変更履歴の本文）は当時の表記のまま。
-- [x] 繰り返し予定の回への出欠 — 「今回のみ」を「不参加」のボタンだけでなく、出欠のラベルの下に1回だけ出す形にした（参加・未定・不参加のどれもその回だけに効くため）。ボタンの高さも3つで揃う。
-- [x] リマインダー表現の統一: 「通知」表記に統一済み。予定フォームのラベルは設定（`reminderMinutes`）の分数を出す（「開始5分前に通知する」、`remindMinutesBefore` / `remindHourBefore`）。`remindMeBefore`（分数なし）は設定を読むまでの仮の表示にだけ使う。
-
 ## 既知の不具合（要設計）
 
-- [x] サイドパネル幅 320px（Chrome の最小幅）でヘッダーの更新アイコンと「前の日」ボタンが重なる — ヘッダーを3列グリッド（`1fr auto 1fr`）にし、日付は中央のまま、狭いときは左右のボタンに被らずにずれるようにした。幅 360px 以下では日付の文字と間隔を少し詰め、更新ボタンとの間を 12px 空ける（チュートリアルのハイライトが隣のボタンに掛からないように）。同じ幅でチュートリアルの吹き出しと初期設定のカードがはみ出していたのも修正（どちらも padding が幅の外に足されていた）。
-- [x] 拡張機能の言語設定と Chrome の言語が違うと、時刻欄の表記だけが混在していた（例: Chrome が米国英語・拡張機能が日本語で「04:30 PM」）— 時刻欄を `<input type="time">` から自前の部品（`src/lib/time-field.js`）に置き換えた。表記は予定ブロックと同じ「拡張機能の言語＋時刻表記の設定」（「09:00」「9:00 AM」「午前9:00」）で、「930」「9:30pm」「午後3時」なども読める。15分ごとの時刻の一覧（ポップオーバー）から選べる。対象: 予定の作成・編集（ローカル / Google）、初期設定の勤務時間、設定ページの勤務・休憩時間とデモの時刻。言語・時刻表記の取得は `src/lib/display-prefs.js` にまとめ、設定ページでも `locale-utils.js` を読み込む。`CLAUDE.md` の時刻表記の記述も実態に合わせた。
-- [x] 日付欄（繰り返しの終了日 `<input type="date">`）も Chrome の言語で表示されていた（例: 米国英語の Chrome では日本語の画面でも「mm/dd/yyyy」）— 自前の部品（`src/lib/date-field.js`）に置き換えた。表記はヘッダーと同じ（「10月31日(土)」「Sat, Oct 31」、今年以外は年付き）で、「10/31」「2026-10-31」「10月31日」「Oct 31」「明日」なども読める。月のカレンダー（ポップオーバー）から選べ、予定の日より前の日は選べない（`min`）。ヘッダーの日付ラベルから開く日付選択も、`showPicker()`（Chrome の言語）から同じカレンダーに替えた。
-- [x] 高速な日付ナビゲーションでの表示レース: `fetchEvents()` と `fetchEventsForCalendars()` に `_fetchVersion` ガードを追加し、古いレスポンスの描画・DOMクリア・`currentFetchPromise` の誤クリアを防止（`tests/side_panel/event-handlers-race.test.js`）。残る極小レース: 古いフェッチの `_processEvents` 実行中に新しいフェッチが完了した場合の混在描画（発生条件が非常に狭いため保留）。
-- [x] 日跨ぎイベントのレイアウト崩れ（レーン割当）: `_areEventsOverlapping()` とグループ内ソートを、DOM が実際に描画する区間（開始の分単位 + 実所要時間 = `_getRenderInterval()`）で比較するよう変更。23:00→翌01:00 の重なり判定が正しくなり、かつ前日開始のイベント（23:00 の位置に描かれる）が深夜帯のイベントとグループ化されてレーンを奪う問題も回避（`tests/side_panel/time-manager.test.js` に日跨ぎスペック）。残: 前日開始イベントを閲覧中の日の先頭へクランプする／翌日にも継続表示する表示仕様（複数日ローカル予定を実装する際に設計）。レイアウトは描画位置に追随しているため、その時は `_getRenderInterval()` も合わせて更新すること。
+- [ ] 日付ナビゲーションの残る極小レース: 古いフェッチの `_processEvents` 実行中に新しいフェッチが完了した場合の混在描画（`_fetchVersion` ガードでは防げない。発生条件が非常に狭いため保留）。
+- [ ] 前日開始の日跨ぎ予定を閲覧中の日の先頭へクランプする／翌日にも継続表示する表示仕様（複数日ローカル予定を実装する際に設計）。その時は `EventLayoutManager._getRenderInterval()` も合わせて更新すること。
 - [ ] 毎日繰り返しの DST 日数ずれ（潜在）: `event-storage.js` DAILY 分岐の `Math.floor((targetDateObj - eventStartDate) / 86400000)` がサマータイム境界で1日ずれる。現状 `interval` はUIで `1` 固定（`local-event-modal.js` / `local-event-form-builder.js`）のため `daysDiff % 1 === 0` で観測影響なし。`interval > 1` 機能を追加する場合は `Math.floor`→`Math.round`（WEEKLYと整合）に修正すること。

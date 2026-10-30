@@ -51,7 +51,7 @@ npm run screenshots -- --out <dir>    # 出力先を変更
   で生成) されているため、オフライン環境でも撮影可能
 - 実行後の `dist/` と `manifest.json` はデモデータ入りの開発ビルドになる。
   リリース作業前に `npm run build` で本番ビルドに戻すこと
-  (build-zip.js 側にも dev マニフェスト検出ガードあり)
+  (scripts/build-zip.js 側にも dev マニフェスト検出ガードあり)
 - ページ内の時刻は Playwright Clock API で固定 (capture.js の `FIXED_DATE` /
   `FIXED_TIME`) しているため、UI が変わらない限り再生成しても日付表示は
   変わらない
