@@ -4,7 +4,7 @@
  * Handles synchronisation of both local and Google Calendar event
  * reminders using the AlarmManager infrastructure.
  */
-import { StorageHelper } from '../lib/storage-helper.js';
+import { StorageHelper } from '../lib/storage/storage-helper.js';
 import { AlarmManager } from '../lib/alarm-manager.js';
 import { STORAGE_KEYS } from '../lib/constants.js';
 import { AuthenticationError } from './google-calendar-client.js';

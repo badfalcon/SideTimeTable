@@ -5,7 +5,7 @@
  * and the side panel controller (writable-calendar filtering). Keeping these
  * pure makes the create-event path unit-testable without a DOM.
  */
-import { buildRfc3339DateTime, isSameDay } from './time-utils.js';
+import { buildRfc3339DateTime, isSameDay } from '../time-utils.js';
 
 // Event types that must never be edited or deleted from the panel
 const NON_EDITABLE_EVENT_TYPES = ['outOfOffice', 'focusTime', 'workingLocation'];

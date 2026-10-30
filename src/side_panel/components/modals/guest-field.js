@@ -7,7 +7,7 @@
  * email addresses stay visible as red chips instead of being dropped, so the
  * user can see what to fix.
  */
-import { guestTone, isValidEmail, normalizeEmail, parseGuestInput } from '../../../lib/guest-utils.js';
+import { guestTone, isValidEmail, normalizeEmail, parseGuestInput } from '../../../lib/google/guest-utils.js';
 import { createHiddenLabel, createHint, createIcon, createRow, msg, msgWith, setLocalizedText } from './event-dialog-dom.js';
 
 const SEPARATOR_KEYS = new Set([',', ';', '、']);

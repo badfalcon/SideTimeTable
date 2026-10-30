@@ -11,9 +11,9 @@
  * visually hidden, and empty fields name themselves through their placeholder.
  */
 import { DEFAULT_SETTINGS, RECURRENCE_TYPES } from '../../../lib/constants.js';
-import { loadSettings } from '../../../lib/settings-storage.js';
+import { loadSettings } from '../../../lib/storage/settings-storage.js';
 import { GuestField } from './guest-field.js';
-import { createDateField } from '../../../lib/date-field.js';
+import { createDateField } from '../../../lib/ui/date-field.js';
 import {
     applyDurationPreset,
     createButton,

@@ -27,8 +27,8 @@ import {
     setPressed,
     showStatusLine
 } from './event-dialog-dom.js';
-import { buildGoogleEventResource, extractTimeHHMM, isEditableGoogleEvent, isDeletableGoogleEvent } from '../../../lib/google-event-utils.js';
-import { buildRequestId } from '../../../lib/request-dedupe.js';
+import { buildGoogleEventResource, extractTimeHHMM, isEditableGoogleEvent, isDeletableGoogleEvent } from '../../../lib/google/google-event-utils.js';
+import { buildRequestId } from '../../../lib/google/request-dedupe.js';
 
 /** RSVP choices, in display order. */
 const RSVP_CHOICES = [

@@ -2,9 +2,9 @@
  * MemoComponent - Persistent memo panel with Markdown preview at the bottom of the side panel
  */
 import { Component } from '../base/component.js';
-import { StorageHelper } from '../../../lib/storage-helper.js';
+import { StorageHelper } from '../../../lib/storage/storage-helper.js';
 import { isDemoMode, getDemoMemoContent } from '../../../lib/demo-data.js';
-import { loadSettings } from '../../../lib/settings-storage.js';
+import { loadSettings } from '../../../lib/storage/settings-storage.js';
 import { DEFAULT_SETTINGS, MEMO_FONT_SIZE_RANGE } from '../../../lib/constants.js';
 import { MemoEditor } from './memo-editor.js';
 import { summarizeMemo } from './memo-summary.js';

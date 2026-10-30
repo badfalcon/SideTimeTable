@@ -5,8 +5,8 @@ import {
   extractTimeHHMM,
   isEditableGoogleEvent,
   isDeletableGoogleEvent,
-} from '../../src/lib/google-event-utils.js';
-import { buildRfc3339DateTime as buildRfc3339DateTimeForTest } from '../../src/lib/time-utils.js';
+} from '../../../src/lib/google/google-event-utils.js';
+import { buildRfc3339DateTime as buildRfc3339DateTimeForTest } from '../../../src/lib/time-utils.js';
 
 // ---------------------------------------------------------------
 // SPEC: isWritableCalendar / filterWritableCalendars

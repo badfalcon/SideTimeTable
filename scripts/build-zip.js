@@ -52,9 +52,9 @@ archive.glob('**/*.html', { cwd: 'src' }, { prefix: 'src' });
 archive.glob('**/*.css', { cwd: 'src' }, { prefix: 'src' });
 archive.directory('src/img/', 'src/img');
 
-// src/lib/ - plain scripts loaded directly by the HTML pages
-archive.file('src/lib/localize.js', { name: 'src/lib/localize.js' });
-archive.file('src/lib/locale-utils.js', { name: 'src/lib/locale-utils.js' });
+// src/lib/i18n/ - plain scripts loaded directly by the HTML pages
+archive.file('src/lib/i18n/localize.js', { name: 'src/lib/i18n/localize.js' });
+archive.file('src/lib/i18n/locale-utils.js', { name: 'src/lib/i18n/locale-utils.js' });
 
 // src/vendor/fontawesome/ - icon fonts and license (the stylesheet is in the *.css glob above)
 console.log('  ✓ src/vendor/fontawesome/ (fonts, license)');

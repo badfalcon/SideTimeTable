@@ -3,7 +3,7 @@
  * - formatEventTime() date display
  * - setMeetInfo() rendering order
  */
-import '../../src/lib/locale-utils.js';
+import '../../src/lib/i18n/locale-utils.js';
 import { GoogleEventContentBuilder } from '../../src/side_panel/components/modals/google-event-content-builder.js';
 
 function setNavigatorLanguage(lang) {

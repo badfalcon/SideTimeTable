@@ -8,7 +8,7 @@
  * - Graceful degradation: network errors, missing keys
  */
 
-import '../../src/lib/localize.js';
+import '../../../src/lib/i18n/localize.js';
 
 describe('localize', () => {
     beforeEach(() => {

@@ -1,7 +1,7 @@
 /**
  * Tests for LocalEventModal view-mode date/time formatting
  */
-import '../../src/lib/locale-utils.js';
+import '../../src/lib/i18n/locale-utils.js';
 import { LocalEventModal } from '../../src/side_panel/components/modals/local-event-modal.js';
 
 function setNavigatorLanguage(lang) {

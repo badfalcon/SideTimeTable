@@ -19,7 +19,7 @@ import {
     loadLocalEventsForDate,
     loadRecurringEvents,
     saveRecurringEvents
-} from '../../src/lib/event-storage.js';
+} from '../../src/lib/storage/event-storage.js';
 
 // Only mock AlarmManager — it calls chrome.alarms which has timing-sensitive behavior
 jest.mock('../../src/lib/alarm-manager.js', () => ({

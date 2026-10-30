@@ -14,7 +14,7 @@
  * link to the settings page at the bottom.
  */
 
-import { calendarMatchesSearch } from '../../../lib/calendar-search.js';
+import { calendarMatchesSearch } from '../../../lib/google/calendar-search.js';
 
 // The search box only earns its place once the list no longer fits at a glance
 export const SEARCH_MIN_CALENDARS = 9;

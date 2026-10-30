@@ -10,8 +10,8 @@
  */
 
 import { logError } from '../../../lib/utils.js';
-import { saveCalendarGroups, saveSelectedCalendars } from '../../../lib/settings-storage.js';
-import { calendarMatchesSearch } from '../../../lib/calendar-search.js';
+import { saveCalendarGroups, saveSelectedCalendars } from '../../../lib/storage/settings-storage.js';
+import { calendarMatchesSearch } from '../../../lib/google/calendar-search.js';
 
 export class CalendarGroupManager {
     /**

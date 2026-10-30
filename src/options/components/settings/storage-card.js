@@ -3,7 +3,7 @@
  */
 import { CardComponent } from '../base/card-component.js';
 import { createButton, createIcon, createIconButton, msg, setText } from '../base/settings-dom.js';
-import { StorageHelper } from '../../../lib/storage-helper.js';
+import { StorageHelper } from '../../../lib/storage/storage-helper.js';
 import { STORAGE_KEYS } from '../../../lib/constants.js';
 
 export class StorageCard extends CardComponent {

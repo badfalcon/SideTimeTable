@@ -7,8 +7,8 @@
 import { ModalComponent } from './modal-component.js';
 import { createButton, createCloseButton, setLocalizedText } from './event-dialog-dom.js';
 import { RELEASE_NOTES, getUnseenReleaseNotes } from '../../../lib/release-notes.js';
-import { StorageHelper } from '../../../lib/storage-helper.js';
-import { saveSettings } from '../../../lib/settings-storage.js';
+import { StorageHelper } from '../../../lib/storage/storage-helper.js';
+import { saveSettings } from '../../../lib/storage/settings-storage.js';
 import { logError } from '../../../lib/utils.js';
 
 export class WhatsNewModal extends ModalComponent {

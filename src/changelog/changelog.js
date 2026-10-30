@@ -2,7 +2,7 @@
  * Changelog - Standalone release notes page
  */
 import { RELEASE_NOTES, formatReleaseDate } from '../lib/release-notes.js';
-import { loadSettings } from '../lib/settings-storage.js';
+import { loadSettings } from '../lib/storage/settings-storage.js';
 import { getThemeById, resolveThemeColors } from '../lib/color-themes.js';
 
 function message(key, fallback) {

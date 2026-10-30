@@ -360,7 +360,7 @@ Returns: `[...recurringInstances, ...dateSpecificEvents]`
 
 ---
 
-## event-handlers (auth expiry)
+## event-managers (auth expiry)
 
 ### Auth Expiry Detection
 - When API response contains `authExpired: true` → calls `onAuthExpired` callback

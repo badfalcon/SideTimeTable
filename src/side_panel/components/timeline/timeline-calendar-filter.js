@@ -6,7 +6,7 @@
  */
 import { Component } from '../base/component.js';
 import { sendMessage } from '../../../lib/chrome-messaging.js';
-import { loadSelectedCalendars, saveSelectedCalendars, loadCalendarGroups } from '../../../lib/settings-storage.js';
+import { loadSelectedCalendars, saveSelectedCalendars, loadCalendarGroups } from '../../../lib/storage/settings-storage.js';
 import { isDemoMode, getDemoCalendarGroups } from '../../../lib/demo-data.js';
 import { CalendarFilterRenderer } from './calendar-filter-renderer.js';
 

@@ -5,14 +5,14 @@
  * managing side panel settings and Google Calendar integration.
  */
 
-import { StorageHelper } from './lib/storage-helper.js';
+import { StorageHelper } from './lib/storage/storage-helper.js';
 import { AlarmManager } from './lib/alarm-manager.js';
-import { selectNotificationUrl } from './lib/conference-url-utils.js';
+import { selectNotificationUrl } from './lib/google/conference-url-utils.js';
 import { savePendingEventFocus } from './lib/event-focus.js';
 import { GoogleCalendarClient, AuthenticationError, SEND_UPDATES_VALUES } from './services/google-calendar-client.js';
 import { ReminderSyncService } from './services/reminder-sync-service.js';
 import { logError, logWarn } from './lib/utils.js';
-import { runDeduped } from './lib/request-dedupe.js';
+import { runDeduped } from './lib/google/request-dedupe.js';
 
 // Instantiate services
 const calendarClient = new GoogleCalendarClient();

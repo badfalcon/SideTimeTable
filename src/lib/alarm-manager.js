@@ -2,8 +2,8 @@
  * AlarmManager - Manages event reminders using chrome.alarms API
  */
 import { STORAGE_KEYS } from './constants.js';
-import { getRecurringEventsForDate } from './event-storage.js';
-import { extractMeetUrl, extractVideoUrl } from './conference-url-utils.js';
+import { getRecurringEventsForDate } from './storage/event-storage.js';
+import { extractMeetUrl, extractVideoUrl } from './google/conference-url-utils.js';
 
 export class AlarmManager {
     static ALARM_PREFIX = 'event_reminder_';

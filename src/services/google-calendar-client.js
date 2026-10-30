@@ -4,8 +4,8 @@
  * Encapsulates all Google Calendar API interactions including
  * authentication, calendar listing, event fetching, and RSVP.
  */
-import { StorageHelper } from '../lib/storage-helper.js';
-import { isWritableCalendar } from '../lib/google-event-utils.js';
+import { StorageHelper } from '../lib/storage/storage-helper.js';
+import { isWritableCalendar } from '../lib/google/google-event-utils.js';
 
 const CALENDAR_API_BASE = 'https://www.googleapis.com/calendar/v3';
 

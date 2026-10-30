@@ -18,9 +18,9 @@ import {
     setLocalizedText
 } from './event-dialog-dom.js';
 import { formatDateTimeRange } from '../../../lib/time-utils.js';
-import { buildGoogleEventResource } from '../../../lib/google-event-utils.js';
-import { buildAttendees } from '../../../lib/guest-utils.js';
-import { buildRequestId } from '../../../lib/request-dedupe.js';
+import { buildGoogleEventResource } from '../../../lib/google/google-event-utils.js';
+import { buildAttendees } from '../../../lib/google/guest-utils.js';
+import { buildRequestId } from '../../../lib/google/request-dedupe.js';
 
 export class LocalEventModal extends ModalComponent {
     constructor(options = {}) {

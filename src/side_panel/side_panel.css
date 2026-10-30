@@ -665,7 +665,7 @@ body {
 
 .drag-preview.event {
     position: absolute;
-    left: 40px; /* matches LAYOUT_CONSTANTS.BASE_LEFT in event-handlers.js */
+    left: 40px; /* matches LAYOUT_CONSTANTS.BASE_LEFT in event-layout-manager.js */
     right: 4px;
     background: var(--side-calendar-accent-shadow);
     border: 2px dashed var(--side-calendar-accent-color);
@@ -3819,7 +3819,7 @@ body {
     color: var(--side-calendar-link-color);
 }
 
-/* ===== Time field list (lib/time-field.js) =====
+/* ===== Time field list (lib/ui/time-field.js) =====
    Times every 15 minutes under a time field, written like the field. It is a
    popover, so it sits above dialogs and is not clipped by their scrolling. */
 .time-field-list {
@@ -3860,7 +3860,7 @@ body {
     font-weight: 600;
 }
 
-/* ===== Date calendar (lib/date-field.js) =====
+/* ===== Date calendar (lib/ui/date-field.js) =====
    A month under the recurrence end date and the header's date, written in
    the extension's language. A popover, like the time list. */
 .date-calendar {

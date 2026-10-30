@@ -8,12 +8,12 @@
  * 4. Notification/reminder settings
  */
 import { Component } from '../base/component.js';
-import { StorageHelper } from '../../../lib/storage-helper.js';
+import { StorageHelper } from '../../../lib/storage/storage-helper.js';
 import { DEFAULT_SETTINGS } from '../../../lib/constants.js';
-import { saveSettings, loadSettings } from '../../../lib/settings-storage.js';
+import { saveSettings, loadSettings } from '../../../lib/storage/settings-storage.js';
 import { sendMessage } from '../../../lib/chrome-messaging.js';
-import { createGoogleSignInButton } from '../../../lib/google-button-helper.js';
-import { createTimeField } from '../../../lib/time-field.js';
+import { createGoogleSignInButton } from '../../../lib/ui/google-button-helper.js';
+import { createTimeField } from '../../../lib/ui/time-field.js';
 
 const SETUP_STORAGE_KEY = 'initialSetupCompleted';
 

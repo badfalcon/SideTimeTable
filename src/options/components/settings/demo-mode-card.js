@@ -3,7 +3,7 @@
  */
 import { CardComponent } from '../base/card-component.js';
 import { createIcon, createSelect, createSettingRow, createSwitch, msg, setText } from '../base/settings-dom.js';
-import { createTimeField } from '../../../lib/time-field.js';
+import { createTimeField } from '../../../lib/ui/time-field.js';
 import {
     isDemoMode, setDemoMode,
     getDemoCurrentTimeString, setDemoCurrentTime,

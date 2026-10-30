@@ -8,7 +8,7 @@ import {
     fromYmd,
     addDays,
     addMonths
-} from '../../src/lib/date-field.js';
+} from '../../../src/lib/ui/date-field.js';
 
 // A fixed "now" (Friday 2 October 2026) so dates without a year are in 2026
 const NOW = new Date(2026, 9, 2, 10, 0);

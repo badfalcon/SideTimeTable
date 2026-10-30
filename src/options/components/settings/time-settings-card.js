@@ -2,7 +2,7 @@
  * TimeSettingsCard - Time settings card component
  */
 import { CardComponent } from '../base/card-component.js';
-import { createTimeField } from '../../../lib/time-field.js';
+import { createTimeField } from '../../../lib/ui/time-field.js';
 import { createNotice, createSettingRow, createSwitch, msg } from '../base/settings-dom.js';
 
 export class TimeSettingsCard extends CardComponent {

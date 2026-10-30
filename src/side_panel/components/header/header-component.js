@@ -3,7 +3,7 @@
  */
 import { Component } from '../base/component.js';
 import { formatHeaderDate } from '../../../lib/time-utils.js';
-import { createDateCalendar, fromYmd, toYmd } from '../../../lib/date-field.js';
+import { createDateCalendar, fromYmd, toYmd } from '../../../lib/ui/date-field.js';
 
 export class HeaderComponent extends Component {
     constructor(options = {}) {

@@ -11,7 +11,7 @@
  *   - Google Calendar integration is still enabled
  */
 import {ModalComponent} from './modal-component.js';
-import {StorageHelper} from '../../../lib/storage-helper.js';
+import {StorageHelper} from '../../../lib/storage/storage-helper.js';
 import {
     createButton,
     createCloseButton,
