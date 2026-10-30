@@ -2,8 +2,8 @@ import {
     saveSettings, loadSettings,
     saveSelectedCalendars, loadSelectedCalendars,
     saveCalendarGroups, loadCalendarGroups
-} from '../../src/lib/settings-storage.js';
-import { DEFAULT_SETTINGS } from '../../src/lib/constants.js';
+} from '../../../src/lib/storage/settings-storage.js';
+import { DEFAULT_SETTINGS } from '../../../src/lib/constants.js';
 
 describe('settings-storage', () => {
     beforeEach(() => {

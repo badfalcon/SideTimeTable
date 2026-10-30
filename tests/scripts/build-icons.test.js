@@ -40,7 +40,7 @@ describe('vendored Font Awesome (src/vendor/fontawesome/)', () => {
     });
 
     test('the release ZIP packages the fonts and license', () => {
-        const buildZip = fs.readFileSync(path.join(__dirname, '..', '..', 'build-zip.js'), 'utf8');
+        const buildZip = fs.readFileSync(path.join(__dirname, '..', '..', 'scripts', 'build-zip.js'), 'utf8');
         expect(buildZip).toContain("cwd: 'src/vendor/fontawesome'");
     });
 

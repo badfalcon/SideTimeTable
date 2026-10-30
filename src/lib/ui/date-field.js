@@ -15,8 +15,8 @@
  * The calendar on its own (createDateCalendar) is also what the header's
  * date label opens.
  */
-import { formatHeaderDate } from './time-utils.js';
-import { getDisplayPrefs } from './display-prefs.js';
+import { formatHeaderDate } from '../time-utils.js';
+import { getDisplayPrefs } from '../i18n/display-prefs.js';
 
 const VIEWPORT_MARGIN = 8;
 const MONTH_NAMES = [

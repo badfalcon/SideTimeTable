@@ -6,7 +6,7 @@
  * the recorded response is replayed from the session-storage ledger, which
  * survives service worker restarts within the browser session.
  */
-import { runDeduped, buildRequestId, _clearInFlightForTests } from '../../src/lib/request-dedupe.js';
+import { runDeduped, buildRequestId, _clearInFlightForTests } from '../../../src/lib/google/request-dedupe.js';
 
 // Minimal chrome.storage.session mock (promise-based, like MV3)
 function installSessionStore() {

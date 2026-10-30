@@ -5,7 +5,7 @@
  * Only touches document.documentElement.style — no component dependencies.
  */
 
-import { loadSettings } from '../lib/settings-storage.js';
+import { loadSettings } from '../lib/storage/settings-storage.js';
 import { getThemeById, resolveThemeColors } from '../lib/color-themes.js';
 
 export class ThemeService {

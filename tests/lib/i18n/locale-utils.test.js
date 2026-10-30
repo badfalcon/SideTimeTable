@@ -5,7 +5,7 @@
  * Tests specify exact expected outputs, not regex patterns.
  */
 
-import '../../src/lib/locale-utils.js';
+import '../../../src/lib/i18n/locale-utils.js';
 
 describe('locale-utils', () => {
     beforeEach(() => {

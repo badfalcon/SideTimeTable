@@ -12,7 +12,7 @@
  */
 
 import { CalendarGroupManager } from '../../src/options/components/calendar/calendar-group-manager.js';
-import { loadCalendarGroups } from '../../src/lib/settings-storage.js';
+import { loadCalendarGroups } from '../../src/lib/storage/settings-storage.js';
 
 const ALL_CALENDARS = [
     { id: 'primary@example.com', summary: 'Primary', primary: true },

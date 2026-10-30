@@ -12,8 +12,8 @@
  */
 
 import { StorageHelper } from './storage-helper.js';
-import { STORAGE_KEYS, RECURRENCE_TYPES } from './constants.js';
-import { getFormattedDateFromDate } from './utils.js';
+import { STORAGE_KEYS, RECURRENCE_TYPES } from '../constants.js';
+import { getFormattedDateFromDate } from '../utils.js';
 
 // Migration flag key
 const MIGRATION_KEY = 'eventDataMigratedToLocal_v2';

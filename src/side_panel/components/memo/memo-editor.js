@@ -5,7 +5,7 @@
  * bold/italic shortcuts), markdown rendering, checkbox toggling, and
  * debounced save.
  */
-import { StorageHelper } from '../../../lib/storage-helper.js';
+import { StorageHelper } from '../../../lib/storage/storage-helper.js';
 
 const SAVE_DEBOUNCE_DELAY = 300;
 

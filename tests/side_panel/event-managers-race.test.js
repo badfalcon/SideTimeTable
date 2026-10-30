@@ -6,7 +6,7 @@
  * newer date's events.
  */
 
-jest.mock('../../src/lib/settings-storage.js', () => ({
+jest.mock('../../src/lib/storage/settings-storage.js', () => ({
   loadSettings: jest.fn(),
   loadSelectedCalendars: jest.fn(),
 }));
@@ -21,7 +21,7 @@ jest.mock('../../src/lib/demo-data.js', () => ({
 jest.mock('../../src/lib/utils.js', () => ({
   logError: jest.fn(),
 }));
-jest.mock('../../src/lib/event-storage.js', () => ({
+jest.mock('../../src/lib/storage/event-storage.js', () => ({
   loadLocalEvents: jest.fn(),
   loadLocalEventsForDate: jest.fn(),
 }));
@@ -32,8 +32,8 @@ jest.mock('../../src/side_panel/event-element-factory.js', () => ({
   EventElementFactory: { createEventElement: jest.fn(), createEventBody: jest.fn(), buildTooltip: jest.fn() },
 }));
 
-import { GoogleEventManager } from '../../src/side_panel/event-handlers.js';
-import { loadSettings, loadSelectedCalendars } from '../../src/lib/settings-storage.js';
+import { GoogleEventManager } from '../../src/side_panel/event-managers.js';
+import { loadSettings, loadSelectedCalendars } from '../../src/lib/storage/settings-storage.js';
 import { sendMessage } from '../../src/lib/chrome-messaging.js';
 
 function createGoogleEventsDiv() {

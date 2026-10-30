@@ -1,5 +1,5 @@
-import { cleanupObsoleteStorageKeys } from '../../src/lib/storage-cleanup.js';
-import { StorageHelper } from '../../src/lib/storage-helper.js';
+import { cleanupObsoleteStorageKeys } from '../../../src/lib/storage/storage-cleanup.js';
+import { StorageHelper } from '../../../src/lib/storage/storage-helper.js';
 
 describe('cleanupObsoleteStorageKeys', () => {
     beforeEach(() => {

@@ -11,8 +11,8 @@ import {
     addRecurringEventException,
     deleteRecurringEvent,
     loadLocalEvents
-} from '../../src/lib/event-storage.js';
-import { StorageHelper } from '../../src/lib/storage-helper.js';
+} from '../../../src/lib/storage/event-storage.js';
+import { StorageHelper } from '../../../src/lib/storage/storage-helper.js';
 
 describe('event-storage (migration & CRUD)', () => {
     beforeEach(() => {

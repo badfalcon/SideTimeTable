@@ -2,7 +2,7 @@
  * TimelineComponent - The timeline display component
  */
 import { Component } from '../base/component.js';
-import { CurrentTimeLineManager } from '../../../lib/current-time-line-manager.js';
+import { CurrentTimeLineManager } from '../../current-time-line-manager.js';
 import { getCurrentTime } from '../../../lib/demo-data.js';
 import { formatHourLabel, formatStartTime } from '../../../lib/time-utils.js';
 import { TimelineCalendarFilter } from './timeline-calendar-filter.js';

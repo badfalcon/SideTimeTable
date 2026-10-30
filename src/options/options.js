@@ -6,10 +6,10 @@
 
 import { logError } from '../lib/utils.js';
 import { DEFAULT_SETTINGS } from '../lib/constants.js';
-import { loadSettings, saveSettings } from '../lib/settings-storage.js';
+import { loadSettings, saveSettings } from '../lib/storage/settings-storage.js';
 import { sendMessage } from '../lib/chrome-messaging.js';
 import { getThemeById, resolveThemeColors } from '../lib/color-themes.js';
-import { StorageHelper } from '../lib/storage-helper.js';
+import { StorageHelper } from '../lib/storage/storage-helper.js';
 import { findPreviousReleaseVersion } from '../lib/release-notes.js';
 import { isDemoMode, getDemoOptionsSettings, getDemoCalendars, getDemoCalendarGroups, DEMO_BUILD } from '../lib/demo-data.js';
 import {
@@ -32,7 +32,7 @@ import {
 } from './components/index.js';
 import { createIcon, createNotice, msg } from './components/base/settings-dom.js';
 import { setupSettingsTabs } from './settings-tabs.js';
-import { refreshDisplayPrefs } from '../lib/display-prefs.js';
+import { refreshDisplayPrefs } from '../lib/i18n/display-prefs.js';
 
 /**
  * OptionsPageManager - The overall options page management class

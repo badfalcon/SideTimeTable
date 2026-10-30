@@ -431,7 +431,7 @@ body {
     gap: 8px;
 }
 
-/* Room for "09:00", "12:30 PM" or "午後12:30" (lib/time-field.js) */
+/* Room for "09:00", "12:30 PM" or "午後12:30" (lib/ui/time-field.js) */
 .settings-time-input {
     width: 104px;
     font-variant-numeric: tabular-nums;

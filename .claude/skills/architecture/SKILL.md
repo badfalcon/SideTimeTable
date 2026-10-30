@@ -17,14 +17,15 @@ description: Detailed architecture and component reference for SideTimeTable Chr
 ### Side Panel (`src/side_panel/`)
 Main UI displayed in Chrome's side panel:
 - `side_panel.js`: Main controller with `SidePanelUIController` class managing initialization and coordination
-- `time-manager.js`: Exports `EventLayoutManager` for sophisticated overlap resolution algorithms
-- `event-handlers.js`: Exports `GoogleEventManager` and `LocalEventManager` for event data management
+- `event-layout-manager.js`: Exports `EventLayoutManager` for sophisticated overlap resolution algorithms
+- `current-time-line-manager.js`: `CurrentTimeLineManager` — the current time indicator, with date-aware visibility
+- `event-managers.js`: Exports `GoogleEventManager` and `LocalEventManager` for event data management
 - `side_panel.html`: Main UI with modal dialogs and responsive design
 - `side_panel.css`: Custom styling with CSS variables for theming
 - `components/`: Modular component-based UI architecture
   - `timeline/timeline-component.js`: Main timeline display with integrated event layout
   - `timeline/timeline-calendar-filter.js` + `calendar-filter-renderer.js`: Calendar filter popover in the header — title with refresh, calendars as colour / name / checkbox, folding groups with a group checkbox, search box only for long lists (9+), "Manage calendars in Settings" link
-  - `header/header-component.js`: Date navigation (the date label opens a month calendar from `lib/date-field.js`), add/sync/settings buttons, and the slot the calendar filter mounts into
+  - `header/header-component.js`: Date navigation (the date label opens a month calendar from `lib/ui/date-field.js`), add/sync/settings buttons, and the slot the calendar filter mounts into
   - `modals/`: Modal dialog components (Google events, local events, alerts, What's New, review)
     - `event-dialog-dom.js`: Shared DOM builders for the event dialogs (sticky header/footer, icon-led rows, segmented controls, buttons, inline delete confirmation, status line, time row with duration picker)
     - `delete-recurring-dialog.js`: "This event / All events" choice before deleting a recurring local event
@@ -69,28 +70,39 @@ All service modules live here in a single flat directory (background and side-pa
 - `theme-service.js`: Applies color theme, dark mode, and scrollbar settings
 
 ### Utilities (`src/lib/`)
-Shared functions and framework components:
+Shared functions and framework components. General helpers sit at the top level; the rest are grouped by area:
 - `utils.js`: Core utilities (`generateTimeList`, `loadSettings`, `logError`, event storage, recurring events)
 - `time-utils.js`: Pure functions for time calculations (`calculateWorkHours`, `isToday`)
-- `localize.js`: i18n helper functions with Chrome extension API integration
-- `locale-utils.js`: Locale-aware date/time formatting (12h/24h format support); a plain script exposing `window.getCurrentLocale()` / `window.getTimeFormatPreference()` (loaded by the side panel and the settings page)
-- `display-prefs.js`: The language and 12/24-hour choice times are written in (`getDisplayPrefs()` / `refreshDisplayPrefs()`), shared by the dialogs, the setup and the settings page
-- `time-field.js`: Time field in the extension's language and 12/24-hour setting — a text box (`value` stays "HH:MM") that reads typed times ("930", "9:30pm", "午後3時") and opens a list of times every 15 minutes (a popover); replaces `<input type="time">`, which Chrome draws in its own language
-- `date-field.js`: Date field and month calendar in the extension's language — a text box (`value` stays "YYYY-MM-DD", `min` greys out earlier days) that shows the date like the header ("10月31日(土)" / "Sat, Oct 31"), reads typed dates ("10/31", "2026-10-31", "10月31日", "Oct 31") and opens a month calendar (a popover); the calendar alone (`createDateCalendar()`) is what the header's date label opens. Replaces `<input type="date">`, which Chrome draws in its own language
-- `demo-data.js`: Mock data system for development and screenshots
-- `current-time-line-manager.js`: Dedicated current time indicator management with date-aware visibility
-- `storage-helper.js`: Chrome storage API wrapper with async/await support
+- `constants.js`: Shared constants and configuration values
+- `chrome-messaging.js`: Chrome runtime message passing utilities
 - `alarm-manager.js`: Event reminder system using Chrome alarms API
 - `event-focus.js`: Parks/consumes "show me this event" requests handed from the service worker to the side panel
-- `guest-utils.js`: Guest address checks/parsing, `attendees` body, and `GuestDirectory` (people from loaded events, suggested when adding guests)
-- `release-notes.js`: Version history and update highlights for What's New modal
-- `google-button-helper.js`: Helper utilities for Google-style buttons
-- `chrome-messaging.js`: Chrome runtime message passing utilities
 - `color-themes.js`: Color theme definitions and dark mode support
-- `constants.js`: Shared constants and configuration values
+- `release-notes.js`: Version history and update highlights for What's New modal
+- `demo-data.js`: Mock data system for development and screenshots
+
+**`storage/` — Chrome storage**
+- `storage-helper.js`: Chrome storage API wrapper with async/await support
 - `event-storage.js`: Event persistence and retrieval from Chrome storage
 - `settings-storage.js`: Settings persistence and retrieval
 - `storage-cleanup.js`: Storage maintenance and cleanup utilities
+
+**`i18n/` — language and display format**
+- `localize.js`: i18n helper functions with Chrome extension API integration
+- `locale-utils.js`: Locale-aware date/time formatting (12h/24h format support); a plain script exposing `window.getCurrentLocale()` / `window.getTimeFormatPreference()` (loaded by the side panel and the settings page)
+- `display-prefs.js`: The language and 12/24-hour choice times are written in (`getDisplayPrefs()` / `refreshDisplayPrefs()`), shared by the dialogs, the setup and the settings page
+
+**`ui/` — form controls**
+- `time-field.js`: Time field in the extension's language and 12/24-hour setting — a text box (`value` stays "HH:MM") that reads typed times ("930", "9:30pm", "午後3時") and opens a list of times every 15 minutes (a popover); replaces `<input type="time">`, which Chrome draws in its own language
+- `date-field.js`: Date field and month calendar in the extension's language — a text box (`value` stays "YYYY-MM-DD", `min` greys out earlier days) that shows the date like the header ("10月31日(土)" / "Sat, Oct 31"), reads typed dates ("10/31", "2026-10-31", "10月31日", "Oct 31") and opens a month calendar (a popover); the calendar alone (`createDateCalendar()`) is what the header's date label opens. Replaces `<input type="date">`, which Chrome draws in its own language
+- `google-button-helper.js`: Helper utilities for Google-style buttons
+
+**`google/` — Google Calendar helpers**
+- `google-event-utils.js`: Google event checks (`isEditableGoogleEvent()`, `isDeletableGoogleEvent()`) and request bodies
+- `guest-utils.js`: Guest address checks/parsing, `attendees` body, and `GuestDirectory` (people from loaded events, suggested when adding guests)
+- `calendar-search.js`: Calendar search by name or address (settings list and the side panel filter)
+- `request-dedupe.js`: `runDeduped()` / `buildRequestId()` — keeps a retried Google write from running twice
+- `conference-url-utils.js`: Meeting link extraction, shared by the event dialog and reminder notifications (no DOMParser, so it works in the service worker)
 
 ## Specialized Systems
 
@@ -183,8 +195,8 @@ Chrome alarm-based reminders:
 ### Core Functionality
 - `src/side_panel/side_panel.js`: Main UI controller with `SidePanelUIController` class
 - `src/background.js`: Google Calendar integration, OAuth2, and message handling
-- `src/side_panel/time-manager.js`: `EventLayoutManager` for event layout algorithms
-- `src/side_panel/event-handlers.js`: Event data management
+- `src/side_panel/event-layout-manager.js`: `EventLayoutManager` for event layout algorithms
+- `src/side_panel/event-managers.js`: Event data management
 - `src/side_panel/components/timeline/timeline-component.js`: Main timeline display
 - `src/side_panel/components/header/header-component.js`: Date navigation controls
 - `src/side_panel/components/modals/google-event-modal.js`: Google Calendar event details
@@ -202,8 +214,8 @@ Chrome alarm-based reminders:
 - `_locales/[lang]/messages.json`: Localized strings (en/ja with 400+ strings)
 - `src/lib/utils.js`: Default settings and utility functions
 - `src/lib/demo-data.js`: Mock data for development
-- `src/lib/current-time-line-manager.js`: Current time indicator management
-- `src/lib/storage-helper.js`: Chrome storage API utilities
+- `src/side_panel/current-time-line-manager.js`: Current time indicator management
+- `src/lib/storage/storage-helper.js`: Chrome storage API utilities
 
 ## Dependencies and Libraries
 

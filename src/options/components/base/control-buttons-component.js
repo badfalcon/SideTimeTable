@@ -3,7 +3,7 @@
  * all settings: quiet rows under the section list (at the bottom of the page
  * in a narrow window). Reset is set apart and red.
  */
-import { StorageHelper } from '../../../lib/storage-helper.js';
+import { StorageHelper } from '../../../lib/storage/storage-helper.js';
 import { sendMessage } from '../../../lib/chrome-messaging.js';
 import { createIcon, createNotice, msg, setText } from './settings-dom.js';
 

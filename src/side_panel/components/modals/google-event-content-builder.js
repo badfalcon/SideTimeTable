@@ -5,7 +5,7 @@
  * receives the element to fill and the event, fills it, and returns whether
  * there was anything to show so the caller can hide an empty row.
  */
-import { extractMeetUrl, extractVideoUrl } from '../../../lib/conference-url-utils.js';
+import { extractMeetUrl, extractVideoUrl } from '../../../lib/google/conference-url-utils.js';
 import { createIcon, getDisplayPrefs, msg, msgWith, setLocalizedText } from './event-dialog-dom.js';
 import { formatDateTimeRange, formatHeaderDate } from '../../../lib/time-utils.js';
 

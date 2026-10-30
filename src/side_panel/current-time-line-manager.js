@@ -5,7 +5,7 @@
  * It is a dedicated class for visually displaying the current time on the timeline.
  */
 
-import { getCurrentTime } from './demo-data.js';
+import { getCurrentTime } from '../lib/demo-data.js';
 
 /**
  * The class for managing the current time line

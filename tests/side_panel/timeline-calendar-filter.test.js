@@ -9,7 +9,7 @@
 jest.mock('../../src/lib/chrome-messaging.js', () => ({
   sendMessage: jest.fn(),
 }));
-jest.mock('../../src/lib/settings-storage.js', () => ({
+jest.mock('../../src/lib/storage/settings-storage.js', () => ({
   loadSelectedCalendars: jest.fn(),
   saveSelectedCalendars: jest.fn().mockResolvedValue(undefined),
   loadCalendarGroups: jest.fn(),
@@ -34,7 +34,7 @@ beforeAll(() => {
 });
 
 import { TimelineCalendarFilter } from '../../src/side_panel/components/timeline/timeline-calendar-filter.js';
-import { saveSelectedCalendars, loadSelectedCalendars, loadCalendarGroups } from '../../src/lib/settings-storage.js';
+import { saveSelectedCalendars, loadSelectedCalendars, loadCalendarGroups } from '../../src/lib/storage/settings-storage.js';
 import { sendMessage } from '../../src/lib/chrome-messaging.js';
 
 const CAL_X = { id: 'cal-x', summary: 'X', primary: false };

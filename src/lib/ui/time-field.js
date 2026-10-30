@@ -12,8 +12,8 @@
  * and `change` events work as before), and its `value` keeps the contract of
  * a time input: it reads and writes "HH:MM" (24-hour), or "" when empty.
  */
-import { formatClockTime } from './time-utils.js';
-import { getDisplayPrefs } from './display-prefs.js';
+import { formatClockTime } from '../time-utils.js';
+import { getDisplayPrefs } from '../i18n/display-prefs.js';
 
 const LIST_MAX_HEIGHT = 224;
 const VIEWPORT_MARGIN = 8;

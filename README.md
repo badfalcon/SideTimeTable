@@ -19,7 +19,7 @@
 - **Make it yours** — Memo panel, color themes (with color-vision presets), dark mode, work hours, 12/24-hour time, English and Japanese.
 
 ### Install
-Get it from the [Chrome Web Store](https://chromewebstore.google.com/detail/sidetimetable/pnknjjpncnciijkpdfgfiikmhlmamaid). To build it yourself, see [DEVELOPMENT.md](./DEVELOPMENT.md).
+Get it from the [Chrome Web Store](https://chromewebstore.google.com/detail/sidetimetable/pnknjjpncnciijkpdfgfiikmhlmamaid). To build it yourself, see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ### Sponsor
 If SideTimeTable is useful to you, you can support its development through [GitHub Sponsors](https://github.com/sponsors/badfalcon). The extension stays free either way.
@@ -40,7 +40,7 @@ If SideTimeTable is useful to you, you can support its development through [GitH
 - **自分好みに** — メモ欄、カラーテーマ（色覚対応プリセット付き）、ダークモード、作業時間、12/24時間表記、日本語・英語。
 
 ### インストール
-[Chrome ウェブストア](https://chromewebstore.google.com/detail/sidetimetable/pnknjjpncnciijkpdfgfiikmhlmamaid)から追加できます。自分でビルドする場合は [DEVELOPMENT.md](./DEVELOPMENT.md) を参照してください。
+[Chrome ウェブストア](https://chromewebstore.google.com/detail/sidetimetable/pnknjjpncnciijkpdfgfiikmhlmamaid)から追加できます。自分でビルドする場合は [CONTRIBUTING.md](./CONTRIBUTING.md) を参照してください。
 
 ### スポンサー
 SideTimeTable が役に立ったら、[GitHub Sponsors](https://github.com/sponsors/badfalcon) から開発を支援できます。拡張機能は今後も無料です。

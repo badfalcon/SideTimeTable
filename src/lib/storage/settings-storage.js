@@ -11,7 +11,7 @@
  */
 
 import { StorageHelper } from './storage-helper.js';
-import { DEFAULT_SETTINGS } from './constants.js';
+import { DEFAULT_SETTINGS } from '../constants.js';
 
 /**
  * Save the settings

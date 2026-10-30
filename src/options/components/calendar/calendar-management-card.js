@@ -6,11 +6,11 @@
  */
 import { CardComponent } from '../base/card-component.js';
 import { logError } from '../../../lib/utils.js';
-import { loadSelectedCalendars, saveSelectedCalendars, loadCalendarGroups } from '../../../lib/settings-storage.js';
+import { loadSelectedCalendars, saveSelectedCalendars, loadCalendarGroups } from '../../../lib/storage/settings-storage.js';
 import { sendMessage } from '../../../lib/chrome-messaging.js';
 import { CalendarGroupManager } from './calendar-group-manager.js';
 import { CalendarListRenderer } from './calendar-list-renderer.js';
-import { calendarMatchesSearch } from '../../../lib/calendar-search.js';
+import { calendarMatchesSearch } from '../../../lib/google/calendar-search.js';
 import { createButton, createIcon, createIconButton, msg, setText } from '../base/settings-dom.js';
 
 export class CalendarManagementCard extends CardComponent {

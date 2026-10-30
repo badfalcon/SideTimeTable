@@ -5,7 +5,7 @@
  * DOM-free: delegates rendering to event managers and components.
  */
 
-import { loadSettings } from '../lib/settings-storage.js';
+import { loadSettings } from '../lib/storage/settings-storage.js';
 import { isDemoMode } from '../lib/demo-data.js';
 
 export class EventLoadingService {

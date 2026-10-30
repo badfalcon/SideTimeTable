@@ -5,7 +5,7 @@ import {
     extractMeetUrl,
     extractVideoUrl,
     selectNotificationUrl,
-} from '../../src/lib/conference-url-utils.js';
+} from '../../../src/lib/google/conference-url-utils.js';
 
 describe('extractMeetUrl', () => {
     test('hangoutLink direct', () => {

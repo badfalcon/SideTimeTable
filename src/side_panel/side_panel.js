@@ -24,8 +24,8 @@ import {
 } from './components';
 
 import { AllDayEventsComponent } from './components/timeline/all-day-events-component.js';
-import { EventLayoutManager } from './time-manager.js';
-import { GoogleEventManager, LocalEventManager } from './event-handlers.js';
+import { EventLayoutManager } from './event-layout-manager.js';
+import { GoogleEventManager, LocalEventManager } from './event-managers.js';
 import { LocalEventService } from '../services/local-event-service.js';
 import { DateNavigationService } from '../services/date-navigation-service.js';
 import { EventLoadingService } from '../services/event-loading-service.js';
@@ -35,13 +35,13 @@ import { AlarmManager } from '../lib/alarm-manager.js';
 import { ThemeService } from '../services/theme-service.js';
 import { OnboardingService } from '../services/onboarding-service.js';
 import { isSameDay, parseDateString } from '../lib/time-utils.js';
-import { loadSettings, loadSelectedCalendars } from '../lib/settings-storage.js';
-import { migrateEventDataToLocal } from '../lib/event-storage.js';
-import { cleanupObsoleteStorageKeys } from '../lib/storage-cleanup.js';
+import { loadSettings, loadSelectedCalendars } from '../lib/storage/settings-storage.js';
+import { migrateEventDataToLocal } from '../lib/storage/event-storage.js';
+import { cleanupObsoleteStorageKeys } from '../lib/storage/storage-cleanup.js';
 import { sendMessage } from '../lib/chrome-messaging.js';
 import { setDemoMode, isDemoMode } from '../lib/demo-data.js';
-import { filterWritableCalendars } from '../lib/google-event-utils.js';
-import { refreshDisplayPrefs } from '../lib/display-prefs.js';
+import { filterWritableCalendars } from '../lib/google/google-event-utils.js';
+import { refreshDisplayPrefs } from '../lib/i18n/display-prefs.js';
 
 // The reload message listener
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {

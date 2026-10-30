@@ -11,11 +11,11 @@
  * listener is removed when the component is destroyed.
  */
 import { timeStringToMinutes, minutesToTimeString } from '../../../lib/time-utils.js';
-import { createTimeField } from '../../../lib/time-field.js';
+import { createTimeField } from '../../../lib/ui/time-field.js';
 
-// Language and 12/24-hour preferences live in lib/display-prefs.js (the
+// Language and 12/24-hour preferences live in lib/i18n/display-prefs.js (the
 // settings page uses them too); re-exported for the dialogs.
-export { getDisplayPrefs, setDisplayPrefs, refreshDisplayPrefs, usesTwelveHourClock } from '../../../lib/display-prefs.js';
+export { getDisplayPrefs, setDisplayPrefs, refreshDisplayPrefs, usesTwelveHourClock } from '../../../lib/i18n/display-prefs.js';
 
 /** Duration presets offered next to the time inputs, in minutes. */
 export const DURATION_PRESETS = [

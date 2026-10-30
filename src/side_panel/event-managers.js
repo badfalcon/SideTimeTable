@@ -6,13 +6,13 @@
  */
 
 import { logError } from '../lib/utils.js';
-import { loadSettings, loadSelectedCalendars } from '../lib/settings-storage.js';
-import { loadLocalEvents, loadLocalEventsForDate } from '../lib/event-storage.js';
+import { loadSettings, loadSelectedCalendars } from '../lib/storage/settings-storage.js';
+import { loadLocalEvents, loadLocalEventsForDate } from '../lib/storage/event-storage.js';
 import { sendMessage } from '../lib/chrome-messaging.js';
 import {getDemoEvents, getDemoLocalEvents, isDemoMode} from '../lib/demo-data.js';
 import { GoogleEventRenderer } from './google-event-renderer.js';
 import { LocalEventRenderer } from './local-event-renderer.js';
-import { GuestDirectory } from '../lib/guest-utils.js';
+import { GuestDirectory } from '../lib/google/guest-utils.js';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 

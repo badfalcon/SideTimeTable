@@ -2,7 +2,7 @@
  * Tests for GoogleEventManager — all-day event handling
  */
 
-jest.mock('../../src/lib/settings-storage.js', () => ({
+jest.mock('../../src/lib/storage/settings-storage.js', () => ({
   loadSettings: jest.fn(),
   loadSelectedCalendars: jest.fn(),
 }));
@@ -17,7 +17,7 @@ jest.mock('../../src/lib/demo-data.js', () => ({
 jest.mock('../../src/lib/utils.js', () => ({
   logError: jest.fn(),
 }));
-jest.mock('../../src/lib/event-storage.js', () => ({
+jest.mock('../../src/lib/storage/event-storage.js', () => ({
   loadLocalEvents: jest.fn(),
   loadLocalEventsForDate: jest.fn(),
 }));
@@ -35,7 +35,7 @@ jest.mock('../../src/side_panel/event-element-factory.js', () => ({
   },
 }));
 
-import { GoogleEventManager } from '../../src/side_panel/event-handlers.js';
+import { GoogleEventManager } from '../../src/side_panel/event-managers.js';
 import { onClickOnly } from '../../src/side_panel/event-element-factory.js';
 
 // Mock DOM and window APIs needed by _createAllDayEventElement

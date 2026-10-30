@@ -2,7 +2,7 @@
  * TutorialComponent - Step-by-step onboarding tutorial overlay
  */
 import { Component } from '../base/component.js';
-import { StorageHelper } from '../../../lib/storage-helper.js';
+import { StorageHelper } from '../../../lib/storage/storage-helper.js';
 
 const TUTORIAL_STORAGE_KEY = 'tutorialCompleted';
 

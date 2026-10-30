@@ -7,7 +7,7 @@
  * name Google shows for them.
  */
 
-import { calendarMatchesSearch } from '../../src/lib/calendar-search.js';
+import { calendarMatchesSearch } from '../../../src/lib/google/calendar-search.js';
 
 const CALENDAR = { id: 'tanaka@example.com', summary: '田中 太郎' };
 

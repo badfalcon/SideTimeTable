@@ -10,10 +10,10 @@
  * reloaded the panel.
  */
 
-jest.mock('../../src/lib/storage-helper.js', () => ({ StorageHelper: { get: jest.fn(), set: jest.fn() } }));
-jest.mock('../../src/lib/settings-storage.js', () => ({ loadSettings: jest.fn(), saveSettings: jest.fn() }));
+jest.mock('../../src/lib/storage/storage-helper.js', () => ({ StorageHelper: { get: jest.fn(), set: jest.fn() } }));
+jest.mock('../../src/lib/storage/settings-storage.js', () => ({ loadSettings: jest.fn(), saveSettings: jest.fn() }));
 jest.mock('../../src/lib/chrome-messaging.js', () => ({ sendMessage: jest.fn() }));
-jest.mock('../../src/lib/google-button-helper.js', () => ({ createGoogleSignInButton: jest.fn() }));
+jest.mock('../../src/lib/ui/google-button-helper.js', () => ({ createGoogleSignInButton: jest.fn() }));
 
 import { InitialSetupComponent } from '../../src/side_panel/components/setup/initial-setup-component.js';
 import { TutorialComponent } from '../../src/side_panel/components/tutorial/tutorial-component.js';

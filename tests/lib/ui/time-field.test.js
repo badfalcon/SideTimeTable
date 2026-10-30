@@ -1,4 +1,4 @@
-import { parseTimeText, formatTimeText, buildTimeOptions, nearestTimeIndex } from '../../src/lib/time-field.js';
+import { parseTimeText, formatTimeText, buildTimeOptions, nearestTimeIndex } from '../../../src/lib/ui/time-field.js';
 
 describe('time-field', () => {
     // ---------------------------------------------------------------

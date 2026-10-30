@@ -2,14 +2,10 @@
   "name": "sidetimetable",
   "version": "2.0.0",
   "description": "**SideTimeTable** is a Chrome extension that allows users to manage and view events for their day via a side panel. It seamlessly integrates with Google Calendar to fetch events and also provides an interface to add local events.",
-  "main": "index.js",
-  "directories": {
-    "doc": "docs"
-  },
   "scripts": {
     "build": "webpack --mode production",
     "dev": "webpack --mode development --env demo --watch",
-    "package": "npm run build && node build-zip.js",
+    "package": "npm run build && node scripts/build-zip.js",
     "test": "jest",
     "test:coverage": "jest --coverage",
     "lint": "eslint src/",

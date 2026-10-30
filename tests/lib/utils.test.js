@@ -10,7 +10,7 @@ import { DEFAULT_SETTINGS } from '../../src/lib/constants.js';
 import {
   loadSettings,
   saveSettings,
-} from '../../src/lib/settings-storage.js';
+} from '../../src/lib/storage/settings-storage.js';
 
 import {
   loadLocalEventsForDate,
@@ -20,7 +20,7 @@ import {
   getRecurringEventsForDate,
   addRecurringEventException,
   deleteRecurringEvent,
-} from '../../src/lib/event-storage.js';
+} from '../../src/lib/storage/event-storage.js';
 
 // ---------------------------------------------------------------
 // SPEC: getContrastColor(hexColor)

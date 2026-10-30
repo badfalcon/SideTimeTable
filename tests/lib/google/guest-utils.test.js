@@ -11,7 +11,7 @@ import {
     isValidEmail,
     normalizeEmail,
     parseGuestInput
-} from '../../src/lib/guest-utils.js';
+} from '../../../src/lib/google/guest-utils.js';
 
 describe('isValidEmail', () => {
     test.each([

@@ -6,7 +6,7 @@
  * Google's branding rules ask; connected, a plain "Disconnect" button.
  */
 import { CardComponent } from '../base/card-component.js';
-import { createGoogleSignInButton } from '../../../lib/google-button-helper.js';
+import { createGoogleSignInButton } from '../../../lib/ui/google-button-helper.js';
 import { createButton, createSettingRow, msg } from '../base/settings-dom.js';
 
 export class GoogleIntegrationCard extends CardComponent {

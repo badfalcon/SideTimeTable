@@ -5,7 +5,7 @@
  */
 
 import { StorageHelper } from './storage-helper.js';
-import { VALID_SYNC_KEYS, VALID_LOCAL_KEYS, VALID_LOCAL_KEY_PATTERNS } from './constants.js';
+import { VALID_SYNC_KEYS, VALID_LOCAL_KEYS, VALID_LOCAL_KEY_PATTERNS } from '../constants.js';
 
 /**
  * Check whether a local storage key is valid.
