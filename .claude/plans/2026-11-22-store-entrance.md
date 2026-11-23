@@ -28,6 +28,7 @@
 3. 再依頼で「あとで」を押した人 — 7日後に**再依頼の文面**で出る（初回の文面に戻らない）→ Task 1 のテスト `laterAgain shows the again prompt after 7 days`
 4. フォーム URL が空のまま出荷 — `setUninstallURL` を呼ばない（空文字で既存の設定を消したりもしない）→ Task 3 のテスト `does nothing while the form URL is empty`
 5. 英語のランディングページに `utm_source=landing_ja` が残る — `build:landing` が `landing_en` に書き換える → Task 4 のテスト `English pages use landing_en`
+6. 2.0.1 に更新した日の最初の起動 — 「What's New」とレビュー依頼が同時に開かない（条件の緩和と Google 条件の撤廃で、更新直後に対象になる人が一気に増えるため）。その日の日数は数える → Task 2 のテスト `reports whether it showed something`
 
 ---
 
@@ -82,12 +83,21 @@
 
 **Files:**
 - Modify: `src/side_panel/components/modals/review-modal.js`（定数・`_updateConsecutiveDays`・`_isGoogleIntegrated`・`trackOpenAndMaybeShow`・各ボタンの処理）
+- Modify: `src/services/onboarding-service.js`（`startOnboardingFlow` / `onTutorialComplete` / `_checkInitialSetup` / `checkForUpdateNotification` が「何かを出したか」を `Promise<boolean>` で返す）
+- Modify: `src/side_panel/side_panel.js:478-486`（オンボーディングの戻り値を `trackOpenAndMaybeShow` に渡す）
+- Test: `tests/services/onboarding-service.test.js`（新規。`chrome.runtime.getManifest` はテスト内で差す）
 - Modify: `_locales/ja/messages.json`, `_locales/en/messages.json`（`reviewAgainTitle` / `reviewAgainMessage` を `review*` の並びに追加）
 - Modify: `.claude/skills/architecture/SKILL.md`（modals の一覧に `review-schedule.js` を1行）
 
 **Interfaces:**
 - Consumes: Task 1 の `recordOpen` / `decideReviewPrompt` / `applyAnswer`
-- Produces: なし（`side_panel.js` からの呼び出し `trackOpenAndMaybeShow()` は変えない）
+- Produces: `trackOpenAndMaybeShow({ allowPrompt = true } = {})` — 日数は常に記録し、`allowPrompt` が false なら表示だけしない。`OnboardingService.startOnboardingFlow(...) -> Promise<boolean>`（チュートリアル・初期設定を始めた、または What's New を出したら true）
+
+- [ ] **Step 0: オンボーディングの戻り値（テスト先行）**
+  - `tests/services/onboarding-service.test.js` の `reports whether it showed something`: チュートリアル対象 → true、初期設定対象 → true、`lastSeenVersion` が古い既存ユーザー → true（`showForVersion` が呼ばれる）、同じバージョン → false、`whatsNewAutoShow: false` → false、新規インストール（`initialSetupCompleted` なし）→ false。コンポーネントは `shouldShow` / `start` / `showForVersion` を持つ `jest.fn` のスタブ
+  - `npx jest tests/services/onboarding-service.test.js` で FAIL を確認 → 実装 → PASS
+  - `side_panel.js`: `const onboardingShown = await this.onboardingService.startOnboardingFlow(...); await this.reviewModal.trackOpenAndMaybeShow({ allowPrompt: !onboardingShown });`
+  - `TODO.md` の「`OnboardingService.checkForUpdateNotification()` のテスト」項目は、この新規テストで満たした部分を反映して更新する
 
 - [ ] **Step 1: 文言を追加**
   - ja `reviewAgainTitle`: `使い続けてくださってありがとうございます` / `reviewAgainMessage`: `最近のアップデートを踏まえて、レビューを書いたり更新したりしませんか？\nストアのレビューは後から書き直せます。`
@@ -95,7 +105,7 @@
 - [ ] **Step 2: モーダルを書き換える**
   - `trackOpenAndMaybeShow()`: 読み込み → `recordOpen` → 保存 → `decideReviewPrompt(stats, Date.now())`。結果が `null` でなければ `this._mode` に入れ、タイトル・本文を `first`（既存の `reviewTitle`/`reviewMessage`）か `again`（新しいキー）に差し替えてから `show()`。Google 連携の確認は削除（`_isGoogleIntegrated` も削除）
   - 3つのボタンは `applyAnswer(stats, this._mode, answer, Date.now())` を保存してから閉じる。× ボタンは今までどおり保存せず閉じるだけ
-  - 「レビューを書く」で開く URL に `?utm_source=review_prompt`（first）/ `?utm_source=review_again`（again）を付ける
+  - 「レビューを書く」で開く URL はレビュー欄に直接入る `https://chromewebstore.google.com/detail/sidetimetable/${chrome.runtime.id}/reviews` にし、`?utm_source=review_prompt`（first）/ `?utm_source=review_again`（again）を付ける。`/reviews` がレビュー欄を開くことをブラウザで確認できなければ、今の詳細ページの URL のままにして利用者に伝える
   - ファイル先頭のコメントを新しい条件に書き直す
 - [ ] **Step 3: Run**
   Run: `npm test && npm run lint && npm run build`
@@ -132,9 +142,9 @@
 - [ ] **Step 4: プライバシーポリシーに節を追加**（`data-i18n="privacy.uninstallTitle"` / `privacy.uninstallDesc`、既存の節と同じマークアップ）
   - ja: `アンインストール時のアンケート` / `拡張機能をアンインストールすると、改善のための任意のアンケート（Google フォーム）が開きます。フォームには拡張機能のバージョンと表示言語だけが入力された状態で渡され、それ以外の情報は送られません。回答するかどうかは自由です。`
   - en: `Uninstall survey` / `When you uninstall the extension, an optional survey (Google Forms) opens to help us improve it. Only the extension's version and display language are filled in on the form; nothing else is sent. Answering is up to you.`
-- [ ] **Step 5: Run**
-  Run: `npx jest tests/lib/uninstall-survey.test.js && npm test && npm run lint && npm run build`
-  Expected: PASS（英語ページの再生成は Task 4 でまとめて行う）
+- [ ] **Step 5: 英語ページを再生成して Run**（`tests/docs/landing-en.test.js` は辞書の英文が `docs/en/` に出ていることを確かめるので、`landing-en-data.js` を変えたらこのタスクの中で作り直す）
+  Run: `npm run build:landing && npm test && npm run lint && npm run build`
+  Expected: PASS
 - [ ] **Step 6: Commit** `git commit -m "Open an optional survey on uninstall once the form exists"`
 
 ### Task 4: 拡張名とストアへのリンク（UTM）
@@ -161,7 +171,7 @@
 - [ ] **Step 3: 上の Files のとおりに書き換え、`npm run build:landing` を実行**
 - [ ] **Step 4: Run**
   Run: `npm test && npm run lint && npm run build`
-  Expected: PASS。`dist/` を使った実拡張で、Chrome の言語が日本語なら拡張の一覧・サイドパネルの選択欄に日本語の名前が出ること（Playwright の手元スクリプト、`--lang=ja` / `--lang=en`）
+  Expected: PASS。`dist/` を使った実拡張で、Chrome の言語が日本語なら拡張の一覧・サイドパネルの選択欄に日本語の名前が出ること（Playwright の手元スクリプト、`--lang=ja` / `--lang=en`）。サイドパネル上部の名前が 320px 幅で極端に切れていないかも見る（切れ方が悪ければスクリーンショットを添えて利用者に相談する）
 - [ ] **Step 5: Commit** `git commit -m "Name the extension per language and tag store links with utm_source"`
 
 ### Task 5: ストア説明文の書き直し
