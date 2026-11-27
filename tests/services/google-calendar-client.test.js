@@ -144,6 +144,51 @@ describe('SPEC: checkAuth', () => {
 });
 
 // ---------------------------------------------------------------
+// SPEC: resetAuth()
+// - Clears every token Chrome cached for the extension
+//   (chrome.identity.clearAllCachedAuthTokens), so the next sign-in starts
+//   from scratch — the "Reset Google connection" setting (issue #109)
+// - Rejects with the Identity API's error, or when the API is missing
+// ---------------------------------------------------------------
+describe('SPEC: resetAuth()', () => {
+  let client;
+  let originalClearAll;
+
+  beforeEach(() => {
+    client = new GoogleCalendarClient();
+    originalClearAll = chrome.identity.clearAllCachedAuthTokens;
+  });
+
+  afterEach(() => {
+    chrome.identity.clearAllCachedAuthTokens = originalClearAll;
+    chrome.runtime.lastError = null;
+  });
+
+  test('clears all cached auth tokens', async () => {
+    chrome.identity.clearAllCachedAuthTokens = jest.fn(cb => cb());
+
+    await expect(client.resetAuth()).resolves.toBeUndefined();
+    expect(chrome.identity.clearAllCachedAuthTokens).toHaveBeenCalledTimes(1);
+  });
+
+  test('rejects with the Identity API error', async () => {
+    chrome.identity.clearAllCachedAuthTokens = jest.fn(cb => {
+      chrome.runtime.lastError = { message: 'Identity failure' };
+      cb();
+      chrome.runtime.lastError = null;
+    });
+
+    await expect(client.resetAuth()).rejects.toThrow('Identity failure');
+  });
+
+  test('rejects when the browser has no clearAllCachedAuthTokens', async () => {
+    chrome.identity.clearAllCachedAuthTokens = undefined;
+
+    await expect(client.resetAuth()).rejects.toThrow();
+  });
+});
+
+// ---------------------------------------------------------------
 // SPEC: respondToEvent(calendarId, eventId, response)
 // - Required parameters: calendarId, eventId, response — all must be truthy
 // - Missing any → throws Error("Missing required parameters")

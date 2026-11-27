@@ -76,7 +76,10 @@ class OptionsPageManager {
         const controlContainer = document.getElementById('control-buttons-container');
 
         // --- Google Calendar タブ ---
-        this.googleIntegrationCard = new GoogleIntegrationCard(this.handleGoogleIntegrationChange.bind(this));
+        this.googleIntegrationCard = new GoogleIntegrationCard(
+            this.handleGoogleIntegrationChange.bind(this),
+            this.handleGoogleAuthReset.bind(this)
+        );
         this.googleIntegrationCard.createElement();
         this.googleIntegrationCard.appendTo(tabGoogle);
         this.componentManager.components.set('googleIntegration', this.googleIntegrationCard);
@@ -366,6 +369,50 @@ class OptionsPageManager {
         }
     }
 
+    /**
+     * Reset the Google sign-in (issue #109): after a confirmation, forget
+     * every token and auth grant Chrome holds for the extension, mark the
+     * integration off, and point to "Sign in with Google" to start afresh.
+     */
+    async handleGoogleAuthReset() {
+        if (isDemoMode()) return;
+        const confirmed = window.confirm(msg(
+            'confirmGoogleResetAuth',
+            'Reset the Google connection?\n\nChrome forgets the Google sign-in it keeps for this extension, and you sign in again. Your local events and settings stay.'
+        ));
+        if (!confirmed) return;
+
+        this.googleIntegrationCard.setButtonEnabled(false);
+        this.googleIntegrationCard.updateIntegrationStatus(false, msg('resetting', 'Resetting...'));
+        try {
+            const response = await sendMessage({ action: 'resetGoogleAuth' });
+            if (!response?.success) {
+                throw new Error(response?.error || 'Reset failed');
+            }
+
+            const settings = await loadSettings();
+            await saveSettings({ ...settings, googleIntegrated: false });
+            this.googleIntegrationCard.updateIntegrationStatus(false);
+            this.calendarManagementCard.hide();
+            this.colorSettingsCard.setGoogleCalendarColorsToggleVisible(false);
+            this._reloadSidePanel();
+
+            this.googleIntegrationCard.showNotice(createNotice({
+                content: msg('googleResetAuthDone', 'The Google connection was reset. Sign in with Google to connect again.'),
+                tone: 'success'
+            }));
+        } catch (error) {
+            logError('Google auth reset', error);
+            this.googleIntegrationCard.updateIntegrationStatus(false);
+            this.googleIntegrationCard.showNotice(createNotice({
+                content: `${msg('googleResetAuthFailed', 'Could not reset the Google connection.')} (${error.message})`,
+                tone: 'danger'
+            }));
+        } finally {
+            this.googleIntegrationCard.setButtonEnabled(true);
+        }
+    }
+
     async handleTimeSettingsChange(timeSettings) {
         try {
             // Load the existing settings, update only the time settings
@@ -604,12 +651,6 @@ class OptionsPageManager {
      * @private
      */
     _showManualRevokeNotification(revokeUrl) {
-        // Remove the existing notifications
-        const existingNotice = document.querySelector('.manual-revoke-notice');
-        if (existingNotice) {
-            existingNotice.remove();
-        }
-
         // Create a notification message: what is left to do, and the link
         const content = document.createElement('div');
         const title = document.createElement('strong');
@@ -628,13 +669,8 @@ class OptionsPageManager {
         content.append(title, description, link);
         const notice = createNotice({ content, tone: 'info', className: 'manual-revoke-notice' });
 
-        // Inside the Google card, under its status
-        const googleCardBody = document.querySelector('#tab-google .settings-card .settings-card-body');
-        if (googleCardBody) {
-            googleCardBody.appendChild(notice);
-        } else {
-            document.body.appendChild(notice);
-        }
+        // Inside the Google card, under its rows (replaces an earlier notice)
+        this.googleIntegrationCard.showNotice(notice);
 
         // Auto-remove after 30 seconds
         setTimeout(() => {

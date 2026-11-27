@@ -259,6 +259,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             });
             return true; // Indicates async response
 
+        case "resetGoogleAuth":
+            // Forget every token and auth grant Chrome holds for the
+            // extension, so a sign-in stuck on an error starts from scratch
+            calendarClient.resetAuth()
+                .then(() => sendResponse({ success: true }))
+                .catch(error => {
+                    logError('Google auth reset', error);
+                    sendResponse({ success: false, error: error.message });
+                });
+            return true; // Indicates async response
+
         case "reloadSideTimeTable":
         case "calendarSelectionChanged":
             // These messages are handled by the side panel; just acknowledge

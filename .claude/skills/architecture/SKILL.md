@@ -49,7 +49,7 @@ Extension settings and calendar management, in the side panel's design language:
 - `components/`:
   - `base/settings-dom.js`: Shared builders — `createSettingRow()` (name and hint on the left, control on the right), `createSwitch()`, `createSelect()`, `createButton()`, `createIconButton()`, `createNotice()`
   - `base/card-component.js`: A card — single-colour icon, title, optional description, then the rows
-  - `calendar/`: Google connection (Google's own sign-in button when not connected, "Disconnect" when connected) and calendar management (search, groups, assign popover, create-group dialog)
+  - `calendar/`: Google connection (Google's own sign-in button when not connected, "Disconnect" when connected, and "Reset Google connection" — `chrome.identity.clearAllCachedAuthTokens` after a confirmation, for sign-in stuck on an error) and calendar management (search, groups, assign popover, create-group dialog)
   - `settings/`: Time, color (theme cards with a small preview), language, shortcut, reminder, memo, scrollbar, What's New, and the developer tab cards (extension info, demo mode, reminder debug, storage viewer)
 
 ### Changelog Page (`src/changelog/`)

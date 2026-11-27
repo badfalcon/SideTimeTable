@@ -357,6 +357,30 @@ export class GoogleCalendarClient {
     }
 
     /**
+     * Reset the Identity API's state for this extension: every cached
+     * OAuth2 token, the account preference and the granted auth flows. For
+     * sign-in that keeps failing (Google answering "invalid_request" and
+     * the like); the next sign-in starts from scratch.
+     * @returns {Promise<void>}
+     */
+    resetAuth() {
+        return new Promise((resolve, reject) => {
+            if (typeof chrome.identity?.clearAllCachedAuthTokens !== 'function') {
+                reject(new Error('chrome.identity.clearAllCachedAuthTokens is not available'));
+                return;
+            }
+            chrome.identity.clearAllCachedAuthTokens(() => {
+                const error = chrome.runtime.lastError;
+                if (error) {
+                    reject(new Error(error.message || String(error)));
+                } else {
+                    resolve();
+                }
+            });
+        });
+    }
+
+    /**
      * Respond to a Google Calendar event (accept/decline/tentative)
      * @param {string} calendarId - The calendar ID
      * @param {string} eventId - The event ID

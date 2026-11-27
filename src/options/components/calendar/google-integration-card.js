@@ -4,13 +4,21 @@
  * One row: the connection status (with what it allows) and the action. Not
  * connected, the action is Google's own "Sign in with Google" button, as
  * Google's branding rules ask; connected, a plain "Disconnect" button.
+ *
+ * A second row resets the sign-in Chrome keeps for the extension, for when
+ * connecting keeps failing (Google answering "invalid_request" and the like).
+ * It is shown connected or not: it is most needed when connecting fails.
  */
 import { CardComponent } from '../base/card-component.js';
 import { createGoogleSignInButton } from '../../../lib/ui/google-button-helper.js';
 import { createButton, createSettingRow, msg } from '../base/settings-dom.js';
 
 export class GoogleIntegrationCard extends CardComponent {
-    constructor(onIntegrationChange) {
+    /**
+     * @param {function(boolean)} onIntegrationChange - Connect (true) or disconnect (false)
+     * @param {function()} [onResetAuth] - Reset the Google sign-in
+     */
+    constructor(onIntegrationChange, onResetAuth = null) {
         super({
             title: 'Google Calendar',
             titleLocalize: '__MSG_googleCalendarCardTitle__',
@@ -20,9 +28,11 @@ export class GoogleIntegrationCard extends CardComponent {
         });
 
         this.onIntegrationChange = onIntegrationChange;
+        this.onResetAuth = onResetAuth;
         this.isIntegrated = false;
         this.integrationButton = null;
         this.disconnectButton = null;
+        this.resetButton = null;
         this.statusElement = null;
         this.statusHint = null;
     }
@@ -53,6 +63,23 @@ export class GoogleIntegrationCard extends CardComponent {
         this.statusHint = hint;
         this.addContent(row);
 
+        // Reset the sign-in when connecting keeps failing
+        this.resetButton = createButton({
+            id: 'google-reset-auth-button',
+            icon: 'fas fa-rotate-left',
+            labelKey: 'googleResetAuth',
+            labelFallback: 'Reset'
+        });
+        const { row: resetRow } = createSettingRow({
+            labelKey: 'googleResetAuthLabel',
+            labelFallback: 'Reset Google connection',
+            labelFor: 'google-reset-auth-button',
+            hintKey: 'googleResetAuthHint',
+            hintFallback: 'If connecting fails with an error from Google, clear the sign-in Chrome keeps for this extension and sign in again.',
+            control: this.resetButton
+        });
+        this.addContent(resetRow);
+
         this._setupEventListeners();
 
         return card;
@@ -78,12 +105,27 @@ export class GoogleIntegrationCard extends CardComponent {
      * @private
      */
     _setupEventListeners() {
-        if (!this.onIntegrationChange) return;
-        [this.integrationButton, this.disconnectButton].forEach(button => {
-            button?.addEventListener('click', () => {
-                this.onIntegrationChange(!this.isIntegrated);
+        if (this.onIntegrationChange) {
+            [this.integrationButton, this.disconnectButton].forEach(button => {
+                button?.addEventListener('click', () => {
+                    this.onIntegrationChange(!this.isIntegrated);
+                });
             });
-        });
+        }
+        if (this.onResetAuth) {
+            this.resetButton?.addEventListener('click', () => this.onResetAuth());
+        }
+    }
+
+    /**
+     * Show a notice in the card, under the rows, replacing an earlier one
+     * from this card.
+     * @param {HTMLElement} notice - From createNotice()
+     */
+    showNotice(notice) {
+        this.bodyElement?.querySelectorAll('.google-card-notice').forEach(el => el.remove());
+        notice.classList.add('google-card-notice');
+        this.bodyElement?.appendChild(notice);
     }
 
     /**
@@ -127,7 +169,7 @@ export class GoogleIntegrationCard extends CardComponent {
      * @param {boolean} enabled Whether to enable the button
      */
     setButtonEnabled(enabled) {
-        [this.integrationButton, this.disconnectButton].forEach(button => {
+        [this.integrationButton, this.disconnectButton, this.resetButton].forEach(button => {
             if (button) button.disabled = !enabled;
         });
     }

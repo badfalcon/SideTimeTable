@@ -357,6 +357,30 @@
     "message": "Connect to show, create and edit your Google Calendar events.",
     "description": "Options page: under the 'Not connected' status"
   },
+  "googleResetAuthLabel": {
+    "message": "Reset Google connection",
+    "description": "Options page: name of the row that resets the Google sign-in"
+  },
+  "googleResetAuthHint": {
+    "message": "If connecting fails with an error from Google, clear the sign-in Chrome keeps for this extension and sign in again.",
+    "description": "Options page: explanation under \"Reset Google connection\""
+  },
+  "googleResetAuth": {
+    "message": "Reset",
+    "description": "Options page: button that resets the Google sign-in"
+  },
+  "confirmGoogleResetAuth": {
+    "message": "Reset the Google connection?\n\nChrome forgets the Google sign-in it keeps for this extension, and you sign in again. Your local events and settings stay.",
+    "description": "Options page: confirmation before resetting the Google sign-in"
+  },
+  "googleResetAuthDone": {
+    "message": "The Google connection was reset. Sign in with Google to connect again.",
+    "description": "Options page: notice after the Google sign-in was reset"
+  },
+  "googleResetAuthFailed": {
+    "message": "Could not reset the Google connection.",
+    "description": "Options page: notice when resetting the Google sign-in failed"
+  },
   "workHoursLabel": {
     "message": "Work hours",
     "description": "Options page: work hours setting"

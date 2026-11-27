@@ -34,6 +34,7 @@
 
 ## テスト
 
+- [ ] 「Google 連携をリセット」（`GoogleIntegrationCard` のリセット行・`showNotice()`、`OptionsPageManager.handleGoogleAuthReset()`）の DOM テスト: 確認でキャンセルしたら何もしないこと、成功時に `googleIntegrated=false`・カレンダー管理カードを隠す・お知らせの表示、失敗時のエラー表示とボタンの再有効化。`resetAuth()` 本体は `tests/services/google-calendar-client.test.js` でカバー済み、操作は実拡張で確認済み（2026-11、ja/en・1000/360px）。jsdom 基盤が前提。
 - [ ] 時刻欄（`createTimeField()`）の DOM テスト: 一覧の開閉（クリック・↓・Escape はダイアログを閉じない・Tab・スクロールで閉じる）、↑↓・PageUp/Down・Enter での選択、入力の確定（Enter / フォーカスが外れたとき）と不正な入力で元の時刻に戻ること、変更の通知が1回だけなこと。読み取り・書式は `tests/lib/time-field.test.js` でカバー済み、操作は実拡張で確認済み。jsdom 基盤が前提（popover と `:popover-open` も要る）。
 - [ ] 日付欄・カレンダー（`createDateField()` / `createDateCalendar()`）の DOM テスト: 開閉（クリック・↓・Escape はダイアログを閉じない・Tab・外側クリック・スクロール）、矢印・PageUp/Down（Shift で1年）・Enter での選択、`min` より前の日が選べないこと、入力の確定と不正な入力で元の日付に戻ること、変更の通知が1回だけなこと、ヘッダーでの Escape 後のフォーカス戻り。読み取り・書式・月の並びは `tests/lib/date-field.test.js` でカバー済み、操作は実拡張で確認済み（2026-10、Chrome 米国英語/日本語 × 拡張 ja/en × ライト/ダーク × 384/320px）。jsdom 基盤が前提。
 - [ ] 初期設定・チュートリアルの document レベルの Escape ハンドラの DOM テスト（表示していないときの Escape で `_finish()` が走らないこと）。`_isActive()` 単体は `tests/side_panel/onboarding-overlays.test.js` でカバー済み。jsdom 基盤が前提。

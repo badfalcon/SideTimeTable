@@ -357,6 +357,30 @@
     "message": "連携すると、Google カレンダーの予定を表示・作成できます。",
     "description": "設定ページ: 「未連携」の下の説明"
   },
+  "googleResetAuthLabel": {
+    "message": "Google 連携をリセット",
+    "description": "設定ページ: Google のログイン情報をリセットする行の名前"
+  },
+  "googleResetAuthHint": {
+    "message": "連携しようとして Google のエラーが出るときは、Chrome がこの拡張機能用に保持しているログイン情報を消去して、ログインし直せます。",
+    "description": "設定ページ: 「Google 連携をリセット」の下の説明"
+  },
+  "googleResetAuth": {
+    "message": "リセット",
+    "description": "設定ページ: Google のログイン情報をリセットするボタン"
+  },
+  "confirmGoogleResetAuth": {
+    "message": "Google 連携をリセットしますか？\n\nChrome がこの拡張機能用に保持している Google のログイン情報を消去し、ログインし直します。ローカルの予定と設定はそのまま残ります。",
+    "description": "設定ページ: Google のログイン情報をリセットする前の確認"
+  },
+  "googleResetAuthDone": {
+    "message": "Google 連携をリセットしました。「Googleでログイン」から連携し直してください。",
+    "description": "設定ページ: Google のログイン情報をリセットした後のお知らせ"
+  },
+  "googleResetAuthFailed": {
+    "message": "Google 連携をリセットできませんでした。",
+    "description": "設定ページ: Google のログイン情報のリセットに失敗したときのお知らせ"
+  },
   "workHoursLabel": {
     "message": "勤務時間",
     "description": "設定ページ: 勤務時間の設定"
